@@ -1,8 +1,14 @@
-name: uhcplugin
-main: codeland.uhcplugin.UHCPlugin
-version: 0.0
-description: codeland UHC ported to spigot
+name: UHCPlugin
+version: 0.1.0
+authors:
+  - Rewind
+  - Balduvian
+  - Varas
+  - Sumdumdude
+main: com.codeland.uhc.UHCPlugin
 api-version: 1.15
-load: STARTUP
-authors: [balduvian, c1fr1]
-prefix: UHC
+
+commands:
+  setup:
+    description: Setup the UHC round
+    usage: /<command>
