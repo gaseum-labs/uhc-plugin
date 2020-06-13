@@ -1,12 +1,19 @@
 plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'java'
 }
 
 group = pluginGroup
 version = pluginVersion
 
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+compileJava {
+    options.compilerArgs += ["-parameters"]
+    options.fork = true
+    options.forkOptions.executable = 'javac'
+}
 
 repositories {
     mavenCentral()
@@ -18,18 +25,43 @@ repositories {
         name = 'sonatype'
         url = 'https://oss.sonatype.org/content/groups/public/'
     }
+    maven {
+        name = 'aikar'
+        url = "https://repo.aikar.co/content/groups/aikar/"
+    }
+    maven {
+        name = 'dmulloy2'
+        url = 'https://repo.dmulloy2.net/nexus/repository/public/'
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compileOnly 'com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT'
+    compileOnly "com.github.MilkBowl:VaultAPI:1.7"
+    compileOnly group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.5.0";
+    compile "co.aikar:acf-paper:0.5.0-SNAPSHOT"
 }
 
-import org.apache.tools.ant.filters.ReplaceTokens
+shadowJar {
+    relocate 'co.aikar.commands', 'com.codeland.uhc.acf'
+    relocate 'co.aikar.locales', 'com.codeland.uhc.locales'
+}
+
+build.dependsOn shadowJar
+
+/*import org.apache.tools.ant.filters.ReplaceTokens
 
 processResources {
     from(sourceSets.main.resources.srcDirs) {
         filter ReplaceTokens, tokens: [version: version]
     }
-}
+}*/
 

@@ -7,8 +7,16 @@ authors:
   - Sumdumdude
 main: com.codeland.uhc.UHCPlugin
 api-version: 1.15
-
+depend:
+  - ProtocolLib
+  - Vault
+permissions:
+  gamemaster:
+    description: Game Masters have all UHC management permissions
+    default: false
 commands:
   setup:
     description: Setup the UHC round
-    usage: /<command>
+    permission: gamemaster
+    permission-message: You are not a Game Master
+    usage: /uhc <command> [start radius|end radius|shrink time|grace time]
