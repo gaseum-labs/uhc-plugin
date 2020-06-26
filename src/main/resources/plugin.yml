@@ -5,11 +5,13 @@ authors:
   - Balduvian
   - Varas
   - Sumdumdude
+load: STARTUP
 main: com.codeland.uhc.UHCPlugin
 api-version: 1.15
 depend:
   - ProtocolLib
   - Vault
+  - WorldGeneratorApi
 permissions:
   gamemaster:
     description: Game Masters have all UHC management permissions

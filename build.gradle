@@ -67,6 +67,8 @@ dependencies {
     implementation 'com.github.MilkBowl:VaultAPI:1.7'
     implementation group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.5.0"
     implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
+    implementation files('libs/patched_1.15.2.jar')
+    implementation files ('libs/WorldGeneratorApi-0.6.jar')
 }
 
 shadowJar {
