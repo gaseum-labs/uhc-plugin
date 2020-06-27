@@ -11,6 +11,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.world.WorldLoadEvent
+import org.bukkit.scoreboard.Team
 import org.kodein.di.instance
 import java.util.logging.Level
 
