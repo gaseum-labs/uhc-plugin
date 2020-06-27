@@ -3,15 +3,13 @@ package com.codeland.uhc
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.CommandSetup
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.world.UHCTerrainGenerator
-import com.codeland.uhc.world.VanillaChunkGenerator
-import nl.rutgerkok.worldgeneratorapi.WorldGeneratorApi
-import nl.rutgerkok.worldgeneratorapi.WorldRef
-import org.bukkit.generator.ChunkGenerator
+import com.codeland.uhc.event.WaitingEventListener
+import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.plugin.java.JavaPlugin
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.singleton
+import java.util.logging.Level
 
 val di = DI {
     bind<GameRunner>() with singleton { GameRunner() }
@@ -23,12 +21,13 @@ class UHCPlugin : JavaPlugin() {
 
     override fun onEnable() {
         commandManager.registerCommand(CommandSetup())
+        server.pluginManager.registerEvents(WaitingEventListener(), this)
         //server.pluginManager.registerEvents(WorldGenListener(), this)
     }
 
     override fun onDisable() {}
 
-    override fun getDefaultWorldGenerator(worldName: String, id: String?): ChunkGenerator? {
+    /*override fun getDefaultWorldGenerator(worldName: String, id: String?): ChunkGenerator? {
         if (worldName == "uhc_world") {
             if (id == "no_structures") {
                 return WorldGeneratorApi
@@ -40,7 +39,7 @@ class UHCPlugin : JavaPlugin() {
             }
         }
         return VanillaChunkGenerator()
-    }
+    }*/
 }
 
 /*
