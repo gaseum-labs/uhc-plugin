@@ -18,6 +18,7 @@ class UHCPlugin : JavaPlugin() {
 	override fun onEnable() {
 		commandManager.registerCommand(CommandSetup())
 		server.pluginManager.registerEvents(WaitingEventListener(), this)
+		GameRunner.plugin = this
 		//server.pluginManager.registerEvents(WorldGenListener(), this)
 	}
 

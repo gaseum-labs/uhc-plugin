@@ -1,15 +1,19 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.UHCPlugin
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
 import org.bukkit.command.CommandSender
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
+import org.bukkit.scheduler.BukkitRunnable
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime: Double) {
+class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime: Double, glowTime : Double) {
 
 	//time is measured in seconds here.
 
@@ -17,6 +21,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 	private var endRadius = 0.0
 	private var graceTime = 0.0
 	private var shrinkTime = 0.0
+	private var glowTime = 0.0
 
 	fun setRadius(startRadius: Double, endRadius: Double) {
 		this.startRadius = startRadius
@@ -31,12 +36,17 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 		this.shrinkTime = shrinkTime
 	}
 
+	fun setGlowTime(glowTime: Double) {
+		this.glowTime = glowTime
+	}
+
 	fun start(commandSender : CommandSender, w : World) {
 		w.players.forEach {
 			it.inventory.clear()
-			it.activePotionEffects.clear()
+			for (activePotionEffect in it.activePotionEffects) {
+				it.removePotionEffect(activePotionEffect.type)
+			}
 			it.gameMode = GameMode.SURVIVAL
-			it.sendTitle("main", "subtitle", 0, 20, 0)
 
 			it.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("wtf")[0])
 		}
@@ -55,11 +65,10 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 			var timeRemaining = graceTime.toLong()
 			override fun run() {
 
-				timeRemaining -= 1
 
 				val introText = TextComponent("Grace period ends in ")
 				var timeText : TextComponent
-				if (timeRemaining == 1L) {
+				if (timeRemaining + 1 == 1L) {
 					timeText = TextComponent("1 second")
 				} else if (timeRemaining < 60) {
 					timeText = TextComponent("$timeRemaining seconds")
@@ -76,6 +85,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 				for (player in w.players) {
 					player.spigot().sendMessage(ChatMessageType.ACTION_BAR, introText, timeText)
 				}
+				timeRemaining -= 1
 			}
 		}, 0, 1000)
 		Timer().schedule(object : TimerTask() {
@@ -98,6 +108,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 		}
 
 		var timer = Timer()
+		GameRunner.phase = UHCPhase.SHRINKING
 		timer.schedule(object  : TimerTask() {
 			var border = startRadius
 			var timePassed = 0
@@ -116,7 +127,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 				minutesText.color = ChatColor.AQUA
 				val connector = TextComponent(" in ")
 				val timeText : TextComponent
-				val remainingTime = (shrinkTime - timePassed).toLong()
+				val remainingTime = (shrinkTime - timePassed).toLong() + 1
 				if (remainingTime == 1L) {
 					timeText = TextComponent("1 second")
 				} else if (remainingTime < 60) {
@@ -139,13 +150,62 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 		}, 0, 1000)
 		Timer().schedule(object : TimerTask() {
 			override fun run() {
-				w.players.forEach {
-					it.sendMessage("Border has stopped moving!")
-					it.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
-				}
-				timer.cancel()
+				endShrinking(w, timer)
 			}
 		}, (shrinkTime * 1000.0).toLong())
+	}
+
+	fun endShrinking(w : World, shrinkingTimer : Timer) {
+		w.players.forEach {
+			it.sendMessage("Border has stopped moving!")
+			it.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+		}
+		shrinkingTimer.cancel()
+		val glowTimer = Timer()
+		if (glowTime > 0) {
+			var runnable = object : BukkitRunnable() {
+				var remainingTime = glowTime.toInt()
+				override fun run() {
+					if (remainingTime == 0) {
+						cancel()
+						startGlowing(w)
+						//return
+					}
+					val pre = TextComponent("Glowing starts in ")
+					var timeComp : TextComponent
+					if (remainingTime == 1) {
+						timeComp = TextComponent("1 second")
+					} else if (remainingTime < 60) {
+						timeComp = TextComponent("$remainingTime seconds")
+					} else {
+						val mins = remainingTime / 60
+						if (mins == 1) {
+							timeComp = TextComponent("1 minute")
+						} else {
+							timeComp = TextComponent("$mins minutes")
+						}
+					}
+					timeComp.color = ChatColor.AQUA
+					for (player in w.players) {
+						player.spigot().sendMessage(ChatMessageType.ACTION_BAR, pre, timeComp)
+					}
+					remainingTime -= 1
+				}
+			}
+			if (GameRunner.plugin != null) {
+				runnable.runTaskTimer(GameRunner.plugin!!, 0, 20)
+			}
+		}
+	}
+
+	fun startGlowing(w : World) {
+		for (player in w.players) {
+			player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 1, false, false, false))
+			player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+			val message = TextComponent("Glowing has started!")
+			message.color = ChatColor.GOLD
+			player.sendMessage(message)
+		}
 	}
 
 	fun updateMobCaps(w : World, borderRadius : Double) {
@@ -170,6 +230,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 		setRadius(startRadius, endRadius)
 		setGraceTime(graceTime)
 		setShrinkTime(shrinkTime)
+		setGlowTime(glowTime)
 	}
 }
 
@@ -177,5 +238,4 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 more flair when start
 discord integration
 spawn protection warn
-hp shown on scoreboard
- */
+*/

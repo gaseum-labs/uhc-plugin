@@ -46,7 +46,8 @@ class WaitingEventListener() : Listener {
 		e.world.setSpawnLocation(10000, 70, 10000)
 		e.world.worldBorder.setCenter(10000.0, 10000.0)
 		e.world.worldBorder.size = 50.0
-		e.world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+		e.world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+		e.world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
 		e.world.time = 1000
 		PaperPluginLogger.getGlobal().log(Level.INFO, "Final monster limit is " + e.world.monsterSpawnLimit)
 	}
