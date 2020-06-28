@@ -1,9 +1,8 @@
 package com.codeland.uhc.command;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.*;
+
 //THIS FILE WILL BE TURNED INTO KOTLIN EVENTUALLY, rn it will just serve as a reference
 public class TeamMakerOld {
 	private String dataPath;
@@ -43,6 +42,14 @@ public class TeamMakerOld {
 			}
 			ret.add(tem);
 		}
+		Timer t = new Timer();
+		t.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				System.out.println("yo!");
+			}
+		}, 1000);
+
 		return ret.toArray(new String[][] {});
 	}
 
