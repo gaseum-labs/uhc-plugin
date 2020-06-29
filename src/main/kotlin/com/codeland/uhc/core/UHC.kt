@@ -168,7 +168,6 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 			it.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
 		}
 		shrinkingTimer.cancel()
-		val glowTimer = Timer()
 		countdownToEvent(glowTime, "GLOWING WILL BE APPLIED")
 		if (glowTime > 0) {
 			var runnable = object : BukkitRunnable() {
@@ -227,7 +226,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 					updateGlowing(w)
 				}
 			}
-			runnable.runTaskTimer(GameRunner.plugin!!, 0, 500)
+			runnable.runTaskTimer(GameRunner.plugin!!, 0, 10)
 		}
 		GameRunner.phase = UHCPhase.GLOWING
 	}
