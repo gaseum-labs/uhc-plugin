@@ -4,6 +4,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHCPhase
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.Bukkit
+import org.bukkit.Difficulty
 import org.bukkit.GameMode
 import org.bukkit.GameRule
 import org.bukkit.entity.EntityType
@@ -37,7 +38,7 @@ class WaitingEventListener() : Listener {
 		if (gameRunner.phase != UHCPhase.WAITING) {
 			return
 		}
-		e.player.addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Int.MAX_VALUE, 1, false, false, false))
+		e.player.addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Int.MAX_VALUE, 0, false, false, false))
 		e.player.gameMode = GameMode.ADVENTURE;
 	}
 
@@ -47,13 +48,16 @@ class WaitingEventListener() : Listener {
 		e.world.worldBorder.setCenter(10000.0, 10000.0)
 		e.world.worldBorder.size = 50.0
 		e.world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+		e.world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
 		e.world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
 		e.world.time = 1000
+		e.world.difficulty = Difficulty.NORMAL
 		PaperPluginLogger.getGlobal().log(Level.INFO, "Final monster limit is " + e.world.monsterSpawnLimit)
 	}
 
 	@EventHandler
 	fun onPlayerDeath(e : PlayerDeathEvent) {
 		e.entity.gameMode = GameMode.SPECTATOR
+		GameRunner.playerDeath(e.entity)
 	}
 }

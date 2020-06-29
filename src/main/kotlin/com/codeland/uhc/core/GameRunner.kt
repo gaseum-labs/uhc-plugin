@@ -12,6 +12,8 @@ import org.bukkit.OfflinePlayer
 import org.bukkit.World
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import org.bukkit.scoreboard.Team
 import java.util.logging.Level
 
@@ -53,7 +55,27 @@ object GameRunner {
 	}
 
 	fun playerDeath(deadPlayer: Player) {
-		var aliveTeam : Team? = null
+		var aliveTeam: Team? = null
+
+		var closestDistSqrd = 2500.0
+		var closestPlayer: Player? = null
+		val deadPlayerTeam = playersTeam(deadPlayer.displayName)
+		for (oPlayer in Bukkit.getServer().onlinePlayers) {
+			if (playersTeam(oPlayer.displayName)?.equals(deadPlayerTeam) == false) {
+				val dist = oPlayer.location.distanceSquared(deadPlayer.location)
+				if (dist < closestDistSqrd) {
+					closestDistSqrd = dist
+					closestPlayer = oPlayer
+				}
+			}
+		}
+		val entries = closestPlayer?.displayName?.let { playersTeam(it)?.entries }
+		if (entries != null) {
+			for (entry in entries) {
+				Bukkit.getServer().getPlayer(entry)?.addPotionEffect(PotionEffect(PotionEffectType.INCREASE_DAMAGE, 300 * 5, 0))
+			}
+		}
+
 		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
 			var isThisTeam = false
 			var isAlive = false
@@ -66,12 +88,16 @@ object GameRunner {
 				}
 			}
 			if (isThisTeam && !isAlive) {
+				val teamComp = TextComponent(team.displayName)
+				teamComp.color = team.color.asBungee()
+				teamComp.isBold = true
+				val elimComp = TextComponent(" has been ELIMINATED!")
+				elimComp.color = ChatColor.GOLD
+				val remainingComp = TextComponent("" + remainingTeams() + " teams remain")
+				remainingComp.color = ChatColor.GOLD
 				Bukkit.getServer().onlinePlayers.forEach {
-					val teamComp = TextComponent(team.displayName)
-					teamComp.color = getChatColor(team.color)
-					teamComp.isBold = true
-					val elimComp = TextComponent(" has been ELIMINATED!")
 					it.sendMessage(teamComp, elimComp)
+					it.sendMessage(remainingComp)
 				}
 			}
 			if (isAlive) {
@@ -97,63 +123,41 @@ object GameRunner {
 		return null
 	}
 
+	fun getHighestHPTeam() : Team? {
+		var ret : Team? = null
+		var maxHP = 0.0
+		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
+			var thisTeamsHP = 0.0
+			for (entry in team.entries) {
+				val player = Bukkit.getServer().getPlayer(entry)
+				if (player != null) {
+					if (player.gameMode == GameMode.SURVIVAL) {
+						thisTeamsHP += player.health
+					}
+				}
+			}
+			if (thisTeamsHP > maxHP) {
+				ret = team
+				maxHP = thisTeamsHP
+			}
+		}
+		return ret
+	}
+
 	fun endUHC(winner: Team) {
 		Bukkit.getServer().onlinePlayers.forEach {
 			val winningTeamComp = TextComponent(winner.displayName)
 			winningTeamComp.isBold = true
-			winningTeamComp.color = getChatColor(winner.color)
+			winningTeamComp.color = winner.color.asBungee()
 			val congratsComp = TextComponent("HAS WON!")
 			it.sendTitle(Title(winningTeamComp, congratsComp, 0, 200, 40))
 			phase = UHCPhase.POSTGAME
 		}
 	}
 
-	fun getChatColor(color: org.bukkit.ChatColor) : ChatColor? {
-		if (color == org.bukkit.ChatColor.AQUA) {
-			return ChatColor.AQUA
+	fun setGlowingMode(mode: Int) {
+		if (uhc != null) {
+			uhc!!.glowType = mode
 		}
-		if (color == org.bukkit.ChatColor.BLACK) {
-			return ChatColor.BLACK
-		}
-		if (color == org.bukkit.ChatColor.BLUE) {
-			return ChatColor.BLUE
-		}
-		if (color == org.bukkit.ChatColor.GOLD) {
-			return ChatColor.GOLD
-		}
-		if (color == org.bukkit.ChatColor.GRAY) {
-			return ChatColor.GRAY
-		}
-		if (color == org.bukkit.ChatColor.GREEN) {
-			return ChatColor.GREEN
-		}
-		if (color == org.bukkit.ChatColor.RED) {
-			return ChatColor.RED
-		}
-		if (color == org.bukkit.ChatColor.WHITE) {
-			return ChatColor.WHITE
-		}
-		if (color == org.bukkit.ChatColor.LIGHT_PURPLE) {
-			return ChatColor.LIGHT_PURPLE
-		}
-		if (color == org.bukkit.ChatColor.DARK_AQUA) {
-			return ChatColor.GREEN
-		}
-		if (color == org.bukkit.ChatColor.DARK_BLUE) {
-			return ChatColor.RED
-		}
-		if (color == org.bukkit.ChatColor.DARK_GRAY) {
-			return ChatColor.WHITE
-		}
-		if (color == org.bukkit.ChatColor.DARK_PURPLE) {
-			return ChatColor.LIGHT_PURPLE
-		}
-		if (color == org.bukkit.ChatColor.DARK_GREEN) {
-			return ChatColor.LIGHT_PURPLE
-		}
-		if (color == org.bukkit.ChatColor.DARK_RED) {
-			return ChatColor.LIGHT_PURPLE
-		}
-		return null
 	}
 }

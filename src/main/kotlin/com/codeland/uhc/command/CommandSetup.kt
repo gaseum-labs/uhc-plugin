@@ -18,7 +18,7 @@ import org.bukkit.scoreboard.Team
 class CommandSetup : BaseCommand() {
 
 	private val gameRunner = GameRunner
-	private val teamColours : Array<ChatColor> = arrayOf(ChatColor.BLUE, ChatColor.RED, ChatColor.GREEN, ChatColor.GOLD, ChatColor.LIGHT_PURPLE, ChatColor.AQUA, ChatColor.DARK_RED, ChatColor.GRAY, ChatColor.DARK_BLUE, ChatColor.DARK_GREEN, ChatColor.DARK_PURPLE, ChatColor.DARK_PURPLE)
+	private val teamColours : Array<ChatColor> = arrayOf(ChatColor.BLUE, ChatColor.RED, ChatColor.GREEN, ChatColor.LIGHT_PURPLE, ChatColor.AQUA, ChatColor.DARK_RED, ChatColor.DARK_AQUA, ChatColor.GRAY, ChatColor.DARK_BLUE, ChatColor.DARK_GREEN, ChatColor.DARK_PURPLE, ChatColor.DARK_PURPLE)
 
 	@CommandAlias("UHCsetup")
 	@Description("Setup the UHC round")
@@ -102,7 +102,7 @@ class CommandSetup : BaseCommand() {
 			return
 		}
 		var team = sender.server.scoreboardManager.mainScoreboard.registerNewTeam(teamName)
-		team.color = teamColours[sender.server.scoreboardManager.mainScoreboard.teams.size]
+		team.color = teamColours[(sender.server.scoreboardManager.mainScoreboard.teams.size - 1) % teamColours.size]
 	}
 
 	@CommandAlias("UHCAddToTeam")
@@ -159,7 +159,7 @@ class CommandSetup : BaseCommand() {
 				val introComp = TextComponent("Team name is now ")
 				introComp.color = net.md_5.bungee.api.ChatColor.GOLD
 				val teamName = TextComponent(newName)
-				teamName.color = gameRunner.getChatColor(team.color)
+				teamName.color = team.color.asBungee()
 				teamName.isBold = true
 				player?.sendMessage(introComp, teamName)
 			}
@@ -183,6 +183,40 @@ class CommandSetup : BaseCommand() {
 		textComponent = TextComponent("Water animal spawn limit: " + sender.server.worlds[0].waterAnimalSpawnLimit)
 		textComponent.color = ChatColorBungee.GOLD
 		sender.sendMessage(textComponent)
+	}
+
+	@CommandAlias("UHCSetGlowingMode")
+	@Description("set the type of behavior of glowing, 0 is old, 1 is new")
+	fun setGlowingMode(sender: CommandSender, mode : Int) {
+		GameRunner.setGlowingMode(mode)
+	}
+
+	@CommandAlias("teamColor")
+	@Description("change your team color")
+	fun teamColor(sender: CommandSender, color : ChatColor) {
+		if (color == ChatColor.WHITE || color == ChatColor.GOLD) {
+			val comp = TextComponent("that color is not allowed")
+			comp.color = ChatColor.RED.asBungee()
+			sender.sendMessage(comp)
+			return
+		}
+		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
+			if (team.color.equals(color)) {
+				val comp = TextComponent("that color is already being used by another team")
+				comp.color = net.md_5.bungee.api.ChatColor.RED
+				sender.sendMessage(comp)
+				return
+			}
+		}
+		val team = GameRunner.playersTeam(sender.name)
+		if (team != null) {
+			team.color = color
+			val comp = TextComponent("Your team color has been changed")
+			comp.color = color.asBungee()
+			for (entry in team.entries) {
+				Bukkit.getServer().getPlayer(entry)!!.sendMessage(comp)
+			}
+		}
 	}
 
 	@CommandAlias("UHCTestEnd")

@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitRunnable
+import org.bukkit.scoreboard.Team
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -22,6 +23,8 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 	private var graceTime = 0.0
 	private var shrinkTime = 0.0
 	private var glowTime = 0.0
+
+	var glowType = 1
 
 	fun setRadius(startRadius: Double, endRadius: Double) {
 		this.startRadius = startRadius
@@ -51,6 +54,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 			it.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("wtf")[0])
 		}
 		w.setGameRule(GameRule.NATURAL_REGENERATION, true)
+		w.setGameRule(GameRule.DO_MOB_SPAWNING, true)
 		w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true)
 		w.worldBorder.setCenter(0.0, 0.0)
 		w.worldBorder.size = startRadius * 2
@@ -97,6 +101,8 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 				}
 			}
 		}, (graceTime * 1000.0).toLong())
+
+		countdownToEvent(graceTime, "GRACE PERIOD ENDING")
 	}
 
 	fun endGrace(w : World) {
@@ -153,6 +159,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 				endShrinking(w, timer)
 			}
 		}, (shrinkTime * 1000.0).toLong())
+		countdownToEvent(shrinkTime, "BORDER STOPPING")
 	}
 
 	fun endShrinking(w : World, shrinkingTimer : Timer) {
@@ -162,6 +169,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 		}
 		shrinkingTimer.cancel()
 		val glowTimer = Timer()
+		countdownToEvent(glowTime, "GLOWING WILL BE APPLIED")
 		if (glowTime > 0) {
 			var runnable = object : BukkitRunnable() {
 				var remainingTime = glowTime.toInt()
@@ -169,7 +177,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 					if (remainingTime == 0) {
 						cancel()
 						startGlowing(w)
-						//return
+						return
 					}
 					val pre = TextComponent("Glowing starts in ")
 					var timeComp : TextComponent
@@ -199,12 +207,45 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 	}
 
 	fun startGlowing(w : World) {
+		if (glowType == 0) {//general
+			for (player in w.players) {
+				player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 1, false, false, false))
+				player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+				val message = TextComponent("Glowing has started!")
+				message.color = ChatColor.GOLD
+				player.sendMessage(message)
+			}
+		} else if (glowType == 1) {//special
+			for (player in w.players) {
+				player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+				val message = TextComponent("Glowing has started!")
+				message.color = ChatColor.GOLD
+				player.sendMessage(message)
+			}
+			var runnable = object : BukkitRunnable() {
+				override fun run() {
+					updateGlowing(w)
+				}
+			}
+			runnable.runTaskTimer(GameRunner.plugin!!, 0, 500)
+		}
+		GameRunner.phase = UHCPhase.GLOWING
+	}
+
+	fun updateGlowing(w : World) {
+		val remainingTeams = GameRunner.remainingTeams()
+		var glowingTeam : Team? = null
+		if (remainingTeams > 2) {
+			glowingTeam = GameRunner.getHighestHPTeam()
+		}
 		for (player in w.players) {
-			player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 1, false, false, false))
-			player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
-			val message = TextComponent("Glowing has started!")
-			message.color = ChatColor.GOLD
-			player.sendMessage(message)
+			if (glowingTeam == null) {
+				player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 1, false, false, false))
+			} else if (glowingTeam == GameRunner.playersTeam(player.displayName)) {
+				player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 1, false, false, false))
+			} else {
+				player.removePotionEffect(PotionEffectType.GLOWING)
+			}
 		}
 	}
 
@@ -215,7 +256,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 		var inBorder = 0
 		w.loadedChunks.forEach {
 			++total
-			if (abs(it.x) < borderRadius && abs(it.z) < borderRadius) {
+			if (abs(it.x * 16) < borderRadius && abs(it.z * 16) < borderRadius) {
 				++inBorder
 			}
 		}
@@ -232,10 +273,31 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 		setShrinkTime(shrinkTime)
 		setGlowTime(glowTime)
 	}
+
+	fun countdownToEvent(totalDelay : Double, subtitle : String) {
+		val countdownRunnable = object  : BukkitRunnable() {
+			var num = 3
+			override fun run() {
+				if (num != 0) {
+					for (onlinePlayer in Bukkit.getServer().onlinePlayers) {
+						onlinePlayer.sendTitle("" + num, subtitle, 0, 21, 0)
+					}
+				} else {
+					cancel()
+				}
+				--num
+			}
+		}
+
+		countdownRunnable.runTaskTimer(GameRunner.plugin!!, (totalDelay * 20.0 - 60.0).toLong(), 20)
+	}
 }
 
 /*
+countDowns
+
+spawn protection warn
+
 more flair when start
 discord integration
-spawn protection warn
 */
