@@ -77,7 +77,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 				} else if (timeRemaining < 60) {
 					timeText = TextComponent("$timeRemaining seconds")
 				} else {
-					val minutes = timeRemaining / 60
+					val minutes = timeRemaining / 60 + 1
 					if (minutes == 1L) {
 						timeText = TextComponent("1 minute")
 					} else {
@@ -139,7 +139,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 				} else if (remainingTime < 60) {
 					timeText = TextComponent("$remainingTime seconds")
 				} else {
-					val mins = remainingTime / 60
+					val mins = remainingTime / 60 + 1
 					if (mins == 1L) {
 						timeText = TextComponent("1 minute")
 					} else {
@@ -186,7 +186,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 					} else if (remainingTime < 60) {
 						timeComp = TextComponent("$remainingTime seconds")
 					} else {
-						val mins = remainingTime / 60
+						val mins = remainingTime / 60 + 1
 						if (mins == 1) {
 							timeComp = TextComponent("1 minute")
 						} else {
