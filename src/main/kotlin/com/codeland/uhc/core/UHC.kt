@@ -61,7 +61,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Double, shrinkTime:
 
 		val teamCount = 1 + Bukkit.getServer().scoreboardManager.mainScoreboard.teams.size
 
-		Bukkit.getServer().dispatchCommand(commandSender, String.format("spreadplayers 0 0 %f %f true @a", (startRadius / sqrt(teamCount.toDouble())) * 0.75, startRadius))
+		Bukkit.getServer().dispatchCommand(commandSender, String.format("spreadplayers 0 0 %f %f true @a", (startRadius / sqrt(teamCount.toDouble())) * 0.25, startRadius))
 		w.pvp = false
 
 		var titleTimer = Timer()
