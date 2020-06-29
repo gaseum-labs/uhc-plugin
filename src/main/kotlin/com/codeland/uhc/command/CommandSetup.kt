@@ -18,7 +18,7 @@ import org.bukkit.scoreboard.Team
 class CommandSetup : BaseCommand() {
 
 	private val gameRunner = GameRunner
-	private val teamColours : Array<ChatColor> = arrayOf(ChatColor.BLUE, ChatColor.RED, ChatColor.GREEN, ChatColor.AQUA, ChatColor.DARK_RED, ChatColor.DARK_AQUA, ChatColor.GRAY, ChatColor.DARK_BLUE, ChatColor.DARK_GREEN, ChatColor.DARK_PURPLE, ChatColor.DARK_PURPLE)
+	private val teamColours : Array<ChatColor> = arrayOf(ChatColor.BLUE, ChatColor.RED, ChatColor.GREEN, ChatColor.AQUA, ChatColor.DARK_RED, ChatColor.DARK_AQUA, ChatColor.GRAY, ChatColor.DARK_BLUE, ChatColor.DARK_GREEN)
 
 	@CommandAlias("UHCsetup")
 	@Description("Setup the UHC round")
