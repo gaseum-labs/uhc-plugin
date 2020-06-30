@@ -177,5 +177,4 @@ gradle-app.setting
 
 
 # server stuff
-install.bat
-BuildTools
+server

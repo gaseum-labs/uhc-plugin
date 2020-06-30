@@ -1,6 +1,6 @@
 package com.codeland.uhc.world
 
-import nl.rutgerkok.worldgeneratorapi.BaseChunkGenerator.*
+/*import nl.rutgerkok.worldgeneratorapi.BaseChunkGenerator.*
 import nl.rutgerkok.worldgeneratorapi.BaseTerrainGenerator
 import org.bukkit.block.Biome
 
@@ -35,4 +35,4 @@ class UHCTerrainGenerator : BaseTerrainGenerator {
 		}
 	}
 
-}
+}*/

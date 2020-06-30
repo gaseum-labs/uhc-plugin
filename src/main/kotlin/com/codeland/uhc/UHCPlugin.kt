@@ -4,12 +4,7 @@ import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.CommandSetup
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.WaitingEventListener
-import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.plugin.java.JavaPlugin
-import org.kodein.di.DI
-import org.kodein.di.bind
-import org.kodein.di.singleton
-import java.util.logging.Level
 
 class UHCPlugin : JavaPlugin() {
 

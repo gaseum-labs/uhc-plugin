@@ -299,4 +299,11 @@ spawn protection warn
 
 more flair when start
 discord integration
+
+border ot 0 in nether
+glowing in nether
+people joining with no team = spec
+different border solutions
+default to tm
+
 */

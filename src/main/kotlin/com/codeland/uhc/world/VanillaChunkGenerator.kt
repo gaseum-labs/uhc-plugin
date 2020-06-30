@@ -2,7 +2,6 @@ package com.codeland.uhc.world
 
 import org.bukkit.World
 import org.bukkit.block.Biome
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld
 import org.bukkit.generator.ChunkGenerator
 import java.util.*
 
