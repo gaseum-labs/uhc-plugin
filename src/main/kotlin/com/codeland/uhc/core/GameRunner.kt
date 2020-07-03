@@ -1,41 +1,30 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.phaseType.UHCPhase
 import com.codeland.uhc.UHCPlugin
 import com.destroystokyo.paper.Title
-import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
-import org.bukkit.OfflinePlayer
-import org.bukkit.World
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scoreboard.Team
-import java.util.logging.Level
 
 object GameRunner {
-	private var uhc: UHC? = null
-	private var world : World? = null
+	var uhc = UHC(600.0, 25.0, 1125, 2250, 600, 0)
+
 	var plugin : UHCPlugin? = null
 
 	var phase = UHCPhase.WAITING
 
-	fun setUhc(uhc: UHC?) {
-		this.uhc = uhc
-	}
-
-	fun startGame(commandSender : CommandSender, w : World) {
-		if (uhc == null) {
-			commandSender.sendMessage("You must setup the game first")
-		} else if (phase != UHCPhase.WAITING) {
+	fun startGame(commandSender : CommandSender) {
+		if (phase != UHCPhase.WAITING) {
 			commandSender.sendMessage("UHC already in progress")
 		} else {
-			uhc!!.start(commandSender, w)
-			world = w
+			uhc.start(commandSender)
 			phase = UHCPhase.GRACE
 		}
 	}
@@ -123,27 +112,6 @@ object GameRunner {
 		return null
 	}
 
-	fun getHighestHPTeam() : Team? {
-		var ret : Team? = null
-		var maxHP = 0.0
-		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
-			var thisTeamsHP = 0.0
-			for (entry in team.entries) {
-				val player = Bukkit.getServer().getPlayer(entry)
-				if (player != null) {
-					if (player.gameMode == GameMode.SURVIVAL) {
-						thisTeamsHP += player.health
-					}
-				}
-			}
-			if (thisTeamsHP > maxHP) {
-				ret = team
-				maxHP = thisTeamsHP
-			}
-		}
-		return ret
-	}
-
 	fun endUHC(winner: Team) {
 		Bukkit.getServer().onlinePlayers.forEach {
 			val winningTeamComp = TextComponent(winner.displayName)
@@ -155,9 +123,14 @@ object GameRunner {
 		}
 	}
 
-	fun setGlowingMode(mode: Int) {
-		if (uhc != null) {
-			uhc!!.glowType = mode
-		}
+	fun sendPlayer(player: Player, message: String) {
+		val comp = TextComponent(message)
+		comp.color = ChatColor.GOLD
+		comp.isBold = true
+		player.sendMessage(comp)
+	}
+
+	fun netherIsAllowed() : Boolean {
+		return !(uhc.netherToZero && (phase == UHCPhase.FINAL || phase == UHCPhase.GLOWING || phase == UHCPhase.ENDGAME))
 	}
 }

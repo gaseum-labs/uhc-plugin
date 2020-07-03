@@ -1,19 +1,34 @@
 package com.codeland.uhc
 
 import co.aikar.commands.PaperCommandManager
-import com.codeland.uhc.command.CommandSetup
+import com.codeland.uhc.command.AdminCommands
+import com.codeland.uhc.command.ParticipantCommands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.WaitingEventListener
+import com.destroystokyo.paper.utils.PaperPluginLogger
+import net.md_5.bungee.api.ChatColor
 import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.scoreboard.DisplaySlot
+import org.bukkit.scoreboard.RenderType
+import java.util.logging.Level
 
 class UHCPlugin : JavaPlugin() {
 
 	private val commandManager: PaperCommandManager by lazy { PaperCommandManager(this) }
 
 	override fun onEnable() {
-		commandManager.registerCommand(CommandSetup())
+		commandManager.registerCommand(AdminCommands())
+		commandManager.registerCommand(ParticipantCommands())
 		server.pluginManager.registerEvents(WaitingEventListener(), this)
 		GameRunner.plugin = this
+
+		server.scheduler.scheduleSyncDelayedTask(this, Runnable {
+			if (server.scoreboardManager.mainScoreboard.getObjective("hp") == null) {
+				server.scoreboardManager.mainScoreboard.registerNewObjective("hp", "health", "hp", RenderType.HEARTS)
+			}
+			server.scoreboardManager.mainScoreboard.getObjective("hp")!!.displaySlot = DisplaySlot.PLAYER_LIST
+		})
+
 		//server.pluginManager.registerEvents(WorldGenListener(), this)
 	}
 

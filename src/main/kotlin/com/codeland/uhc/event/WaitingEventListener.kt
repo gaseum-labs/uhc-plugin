@@ -1,9 +1,7 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHCPhase
-import com.destroystokyo.paper.utils.PaperPluginLogger
-import org.bukkit.Bukkit
+import com.codeland.uhc.phaseType.UHCPhase
 import org.bukkit.Difficulty
 import org.bukkit.GameMode
 import org.bukkit.GameRule
@@ -12,12 +10,12 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.player.AsyncPlayerChatEvent
 import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.event.player.PlayerTeleportEvent
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import org.bukkit.scoreboard.RenderType
-import java.util.logging.Level
 
 class WaitingEventListener() : Listener {
 
@@ -36,6 +34,9 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onPlayerJoin(e : PlayerJoinEvent) {
 		if (gameRunner.phase != UHCPhase.WAITING) {
+			if (GameRunner.playersTeam(e.player.name) == null) {
+				e.player.gameMode = GameMode.SPECTATOR
+			}
 			return
 		}
 		e.player.addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Int.MAX_VALUE, 0, false, false, false))
@@ -52,12 +53,36 @@ class WaitingEventListener() : Listener {
 		e.world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
 		e.world.time = 1000
 		e.world.difficulty = Difficulty.NORMAL
-		PaperPluginLogger.getGlobal().log(Level.INFO, "Final monster limit is " + e.world.monsterSpawnLimit)
 	}
 
 	@EventHandler
 	fun onPlayerDeath(e : PlayerDeathEvent) {
 		e.entity.gameMode = GameMode.SPECTATOR
 		GameRunner.playerDeath(e.entity)
+	}
+
+	@EventHandler
+	fun onMessage(e : AsyncPlayerChatEvent) {
+		if (GameRunner.phase != UHCPhase.WAITING) {
+			if (!e.message.startsWith("!")) {
+				val team = GameRunner.playersTeam(e.player.displayName)
+				if (team != null) {
+					e.recipients.removeIf {
+						GameRunner.playersTeam(it.name)?.equals(team) == false
+					}
+				}
+			} else {
+				e.message = e.message.substring(1)
+			}
+		}
+	}
+
+	@EventHandler
+	fun onPlayerTeleport(e : PlayerTeleportEvent) {
+		if (!GameRunner.netherIsAllowed()) {
+			if (e.cause == PlayerTeleportEvent.TeleportCause.NETHER_PORTAL && e.player.gameMode == GameMode.SURVIVAL) {
+				e.isCancelled = true
+			}
+		}
 	}
 }
