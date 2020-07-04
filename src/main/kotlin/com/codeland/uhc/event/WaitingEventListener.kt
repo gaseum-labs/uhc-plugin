@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.UHCPhase
 import com.destroystokyo.paper.utils.PaperPluginLogger
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.Difficulty
 import org.bukkit.GameMode
@@ -73,7 +74,12 @@ class WaitingEventListener() : Listener {
 					e.isCancelled = true
 					PaperPluginLogger.getGlobal().log(Level.INFO, "PLAYER SENT MESSAGE IN TEAM CHAT")
 					for (entry in team.entries) {
-						Bukkit.getPlayer(entry)?.sendMessage("<${e.player}> ${e.message}")
+						val precomp = TextComponent("<")
+						val name = TextComponent(e.player.displayName)
+						name.color = team.color.asBungee()
+						name.isUnderlined = true
+						val remaining = TextComponent("> ${e.message}")
+						Bukkit.getPlayer(entry)?.sendMessage(precomp, name, remaining)
 					}
 				}
 			} else {
