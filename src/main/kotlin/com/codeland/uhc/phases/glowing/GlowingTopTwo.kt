@@ -33,7 +33,7 @@ class GlowingTopTwo : Phase() {
 		if (second > 0) {
 			super.perSecond(second)
 		}
-		val sortedTeams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams.sortedBy {
+		val sortedTeams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams.sortedByDescending {
 			var ret = 0.0
 			for (entry in it.entries) {
 				val player = Bukkit.getServer().getPlayer(entry)!!
@@ -41,16 +41,16 @@ class GlowingTopTwo : Phase() {
 					ret += player.health
 				}
 			}
-			return@sortedBy ret
+			return@sortedByDescending ret
 		}
 		sortedTeams.forEachIndexed { i, team ->
-			if (i <= 2) {
+			if (i < 2) {
 				for (entry in team.entries) {
-					Bukkit.getServer().getPlayer(entry)!!.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 1, false, false, false))
+					Bukkit.getServer().getPlayer(entry)?.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 0, false, false, false))
 				}
 			} else {
 				for (entry in team.entries) {
-					Bukkit.getServer().getPlayer(entry)!!.removePotionEffect(PotionEffectType.GLOWING)
+					Bukkit.getServer().getPlayer(entry)?.removePotionEffect(PotionEffectType.GLOWING)
 				}
 			}
 		}
