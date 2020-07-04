@@ -335,6 +335,7 @@ class AdminCommands : BaseCommand() {
 			player.location.set(10000.0, 100.0, 10000.0)
 			player.gameMode = GameMode.ADVENTURE
 		}
+		GameRunner.phase = UHCPhase.WAITING
 	}
 
 }
