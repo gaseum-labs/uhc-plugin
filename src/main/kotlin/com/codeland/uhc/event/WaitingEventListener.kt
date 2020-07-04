@@ -2,6 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.UHCPhase
+import org.bukkit.Bukkit
 import org.bukkit.Difficulty
 import org.bukkit.GameMode
 import org.bukkit.GameRule
@@ -69,6 +70,10 @@ class WaitingEventListener() : Listener {
 				if (team != null) {
 					e.recipients.removeIf {
 						GameRunner.playersTeam(it.name)?.equals(team) == false
+					}
+					e.recipients.clear()
+					for (entry in team.entries) {
+						e.recipients.add(Bukkit.getPlayer(entry))
 					}
 				}
 			} else {
