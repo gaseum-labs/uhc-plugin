@@ -2,6 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.UHCPhase
+import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.Bukkit
 import org.bukkit.Difficulty
 import org.bukkit.GameMode
@@ -17,6 +18,7 @@ import org.bukkit.event.player.PlayerTeleportEvent
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import java.util.logging.Level
 
 class WaitingEventListener() : Listener {
 
@@ -68,12 +70,10 @@ class WaitingEventListener() : Listener {
 			if (!e.message.startsWith("!")) {
 				val team = GameRunner.playersTeam(e.player.displayName)
 				if (team != null) {
-					e.recipients.removeIf {
-						GameRunner.playersTeam(it.name)?.equals(team) == false
-					}
-					e.recipients.clear()
+					e.isCancelled = true
+					PaperPluginLogger.getGlobal().log(Level.INFO, "PLAYER SENT MESSAGE IN TEAM CHAT")
 					for (entry in team.entries) {
-						e.recipients.add(Bukkit.getPlayer(entry))
+						Bukkit.getPlayer(entry)?.sendMessage("<${e.player}> ${e.message}")
 					}
 				}
 			} else {
