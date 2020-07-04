@@ -14,24 +14,26 @@ abstract class Phase {
 	protected var runnable : BukkitRunnable? = null
 
 	open fun start(uhc : UHC, length : Long) {
-		runnable = object : BukkitRunnable() {
-			var remainingSeconds = length
-			override fun run() {
-				if (remainingSeconds == 0L) {
-					cancel()
-					for (player in Bukkit.getServer().onlinePlayers) {
-						player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+		if (length > 0) {
+			runnable = object : BukkitRunnable() {
+				var remainingSeconds = length
+				override fun run() {
+					if (remainingSeconds == 0L) {
+						cancel()
+						for (player in Bukkit.getServer().onlinePlayers) {
+							player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+						}
+						endPhase()
+						uhc.startNextPhase()
+						return
 					}
-					endPhase()
-					uhc.startNextPhase()
-					return
+					perSecond(remainingSeconds)
+					--remainingSeconds
 				}
-				perSecond(remainingSeconds)
-				--remainingSeconds
 			}
+			runnable!!.runTaskTimer(GameRunner.plugin!!, 0, 20)
+			countdownToEvent(length, endPhrase())
 		}
-		runnable!!.runTaskTimer(GameRunner.plugin!!, 0, 20)
-		countdownToEvent(length, endPhrase())
 	}
 
 	protected open fun endPhase() {
@@ -67,7 +69,7 @@ abstract class Phase {
 		return timeRemaining.toString() + units
 	}
 
-	protected open fun interrupt() {
+	open fun interrupt() {
 		runnable?.cancel()
 	}
 

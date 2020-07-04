@@ -58,12 +58,6 @@ object GameRunner {
 				}
 			}
 		}
-		val entries = closestPlayer?.displayName?.let { playersTeam(it)?.entries }
-		if (entries != null) {
-			for (entry in entries) {
-				Bukkit.getServer().getPlayer(entry)?.addPotionEffect(PotionEffect(PotionEffectType.INCREASE_DAMAGE, 300 * 5, 0))
-			}
-		}
 
 		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
 			var isThisTeam = false
@@ -99,6 +93,10 @@ object GameRunner {
 				endUHC(aliveTeam)
 			}
 		}
+
+		if (closestPlayer != null) {
+			uhc.killReward.applyReward(playersTeam(closestPlayer.displayName)!!)
+		}
 	}
 
 	fun playersTeam(player: String) : Team? {
@@ -121,6 +119,7 @@ object GameRunner {
 			it.sendTitle(Title(winningTeamComp, congratsComp, 0, 200, 40))
 			phase = UHCPhase.POSTGAME
 		}
+		uhc.currentPhase?.interrupt()
 	}
 
 	fun sendPlayer(player: Player, message: String) {

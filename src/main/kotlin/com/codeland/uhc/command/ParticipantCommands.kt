@@ -17,11 +17,12 @@ class ParticipantCommands : BaseCommand() {
 	@Description("get the current setup")
 	fun getCurrentSetup(sender: CommandSender) {
 		val player = Bukkit.getPlayer(sender.name)!!
-		GameRunner.sendPlayer(player, "UHC has been setup")
 		GameRunner.sendPlayer(player, "Starting radius : " + GameRunner.uhc.startRadius.toInt() + " blocks")
 		GameRunner.sendPlayer(player, "Ending radius : " + GameRunner.uhc.endRadius.toInt() + " blocks")
 		GameRunner.sendPlayer(player, "Nether closes after shrinking : " + GameRunner.uhc.netherToZero)
 		GameRunner.sendPlayer(player, "Spawn cap coefficient : " + GameRunner.uhc.mobCapCoefficient)
+		GameRunner.sendPlayer(player, "Team Kill Bounty : " + GameRunner.uhc.killReward)
+		GameRunner.sendPlayer(player, "----------------PHASES----------------")
 		GameRunner.sendPlayer(player, "Grace period variant : " + GameRunner.uhc.graceType + " " + GameRunner.uhc.phaseDurations[0] + " seconds")
 		GameRunner.sendPlayer(player, "Shrinking period variant : " + GameRunner.uhc.shrinkType + " " + GameRunner.uhc.phaseDurations[1] + " seconds")
 		GameRunner.sendPlayer(player, "Final zone variant : " + GameRunner.uhc.finalType + " " + GameRunner.uhc.phaseDurations[2] + " seconds")

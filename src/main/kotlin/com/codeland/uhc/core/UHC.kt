@@ -26,57 +26,16 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 
 	var netherToZero = true
 	var mobCapCoefficient = 1.0
+	var killReward = KillReward.NONE
 
 	var gameMaster : CommandSender? = null
 
 	var currentPhase : Phase? = null
 
 	fun start(commandSender : CommandSender) {
-
 		gameMaster = commandSender
 
 		currentPhase = graceType.startPhase(this, phaseDurations[0])
-
-		/*val teamCount = 1 + Bukkit.getServer().scoreboardManager.mainScoreboard.teams.size
-
-		Bukkit.getServer().dispatchCommand(commandSender, String.format("spreadplayers 0 0 %f %f true @a", (startRadius / sqrt(teamCount.toDouble())), startRadius))
-
-		countdownToEvent(graceTime, "GRACE PERIOD ENDING")
-
-		object : BukkitRunnable() {
-			var timeRemaining = graceTime.toLong()
-			override fun run() {
-				if (timeRemaining < 1L) {
-					cancel()
-					for (player in Bukkit.getServer().onlinePlayers) {
-						player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
-					}
-					endGrace()
-					return
-				}
-
-				val introText = TextComponent("Grace period ends in ")
-				val timeText : TextComponent =
-						if (timeRemaining + 1 == 1L) {
-							TextComponent("1 second")
-						} else if (timeRemaining < 60) {
-							TextComponent("$timeRemaining seconds")
-						} else {
-							val minutes = timeRemaining / 60 + 1
-							if (minutes == 1L) {
-								TextComponent("1 minute")
-							} else {
-								TextComponent("$minutes minutes")
-							}
-						}
-				timeText.color = ChatColor.AQUA
-				timeText.isBold = true
-				for (player in Bukkit.getServer().onlinePlayers) {
-					player.spigot().sendMessage(ChatMessageType.ACTION_BAR, introText, timeText)
-				}
-				timeRemaining -= 1
-			}
-		}.runTaskTimer(GameRunner.plugin!!, 0, 20)*/
 	}
 
 	fun startNextPhase() {

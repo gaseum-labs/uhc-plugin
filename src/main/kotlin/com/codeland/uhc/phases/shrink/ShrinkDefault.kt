@@ -10,9 +10,6 @@ import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.World
-import java.util.logging.Level
-import kotlin.math.max
-import kotlin.math.min
 
 class ShrinkDefault : Phase() {
 

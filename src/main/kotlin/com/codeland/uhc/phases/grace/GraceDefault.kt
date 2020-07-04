@@ -17,10 +17,12 @@ class GraceDefault : Phase() {
 			for (activePotionEffect in it.activePotionEffects) {
 				it.removePotionEffect(activePotionEffect.type)
 			}
+			it.health = 20.0
+			it.exp = 0.0F
 			if (GameRunner.playersTeam(it.name) != null) {
 				it.gameMode = GameMode.SURVIVAL
 			} else {
-				it.gameMode = GameMode.ADVENTURE
+				it.gameMode = GameMode.SPECTATOR
 			}
 		}
 

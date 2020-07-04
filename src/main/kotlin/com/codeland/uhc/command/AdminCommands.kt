@@ -6,10 +6,7 @@ import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.*
 import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.GameMode
-import org.bukkit.OfflinePlayer
+import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.scoreboard.Team
 
@@ -253,6 +250,18 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.netherToZero = netherCloses
 	}
 
+	@CommandAlias("modify killBounty")
+	@Description("change the reward for killing a team")
+	fun setKillBounty(sender : CommandSender, reward : KillReward) {
+		if (!sender.isOp) {
+			val msg = TextComponent("You must be a server operator to use this command.")
+			msg.color = net.md_5.bungee.api.ChatColor.RED
+			sender.sendMessage(msg)
+			return
+		}
+		GameRunner.uhc.killReward = reward
+	}
+
 	@CommandAlias("modify verbose")
 	@Description("set all details of the UHC")
 	fun modifyVerbose(sender : CommandSender, startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, finalTime : Long) {
@@ -296,6 +305,35 @@ class AdminCommands : BaseCommand() {
 			if (aliveTeam != null) {
 				GameRunner.endUHC(aliveTeam)
 			}
+		}
+	}
+
+	@CommandAlias("test reset")
+	@Description("reset things to the waiting stage")
+	fun testReset(sender : CommandSender) {
+		if (!sender.isOp) {
+			val msg = TextComponent("You must be a server operator to use this command.")
+			msg.color = net.md_5.bungee.api.ChatColor.RED
+			sender.sendMessage(msg)
+			return
+		}
+
+		for (world in Bukkit.getServer().worlds) {
+			world.setSpawnLocation(10000, 70, 10000)
+			world.worldBorder.setCenter(10000.0, 10000.0)
+			world.worldBorder.size = 50.0
+			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+			world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
+			world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
+			world.time = 1000
+			world.difficulty = Difficulty.NORMAL
+		}
+
+		for (player in Bukkit.getServer().onlinePlayers) {
+			player.exp = 0.0F
+			player.health = 20.0
+			player.location.set(10000.0, 100.0, 10000.0)
+			player.gameMode = GameMode.ADVENTURE
 		}
 	}
 
