@@ -1,22 +1,25 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.phaseType.GraceType
 import com.codeland.uhc.phaseType.UHCPhase
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.Bukkit
-import org.bukkit.Difficulty
-import org.bukkit.GameMode
-import org.bukkit.GameRule
+import org.bukkit.*
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.CreatureSpawnEvent
+import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.PlayerDeathEvent
-import org.bukkit.event.player.AsyncPlayerChatEvent
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerTeleportEvent
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.event.inventory.InventoryMoveItemEvent
+import org.bukkit.event.player.*
 import org.bukkit.event.world.WorldLoadEvent
+import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.logging.Level
@@ -95,5 +98,98 @@ class WaitingEventListener() : Listener {
 				e.isCancelled = true
 			}
 		}
+	}
+
+	@EventHandler
+	fun onEntitySpawn(e : CreatureSpawnEvent) {
+		if (GameRunner.phase == UHCPhase.WAITING) {
+			e.isCancelled = true
+		}
+	}
+
+	@EventHandler
+	fun onPlayerHold(e : PlayerItemHeldEvent) {
+		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
+			return
+		}
+		if (e.player.inventory.itemInMainHand.type == Material.IRON_SWORD) {
+			if (e.player.inventory.itemInMainHand.itemMeta.displayName == "Half Zatoichi") {
+				e.isCancelled = true
+			}
+		}
+	}
+
+	@EventHandler
+	fun onPlayerDropItem(e : PlayerDropItemEvent) {
+		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
+			return
+		}
+		if (isHalfZatoichi(e.itemDrop.itemStack)) {
+			e.isCancelled = true
+		}
+	}
+
+	@EventHandler
+	fun onSwapHandItemEvent(e : PlayerSwapHandItemsEvent) {
+		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
+			return
+		}
+		if (isHalfZatoichi(e.offHandItem)) {
+			e.isCancelled = true
+		}
+	}
+
+	@EventHandler
+	fun onInventoryMoveEvent (e : InventoryClickEvent) {
+		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
+			return
+		}
+		if (e.inventory.holder is Player) {
+			val player = e.inventory.holder as Player
+			if (player.inventory.itemInMainHand == e.currentItem) {
+				if (isHalfZatoichi(e.currentItem)) {
+					e.isCancelled = true
+				}
+			}
+		}
+		if (e.currentItem?.hasItemMeta() == true) {
+			PaperPluginLogger.getGlobal().log(Level.INFO, "inventory move event, item = " + e.currentItem?.itemMeta?.displayName)
+		} else {
+			PaperPluginLogger.getGlobal().log(Level.INFO, "inventory move event, item = " + e.currentItem?.type)
+		}
+	}
+
+	@EventHandler
+	fun onEntityDamageEvent(e : EntityDamageByEntityEvent) {
+		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
+			return
+		}
+		if (e.damager is Player && e.entity is Player) {
+			val defender = e.entity as Player
+			val attacker = e.damager as Player
+			if (isHalfZatoichi(attacker.inventory.itemInMainHand)) {
+				if (isHalfZatoichi(defender.inventory.itemInMainHand)) {
+					defender.health = 0.0
+					defender.absorptionAmount = 0.0
+				}
+				if (defender.health + defender.absorptionAmount >= e.finalDamage) {
+					if (attacker.health < 10.0) {
+						attacker.health += 10.0
+					} else {
+						attacker.absorptionAmount += attacker.health - 10.0
+						attacker.health = 20.0
+					}
+				}
+			}
+		}
+	}
+
+	fun isHalfZatoichi(item : ItemStack?) : Boolean {
+		if (item?.type == Material.IRON_SWORD) {
+			if (item.itemMeta.displayName == "Half Zatoichi") {
+				return true
+			}
+		}
+		return false
 	}
 }

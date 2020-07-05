@@ -9,15 +9,17 @@ import org.bukkit.GameMode
 import org.bukkit.GameRule
 import kotlin.math.sqrt
 
-class GraceDefault : Phase() {
+open class GraceDefault : Phase() {
 
 	override fun start(uhc : UHC, length : Long) {
 		Bukkit.getServer().onlinePlayers.forEach {
 			it.inventory.clear()
+			it.setItemOnCursor(null)
 			for (activePotionEffect in it.activePotionEffects) {
 				it.removePotionEffect(activePotionEffect.type)
 			}
 			it.health = 20.0
+			it.absorptionAmount = 0.0
 			it.exp = 0.0F
 			if (GameRunner.playersTeam(it.name) != null) {
 				it.gameMode = GameMode.SURVIVAL

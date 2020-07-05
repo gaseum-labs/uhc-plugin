@@ -38,7 +38,7 @@ class GlowingTopTwo : Phase() {
 			for (entry in it.entries) {
 				val player = Bukkit.getServer().getPlayer(entry)!!
 				if (player.gameMode == GameMode.SURVIVAL) {
-					ret += player.health
+					ret += player.health + player.absorptionAmount
 				}
 			}
 			return@sortedByDescending ret
