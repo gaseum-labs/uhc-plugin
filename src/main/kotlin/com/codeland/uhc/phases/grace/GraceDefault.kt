@@ -21,6 +21,7 @@ open class GraceDefault : Phase() {
 			it.health = 20.0
 			it.absorptionAmount = 0.0
 			it.exp = 0.0F
+			it.level = 0
 			if (GameRunner.playersTeam(it.name) != null) {
 				it.gameMode = GameMode.SURVIVAL
 			} else {

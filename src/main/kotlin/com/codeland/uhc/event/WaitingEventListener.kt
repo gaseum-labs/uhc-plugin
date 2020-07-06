@@ -15,8 +15,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryDragEvent
-import org.bukkit.event.inventory.InventoryMoveItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.ItemStack
@@ -107,7 +105,7 @@ class WaitingEventListener() : Listener {
 		}
 	}
 
-	@EventHandler
+	/*@EventHandler
 	fun onPlayerHold(e : PlayerItemHeldEvent) {
 		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
 			return
@@ -117,7 +115,7 @@ class WaitingEventListener() : Listener {
 				e.isCancelled = true
 			}
 		}
-	}
+	}*/
 
 	@EventHandler
 	fun onPlayerDropItem(e : PlayerDropItemEvent) {
@@ -129,7 +127,7 @@ class WaitingEventListener() : Listener {
 		}
 	}
 
-	@EventHandler
+	/*@EventHandler
 	fun onSwapHandItemEvent(e : PlayerSwapHandItemsEvent) {
 		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
 			return
@@ -158,11 +156,14 @@ class WaitingEventListener() : Listener {
 			PaperPluginLogger.getGlobal().log(Level.INFO, "inventory move event, item = " + e.currentItem?.type)
 		}
 	}
-
+*/
 	@EventHandler
 	fun onEntityDamageEvent(e : EntityDamageByEntityEvent) {
 		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
 			return
+		}
+		if (e.damager is Player) {
+			val attacker = e.damager as Player
 		}
 		if (e.damager is Player && e.entity is Player) {
 			val defender = e.entity as Player
@@ -172,13 +173,17 @@ class WaitingEventListener() : Listener {
 					defender.health = 0.0
 					defender.absorptionAmount = 0.0
 				}
-				if (defender.health + defender.absorptionAmount >= e.finalDamage) {
+				if (defender.health + defender.absorptionAmount < e.finalDamage) {
 					if (attacker.health < 10.0) {
 						attacker.health += 10.0
 					} else {
 						attacker.absorptionAmount += attacker.health - 10.0
 						attacker.health = 20.0
 					}
+					val meta = attacker.inventory.itemInMainHand.itemMeta.clone()
+					meta.setDisplayName("Half Zatoichi (bloody)")
+					attacker.inventory.itemInMainHand.itemMeta = meta
+					PaperPluginLogger.getGlobal().log(Level.INFO, "damaged entity")
 				}
 			}
 		}
@@ -186,7 +191,7 @@ class WaitingEventListener() : Listener {
 
 	fun isHalfZatoichi(item : ItemStack?) : Boolean {
 		if (item?.type == Material.IRON_SWORD) {
-			if (item.itemMeta.displayName == "Half Zatoichi") {
+			if (item.itemMeta.displayName.startsWith("Half Zatoichi")) {
 				return true
 			}
 		}
