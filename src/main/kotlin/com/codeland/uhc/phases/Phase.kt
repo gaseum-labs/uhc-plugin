@@ -7,6 +7,8 @@ import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
+import org.bukkit.boss.BarColor
+import org.bukkit.boss.BarStyle
 import org.bukkit.scheduler.BukkitRunnable
 
 abstract class Phase {
@@ -15,23 +17,37 @@ abstract class Phase {
 
 	open fun start(uhc : UHC, length : Long) {
 		if (length > 0) {
+
+			val bar = Bukkit.createBossBar("${getPhaseType()}", BarColor.BLUE, BarStyle.SOLID)
+			bar.progress = 1.0
+
+			for (player in Bukkit.getServer().onlinePlayers) {
+				bar.addPlayer(player)
+			}
+
 			runnable = object : BukkitRunnable() {
 				var remainingSeconds = length
+				var currentTick = 0
 				override fun run() {
-					if (remainingSeconds == 0L) {
-						cancel()
-						for (player in Bukkit.getServer().onlinePlayers) {
-							player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+					if (currentTick == 0) {
+						if (remainingSeconds == 0L) {
+							cancel()
+							for (player in Bukkit.getServer().onlinePlayers) {
+								player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+							}
+							bar.removeAll()//TEST AGAIN ALSO COUNTDOWN TILL START
+							endPhase()
+							uhc.startNextPhase()
+							return
 						}
-						endPhase()
-						uhc.startNextPhase()
-						return
+						perSecond(remainingSeconds)
+						--remainingSeconds
 					}
-					perSecond(remainingSeconds)
-					--remainingSeconds
+					bar.progress = (remainingSeconds.toDouble() + 1 - (currentTick.toDouble() / 20.0)) / length.toDouble()
+					currentTick = (currentTick + 1) % 20
 				}
 			}
-			runnable!!.runTaskTimer(GameRunner.plugin!!, 0, 20)
+			runnable!!.runTaskTimer(GameRunner.plugin!!, 0, 1)
 			countdownToEvent(length, endPhrase())
 		}
 	}

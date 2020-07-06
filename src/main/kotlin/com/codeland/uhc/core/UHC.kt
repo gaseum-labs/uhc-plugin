@@ -66,10 +66,6 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 				inBorder += width * height / 256.0
 			}
 			val coeff = inBorder / total
-			if (world.environment == World.Environment.NORMAL) {
-				PaperPluginLogger.getGlobal().log(Level.INFO, "$inBorder / $total")
-				PaperPluginLogger.getGlobal().log(Level.INFO, "$coeff")
-			}
 			world.monsterSpawnLimit = (70 * coeff * mobCapCoefficient).toInt() + 1
 			world.animalSpawnLimit = (10 * coeff * mobCapCoefficient).toInt() + 1
 			world.ambientSpawnLimit = (15 * coeff * mobCapCoefficient).toInt() + 1
