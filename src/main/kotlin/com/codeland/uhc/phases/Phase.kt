@@ -113,3 +113,6 @@ abstract class Phase {
 		countdownRunnable.runTaskTimer(GameRunner.plugin!!, totalDelay * 20 - 60, 20)
 	}
 }
+
+// nether
+//endgames
