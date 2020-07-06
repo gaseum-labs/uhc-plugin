@@ -36,9 +36,11 @@ class GlowingTopTwo : Phase() {
 		val sortedTeams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams.sortedByDescending {
 			var ret = 0.0
 			for (entry in it.entries) {
-				val player = Bukkit.getServer().getPlayer(entry)!!
-				if (player.gameMode == GameMode.SURVIVAL) {
-					ret += player.health + player.absorptionAmount
+				val player = Bukkit.getServer().getPlayer(entry)
+				if (player != null) {
+					if (player.gameMode == GameMode.SURVIVAL) {
+						ret += player.health + player.absorptionAmount
+					}
 				}
 			}
 			return@sortedByDescending ret
