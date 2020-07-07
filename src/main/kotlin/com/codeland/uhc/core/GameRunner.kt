@@ -20,6 +20,9 @@ object GameRunner {
 
 	var phase = UHCPhase.WAITING
 
+	var abundance = true;
+	var unsheltered = true;
+
 	fun startGame(commandSender : CommandSender) {
 		if (phase != UHCPhase.WAITING) {
 			commandSender.sendMessage("UHC already in progress")

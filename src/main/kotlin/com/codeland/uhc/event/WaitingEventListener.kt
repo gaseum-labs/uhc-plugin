@@ -4,12 +4,11 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.GraceType
 import com.codeland.uhc.phaseType.UHCPhase
 import com.destroystokyo.paper.utils.PaperPluginLogger
+import net.md_5.bungee.api.ChatColor
+import net.md_5.bungee.api.chat.BaseComponent
+import net.md_5.bungee.api.chat.ComponentBuilder
 import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.Bukkit
-import org.bukkit.Difficulty
-import org.bukkit.GameMode
-import org.bukkit.GameRule
-import org.bukkit.Material
+import org.bukkit.*
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_MOBS
@@ -17,10 +16,10 @@ import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.entity.CreatureSpawnEvent
-import org.bukkit.event.entity.EntityDamageByEntityEvent
-import org.bukkit.event.entity.EntityDamageEvent
-import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockDamageEvent
+import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.AsyncPlayerChatEvent
 import org.bukkit.event.player.PlayerDropItemEvent
@@ -28,6 +27,10 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerTeleportEvent
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.metadata.FixedMetadataValue
+import org.bukkit.metadata.MetadataValue
+import org.bukkit.plugin.Plugin
+import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.logging.Level
@@ -209,65 +212,109 @@ class WaitingEventListener() : Listener {
 		return false
 	}
 
-	val TOOLS = arrayOf(
-		Material.DIAMOND_PICKAXE,
-		Material.GOLDEN_PICKAXE,
-		Material.IRON_PICKAXE,
-		Material.STONE_PICKAXE,
-		Material.WOODEN_PICKAXE,
-		Material.DIAMOND_AXE,
-		Material.GOLDEN_AXE,
-		Material.IRON_AXE,
-		Material.STONE_AXE,
-		Material.WOODEN_AXE,
-		Material.DIAMOND_HOE,
-		Material.GOLDEN_HOE,
-		Material.IRON_HOE,
-		Material.STONE_HOE,
-		Material.WOODEN_HOE,
-		Material.DIAMOND_SHOVEL,
-		Material.GOLDEN_SHOVEL,
-		Material.IRON_SHOVEL,
-		Material.STONE_SHOVEL,
-		Material.WOODEN_SHOVEL)
-
-	val SWORDS = arrayOf(
-		Material.DIAMOND_SWORD,
-		Material.GOLDEN_SWORD,
-		Material.IRON_SWORD,
-		Material.STONE_SWORD,
-		Material.WOODEN_SWORD)
-
-	private fun isContained(material: Material, array: Array<Material>): Boolean {
-		for (element in array) if (element === material) return true
-		return false
-	}
-
-	@EventHandler
-	fun onCraft(event: CraftItemEvent) {
-		val result = event.recipe.result
-		val type = result.type
-		PaperPluginLogger.getGlobal().log(Level.INFO, "item crafted")
-		if (isContained(type, TOOLS)) {
-			PaperPluginLogger.getGlobal().log(Level.INFO, "tool crafted")
-			enchantThing(result, LOOT_BONUS_BLOCKS, 3)
-			event.isCancelled = true
-		} else if (isContained(type, SWORDS)) {
-			PaperPluginLogger.getGlobal().log(Level.INFO, "sword crafted")
-			enchantThing(result, LOOT_BONUS_MOBS, 3)
-			event.isCancelled = true
-		} else {
-			return
-		}
-		event.inventory.contents.forEach {
-			it.amount -= 1
-		}
-		Bukkit.getServer().getPlayer(event.whoClicked.name)?.inventory?.addItem(result)
-		PaperPluginLogger.getGlobal().log(Level.INFO, "gave item")
-	}
 	fun enchantThing(item : ItemStack, enchant : Enchantment, level : Int) {
 		val meta = item.itemMeta.clone()
 		meta.addEnchant(enchant, level, true)
 		item.itemMeta = meta
+	}
+
+	@EventHandler
+	fun onBreakBlock(event : BlockBreakEvent) {
+		var block = event.block;
+		var player = event.player;
+
+		val getTool = {
+			/* get what the player is holding */
+			/* pretend it isn't air if it is */
+			var tool = player.inventory.itemInMainHand;
+			if (tool.type == Material.AIR)
+				tool = ItemStack(Material.PORKCHOP);
+
+			/* get drops from block as if held item */
+			/* had fortune */
+			var fakeTool = tool.clone();
+			if (GameRunner.abundance) enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 5);
+
+			fakeTool;
+		}
+
+		/* these replace reguar block breaking behavior */
+		event.isCancelled = GameRunner.unsheltered || GameRunner.abundance;
+
+		if (GameRunner.unsheltered) {
+			/* regular block breaking behavior for acceptable blocks */
+			if (binarySearch(block.type, acceptedBlocks, {mat -> mat.ordinal})) {
+				event.isCancelled = false;
+				return;
+			}
+
+			var broken = block.state.getMetadata("broken");
+
+			/* if we have not applied broken label or broken is explicitly set to false */
+			/* proceed to mine then set broken to true */
+			if (broken.size == 0 || !broken[0].asBoolean()) {
+				/* manually drop items instead of the block breaking */
+				var drops = block.getDrops(getTool());
+				for (drop in drops)
+					player.world.dropItem(block.location, ItemStack(drop.type, drop.amount));
+
+				/* make sure we can't break this block again */
+				block.state.setMetadata("broken", FixedMetadataValue(GameRunner.plugin as Plugin, true));
+			} else {
+				var message = TextComponent("Block already broken!");
+				message.isBold = true;
+				message.color = Color.RED as ChatColor;
+
+				player.sendMessage(message);
+			}
+		} else if (GameRunner.abundance) {
+			block.breakNaturally(getTool());
+		}
+	}
+
+	val acceptedBlocks = {
+		var arr = arrayOf<Material>(
+				Material.CRAFTING_TABLE,
+				Material.FURNACE,
+				Material.BREWING_STAND,
+				Material.WHEAT_SEEDS,
+				Material.BLAST_FURNACE,
+				Material.SMOKER,
+				Material.WATER,
+				Material.LAVA,
+				Material.LADDER
+		);
+		arr.sortBy { mat -> mat.ordinal };
+
+		arr;
+	}();
+
+	fun <T>binarySearch(value: T, array: Array<T>, sort: (T)->Int): Boolean {
+		var start = 0;
+		var end = array.size - 1;
+		var lookFor = sort(value);
+
+		while (true) {
+			var position = (end + start) / 2;
+			var compare = sort(array[position]);
+
+			when {
+				lookFor == compare -> return true;
+				  end - start == 1 -> return false;
+				 lookFor < compare -> end = position;
+				 lookFor > compare -> start = position;
+			}
+		}
+	}
+
+	@EventHandler
+	fun onPlaceBlock(event: BlockPlaceEvent) {
+		if (GameRunner.unsheltered) {
+			var block = event.block;
+
+			if (!binarySearch(block.type, acceptedBlocks, { mat -> mat.ordinal })) {
+				event.isCancelled = true;
+			}
+		}
 	}
 }
