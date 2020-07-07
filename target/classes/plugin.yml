@@ -1,0 +1,8 @@
+name: uhcplugin
+main: codeland.uhcplugin.UHCPlugin
+version: 0.0
+description: codeland UHC ported to spigot
+api-version: 1.15
+load: STARTUP
+authors: [balduvian, c1fr1]
+prefix: UHC

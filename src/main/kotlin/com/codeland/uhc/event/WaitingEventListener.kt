@@ -263,7 +263,7 @@ class WaitingEventListener() : Listener {
 			} else {
 				var message = TextComponent("Block already broken!");
 				message.isBold = true;
-				message.color = Color.RED as ChatColor;
+				message.color = ChatColor.GOLD;
 
 				player.sendMessage(message);
 			}
