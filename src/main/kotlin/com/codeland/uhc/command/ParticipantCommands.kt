@@ -32,51 +32,74 @@ class ParticipantCommands : BaseCommand() {
 
 	@CommandAlias("name")
 	@Description("change the name of your team")
-	fun teamName(sender: CommandSender, newName : String) {
+	fun teamName(sender: CommandSender, newName: String) {
 		val team = GameRunner.playersTeam(sender.name)
-		if (team != null) {
-			team.displayName = newName
-			for (entry in team.entries) {
-				val player = Bukkit.getPlayer(entry)
-				val introComp = TextComponent("Team name is now ")
-				introComp.color = ChatColorBungee.GOLD
-				val teamName = TextComponent(newName)
-				teamName.color = team.color.asBungee()
-				teamName.isBold = true
-				player?.sendMessage(introComp, teamName)
-			}
-		} else {
-			sender.sendMessage("you are not on a team")
+			?: return TeamData.errorMessage(sender, "You are not on a team!")
+
+		team.displayName = newName
+
+		val message = TextComponent("Your team name has been changed to ${newName}")
+		message.color = team.color.asBungee();
+		message.isBold = true;
+
+		/* broadcast change to all teammates */
+		team.entries.forEach { entry ->
+			Bukkit.getServer().getPlayer(entry)?.sendMessage(message)
 		}
 	}
 
 	@CommandAlias("color")
 	@Description("change your team color")
-	fun teamColor(sender: CommandSender, color : ChatColor) {
-		if (color == ChatColor.WHITE || color == ChatColor.GOLD || color == ChatColor.BLACK || color == ChatColor.ITALIC || color == ChatColor.BOLD || color == ChatColor.STRIKETHROUGH || color == ChatColor.UNDERLINE || color == ChatColor.RESET || color == ChatColor.MAGIC) {
-			val comp = TextComponent("that color is not allowed")
-			comp.color = ChatColorBungee.RED
-			sender.sendMessage(comp)
-			return
-		}
-		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
-			if (team.color.equals(color)) {
-				val comp = TextComponent("that color is already being used by another team")
-				comp.color = ChatColorBungee.RED
-				sender.sendMessage(comp)
-				return
-			}
-		}
+	fun teamColor(sender: CommandSender, color: ChatColor) {
 		val team = GameRunner.playersTeam(sender.name)
-		if (team != null) {
-			team.color = color
-			val comp = TextComponent("Your team color has been changed")
-			comp.color = color.asBungee()
-			for (entry in team.entries) {
-				Bukkit.getServer().getPlayer(entry)!!.sendMessage(comp)
-			}
+			?: return TeamData.errorMessage(sender, "You are not on a team!")
+
+		if (!TeamData.isValidColor(color))
+			return TeamData.errorMessage(sender, "That color is not allowed!")
+
+		if (Bukkit.getServer().scoreboardManager.mainScoreboard.teams.any { team ->
+				return@any team.color == color
+		})
+			return TeamData.errorMessage(sender, "That color is already being used by another team!")
+
+		/* now finally change color */
+		team.color = color
+
+		val message = TextComponent("Your team color has been changed to ${TeamData.colorPrettyNames[color.ordinal].toLowerCase()}")
+		message.color = color.asBungee()
+		message.isBold = true
+
+		/* broadcast change to all teammates */
+		team.entries.forEach { entry ->
+			Bukkit.getServer().getPlayer(entry)?.sendMessage(message)
 		}
 	}
+
+	/*@CommandAlias("style")
+	@Description("change your team name's display style")
+	fun teamStyle(sender: CommandSender, style : ChatColor) {
+		val team = GameRunner.playersTeam(sender.name)
+			?: return TeamData.errorMessage(sender, "You are not on a team!")
+
+		if (!style.isFormat)
+			return TeamData.errorMessage(sender, "Please choose a style and not a color!")
+
+		/* now finally change style (badly) */
+		team.displayName = "${ChatColor.COLOR_CHAR}${style.char}${team.displayName}"
+
+		val message = TextComponent("Your team style has been changed to ${TeamData.colorPrettyNames[style.ordinal].toLowerCase()}")
+		message.color = team.color.asBungee()
+		message.isBold = style == ChatColor.BOLD
+		message.isItalic = style == ChatColor.ITALIC
+		message.isObfuscated = style == ChatColor.MAGIC
+		message.isUnderlined = style == ChatColor.UNDERLINE
+		message.isStrikethrough = style == ChatColor.STRIKETHROUGH
+
+		/* broadcast change to all teammates */
+		team.entries.forEach { entry ->
+			Bukkit.getServer().getPlayer(entry)?.sendMessage(message)
+		}
+	}*/
 
 	@CommandAlias("mobcaps")
 	@Description("query the current spawn limit coefficient")
