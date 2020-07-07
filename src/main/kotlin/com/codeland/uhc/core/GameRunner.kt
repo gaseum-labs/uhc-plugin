@@ -20,8 +20,9 @@ object GameRunner {
 
 	var phase = UHCPhase.WAITING
 
-	var abundance = true;
-	var unsheltered = true;
+	var abundance = false;
+	var unsheltered = false;
+	var pests = true;
 
 	fun startGame(commandSender : CommandSender) {
 		if (phase != UHCPhase.WAITING) {
@@ -32,85 +33,98 @@ object GameRunner {
 		}
 	}
 
-	fun remainingTeams() : Int {
-		var ret = 0
-		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
-			for (entry in team.entries) {
-				val player = Bukkit.getServer().getPlayer(entry)
-				if (player != null && player.gameMode == GameMode.SURVIVAL) {
-					++ret
-					break
-				}
+	fun teamIsAlive(team: Team): Boolean {
+		return team.entries.any { entry ->
+			val player = Bukkit.getServer().getPlayer(entry)
+
+			when {
+				player == null -> false
+				player.gameMode == GameMode.SURVIVAL -> true
+				else -> false
 			}
 		}
-		return ret
+	}
+
+	/**
+	 * returns both the number of remaining teams
+	 * and the last remaining team if there is exactly 1
+	 */
+	fun remainingTeams(focus: Team) : Triple<Int, Team?, Boolean> {
+		var retRemaining = 0
+		var retAlive = null as Team?
+		var retFocus = false
+
+		Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
+			val alive = teamIsAlive(team)
+
+			if (team == focus) retFocus = alive;
+
+			if (alive) {
+				++retRemaining
+				retAlive = team
+			}
+		}
+
+		/* only give last alive if only one team is alive */
+		return Triple(retRemaining, if (retRemaining == 1) retAlive else null, retFocus)
+	}
+
+	fun quickRemainingTeams() : Int {
+		var retRemaining = 0
+
+		Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
+			if (teamIsAlive(team))
+				++retRemaining
+		}
+
+		/* only give last alive if only one team is alive */
+		return retRemaining;
 	}
 
 	fun playerDeath(deadPlayer: Player) {
 		var aliveTeam: Team? = null
 
-		var closestDistSqrd = 2500.0
-		var closestPlayer: Player? = null
-		val deadPlayerTeam = playersTeam(deadPlayer.displayName)
-		for (oPlayer in Bukkit.getServer().onlinePlayers) {
-			if (playersTeam(oPlayer.displayName)?.equals(deadPlayerTeam) == false) {
-				val dist = oPlayer.location.distanceSquared(deadPlayer.location)
-				if (dist < closestDistSqrd) {
-					closestDistSqrd = dist
-					closestPlayer = oPlayer
-				}
+		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
+
+		deadPlayer.gameMode = GameMode.SPECTATOR
+
+		var deadPlayerTeam = playersTeam(deadPlayer.displayName)
+			?: return
+
+		var (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(deadPlayerTeam)
+
+		/* broadcast elimination message */
+		if (!teamIsAlive) {
+			val message = TextComponent("${deadPlayerTeam.displayName} has been Eliminated!")
+			message.color = ChatColor.GOLD
+			message.isBold = true
+
+			val message2 = TextComponent("$remainingTeams teams remain")
+			message2.color = ChatColor.GOLD
+			message2.isBold = true
+
+			Bukkit.getServer().onlinePlayers.forEach { player ->
+				player.sendMessage(message)
+				player.sendMessage(message2)
 			}
 		}
 
-		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
-			var isThisTeam = false
-			var isAlive = false
-			for (entry in team.entries) {
-				val player = Bukkit.getServer().getPlayer(entry)
-				if (deadPlayer.equals(player)) {
-					isThisTeam = true
-				} else if (player != null && player.gameMode == GameMode.SURVIVAL) {
-					isAlive = true
-				}
-			}
-			if (isThisTeam && !isAlive) {
-				val teamComp = TextComponent(team.displayName)
-				teamComp.color = team.color.asBungee()
-				teamComp.isBold = true
-				val elimComp = TextComponent(" has been ELIMINATED!")
-				elimComp.color = ChatColor.GOLD
-				val remainingComp = TextComponent("" + remainingTeams() + " teams remain")
-				remainingComp.color = ChatColor.GOLD
-				Bukkit.getServer().onlinePlayers.forEach {
-					it.sendMessage(teamComp, elimComp)
-					it.sendMessage(remainingComp)
-				}
-			}
-			if (isAlive) {
-				aliveTeam = team;
-			}
-		}
+		/* uhc ending point (stops kill reward) */
+		if (lastRemaining != null)
+			return endUHC(lastRemaining)
 
-		if (remainingTeams() == 1) {
-			if (aliveTeam != null) {
-				endUHC(aliveTeam)
-			}
-		}
+		/* kill reward awarding */
+		val killer = deadPlayer.killer
+		if (killer != null) {
+			val killerTeam = playersTeam(killer.displayName)
+				?: return
 
-		if (closestPlayer != null) {
-			uhc.killReward.applyReward(playersTeam(closestPlayer.displayName)!!)
+			uhc.killReward.applyReward(killerTeam)
 		}
 	}
 
-	fun playersTeam(player: String) : Team? {
-		for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
-			for (entry in team.entries) {
-				if (entry == player) {
-					return team
-				}
-			}
-		}
-		return null
+	fun playersTeam(playerName: String) : Team? {
+		return Bukkit.getServer().scoreboardManager.mainScoreboard.getEntryTeam(playerName);
 	}
 
 	fun endUHC(winner: Team) {

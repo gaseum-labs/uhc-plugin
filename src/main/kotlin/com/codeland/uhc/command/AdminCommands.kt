@@ -5,10 +5,8 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.*
-import net.md_5.bungee.api.chat.*
 import org.bukkit.*
 import org.bukkit.command.CommandSender
-import org.bukkit.scoreboard.Scoreboard
 import org.bukkit.scoreboard.Team
 
 @CommandAlias("uhc")
@@ -200,7 +198,7 @@ class AdminCommands : BaseCommand() {
 	fun testEnd(sender : CommandSender) {
 		if (TeamData.opGuard(sender)) return;
 
-		if (GameRunner.remainingTeams() == 1) {
+		if (GameRunner.quickRemainingTeams() == 1) {
 			var aliveTeam : Team? = null
 			for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
 				for (entry in team.entries) {
