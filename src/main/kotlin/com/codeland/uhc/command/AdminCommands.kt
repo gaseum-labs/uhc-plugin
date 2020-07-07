@@ -14,119 +14,12 @@ import org.bukkit.scoreboard.Team
 @CommandAlias("uhc")
 class AdminCommands : BaseCommand() {
 
-	/* DATA */
-
-	private val teamColours = arrayOf<ChatColor>(
-		ChatColor.BLUE,
-		ChatColor.RED,
-		ChatColor.GREEN,
-		ChatColor.AQUA,
-		ChatColor.LIGHT_PURPLE,
-		ChatColor.YELLOW,
-		ChatColor.DARK_RED,
-		ChatColor.DARK_AQUA,
-		ChatColor.DARK_PURPLE,
-		ChatColor.GRAY,
-		ChatColor.DARK_BLUE,
-		ChatColor.DARK_GREEN,
-		ChatColor.DARK_GRAY
-	);
-
-	private val colorPrettyNames = arrayOf<String>(
-		"Black",
-		"Dark Blue",
-		"Dark Green",
-		"Dark Aqua",
-		"Dark Red",
-		"Dark Purple",
-		"Gold",
-		"Gray",
-		"Dark Gray",
-		"Blue",
-		"Green",
-		"Aqua",
-		"Red",
-		"Light Purple",
-		"Yellow",
-		"White",
-		"Magic",
-		"Bold",
-		"Strike",
-		"Underline",
-		"Italic",
-		"Reset"
-	);
-
-	/* HELPER FUNCTIONS */
-
-	/**
-	 * prevents non-color font modifiers and white, black, and gold
-	 */
-	fun isValidColor(color: ChatColor): Boolean {
-		return color.isColor && color != ChatColor.WHITE && color != ChatColor.BLACK && color != ChatColor.GOLD;
-	}
-
-	fun prettyTeamName(color: ChatColor): String {
-		return "Team ${colorPrettyNames[color.ordinal]}";
-	}
-
-	fun errorMessage(sender: CommandSender, text: String) {
-		val message = TextComponent(text);
-		message.color = ChatColor.RED.asBungee();
-		message.isBold = true;
-
-		sender.sendMessage(message);
-	}
-
-	/**
-	 * returns if the sender cannot use this command
-	 * you should return from original function if true
-	 */
-	fun opGuard(sender: CommandSender): Boolean {
-		if (!sender.isOp) {
-			errorMessage(sender, "You must be a server operator to use this command!");
-
-			return true;
-		}
-
-		return false;
-	}
-
-	fun addToTeam(scoreboard: Scoreboard, color: ChatColor, playerName: String) {
-		/* remove player from old team if they are on one */
-		val oldTeam = scoreboard.getEntryTeam(playerName);
-
-		if (oldTeam != null)
-			removeFromTeam(oldTeam, playerName);
-
-		/* find if the new team exists */
-		val teamName = color.name;
-		var team = scoreboard.getTeam(teamName);
-
-		/* create the team if it doesn't exist */
-		if (team == null) {
-			team = scoreboard.registerNewTeam(teamName);
-			team.color = color;
-			team.displayName = prettyTeamName(color);
-		}
-
-		team.addEntry(playerName);
-	}
-
-	fun removeFromTeam(team: Team, playerName: String) {
-		team.removeEntry(playerName);
-
-		/* remove the team if no one is left on it */
-		if (team.entries.size == 0)
-			team.unregister();
-	}
-
 	/* COMMANDS */
 
 	@CommandAlias("start")
 	@Description("start the UHC")
 	fun startGame(sender : CommandSender) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.startGame(sender);
 	}
@@ -134,7 +27,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("team clear")
 	@Description("remove all current teams")
 	fun clearTeams(sender : CommandSender) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		val scoreboard = sender.server.scoreboardManager.mainScoreboard;
 
@@ -146,28 +39,24 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("team add")
 	@Description("add a player to a team")
 	fun addPlayerToTeamCommand(sender : CommandSender, teamColor : ChatColor, player : OfflinePlayer) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		/* make sure no kek team colors */
-		if (!isValidColor(teamColor)) {
-			errorMessage(sender, "Invalid team color!");
+		if (!TeamData.isValidColor(teamColor)) {
+			TeamData.errorMessage(sender, "Invalid team color!");
 			return;
 		}
 
 		/* apparently players can not have names */
-		val playerName = player.name;
-		if (playerName == null) {
-			errorMessage(sender, "Player doesn't exist!");
-			return;
-		}
+		val playerName = player.name ?: return TeamData.errorMessage(sender, "Player doesn't exist!");
 
-		addToTeam(sender.server.scoreboardManager.mainScoreboard, teamColor, playerName);
+		TeamData.addToTeam(sender.server.scoreboardManager.mainScoreboard, teamColor, playerName);
 	}
 
 	@CommandAlias("team random")
 	@Description("create random teams")
 	fun randomTeams(sender : CommandSender, teamSize : Int) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		val onlinePlayers = sender.server.onlinePlayers
 		val scoreboard = sender.server.scoreboardManager.mainScoreboard
@@ -178,13 +67,16 @@ class AdminCommands : BaseCommand() {
 				playerArray.add(it.name)
 		}
 
-		val teams = TeamMaker().getTeamsRandom(playerArray, teamSize)
+		val teams = TeamMaker.getTeamsRandom(playerArray, teamSize)
 		val numPreMadeTeams = scoreboard.teams.size
+
+		val teamColors = TeamMaker.getColorList(numPreMadeTeams, scoreboard)
+			?: return TeamData.errorMessage(sender, "Team Maker could not make enough teams!");
 
 		teams.forEachIndexed { index, playerNames ->
 			playerNames.forEach {
 				if (it != null)
-					addToTeam(scoreboard, teamColours[numPreMadeTeams + index], it);
+					TeamData.addToTeam(scoreboard, teamColors[index], it);
 			}
 		}
 	}
@@ -192,7 +84,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify phase variant grace")
 	@Description("set grace period variant")
 	fun setGlowingMode(sender : CommandSender, type : GraceType) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.graceType = type
 	}
@@ -200,7 +92,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify phase variant shrink")
 	@Description("set shrink phase variant")
 	fun setShrinkMode(sender : CommandSender, type : ShrinkType) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.shrinkType = type
 	}
@@ -208,7 +100,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify phase variant waiting")
 	@Description("set waiting phase variant")
 	fun setShrinkMode(sender : CommandSender, type : FinalType) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.finalType = type
 	}
@@ -216,7 +108,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify phase variant glowing")
 	@Description("set glowing phase variant")
 	fun setShrinkMode(sender : CommandSender, type : GlowType) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.glowType = type
 	}
@@ -224,7 +116,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify phase variant endgame")
 	@Description("set endgame phase variant")
 	fun setShrinkMode(sender : CommandSender, type : EndgameType) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.endgameType = type
 	}
@@ -232,7 +124,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify phase length")
 	@Description("set the length of a phase")
 	fun setPhaseLength(sender : CommandSender, type : UHCPhase, length : Long) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		val index = when (type) {
 			UHCPhase.GRACE -> 0
@@ -248,7 +140,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify radius start")
 	@Description("set the starting radius")
 	fun setStartRadius(sender : CommandSender, radius : Double) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.startRadius = radius
 	}
@@ -256,7 +148,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify radius end")
 	@Description("set the final radius")
 	fun setEndRadius(sender : CommandSender, radius : Double) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.endRadius = radius
 	}
@@ -264,7 +156,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify mobCoefficient")
 	@Description("change the mob spawn cap coefficient")
 	fun modifyMobCapCoefficient(sender : CommandSender, coefficient : Double) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		for (w in Bukkit.getServer().worlds) {
 			w.monsterSpawnLimit = (w.monsterSpawnLimit * (coefficient / GameRunner.uhc.mobCapCoefficient)).toInt()
@@ -278,7 +170,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify netherCloses")
 	@Description("specify how the nether ends")
 	fun setNetherSolution(sender : CommandSender, netherCloses : Boolean) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.netherToZero = netherCloses
 	}
@@ -286,7 +178,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify killBounty")
 	@Description("change the reward for killing a team")
 	fun setKillBounty(sender : CommandSender, reward : KillReward) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.killReward = reward
 	}
@@ -294,7 +186,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify verbose")
 	@Description("set all details of the UHC")
 	fun modifyVerbose(sender : CommandSender, startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, finalTime : Long) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		GameRunner.uhc.startRadius = startRadius
 		GameRunner.uhc.endRadius = endRadius
@@ -306,7 +198,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("test end")
 	@Description("Check to see if the game should be over")
 	fun testEnd(sender : CommandSender) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		if (GameRunner.remainingTeams() == 1) {
 			var aliveTeam : Team? = null
@@ -331,7 +223,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("test reset")
 	@Description("reset things to the waiting stage")
 	fun testReset(sender : CommandSender) {
-		if (opGuard(sender)) return;
+		if (TeamData.opGuard(sender)) return;
 
 		for (world in Bukkit.getServer().worlds) {
 			world.setSpawnLocation(10000, 70, 10000)
