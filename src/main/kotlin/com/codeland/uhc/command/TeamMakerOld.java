@@ -52,44 +52,7 @@ public class TeamMakerOld {
 
 		return ret.toArray(new String[][] {});
 	}
-	private static TOOLS = new Material[] {
-		DIAMOND_PICKAXE,
-				GOLDEN_PICKAXE,
-				IRON_PICKAXE,
-				NETHERITE_PICKAXE,
-				STONE_PICKAXE,
-				WOODEN_PICKAXE,
 
-				DIAMOND_AXE,
-				GOLDEN_AXE,
-				IRON_AXE,
-				NETHERITE_AXE,
-				STONE_AXE,
-				WOODEN_AXE,
-
-				DIAMOND_HOE,
-				GOLDEN_HOE,
-				IRON_HOE,
-				NETHERITE_HOE,
-				STONE_HOE,
-				WOODEN_HOE,
-
-				DIAMOND_SHOVEL,
-				GOLDEN_SHOVEL,
-				IRON_SHOVEL,
-				NETHERITE_SHOVEL,
-				STONE_SHOVEL,
-				WOODEN_SHOVEL,
-	}
-
-	private static SWORDS = new Material[] {
-		DIAMOND_SWORD,
-				GOLDEN_SWORD,
-				IRON_SWORD,
-				NETHERITE_SWORD,
-				STONE_SWORD,
-				WOODEN_SWORD,
-	}
 	/*public String[][] getTeamsRanked(String[] names, int teamSize) {
 		ArrayList<ScoredPlayer> tempPlayers = new ArrayList<>();
 		for (int i = 0; i < names.length; ++i) {

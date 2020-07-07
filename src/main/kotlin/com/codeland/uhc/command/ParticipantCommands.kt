@@ -53,7 +53,7 @@ class ParticipantCommands : BaseCommand() {
 	@CommandAlias("color")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender, color : ChatColor) {
-		if (color == ChatColor.WHITE || color == ChatColor.GOLD) {
+		if (color == ChatColor.WHITE || color == ChatColor.GOLD || color == ChatColor.BLACK || color == ChatColor.ITALIC || color == ChatColor.BOLD || color == ChatColor.STRIKETHROUGH || color == ChatColor.UNDERLINE || color == ChatColor.RESET || color == ChatColor.MAGIC) {
 			val comp = TextComponent("that color is not allowed")
 			comp.color = ChatColorBungee.RED
 			sender.sendMessage(comp)
