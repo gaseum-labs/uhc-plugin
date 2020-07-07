@@ -113,9 +113,9 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onEntitySpawn(e : CreatureSpawnEvent) {
+	fun onEntitySpawn(event : EntitySpawnEvent) {
 		if (GameRunner.phase == UHCPhase.WAITING) {
-			e.isCancelled = true
+			event.isCancelled = true
 		}
 	}
 
@@ -238,7 +238,7 @@ class WaitingEventListener() : Listener {
 			fakeTool;
 		}
 
-		/* these replace reguar block breaking behavior */
+		/* these replace regular block breaking behavior */
 		event.isCancelled = GameRunner.unsheltered || GameRunner.abundance;
 
 		if (GameRunner.unsheltered) {
@@ -282,7 +282,16 @@ class WaitingEventListener() : Listener {
 				Material.SMOKER,
 				Material.WATER,
 				Material.LAVA,
-				Material.LADDER
+				Material.LADDER,
+				Material.ENCHANTING_TABLE,
+				Material.BOOKSHELF,
+				Material.SMITHING_TABLE,
+				Material.LOOM,
+				Material.ANVIL,
+				Material.FLETCHING_TABLE,
+				Material.COMPOSTER,
+				Material.CHEST,
+				Material.BARREL
 		);
 		arr.sortBy { mat -> mat.ordinal };
 

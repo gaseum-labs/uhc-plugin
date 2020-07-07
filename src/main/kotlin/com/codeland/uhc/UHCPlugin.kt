@@ -5,12 +5,11 @@ import com.codeland.uhc.command.AdminCommands
 import com.codeland.uhc.command.ParticipantCommands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.WaitingEventListener
-import com.destroystokyo.paper.utils.PaperPluginLogger
-import net.md_5.bungee.api.ChatColor
+import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.RenderType
-import java.util.logging.Level
+
 
 class UHCPlugin : JavaPlugin() {
 

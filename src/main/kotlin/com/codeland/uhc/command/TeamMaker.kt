@@ -32,22 +32,22 @@ object TeamMaker {
 		var numAvailableColors = 0;
 
 		TeamData.teamColours.forEach { color ->
-			var available = !scoreboard.teams.any { team ->
+			if(!scoreboard.teams.any { team ->
 				if (color == team.color)
 					return@any true;
 
 				return@any false;
+			}) {
+				availableColors[numAvailableColors] = color;
+				++numAvailableColors;
 			}
-
-			availableColors[numAvailableColors] = color;
-			++numAvailableColors;
 		}
 
 		var ret = arrayOfNulls<ChatColor>(size);
 
 		ret.forEachIndexed { i, _ ->
-			var position = (Math.random() * numAvailableColors) as Int;
-			var usingColor = null as ChatColor;
+			var position = (Math.random() * numAvailableColors).toInt();
+			var usingColor = null as ChatColor?;
 
 			while (availableColors[position] == null) {
 				++position;
