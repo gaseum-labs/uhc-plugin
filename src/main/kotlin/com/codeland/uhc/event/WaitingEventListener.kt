@@ -1,6 +1,7 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.GameRunner.uhc
 import com.codeland.uhc.phaseType.GraceType
 import com.codeland.uhc.phaseType.UHCPhase
 import com.destroystokyo.paper.utils.PaperPluginLogger
@@ -9,6 +10,7 @@ import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.ComponentBuilder
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
+import org.bukkit.attribute.Attribute
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_MOBS
@@ -21,12 +23,11 @@ import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
-import org.bukkit.event.player.AsyncPlayerChatEvent
-import org.bukkit.event.player.PlayerDropItemEvent
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerTeleportEvent
+import org.bukkit.event.player.*
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.ItemMeta
+import org.bukkit.inventory.meta.LeatherArmorMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.metadata.MetadataValue
 import org.bukkit.plugin.Plugin
@@ -75,9 +76,22 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onPlayerDeath(e : PlayerDeathEvent) {
-		e.entity.gameMode = GameMode.SPECTATOR
-		GameRunner.playerDeath(e.entity)
+	fun onPlayerDeath(event : PlayerDeathEvent) {
+		event.entity.gameMode = GameMode.SPECTATOR
+		GameRunner.playerDeath(event.entity)
+
+		/* begin pest section */
+		if (!GameRunner.pests)
+			return
+
+		var player = event.entity
+
+		if (!Pests.isPest(player))
+			return;
+
+		/* don't drop anything */
+		player.inventory.clear()
+		event.setShouldDropExperience(false)
 	}
 
 	@EventHandler
@@ -117,6 +131,118 @@ class WaitingEventListener() : Listener {
 		if (GameRunner.phase == UHCPhase.WAITING) {
 			event.isCancelled = true
 		}
+	}
+
+	private val pestArmorMeta = {
+		var meta = ItemStack(Material.LEATHER_HELMET).itemMeta.clone()
+
+		meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
+
+		meta
+	}()
+
+	fun genPestArmor(item: Material): ItemStack {
+		var stack = ItemStack(item)
+
+		stack.itemMeta = pestArmorMeta;
+
+		return stack
+	}
+
+	private val pestToolMeta = {
+		var meta = ItemStack(Material.WOODEN_PICKAXE).itemMeta.clone()
+
+		meta.isUnbreakable = true;
+
+		meta
+	}()
+
+	fun genPestTool(item: Material): ItemStack {
+		var stack = ItemStack(item)
+
+		stack.itemMeta = pestToolMeta;
+
+		return stack
+	}
+
+	@EventHandler
+	fun onPlayerRespawn(event: PlayerRespawnEvent) {
+		/* only do this on pests mode */
+		if (!GameRunner.pests)
+			return
+
+		var player = event.player
+
+		Pests.makePest(player)
+
+		var border = player.world.worldBorder
+
+		Bukkit.getServer().dispatchCommand(GameRunner.uhc.gameMaster!!, "spreadplayers ${border.center.x} ${border.center.z} 0 ${border.size / 2} true ${player.name}")
+
+		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 2.0
+
+		/* give pest a bunch of crap */
+		player.inventory.helmet = genPestArmor(Material.LEATHER_HELMET)
+		player.inventory.chestplate = genPestArmor(Material.LEATHER_CHESTPLATE)
+		player.inventory.leggings = genPestArmor(Material.LEATHER_LEGGINGS)
+		player.inventory.boots = genPestArmor(Material.LEATHER_BOOTS)
+
+		player.inventory.setItem(0, genPestTool(Material.WOODEN_PICKAXE))
+		player.inventory.setItem(1, genPestTool(Material.WOODEN_AXE))
+		player.inventory.setItem(2, genPestTool(Material.WOODEN_SHOVEL))
+		player.inventory.setItem(3, genPestTool(Material.WOODEN_HOE))
+		player.inventory.setItem(4, genPestTool(Material.WOODEN_SWORD))
+	}
+
+	private val pestBanList = {
+		val arr = arrayOf<Material>(
+			Material.IRON_PICKAXE,
+			Material.IRON_AXE,
+			Material.IRON_HOE,
+			Material.IRON_SHOVEL,
+			Material.IRON_SWORD,
+			Material.IRON_HELMET,
+			Material.IRON_CHESTPLATE,
+			Material.IRON_LEGGINGS,
+			Material.IRON_BOOTS,
+			Material.BOW,
+			Material.SHIELD
+		)
+
+		arr.sort()
+
+		arr
+	}()
+
+	@EventHandler
+	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
+		/* only do this on pests mode */
+		if (!GameRunner.pests)
+			return
+
+		var player = event.target as Player;
+
+		/* monsters will not target the pests */
+		if (Pests.isPest(player))
+			event.isCancelled = true;
+	}
+
+	@EventHandler
+	fun onCraft(event: CraftItemEvent) {
+		/* only do this on pests mode */
+		if (!GameRunner.pests)
+			return
+
+		var player = event.whoClicked;
+
+		if (!Pests.isPest(player as Player))
+			return
+
+		var item = event.recipe.result.type
+
+		/* prevent crafting of banned items */
+		if (binarySearch(item, pestBanList))
+			event.isCancelled = true
 	}
 
 	/*@EventHandler
@@ -243,7 +369,7 @@ class WaitingEventListener() : Listener {
 
 		if (GameRunner.unsheltered) {
 			/* regular block breaking behavior for acceptable blocks */
-			if (binarySearch(block.type, acceptedBlocks, {mat -> mat.ordinal})) {
+			if (binarySearch(block.type, acceptedBlocks)) {
 				event.isCancelled = false;
 				return;
 			}
@@ -293,19 +419,19 @@ class WaitingEventListener() : Listener {
 				Material.CHEST,
 				Material.BARREL
 		);
-		arr.sortBy { mat -> mat.ordinal };
+		arr.sort();
 
 		arr;
 	}();
 
-	fun <T>binarySearch(value: T, array: Array<T>, sort: (T)->Int): Boolean {
+	fun <T : Enum<T>>binarySearch(value: T, array: Array<T>): Boolean {
 		var start = 0;
 		var end = array.size - 1;
-		var lookFor = sort(value);
+		var lookFor = value.ordinal;
 
 		while (true) {
 			var position = (end + start) / 2;
-			var compare = sort(array[position]);
+			var compare = array[position].ordinal;
 
 			when {
 				lookFor == compare -> return true;
@@ -321,7 +447,7 @@ class WaitingEventListener() : Listener {
 		if (GameRunner.unsheltered) {
 			var block = event.block;
 
-			if (!binarySearch(block.type, acceptedBlocks, { mat -> mat.ordinal })) {
+			if (!binarySearch(block.type, acceptedBlocks)) {
 				event.isCancelled = true;
 			}
 		}

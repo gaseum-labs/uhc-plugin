@@ -2,6 +2,7 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.phaseType.UHCPhase
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.event.Pests
 import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -39,6 +40,7 @@ object GameRunner {
 
 			when {
 				player == null -> false
+				pests && Pests.isPest(player) -> false
 				player.gameMode == GameMode.SURVIVAL -> true
 				else -> false
 			}
@@ -86,9 +88,11 @@ object GameRunner {
 
 		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
-		deadPlayer.gameMode = GameMode.SPECTATOR
+		/* pest mode keeps everyone in survival */
+		if (!pests)
+			deadPlayer.gameMode = GameMode.SPECTATOR
 
-		var deadPlayerTeam = playersTeam(deadPlayer.displayName)
+		var deadPlayerTeam = playersTeam(deadPlayer.name)
 			?: return
 
 		var (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(deadPlayerTeam)
@@ -116,7 +120,7 @@ object GameRunner {
 		/* kill reward awarding */
 		val killer = deadPlayer.killer
 		if (killer != null) {
-			val killerTeam = playersTeam(killer.displayName)
+			val killerTeam = playersTeam(killer.name)
 				?: return
 
 			uhc.killReward.applyReward(killerTeam)
