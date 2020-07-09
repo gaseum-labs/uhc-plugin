@@ -47,6 +47,7 @@ class AdminCommands : BaseCommand() {
 			return;
 		}
 
+
 		/* apparently players can not have names */
 		val playerName = player.name ?: return TeamData.errorMessage(sender, "Player doesn't exist!");
 
