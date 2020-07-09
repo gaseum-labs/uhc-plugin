@@ -2,6 +2,7 @@ package com.codeland.uhc.phases.grace
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.event.Zatoichi
 import com.codeland.uhc.phaseType.UHCPhase
 import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
@@ -43,6 +44,9 @@ open class GraceDefault : Phase() {
 		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.startRadius / sqrt(teamCount.toDouble())), uhc.startRadius))
 
 		super.start(uhc, length)
+
+		if (GameRunner.halfZatoichi.enabled)
+			Zatoichi.start(uhc, length)
 	}
 
 	override fun endPhase() {

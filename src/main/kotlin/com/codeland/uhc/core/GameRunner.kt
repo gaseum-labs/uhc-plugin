@@ -3,6 +3,8 @@ package com.codeland.uhc.core
 import com.codeland.uhc.phaseType.UHCPhase
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.event.Pests
+import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.quirk.Quirk
 import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -21,9 +23,16 @@ object GameRunner {
 
 	var phase = UHCPhase.WAITING
 
-	var abundance = false;
-	var unsheltered = false;
-	var pests = true;
+	var halfZatoichi = Quirk("Half Zatoichi")
+	var abundance = Quirk("Abundance")
+	var unsheltered = Quirk("Unsheletered")
+	var pests = Quirk("Pests")
+
+	private val _SET_INCOMPATIBILITIES = {
+		halfZatoichi.setIncompatible(pests)
+	}()
+
+	var gui = Gui()
 
 	fun startGame(commandSender : CommandSender) {
 		if (phase != UHCPhase.WAITING) {
@@ -40,7 +49,7 @@ object GameRunner {
 
 			when {
 				player == null -> false
-				pests && Pests.isPest(player) -> false
+				pests.enabled && Pests.isPest(player) -> false
 				player.gameMode == GameMode.SURVIVAL -> true
 				else -> false
 			}
@@ -89,7 +98,7 @@ object GameRunner {
 		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
 		/* pest mode keeps everyone in survival */
-		if (!pests)
+		if (!pests.enabled)
 			deadPlayer.gameMode = GameMode.SPECTATOR
 
 		var deadPlayerTeam = playersTeam(deadPlayer.name)

@@ -1,5 +1,7 @@
 package com.codeland.uhc.gui
 
+import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.phaseType.GraceType
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -11,26 +13,23 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 
 class Gui : Listener {
-    val INVENTORY_SIZE = 27
     val INVENTORY_WIDTH = 9
+    val INVENTORY_SIZE = INVENTORY_WIDTH * 3
 
     var inventory = Bukkit.createInventory(null, INVENTORY_SIZE, "UHC Setup")
     var guiItems = arrayOfNulls<GuiItem>(INVENTORY_SIZE)
 
     constructor() {
         /* cancel button */
-        addItem(GuiItem(ItemStack(Material.BARRIER)) { player ->
+        addItem(GuiItem(ItemStack(Material.BARRIER)) { gui, guiItem, player ->
             close(player)
         }, 8, 2)
 
-        /* demo button */
-        addItem(GuiItem(ItemStack(Material.LAPIS_LAZULI)) { player ->
-            val message = TextComponent("hi")
-            message.color = ChatColor.GOLD
-            message.isBold = true
-
-            player.sendMessage(message)
-        }, 4, 1)
+        /* toggles */
+        addItem(QuirkToggle(ItemStack(Material.IRON_SWORD), GameRunner.halfZatoichi), 0, 0)
+        addItem(QuirkToggle(ItemStack(Material.BLUE_ORCHID), GameRunner.abundance), 1, 0)
+        addItem(QuirkToggle(ItemStack(Material.SHULKER_SHELL), GameRunner.unsheltered), 2, 0)
+        addItem(QuirkToggle(ItemStack(Material.LEATHER_CHESTPLATE), GameRunner.pests), 3, 0)
     }
 
     fun open(player: Player) {
@@ -78,18 +77,20 @@ class Gui : Listener {
 
         event.isCancelled = true
 
-        val slot = event.rawSlot
-        val guiItem = guiItems[slot];
-        val player = event.whoClicked
-
         /* only ops may modify */
+        val player = event.whoClicked
         if (!player.isOp)
             return
 
-        if (guiItem == null)
+        /* make sure it is in top inventory not player's */
+        val slot = event.rawSlot
+        if (slot >= INVENTORY_SIZE)
             return
 
+        val guiItem = guiItems[slot]
+            ?: return
+
         /* do guiItem action */
-        guiItem.onClick(player as Player)
+        guiItem.onClick(this, guiItem, player as Player)
     }
 }

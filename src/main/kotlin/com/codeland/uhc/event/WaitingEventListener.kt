@@ -1,49 +1,37 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.GameRunner.uhc
+import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.GraceType
 import com.codeland.uhc.phaseType.UHCPhase
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.chat.BaseComponent
-import net.md_5.bungee.api.chat.ComponentBuilder
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
-import org.bukkit.enchantments.Enchantment.LOOT_BONUS_MOBS
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.ItemMeta
-import org.bukkit.inventory.meta.LeatherArmorMeta
 import org.bukkit.metadata.FixedMetadataValue
-import org.bukkit.metadata.MetadataValue
 import org.bukkit.plugin.Plugin
-import org.bukkit.plugin.java.JavaPlugin
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
 import java.util.logging.Level
 
 
 class WaitingEventListener() : Listener {
 
-	private val gameRunner = GameRunner
-
 	@EventHandler
 	fun onPlayerHurt(e : EntityDamageEvent) {
-		if (gameRunner.phase != UHCPhase.WAITING) {
+		if (GameRunner.phase != UHCPhase.WAITING) {
 			return
 		}
 		if (e.entityType == EntityType.PLAYER) {
@@ -52,15 +40,50 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onPlayerJoin(e : PlayerJoinEvent) {
-		if (gameRunner.phase != UHCPhase.WAITING) {
-			if (GameRunner.playersTeam(e.player.name) == null) {
-				e.player.gameMode = GameMode.SPECTATOR
+	fun onPlayerJoin(event : PlayerJoinEvent) {
+		if (GameRunner.phase != UHCPhase.WAITING) {
+			if (GameRunner.playersTeam(event.player.name) == null) {
+				event.player.gameMode = GameMode.SPECTATOR
 			}
 			return
 		}
-		e.player.addPotionEffect(PotionEffect(PotionEffectType.SATURATION, Int.MAX_VALUE, 0, false, false, false))
-		e.player.gameMode = GameMode.ADVENTURE;
+
+		val player = event.player
+		val inventory = player.inventory
+
+		/* get them on the health scoreboard */
+		player.damage(1.0)
+		player.gameMode = GameMode.ADVENTURE
+
+		/* give them the gui opener */
+		if (!GuiOpener.hasGuiOpener(inventory))
+			inventory.addItem(GuiOpener.createGuiOpener())
+	}
+
+	@EventHandler
+	fun onUseItem(event: PlayerInteractEvent) {
+		/* only can open uhc settings while in waiting */
+		if (GameRunner.phase !== UHCPhase.WAITING)
+			return
+
+		val stack = event.item
+			?: return
+
+		if (!GuiOpener.isGuiOpener(stack))
+			return
+
+		GameRunner.gui.open(event.player)
+	}
+
+	/**
+	 * this is a better way of preventing hunger loss during waiting
+	 * than a potion effect
+	 */
+	@EventHandler
+	fun onHunger(event: FoodLevelChangeEvent) {
+		if (GameRunner.phase === UHCPhase.WAITING) {
+			event.isCancelled = true
+		}
 	}
 
 	@EventHandler
@@ -81,7 +104,7 @@ class WaitingEventListener() : Listener {
 		GameRunner.playerDeath(event.entity)
 
 		/* begin pest section */
-		if (!GameRunner.pests)
+		if (!GameRunner.pests.enabled)
 			return
 
 		var player = event.entity
@@ -128,13 +151,16 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onEntitySpawn(event : EntitySpawnEvent) {
-		if (GameRunner.phase == UHCPhase.WAITING) {
+		/* prevent spawns during waiting */
+		if (GameRunner.phase !== UHCPhase.WAITING)
+			return
+
+		if (event.entityType.isAlive)
 			event.isCancelled = true
-		}
 	}
 
 	private val pestArmorMeta = {
-		var meta = ItemStack(Material.LEATHER_HELMET).itemMeta.clone()
+		var meta = ItemStack(Material.LEATHER_HELMET).itemMeta
 
 		meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
 
@@ -150,7 +176,7 @@ class WaitingEventListener() : Listener {
 	}
 
 	private val pestToolMeta = {
-		var meta = ItemStack(Material.WOODEN_PICKAXE).itemMeta.clone()
+		var meta = ItemStack(Material.WOODEN_PICKAXE).itemMeta
 
 		meta.isUnbreakable = true;
 
@@ -168,7 +194,7 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
 		/* only do this on pests mode */
-		if (!GameRunner.pests)
+		if (!GameRunner.pests.enabled)
 			return
 
 		var player = event.player
@@ -217,7 +243,7 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
 		/* only do this on pests mode */
-		if (!GameRunner.pests)
+		if (!GameRunner.pests.enabled)
 			return
 
 		var player = event.target as Player;
@@ -230,7 +256,7 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
 		/* only do this on pests mode */
-		if (!GameRunner.pests)
+		if (!GameRunner.pests.enabled)
 			return
 
 		var player = event.whoClicked;
@@ -258,12 +284,13 @@ class WaitingEventListener() : Listener {
 	}*/
 
 	@EventHandler
-	fun onPlayerDropItem(e : PlayerDropItemEvent) {
-		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
-			return
-		}
-		if (isHalfZatoichi(e.itemDrop.itemStack)) {
-			e.isCancelled = true
+	fun onPlayerDropItem(event: PlayerDropItemEvent) {
+		val stack = event.itemDrop.itemStack
+
+		event.isCancelled = when {
+			isHalfZatoichi(stack) -> true
+			GuiOpener.isGuiOpener(stack) -> true
+			else -> false
 		}
 	}
 
@@ -299,7 +326,7 @@ class WaitingEventListener() : Listener {
 */
 	@EventHandler
 	fun onEntityDamageEvent(e : EntityDamageByEntityEvent) {
-		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
+		if (GameRunner.halfZatoichi.enabled) {
 			return
 		}
 		if (e.damager is Player) {
@@ -339,7 +366,7 @@ class WaitingEventListener() : Listener {
 	}
 
 	fun enchantThing(item : ItemStack, enchant : Enchantment, level : Int) {
-		val meta = item.itemMeta.clone()
+		val meta = item.itemMeta
 		meta.addEnchant(enchant, level, true)
 		item.itemMeta = meta
 	}
@@ -359,15 +386,15 @@ class WaitingEventListener() : Listener {
 			/* get drops from block as if held item */
 			/* had fortune */
 			var fakeTool = tool.clone();
-			if (GameRunner.abundance) enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 5);
+			if (GameRunner.abundance.enabled) enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 5);
 
 			fakeTool;
 		}
 
 		/* these replace regular block breaking behavior */
-		event.isCancelled = GameRunner.unsheltered || GameRunner.abundance;
+		event.isCancelled = GameRunner.unsheltered.enabled || GameRunner.abundance.enabled;
 
-		if (GameRunner.unsheltered) {
+		if (GameRunner.unsheltered.enabled) {
 			/* regular block breaking behavior for acceptable blocks */
 			if (binarySearch(block.type, acceptedBlocks)) {
 				event.isCancelled = false;
@@ -393,7 +420,7 @@ class WaitingEventListener() : Listener {
 
 				player.sendMessage(message);
 			}
-		} else if (GameRunner.abundance) {
+		} else if (GameRunner.abundance.enabled) {
 			block.breakNaturally(getTool());
 		}
 	}
@@ -444,7 +471,7 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
-		if (GameRunner.unsheltered) {
+		if (GameRunner.unsheltered.enabled) {
 			var block = event.block;
 
 			if (!binarySearch(block.type, acceptedBlocks)) {

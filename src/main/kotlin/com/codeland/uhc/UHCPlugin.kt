@@ -18,7 +18,10 @@ class UHCPlugin : JavaPlugin() {
 	override fun onEnable() {
 		commandManager.registerCommand(AdminCommands())
 		commandManager.registerCommand(ParticipantCommands())
+
 		server.pluginManager.registerEvents(WaitingEventListener(), this)
+		server.pluginManager.registerEvents(GameRunner.gui, this)
+
 		GameRunner.plugin = this
 
 		server.scheduler.scheduleSyncDelayedTask(this, Runnable {

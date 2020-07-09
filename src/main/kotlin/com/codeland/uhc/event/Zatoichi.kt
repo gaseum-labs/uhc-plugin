@@ -1,19 +1,15 @@
-package com.codeland.uhc.phases.grace
+package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.scheduler.BukkitRunnable
-import java.util.logging.Level
 
-class GraceZatoichi : GraceDefault() {
-
-	override fun start(uhc : UHC, length : Long) {
-		super.start(uhc, length)
+object Zatoichi {
+	fun start(uhc : UHC, length : Long) {
 		for (player in Bukkit.getServer().onlinePlayers) {
 			val zatoichi = ItemStack(Material.IRON_SWORD)
 			val meta = zatoichi.itemMeta.clone()
@@ -40,6 +36,7 @@ class GraceZatoichi : GraceDefault() {
 			}
 		}.runTaskTimer(GameRunner.plugin!!, 0, 1)
 	}
+
 	private class Senshi(name : String) {
 		private val name = name
 		private var holdingZatoichi = false
@@ -79,6 +76,7 @@ class GraceZatoichi : GraceDefault() {
 			}
 			return false
 		}
+
 		private fun isHalfZatoichi(item : ItemStack?) : Boolean {
 			if (item?.type == Material.IRON_SWORD) {
 				if (item.itemMeta.displayName.startsWith("Half Zatoichi")) {
