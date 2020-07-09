@@ -3,7 +3,8 @@ package com.codeland.uhc.phases.grace
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.event.Zatoichi
-import com.codeland.uhc.phaseType.UHCPhase
+import com.codeland.uhc.phaseType.PhaseFactory
+import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
@@ -61,10 +62,6 @@ open class GraceDefault : Phase() {
 
 	override fun getCountdownString(): String {
 		return "Grace period ends in "
-	}
-
-	override fun getPhaseType(): UHCPhase {
-		return UHCPhase.GRACE
 	}
 
 	override fun endPhrase(): String {

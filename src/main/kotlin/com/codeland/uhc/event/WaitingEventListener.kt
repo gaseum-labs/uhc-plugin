@@ -2,8 +2,8 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.GuiOpener
-import com.codeland.uhc.phaseType.GraceType
-import com.codeland.uhc.phaseType.UHCPhase
+import com.codeland.uhc.phaseType.PhaseFactory
+import com.codeland.uhc.phaseType.PhaseType
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -30,21 +30,20 @@ import java.util.logging.Level
 class WaitingEventListener() : Listener {
 
 	@EventHandler
-	fun onPlayerHurt(e : EntityDamageEvent) {
-		if (GameRunner.phase != UHCPhase.WAITING) {
+	fun onPlayerHurt(event : EntityDamageEvent) {
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
 			return
-		}
-		if (e.entityType == EntityType.PLAYER) {
-			e.isCancelled = true
-		}
+
+		if (event.entityType == EntityType.PLAYER)
+			event.isCancelled = true
 	}
 
 	@EventHandler
 	fun onPlayerJoin(event : PlayerJoinEvent) {
-		if (GameRunner.phase != UHCPhase.WAITING) {
-			if (GameRunner.playersTeam(event.player.name) == null) {
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			if (GameRunner.playersTeam(event.player.name) == null)
 				event.player.gameMode = GameMode.SPECTATOR
-			}
+
 			return
 		}
 
@@ -63,7 +62,7 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
 		/* only can open uhc settings while in waiting */
-		if (GameRunner.phase !== UHCPhase.WAITING)
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
 			return
 
 		val stack = event.item
@@ -81,7 +80,7 @@ class WaitingEventListener() : Listener {
 	 */
 	@EventHandler
 	fun onHunger(event: FoodLevelChangeEvent) {
-		if (GameRunner.phase === UHCPhase.WAITING) {
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			event.isCancelled = true
 		}
 	}
@@ -119,7 +118,7 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onMessage(e : AsyncPlayerChatEvent) {
-		if (GameRunner.phase != UHCPhase.WAITING) {
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			if (!e.message.startsWith("!")) {
 				val team = GameRunner.playersTeam(e.player.displayName)
 				if (team != null) {
@@ -152,7 +151,7 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onEntitySpawn(event : EntitySpawnEvent) {
 		/* prevent spawns during waiting */
-		if (GameRunner.phase !== UHCPhase.WAITING)
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
 			return
 
 		if (event.entityType.isAlive)
@@ -367,31 +366,31 @@ class WaitingEventListener() : Listener {
 		if (GameRunner.unsheltered.enabled) {
 			/* regular block breaking behavior for acceptable blocks */
 			if (binarySearch(block.type, acceptedBlocks)) {
-				event.isCancelled = false;
-				return;
+				event.isCancelled = false
+				return
 			}
 
-			var broken = block.state.getMetadata("broken");
+			var broken = block.state.getMetadata("broken")
 
 			/* if we have not applied broken label or broken is explicitly set to false */
 			/* proceed to mine then set broken to true */
 			if (broken.size == 0 || !broken[0].asBoolean()) {
 				/* manually drop items instead of the block breaking */
-				var drops = block.getDrops(getTool());
+				var drops = block.getDrops(getTool())
 				for (drop in drops)
-					player.world.dropItem(block.location, ItemStack(drop.type, drop.amount));
+					player.world.dropItem(block.location, ItemStack(drop.type, drop.amount))
 
 				/* make sure we can't break this block again */
-				block.state.setMetadata("broken", FixedMetadataValue(GameRunner.plugin as Plugin, true));
+				block.state.setMetadata("broken", FixedMetadataValue(GameRunner.plugin as Plugin, true))
 			} else {
-				var message = TextComponent("Block already broken!");
-				message.isBold = true;
-				message.color = ChatColor.GOLD;
+				var message = TextComponent("Block already broken!")
+				message.isBold = true
+				message.color = ChatColor.GOLD
 
-				player.sendMessage(message);
+				player.sendMessage(message)
 			}
 		} else if (GameRunner.abundance.enabled) {
-			block.breakNaturally(getTool());
+			block.breakNaturally(getTool())
 		}
 	}
 

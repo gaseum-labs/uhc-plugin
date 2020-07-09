@@ -2,7 +2,8 @@ package com.codeland.uhc.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.UHCPhase
+import com.codeland.uhc.phaseType.PhaseFactory
+import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
@@ -64,10 +65,6 @@ class EndgameClearBlocks : Phase() {
 
 	override fun getCountdownString(): String {
 		return ""
-	}
-
-	override fun getPhaseType(): UHCPhase {
-		return UHCPhase.ENDGAME
 	}
 
 	override fun endPhrase(): String {

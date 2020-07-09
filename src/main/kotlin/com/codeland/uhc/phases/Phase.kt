@@ -2,7 +2,8 @@ package com.codeland.uhc.phases
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.UHCPhase
+import com.codeland.uhc.phaseType.PhaseFactory
+import com.codeland.uhc.phaseType.PhaseType
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
@@ -14,11 +15,12 @@ import org.bukkit.scheduler.BukkitRunnable
 abstract class Phase {
 
 	protected var runnable : BukkitRunnable? = null
+	var phaseType = PhaseType.WAITING
 
 	open fun start(uhc : UHC, length : Long) {
 		if (length > 0) {
 
-			val bar = Bukkit.createBossBar("${getPhaseType()}", BarColor.BLUE, BarStyle.SOLID)
+			val bar = Bukkit.createBossBar("$phaseType", BarColor.BLUE, BarStyle.SOLID)
 			bar.progress = 1.0
 
 			for (player in Bukkit.getServer().onlinePlayers) {
@@ -91,7 +93,9 @@ abstract class Phase {
 
 	abstract fun getCountdownString() : String
 
-	abstract fun getPhaseType() : UHCPhase
+	fun getPhaseType() {
+
+	}
 
 	abstract fun endPhrase() : String
 

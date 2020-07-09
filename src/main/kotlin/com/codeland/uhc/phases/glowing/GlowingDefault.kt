@@ -2,7 +2,8 @@ package com.codeland.uhc.phases.glowing
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.UHCPhase
+import com.codeland.uhc.phaseType.PhaseFactory
+import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
@@ -29,10 +30,6 @@ class GlowingDefault : Phase() {
 
 	override fun getCountdownString(): String {
 		return "Endgame starts in "
-	}
-
-	override fun getPhaseType(): UHCPhase {
-		return UHCPhase.GLOWING
 	}
 
 	override fun endPhrase(): String {

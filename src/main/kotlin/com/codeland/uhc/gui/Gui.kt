@@ -1,7 +1,6 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phaseType.GraceType
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit

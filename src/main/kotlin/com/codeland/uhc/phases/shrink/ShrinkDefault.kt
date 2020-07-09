@@ -2,9 +2,8 @@ package com.codeland.uhc.phases.shrink
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.UHCPhase
+import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
-import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
@@ -61,18 +60,14 @@ class ShrinkDefault : Phase() {
 	}
 
 	override fun interrupt() {
-		for (w in Bukkit.getServer().worlds) {
+		for (w in Bukkit.getServer().worlds)
 			w.worldBorder.setSize(w.worldBorder.size, 0)
-		}
+
 		super.interrupt()
 	}
 
 	override fun getCountdownString(): String {
 		return "Border radius: "
-	}
-
-	override fun getPhaseType(): UHCPhase {
-		return UHCPhase.SHRINKING
 	}
 
 	override fun endPhrase(): String {

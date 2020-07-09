@@ -2,52 +2,63 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.Phase
-import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.Bukkit
-import org.bukkit.World
 import org.bukkit.command.CommandSender
-import java.util.logging.Level
 import kotlin.math.max
 import kotlin.math.min
 
 class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, waitTime : Long, glowTime : Long) {
 
-	//time is measured in seconds here.
+	/* time is measured in seconds here. */
 
 	var startRadius = startRadius
 	var endRadius = endRadius
 
-	var phaseDurations = arrayOf(graceTime, shrinkTime, waitTime, glowTime)
-	var graceType = GraceType.DEFAULT
-	var shrinkType = ShrinkType.DEFAULT
-	var finalType = FinalType.DEFAULT
-	var glowType = GlowType.DEFAULT
-	var endgameType = EndgameType.NONE
+	var phaseDurations = arrayOf(0, graceTime, shrinkTime, waitTime, glowTime, 0, 0)
+	var phaseFactories = arrayOf<PhaseFactory>(
+		PhaseFactory.WAITING_DEFAULT,
+		PhaseFactory.GRACE_DEFAULT,
+		PhaseFactory.SHRINK_DEFAULT,
+		PhaseFactory.FINAL_DEFAULT,
+		PhaseFactory.GLOWING_DEFAULT,
+		PhaseFactory.ENDGAME_NONE,
+		PhaseFactory.POSTGAME_DEFAULT
+	)
 
 	var netherToZero = true
 	var mobCapCoefficient = 1.0
 	var killReward = KillReward.NONE
 
-	var gameMaster : CommandSender? = null
+	var gameMaster = null as CommandSender?
 
-	var currentPhase : Phase? = null
+	var currentPhase = PhaseFactory.WAITING_DEFAULT.target
+	var currentPhaseIndex = 0
 
-	fun start(commandSender : CommandSender) {
+	fun startWaiting() {
+		startPhase(PhaseType.WAITING)
+	}
+
+	fun startUHC(commandSender : CommandSender) {
 		gameMaster = commandSender
 
-		currentPhase = graceType.startPhase(this, phaseDurations[0])
+		startPhase(PhaseType.GRACE)
 	}
 
 	fun startNextPhase() {
-		if (currentPhase?.getPhaseType() == UHCPhase.GRACE) {
-			currentPhase = shrinkType.startPhase(this, phaseDurations[1])
-		} else if (currentPhase?.getPhaseType() == UHCPhase.SHRINKING) {
-			currentPhase = finalType.startPhase(this, phaseDurations[2])
-		} else if (currentPhase?.getPhaseType() == UHCPhase.FINAL) {
-			currentPhase = glowType.startPhase(this, phaseDurations[3])
-		} else if (currentPhase?.getPhaseType() == UHCPhase.GLOWING) {
-			currentPhase = endgameType.startPhase(this)
-		}
+		++currentPhaseIndex
+
+		if (currentPhaseIndex < phaseFactories.size)
+			startPhase(currentPhaseIndex)
+	}
+
+	fun startPhase(phaseType: PhaseType) {
+		startPhase(phaseType.ordinal)
+	}
+
+	fun startPhase(phaseIndex: Int) {
+		currentPhaseIndex = phaseIndex
+
+		currentPhase = phaseFactories[phaseIndex].start(this, phaseDurations[phaseIndex])
 	}
 
 	fun updateMobCaps() {
@@ -73,6 +84,13 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 		}
 	}
 
+	fun isPhase(compare: PhaseType): Boolean {
+		return currentPhase.phaseType == compare
+	}
+
+	fun getVariant(phaseType: PhaseType): Phase {
+		return phaseFactories[phaseType.ordinal].target
+	}
 }
 
 /*
