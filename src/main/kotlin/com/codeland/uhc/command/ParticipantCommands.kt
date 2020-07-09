@@ -34,11 +34,18 @@ class ParticipantCommands : BaseCommand() {
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
 		val team = GameRunner.playersTeam(sender.name)
-			?: return TeamData.errorMessage(sender, "You are not on a team!")
+			?: return AdminCommands.errorMessage(sender, "You are not on a team!")
 
-		team.displayName = newName
+		var realNewName = newName
+		if (realNewName.startsWith('"') && realNewName.endsWith('"') && realNewName.length > 1) {
+			realNewName = realNewName.substring(1, realNewName.length - 1)
+		}
 
-		val message = TextComponent("Your team name has been changed to ${newName}")
+		GameRunner.discordBot?.renameTeam(team, realNewName)
+
+		team.displayName = realNewName
+
+		val message = TextComponent("Your team name has been changed to \"$realNewName\"")
 		message.color = team.color.asBungee();
 		message.isBold = true;
 
@@ -52,15 +59,15 @@ class ParticipantCommands : BaseCommand() {
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender, color: ChatColor) {
 		val team = GameRunner.playersTeam(sender.name)
-			?: return TeamData.errorMessage(sender, "You are not on a team!")
+			?: return AdminCommands.errorMessage(sender, "You are not on a team!")
 
 		if (!TeamData.isValidColor(color))
-			return TeamData.errorMessage(sender, "That color is not allowed!")
+			return AdminCommands.errorMessage(sender, "That color is not allowed!")
 
 		if (Bukkit.getServer().scoreboardManager.mainScoreboard.teams.any { team ->
 				return@any team.color == color
 		})
-			return TeamData.errorMessage(sender, "That color is already being used by another team!")
+			return AdminCommands.errorMessage(sender, "That color is already being used by another team!")
 
 		/* now finally change color */
 		team.color = color

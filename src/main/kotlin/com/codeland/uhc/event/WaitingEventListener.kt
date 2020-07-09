@@ -294,36 +294,6 @@ class WaitingEventListener() : Listener {
 		}
 	}
 
-	/*@EventHandler
-	fun onSwapHandItemEvent(e : PlayerSwapHandItemsEvent) {
-		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
-			return
-		}
-		if (isHalfZatoichi(e.offHandItem)) {
-			e.isCancelled = true
-		}
-	}
-
-	@EventHandler
-	fun onInventoryMoveEvent (e : InventoryClickEvent) {
-		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
-			return
-		}
-		if (e.inventory.holder is Player) {
-			val player = e.inventory.holder as Player
-			if (player.inventory.itemInMainHand == e.currentItem) {
-				if (isHalfZatoichi(e.currentItem)) {
-					e.isCancelled = true
-				}
-			}
-		}
-		if (e.currentItem?.hasItemMeta() == true) {
-			PaperPluginLogger.getGlobal().log(Level.INFO, "inventory move event, item = " + e.currentItem?.itemMeta?.displayName)
-		} else {
-			PaperPluginLogger.getGlobal().log(Level.INFO, "inventory move event, item = " + e.currentItem?.type)
-		}
-	}
-*/
 	@EventHandler
 	fun onEntityDamageEvent(e : EntityDamageByEntityEvent) {
 		if (GameRunner.halfZatoichi.enabled) {
