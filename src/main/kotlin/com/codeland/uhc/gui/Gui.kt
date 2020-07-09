@@ -10,7 +10,10 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.event.inventory.InventoryMoveItemEvent
 import org.bukkit.inventory.ItemStack
+import java.util.logging.Level
 
 class Gui : Listener {
     val INVENTORY_WIDTH = 9
@@ -23,7 +26,7 @@ class Gui : Listener {
         /* cancel button */
         addItem(GuiItem(ItemStack(Material.BARRIER)) { gui, guiItem, player ->
             close(player)
-        }, 8, 2)
+        }, 8, 2).setName("${ChatColor.RESET}${ChatColor.RED}close")
 
         /* toggles */
         addItem(QuirkToggle(ItemStack(Material.IRON_SWORD), GameRunner.halfZatoichi), 0, 0)
@@ -48,7 +51,7 @@ class Gui : Listener {
         return Pair(index % INVENTORY_WIDTH, index / INVENTORY_WIDTH)
     }
 
-    fun addItem(item: GuiItem, x: Int, y: Int) {
+    fun addItem(item: GuiItem, x: Int, y: Int): GuiItem {
         val index = coordinateToIndex(x, y)
 
         item.index = index
@@ -57,6 +60,10 @@ class Gui : Listener {
 
         inventory.setItem(index, item.stack)
         guiItems[index] = item
+
+        item.updateStack(inventory.getItem(index)!!)
+
+        return item
     }
 
     fun removeItem(x: Int, y: Int) {
@@ -77,18 +84,18 @@ class Gui : Listener {
 
         event.isCancelled = true
 
+        /* make sure it is in top inventory not player's */
+        val slot = event.rawSlot
+        if (slot >= INVENTORY_SIZE || slot < 0)
+            return
+
+        val guiItem = guiItems[slot]
+                ?: return
+
         /* only ops may modify */
         val player = event.whoClicked
         if (!player.isOp)
             return
-
-        /* make sure it is in top inventory not player's */
-        val slot = event.rawSlot
-        if (slot >= INVENTORY_SIZE)
-            return
-
-        val guiItem = guiItems[slot]
-            ?: return
 
         /* do guiItem action */
         guiItem.onClick(this, guiItem, player as Player)

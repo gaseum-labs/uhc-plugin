@@ -25,7 +25,7 @@ object GameRunner {
 
 	var halfZatoichi = Quirk("Half Zatoichi")
 	var abundance = Quirk("Abundance")
-	var unsheltered = Quirk("Unsheletered")
+	var unsheltered = Quirk("Unsheltered")
 	var pests = Quirk("Pests")
 
 	private val _SET_INCOMPATIBILITIES = {
