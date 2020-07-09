@@ -1,9 +1,8 @@
 package com.codeland.uhc.core
 
-import com.codeland.uhc.phaseType.PhaseFactory
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.discord.MixerBot
-import com.codeland.uhc.event.Pests
+import com.codeland.uhc.quirk.Pests
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.quirk.Quirk
@@ -20,15 +19,6 @@ object GameRunner {
 	var uhc = UHC(600.0, 25.0, 1125, 2250, 600, 0)
 
 	var plugin : UHCPlugin? = null
-
-	var halfZatoichi = Quirk("Half Zatoichi")
-	var abundance = Quirk("Abundance")
-	var unsheltered = Quirk("Unsheltered")
-	var pests = Quirk("Pests")
-
-	init {
-		halfZatoichi.setIncompatible(pests)
-	}
 
 	var gui = Gui()
 
@@ -48,7 +38,7 @@ object GameRunner {
 
 			when {
 				player == null -> false
-				pests.enabled && Pests.isPest(player) -> false
+				Quirk.PESTS.enabled && Pests.isPest(player) -> false
 				player.gameMode == GameMode.SURVIVAL -> true
 				else -> false
 			}
@@ -97,7 +87,7 @@ object GameRunner {
 		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
 		/* pest mode keeps everyone in survival */
-		if (!pests.enabled)
+		if (!Quirk.PESTS.enabled)
 			deadPlayer.gameMode = GameMode.SPECTATOR
 
 		var deadPlayerTeam = playersTeam(deadPlayer.name)

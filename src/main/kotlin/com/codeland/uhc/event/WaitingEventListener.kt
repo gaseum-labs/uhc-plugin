@@ -2,8 +2,9 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.GuiOpener
-import com.codeland.uhc.phaseType.PhaseFactory
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.quirk.Pests
+import com.codeland.uhc.quirk.Quirk
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -103,7 +104,7 @@ class WaitingEventListener() : Listener {
 		GameRunner.playerDeath(event.entity)
 
 		/* begin pest section */
-		if (!GameRunner.pests.enabled)
+		if (!Quirk.PESTS.enabled)
 			return
 
 		var player = event.entity
@@ -193,7 +194,7 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
 		/* only do this on pests mode */
-		if (!GameRunner.pests.enabled)
+		if (!Quirk.PESTS.enabled)
 			return
 
 		var player = event.player
@@ -242,7 +243,7 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
 		/* only do this on pests mode */
-		if (!GameRunner.pests.enabled)
+		if (!Quirk.PESTS.enabled)
 			return
 
 		var player = event.target as Player;
@@ -255,7 +256,7 @@ class WaitingEventListener() : Listener {
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
 		/* only do this on pests mode */
-		if (!GameRunner.pests.enabled)
+		if (!Quirk.PESTS.enabled)
 			return
 
 		var player = event.whoClicked;
@@ -295,7 +296,7 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onEntityDamageEvent(e : EntityDamageByEntityEvent) {
-		if (GameRunner.halfZatoichi.enabled) {
+		if (Quirk.HALF_ZATOICHI.enabled) {
 			return
 		}
 		if (e.damager is Player) {
@@ -355,15 +356,15 @@ class WaitingEventListener() : Listener {
 			/* get drops from block as if held item */
 			/* had fortune */
 			var fakeTool = tool.clone();
-			if (GameRunner.abundance.enabled) enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 5);
+			if (Quirk.ABUNDANCE.enabled) enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 5);
 
 			fakeTool;
 		}
 
 		/* these replace regular block breaking behavior */
-		event.isCancelled = GameRunner.unsheltered.enabled || GameRunner.abundance.enabled;
+		event.isCancelled = Quirk.UNSHELTERED.enabled || Quirk.ABUNDANCE.enabled;
 
-		if (GameRunner.unsheltered.enabled) {
+		if (Quirk.UNSHELTERED.enabled) {
 			/* regular block breaking behavior for acceptable blocks */
 			if (binarySearch(block.type, acceptedBlocks)) {
 				event.isCancelled = false
@@ -389,7 +390,7 @@ class WaitingEventListener() : Listener {
 
 				player.sendMessage(message)
 			}
-		} else if (GameRunner.abundance.enabled) {
+		} else if (Quirk.ABUNDANCE.enabled) {
 			block.breakNaturally(getTool())
 		}
 	}
@@ -440,7 +441,7 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
-		if (GameRunner.unsheltered.enabled) {
+		if (Quirk.UNSHELTERED.enabled) {
 			var block = event.block;
 
 			if (!binarySearch(block.type, acceptedBlocks)) {

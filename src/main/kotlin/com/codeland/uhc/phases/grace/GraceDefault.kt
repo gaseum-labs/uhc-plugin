@@ -2,10 +2,9 @@ package com.codeland.uhc.phases.grace
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.event.Zatoichi
-import com.codeland.uhc.phaseType.PhaseFactory
-import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.quirk.Zatoichi
 import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.quirk.Quirk
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.GameRule
@@ -46,7 +45,7 @@ open class GraceDefault : Phase() {
 
 		super.start(uhc, length)
 
-		if (GameRunner.halfZatoichi.enabled)
+		if (Quirk.HALF_ZATOICHI.enabled)
 			Zatoichi.start(uhc, length)
 	}
 

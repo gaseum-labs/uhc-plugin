@@ -1,6 +1,7 @@
 package com.codeland.uhc.gui
 
 import org.bukkit.ChatColor
+import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
@@ -12,8 +13,6 @@ open class GuiItem(stack: ItemStack, onClick: (Gui, GuiItem, Player) -> Unit) {
     var onClick = onClick
 
     var index = 0
-    var x = 0
-    var y = 0
 
     /**
      * called when the guiItem is added
@@ -23,6 +22,10 @@ open class GuiItem(stack: ItemStack, onClick: (Gui, GuiItem, Player) -> Unit) {
      */
     fun updateStack(newStack: ItemStack) {
         stack = newStack
+    }
+
+    fun changeStackType(material: Material) {
+        stack.type = material
     }
 
     fun setName(name: String) {

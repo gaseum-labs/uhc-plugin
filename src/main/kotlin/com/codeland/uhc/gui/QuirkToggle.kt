@@ -6,17 +6,20 @@ import org.bukkit.ChatColor
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 
-class QuirkToggle(stack: ItemStack, quirk: Quirk) : GuiItem(stack, { gui, guiItem, player ->
-    guiItem as QuirkToggle
+class QuirkToggle(quirk: Quirk)
+    : GuiItem(ItemStack(quirk.representation),
+    { gui, guiItem, player ->
+        guiItem as QuirkToggle
 
-    if (quirk.enabled) {
-        quirk.enabled = false
-        guiItem.setDisplayDisabled(quirk.name)
-    } else {
-        quirk.enabled = true
-        guiItem.setDisplayEnabled(quirk.name)
+        if (quirk.enabled) {
+            quirk.enabled = false
+            guiItem.setDisplayDisabled(quirk.name)
+        } else {
+            quirk.enabled = true
+            guiItem.setDisplayEnabled(quirk.name)
+        }
     }
-}) {
+) {
 
     var quirk = quirk
 

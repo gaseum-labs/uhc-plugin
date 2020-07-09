@@ -1,11 +1,18 @@
 package com.codeland.uhc.quirk
 
-class Quirk(name: String) {
-    var name = name
+import org.bukkit.Material
+
+enum class Quirk(prettyName: String, representation: Material) {
+    HALF_ZATOICHI("Half Zatoichi", Material.IRON_SWORD),
+    ABUNDANCE("Abundance", Material.BLUE_ORCHID),
+    UNSHELTERED("Unsheltered", Material.SHULKER_SHELL),
+    PESTS("Pests", Material.LEATHER_CHESTPLATE);
+
+    var prettyName = prettyName
+    var representation = representation
 
     var enabled = false
-
-    var incompatibilities = mutableListOf<Quirk>()
+    var incompatibilities = mutableSetOf<Quirk>()
 
     /**
      * you have to do this after initialization to
@@ -24,5 +31,11 @@ class Quirk(name: String) {
 
     fun isIncompatible(other: Quirk) {
         incompatibilities.contains(other)
+    }
+
+    companion object {
+        init {
+            HALF_ZATOICHI.setIncompatible(PESTS)
+        }
     }
 }

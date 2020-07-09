@@ -1,4 +1,4 @@
-package com.codeland.uhc.event
+package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.GameRunner
 import org.bukkit.entity.Player

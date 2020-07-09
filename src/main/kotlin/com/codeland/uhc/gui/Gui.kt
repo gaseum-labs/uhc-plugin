@@ -1,6 +1,8 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.quirk.Quirk
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -27,11 +29,18 @@ class Gui : Listener {
             close(player)
         }, 8, 2).setName("${ChatColor.RESET}${ChatColor.RED}close")
 
-        /* toggles */
-        addItem(QuirkToggle(ItemStack(Material.IRON_SWORD), GameRunner.halfZatoichi), 0, 0)
-        addItem(QuirkToggle(ItemStack(Material.BLUE_ORCHID), GameRunner.abundance), 1, 0)
-        addItem(QuirkToggle(ItemStack(Material.SHULKER_SHELL), GameRunner.unsheltered), 2, 0)
-        addItem(QuirkToggle(ItemStack(Material.LEATHER_CHESTPLATE), GameRunner.pests), 3, 0)
+        /* programmatically add all quirks */
+        var lastIndex = 0
+
+        Quirk.values().forEach { quirk ->
+            addItem(QuirkToggle(quirk), lastIndex)
+            ++lastIndex
+        }
+
+        PhaseType.values().forEach { phaseType ->
+            addItem(VariantCycler(phaseType), lastIndex)
+            ++lastIndex
+        }
     }
 
     fun open(player: Player) {
@@ -53,9 +62,11 @@ class Gui : Listener {
     fun addItem(item: GuiItem, x: Int, y: Int): GuiItem {
         val index = coordinateToIndex(x, y)
 
+        return addItem(item, index)
+    }
+
+    fun addItem(item: GuiItem, index: Int): GuiItem {
         item.index = index
-        item.x = x
-        item.y = y
 
         inventory.setItem(index, item.stack)
         guiItems[index] = item
