@@ -2,6 +2,7 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.phaseType.UHCPhase
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.Pests
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.quirk.Quirk
@@ -33,6 +34,8 @@ object GameRunner {
 	}()
 
 	var gui = Gui()
+
+	var discordBot : MixerBot? = null
 
 	fun startGame(commandSender : CommandSender) {
 		if (phase != UHCPhase.WAITING) {

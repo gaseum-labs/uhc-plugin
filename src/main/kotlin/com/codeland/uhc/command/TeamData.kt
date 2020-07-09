@@ -1,8 +1,7 @@
 package com.codeland.uhc.command
 
-import net.md_5.bungee.api.chat.TextComponent
+import com.codeland.uhc.core.GameRunner
 import org.bukkit.ChatColor
-import org.bukkit.command.CommandSender
 import org.bukkit.scoreboard.Scoreboard
 import org.bukkit.scoreboard.Team
 
@@ -56,29 +55,7 @@ object TeamData {
     }
 
     fun prettyTeamName(color: ChatColor): String {
-        return "Team ${TeamData.colorPrettyNames[color.ordinal]}";
-    }
-
-    fun errorMessage(sender: CommandSender, text: String) {
-        val message = TextComponent(text);
-        message.color = ChatColor.RED.asBungee();
-        message.isBold = true;
-
-        sender.sendMessage(message);
-    }
-
-    /**
-     * returns if the sender cannot use this command
-     * you should return from original function if true
-     */
-    fun opGuard(sender: CommandSender): Boolean {
-        if (!sender.isOp) {
-            errorMessage(sender, "You must be a server operator to use this command!");
-
-            return true;
-        }
-
-        return false;
+        return "Team ${colorPrettyNames[color.ordinal]}";
     }
 
     fun addToTeam(scoreboard: Scoreboard, color: ChatColor, playerName: String) {
@@ -99,6 +76,8 @@ object TeamData {
             team.displayName = prettyTeamName(color);
         }
 
+	    GameRunner.discordBot?.addPlayerToTeam(team, playerName)
+
         team.addEntry(playerName);
     }
 
@@ -106,7 +85,9 @@ object TeamData {
         team.removeEntry(playerName);
 
         /* remove the team if no one is left on it */
-        if (team.entries.size == 0)
-            team.unregister();
+        if (team.entries.size == 0) {
+	        GameRunner.discordBot?.destroyTeam(team)
+	        team.unregister()
+        }
     }
 }
