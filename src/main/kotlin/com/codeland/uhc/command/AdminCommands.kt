@@ -83,42 +83,10 @@ class AdminCommands : BaseCommand() {
 		}
 	}
 
-	@CommandAlias("modify phase variant")
-	@Description("set variant")
-	fun setPhase(sender : CommandSender, factory: PhaseFactory) {
-		if (Commands.opGuard(sender)) return
-
-		GameRunner.uhc.phaseFactories[factory.type.ordinal] = factory
-	}
-
-	@CommandAlias("modify phase length")
-	@Description("set the length of a phase")
-	fun setPhaseLength(sender : CommandSender, type : PhaseType, length : Long) {
-		if (Commands.opGuard(sender)) return
-
-		GameRunner.uhc.phaseDurations[type.ordinal] = length
-	}
-
-	@CommandAlias("modify radius start")
-	@Description("set the starting radius")
-	fun setStartRadius(sender : CommandSender, radius : Double) {
-		if (Commands.opGuard(sender)) return;
-
-		GameRunner.uhc.startRadius = radius
-	}
-
-	@CommandAlias("modify radius end")
-	@Description("set the final radius")
-	fun setEndRadius(sender : CommandSender, radius : Double) {
-		if (Commands.opGuard(sender)) return;
-
-		GameRunner.uhc.endRadius = radius
-	}
-
 	@CommandAlias("modify mobCoefficient")
 	@Description("change the mob spawn cap coefficient")
 	fun modifyMobCapCoefficient(sender : CommandSender, coefficient : Double) {
-		if (Commands.opGuard(sender)) return;
+		if (Commands.opGuard(sender)) return
 
 		for (w in Bukkit.getServer().worlds) {
 			w.monsterSpawnLimit = (w.monsterSpawnLimit * (coefficient / GameRunner.uhc.mobCapCoefficient)).toInt()
@@ -132,7 +100,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify netherCloses")
 	@Description("specify how the nether ends")
 	fun setNetherSolution(sender : CommandSender, netherCloses : Boolean) {
-		if (Commands.opGuard(sender)) return;
+		if (Commands.opGuard(sender)) return
 
 		GameRunner.uhc.netherToZero = netherCloses
 	}
@@ -140,27 +108,69 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("modify killBounty")
 	@Description("change the reward for killing a team")
 	fun setKillBounty(sender : CommandSender, reward : KillReward) {
-		if (Commands.opGuard(sender)) return;
+		if (Commands.opGuard(sender)) return
 
 		GameRunner.uhc.killReward = reward
 	}
 
-	@CommandAlias("modify verbose")
+	@CommandAlias("modify phase variant")
+	@Description("set variant")
+	fun setPhase(sender: CommandSender, factory: PhaseFactory) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.waitGuard(sender)) return
+
+		GameRunner.uhc.phaseFactories[factory.type.ordinal] = factory
+	}
+
+	@CommandAlias("modify phase length")
+	@Description("set the length of a phase")
+	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Long) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.waitGuard(sender)) return
+
+		if (!type.hasTimer)
+			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
+
+		GameRunner.uhc.setTiming(type, length)
+	}
+
+	@CommandAlias("modify radius start")
+	@Description("set the starting radius")
+	fun setStartRadius(sender : CommandSender, radius : Double) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.waitGuard(sender)) return
+
+		GameRunner.uhc.startRadius = radius
+	}
+
+	@CommandAlias("modify radius end")
+	@Description("set the final radius")
+	fun setEndRadius(sender : CommandSender, radius : Double) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.waitGuard(sender)) return
+
+		GameRunner.uhc.endRadius = radius
+	}
+
+	@CommandAlias("modify all")
 	@Description("set all details of the UHC")
-	fun modifyVerbose(sender : CommandSender, startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, finalTime : Long) {
-		if (Commands.opGuard(sender)) return;
+	fun modifyAll(sender : CommandSender, startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, finalTime: Long, glowingTime: Long) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.waitGuard(sender)) return
 
 		GameRunner.uhc.startRadius = startRadius
 		GameRunner.uhc.endRadius = endRadius
-		GameRunner.uhc.phaseDurations[0] = graceTime
-		GameRunner.uhc.phaseDurations[1] = shrinkTime
-		GameRunner.uhc.phaseDurations[2] = finalTime
+
+		GameRunner.uhc.setTiming(PhaseType.GRACE, graceTime)
+		GameRunner.uhc.setTiming(PhaseType.SHRINK, shrinkTime)
+		GameRunner.uhc.setTiming(PhaseType.FINAL, finalTime)
+		GameRunner.uhc.setTiming(PhaseType.GLOWING, glowingTime)
 	}
 
 	@CommandAlias("test end")
 	@Description("Check to see if the game should be over")
 	fun testEnd(sender : CommandSender) {
-		if (Commands.opGuard(sender)) return;
+		if (Commands.opGuard(sender)) return
 
 		if (GameRunner.quickRemainingTeams() == 1) {
 			var aliveTeam : Team? = null
@@ -185,7 +195,7 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("test reset")
 	@Description("reset things to the waiting stage")
 	fun testReset(sender : CommandSender) {
-		if (Commands.opGuard(sender)) return;
+		if (Commands.opGuard(sender)) return
 
 		for (world in Bukkit.getServer().worlds) {
 			world.setSpawnLocation(10000, 70, 10000)

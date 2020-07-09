@@ -35,12 +35,13 @@ enum class PhaseFactory(type: PhaseType, target: Phase) {
 
 	var type = type
 	var target = target
+	var time = 0L
 
 	init {
 		target.phaseType = type
 	}
 
-	fun start(uhc: UHC, time: Long): Phase {
+	fun start(uhc: UHC): Phase {
 		target.start(uhc, time)
 
 		return target

@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.HelpCommand
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
 import net.md_5.bungee.api.ChatColor as ChatColorBungee
 import net.md_5.bungee.api.chat.TextComponent
@@ -16,22 +17,36 @@ import org.bukkit.entity.Player
 @CommandAlias("uhc")
 class ParticipantCommands : BaseCommand() {
 
+	fun phaseString(uhc: UHC, phaseType: PhaseType): String {
+		val ret = "${phaseType.prettyName} variant : ${uhc.getVariant(phaseType)}"
+
+		val time = uhc.getTime(phaseType)
+				?: return ret
+
+		return "$ret | $time seconds"
+	}
+
 	@CommandAlias("setup")
 	@Description("get the current setup")
 	fun getCurrentSetup(sender: CommandSender) {
 		sender as Player
+		val uhc = GameRunner.uhc
 
-		GameRunner.sendPlayer(sender, "Starting radius : " + GameRunner.uhc.startRadius.toInt() + " blocks")
-		GameRunner.sendPlayer(sender, "Ending radius : " + GameRunner.uhc.endRadius.toInt() + " blocks")
-		GameRunner.sendPlayer(sender, "Nether closes after shrinking : " + GameRunner.uhc.netherToZero)
-		GameRunner.sendPlayer(sender, "Spawn cap coefficient : " + GameRunner.uhc.mobCapCoefficient)
-		GameRunner.sendPlayer(sender, "Team Kill Bounty : " + GameRunner.uhc.killReward)
+		GameRunner.sendPlayer(sender, "Starting radius : ${uhc.startRadius.toInt()} blocks")
+		GameRunner.sendPlayer(sender, "Ending radius : ${uhc.endRadius.toInt()} blocks")
+		GameRunner.sendPlayer(sender, "Nether closes after shrinking : ${uhc.netherToZero}")
+		GameRunner.sendPlayer(sender, "Spawn cap coefficient : ${uhc.mobCapCoefficient}")
+		GameRunner.sendPlayer(sender, "Team Kill Bounty : ${uhc.killReward}")
+
 		GameRunner.sendPlayer(sender, "----------------PHASES----------------")
-		GameRunner.sendPlayer(sender, "Grace period variant : " + GameRunner.uhc.getVariant(PhaseType.GRACE) + " " + GameRunner.uhc.phaseDurations[0] + " seconds")
-		GameRunner.sendPlayer(sender, "Shrinking period variant : " + GameRunner.uhc.getVariant(PhaseType.SHRINK) + " " + GameRunner.uhc.phaseDurations[1] + " seconds")
-		GameRunner.sendPlayer(sender, "Final zone variant : " + GameRunner.uhc.getVariant(PhaseType.FINAL) + " " + GameRunner.uhc.phaseDurations[2] + " seconds")
-		GameRunner.sendPlayer(sender, "Glowing period variant : " + GameRunner.uhc.getVariant(PhaseType.GLOWING) + " " + GameRunner.uhc.phaseDurations[3] + " seconds")
-		GameRunner.sendPlayer(sender, "Endgame variant : " + GameRunner.uhc.getVariant(PhaseType.ENDGAME))
+
+		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.WAITING))
+		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.GRACE))
+		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.SHRINK))
+		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.FINAL))
+		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.GLOWING))
+		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.ENDGAME))
+		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.POSTGAME))
 	}
 
 	@CommandAlias("name")

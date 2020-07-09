@@ -7,14 +7,13 @@ import org.bukkit.command.CommandSender
 import kotlin.math.max
 import kotlin.math.min
 
-class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, waitTime : Long, glowTime : Long) {
+class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, finalTime: Long, glowTime: Long) {
 
 	/* time is measured in seconds here. */
 
 	var startRadius = startRadius
 	var endRadius = endRadius
 
-	var phaseDurations = arrayOf(0, graceTime, shrinkTime, waitTime, glowTime, 0, 0)
 	var phaseFactories = arrayOf<PhaseFactory>(
 		PhaseFactory.WAITING_DEFAULT,
 		PhaseFactory.GRACE_DEFAULT,
@@ -25,6 +24,13 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 		PhaseFactory.POSTGAME_DEFAULT
 	)
 
+	init {
+		setTiming(PhaseType.GRACE, graceTime)
+		setTiming(PhaseType.SHRINK, shrinkTime)
+		setTiming(PhaseType.FINAL, finalTime)
+		setTiming(PhaseType.GLOWING, glowTime)
+	}
+
 	var netherToZero = true
 	var mobCapCoefficient = 1.0
 	var killReward = KillReward.NONE
@@ -33,6 +39,10 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 
 	var currentPhase = PhaseFactory.WAITING_DEFAULT.target
 	var currentPhaseIndex = 0
+
+	fun setTiming(phaseType: PhaseType, time: Long) {
+		phaseFactories[phaseType.ordinal].time = time
+	}
 
 	fun startWaiting() {
 		startPhase(PhaseType.WAITING)
@@ -58,7 +68,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	fun startPhase(phaseIndex: Int) {
 		currentPhaseIndex = phaseIndex
 
-		currentPhase = phaseFactories[phaseIndex].start(this, phaseDurations[phaseIndex])
+		currentPhase = phaseFactories[phaseIndex].start(this)
 	}
 
 	fun updateMobCaps() {
@@ -91,15 +101,11 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	fun getVariant(phaseType: PhaseType): Phase {
 		return phaseFactories[phaseType.ordinal].target
 	}
+
+	fun getTime(phaseType: PhaseType): Long? {
+		if (!phaseType.hasTimer)
+			return null
+
+		return phaseFactories[phaseType.ordinal].time
+	}
 }
-
-/*
-spawn protection warn
-
-discord integration
-
-different border solutions
-
-special team effects
-
-*/
