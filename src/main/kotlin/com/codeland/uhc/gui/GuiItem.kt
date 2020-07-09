@@ -7,11 +7,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 
-open class GuiItem(stack: ItemStack, onClick: (Gui, GuiItem, Player) -> Unit) {
-    var stack = stack
-
-    var onClick = onClick
-
+open class GuiItem(var stack: ItemStack, var onClick: (GuiItem, Player) -> Unit) {
     var index = 0
 
     /**
@@ -33,4 +29,6 @@ open class GuiItem(stack: ItemStack, onClick: (Gui, GuiItem, Player) -> Unit) {
         meta.setDisplayName(name)
         stack.itemMeta = meta
     }
+
+    open fun updateDisplay() {}
 }

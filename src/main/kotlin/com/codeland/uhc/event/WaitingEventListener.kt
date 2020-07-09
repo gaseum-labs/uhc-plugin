@@ -1,6 +1,7 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.quirk.Pests
@@ -72,7 +73,7 @@ class WaitingEventListener() : Listener {
 		if (!GuiOpener.isGuiOpener(stack))
 			return
 
-		GameRunner.gui.open(event.player)
+		Gui.open(event.player)
 	}
 
 	/**

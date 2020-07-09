@@ -5,9 +5,11 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.*
+import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.scoreboard.Team
+import java.util.logging.Level
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -119,7 +121,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
-		GameRunner.uhc.phaseFactories[factory.type.ordinal] = factory
+		factory.type.factory = factory
 	}
 
 	@CommandAlias("modify phase length")
@@ -131,7 +133,7 @@ class AdminCommands : BaseCommand() {
 		if (!type.hasTimer)
 			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
 
-		GameRunner.uhc.setTiming(type, length)
+		type.time = length
 	}
 
 	@CommandAlias("modify radius start")
@@ -161,10 +163,10 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.startRadius = startRadius
 		GameRunner.uhc.endRadius = endRadius
 
-		GameRunner.uhc.setTiming(PhaseType.GRACE, graceTime)
-		GameRunner.uhc.setTiming(PhaseType.SHRINK, shrinkTime)
-		GameRunner.uhc.setTiming(PhaseType.FINAL, finalTime)
-		GameRunner.uhc.setTiming(PhaseType.GLOWING, glowingTime)
+		PhaseType.GRACE.time = graceTime
+		PhaseType.SHRINK.time = shrinkTime
+		PhaseType.FINAL.time = finalTime
+		PhaseType.GLOWING.time = glowingTime
 	}
 
 	@CommandAlias("test end")

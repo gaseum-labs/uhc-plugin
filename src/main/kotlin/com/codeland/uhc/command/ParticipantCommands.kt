@@ -5,9 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.HelpCommand
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
-import net.md_5.bungee.api.ChatColor as ChatColorBungee
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -17,10 +15,10 @@ import org.bukkit.entity.Player
 @CommandAlias("uhc")
 class ParticipantCommands : BaseCommand() {
 
-	fun phaseString(uhc: UHC, phaseType: PhaseType): String {
-		val ret = "${phaseType.prettyName} variant : ${uhc.getVariant(phaseType)}"
+	fun phaseString(phaseType: PhaseType): String {
+		val ret = "${phaseType.prettyName} variant : ${phaseType.factory?.prettyName}"
 
-		val time = uhc.getTime(phaseType)
+		val time = phaseType.time
 				?: return ret
 
 		return "$ret | $time seconds"
@@ -40,13 +38,13 @@ class ParticipantCommands : BaseCommand() {
 
 		GameRunner.sendPlayer(sender, "----------------PHASES----------------")
 
-		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.WAITING))
-		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.GRACE))
-		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.SHRINK))
-		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.FINAL))
-		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.GLOWING))
-		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.ENDGAME))
-		GameRunner.sendPlayer(sender, phaseString(uhc, PhaseType.POSTGAME))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.WAITING))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.GRACE))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.SHRINK))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.FINAL))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.GLOWING))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.ENDGAME))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.POSTGAME))
 	}
 
 	@CommandAlias("name")

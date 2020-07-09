@@ -1,7 +1,6 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.phaseType.*
-import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import kotlin.math.max
@@ -14,21 +13,11 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	var startRadius = startRadius
 	var endRadius = endRadius
 
-	var phaseFactories = arrayOf<PhaseFactory>(
-		PhaseFactory.WAITING_DEFAULT,
-		PhaseFactory.GRACE_DEFAULT,
-		PhaseFactory.SHRINK_DEFAULT,
-		PhaseFactory.FINAL_DEFAULT,
-		PhaseFactory.GLOWING_DEFAULT,
-		PhaseFactory.ENDGAME_NONE,
-		PhaseFactory.POSTGAME_DEFAULT
-	)
-
 	init {
-		setTiming(PhaseType.GRACE, graceTime)
-		setTiming(PhaseType.SHRINK, shrinkTime)
-		setTiming(PhaseType.FINAL, finalTime)
-		setTiming(PhaseType.GLOWING, glowTime)
+		PhaseType.GRACE.time = graceTime
+		PhaseType.SHRINK.time = shrinkTime
+		PhaseType.FINAL.time = finalTime
+		PhaseType.GLOWING.time = glowTime
 	}
 
 	var netherToZero = true
@@ -39,10 +28,6 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 
 	var currentPhase = PhaseFactory.WAITING_DEFAULT.target
 	var currentPhaseIndex = 0
-
-	fun setTiming(phaseType: PhaseType, time: Long) {
-		phaseFactories[phaseType.ordinal].time = time
-	}
 
 	fun startWaiting() {
 		startPhase(PhaseType.WAITING)
@@ -57,7 +42,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	fun startNextPhase() {
 		++currentPhaseIndex
 
-		if (currentPhaseIndex < phaseFactories.size)
+		if (currentPhaseIndex < PhaseType.values().size)
 			startPhase(currentPhaseIndex)
 	}
 
@@ -68,7 +53,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	fun startPhase(phaseIndex: Int) {
 		currentPhaseIndex = phaseIndex
 
-		currentPhase = phaseFactories[phaseIndex].start(this)
+		currentPhase = PhaseType.getFactory(phaseIndex).start(this)
 	}
 
 	fun updateMobCaps() {
@@ -96,16 +81,5 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 
 	fun isPhase(compare: PhaseType): Boolean {
 		return currentPhase.phaseType == compare
-	}
-
-	fun getVariant(phaseType: PhaseType): Phase {
-		return phaseFactories[phaseType.ordinal].target
-	}
-
-	fun getTime(phaseType: PhaseType): Long? {
-		if (!phaseType.hasTimer)
-			return null
-
-		return phaseFactories[phaseType.ordinal].time
 	}
 }

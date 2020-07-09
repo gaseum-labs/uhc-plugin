@@ -26,16 +26,15 @@ enum class PhaseFactory(type: PhaseType, target: Phase, prettyName: String, repr
 	GLOWING_DEFAULT(PhaseType.GLOWING, GlowingDefault(), "Default", Material.GLOWSTONE_DUST),
 	GLOWING_TOP_TWO(PhaseType.GLOWING, GlowingTopTwo(), "Top two", Material.SPECTRAL_ARROW),
 
+	ENDGAME_NONE(PhaseType.ENDGAME, EndgameNone(), "None", Material.STONE_SWORD),
 	ENDGAME_CLEAR_BLOCKS(PhaseType.ENDGAME, EndgameClearBlocks(), "Clear blocks", Material.DIRT),
 	ENDGAME_DEATHMATCH(PhaseType.ENDGAME, EndgameDeathmatch(), "Deathmatch", Material.BONE),
-	ENDGAME_NONE(PhaseType.ENDGAME, EndgameNone(), "None", Material.STONE_SWORD),
 	ENDGAME_POISON(PhaseType.ENDGAME, EndgamePoison(), "Poision", Material.WITHER_SKELETON_SKULL),
 
 	POSTGAME_DEFAULT(PhaseType.POSTGAME, PostgameDefault(), "Default", Material.FILLED_MAP);
 
 	var type = type
 	var target = target
-	var time = 0L
 	var prettyName = prettyName
 	var representation = representation
 
@@ -46,7 +45,7 @@ enum class PhaseFactory(type: PhaseType, target: Phase, prettyName: String, repr
 	}
 
 	fun start(uhc: UHC): Phase {
-		target.start(uhc, time)
+		target.start(uhc, type.time ?: 0)
 
 		return target
 	}

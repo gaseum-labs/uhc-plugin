@@ -4,14 +4,15 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.Factories
 import com.codeland.uhc.phaseType.PhaseFactory
 import com.codeland.uhc.phaseType.PhaseType
+import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.ChatColor
 import org.bukkit.Material
-import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
+import java.util.logging.Level
 
-class VariantCycler(phaseType: PhaseType)
+class VariantCycler(var phaseType: PhaseType)
     : GuiItem(ItemStack(Material.DAMAGED_ANVIL),
-    { gui, guiItem, player ->
+    { guiItem, player ->
         guiItem as VariantCycler
 
         val factories = guiItem.getFactories()
@@ -19,13 +20,9 @@ class VariantCycler(phaseType: PhaseType)
         ++guiItem.currentIndex
         guiItem.currentIndex %= factories.size
 
-        val factory = factories[guiItem.currentIndex]
-
-        GameRunner.uhc.phaseFactories[guiItem.phaseType.ordinal] = factory
-        guiItem.setFactoryDisplay(factory)
+        guiItem.phaseType.factory = factories[guiItem.currentIndex]
     }
 ) {
-    var phaseType = phaseType
     var currentIndex = 0
 
     private fun setFactoryDisplay(factory: PhaseFactory) {
@@ -38,7 +35,16 @@ class VariantCycler(phaseType: PhaseType)
         return Factories.list[phaseType.ordinal]
     }
 
-    init {
+    override fun updateDisplay() {
+        currentIndex = getFactories().indexOf(phaseType.factory)
+
+        if (currentIndex == -1)
+            currentIndex = 0
+
         setFactoryDisplay(getFactories()[currentIndex])
+    }
+
+    init {
+        updateDisplay()
     }
 }

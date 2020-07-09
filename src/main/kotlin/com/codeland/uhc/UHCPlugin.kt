@@ -6,6 +6,8 @@ import com.codeland.uhc.command.ParticipantCommands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.WaitingEventListener
+import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.gui.GuiListener
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.RenderType
@@ -23,7 +25,7 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(ParticipantCommands())
 
 		server.pluginManager.registerEvents(WaitingEventListener(), this)
-		server.pluginManager.registerEvents(GameRunner.gui, this)
+		server.pluginManager.registerEvents(GuiListener(), this)
 
 		GameRunner.plugin = this
 

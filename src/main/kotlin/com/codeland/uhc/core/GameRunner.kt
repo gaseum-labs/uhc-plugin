@@ -20,8 +20,6 @@ object GameRunner {
 
 	var plugin : UHCPlugin? = null
 
-	var gui = Gui()
-
 	var discordBot : MixerBot? = null
 
 	fun startGame(commandSender : CommandSender) {

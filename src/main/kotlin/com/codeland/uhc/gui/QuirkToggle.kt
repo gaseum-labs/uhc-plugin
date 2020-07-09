@@ -6,38 +6,37 @@ import org.bukkit.ChatColor
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 
-class QuirkToggle(quirk: Quirk)
+class QuirkToggle(var quirk: Quirk)
     : GuiItem(ItemStack(quirk.representation),
-    { gui, guiItem, player ->
+    { guiItem, player ->
         guiItem as QuirkToggle
 
-        if (quirk.enabled) {
-            quirk.enabled = false
-            guiItem.setDisplayDisabled(quirk.name)
-        } else {
-            quirk.enabled = true
-            guiItem.setDisplayEnabled(quirk.name)
-        }
+        quirk.enabled = !quirk.enabled
     }
 ) {
-
-    var quirk = quirk
-
-    init {
-        setDisplayDisabled(quirk.name)
-    }
-
-    fun setDisplayEnabled(name: String) {
+    fun setDisplayEnabled() {
         val meta = stack.itemMeta
-        meta.setDisplayName("${ChatColor.RESET}${ChatColor.WHITE}${name} ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}ENABLED")
+        meta.setDisplayName("${ChatColor.RESET}${ChatColor.WHITE}${quirk.prettyName} ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}ENABLED")
         meta.addEnchant(Enchantment.CHANNELING, 1, true)
         stack.itemMeta = meta
     }
 
-    fun setDisplayDisabled(name: String) {
+    fun setDisplayDisabled() {
         val meta = stack.itemMeta
-        meta.setDisplayName("${ChatColor.RESET}${ChatColor.WHITE}${name} ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}DISABLED")
+        meta.setDisplayName("${ChatColor.RESET}${ChatColor.WHITE}${quirk.prettyName} ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}DISABLED")
         meta.removeEnchant(Enchantment.CHANNELING)
         stack.itemMeta = meta
+    }
+
+    override fun updateDisplay() {
+        if (quirk.enabled) {
+            setDisplayEnabled()
+        } else {
+            setDisplayDisabled()
+        }
+    }
+
+    init {
+        updateDisplay()
     }
 }

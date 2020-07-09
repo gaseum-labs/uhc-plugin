@@ -1,5 +1,6 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.gui.Gui
 import org.bukkit.Material
 
 enum class Quirk(prettyName: String, representation: Material) {
@@ -12,6 +13,11 @@ enum class Quirk(prettyName: String, representation: Material) {
     var representation = representation
 
     var enabled = false
+    set(value) {
+        field = value
+        Gui.updateQuirk(this)
+    }
+
     var incompatibilities = mutableSetOf<Quirk>()
 
     /**
