@@ -5,9 +5,11 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.*
+import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.scoreboard.Team
+import java.util.logging.Level
 
 @CommandAlias("uhc")
 class AdminCommands : BaseCommand() {
@@ -66,7 +68,7 @@ class AdminCommands : BaseCommand() {
 		}
 
 		val teams = TeamMaker.getTeamsRandom(playerArray, teamSize)
-		val numPreMadeTeams = scoreboard.teams.size
+		val numPreMadeTeams = teams.size
 
 		val teamColors = TeamMaker.getColorList(numPreMadeTeams, scoreboard)
 			?: return TeamData.errorMessage(sender, "Team Maker could not make enough teams!");

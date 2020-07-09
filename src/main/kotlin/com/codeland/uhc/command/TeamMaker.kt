@@ -26,42 +26,39 @@ object TeamMaker {
 	 */
 	fun getColorList(size: Int, scoreboard: Scoreboard): Array<ChatColor>? {
 		if (size > TeamData.teamColours.size - scoreboard.teams.size)
-			return null;
+			return null
 
-		var availableColors = arrayOfNulls<ChatColor>(TeamData.teamColours.size);
-		var numAvailableColors = 0;
+		var availableColors = arrayOfNulls<ChatColor>(TeamData.teamColours.size)
+		var numAvailableColors = 0
 
 		TeamData.teamColours.forEach { color ->
 			if(!scoreboard.teams.any { team ->
 				if (color == team.color)
-					return@any true;
+					return@any true
 
-				return@any false;
+				return@any false
 			}) {
-				availableColors[numAvailableColors] = color;
-				++numAvailableColors;
+				availableColors[numAvailableColors] = color
+				++numAvailableColors
 			}
 		}
 
-		var ret = arrayOfNulls<ChatColor>(size);
+		var ret = arrayOfNulls<ChatColor>(size)
 
 		ret.forEachIndexed { i, _ ->
-			var position = (Math.random() * numAvailableColors).toInt();
-			var usingColor = null as ChatColor?;
+			var position = (Math.random() * numAvailableColors).toInt()
+			var usingColor = null as ChatColor?
 
 			while (availableColors[position] == null) {
-				++position;
-				position %= numAvailableColors;
+				++position
+				position %= numAvailableColors
 			}
 
-			availableColors[position] = null;
-			ret[i] = usingColor;
+			usingColor = availableColors[position]
+			availableColors[position] = null
+			ret[i] = usingColor
 		}
 
-		return try {
-			ret.requireNoNulls();
-		} catch (ex: Exception) {
-			null;
-		}
+		return ret as Array<ChatColor>
 	}
 }
