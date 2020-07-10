@@ -5,6 +5,7 @@ import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.quirk.Pests
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
 import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
@@ -16,7 +17,7 @@ import org.bukkit.entity.Player
 import org.bukkit.scoreboard.Team
 
 object GameRunner {
-	var uhc = UHC(600.0, 25.0, 1125, 2250, 600, 0)
+	var uhc = UHC(400.0, 25.0, 1125, 2250, 600, 0)
 
 	var plugin : UHCPlugin? = null
 
@@ -124,18 +125,10 @@ object GameRunner {
 	}
 
 	fun endUHC(winner: Team) {
-		Bukkit.getServer().onlinePlayers.forEach {
-			val winningTeamComp = TextComponent(winner.displayName)
-			winningTeamComp.isBold = true
-			winningTeamComp.color = winner.color.asBungee()
-			val congratsComp = TextComponent("HAS WON!")
-			it.sendTitle(Title(winningTeamComp, congratsComp, 0, 200, 40))
+		val postPhase = PhaseType.getFactory(PhaseType.POSTGAME).target as PostgameDefault
+		postPhase.winningTeam = winner
 
-			/* this code above should be rolled into postgame phase */
-
-			uhc.startPhase(PhaseType.POSTGAME)
-		}
-		uhc.currentPhase?.interrupt()
+		uhc.startPhase(PhaseType.POSTGAME)
 	}
 
 	fun sendPlayer(player: Player, message: String) {

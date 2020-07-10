@@ -2,12 +2,12 @@ package com.codeland.uhc.phases.shrink
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
+import org.bukkit.GameRule
 import org.bukkit.World
 
 class ShrinkDefault : Phase() {
@@ -15,6 +15,15 @@ class ShrinkDefault : Phase() {
 	var minRadius : Double? = null
 
 	override fun start(uhc: UHC, length: Long) {
+		for (w in Bukkit.getServer().worlds) {
+			w.setGameRule(GameRule.NATURAL_REGENERATION, false)
+			w.pvp = true
+		}
+
+		for (player in Bukkit.getServer().onlinePlayers) {
+			GameRunner.sendPlayer(player, "Grace period has ended!")
+		}
+
 		minRadius = uhc.endRadius
 		for (w in Bukkit.getServer().worlds) {
 			if (w.environment == World.Environment.NETHER && uhc.netherToZero) {
@@ -23,22 +32,17 @@ class ShrinkDefault : Phase() {
 				w.worldBorder.setSize(minRadius!! * 2.0, length)
 			}
 		}
+
 		for (player in Bukkit.getServer().onlinePlayers) {
 			GameRunner.sendPlayer(player, "The border is now shrinking")
 		}
+
 		super.start(uhc, length)
 	}
 
 	override fun perSecond(second: Long) {
 		GameRunner.uhc.updateMobCaps()
 		super.perSecond(second)
-	}
-
-	override fun endPhase() {
-		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "The border has stopped shrinking")
-		}
-		super.endPhase()
 	}
 
 	override fun updateActionBar(remainingSeconds: Long) {
@@ -57,13 +61,6 @@ class ShrinkDefault : Phase() {
 			remainingTimeComponent.isBold = true
 			player.spigot().sendMessage(ChatMessageType.ACTION_BAR, countdownComponent, radiusComponent, messageComponent, minRadComponent, inComponent, remainingTimeComponent)
 		}
-	}
-
-	override fun interrupt() {
-		for (w in Bukkit.getServer().worlds)
-			w.worldBorder.setSize(w.worldBorder.size, 0)
-
-		super.interrupt()
 	}
 
 	override fun getCountdownString(): String {

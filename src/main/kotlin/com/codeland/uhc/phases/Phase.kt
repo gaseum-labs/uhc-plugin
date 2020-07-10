@@ -2,7 +2,6 @@ package com.codeland.uhc.phases
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseFactory
 import com.codeland.uhc.phaseType.PhaseType
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.ChatMessageType
@@ -38,7 +37,7 @@ abstract class Phase {
 								player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
 							}
 							bar.removeAll()//TEST AGAIN ALSO COUNTDOWN TILL START
-							endPhase()
+							onEnd()
 							uhc.startNextPhase()
 							return
 						}
@@ -54,8 +53,8 @@ abstract class Phase {
 		}
 	}
 
-	protected open fun endPhase() {
-
+	public fun onEnd() {
+		runnable?.cancel()
 	}
 
 	protected open fun perSecond(second : Long) {
@@ -87,15 +86,7 @@ abstract class Phase {
 		return timeRemaining.toString() + units
 	}
 
-	open fun interrupt() {
-		runnable?.cancel()
-	}
-
 	abstract fun getCountdownString() : String
-
-	fun getPhaseType() {
-
-	}
 
 	abstract fun endPhrase() : String
 

@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.phaseType.*
+import com.codeland.uhc.quirk.Quirk
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import kotlin.math.max
@@ -14,6 +15,11 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	var endRadius = endRadius
 
 	init {
+		Quirk.PESTS.enabled = false
+		Quirk.ABUNDANCE.enabled = false
+		Quirk.HALF_ZATOICHI.enabled = false
+		Quirk.UNSHELTERED.enabled = false
+
 		PhaseType.GRACE.time = graceTime
 		PhaseType.SHRINK.time = shrinkTime
 		PhaseType.FINAL.time = finalTime
@@ -59,6 +65,9 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	}
 
 	fun startPhase(phaseIndex: Int) {
+		var oldPhase = PhaseType.getFactory(phaseIndex).target
+		oldPhase.onEnd()
+
 		currentPhaseIndex = phaseIndex
 
 		currentPhase = PhaseType.getFactory(phaseIndex).start(this)

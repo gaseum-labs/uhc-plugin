@@ -101,23 +101,18 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onPlayerDeath(event : PlayerDeathEvent) {
-		if (!Quirk.PESTS.enabled)
+		var wasPest = Pests.isPest(event.entity)
+
+		if (Quirk.PESTS.enabled) {
+			if (event.entity.gameMode != GameMode.SPECTATOR)
+				Pests.makePest(event.entity)
+
+		} else {
 			event.entity.gameMode = GameMode.SPECTATOR
+		}
 
-		GameRunner.playerDeath(event.entity)
-
-		/* begin pest section */
-		if (!Quirk.PESTS.enabled)
-			return
-
-		var player = event.entity
-
-		if (!Pests.isPest(player))
-			return;
-
-		/* don't drop anything */
-		player.inventory.clear()
-		event.setShouldDropExperience(false)
+		if (!wasPest)
+			GameRunner.playerDeath(event.entity)
 	}
 
 	@EventHandler
@@ -162,38 +157,6 @@ class WaitingEventListener() : Listener {
 			event.isCancelled = true
 	}
 
-	private val pestArmorMeta = {
-		var meta = ItemStack(Material.LEATHER_HELMET).itemMeta
-
-		meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
-
-		meta
-	}()
-
-	fun genPestArmor(item: Material): ItemStack {
-		var stack = ItemStack(item)
-
-		stack.itemMeta = pestArmorMeta;
-
-		return stack
-	}
-
-	private val pestToolMeta = {
-		var meta = ItemStack(Material.WOODEN_PICKAXE).itemMeta
-
-		meta.isUnbreakable = true;
-
-		meta
-	}()
-
-	fun genPestTool(item: Material): ItemStack {
-		var stack = ItemStack(item)
-
-		stack.itemMeta = pestToolMeta;
-
-		return stack
-	}
-
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
 		/* only do this on pests mode */
@@ -202,48 +165,47 @@ class WaitingEventListener() : Listener {
 
 		var player = event.player
 
-		Pests.makePest(player)
+		/* player is set to pest on death */
+		if (!Pests.isPest(player))
+			return
 
 		var border = player.world.worldBorder
 
-		Bukkit.getServer().dispatchCommand(GameRunner.uhc.gameMaster!!, "spreadplayers ${border.center.x} ${border.center.z} 0 ${border.size / 2} false ${player.name}")
+		/* spread player */
+		var right = border.center.x + border.size / 2 - 10
+		var down = border.center.z + border.size / 2 - 10
 
-		PaperPluginLogger.getGlobal().log(Level.INFO, "spreadplayers ${border.center.x} ${border.center.z} 0 ${border.size / 2} false ${player.name}")
+		var x = ((Math.random() * right * 2) - right).toInt()
+		var z = ((Math.random() * down * 2) - down).toInt()
 
-		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 2.0
+		var world = player.world
+
+		for (y in 255..0) {
+			var block = world.getBlockAt(x, y, z)
+
+			if (!block.isPassable) {
+				player.teleport(Location(world, x + 0.5, y + 1.0, z + 0.5))
+
+				break
+			}
+		}
+
+		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
 
 		/* give pest a bunch of crap */
-		player.inventory.helmet = genPestArmor(Material.LEATHER_HELMET)
-		player.inventory.chestplate = genPestArmor(Material.LEATHER_CHESTPLATE)
-		player.inventory.leggings = genPestArmor(Material.LEATHER_LEGGINGS)
-		player.inventory.boots = genPestArmor(Material.LEATHER_BOOTS)
+		player.inventory.helmet = Pests.genPestArmor(Material.LEATHER_HELMET)
+		player.inventory.chestplate = Pests.genPestArmor(Material.LEATHER_CHESTPLATE)
+		player.inventory.leggings = Pests.genPestArmor(Material.LEATHER_LEGGINGS)
+		player.inventory.boots = Pests.genPestArmor(Material.LEATHER_BOOTS)
 
-		player.inventory.setItem(0, genPestTool(Material.WOODEN_PICKAXE))
-		player.inventory.setItem(1, genPestTool(Material.WOODEN_AXE))
-		player.inventory.setItem(2, genPestTool(Material.WOODEN_SHOVEL))
-		player.inventory.setItem(3, genPestTool(Material.WOODEN_HOE))
-		player.inventory.setItem(4, genPestTool(Material.WOODEN_SWORD))
+		player.inventory.setItem(0, Pests.genPestTool(Material.WOODEN_PICKAXE))
+		player.inventory.setItem(1, Pests.genPestTool(Material.WOODEN_AXE))
+		player.inventory.setItem(2, Pests.genPestTool(Material.WOODEN_SHOVEL))
+		player.inventory.setItem(3, Pests.genPestTool(Material.WOODEN_HOE))
+		player.inventory.setItem(4, Pests.genPestTool(Material.WOODEN_SWORD))
 	}
 
-	private val pestBanList = {
-		val arr = arrayOf<Material>(
-			Material.IRON_PICKAXE,
-			Material.IRON_AXE,
-			Material.IRON_HOE,
-			Material.IRON_SHOVEL,
-			Material.IRON_SWORD,
-			Material.IRON_HELMET,
-			Material.IRON_CHESTPLATE,
-			Material.IRON_LEGGINGS,
-			Material.IRON_BOOTS,
-			Material.BOW,
-			Material.SHIELD
-		)
 
-		arr.sort()
-
-		arr
-	}()
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
@@ -254,12 +216,14 @@ class WaitingEventListener() : Listener {
 		if (event.target == null)
 			return
 
-		/* todo check if is actually player */
-		var player = event.target as Player;
+		if (event.target !is Player)
+			return
+
+		var player = event.target as Player
 
 		/* monsters will not target the pests */
 		if (Pests.isPest(player))
-			event.isCancelled = true;
+			event.isCancelled = true
 	}
 
 	@EventHandler
@@ -276,7 +240,7 @@ class WaitingEventListener() : Listener {
 		var item = event.recipe.result.type
 
 		/* prevent crafting of banned items */
-		if (binarySearch(item, pestBanList))
+		if (binarySearch(item, Pests.banList))
 			event.isCancelled = true
 	}
 
@@ -288,6 +252,16 @@ class WaitingEventListener() : Listener {
 			isHalfZatoichi(stack) -> true
 			GuiOpener.isGuiOpener(stack) -> true
 			else -> false
+		}
+	}
+
+	@EventHandler
+	fun onEntityDeath(event: EntityDeathEvent) {
+		if (!Quirk.ABUNDANCE.enabled)
+			return
+
+		event.drops.forEach { drop ->
+			drop.amount = drop.amount * 3
 		}
 	}
 

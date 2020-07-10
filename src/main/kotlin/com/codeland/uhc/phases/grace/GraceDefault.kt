@@ -50,16 +50,6 @@ open class GraceDefault : Phase() {
 			Zatoichi.start(uhc, length)
 	}
 
-	override fun endPhase() {
-		for (w in Bukkit.getServer().worlds) {
-			w.setGameRule(GameRule.NATURAL_REGENERATION, false)
-			w.pvp = true
-		}
-		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "Grace period has ended!")
-		}
-	}
-
 	override fun getCountdownString(): String {
 		return "Grace period ends in "
 	}
