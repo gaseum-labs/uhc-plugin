@@ -135,7 +135,8 @@ object GameRunner {
 
 			uhc.startPhase(PhaseType.POSTGAME)
 		}
-		uhc.currentPhase?.interrupt()
+		discordBot?.clearTeamVCs()
+		uhc.currentPhase.interrupt()
 	}
 
 	fun sendPlayer(player: Player, message: String) {

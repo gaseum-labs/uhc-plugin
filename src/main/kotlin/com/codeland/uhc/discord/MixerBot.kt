@@ -229,5 +229,6 @@ class MixerBot(userDataPath: String, ip: String) : ListenerAdapter() {
 		}
 		reader.close()
 		mixerBot.awaitReady()
+		clearTeamVCs()
 	}
 }
