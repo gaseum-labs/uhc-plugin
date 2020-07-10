@@ -101,7 +101,9 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onPlayerDeath(event : PlayerDeathEvent) {
-		event.entity.gameMode = GameMode.SPECTATOR
+		if (!Quirk.PESTS.enabled)
+			event.entity.gameMode = GameMode.SPECTATOR
+
 		GameRunner.playerDeath(event.entity)
 
 		/* begin pest section */
@@ -204,7 +206,9 @@ class WaitingEventListener() : Listener {
 
 		var border = player.world.worldBorder
 
-		Bukkit.getServer().dispatchCommand(GameRunner.uhc.gameMaster!!, "spreadplayers ${border.center.x} ${border.center.z} 0 ${border.size / 2} true ${player.name}")
+		Bukkit.getServer().dispatchCommand(GameRunner.uhc.gameMaster!!, "spreadplayers ${border.center.x} ${border.center.z} 0 ${border.size / 2} false ${player.name}")
+
+		PaperPluginLogger.getGlobal().log(Level.INFO, "spreadplayers ${border.center.x} ${border.center.z} 0 ${border.size / 2} false ${player.name}")
 
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 2.0
 
@@ -247,6 +251,10 @@ class WaitingEventListener() : Listener {
 		if (!Quirk.PESTS.enabled)
 			return
 
+		if (event.target == null)
+			return
+
+		/* todo check if is actually player */
 		var player = event.target as Player;
 
 		/* monsters will not target the pests */
@@ -271,18 +279,6 @@ class WaitingEventListener() : Listener {
 		if (binarySearch(item, pestBanList))
 			event.isCancelled = true
 	}
-
-	/*@EventHandler
-	fun onPlayerHold(e : PlayerItemHeldEvent) {
-		if (GameRunner.uhc.graceType != GraceType.HALFZATOICHI) {
-			return
-		}
-		if (e.player.inventory.itemInMainHand.type == Material.IRON_SWORD) {
-			if (e.player.inventory.itemInMainHand.itemMeta.displayName == "Half Zatoichi") {
-				e.isCancelled = true
-			}
-		}
-	}*/
 
 	@EventHandler
 	fun onPlayerDropItem(event: PlayerDropItemEvent) {
