@@ -180,11 +180,11 @@ class WaitingEventListener() : Listener {
 
 		var world = player.world
 
-		for (y in 255..0) {
+		for (y in 255 downTo 0) {
 			var block = world.getBlockAt(x, y, z)
 
 			if (!block.isPassable) {
-				player.teleport(Location(world, x + 0.5, y + 1.0, z + 0.5))
+				player.location.set(x + 0.5, y + 1.0, z + 0.5)
 
 				break
 			}
@@ -204,8 +204,6 @@ class WaitingEventListener() : Listener {
 		player.inventory.setItem(3, Pests.genPestTool(Material.WOODEN_HOE))
 		player.inventory.setItem(4, Pests.genPestTool(Material.WOODEN_SWORD))
 	}
-
-
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
