@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.HelpCommand
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phaseType.PhaseType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -45,6 +46,31 @@ class ParticipantCommands : BaseCommand() {
 		GameRunner.sendPlayer(sender, phaseString(PhaseType.GLOWING))
 		GameRunner.sendPlayer(sender, phaseString(PhaseType.ENDGAME))
 		GameRunner.sendPlayer(sender, phaseString(PhaseType.POSTGAME))
+	}
+
+	@CommandAlias("setup gui")
+	@Description("get the current setup as the gui")
+	fun getCurrentSetupGui(sender: CommandSender) {
+		sender as Player
+		val uhc = GameRunner.uhc
+
+		Gui.open(sender)
+
+		/*GameRunner.sendPlayer(sender, "Starting radius : ${uhc.startRadius.toInt()} blocks")
+		GameRunner.sendPlayer(sender, "Ending radius : ${uhc.endRadius.toInt()} blocks")
+		GameRunner.sendPlayer(sender, "Nether closes after shrinking : ${uhc.netherToZero}")
+		GameRunner.sendPlayer(sender, "Spawn cap coefficient : ${uhc.mobCapCoefficient}")
+		GameRunner.sendPlayer(sender, "Team Kill Bounty : ${uhc.killReward}")
+
+		GameRunner.sendPlayer(sender, "----------------PHASES----------------")
+
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.WAITING))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.GRACE))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.SHRINK))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.FINAL))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.GLOWING))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.ENDGAME))
+		GameRunner.sendPlayer(sender, phaseString(PhaseType.POSTGAME))*/
 	}
 
 	@CommandAlias("name")
