@@ -41,6 +41,11 @@ abstract class Phase {
 							uhc.startNextPhase()
 							return
 						}
+						if (remainingSeconds <= 3) {
+							for (onlinePlayer in Bukkit.getServer().onlinePlayers) {
+								onlinePlayer.sendTitle("" + remainingSeconds, endPhrase(), 0, 21, 0)
+							}
+						}
 						perSecond(remainingSeconds)
 						--remainingSeconds
 					}
@@ -49,7 +54,6 @@ abstract class Phase {
 				}
 			}
 			runnable!!.runTaskTimer(GameRunner.plugin!!, 0, 1)
-			countdownToEvent(length, endPhrase())
 		}
 	}
 
@@ -89,24 +93,6 @@ abstract class Phase {
 	abstract fun getCountdownString() : String
 
 	abstract fun endPhrase() : String
-
-	private fun countdownToEvent(totalDelay : Long, subtitle : String) {
-		val countdownRunnable = object  : BukkitRunnable() {
-			var num = 3
-			override fun run() {
-				if (num != 0) {
-					for (onlinePlayer in Bukkit.getServer().onlinePlayers) {
-						onlinePlayer.sendTitle("" + num, subtitle, 0, 21, 0)
-					}
-				} else {
-					cancel()
-				}
-				--num
-			}
-		}
-
-		countdownRunnable.runTaskTimer(GameRunner.plugin!!, totalDelay * 20 - 60, 20)
-	}
 }
 
 // nether
