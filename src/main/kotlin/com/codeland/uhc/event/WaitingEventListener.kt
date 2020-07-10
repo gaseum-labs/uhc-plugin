@@ -184,8 +184,7 @@ class WaitingEventListener() : Listener {
 			var block = world.getBlockAt(x, y, z)
 
 			if (!block.isPassable) {
-				player.location.set(x + 0.5, y + 1.0, z + 0.5)
-
+				event.respawnLocation.set(x + 0.5, y + 1.0, z + 0.5)
 				break
 			}
 		}
@@ -267,9 +266,6 @@ class WaitingEventListener() : Listener {
 	fun onEntityDamageEvent(e : EntityDamageByEntityEvent) {
 		if (Quirk.HALF_ZATOICHI.enabled) {
 			return
-		}
-		if (e.damager is Player) {
-			val attacker = e.damager as Player
 		}
 		if (e.damager is Player && e.entity is Player) {
 			val defender = e.entity as Player
