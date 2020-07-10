@@ -43,8 +43,4 @@ class VariantCycler(var phaseType: PhaseType)
 
         setFactoryDisplay(getFactories()[currentIndex])
     }
-
-    init {
-        updateDisplay()
-    }
 }

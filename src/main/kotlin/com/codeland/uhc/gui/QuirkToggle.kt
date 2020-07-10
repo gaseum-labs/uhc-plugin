@@ -35,8 +35,4 @@ class QuirkToggle(var quirk: Quirk)
             setDisplayDisabled()
         }
     }
-
-    init {
-        updateDisplay()
-    }
 }

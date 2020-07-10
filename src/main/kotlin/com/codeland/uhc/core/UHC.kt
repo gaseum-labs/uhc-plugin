@@ -18,6 +18,14 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 		PhaseType.SHRINK.time = shrinkTime
 		PhaseType.FINAL.time = finalTime
 		PhaseType.GLOWING.time = glowTime
+
+		PhaseType.WAITING.factory = PhaseFactory.WAITING_DEFAULT
+		PhaseType.GRACE.factory = PhaseFactory.GRACE_DEFAULT
+		PhaseType.SHRINK.factory = PhaseFactory.SHRINK_DEFAULT
+		PhaseType.FINAL.factory = PhaseFactory.FINAL_DEFAULT
+		PhaseType.GLOWING.factory = PhaseFactory.GLOWING_DEFAULT
+		PhaseType.ENDGAME.factory = PhaseFactory.ENDGAME_NONE
+		PhaseType.POSTGAME.factory = PhaseFactory.POSTGAME_DEFAULT
 	}
 
 	var netherToZero = true

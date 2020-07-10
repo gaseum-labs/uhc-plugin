@@ -8,6 +8,7 @@ import com.codeland.uhc.quirk.Quirk
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.GameRule
+import org.bukkit.attribute.Attribute
 import kotlin.math.sqrt
 
 open class GraceDefault : Phase() {
@@ -19,7 +20,7 @@ open class GraceDefault : Phase() {
 			for (activePotionEffect in it.activePotionEffects) {
 				it.removePotionEffect(activePotionEffect.type)
 			}
-			it.health = 20.0
+			it.health = it.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
 			it.absorptionAmount = 0.0
 			it.exp = 0.0F
 			it.level = 0

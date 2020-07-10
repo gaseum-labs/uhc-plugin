@@ -84,10 +84,6 @@ object GameRunner {
 
 		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
-		/* pest mode keeps everyone in survival */
-		if (!Quirk.PESTS.enabled)
-			deadPlayer.gameMode = GameMode.SPECTATOR
-
 		var deadPlayerTeam = playersTeam(deadPlayer.name)
 			?: return
 
