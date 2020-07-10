@@ -1,6 +1,7 @@
 package com.codeland.uhc.phases.postgame
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.GameRunner.discordBot
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseFactory
 import com.codeland.uhc.phaseType.PhaseType
@@ -32,5 +33,7 @@ class PostgameDefault : Phase() {
 
             player.sendTitle(Title(winningTeamComp, congratsComp, 0, 200, 40))
         }
+
+        discordBot?.clearTeamVCs()
     }
 }
