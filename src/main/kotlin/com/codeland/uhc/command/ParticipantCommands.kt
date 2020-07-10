@@ -10,6 +10,7 @@ import com.codeland.uhc.phaseType.PhaseType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.GameMode
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -55,22 +56,19 @@ class ParticipantCommands : BaseCommand() {
 		val uhc = GameRunner.uhc
 
 		Gui.open(sender)
+	}
 
-		/*GameRunner.sendPlayer(sender, "Starting radius : ${uhc.startRadius.toInt()} blocks")
-		GameRunner.sendPlayer(sender, "Ending radius : ${uhc.endRadius.toInt()} blocks")
-		GameRunner.sendPlayer(sender, "Nether closes after shrinking : ${uhc.netherToZero}")
-		GameRunner.sendPlayer(sender, "Spawn cap coefficient : ${uhc.mobCapCoefficient}")
-		GameRunner.sendPlayer(sender, "Team Kill Bounty : ${uhc.killReward}")
-
-		GameRunner.sendPlayer(sender, "----------------PHASES----------------")
-
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.WAITING))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.GRACE))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.SHRINK))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.FINAL))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.GLOWING))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.ENDGAME))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.POSTGAME))*/
+	@CommandAlias("spectate")
+	@Description("start spectating")
+	fun startSpecting(sender: CommandSender) {
+		sender as Player
+		val team = GameRunner.playersTeam(sender.name)
+		if (team != null) {
+			TeamData.removeFromTeam(team, sender.name)
+		}
+		if (!GameRunner.uhc.isPhase(PhaseType.POSTGAME) && !GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			sender.gameMode = GameMode.SPECTATOR
+		}
 	}
 
 	@CommandAlias("name")
