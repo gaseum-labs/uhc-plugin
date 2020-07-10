@@ -33,7 +33,7 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onPlayerHurt(event : EntityDamageEvent) {
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && !GameRunner.uhc.isPhase(PhaseType.POSTGAME))
 			return
 
 		if (event.entityType == EntityType.PLAYER)
