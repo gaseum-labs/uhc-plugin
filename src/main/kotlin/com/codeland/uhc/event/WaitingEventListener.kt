@@ -338,7 +338,7 @@ class WaitingEventListener() : Listener {
 				}
 			} else if (event.entityType == EntityType.ZOMBIE || event.entityType == EntityType.ZOMBIE_VILLAGER || event.entityType == EntityType.HUSK) {
 				event.drops.add(ItemStack(Material.CARROT))
-				if (Math.random() < 0.1) {
+				if (Math.random() < 0.04) {
 					for (i in (0..30)) {
 						val item = ItemStack(Material.CARROT)
 						val meta = item.itemMeta
