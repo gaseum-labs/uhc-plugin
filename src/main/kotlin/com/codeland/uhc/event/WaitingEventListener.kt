@@ -4,8 +4,10 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.quirk.ModifiedDrops
 import com.codeland.uhc.quirk.Pests
 import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.Zatoichi
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -17,6 +19,7 @@ import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.*
@@ -24,6 +27,9 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.Damageable
+import org.bukkit.inventory.meta.ItemMeta
+import org.bukkit.inventory.meta.SpawnEggMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 import java.util.logging.Level
@@ -33,6 +39,13 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onPlayerHurt(event : EntityDamageEvent) {
+
+		if (Quirk.WET_SPONGE.enabled) {
+			if (event.entity is Player) {
+				(event.entity as Player).inventory.addItem(ItemStack(Material.WET_SPONGE))
+			}
+		}
+
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && !GameRunner.uhc.isPhase(PhaseType.POSTGAME))
 			return
 
@@ -63,6 +76,24 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
+
+		if (Quirk.MODIFIED_DROPS.enabled) {
+			if (ModifiedDrops.isSpawnEgg(event.item?.type)) {
+				if (event.action == Action.RIGHT_CLICK_BLOCK) {
+					val location = event.clickedBlock!!.location.add(event.blockFace.direction).add(0.5, 0.5, 0.5)
+					val entity = event.player.world.spawnEntity(location, ModifiedDrops.getEntityType(event.item?.type)!!, CreatureSpawnEvent.SpawnReason.EGG)
+					val team = GameRunner.playersTeam(event.player.name)
+					if (team != null) {
+						entity.customName = "${team.color}${team.displayName}${ChatColor.RESET}'s ${entity.name}"
+					}
+					if (event.item != null) {
+						event.item!!.amount = event.item!!.amount - 1
+					}
+					event.isCancelled = true
+				}
+			}
+		}
+
 		/* only can open uhc settings while in waiting */
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
 			return
@@ -206,6 +237,26 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
+
+		if (Quirk.WET_SPONGE.enabled) {
+			if (event.target is Player && Math.random() < 0.20) {
+				(event.target as Player).inventory.addItem(ItemStack(Material.WET_SPONGE))
+			}
+		}
+
+		if (Quirk.MODIFIED_DROPS.enabled) {
+			if (event.target != null) {
+				val team = GameRunner.playersTeam(event.target!!.name)
+				if (team != null) {
+					if (event.entity.customName != null) {
+						if (event.entity.customName!!.startsWith(team.color.toString())) {
+							event.isCancelled = true
+						}
+					}
+				}
+			}
+		}
+
 		/* only do this on pests mode */
 		if (!Quirk.PESTS.enabled)
 			return
@@ -225,6 +276,14 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
+
+		if (Quirk.WET_SPONGE.enabled) {
+			if (Math.random() < 0.1) {
+				event.whoClicked as Player
+				event.whoClicked.inventory.addItem(ItemStack(Material.WET_SPONGE))
+			}
+		}
+
 		/* only do this on pests mode */
 		if (!Quirk.PESTS.enabled)
 			return
@@ -245,8 +304,12 @@ class WaitingEventListener() : Listener {
 	fun onPlayerDropItem(event: PlayerDropItemEvent) {
 		val stack = event.itemDrop.itemStack
 
+		if (Quirk.WET_SPONGE.enabled) {
+			event.player.inventory.addItem(ItemStack(Material.WET_SPONGE, 1))
+		}
+
 		event.isCancelled = when {
-			isHalfZatoichi(stack) -> true
+			Zatoichi.isHalfZatoichi(stack) -> true
 			GuiOpener.isGuiOpener(stack) -> true
 			else -> false
 		}
@@ -254,24 +317,108 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
+
+		if (Quirk.MODIFIED_DROPS.enabled) {
+			if (event.entityType == EntityType.CREEPER) {
+				val amount = (Math.random() * 4.0).toInt() + 1
+				if (Math.random() < 0.25) {
+					event.drops.add(ItemStack(Material.TNT, amount))
+				} else if (Math.random() < 0.5) {
+					event.drops.add(ItemStack(Material.FIREWORK_STAR, 2 * amount))
+				} else {
+					event.drops.add(ItemStack(Material.GUNPOWDER, 2 * amount))
+				}
+			} else if (event.entityType == EntityType.PHANTOM) {
+				if (Math.random() < 0.6) {
+					val elytra = ItemStack(Material.ELYTRA)
+					val damageable = (elytra.itemMeta as Damageable)
+					damageable.damage = (432 * Math.random()).toInt() / 2
+					elytra.itemMeta = damageable as ItemMeta
+					event.drops.add(elytra)
+				}
+			} else if (event.entityType == EntityType.ZOMBIE || event.entityType == EntityType.ZOMBIE_VILLAGER || event.entityType == EntityType.HUSK) {
+				event.drops.add(ItemStack(Material.CARROT))
+				if (Math.random() < 0.04) {
+					for (i in (0..30)) {
+						val item = ItemStack(Material.CARROT)
+						val meta = item.itemMeta
+						meta.setDisplayName("${ChatColor.GOLD}Carrot Warrior #${(Math.random() * 27182).toInt()}")
+						item.itemMeta = meta
+						event.drops.add(item)
+					}
+				}
+				if (Math.random() < 0.15) {
+					event.drops.add(ItemStack(Material.ZOMBIE_SPAWN_EGG))
+				}
+			} else if (event.entityType == EntityType.SKELETON || event.entityType == EntityType.STRAY) {
+				if (Math.random() < 0.25) {
+					val crossbow = ItemStack(Material.CROSSBOW)
+					val damageable = (crossbow.itemMeta as Damageable)
+					damageable.damage = (326 * Math.random()).toInt() / 2
+					crossbow.itemMeta = damageable as ItemMeta
+					event.drops.add(crossbow)
+				} else if (Math.random() < 0.25) {
+					var hasBow = false
+					for (drop in event.drops) {
+						if (drop.type == Material.BOW) {
+							hasBow = true
+							break
+						}
+					}
+					if (!hasBow) {
+						val crossbow = ItemStack(Material.BOW)
+						val damageable = (crossbow.itemMeta as Damageable)
+						damageable.damage = (384 * Math.random()).toInt() / 2
+						crossbow.itemMeta = damageable as ItemMeta
+						event.drops.add(crossbow)
+					}
+				}
+			} else if (event.entityType == EntityType.SPIDER || event.entityType == EntityType.CAVE_SPIDER) {
+				val dropCount = (Math.random() * 4.0).toInt()
+				if (dropCount > 0) {
+					event.drops.add(ItemStack(Material.PAPER, dropCount))
+				}
+			} else if (event.entityType == EntityType.DROWNED) {
+				val trident = ItemStack(Material.TRIDENT)
+				val damageable = trident.itemMeta as Damageable
+				damageable.damage = (250 * Math.random()).toInt() / 2
+				trident.itemMeta = damageable as ItemMeta
+				if (Math.random() < 0.33) {
+					trident.addEnchantment(Enchantment.RIPTIDE, (Math.random() * 3.0).toInt() + 1)
+				} else if (Math.random() < 0.5) {
+					trident.addEnchantment(Enchantment.LOYALTY, (Math.random() * 3.0).toInt() + 1)
+				}
+				event.drops.add(trident)
+			}
+			if (Math.random() < 0.25) {
+				val material = ModifiedDrops.getSpawnEgg(event.entityType)
+				if (material != null) {
+					event.drops.add(ItemStack(ItemStack(material)))
+				}
+			}
+		}
+
 		if (!Quirk.ABUNDANCE.enabled)
 			return
 
-		event.drops.forEach { drop ->
-			drop.amount = drop.amount * 3
+		if (event.entityType != EntityType.PLAYER) {
+			event.drops.forEach { drop ->
+				drop.amount = drop.amount * 3
+			}
 		}
 	}
 
 	@EventHandler
 	fun onEntityDamageEvent(e : EntityDamageByEntityEvent) {
-		if (Quirk.HALF_ZATOICHI.enabled) {
+		if (!Quirk.HALF_ZATOICHI.enabled) {
 			return
 		}
 		if (e.damager is Player && e.entity is Player) {
 			val defender = e.entity as Player
 			val attacker = e.damager as Player
-			if (isHalfZatoichi(attacker.inventory.itemInMainHand)) {
-				if (isHalfZatoichi(defender.inventory.itemInMainHand)) {
+
+			if (Zatoichi.isHalfZatoichi(attacker.inventory.itemInMainHand)) {
+				if (Zatoichi.isHalfZatoichi(defender.inventory.itemInMainHand)) {
 					defender.health = 0.0
 					defender.absorptionAmount = 0.0
 				}
@@ -289,15 +436,6 @@ class WaitingEventListener() : Listener {
 				}
 			}
 		}
-	}
-
-	fun isHalfZatoichi(item : ItemStack?) : Boolean {
-		if (item?.type == Material.IRON_SWORD) {
-			if (item.itemMeta.displayName.startsWith("Half Zatoichi")) {
-				return true
-			}
-		}
-		return false
 	}
 
 	fun enchantThing(item : ItemStack, enchant : Enchantment, level : Int) {
@@ -358,6 +496,12 @@ class WaitingEventListener() : Listener {
 		} else if (Quirk.ABUNDANCE.enabled) {
 			block.breakNaturally(getTool())
 		}
+
+		if (Quirk.WET_SPONGE.enabled) {
+			if (Math.random() < 0.01) {
+				player.inventory.addItem(ItemStack(Material.WET_SPONGE))
+			}
+		}
 	}
 
 	val acceptedBlocks = {
@@ -379,7 +523,8 @@ class WaitingEventListener() : Listener {
 				Material.FLETCHING_TABLE,
 				Material.COMPOSTER,
 				Material.CHEST,
-				Material.BARREL
+				Material.BARREL,
+				Material.WET_SPONGE
 		);
 		arr.sort();
 
@@ -406,6 +551,12 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
+		if (Quirk.WET_SPONGE.enabled) {
+			if (event.block.type == Material.WET_SPONGE) {
+				event.isCancelled = true
+				event.player.inventory.addItem(ItemStack(Material.WET_SPONGE))
+			}
+		}
 		if (Quirk.UNSHELTERED.enabled) {
 			var block = event.block;
 

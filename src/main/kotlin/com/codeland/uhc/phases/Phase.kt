@@ -17,7 +17,7 @@ abstract class Phase {
 		val bossKey = NamespacedKey(GameRunner.plugin!!, "phaseBar")
 	}
 
-	protected var runnable = object : BukkitRunnable() { override fun run() {} }
+	protected var runnable : BukkitRunnable? = null
 
 	/* default values */
 
@@ -71,7 +71,7 @@ abstract class Phase {
 				}
 			}
 
-			runnable.runTaskTimer(GameRunner.plugin!!, 0, 1)
+			runnable!!.runTaskTimer(GameRunner.plugin, 0, 1)
 		}
 
 		onInject(this)
@@ -89,7 +89,7 @@ abstract class Phase {
 	}
 
 	public open fun onEnd() {
-		runnable.cancel()
+		runnable?.cancel()
 	}
 
 	protected open fun updateActionBar(remainingSeconds : Long) {

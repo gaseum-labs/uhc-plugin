@@ -9,7 +9,9 @@ enum class Quirk(prettyName: String, representation: Material) {
     HALF_ZATOICHI("Half Zatoichi", Material.IRON_SWORD),
     ABUNDANCE("Abundance", Material.BLUE_ORCHID),
     UNSHELTERED("Unsheltered", Material.SHULKER_SHELL),
-    PESTS("Pests", Material.LEATHER_CHESTPLATE);
+    PESTS("Pests", Material.LEATHER_CHESTPLATE),
+	WET_SPONGE("Wet Sponge (don't question it)", Material.WET_SPONGE),
+	MODIFIED_DROPS("Modified Drops", Material.ROTTEN_FLESH);
 
     var prettyName = prettyName
     var representation = representation
