@@ -4,6 +4,7 @@ import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.AdminCommands
 import com.codeland.uhc.command.ParticipantCommands
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.WaitingEventListener
 import com.codeland.uhc.gui.Gui
@@ -27,13 +28,15 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(WaitingEventListener(), this)
 		server.pluginManager.registerEvents(GuiListener(), this)
 
-		GameRunner.plugin = this
-
+		var uhc = UHC(400.0, 25.0, 1125, 2250, 600, 0)
 
 		val niceWebsite = URL("http://checkip.amazonaws.com")
 		val `in` = BufferedReader(InputStreamReader(niceWebsite.openStream()))
 		val ip = `in`.readLine().trim { it <= ' ' }
-		GameRunner.discordBot = MixerBot("discordData.txt", ip)
+
+		GameRunner(uhc, this, MixerBot("discordData.txt", ip))
+
+		uhc.startWaiting()
 
 		server.scheduler.scheduleSyncDelayedTask(this) {
 			if (server.scoreboardManager.mainScoreboard.getObjective("hp") == null) {

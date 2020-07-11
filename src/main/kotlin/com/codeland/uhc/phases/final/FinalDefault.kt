@@ -1,9 +1,6 @@
 package com.codeland.uhc.phases.final
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseFactory
-import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 
@@ -16,7 +13,7 @@ class FinalDefault : Phase() {
 	}
 
 	override fun perSecond(remainingSeconds: Long) {
-		TODO("Not yet implemented")
+
 	}
 
 	override fun getCountdownString(): String {

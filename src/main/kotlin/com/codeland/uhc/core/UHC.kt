@@ -1,5 +1,6 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.Quirk
@@ -15,33 +16,40 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	var startRadius = startRadius
 	var endRadius = endRadius
 
+	var netherToZero = true
+	var mobCapCoefficient = 1.0
+	var killReward = KillReward.NONE
+
+	var gameMaster = null as CommandSender?
+
+	var phaseVariants = arrayOf<PhaseVariant>(
+		PhaseVariant.WAITING_DEFAULT,
+		PhaseVariant.GRACE_DEFAULT,
+		PhaseVariant.SHRINK_DEFAULT,
+		PhaseVariant.FINAL_DEFAULT,
+		PhaseVariant.GLOWING_DEFAULT,
+		PhaseVariant.ENDGAME_NONE,
+		PhaseVariant.POSTGAME_DEFAULT
+	)
+
+	var phaseTimes = arrayOf<Long>(
+		0,
+		graceTime,
+		shrinkTime,
+		finalTime,
+		glowTime,
+		0,
+		0
+	)
+
 	init {
 		Quirk.PESTS.enabled = false
 		Quirk.ABUNDANCE.enabled = false
 		Quirk.HALF_ZATOICHI.enabled = false
 		Quirk.UNSHELTERED.enabled = false
-
-		PhaseType.GRACE.time = graceTime
-		PhaseType.SHRINK.time = shrinkTime
-		PhaseType.FINAL.time = finalTime
-		PhaseType.GLOWING.time = glowTime
-
-		PhaseType.WAITING.factory = PhaseFactory.WAITING_DEFAULT
-		PhaseType.GRACE.factory = PhaseFactory.GRACE_DEFAULT
-		PhaseType.SHRINK.factory = PhaseFactory.SHRINK_DEFAULT
-		PhaseType.FINAL.factory = PhaseFactory.FINAL_DEFAULT
-		PhaseType.GLOWING.factory = PhaseFactory.GLOWING_DEFAULT
-		PhaseType.ENDGAME.factory = PhaseFactory.ENDGAME_NONE
-		PhaseType.POSTGAME.factory = PhaseFactory.POSTGAME_DEFAULT
 	}
 
-	var netherToZero = true
-	var mobCapCoefficient = 1.0
-	var killReward = KillReward.NONE
-
-	var gameMaster = null as CommandSender
-
-	var currentPhase = null as Phase
+	var currentPhase = null as Phase?
 	var currentPhaseIndex = 0
 
 	fun startWaiting() {
@@ -52,6 +60,20 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 		gameMaster = commandSender
 
 		startPhase(PhaseType.GRACE)
+	}
+
+	public fun setVariant(phaseVariant: PhaseVariant) {
+		phaseVariants[phaseVariant.type.ordinal] = phaseVariant
+
+		Gui.updatePhaseVariant(phaseVariant)
+	}
+
+	fun getVariant(phaseType: PhaseType): PhaseVariant {
+		return phaseVariants[phaseType.ordinal]
+	}
+
+	fun getTime(phaseType: PhaseType): Long {
+		return phaseTimes[phaseType.ordinal]
 	}
 
 	fun startNextPhase() {
@@ -66,11 +88,11 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	}
 
 	fun startPhase(phaseIndex: Int, onInject: (Phase) -> Unit = {}) {
-		currentPhase.onEnd()
+		currentPhase?.onEnd()
 
 		currentPhaseIndex = phaseIndex
 
-		currentPhase = PhaseType.getFactory(phaseIndex).start(this, onInject)
+		currentPhase = phaseVariants[phaseIndex].start(this, phaseTimes[phaseIndex], onInject)
 	}
 
 	fun updateMobCaps() {
@@ -98,6 +120,6 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	}
 
 	fun isPhase(compare: PhaseType): Boolean {
-		return currentPhase.phaseType == compare
+		return currentPhase?.phaseType == compare
 	}
 }

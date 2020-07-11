@@ -1,9 +1,6 @@
 package com.codeland.uhc.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseFactory
-import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
@@ -25,7 +22,7 @@ class EndgamePoison : Phase() {
 	}
 
 	override fun perSecond(remainingSeconds: Long) {
-		TODO("Not yet implemented")
+
 	}
 
 	override fun onEnd() {

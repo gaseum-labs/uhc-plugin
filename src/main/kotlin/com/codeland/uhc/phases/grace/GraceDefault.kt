@@ -49,7 +49,7 @@ open class GraceDefault : Phase() {
 	}
 
 	override fun perSecond(remainingSeconds: Long) {
-		TODO("Not yet implemented")
+
 	}
 
 	override fun getCountdownString(): String {

@@ -18,12 +18,16 @@ import org.bukkit.entity.Player
 class ParticipantCommands : BaseCommand() {
 
 	fun phaseString(phaseType: PhaseType): String {
-		val ret = "${phaseType.prettyName} variant : ${phaseType.factory?.prettyName}"
+		val variant = GameRunner.uhc.getVariant(phaseType)
 
-		val time = phaseType.time
-				?: return ret
+		val ret = "${phaseType.prettyName} variant : ${variant.prettyName}"
 
-		return "$ret | $time seconds"
+		val time = GameRunner.uhc.getTime(phaseType)
+
+		return if (time == 0L)
+			ret
+		else
+			"$ret | $time seconds"
 	}
 
 	@CommandAlias("setup")
@@ -82,7 +86,7 @@ class ParticipantCommands : BaseCommand() {
 			realNewName = realNewName.substring(1, realNewName.length - 1)
 		}
 
-		GameRunner.discordBot?.renameTeam(team, realNewName)
+		GameRunner.bot.renameTeam(team, realNewName)
 
 		team.displayName = realNewName
 

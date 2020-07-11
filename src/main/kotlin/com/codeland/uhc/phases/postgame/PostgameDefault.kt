@@ -38,10 +38,10 @@ class PostgameDefault : Phase() {
             player.sendTitle(Title(topMessage, bottomMessage, 0, 200, 40))
         }
 
-        GameRunner.discordBot?.clearTeamVCs()
+        GameRunner.bot.clearTeamVCs()
     }
 
     override fun perSecond(remainingSeconds: Long) {
-        TODO("Not yet implemented")
+
     }
 }

@@ -28,7 +28,7 @@ class QuirkToggle(var quirk: Quirk)
         stack.itemMeta = meta
     }
 
-    override fun updateDisplay() {
+    fun updateDisplay() {
         if (quirk.enabled) {
             setDisplayEnabled()
         } else {

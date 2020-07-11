@@ -29,6 +29,4 @@ open class GuiItem(var opOnly: Boolean, var stack: ItemStack, var onClick: (GuiI
         meta.setDisplayName(name)
         stack.itemMeta = meta
     }
-
-    open fun updateDisplay() {}
 }

@@ -16,7 +16,7 @@ import com.codeland.uhc.phases.waiting.WaitingDefault
 import org.bukkit.Material
 import kotlin.reflect.KFunction
 
-enum class PhaseFactory(var type: PhaseType, var createPhase: () -> Phase, var prettyName: String, var representation: Material) {
+enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var prettyName: String, var representation: Material) {
 	WAITING_DEFAULT(PhaseType.WAITING, ::WaitingDefault, "Default", Material.CLOCK),
 	GRACE_DEFAULT(PhaseType.GRACE, ::GraceDefault, "Default", Material.FEATHER),
 
@@ -38,10 +38,10 @@ enum class PhaseFactory(var type: PhaseType, var createPhase: () -> Phase, var p
 		Factories.list[type.ordinal].add(this)
 	}
 
-	fun start(uhc: UHC, onInject: (Phase) -> Unit): Phase {
+	fun start(uhc: UHC, time: Long, onInject: (Phase) -> Unit): Phase {
 		val ret = createPhase()
 
-		ret.start(type, uhc, type.time ?: 0, onInject)
+		ret.start(type, uhc, time, onInject)
 
 		return ret
 	}

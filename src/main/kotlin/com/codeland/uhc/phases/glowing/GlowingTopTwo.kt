@@ -1,15 +1,11 @@
 package com.codeland.uhc.phases.glowing
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseFactory
-import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import org.bukkit.scheduler.BukkitRunnable
 
 class GlowingTopTwo : Phase() {
 

@@ -21,8 +21,8 @@ abstract class Phase {
 
 	/* default values */
 
-	var phaseType = PhaseType.WAITING
-	var uhc = null as UHC
+	lateinit var phaseType: PhaseType
+	lateinit var uhc: UHC
 	var length = 0L
 
 	fun start(phaseType: PhaseType, uhc : UHC, length : Long, onInject: (Phase) -> Unit) {

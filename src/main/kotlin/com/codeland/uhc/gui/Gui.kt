@@ -1,21 +1,13 @@
 package com.codeland.uhc.gui
 
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.quirk.Quirk
-import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.event.EventHandler
-import org.bukkit.event.Listener
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryDragEvent
-import org.bukkit.event.inventory.InventoryMoveItemEvent
 import org.bukkit.inventory.ItemStack
-import java.util.logging.Level
 
 object Gui {
     const val INVENTORY_WIDTH = 9
@@ -57,11 +49,11 @@ object Gui {
     }
 
     fun updateQuirk(quirk: Quirk) {
-        guiItems[getQuirkPosition(quirk)]?.updateDisplay()
+        (guiItems[getQuirkPosition(quirk)] as? QuirkToggle)?.updateDisplay()
     }
 
-    fun updatePhaseType(phaseType: PhaseType) {
-        guiItems[getPhasePosition(phaseType)]?.updateDisplay()
+    fun updatePhaseVariant(phaseVariant: PhaseVariant) {
+        (guiItems[getPhasePosition(phaseVariant.type)] as? VariantCycler)?.updateDisplay(phaseVariant)
     }
 
     fun coordinateToIndex(x: Int, y: Int): Int {
