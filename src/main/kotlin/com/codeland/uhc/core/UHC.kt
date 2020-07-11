@@ -43,10 +43,13 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	)
 
 	init {
+
 		Quirk.PESTS.enabled = false
 		Quirk.ABUNDANCE.enabled = false
 		Quirk.HALF_ZATOICHI.enabled = false
 		Quirk.UNSHELTERED.enabled = false
+		Quirk.WET_SPONGE.enabled = false
+		Quirk.MODIFIED_DROPS.enabled = false
 	}
 
 	var currentPhase = null as Phase?

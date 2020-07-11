@@ -7,6 +7,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.*
 import org.bukkit.*
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 import org.bukkit.scoreboard.Team
 
 @CommandAlias("uhca")
@@ -217,5 +218,12 @@ class AdminCommands : BaseCommand() {
 		}
 
 		GameRunner.uhc.startPhase(PhaseType.WAITING)
+	}
+
+	@CommandAlias("test insomnia")
+	@Description("get the insomnia of the sender")
+	fun testExhaustion(sender: CommandSender) {
+		sender as Player
+		sender.sendMessage("${sender.name}'s insomnia: ${sender.getStatistic(Statistic.TIME_SINCE_REST)}")
 	}
 }

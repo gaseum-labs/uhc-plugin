@@ -5,10 +5,9 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.Zatoichi
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.Quirk
-import org.bukkit.Bukkit
-import org.bukkit.GameMode
-import org.bukkit.GameRule
+import org.bukkit.*
 import org.bukkit.attribute.Attribute
+import org.bukkit.inventory.ItemStack
 import kotlin.math.sqrt
 
 open class GraceDefault : Phase() {
@@ -24,6 +23,10 @@ open class GraceDefault : Phase() {
 			it.absorptionAmount = 0.0
 			it.exp = 0.0F
 			it.level = 0
+			it.setStatistic(Statistic.TIME_SINCE_REST, 0)
+			if (Quirk.WET_SPONGE.enabled) {
+				it.inventory.addItem(ItemStack(Material.WET_SPONGE, 1))
+			}
 			if (GameRunner.playersTeam(it.name) != null) {
 				it.gameMode = GameMode.SURVIVAL
 			} else {
