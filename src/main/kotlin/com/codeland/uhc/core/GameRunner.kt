@@ -125,10 +125,11 @@ object GameRunner {
 	}
 
 	fun endUHC(winner: Team) {
-		val postPhase = PhaseType.getFactory(PhaseType.POSTGAME).target as PostgameDefault
-		postPhase.winningTeam = winner
+		uhc.startPhase(PhaseType.POSTGAME) { phase ->
+			phase as PostgameDefault
 
-		uhc.startPhase(PhaseType.POSTGAME)
+			phase.winningTeam = winner
+		}
 	}
 
 	fun sendPlayer(player: Player, message: String) {

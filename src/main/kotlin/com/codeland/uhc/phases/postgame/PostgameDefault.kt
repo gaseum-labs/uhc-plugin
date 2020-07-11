@@ -1,10 +1,6 @@
 package com.codeland.uhc.phases.postgame
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.GameRunner.discordBot
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseFactory
-import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.chat.TextComponent
@@ -12,6 +8,7 @@ import org.bukkit.Bukkit
 import org.bukkit.scoreboard.Team
 
 class PostgameDefault : Phase() {
+
     override fun getCountdownString(): String {
         TODO("Not yet implemented")
     }
@@ -22,18 +19,29 @@ class PostgameDefault : Phase() {
 
     var winningTeam = null as Team?
 
-    override fun start(uhc: UHC, length: Long) {
+    override fun customStart() {
         var team: Team = winningTeam ?: return
 
         Bukkit.getServer().onlinePlayers.forEach { player ->
-            val winningTeamComp = TextComponent(team.displayName)
-            winningTeamComp.isBold = true
-            winningTeamComp.color = team.color.asBungee()
-            val congratsComp = TextComponent("HAS WON!")
+            val topMessage = TextComponent("${team.displayName} Has Won!")
+            topMessage.isBold = true
+            topMessage.color = team.color.asBungee()
 
-            player.sendTitle(Title(winningTeamComp, congratsComp, 0, 200, 40))
+            var playerString = ""
+            team.entries.forEach { playerName ->
+                playerString += "$playerName "
+            }
+
+            val bottomMessage = TextComponent(playerString.removeSuffix(" "))
+            bottomMessage.color = team.color.asBungee()
+
+            player.sendTitle(Title(topMessage, bottomMessage, 0, 200, 40))
         }
 
-        discordBot?.clearTeamVCs()
+        GameRunner.discordBot?.clearTeamVCs()
+    }
+
+    override fun perSecond(remainingSeconds: Long) {
+        TODO("Not yet implemented")
     }
 }

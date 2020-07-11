@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.phaseType.*
+import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.Quirk
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -38,9 +39,9 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	var mobCapCoefficient = 1.0
 	var killReward = KillReward.NONE
 
-	var gameMaster = null as CommandSender?
+	var gameMaster = null as CommandSender
 
-	var currentPhase = PhaseFactory.WAITING_DEFAULT.target
+	var currentPhase = null as Phase
 	var currentPhaseIndex = 0
 
 	fun startWaiting() {
@@ -60,22 +61,21 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 			startPhase(currentPhaseIndex)
 	}
 
-	fun startPhase(phaseType: PhaseType) {
-		startPhase(phaseType.ordinal)
+	fun startPhase(phaseType: PhaseType, onInject: (Phase) -> Unit = {}) {
+		startPhase(phaseType.ordinal, onInject)
 	}
 
-	fun startPhase(phaseIndex: Int) {
-		var oldPhase = PhaseType.getFactory(phaseIndex).target
-		oldPhase.onEnd()
+	fun startPhase(phaseIndex: Int, onInject: (Phase) -> Unit = {}) {
+		currentPhase.onEnd()
 
 		currentPhaseIndex = phaseIndex
 
-		currentPhase = PhaseType.getFactory(phaseIndex).start(this)
+		currentPhase = PhaseType.getFactory(phaseIndex).start(this, onInject)
 	}
 
 	fun updateMobCaps() {
-		// mobCap = constant × chunks ÷ 289
-		// https://minecraft.gamepedia.com/Spawn#Java_Edition_mob_cap
+		/* mobCap = constant × chunks ÷ 289                           */
+		/* https://minecraft.gamepedia.com/Spawn#Java_Edition_mob_cap */
 		for (world in Bukkit.getServer().worlds) {
 			var total = 0.0
 			var inBorder = 0.0
@@ -89,6 +89,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 				inBorder += width * height / 256.0
 			}
 			val coeff = inBorder / total
+
 			world.monsterSpawnLimit = (70 * coeff * mobCapCoefficient).toInt() + 1
 			world.animalSpawnLimit = (10 * coeff * mobCapCoefficient).toInt() + 1
 			world.ambientSpawnLimit = (15 * coeff * mobCapCoefficient).toInt() + 1

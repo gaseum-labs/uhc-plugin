@@ -3,25 +3,37 @@ package com.codeland.uhc.phases
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
-import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
+import org.bukkit.NamespacedKey
 import org.bukkit.boss.BarColor
 import org.bukkit.boss.BarStyle
 import org.bukkit.scheduler.BukkitRunnable
 
 abstract class Phase {
+	companion object {
+		val bossKey = NamespacedKey(GameRunner.plugin!!, "phaseBar")
+	}
 
-	protected var runnable : BukkitRunnable? = null
+	protected var runnable = object : BukkitRunnable() { override fun run() {} }
+
+	/* default values */
+
 	var phaseType = PhaseType.WAITING
+	var uhc = null as UHC
+	var length = 0L
 
-	open fun start(uhc : UHC, length : Long) {
+	fun start(phaseType: PhaseType, uhc : UHC, length : Long, onInject: (Phase) -> Unit) {
+		this.phaseType = phaseType
+		this.uhc = uhc
+		this.length = length
+
+		Bukkit.removeBossBar(bossKey)
+		val bar = Bukkit.createBossBar(bossKey, "${phaseType.prettyName}", phaseType.color, BarStyle.SOLID)
+
 		if (length > 0) {
-
-			val bar = Bukkit.createBossBar("$phaseType", BarColor.BLUE, BarStyle.SOLID)
-			bar.progress = 1.0
-
 			for (player in Bukkit.getServer().onlinePlayers) {
 				bar.addPlayer(player)
 			}
@@ -32,43 +44,58 @@ abstract class Phase {
 				override fun run() {
 					if (currentTick == 0) {
 						if (remainingSeconds == 0L) {
-							cancel()
-							for (player in Bukkit.getServer().onlinePlayers) {
-								player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(""))
+							Bukkit.getServer().onlinePlayers.forEach { player ->
+								player.sendActionBar("")
 							}
-							bar.removeAll()//TEST AGAIN ALSO COUNTDOWN TILL START
-							onEnd()
+
 							uhc.startNextPhase()
+
 							return
+						} else {
+							updateActionBar(remainingSeconds)
 						}
+
 						if (remainingSeconds <= 3) {
-							for (onlinePlayer in Bukkit.getServer().onlinePlayers) {
-								onlinePlayer.sendTitle("" + remainingSeconds, endPhrase(), 0, 21, 0)
+							Bukkit.getServer().onlinePlayers.forEach { player ->
+								player.sendTitle("${ChatColor.BOLD}${countDownColor(remainingSeconds)}$remainingSeconds", "${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
 							}
 						}
+
 						perSecond(remainingSeconds)
+
 						--remainingSeconds
 					}
+
 					bar.progress = (remainingSeconds.toDouble() + 1 - (currentTick.toDouble() / 20.0)) / length.toDouble()
 					currentTick = (currentTick + 1) % 20
 				}
 			}
-			runnable!!.runTaskTimer(GameRunner.plugin!!, 0, 1)
+
+			runnable.runTaskTimer(GameRunner.plugin!!, 0, 1)
+		}
+
+		onInject(this)
+
+		customStart()
+	}
+
+	private fun countDownColor(secondsLeft: Long): ChatColor {
+		return when (secondsLeft) {
+			3L -> ChatColor.RED
+			2L -> ChatColor.GREEN
+			1L -> ChatColor.BLUE
+			else -> ChatColor.GRAY
 		}
 	}
 
-	public fun onEnd() {
-		runnable?.cancel()
-	}
-
-	protected open fun perSecond(second : Long) {
-		updateActionBar(second)
+	public open fun onEnd() {
+		runnable.cancel()
 	}
 
 	protected open fun updateActionBar(remainingSeconds : Long) {
 		val countdownComponent = TextComponent(getCountdownString())
 		val remainingTimeComponent = TextComponent(getRemainingTimeString(remainingSeconds))
-		remainingTimeComponent.color = ChatColor.GOLD
+		remainingTimeComponent.color = ChatColor.GOLD.asBungee()
 		remainingTimeComponent.isBold = true
 		for (player in Bukkit.getServer().onlinePlayers) {
 			player.spigot().sendMessage(ChatMessageType.ACTION_BAR, countdownComponent, remainingTimeComponent)
@@ -90,10 +117,10 @@ abstract class Phase {
 		return timeRemaining.toString() + units
 	}
 
-	abstract fun getCountdownString() : String
+	/* abstract */
 
+	abstract fun customStart()
+	protected abstract fun perSecond(remainingSeconds: Long)
+	abstract fun getCountdownString() : String
 	abstract fun endPhrase() : String
 }
-
-// nether
-//endgames

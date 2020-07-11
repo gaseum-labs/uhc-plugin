@@ -7,7 +7,10 @@ import com.codeland.uhc.phases.Phase
 
 class EndgameNone : Phase() {
 
-	override fun start(uhc: UHC, length: Long) {}
+	override fun customStart() {}
+	override fun perSecond(remainingSeconds: Long) {
+		TODO("Not yet implemented")
+	}
 
 	override fun getCountdownString(): String {
 		return ""

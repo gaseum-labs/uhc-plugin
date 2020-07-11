@@ -2,6 +2,8 @@ package com.codeland.uhc.quirk
 
 import com.codeland.uhc.gui.Gui
 import org.bukkit.Material
+import org.bukkit.enchantments.Enchantment
+import org.bukkit.inventory.ItemStack
 
 enum class Quirk(prettyName: String, representation: Material) {
     HALF_ZATOICHI("Half Zatoichi", Material.IRON_SWORD),
@@ -42,6 +44,19 @@ enum class Quirk(prettyName: String, representation: Material) {
     companion object {
         init {
             HALF_ZATOICHI.setIncompatible(PESTS)
+        }
+
+        fun randomEnchantedBook(): ItemStack {
+            val ret = ItemStack(Material.BOOK)
+
+            val meta = ret.itemMeta
+
+            val enchant = Enchantment.values()[(Math.random() * Enchantment.values().size).toInt()]
+            meta.addEnchant(enchant, (Math.random() * (enchant.maxLevel + 1)).toInt(), true)
+
+            ret.itemMeta = meta
+
+            return ret
         }
     }
 }

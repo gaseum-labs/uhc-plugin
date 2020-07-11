@@ -14,39 +14,35 @@ import com.codeland.uhc.phases.postgame.PostgameDefault
 import com.codeland.uhc.phases.shrink.ShrinkDefault
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import org.bukkit.Material
+import kotlin.reflect.KFunction
 
-enum class PhaseFactory(type: PhaseType, target: Phase, prettyName: String, representation: Material) {
-	WAITING_DEFAULT(PhaseType.WAITING, WaitingDefault(), "Default", Material.CLOCK),
-	GRACE_DEFAULT(PhaseType.GRACE, GraceDefault(), "Default", Material.FEATHER),
+enum class PhaseFactory(var type: PhaseType, var createPhase: () -> Phase, var prettyName: String, var representation: Material) {
+	WAITING_DEFAULT(PhaseType.WAITING, ::WaitingDefault, "Default", Material.CLOCK),
+	GRACE_DEFAULT(PhaseType.GRACE, ::GraceDefault, "Default", Material.FEATHER),
 
-	SHRINK_DEFAULT(PhaseType.SHRINK, ShrinkDefault(), "Default", Material.SPAWNER),
+	SHRINK_DEFAULT(PhaseType.SHRINK, ::ShrinkDefault, "Default", Material.SPAWNER),
 
-	FINAL_DEFAULT(PhaseType.FINAL, FinalDefault(), "Default", Material.NETHERITE_SCRAP),
+	FINAL_DEFAULT(PhaseType.FINAL, ::FinalDefault, "Default", Material.NETHERITE_SCRAP),
 
-	GLOWING_DEFAULT(PhaseType.GLOWING, GlowingDefault(), "Default", Material.GLOWSTONE_DUST),
-	GLOWING_TOP_TWO(PhaseType.GLOWING, GlowingTopTwo(), "Top two", Material.SPECTRAL_ARROW),
+	GLOWING_DEFAULT(PhaseType.GLOWING, ::GlowingDefault, "Default", Material.GLOWSTONE_DUST),
+	GLOWING_TOP_TWO(PhaseType.GLOWING, ::GlowingTopTwo, "Top two", Material.SPECTRAL_ARROW),
 
-	ENDGAME_NONE(PhaseType.ENDGAME, EndgameNone(), "None", Material.STONE_SWORD),
-	ENDGAME_CLEAR_BLOCKS(PhaseType.ENDGAME, EndgameClearBlocks(), "Clear blocks", Material.DIRT),
-	ENDGAME_DEATHMATCH(PhaseType.ENDGAME, EndgameDeathmatch(), "Deathmatch", Material.BONE),
-	ENDGAME_POISON(PhaseType.ENDGAME, EndgamePoison(), "Poision", Material.WITHER_SKELETON_SKULL),
+	ENDGAME_NONE(PhaseType.ENDGAME, ::EndgameNone, "None", Material.STONE_SWORD),
+	ENDGAME_CLEAR_BLOCKS(PhaseType.ENDGAME, ::EndgameClearBlocks, "Clear blocks", Material.DIRT),
+	ENDGAME_DEATHMATCH(PhaseType.ENDGAME, ::EndgameDeathmatch, "Deathmatch", Material.BONE),
+	ENDGAME_POISON(PhaseType.ENDGAME, ::EndgamePoison, "Poision", Material.WITHER_SKELETON_SKULL),
 
-	POSTGAME_DEFAULT(PhaseType.POSTGAME, PostgameDefault(), "Default", Material.FILLED_MAP);
-
-	var type = type
-	var target = target
-	var prettyName = prettyName
-	var representation = representation
+	POSTGAME_DEFAULT(PhaseType.POSTGAME, ::PostgameDefault, "Default", Material.FILLED_MAP);
 
 	init {
-		target.phaseType = type
-
 		Factories.list[type.ordinal].add(this)
 	}
 
-	fun start(uhc: UHC): Phase {
-		target.start(uhc, type.time ?: 0)
+	fun start(uhc: UHC, onInject: (Phase) -> Unit): Phase {
+		val ret = createPhase()
 
-		return target
+		ret.start(type, uhc, type.time ?: 0, onInject)
+
+		return ret
 	}
 }

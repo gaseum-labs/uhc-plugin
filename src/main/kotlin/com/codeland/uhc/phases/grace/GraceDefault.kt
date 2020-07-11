@@ -13,7 +13,7 @@ import kotlin.math.sqrt
 
 open class GraceDefault : Phase() {
 
-	override fun start(uhc : UHC, length : Long) {
+	override fun customStart() {
 		Bukkit.getServer().onlinePlayers.forEach {
 			it.inventory.clear()
 			it.setItemOnCursor(null)
@@ -44,10 +44,12 @@ open class GraceDefault : Phase() {
 
 		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.startRadius / sqrt(teamCount.toDouble())), uhc.startRadius))
 
-		super.start(uhc, length)
-
 		if (Quirk.HALF_ZATOICHI.enabled)
 			Zatoichi.start(uhc, length)
+	}
+
+	override fun perSecond(remainingSeconds: Long) {
+		TODO("Not yet implemented")
 	}
 
 	override fun getCountdownString(): String {

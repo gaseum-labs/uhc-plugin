@@ -15,14 +15,18 @@ import kotlin.math.max
 
 class EndgameClearBlocks : Phase() {
 
-	override fun start(uhc: UHC, length: Long) {
+	var blockRunnable = null as BukkitRunnable?
+
+	override fun customStart() {
 		var w : World? = null
+
 		for (world in Bukkit.getServer().worlds) {
 			if (world.environment == World.Environment.NORMAL) {
 				w = world
 			}
 		}
-		runnable = object : BukkitRunnable() {
+
+		blockRunnable = object : BukkitRunnable() {
 			var topBoundary = 255
 			var botBoundary = -135
 			var frame = 0
@@ -60,7 +64,18 @@ class EndgameClearBlocks : Phase() {
 				}
 			}
 		}
-		runnable?.runTaskTimer(GameRunner.plugin!!, 0, 1)
+
+		blockRunnable?.runTaskTimer(GameRunner.plugin!!, 0, 1)
+	}
+
+	override fun perSecond(remainingSeconds: Long) {
+		TODO("Not yet implemented")
+	}
+
+	override fun onEnd() {
+		super.onEnd()
+
+		blockRunnable?.cancel()
 	}
 
 	override fun getCountdownString(): String {

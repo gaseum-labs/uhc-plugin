@@ -2,19 +2,18 @@ package com.codeland.uhc.phaseType;
 
 import com.codeland.uhc.gui.Gui
 import com.destroystokyo.paper.utils.PaperPluginLogger
+import org.bukkit.boss.BarColor
 import java.util.logging.Level
 
-enum class PhaseType(prettyName: String, hasTimer: Boolean) {
-	WAITING("Waiting lobby", false),
-	GRACE("Grace period", true),
-	SHRINK("Shrinking period", true),
-	FINAL("Final zone", true),
-	GLOWING("Glowing period", true),
-	ENDGAME("Endgame", false),
-	POSTGAME("Postgame", false);
+enum class PhaseType(var prettyName: String, var hasTimer: Boolean, var color: BarColor) {
+	WAITING("Waiting lobby", false, BarColor.WHITE),
+	GRACE("Grace period", true, BarColor.BLUE),
+	SHRINK("Shrinking period", true, BarColor.GREEN),
+	FINAL("Final zone", true, BarColor.RED),
+	GLOWING("Glowing period", true, BarColor.PURPLE),
+	ENDGAME("Endgame", false, BarColor.YELLOW),
+	POSTGAME("Postgame", false, BarColor.WHITE);
 
-	val prettyName = prettyName
-	val hasTimer = hasTimer
 	var time: Long? = 0L
 	get() {
 		if (!hasTimer)

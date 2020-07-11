@@ -13,25 +13,13 @@ import org.bukkit.scheduler.BukkitRunnable
 
 class GlowingTopTwo : Phase() {
 
-	override fun start(uhc: UHC, length: Long) {
+	override fun customStart() {
 		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "Glowing has been applied")
-		}
-		if (length > 0) {//no endgame
-			super.start(uhc, length)
-		} else {
-			object : BukkitRunnable() {
-				override fun run() {
-					perSecond(0)
-				}
-			}.runTaskTimer(GameRunner.plugin!!, 0, 20)
+			GameRunner.sendPlayer(player, "Glowing will be applied to the top two teams")
 		}
 	}
 
 	override fun perSecond(second: Long) {
-		if (second > 0) {
-			super.perSecond(second)
-		}
 		val sortedTeams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams.sortedByDescending {
 			var ret = 0.0
 			for (entry in it.entries) {
@@ -44,6 +32,7 @@ class GlowingTopTwo : Phase() {
 			}
 			return@sortedByDescending ret
 		}
+
 		sortedTeams.forEachIndexed { i, team ->
 			if (i < 2) {
 				for (entry in team.entries) {

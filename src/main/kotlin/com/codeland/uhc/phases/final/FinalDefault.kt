@@ -8,10 +8,15 @@ import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 
 class FinalDefault : Phase() {
-	override fun start(uhc: UHC, length: Long) {
+
+	override fun customStart() {
 		for (player in Bukkit.getServer().onlinePlayers) {
 			GameRunner.sendPlayer(player, "The border has stopped shrinking")
 		}
+	}
+
+	override fun perSecond(remainingSeconds: Long) {
+		TODO("Not yet implemented")
 	}
 
 	override fun getCountdownString(): String {
