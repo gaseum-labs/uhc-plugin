@@ -7,7 +7,7 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 
 class QuirkToggle(var quirk: Quirk)
-    : GuiItem(ItemStack(quirk.representation),
+    : GuiItem(true, ItemStack(quirk.representation),
     { guiItem, player ->
         guiItem as QuirkToggle
 

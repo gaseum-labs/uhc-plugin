@@ -20,20 +20,10 @@ class ShrinkDefault : Phase() {
 	}
 
 	override fun updateActionBar(remainingSeconds: Long) {
-		val countdownComponent = TextComponent(getCountdownString())
-		val messageComponent = TextComponent(" reaching ")
-		val minRadComponent = TextComponent(minRadius!!.toLong().toString())
-		minRadComponent.color = ChatColor.GOLD
-		minRadComponent.isBold = true
-		val inComponent = TextComponent(" in ")
-		val remainingTimeComponent = TextComponent(getRemainingTimeString(remainingSeconds))
-		remainingTimeComponent.color = ChatColor.GOLD
-		remainingTimeComponent.isBold = true
-		for (player in Bukkit.getServer().onlinePlayers) {
-			val radiusComponent = TextComponent((player.world.worldBorder.size.toLong() / 2).toString())
-			radiusComponent.color = ChatColor.GOLD
-			remainingTimeComponent.isBold = true
-			player.spigot().sendMessage(ChatMessageType.ACTION_BAR, countdownComponent, radiusComponent, messageComponent, minRadComponent, inComponent, remainingTimeComponent)
+		val text = "reaching ${minRadius!!.toLong()} in ${getRemainingTimeString(remainingSeconds)}"
+
+		Bukkit.getServer().onlinePlayers.forEach { player ->
+			player.sendActionBar("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${player.world.worldBorder.size.toLong() / 2} $text")
 		}
 	}
 
@@ -62,7 +52,7 @@ class ShrinkDefault : Phase() {
 	}
 
 	override fun getCountdownString(): String {
-		return "Border radius: "
+		return "Border radius:"
 	}
 
 	override fun endPhrase(): String {

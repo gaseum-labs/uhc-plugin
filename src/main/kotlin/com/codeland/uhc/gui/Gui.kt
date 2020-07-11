@@ -26,7 +26,7 @@ object Gui {
 
     init {
         /* cancel button */
-        addItem(GuiItem(ItemStack(Material.BARRIER)) { guiItem, player ->
+        addItem(GuiItem(false, ItemStack(Material.BARRIER)) { guiItem, player ->
             close(player)
         }, 8, 3).setName("${ChatColor.RESET}${ChatColor.RED}close")
 

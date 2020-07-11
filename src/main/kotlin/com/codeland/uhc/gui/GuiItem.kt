@@ -7,7 +7,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 
-open class GuiItem(var stack: ItemStack, var onClick: (GuiItem, Player) -> Unit) {
+open class GuiItem(var opOnly: Boolean, var stack: ItemStack, var onClick: (GuiItem, Player) -> Unit) {
     var index = 0
 
     /**

@@ -93,12 +93,8 @@ abstract class Phase {
 	}
 
 	protected open fun updateActionBar(remainingSeconds : Long) {
-		val countdownComponent = TextComponent(getCountdownString())
-		val remainingTimeComponent = TextComponent(getRemainingTimeString(remainingSeconds))
-		remainingTimeComponent.color = ChatColor.GOLD.asBungee()
-		remainingTimeComponent.isBold = true
-		for (player in Bukkit.getServer().onlinePlayers) {
-			player.spigot().sendMessage(ChatMessageType.ACTION_BAR, countdownComponent, remainingTimeComponent)
+		Bukkit.getServer().onlinePlayers.forEach { player ->
+			player.sendActionBar("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${getRemainingTimeString(remainingSeconds)}")
 		}
 	}
 

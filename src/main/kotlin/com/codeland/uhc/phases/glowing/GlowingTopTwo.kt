@@ -47,11 +47,10 @@ class GlowingTopTwo : Phase() {
 	}
 
 	override fun getCountdownString(): String {
-		return "Endgame starts in "
+		return "Endgame starts in"
 	}
 
 	override fun endPhrase(): String {
 		return "ENDGAME STARTING"
 	}
-
 }

@@ -25,7 +25,7 @@ class GuiListener : Listener {
 
         /* only ops may modify */
         val player = event.whoClicked
-        if (!player.isOp)
+        if (guiItem.opOnly && !player.isOp)
             return
 
         /* do guiItem action */

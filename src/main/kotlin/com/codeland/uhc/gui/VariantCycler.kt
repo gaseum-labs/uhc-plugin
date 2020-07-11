@@ -11,7 +11,7 @@ import org.bukkit.inventory.ItemStack
 import java.util.logging.Level
 
 class VariantCycler(var phaseType: PhaseType)
-    : GuiItem(ItemStack(Material.DAMAGED_ANVIL),
+    : GuiItem(true, ItemStack(Material.DAMAGED_ANVIL),
     { guiItem, player ->
         guiItem as VariantCycler
 

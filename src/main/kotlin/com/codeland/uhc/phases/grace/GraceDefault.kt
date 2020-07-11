@@ -53,7 +53,7 @@ open class GraceDefault : Phase() {
 	}
 
 	override fun getCountdownString(): String {
-		return "Grace period ends in "
+		return "Grace period ends in"
 	}
 
 	override fun endPhrase(): String {

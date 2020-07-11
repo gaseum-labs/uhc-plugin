@@ -20,11 +20,10 @@ class FinalDefault : Phase() {
 	}
 
 	override fun getCountdownString(): String {
-		return "Glowing starts in "
+		return "Glowing starts in"
 	}
 
 	override fun endPhrase(): String {
 		return "GLOWING WILL BE APPLIED"
 	}
-
 }

@@ -10,11 +10,11 @@ import org.bukkit.scoreboard.Team
 class PostgameDefault : Phase() {
 
     override fun getCountdownString(): String {
-        TODO("Not yet implemented")
+        return ""
     }
 
     override fun endPhrase(): String {
-        TODO("Not yet implemented")
+        return ""
     }
 
     var winningTeam = null as Team?

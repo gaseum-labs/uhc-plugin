@@ -8,6 +8,7 @@ import com.codeland.uhc.phases.Phase
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.scheduler.BukkitRunnable
@@ -46,17 +47,16 @@ class EndgameClearBlocks : Phase() {
 						}
 					}
 				}
-				for (player in Bukkit.getServer().onlinePlayers) {
-					val preComp = TextComponent("block range is between ")
-					val min = TextComponent(max(botBoundary, 0).toString())
-					val mid = TextComponent(" and ")
-					val max = TextComponent(topBoundary.toString())
-					player.spigot().sendMessage(ChatMessageType.ACTION_BAR, preComp, min, mid, max)
+
+				Bukkit.getServer().onlinePlayers.forEach { player ->
+					player.sendActionBar("Block range is between ${ChatColor.GOLD}${ChatColor.BOLD}${max(botBoundary, 0)} ${ChatColor.RESET}and ${ChatColor.GOLD}${ChatColor.BOLD}$topBoundary")
 				}
+
 				if (frame == 0) {
 					--topBoundary
 					++botBoundary
 				}
+
 				frame = (frame + 1) % 20
 				if (botBoundary > 60 || topBoundary < 60) {
 					botBoundary = 60
@@ -85,5 +85,4 @@ class EndgameClearBlocks : Phase() {
 	override fun endPhrase(): String {
 		return ""
 	}
-
 }
