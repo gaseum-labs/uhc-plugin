@@ -22,15 +22,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 
 	var gameMaster = null as CommandSender?
 
-	var phaseVariants = arrayOf<PhaseVariant>(
-		PhaseVariant.WAITING_DEFAULT,
-		PhaseVariant.GRACE_DEFAULT,
-		PhaseVariant.SHRINK_DEFAULT,
-		PhaseVariant.FINAL_DEFAULT,
-		PhaseVariant.GLOWING_DEFAULT,
-		PhaseVariant.ENDGAME_NONE,
-		PhaseVariant.POSTGAME_DEFAULT
-	)
+	var phaseVariants = Array<PhaseVariant>(7) {PhaseVariant.WAITING_DEFAULT}
 
 	var phaseTimes = arrayOf<Long>(
 		0,
@@ -47,6 +39,14 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 		Quirk.ABUNDANCE.enabled = false
 		Quirk.HALF_ZATOICHI.enabled = false
 		Quirk.UNSHELTERED.enabled = false
+
+		setVariant(PhaseVariant.WAITING_DEFAULT)
+		setVariant(PhaseVariant.GRACE_DEFAULT)
+		setVariant(PhaseVariant.SHRINK_DEFAULT)
+		setVariant(PhaseVariant.FINAL_DEFAULT)
+		setVariant(PhaseVariant.GLOWING_DEFAULT)
+		setVariant(PhaseVariant.ENDGAME_NONE)
+		setVariant(PhaseVariant.POSTGAME_DEFAULT)
 	}
 
 	var currentPhase = null as Phase?
