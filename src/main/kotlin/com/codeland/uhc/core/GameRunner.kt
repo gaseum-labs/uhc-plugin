@@ -6,7 +6,6 @@ import com.codeland.uhc.quirk.Pests
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
-import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -27,14 +26,6 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 		lateinit var uhc: UHC
 		lateinit var plugin: UHCPlugin
 		lateinit var bot: MixerBot
-
-		fun startGame(commandSender : CommandSender) {
-			if (!uhc.isPhase(PhaseType.WAITING)) {
-				commandSender.sendMessage("UHC already in progress")
-			} else {
-				uhc.startUHC(commandSender)
-			}
-		}
 
 		fun teamIsAlive(team: Team): Boolean {
 			return team.entries.any { entry ->

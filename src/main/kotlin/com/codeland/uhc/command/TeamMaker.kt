@@ -2,6 +2,10 @@ package com.codeland.uhc.command
 
 import org.bukkit.ChatColor
 import org.bukkit.scoreboard.Scoreboard
+import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
+import java.io.IOException
 import java.util.*
 import kotlin.math.abs
 
@@ -64,9 +68,14 @@ object TeamMaker {
 
 	/* ranked */
 
-	class ScoredPlayer(var name: String, var score: Float, var games: Int)
+	class ScoredPlayer(var name: String, var score: Float, var games: Int) {
+		override fun toString(): String {
+			return "$name $score $games"
+		}
+	}
 
 	private val scores = ArrayList<ScoredPlayer>()
+	val dataPath = "./scores.txt"
 
 	private fun getScoredPlayer(name: String): ScoredPlayer {
 		var scoredPlayer = scores.find { player ->
@@ -175,5 +184,84 @@ object TeamMaker {
 		}
 
 		return ret
+	}
+
+	fun addGame(losers: Array<String>, winners: Array<String>) {
+		var totalPlayers = losers.size + winners.size
+
+		losers.forEachIndexed { i, loser ->
+			var player = getScoredPlayer(loser)
+
+			var oldScoreWeight = player.score * player.games
+			var newScore = (i + winners.size).toFloat() / totalPlayers
+			++player.games
+			player.score = (oldScoreWeight + newScore) / player.games
+		}
+
+		winners.forEach { winner ->
+			var player = getScoredPlayer(winner)
+
+			var oldScoreWeight = player.score * player.games;
+			++player.games;
+			player.score = oldScoreWeight / player.games;
+		}
+
+		saveData()
+	}
+
+	fun saveData() {
+		var fr = FileWriter(File(dataPath), false);
+		if (scores.size > 0) {
+			fr.write("${scores[0]}")
+
+			for (i in 1..scores.size)
+				fr.write("\n${scores[i]}")
+		}
+
+		fr.close()
+	}
+
+	fun readData() {
+		val file = File(dataPath)
+
+		if (file.exists()) {
+			var fr = FileReader(file)
+
+			var lines = fr.readLines()
+
+			lines.forEach { line ->
+				var builder = StringBuilder()
+
+				var name = ""
+				var score = 0.0f
+				var games = 0
+
+				var mode = 0
+
+				line.forEach { current ->
+					if (current == ' ') {
+						when (mode) {
+							0 -> name = builder.toString()
+							1 -> score = builder.toString().toFloat()
+						}
+
+						builder.clear()
+						++mode
+
+					} else {
+						builder.append(current)
+					}
+				}
+
+				games = builder.toString().toInt()
+
+				scores.add(ScoredPlayer(name, score, games))
+			}
+
+			fr.close()
+
+		} else {
+			FileWriter(file).close()
+		}
 	}
 }

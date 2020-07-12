@@ -79,7 +79,7 @@ object Zatoichi {
 
 	}
 
-	fun isHalfZatoichi(item : ItemStack?) : Boolean {
+	public fun isHalfZatoichi(item : ItemStack?) : Boolean {
 		if (item?.type == Material.IRON_SWORD) {
 			if (item.itemMeta.displayName.startsWith("Half Zatoichi")) {
 				return true

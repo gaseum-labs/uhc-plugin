@@ -20,7 +20,10 @@ class AdminCommands : BaseCommand() {
 	fun startGame(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		GameRunner.startGame(sender)
+		val errMessage = GameRunner.uhc.startUHC(sender)
+
+		if (errMessage != null)
+			Commands.errorMessage(sender, errMessage)
 	}
 
 	@CommandAlias("team clear")
@@ -56,6 +59,16 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("team random")
 	@Description("create random teams")
 	fun randomTeams(sender : CommandSender, teamSize : Int) {
+		doRandomTeams(sender, teamSize)
+	}
+
+	@CommandAlias("team random")
+	@Description("create random teams")
+	fun randomTeams(sender : CommandSender) {
+		doRandomTeams(sender, 1)
+	}
+
+	private fun doRandomTeams(sender: CommandSender, teamSize: Int) {
 		if (Commands.opGuard(sender)) return;
 
 		val onlinePlayers = sender.server.onlinePlayers
@@ -72,7 +85,7 @@ class AdminCommands : BaseCommand() {
 		val numPreMadeTeams = teams.size
 
 		val teamColors = TeamMaker.getColorList(numPreMadeTeams, scoreboard)
-			?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!");
+				?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!");
 
 		teams.forEachIndexed { index, playerNames ->
 			playerNames.forEach {
@@ -113,7 +126,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.killReward = reward
 	}
 
-	@CommandAlias("modify phase variant")
+	@CommandAlias("modify variant")
 	@Description("set variant")
 	fun setPhase(sender: CommandSender, factory: PhaseVariant) {
 		if (Commands.opGuard(sender)) return
@@ -122,7 +135,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.setVariant(factory)
 	}
 
-	@CommandAlias("modify phase length")
+	@CommandAlias("modify timing")
 	@Description("set the length of a phase")
 	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Long) {
 		if (Commands.opGuard(sender)) return
@@ -134,7 +147,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.phaseTimes[type.ordinal] = length
 	}
 
-	@CommandAlias("modify radius start")
+	@CommandAlias("modify startRadius")
 	@Description("set the starting radius")
 	fun setStartRadius(sender : CommandSender, radius : Double) {
 		if (Commands.opGuard(sender)) return
@@ -143,7 +156,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.startRadius = radius
 	}
 
-	@CommandAlias("modify radius end")
+	@CommandAlias("modify endRadius")
 	@Description("set the final radius")
 	fun setEndRadius(sender : CommandSender, radius : Double) {
 		if (Commands.opGuard(sender)) return
@@ -194,28 +207,10 @@ class AdminCommands : BaseCommand() {
 		}
 	}
 
-	@CommandAlias("test reset")
+	@CommandAlias("reset")
 	@Description("reset things to the waiting stage")
 	fun testReset(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
-
-		for (world in Bukkit.getServer().worlds) {
-			world.setSpawnLocation(10000, 70, 10000)
-			world.worldBorder.setCenter(10000.0, 10000.0)
-			world.worldBorder.size = 50.0
-			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
-			world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
-			world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
-			world.time = 1000
-			world.difficulty = Difficulty.NORMAL
-		}
-
-		for (player in Bukkit.getServer().onlinePlayers) {
-			player.exp = 0.0F
-			player.health = 20.0
-			player.location.set(10000.0, 100.0, 10000.0)
-			player.gameMode = GameMode.ADVENTURE
-		}
 
 		GameRunner.uhc.startPhase(PhaseType.WAITING)
 	}

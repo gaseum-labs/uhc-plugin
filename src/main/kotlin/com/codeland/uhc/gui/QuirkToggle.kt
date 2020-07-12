@@ -11,7 +11,7 @@ class QuirkToggle(var quirk: Quirk)
     { guiItem, player ->
         guiItem as QuirkToggle
 
-        quirk.enabled = !quirk.enabled
+        quirk.updateEnabled(!quirk.enabled)
     }
 ) {
     fun setDisplayEnabled() {

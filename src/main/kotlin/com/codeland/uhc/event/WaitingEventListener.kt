@@ -4,10 +4,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.quirk.ModifiedDrops
-import com.codeland.uhc.quirk.Pests
-import com.codeland.uhc.quirk.Quirk
-import com.codeland.uhc.quirk.Zatoichi
+import com.codeland.uhc.quirk.*
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -27,9 +24,6 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.Damageable
-import org.bukkit.inventory.meta.ItemMeta
-import org.bukkit.inventory.meta.SpawnEggMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 import java.util.logging.Level
@@ -76,7 +70,6 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-
 		if (Quirk.MODIFIED_DROPS.enabled) {
 			if (ModifiedDrops.isSpawnEgg(event.item?.type)) {
 				if (event.action == Action.RIGHT_CLICK_BLOCK) {
@@ -116,18 +109,6 @@ class WaitingEventListener() : Listener {
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			event.isCancelled = true
 		}
-	}
-
-	@EventHandler
-	fun onWorldLoad(e : WorldLoadEvent) {
-		e.world.setSpawnLocation(10000, 70, 10000)
-		e.world.worldBorder.setCenter(10000.0, 10000.0)
-		e.world.worldBorder.size = 50.0
-		e.world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
-		e.world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
-		e.world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
-		e.world.time = 1000
-		e.world.difficulty = Difficulty.NORMAL
 	}
 
 	@EventHandler
@@ -317,93 +298,15 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
-
 		if (Quirk.MODIFIED_DROPS.enabled) {
-			if (event.entityType == EntityType.CREEPER) {
-				val amount = (Math.random() * 4.0).toInt() + 1
-				if (Math.random() < 0.25) {
-					event.drops.add(ItemStack(Material.TNT, amount))
-				} else if (Math.random() < 0.5) {
-					event.drops.add(ItemStack(Material.FIREWORK_STAR, 2 * amount))
-				} else {
-					event.drops.add(ItemStack(Material.GUNPOWDER, 2 * amount))
-				}
-			} else if (event.entityType == EntityType.PHANTOM) {
-				if (Math.random() < 0.6) {
-					val elytra = ItemStack(Material.ELYTRA)
-					val damageable = (elytra.itemMeta as Damageable)
-					damageable.damage = (432 * Math.random()).toInt() / 2
-					elytra.itemMeta = damageable as ItemMeta
-					event.drops.add(elytra)
-				}
-			} else if (event.entityType == EntityType.ZOMBIE || event.entityType == EntityType.ZOMBIE_VILLAGER || event.entityType == EntityType.HUSK) {
-				event.drops.add(ItemStack(Material.CARROT))
-				if (Math.random() < 0.04) {
-					for (i in (0..30)) {
-						val item = ItemStack(Material.CARROT)
-						val meta = item.itemMeta
-						meta.setDisplayName("${ChatColor.GOLD}Carrot Warrior #${(Math.random() * 27182).toInt()}")
-						item.itemMeta = meta
-						event.drops.add(item)
-					}
-				}
-				if (Math.random() < 0.15) {
-					event.drops.add(ItemStack(Material.ZOMBIE_SPAWN_EGG))
-				}
-			} else if (event.entityType == EntityType.SKELETON || event.entityType == EntityType.STRAY) {
-				if (Math.random() < 0.25) {
-					val crossbow = ItemStack(Material.CROSSBOW)
-					val damageable = (crossbow.itemMeta as Damageable)
-					damageable.damage = (326 * Math.random()).toInt() / 2
-					crossbow.itemMeta = damageable as ItemMeta
-					event.drops.add(crossbow)
-				} else if (Math.random() < 0.25) {
-					var hasBow = false
-					for (drop in event.drops) {
-						if (drop.type == Material.BOW) {
-							hasBow = true
-							break
-						}
-					}
-					if (!hasBow) {
-						val crossbow = ItemStack(Material.BOW)
-						val damageable = (crossbow.itemMeta as Damageable)
-						damageable.damage = (384 * Math.random()).toInt() / 2
-						crossbow.itemMeta = damageable as ItemMeta
-						event.drops.add(crossbow)
-					}
-				}
-			} else if (event.entityType == EntityType.SPIDER || event.entityType == EntityType.CAVE_SPIDER) {
-				val dropCount = (Math.random() * 4.0).toInt()
-				if (dropCount > 0) {
-					event.drops.add(ItemStack(Material.PAPER, dropCount))
-				}
-			} else if (event.entityType == EntityType.DROWNED) {
-				val trident = ItemStack(Material.TRIDENT)
-				val damageable = trident.itemMeta as Damageable
-				damageable.damage = (250 * Math.random()).toInt() / 2
-				trident.itemMeta = damageable as ItemMeta
-				if (Math.random() < 0.33) {
-					trident.addEnchantment(Enchantment.RIPTIDE, (Math.random() * 3.0).toInt() + 1)
-				} else if (Math.random() < 0.5) {
-					trident.addEnchantment(Enchantment.LOYALTY, (Math.random() * 3.0).toInt() + 1)
-				}
-				event.drops.add(trident)
-			}
-			if (Math.random() < 0.25) {
-				val material = ModifiedDrops.getSpawnEgg(event.entityType)
-				if (material != null) {
-					event.drops.add(ItemStack(ItemStack(material)))
-				}
-			}
+			ModifiedDrops.onDrop(event.entityType, event.drops)
 		}
 
-		if (!Quirk.ABUNDANCE.enabled)
-			return
-
-		if (event.entityType != EntityType.PLAYER) {
-			event.drops.forEach { drop ->
-				drop.amount = drop.amount * 3
+		if (Quirk.ABUNDANCE.enabled) {
+			if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
+				event.drops.forEach { drop ->
+					drop.amount = drop.amount * 3
+				}
 			}
 		}
 	}
@@ -557,11 +460,21 @@ class WaitingEventListener() : Listener {
 				event.player.inventory.addItem(ItemStack(Material.WET_SPONGE))
 			}
 		}
-		if (Quirk.UNSHELTERED.enabled) {
-			var block = event.block;
+
+		if (Quirk.CREATIVE.enabled) {
+			var material = event.itemInHand.type
+
+			/* replace these blocks */
+			if (binarySearch(material, Creative.blocks)) {
+				event.isCancelled = true
+				Bukkit.getScheduler().runTaskLater(GameRunner.plugin, { event.block.type = material } as () -> Unit, 0)
+			}
+
+		} else if (Quirk.UNSHELTERED.enabled) {
+			var block = event.block
 
 			if (!binarySearch(block.type, acceptedBlocks)) {
-				event.isCancelled = true;
+				event.isCancelled = true
 			}
 		}
 	}

@@ -14,7 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable
 
 abstract class Phase {
 	companion object {
-		val bossKey = NamespacedKey(GameRunner.plugin, "phaseBar")
+		var bossBar = Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID)
 	}
 
 	protected var runnable : BukkitRunnable? = null
@@ -30,12 +30,13 @@ abstract class Phase {
 		this.uhc = uhc
 		this.length = length
 
-		Bukkit.removeBossBar(bossKey)
-		val bar = Bukkit.createBossBar(bossKey, phaseType.prettyName, phaseType.color, BarStyle.SOLID)
+		bossBar.progress = 1.0
+		bossBar.color = phaseType.color
+		bossBar.setTitle(phaseType.prettyName)
 
 		if (length > 0) {
 			for (player in Bukkit.getServer().onlinePlayers) {
-				bar.addPlayer(player)
+				bossBar.addPlayer(player)
 			}
 
 			runnable = object : BukkitRunnable() {
@@ -66,7 +67,7 @@ abstract class Phase {
 						--remainingSeconds
 					}
 
-					bar.progress = (remainingSeconds.toDouble() + 1 - (currentTick.toDouble() / 20.0)) / length.toDouble()
+					bossBar.progress = (remainingSeconds.toDouble() + 1 - (currentTick.toDouble() / 20.0)) / length.toDouble()
 					currentTick = (currentTick + 1) % 20
 				}
 			}
