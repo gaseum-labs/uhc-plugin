@@ -27,14 +27,6 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 		lateinit var plugin: UHCPlugin
 		lateinit var bot: MixerBot
 
-		fun startGame(commandSender : CommandSender) {
-			if (!uhc.isPhase(PhaseType.WAITING)) {
-				commandSender.sendMessage("UHC already in progress")
-			} else {
-				uhc.startUHC(commandSender)
-			}
-		}
-
 		fun teamIsAlive(team: Team): Boolean {
 			return team.entries.any { entry ->
 				val player = Bukkit.getServer().getPlayer(entry)

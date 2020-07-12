@@ -24,9 +24,6 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.Damageable
-import org.bukkit.inventory.meta.ItemMeta
-import org.bukkit.inventory.meta.SpawnEggMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 import java.util.logging.Level
@@ -73,7 +70,6 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-
 		if (Quirk.MODIFIED_DROPS.enabled) {
 			if (ModifiedDrops.isSpawnEgg(event.item?.type)) {
 				if (event.action == Action.RIGHT_CLICK_BLOCK) {
@@ -113,18 +109,6 @@ class WaitingEventListener() : Listener {
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			event.isCancelled = true
 		}
-	}
-
-	@EventHandler
-	fun onWorldLoad(e : WorldLoadEvent) {
-		e.world.setSpawnLocation(10000, 70, 10000)
-		e.world.worldBorder.setCenter(10000.0, 10000.0)
-		e.world.worldBorder.size = 50.0
-		e.world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
-		e.world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
-		e.world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
-		e.world.time = 1000
-		e.world.difficulty = Difficulty.NORMAL
 	}
 
 	@EventHandler
@@ -478,17 +462,19 @@ class WaitingEventListener() : Listener {
 		}
 
 		if (Quirk.CREATIVE.enabled) {
-			var material = event.block.type
+			var material = event.itemInHand.type
 
 			/* replace these blocks */
 			if (binarySearch(material, Creative.blocks)) {
-				event.player.inventory.addItem(ItemStack(material))
+				event.isCancelled = true
+				Bukkit.getScheduler().runTaskLater(GameRunner.plugin, { event.block.type = material } as () -> Unit, 0)
 			}
+
 		} else if (Quirk.UNSHELTERED.enabled) {
-			var block = event.block;
+			var block = event.block
 
 			if (!binarySearch(block.type, acceptedBlocks)) {
-				event.isCancelled = true;
+				event.isCancelled = true
 			}
 		}
 	}

@@ -59,10 +59,21 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 		startPhase(PhaseType.WAITING)
 	}
 
-	fun startUHC(commandSender : CommandSender) {
+	/**
+	 * @return a string if the game couldn't start
+	 */
+	fun startUHC(commandSender : CommandSender): String? {
+		if (!isPhase(PhaseType.WAITING))
+			return "Game has already started!"
+
+		if (Bukkit.getScoreboardManager().mainScoreboard.teams.size == 0)
+			return "No one is playing!"
+
 		gameMaster = commandSender
 
 		startPhase(PhaseType.GRACE)
+
+		return null
 	}
 
 	public fun setVariant(phaseVariant: PhaseVariant) {

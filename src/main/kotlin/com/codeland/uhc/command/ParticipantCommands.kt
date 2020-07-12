@@ -53,7 +53,7 @@ class ParticipantCommands : BaseCommand() {
 		GameRunner.sendPlayer(sender, phaseString(PhaseType.POSTGAME))
 	}
 
-	@CommandAlias("setup gui")
+	@CommandAlias("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
 		sender as Player
@@ -66,12 +66,19 @@ class ParticipantCommands : BaseCommand() {
 	@Description("start spectating")
 	fun startSpecting(sender: CommandSender) {
 		sender as Player
-		val team = GameRunner.playersTeam(sender.name)
-		if (team != null) {
-			TeamData.removeFromTeam(team, sender.name)
-		}
-		if (!GameRunner.uhc.isPhase(PhaseType.POSTGAME) && !GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			sender.gameMode = GameMode.SPECTATOR
+
+		if (sender.gameMode != GameMode.SPECTATOR) {
+			val team = GameRunner.playersTeam(sender.name)
+
+			if (team != null) {
+				TeamData.removeFromTeam(team, sender.name)
+			}
+
+			if (!GameRunner.uhc.isPhase(PhaseType.POSTGAME) && !GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+				sender.gameMode = GameMode.SPECTATOR
+
+				GameRunner.playerDeath(sender)
+			}
 		}
 	}
 
