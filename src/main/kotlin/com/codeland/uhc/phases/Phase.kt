@@ -15,7 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable
 
 abstract class Phase {
 	companion object {
-		private var bossBar = Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID)
+		var bossBar = Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID)
 
 		fun addToBossBar(player: Player) {
 			bossBar.addPlayer(player)

@@ -45,13 +45,13 @@ open class GraceDefault : Phase() {
 			w.setGameRule(GameRule.DO_MOB_SPAWNING, true)
 			w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true)
 			w.worldBorder.setCenter(0.0, 0.0)
-			w.worldBorder.size = uhc.startRadius * 2
+			w.worldBorder.size = uhc.preset.startRadius * 2
 			w.pvp = false
 		}
 
 		val teamCount = 1 + Bukkit.getServer().scoreboardManager.mainScoreboard.teams.size
 
-		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.startRadius / sqrt(teamCount.toDouble())), uhc.startRadius))
+		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.preset.startRadius / sqrt(teamCount.toDouble())), uhc.preset.startRadius))
 
 		if (Quirk.HALF_ZATOICHI.enabled)
 			Zatoichi.start(uhc, length)

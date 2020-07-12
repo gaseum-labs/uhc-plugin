@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.Preset
 import com.codeland.uhc.phaseType.*
 import org.bukkit.*
 import org.bukkit.command.CommandSender
@@ -153,7 +154,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
-		GameRunner.uhc.startRadius = radius
+		GameRunner.uhc.preset.startRadius = radius
 	}
 
 	@CommandAlias("modify endRadius")
@@ -162,7 +163,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
-		GameRunner.uhc.endRadius = radius
+		GameRunner.uhc.preset.endRadius = radius
 	}
 
 	@CommandAlias("modify all")
@@ -171,8 +172,8 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
-		GameRunner.uhc.startRadius = startRadius
-		GameRunner.uhc.endRadius = endRadius
+		GameRunner.uhc.preset.startRadius = startRadius
+		GameRunner.uhc.preset.endRadius = endRadius
 
 		val phaseTimes = GameRunner.uhc.phaseTimes
 
@@ -180,6 +181,15 @@ class AdminCommands : BaseCommand() {
 		phaseTimes[PhaseType.SHRINK.ordinal] = shrinkTime
 		phaseTimes[PhaseType.FINAL.ordinal] = finalTime
 		phaseTimes[PhaseType.GLOWING.ordinal] = glowingTime
+	}
+
+	@CommandAlias("preset")
+	@Description("set all details of the UHC")
+	fun modifyAll(sender : CommandSender, preset: Preset) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.waitGuard(sender)) return
+
+		GameRunner.uhc.updatePreset(preset)
 	}
 
 	@CommandAlias("test end")

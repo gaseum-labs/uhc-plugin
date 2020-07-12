@@ -36,8 +36,8 @@ class ParticipantCommands : BaseCommand() {
 		sender as Player
 		val uhc = GameRunner.uhc
 
-		GameRunner.sendPlayer(sender, "Starting radius : ${uhc.startRadius.toInt()} blocks")
-		GameRunner.sendPlayer(sender, "Ending radius : ${uhc.endRadius.toInt()} blocks")
+		GameRunner.sendPlayer(sender, "Starting radius : ${uhc.preset.startRadius.toInt()} blocks")
+		GameRunner.sendPlayer(sender, "Ending radius : ${uhc.preset.endRadius.toInt()} blocks")
 		GameRunner.sendPlayer(sender, "Nether closes after shrinking : ${uhc.netherToZero}")
 		GameRunner.sendPlayer(sender, "Spawn cap coefficient : ${uhc.mobCapCoefficient}")
 		GameRunner.sendPlayer(sender, "Team Kill Bounty : ${uhc.killReward}")

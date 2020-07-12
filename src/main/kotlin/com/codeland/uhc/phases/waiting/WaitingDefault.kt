@@ -44,7 +44,7 @@ class WaitingDefault : Phase() {
     }
 
     companion object {
-        public fun onPlayerJoin(player: Player) {
+        fun onPlayerJoin(player: Player) {
             player.exp = 0.0F
             player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
             player.health = 20.0

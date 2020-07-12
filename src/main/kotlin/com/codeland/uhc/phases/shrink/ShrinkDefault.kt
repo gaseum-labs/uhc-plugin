@@ -22,9 +22,7 @@ class ShrinkDefault : Phase() {
 	override fun updateActionBar(remainingSeconds: Long) {
 		val text = "reaching ${minRadius!!.toLong()} in ${getRemainingTimeString(remainingSeconds)}"
 
-		Bukkit.getServer().onlinePlayers.forEach { player ->
-			player.sendActionBar("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${player.world.worldBorder.size.toLong() / 2} $text")
-		}
+		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${Bukkit.getWorlds()[0].worldBorder.size.toLong() / 2} $text")
 	}
 
 	override fun customStart() {
@@ -37,7 +35,7 @@ class ShrinkDefault : Phase() {
 			GameRunner.sendPlayer(player, "Grace period has ended!")
 		}
 
-		minRadius = uhc.endRadius
+		minRadius = uhc.preset.endRadius
 		for (w in Bukkit.getServer().worlds) {
 			if (w.environment == World.Environment.NETHER && uhc.netherToZero) {
 				w.worldBorder.setSize(0.0, length)

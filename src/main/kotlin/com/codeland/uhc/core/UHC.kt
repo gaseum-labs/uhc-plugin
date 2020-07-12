@@ -11,13 +11,8 @@ import org.bukkit.scoreboard.Team
 import kotlin.math.max
 import kotlin.math.min
 
-class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, finalTime: Long, glowTime: Long) {
-
+class UHC(var preset: Preset) {
 	/* time is measured in seconds here. */
-
-	var startRadius = startRadius
-	var endRadius = endRadius
-
 	var netherToZero = true
 	var mobCapCoefficient = 1.0
 	var killReward = KillReward.NONE
@@ -25,16 +20,7 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	var gameMaster = null as CommandSender?
 
 	var phaseVariants = Array<PhaseVariant>(7) {PhaseVariant.WAITING_DEFAULT}
-
-	var phaseTimes = arrayOf<Long>(
-		0,
-		graceTime,
-		shrinkTime,
-		finalTime,
-		glowTime,
-		0,
-		0
-	)
+	var phaseTimes = emptyArray<Long>()
 
 	init {
 		Quirk.PESTS.updateEnabled(false)
@@ -56,6 +42,24 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 
 	var currentPhase = null as Phase?
 	var currentPhaseIndex = 0
+
+	fun updatePreset(preset: Preset) {
+		this.preset = preset
+
+		phaseTimes = arrayOf(
+			0,
+			preset.graceTime,
+			preset.shrinkTime,
+			preset.finalTime,
+			preset.glowTime,
+			0,
+			0
+		)
+	}
+
+	init {
+		updatePreset(preset)
+	}
 
 	fun startWaiting() {
 		startPhase(PhaseType.WAITING)
