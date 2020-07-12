@@ -6,7 +6,6 @@ import com.codeland.uhc.quirk.Pests
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
-import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit

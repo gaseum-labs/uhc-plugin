@@ -1,7 +1,9 @@
 package com.codeland.uhc.quirk
 
 import org.bukkit.Material
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.EntityType
+import org.bukkit.inventory.ItemStack
 
 object ModifiedDrops {
 	private val spawnEggs = arrayOf(
@@ -72,5 +74,18 @@ object ModifiedDrops {
 			return null
 		}
 		return enemyEntities[spawnEggs.indexOf(material)]
+	}
+
+	fun randomEnchantedBook(): ItemStack {
+		val ret = ItemStack(Material.BOOK)
+
+		val meta = ret.itemMeta
+
+		val enchant = Enchantment.values()[(Math.random() * Enchantment.values().size).toInt()]
+		meta.addEnchant(enchant, (Math.random() * (enchant.maxLevel + 1)).toInt(), true)
+
+		ret.itemMeta = meta
+
+		return ret
 	}
 }

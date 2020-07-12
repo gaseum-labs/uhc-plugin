@@ -35,7 +35,6 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	)
 
 	init {
-
 		Quirk.PESTS.enabled = false
 		Quirk.ABUNDANCE.enabled = false
 		Quirk.HALF_ZATOICHI.enabled = false
