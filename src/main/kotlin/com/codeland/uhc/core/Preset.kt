@@ -12,10 +12,27 @@ enum class Preset(var prettyName: String, var startRadius: Double, var endRadius
 		return listOf(
 			"Start radius: $startRadius",
 			"End radius: $endRadius",
-			"Grace time: $graceTime",
-			"Shrink time: $shrinkTime",
-			"Final time: $finalTime",
-			"Glow time: $glowTime"
+			"Grace time: ${prettyTime(graceTime)}",
+			"Shrink time: ${prettyTime(shrinkTime)}",
+			"Final time: ${prettyTime(finalTime)}",
+			"Glow time: ${prettyTime(glowTime)}"
 		)
+	}
+
+	fun prettyTime(time: Long): String {
+		val minutes = time / 60
+		val seconds = time % 60
+
+		var minutesPart = if (minutes == 0L)
+			""
+		else
+			"$minutes minute${if (minutes == 1L) "" else "s"}"
+
+		var secondsPart = if (seconds == 0L)
+			""
+		else
+			"$seconds second${if (seconds == 1L) "" else "s"}"
+
+		return "$minutesPart $secondsPart"
 	}
 }

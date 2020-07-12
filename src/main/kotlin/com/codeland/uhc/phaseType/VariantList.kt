@@ -1,6 +1,6 @@
 package com.codeland.uhc.phaseType
 
-object Factories {
+object VariantList {
     var list = Array<ArrayList<PhaseVariant>>(PhaseType.values().size) {
         ArrayList()
     }

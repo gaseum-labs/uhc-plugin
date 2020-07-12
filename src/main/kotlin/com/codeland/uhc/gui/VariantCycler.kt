@@ -1,7 +1,7 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phaseType.Factories
+import com.codeland.uhc.phaseType.VariantList
 import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phaseType.PhaseType
 import org.bukkit.ChatColor
@@ -27,10 +27,11 @@ class VariantCycler(var phaseType: PhaseType)
         changeStackType(factory.representation)
 
         setName("${ChatColor.RESET}${ChatColor.WHITE}${phaseType.prettyName} ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${factory.prettyName}")
+        setLore(factory.description)
     }
 
     private fun getFactories(): ArrayList<PhaseVariant> {
-        return Factories.list[phaseType.ordinal]
+        return VariantList.list[phaseType.ordinal]
     }
 
     fun updateDisplay(phaseFactory: PhaseVariant) {
