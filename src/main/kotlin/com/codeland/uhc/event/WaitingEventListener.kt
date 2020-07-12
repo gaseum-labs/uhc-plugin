@@ -84,7 +84,7 @@ class WaitingEventListener() : Listener {
 					val entity = event.player.world.spawnEntity(location, ModifiedDrops.getEntityType(event.item?.type)!!, CreatureSpawnEvent.SpawnReason.EGG)
 					val team = GameRunner.playersTeam(event.player.name)
 					if (team != null) {
-						entity.customName = "${team.color}${team.displayName}${ChatColor.RESET}'s ${entity.name}"
+						entity.customName = "${team.color}${team.displayName}${ChatColor.RESET} ${entity.name}"
 					}
 					if (event.item != null) {
 						event.item!!.amount = event.item!!.amount - 1
