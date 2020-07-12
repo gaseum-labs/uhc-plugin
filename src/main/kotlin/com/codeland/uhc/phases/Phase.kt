@@ -10,11 +10,16 @@ import org.bukkit.ChatColor
 import org.bukkit.NamespacedKey
 import org.bukkit.boss.BarColor
 import org.bukkit.boss.BarStyle
+import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 
 abstract class Phase {
 	companion object {
-		var bossBar = Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID)
+		private var bossBar = Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID)
+
+		fun addToBossBar(player: Player) {
+			bossBar.addPlayer(player)
+		}
 	}
 
 	protected var runnable : BukkitRunnable? = null
@@ -32,13 +37,9 @@ abstract class Phase {
 
 		bossBar.progress = 1.0
 		bossBar.color = phaseType.color
-		bossBar.setTitle(phaseType.prettyName)
+		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${phaseType.prettyName}")
 
 		if (length > 0) {
-			for (player in Bukkit.getServer().onlinePlayers) {
-				bossBar.addPlayer(player)
-			}
-
 			runnable = object : BukkitRunnable() {
 				var remainingSeconds = length
 				var currentTick = 0
@@ -58,7 +59,7 @@ abstract class Phase {
 
 						if (remainingSeconds <= 3) {
 							Bukkit.getServer().onlinePlayers.forEach { player ->
-								player.sendTitle("${ChatColor.BOLD}${countDownColor(remainingSeconds)}$remainingSeconds", "${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
+								player.sendTitle("${countDownColor(remainingSeconds)}${ChatColor.BOLD}$remainingSeconds", "${ChatColor.GOLD}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
 							}
 						}
 

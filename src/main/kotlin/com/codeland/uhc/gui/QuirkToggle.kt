@@ -16,15 +16,17 @@ class QuirkToggle(var quirk: Quirk)
 ) {
     fun setDisplayEnabled() {
         val meta = stack.itemMeta
-        meta.setDisplayName("${ChatColor.RESET}${ChatColor.WHITE}${quirk.prettyName} ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}ENABLED")
+        meta.setDisplayName("${ChatColor.RESET}${ChatColor.WHITE}${quirk.prettyName} ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
         meta.addEnchant(Enchantment.CHANNELING, 1, true)
+        meta.lore = quirk.description.asList()
         stack.itemMeta = meta
     }
 
     fun setDisplayDisabled() {
         val meta = stack.itemMeta
-        meta.setDisplayName("${ChatColor.RESET}${ChatColor.WHITE}${quirk.prettyName} ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}DISABLED")
+        meta.setDisplayName("${ChatColor.RESET}${ChatColor.WHITE}${quirk.prettyName} ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
         meta.removeEnchant(Enchantment.CHANNELING)
+        meta.lore = quirk.description.asList()
         stack.itemMeta = meta
     }
 

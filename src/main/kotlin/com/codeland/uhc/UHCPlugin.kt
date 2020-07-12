@@ -7,8 +7,7 @@ import com.codeland.uhc.command.TeamMaker
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
-import com.codeland.uhc.event.WaitingEventListener
-import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.event.EventListener
 import com.codeland.uhc.gui.GuiListener
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scoreboard.DisplaySlot
@@ -26,18 +25,16 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(AdminCommands())
 		commandManager.registerCommand(ParticipantCommands())
 
-		server.pluginManager.registerEvents(WaitingEventListener(), this)
+		server.pluginManager.registerEvents(EventListener(), this)
 		server.pluginManager.registerEvents(GuiListener(), this)
 
-		var uhc = UHC(400.0, 25.0, 1125, 2250, 600, 0)
+		var uhc = UHC(400.0, 25.0, 1200, 2250, 600, 0)
 
 		val niceWebsite = URL("http://checkip.amazonaws.com")
 		val `in` = BufferedReader(InputStreamReader(niceWebsite.openStream()))
 		val ip = `in`.readLine().trim { it <= ' ' }
 
 		GameRunner(uhc, this, MixerBot("discordData.txt", ip))
-
-		uhc.startWaiting()
 
 		TeamMaker.readData()
 

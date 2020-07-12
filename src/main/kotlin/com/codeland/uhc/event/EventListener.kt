@@ -4,11 +4,15 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
-import org.bukkit.*
+import org.bukkit.Bukkit
+import org.bukkit.GameMode
+import org.bukkit.Material
 import org.bukkit.attribute.Attribute
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
@@ -23,16 +27,17 @@ import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.WorldLoadEvent
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.material.SpawnEgg
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 import java.util.logging.Level
 
 
-class WaitingEventListener() : Listener {
-
+class EventListener : Listener {
 	@EventHandler
-	fun onPlayerHurt(event : EntityDamageEvent) {
+	fun onPlayerHurt(event: EntityDamageEvent) {
 
 		if (Quirk.WET_SPONGE.enabled) {
 			if (event.entity is Player) {
@@ -48,24 +53,17 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onPlayerJoin(event : PlayerJoinEvent) {
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+	fun onPlayerJoin(event: PlayerJoinEvent) {
+		Phase.addToBossBar(event.player)
+
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			WaitingDefault.onPlayerJoin(event.player)
+		} else {
 			if (GameRunner.playersTeam(event.player.name) == null)
 				event.player.gameMode = GameMode.SPECTATOR
 
 			return
 		}
-
-		val player = event.player
-		val inventory = player.inventory
-
-		/* get them on the health scoreboard */
-		player.damage(1.0)
-		player.gameMode = GameMode.ADVENTURE
-
-		/* give them the gui opener */
-		if (!GuiOpener.hasGuiOpener(inventory))
-			inventory.addItem(GuiOpener.createGuiOpener())
 	}
 
 	@EventHandler
@@ -92,7 +90,7 @@ class WaitingEventListener() : Listener {
 			return
 
 		val stack = event.item
-			?: return
+				?: return
 
 		if (!GuiOpener.isGuiOpener(stack))
 			return
@@ -112,7 +110,7 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onPlayerDeath(event : PlayerDeathEvent) {
+	fun onPlayerDeath(event: PlayerDeathEvent) {
 		var wasPest = Pests.isPest(event.entity)
 
 		if (Quirk.PESTS.enabled) {
@@ -128,7 +126,7 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onMessage(e : AsyncPlayerChatEvent) {
+	fun onMessage(e: AsyncPlayerChatEvent) {
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			if (!e.message.startsWith("!")) {
 				val team = GameRunner.playersTeam(e.player.displayName)
@@ -151,7 +149,7 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onPlayerTeleport(e : PlayerTeleportEvent) {
+	fun onPlayerTeleport(e: PlayerTeleportEvent) {
 		if (!GameRunner.netherIsAllowed()) {
 			if (e.cause == PlayerTeleportEvent.TeleportCause.NETHER_PORTAL && e.player.gameMode == GameMode.SURVIVAL) {
 				e.isCancelled = true
@@ -160,13 +158,18 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onEntitySpawn(event : EntitySpawnEvent) {
+	fun onEntitySpawn(event: EntitySpawnEvent) {
 		/* prevent spawns during waiting */
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
 			return
 
 		if (event.entityType.isAlive)
 			event.isCancelled = true
+	}
+
+	@EventHandler
+	fun onWorldLoad(event: WorldLoadEvent) {
+		GameRunner.uhc.startWaiting()
 	}
 
 	@EventHandler
@@ -190,16 +193,8 @@ class WaitingEventListener() : Listener {
 		var x = ((Math.random() * right * 2) - right).toInt()
 		var z = ((Math.random() * down * 2) - down).toInt()
 
-		var world = player.world
-
-		for (y in 255 downTo 0) {
-			var block = world.getBlockAt(x, y, z)
-
-			if (!block.isPassable) {
-				event.respawnLocation.set(x + 0.5, y + 1.0, z + 0.5)
-				break
-			}
-		}
+		var y = GameRunner.topBlockY(player.world, x, z)
+		event.respawnLocation.set(x + 0.5, y + 1.0, z + 0.5)
 
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
 
@@ -302,6 +297,13 @@ class WaitingEventListener() : Listener {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
 		}
 
+		if (Quirk.SUMMONER.enabled) {
+			val spawnEgg = ModifiedDrops.getSpawnEgg(event.entityType)
+
+			if (spawnEgg != null)
+				event.drops.add(ItemStack(spawnEgg))
+		}
+
 		if (Quirk.ABUNDANCE.enabled) {
 			if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
 				event.drops.forEach { drop ->
@@ -312,7 +314,7 @@ class WaitingEventListener() : Listener {
 	}
 
 	@EventHandler
-	fun onEntityDamageEvent(e : EntityDamageByEntityEvent) {
+	fun onEntityDamageEvent(e: EntityDamageByEntityEvent) {
 		if (!Quirk.HALF_ZATOICHI.enabled) {
 			return
 		}
@@ -341,14 +343,14 @@ class WaitingEventListener() : Listener {
 		}
 	}
 
-	fun enchantThing(item : ItemStack, enchant : Enchantment, level : Int) {
+	fun enchantThing(item: ItemStack, enchant: Enchantment, level: Int) {
 		val meta = item.itemMeta
 		meta.addEnchant(enchant, level, true)
 		item.itemMeta = meta
 	}
 
 	@EventHandler
-	fun onBreakBlock(event : BlockBreakEvent) {
+	fun onBreakBlock(event: BlockBreakEvent) {
 		var block = event.block;
 		var player = event.player;
 
@@ -407,34 +409,33 @@ class WaitingEventListener() : Listener {
 		}
 	}
 
-	val acceptedBlocks = {
-		var arr = arrayOf<Material>(
-				Material.CRAFTING_TABLE,
-				Material.FURNACE,
-				Material.BREWING_STAND,
-				Material.WHEAT_SEEDS,
-				Material.BLAST_FURNACE,
-				Material.SMOKER,
-				Material.WATER,
-				Material.LAVA,
-				Material.LADDER,
-				Material.ENCHANTING_TABLE,
-				Material.BOOKSHELF,
-				Material.SMITHING_TABLE,
-				Material.LOOM,
-				Material.ANVIL,
-				Material.FLETCHING_TABLE,
-				Material.COMPOSTER,
-				Material.CHEST,
-				Material.BARREL,
-				Material.WET_SPONGE
-		);
-		arr.sort();
+	val acceptedBlocks = arrayOf<Material>(
+			Material.CRAFTING_TABLE,
+			Material.FURNACE,
+			Material.BREWING_STAND,
+			Material.WHEAT_SEEDS,
+			Material.BLAST_FURNACE,
+			Material.SMOKER,
+			Material.WATER,
+			Material.LAVA,
+			Material.LADDER,
+			Material.ENCHANTING_TABLE,
+			Material.BOOKSHELF,
+			Material.SMITHING_TABLE,
+			Material.LOOM,
+			Material.ANVIL,
+			Material.FLETCHING_TABLE,
+			Material.COMPOSTER,
+			Material.CHEST,
+			Material.BARREL,
+			Material.WET_SPONGE
+	)
 
-		arr;
-	}();
+	init {
+		acceptedBlocks.sort()
+	}
 
-	fun <T : Enum<T>>binarySearch(value: T, array: Array<T>): Boolean {
+	fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
 		var start = 0;
 		var end = array.size - 1;
 		var lookFor = value.ordinal;
@@ -445,9 +446,9 @@ class WaitingEventListener() : Listener {
 
 			when {
 				lookFor == compare -> return true;
-				  end - start == 1 -> return false;
-				 lookFor < compare -> end = position;
-				 lookFor > compare -> start = position;
+				end - start == 1 -> return false;
+				lookFor < compare -> end = position;
+				lookFor > compare -> start = position;
 			}
 		}
 	}
@@ -466,8 +467,20 @@ class WaitingEventListener() : Listener {
 
 			/* replace these blocks */
 			if (binarySearch(material, Creative.blocks)) {
-				event.isCancelled = true
-				Bukkit.getScheduler().runTaskLater(GameRunner.plugin, { event.block.type = material } as () -> Unit, 0)
+
+				var oldItemStack = event.itemInHand.clone()
+
+				val inHand: ItemStack = if (event.hand === EquipmentSlot.HAND)
+					event.player.inventory.itemInMainHand.clone()
+				else
+					event.player.inventory.itemInOffHand.clone()
+
+				Bukkit.getScheduler().runTaskLater(GameRunner.plugin, {
+					if (event.hand === EquipmentSlot.HAND)
+						event.player.inventory.setItemInMainHand(inHand)
+					else
+						event.player.inventory.setItemInOffHand(inHand)
+				} as () -> Unit, 0)
 			}
 
 		} else if (Quirk.UNSHELTERED.enabled) {

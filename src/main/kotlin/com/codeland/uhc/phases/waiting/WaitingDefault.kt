@@ -1,8 +1,12 @@
 package com.codeland.uhc.phases.waiting
 
+import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phases.Phase
 import org.bukkit.*
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.Player
 
 class WaitingDefault : Phase() {
 
@@ -23,10 +27,7 @@ class WaitingDefault : Phase() {
         }
 
         Bukkit.getServer().onlinePlayers.forEach { player ->
-            player.exp = 0.0F
-            player.health = 20.0
-            player.teleport(Location(Bukkit.getWorlds()[0], 10000.0, 100.0, 10000.0))
-            player.gameMode = GameMode.ADVENTURE
+           onPlayerJoin(player)
         }
     }
 
@@ -40,5 +41,24 @@ class WaitingDefault : Phase() {
 
     override fun endPhrase(): String {
         return ""
+    }
+
+    companion object {
+        public fun onPlayerJoin(player: Player) {
+            player.exp = 0.0F
+            player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
+            player.health = 20.0
+            player.foodLevel = 20
+            player.teleport(Location(Bukkit.getWorlds()[0], 10000.5, GameRunner.topBlockY(Bukkit.getWorlds()[0], 10000, 10000) + 1.0, 10000.5))
+            player.gameMode = GameMode.ADVENTURE
+
+            /* get them on the health scoreboard */
+            player.damage(1.0)
+
+            val inventory = player.inventory
+            inventory.clear()
+
+            inventory.addItem(GuiOpener.createGuiOpener())
+        }
     }
 }
