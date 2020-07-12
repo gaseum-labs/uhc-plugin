@@ -1,5 +1,6 @@
 package com.codeland.uhc.gui
 
+import com.codeland.uhc.core.Preset
 import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.quirk.Quirk
@@ -30,6 +31,8 @@ object Gui {
         PhaseType.values().forEach { phaseType ->
             addItem(VariantCycler(phaseType), getPhasePosition(phaseType))
         }
+
+        addItem(PresetCycler(), getPresetPosition())
     }
 
     fun open(player: Player) {
@@ -40,12 +43,16 @@ object Gui {
         player.closeInventory()
     }
 
-    fun getQuirkPosition(quirk: Quirk): Int {
+    private fun getQuirkPosition(quirk: Quirk): Int {
         return quirk.ordinal
     }
 
-    fun getPhasePosition(phaseType: PhaseType): Int {
+    private fun getPhasePosition(phaseType: PhaseType): Int {
         return INVENTORY_WIDTH * 2 + phaseType.ordinal
+    }
+
+    private fun getPresetPosition(): Int {
+        return INVENTORY_SIZE - INVENTORY_WIDTH
     }
 
     fun updateQuirk(quirk: Quirk) {
@@ -54,6 +61,10 @@ object Gui {
 
     fun updatePhaseVariant(phaseVariant: PhaseVariant) {
         (guiItems[getPhasePosition(phaseVariant.type)] as? VariantCycler)?.updateDisplay(phaseVariant)
+    }
+
+    fun updatePreset(preset: Preset) {
+        (guiItems[getPresetPosition()] as? PresetCycler)?.updateDisplay(preset)
     }
 
     fun coordinateToIndex(x: Int, y: Int): Int {

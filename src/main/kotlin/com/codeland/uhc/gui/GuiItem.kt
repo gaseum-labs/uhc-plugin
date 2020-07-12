@@ -29,4 +29,10 @@ open class GuiItem(var opOnly: Boolean, var stack: ItemStack, var onClick: (GuiI
         meta.setDisplayName(name)
         stack.itemMeta = meta
     }
+
+    fun setLore(lore: List<String>) {
+        val meta = stack.itemMeta
+        meta.lore = lore
+        stack.itemMeta = meta
+    }
 }

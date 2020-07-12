@@ -57,6 +57,8 @@ class UHC(var preset: Preset) {
 			0,
 			0
 		)
+
+		Gui.updatePreset(preset)
 	}
 
 	init {
