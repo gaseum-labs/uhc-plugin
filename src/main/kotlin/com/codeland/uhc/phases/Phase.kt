@@ -14,7 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable
 
 abstract class Phase {
 	companion object {
-		val bossKey = NamespacedKey(GameRunner.plugin!!, "phaseBar")
+		val bossKey = NamespacedKey(GameRunner.plugin, "phaseBar")
 	}
 
 	protected var runnable : BukkitRunnable? = null
@@ -31,7 +31,7 @@ abstract class Phase {
 		this.length = length
 
 		Bukkit.removeBossBar(bossKey)
-		val bar = Bukkit.createBossBar(bossKey, "${phaseType.prettyName}", phaseType.color, BarStyle.SOLID)
+		val bar = Bukkit.createBossBar(bossKey, phaseType.prettyName, phaseType.color, BarStyle.SOLID)
 
 		if (length > 0) {
 			for (player in Bukkit.getServer().onlinePlayers) {

@@ -23,7 +23,13 @@ open class GraceDefault : Phase() {
 			it.absorptionAmount = 0.0
 			it.exp = 0.0F
 			it.level = 0
+			it.foodLevel = 20
+			it.saturation = 20F
+			it.exhaustion = 0F
 			it.setStatistic(Statistic.TIME_SINCE_REST, 0)
+			if (Quirk.MODIFIED_DROPS.enabled) {
+				it.setStatistic(Statistic.TIME_SINCE_REST, 60000)
+			}
 			if (Quirk.WET_SPONGE.enabled) {
 				it.inventory.addItem(ItemStack(Material.WET_SPONGE, 1))
 			}
