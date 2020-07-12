@@ -35,12 +35,13 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 	)
 
 	init {
-		Quirk.PESTS.enabled = false
-		Quirk.ABUNDANCE.enabled = false
-		Quirk.HALF_ZATOICHI.enabled = false
-		Quirk.UNSHELTERED.enabled = false
-		Quirk.WET_SPONGE.enabled = false
-		Quirk.MODIFIED_DROPS.enabled = false
+		Quirk.PESTS.updateEnabled(false)
+		Quirk.ABUNDANCE.updateEnabled(false)
+		Quirk.HALF_ZATOICHI.updateEnabled(false)
+		Quirk.UNSHELTERED.updateEnabled(false)
+		Quirk.WET_SPONGE.updateEnabled(false)
+		Quirk.MODIFIED_DROPS.updateEnabled(false)
+		Quirk.CREATIVE.updateEnabled(false)
 
 		setVariant(PhaseVariant.WAITING_DEFAULT)
 		setVariant(PhaseVariant.GRACE_DEFAULT)

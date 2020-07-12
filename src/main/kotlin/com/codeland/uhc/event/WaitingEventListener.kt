@@ -4,10 +4,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.quirk.ModifiedDrops
-import com.codeland.uhc.quirk.Pests
-import com.codeland.uhc.quirk.Quirk
-import com.codeland.uhc.quirk.Zatoichi
+import com.codeland.uhc.quirk.*
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -479,7 +476,15 @@ class WaitingEventListener() : Listener {
 				event.player.inventory.addItem(ItemStack(Material.WET_SPONGE))
 			}
 		}
-		if (Quirk.UNSHELTERED.enabled) {
+
+		if (Quirk.CREATIVE.enabled) {
+			var material = event.block.type
+
+			/* replace these blocks */
+			if (binarySearch(material, Creative.blocks)) {
+				event.player.inventory.addItem(ItemStack(material))
+			}
+		} else if (Quirk.UNSHELTERED.enabled) {
 			var block = event.block;
 
 			if (!binarySearch(block.type, acceptedBlocks)) {
