@@ -2,8 +2,8 @@ package com.codeland.uhc.command
 
 import org.bukkit.ChatColor
 import org.bukkit.scoreboard.Scoreboard
-import java.lang.Exception
 import java.util.*
+import kotlin.math.abs
 
 object TeamMaker {
 	fun getTeamsRandom(names: ArrayList<String>, teamSize: Int): Array<Array<String?>> {
@@ -60,5 +60,120 @@ object TeamMaker {
 		}
 
 		return ret as Array<ChatColor>
+	}
+
+	/* ranked */
+
+	class ScoredPlayer(var name: String, var score: Float, var games: Int)
+
+	private val scores = ArrayList<ScoredPlayer>()
+
+	private fun getScoredPlayer(name: String): ScoredPlayer {
+		var scoredPlayer = scores.find { player ->
+			player.name == name
+		}
+
+		return if (scoredPlayer == null) {
+			val ret = ScoredPlayer(name, 0.5f, 0)
+			scores.add(ret)
+
+			ret
+		} else {
+			scoredPlayer
+		}
+	}
+
+	fun getTeamsRandRanked(names: Array<String>, teamSize: Int, maxDisplace: Float): Array<Array<String>> {
+		var defaultPlayer = ScoredPlayer("_ `", 0.5f, 0)
+		var tempPlayers = ArrayList<ScoredPlayer>()
+
+		names.forEach { name ->
+			var player = getScoredPlayer(name)
+			player.score += maxDisplace * (Math.random() * 2 - 1).toFloat()
+			tempPlayers.add(player)
+		}
+
+		while (tempPlayers.size % teamSize > 0) {
+			tempPlayers.add(defaultPlayer)
+		}
+
+		var dynamicRet = ArrayList<Array<ScoredPlayer>>()
+
+		while (tempPlayers.size > 0) {
+			var team = Array(teamSize) { defaultPlayer }
+
+			for (i in 0..teamSize) {
+				team[i] = tempPlayers[0]
+				tempPlayers.removeAt(0)
+			}
+
+			dynamicRet.add(team)
+		}
+
+		while (doImproveRound(dynamicRet));
+
+		var ret = Array(dynamicRet.size) {Array(teamSize) {""} }
+
+		for (i in 0..ret.size)
+			for (j in 0..teamSize)
+				ret[i][j] = dynamicRet[i][j].name
+
+		return ret
+	}
+
+	private fun doImproveRound(teams: ArrayList<Array<ScoredPlayer>>): Boolean {
+		var ret = false
+
+		for (i in 0..(teams.size))
+			for (j in (i + 1)..(teams.size))
+				if (trySwaps(teams[i], teams[j]))
+					ret = true
+
+		return ret
+	}
+
+	private fun calcScore(team: Array<ScoredPlayer>): Float {
+		var ret = 0f
+		for (p in team) {
+			ret += p.score
+		}
+		return ret
+	}
+
+	private fun trySwaps(teamA: Array<ScoredPlayer>, teamB: Array<ScoredPlayer>): Boolean {
+		var tempName = ""
+		var tempScore = 0.0f
+		var tempRounds = 0
+
+		var teamAScore = calcScore(teamA)
+		var teamBScore = calcScore(teamB)
+
+		var mean = teamAScore + teamBScore
+		mean /= 2
+		var beforeMSE = abs(teamAScore - teamBScore)
+
+		var ret = false
+
+		for (i in 0..teamA.size) {
+			for (j in 0..teamB.size) {
+				var tempScoreA = teamAScore - teamA[i].score + teamB[j].score
+				var tempScoreB = teamBScore - teamB[j].score + teamA[i].score
+				var mse = Math.abs(tempScoreA - tempScoreB)
+
+				/* perform swap */
+				if (mse < beforeMSE) {
+					var temp = teamA[i]
+					teamA[i] = teamB[j]
+					teamB[j] = temp
+
+					ret = true
+					beforeMSE = mse
+					teamAScore = tempScoreA
+					teamBScore = tempScoreB
+				}
+			}
+		}
+
+		return ret
 	}
 }
