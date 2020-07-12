@@ -317,93 +317,15 @@ class WaitingEventListener() : Listener {
 
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
-
 		if (Quirk.MODIFIED_DROPS.enabled) {
-			if (event.entityType == EntityType.CREEPER) {
-				val amount = (Math.random() * 4.0).toInt() + 1
-				if (Math.random() < 0.25) {
-					event.drops.add(ItemStack(Material.TNT, amount))
-				} else if (Math.random() < 0.5) {
-					event.drops.add(ItemStack(Material.FIREWORK_STAR, 2 * amount))
-				} else {
-					event.drops.add(ItemStack(Material.GUNPOWDER, 2 * amount))
-				}
-			} else if (event.entityType == EntityType.PHANTOM) {
-				if (Math.random() < 0.6) {
-					val elytra = ItemStack(Material.ELYTRA)
-					val damageable = (elytra.itemMeta as Damageable)
-					damageable.damage = (432 * Math.random()).toInt() / 2
-					elytra.itemMeta = damageable as ItemMeta
-					event.drops.add(elytra)
-				}
-			} else if (event.entityType == EntityType.ZOMBIE || event.entityType == EntityType.ZOMBIE_VILLAGER || event.entityType == EntityType.HUSK) {
-				event.drops.add(ItemStack(Material.CARROT))
-				if (Math.random() < 0.04) {
-					for (i in (0..30)) {
-						val item = ItemStack(Material.CARROT)
-						val meta = item.itemMeta
-						meta.setDisplayName("${ChatColor.GOLD}Carrot Warrior #${(Math.random() * 27182).toInt()}")
-						item.itemMeta = meta
-						event.drops.add(item)
-					}
-				}
-				if (Math.random() < 0.15) {
-					event.drops.add(ItemStack(Material.ZOMBIE_SPAWN_EGG))
-				}
-			} else if (event.entityType == EntityType.SKELETON || event.entityType == EntityType.STRAY) {
-				if (Math.random() < 0.25) {
-					val crossbow = ItemStack(Material.CROSSBOW)
-					val damageable = (crossbow.itemMeta as Damageable)
-					damageable.damage = (326 * Math.random()).toInt() / 2
-					crossbow.itemMeta = damageable as ItemMeta
-					event.drops.add(crossbow)
-				} else if (Math.random() < 0.25) {
-					var hasBow = false
-					for (drop in event.drops) {
-						if (drop.type == Material.BOW) {
-							hasBow = true
-							break
-						}
-					}
-					if (!hasBow) {
-						val crossbow = ItemStack(Material.BOW)
-						val damageable = (crossbow.itemMeta as Damageable)
-						damageable.damage = (384 * Math.random()).toInt() / 2
-						crossbow.itemMeta = damageable as ItemMeta
-						event.drops.add(crossbow)
-					}
-				}
-			} else if (event.entityType == EntityType.SPIDER || event.entityType == EntityType.CAVE_SPIDER) {
-				val dropCount = (Math.random() * 4.0).toInt()
-				if (dropCount > 0) {
-					event.drops.add(ItemStack(Material.PAPER, dropCount))
-				}
-			} else if (event.entityType == EntityType.DROWNED) {
-				val trident = ItemStack(Material.TRIDENT)
-				val damageable = trident.itemMeta as Damageable
-				damageable.damage = (250 * Math.random()).toInt() / 2
-				trident.itemMeta = damageable as ItemMeta
-				if (Math.random() < 0.33) {
-					trident.addEnchantment(Enchantment.RIPTIDE, (Math.random() * 3.0).toInt() + 1)
-				} else if (Math.random() < 0.5) {
-					trident.addEnchantment(Enchantment.LOYALTY, (Math.random() * 3.0).toInt() + 1)
-				}
-				event.drops.add(trident)
-			}
-			if (Math.random() < 0.25) {
-				val material = ModifiedDrops.getSpawnEgg(event.entityType)
-				if (material != null) {
-					event.drops.add(ItemStack(ItemStack(material)))
-				}
-			}
+			ModifiedDrops.onDrop(event.entityType, event.drops)
 		}
 
-		if (!Quirk.ABUNDANCE.enabled)
-			return
-
-		if (event.entityType != EntityType.PLAYER) {
-			event.drops.forEach { drop ->
-				drop.amount = drop.amount * 3
+		if (Quirk.ABUNDANCE.enabled) {
+			if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
+				event.drops.forEach { drop ->
+					drop.amount = drop.amount * 3
+				}
 			}
 		}
 	}
