@@ -30,6 +30,8 @@ class UHC(var preset: Preset) {
 		Quirk.WET_SPONGE.updateEnabled(false)
 		Quirk.MODIFIED_DROPS.updateEnabled(false)
 		Quirk.CREATIVE.updateEnabled(false)
+		Quirk.AGGRO_SUMMONER.updateEnabled(false)
+		Quirk.PASSIVE_SUMMONER.updateEnabled(false)
 
 		setVariant(PhaseVariant.WAITING_DEFAULT)
 		setVariant(PhaseVariant.GRACE_DEFAULT)

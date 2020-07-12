@@ -298,12 +298,10 @@ class EventListener : Listener {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
 		}
 
-		if (Quirk.SUMMONER.enabled) {
-			val spawnEgg = Summoner.getSpawnEgg(event.entityType)
+		val spawnEgg = Summoner.getSpawnEgg(event.entityType, Quirk.AGGRO_SUMMONER.enabled, Quirk.PASSIVE_SUMMONER.enabled)
 
-			if (spawnEgg != null)
-				event.drops.add(ItemStack(spawnEgg))
-		}
+		if (spawnEgg != null)
+			event.drops.add(ItemStack(spawnEgg))
 
 		if (Quirk.ABUNDANCE.enabled) {
 			if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {

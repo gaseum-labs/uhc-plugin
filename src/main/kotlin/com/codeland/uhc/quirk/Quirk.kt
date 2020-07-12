@@ -40,8 +40,12 @@ enum class Quirk(var prettyName: String, var representation: Material, var descr
 		"You may place blocks without them emptying from your inventory"
 	)),
 
-	SUMMONER("Summoner", Material.CREEPER_SPAWN_EGG, arrayOf(
-		"Mobs drop their spawn eggs"
+	AGGRO_SUMMONER("Summoner Aggro", Material.CREEPER_SPAWN_EGG, arrayOf(
+		"Hostile mobs drop their spawn eggs"
+	)),
+
+	PASSIVE_SUMMONER("Summoner Passive", Material.CHICKEN_SPAWN_EGG, arrayOf(
+		"Passive mobs drop their spawn eggs"
 	));
 
     var enabled = false
