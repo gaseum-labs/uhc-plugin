@@ -7,6 +7,7 @@ import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
+import com.destroystokyo.paper.Title
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -68,7 +69,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		if (Quirk.MODIFIED_DROPS.enabled) {
+		/*if (Quirk.MODIFIED_DROPS.enabled) {
 			if (ModifiedDrops.isSpawnEgg(event.item?.type)) {
 				if (event.action == Action.RIGHT_CLICK_BLOCK) {
 					val location = event.clickedBlock!!.location.add(event.blockFace.direction).add(0.5, 0.5, 0.5)
@@ -83,7 +84,7 @@ class EventListener : Listener {
 					event.isCancelled = true
 				}
 			}
-		}
+		}*/
 
 		/* only can open uhc settings while in waiting */
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
@@ -272,7 +273,7 @@ class EventListener : Listener {
 		var item = event.recipe.result.type
 
 		/* prevent crafting of banned items */
-		if (binarySearch(item, Pests.banList))
+		if (GameRunner.binarySearch(item, Pests.banList))
 			event.isCancelled = true
 	}
 
@@ -298,7 +299,7 @@ class EventListener : Listener {
 		}
 
 		if (Quirk.SUMMONER.enabled) {
-			val spawnEgg = ModifiedDrops.getSpawnEgg(event.entityType)
+			val spawnEgg = Summoner.getSpawnEgg(event.entityType)
 
 			if (spawnEgg != null)
 				event.drops.add(ItemStack(spawnEgg))
@@ -369,12 +370,29 @@ class EventListener : Listener {
 			fakeTool;
 		}
 
+		val breakBlock = {
+			var drops = block.getDrops(getTool())
+
+			if (Quirk.ABUNDANCE.enabled)
+				Abundance.extraDrops(block, drops)
+
+			for (drop in drops)
+				player.world.dropItem(block.location.add(0.5, 0.5, 0.5), ItemStack(drop.type, drop.amount))
+
+			if (Quirk.UNSHELTERED.enabled) {
+				/* make sure we can't break this block again */
+				block.state.setMetadata("broken", FixedMetadataValue(GameRunner.plugin as Plugin, true))
+			} else {
+				block.type = Material.AIR
+			}
+		}
+
 		/* these replace regular block breaking behavior */
 		event.isCancelled = Quirk.UNSHELTERED.enabled || Quirk.ABUNDANCE.enabled;
 
 		if (Quirk.UNSHELTERED.enabled) {
 			/* regular block breaking behavior for acceptable blocks */
-			if (binarySearch(block.type, acceptedBlocks)) {
+			if (GameRunner.binarySearch(block.type, acceptedBlocks)) {
 				event.isCancelled = false
 				return
 			}
@@ -384,22 +402,12 @@ class EventListener : Listener {
 			/* if we have not applied broken label or broken is explicitly set to false */
 			/* proceed to mine then set broken to true */
 			if (broken.size == 0 || !broken[0].asBoolean()) {
-				/* manually drop items instead of the block breaking */
-				var drops = block.getDrops(getTool())
-				for (drop in drops)
-					player.world.dropItem(block.location, ItemStack(drop.type, drop.amount))
-
-				/* make sure we can't break this block again */
-				block.state.setMetadata("broken", FixedMetadataValue(GameRunner.plugin as Plugin, true))
+				breakBlock()
 			} else {
-				var message = TextComponent("Block already broken!")
-				message.isBold = true
-				message.color = ChatColor.GOLD
-
-				player.sendMessage(message)
+				player.sendActionBar("${ChatColor.GOLD}${ChatColor.BOLD}Block already broken!")
 			}
 		} else if (Quirk.ABUNDANCE.enabled) {
-			block.breakNaturally(getTool())
+			breakBlock()
 		}
 
 		if (Quirk.WET_SPONGE.enabled) {
@@ -410,47 +418,30 @@ class EventListener : Listener {
 	}
 
 	val acceptedBlocks = arrayOf<Material>(
-			Material.CRAFTING_TABLE,
-			Material.FURNACE,
-			Material.BREWING_STAND,
-			Material.WHEAT_SEEDS,
-			Material.BLAST_FURNACE,
-			Material.SMOKER,
-			Material.WATER,
-			Material.LAVA,
-			Material.LADDER,
-			Material.ENCHANTING_TABLE,
-			Material.BOOKSHELF,
-			Material.SMITHING_TABLE,
-			Material.LOOM,
-			Material.ANVIL,
-			Material.FLETCHING_TABLE,
-			Material.COMPOSTER,
-			Material.CHEST,
-			Material.BARREL,
-			Material.WET_SPONGE
+		Material.CRAFTING_TABLE,
+		Material.FURNACE,
+		Material.BREWING_STAND,
+		Material.WHEAT_SEEDS,
+		Material.BLAST_FURNACE,
+		Material.SMOKER,
+		Material.WATER,
+		Material.LAVA,
+		Material.LADDER,
+		Material.ENCHANTING_TABLE,
+		Material.BOOKSHELF,
+		Material.SMITHING_TABLE,
+		Material.LOOM,
+		Material.ANVIL,
+		Material.FLETCHING_TABLE,
+		Material.COMPOSTER,
+		Material.CHEST,
+		Material.BARREL,
+		Material.WET_SPONGE,
+		Material.TNT
 	)
 
 	init {
 		acceptedBlocks.sort()
-	}
-
-	fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
-		var start = 0;
-		var end = array.size - 1;
-		var lookFor = value.ordinal;
-
-		while (true) {
-			var position = (end + start) / 2;
-			var compare = array[position].ordinal;
-
-			when {
-				lookFor == compare -> return true;
-				end - start == 1 -> return false;
-				lookFor < compare -> end = position;
-				lookFor > compare -> start = position;
-			}
-		}
 	}
 
 	@EventHandler
@@ -466,7 +457,7 @@ class EventListener : Listener {
 			var material = event.itemInHand.type
 
 			/* replace these blocks */
-			if (binarySearch(material, Creative.blocks)) {
+			if (GameRunner.binarySearch(material, Creative.blocks)) {
 
 				var oldItemStack = event.itemInHand.clone()
 
@@ -486,7 +477,7 @@ class EventListener : Listener {
 		} else if (Quirk.UNSHELTERED.enabled) {
 			var block = event.block
 
-			if (!binarySearch(block.type, acceptedBlocks)) {
+			if (!GameRunner.binarySearch(block.type, acceptedBlocks)) {
 				event.isCancelled = true
 			}
 		}

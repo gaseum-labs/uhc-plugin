@@ -46,10 +46,6 @@ abstract class Phase {
 				override fun run() {
 					if (currentTick == 0) {
 						if (remainingSeconds == 0L) {
-							Bukkit.getServer().onlinePlayers.forEach { player ->
-								player.sendActionBar("")
-							}
-
 							uhc.startNextPhase()
 
 							return
@@ -95,9 +91,7 @@ abstract class Phase {
 	}
 
 	protected open fun updateActionBar(remainingSeconds : Long) {
-		Bukkit.getServer().onlinePlayers.forEach { player ->
-			player.sendActionBar("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${getRemainingTimeString(remainingSeconds)}")
-		}
+		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${getRemainingTimeString(remainingSeconds)}")
 	}
 
 	protected open fun getRemainingTimeString(remainingSeconds : Long) : String {

@@ -3,9 +3,11 @@ package com.codeland.uhc.core
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
+import org.bukkit.scoreboard.Team
 import kotlin.math.max
 import kotlin.math.min
 
@@ -74,6 +76,14 @@ class UHC(startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: L
 		startPhase(PhaseType.GRACE)
 
 		return null
+	}
+
+	fun endUHC(winner: Team?) {
+		startPhase(PhaseType.POSTGAME) { phase ->
+			phase as PostgameDefault
+
+			phase.winningTeam = winner
+		}
 	}
 
 	public fun setVariant(phaseVariant: PhaseVariant) {

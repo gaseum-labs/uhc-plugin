@@ -187,24 +187,10 @@ class AdminCommands : BaseCommand() {
 	fun testEnd(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		if (GameRunner.quickRemainingTeams() == 1) {
-			var aliveTeam : Team? = null
-			for (team in Bukkit.getServer().scoreboardManager.mainScoreboard.teams) {
-				for (entry in team.entries) {
-					val player = Bukkit.getPlayer(entry)
-					if (player != null && player.gameMode == GameMode.SURVIVAL) {
-						aliveTeam = team
-						break
-					}
-				}
-				if (aliveTeam != null) {
-					break
-				}
-			}
-			if (aliveTeam != null) {
-				GameRunner.endUHC(aliveTeam)
-			}
-		}
+		var (remainingTeams, lastRemaining, _) = GameRunner.remainingTeams()
+
+		if (lastRemaining != null || remainingTeams == 0)
+			GameRunner.uhc.endUHC(lastRemaining)
 	}
 
 	@CommandAlias("reset")

@@ -47,7 +47,7 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 		 * returns both the number of remaining teams
 		 * and the last remaining team if there is exactly 1
 		 */
-		fun remainingTeams(focus: Team) : Triple<Int, Team?, Boolean> {
+		fun remainingTeams(focus: Team? = null) : Triple<Int, Team?, Boolean> {
 			var retRemaining = 0
 			var retAlive = null as Team?
 			var retFocus = false
@@ -106,8 +106,8 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 			}
 
 			/* uhc ending point (stops kill reward) */
-			if (lastRemaining != null)
-				return endUHC(lastRemaining)
+			if (lastRemaining != null || remainingTeams == 0)
+				return uhc.endUHC(lastRemaining)
 
 			/* kill reward awarding */
 			val killer = deadPlayer.killer
@@ -121,14 +121,6 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 
 		fun playersTeam(playerName: String) : Team? {
 			return Bukkit.getServer().scoreboardManager.mainScoreboard.getEntryTeam(playerName);
-		}
-
-		fun endUHC(winner: Team) {
-			uhc.startPhase(PhaseType.POSTGAME) { phase ->
-				phase as PostgameDefault
-
-				phase.winningTeam = winner
-			}
 		}
 
 		fun sendPlayer(player: Player, message: String) {
@@ -155,6 +147,24 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 			}
 
 			return 0
+		}
+
+		fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
+			var start = 0
+			var end = array.size - 1
+			var lookFor = value.ordinal
+
+			while (true) {
+				var position = (end + start) / 2
+				var compare = array[position].ordinal
+
+				when {
+					lookFor == compare -> return true
+					end - start == 1 -> return false
+					lookFor < compare -> end = position
+					lookFor > compare -> start = position
+				}
+			}
 		}
 	}
 }

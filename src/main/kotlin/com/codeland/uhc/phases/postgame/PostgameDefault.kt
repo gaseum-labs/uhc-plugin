@@ -3,6 +3,7 @@ package com.codeland.uhc.phases.postgame
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phases.Phase
 import com.destroystokyo.paper.Title
+import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.scoreboard.Team
@@ -20,9 +21,9 @@ class PostgameDefault : Phase() {
     var winningTeam = null as Team?
 
     override fun customStart() {
-        var team: Team = winningTeam ?: return
+        var team = winningTeam
 
-        Bukkit.getServer().onlinePlayers.forEach { player ->
+        if (team != null) {
             val topMessage = TextComponent("${team.displayName} Has Won!")
             topMessage.isBold = true
             topMessage.color = team.color.asBungee()
@@ -35,7 +36,22 @@ class PostgameDefault : Phase() {
             val bottomMessage = TextComponent(playerString.removeSuffix(" "))
             bottomMessage.color = team.color.asBungee()
 
-            player.sendTitle(Title(topMessage, bottomMessage, 0, 200, 40))
+            val title = Title(topMessage, bottomMessage, 0, 200, 40)
+
+            Bukkit.getServer().onlinePlayers.forEach { player ->
+                player.sendTitle(title)
+            }
+
+        } else {
+            val topMessage = TextComponent("No one wins?")
+            topMessage.isBold = true
+            topMessage.color = ChatColor.GOLD
+
+            val title = Title(topMessage, TextComponent(""), 0, 200, 40)
+
+            Bukkit.getServer().onlinePlayers.forEach { player ->
+                player.sendTitle(title)
+            }
         }
 
         GameRunner.bot.clearTeamVCs()
