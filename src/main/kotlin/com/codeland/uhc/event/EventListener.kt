@@ -69,7 +69,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		if (Quirk.COMMANDER.enabled) {
+		if (Quirk.COMMANDER.enabled || Quirk.AGGRO_SUMMONER.enabled || Quirk.PASSIVE_SUMMONER.enabled) {
 			if (event.action != Action.RIGHT_CLICK_BLOCK)
 				return
 
@@ -83,12 +83,14 @@ class EventListener : Listener {
 				?: return
 
 			val location = block.location.add(event.blockFace.direction).add(0.5, 0.5, 0.5)
-			val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.EGG)
+			val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)
 
 			val team = GameRunner.playersTeam(event.player.name)
 			if (team != null) {
-				entity.customName = "${team.color}${team.displayName}${ChatColor.RESET} ${entity.name}"
-				entity.setMetadata("commandedBy", FixedMetadataValue(GameRunner.plugin, team.color))
+				Commander.setCommandedBy(entity, team.color)
+
+				if (Quirk.COMMANDER.enabled)
+					entity.customName = "${team.color}${team.displayName}${ChatColor.RESET} ${entity.name}"
 			}
 
 			--item.amount
@@ -235,8 +237,7 @@ class EventListener : Listener {
 
 			val team = GameRunner.playersTeam(target.name) ?: return
 
-			val meta = event.entity.getMetadata("commandedBy")
-			if (meta.size > 0 && (meta[0].value() as org.bukkit.ChatColor) == team.color)
+			if (Commander.isCommandedBy(event.entity, team.color))
 				event.isCancelled = true
 		}
 
@@ -304,10 +305,12 @@ class EventListener : Listener {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
 		}
 
-		val spawnEgg = Summoner.getSpawnEgg(event.entityType, Quirk.AGGRO_SUMMONER.enabled, Quirk.PASSIVE_SUMMONER.enabled)
+		if (!Commander.isCommanded(event.entity)) {
+			val spawnEgg = Summoner.getSpawnEgg(event.entityType, Quirk.AGGRO_SUMMONER.enabled, Quirk.PASSIVE_SUMMONER.enabled)
 
-		if (spawnEgg != null)
-			event.drops.add(ItemStack(spawnEgg))
+			if (spawnEgg != null)
+				event.drops.add(ItemStack(spawnEgg))
+		}
 
 		if (Quirk.ABUNDANCE.enabled) {
 			if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
