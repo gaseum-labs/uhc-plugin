@@ -58,16 +58,18 @@ object Zatoichi {
 							}
 						}
 
-						if (player.absorptionAmount < 5.0) {
-							if (player.health > 5.0 - player.absorptionAmount) {
-								player.health -= 5.0 - player.absorptionAmount
-							} else {
-								player.health = 0.0
-							}
-							player.absorptionAmount = 0.0
-						} else {
-							player.absorptionAmount -= 5.0
-						}
+						player.damage(5.0)
+
+						//if (player.absorptionAmount < 5.0) {
+						//	if (player.health > 5.0 - player.absorptionAmount) {
+						//		player.health -= 5.0 - player.absorptionAmount
+						//	} else {
+						//		player.health = 0.0
+						//	}
+						//	player.absorptionAmount = 0.0
+						//} else {
+						//	player.absorptionAmount -= 5.0
+						//}
 					}
 				} else {
 					holdingZatoichi = isHalfZatoichi(player.inventory.itemInMainHand)

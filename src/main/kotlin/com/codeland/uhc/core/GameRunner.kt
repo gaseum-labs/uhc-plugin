@@ -166,5 +166,9 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 				}
 			}
 		}
+
+		fun randRange(low: Int, high: Int): Int {
+			return ((Math.random() * high - low + 1) + low).toInt()
+		}
 	}
 }

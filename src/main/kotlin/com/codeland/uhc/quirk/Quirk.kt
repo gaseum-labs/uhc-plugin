@@ -90,7 +90,6 @@ enum class Quirk(var prettyName: String, var representation: Material, var descr
 
     companion object {
         init {
-            HALF_ZATOICHI.setIncompatible(PESTS)
             CREATIVE.setIncompatible(UNSHELTERED)
         }
     }

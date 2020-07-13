@@ -41,9 +41,10 @@ class EventListener : Listener {
 	fun onPlayerHurt(event: EntityDamageEvent) {
 
 		if (Quirk.WET_SPONGE.enabled) {
-			if (event.entity is Player) {
-				(event.entity as Player).inventory.addItem(ItemStack(Material.WET_SPONGE))
-			}
+			val player = event.entity
+
+			if (player is Player)
+				WetSponge.addSponge(player)
 		}
 
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && !GameRunner.uhc.isPhase(PhaseType.POSTGAME))
@@ -224,9 +225,10 @@ class EventListener : Listener {
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
 
 		if (Quirk.WET_SPONGE.enabled) {
-			if (event.target is Player && Math.random() < 0.20) {
-				(event.target as Player).inventory.addItem(ItemStack(Material.WET_SPONGE))
-			}
+			val player = event.target
+
+			if (player is Player && Math.random() < 0.20)
+				WetSponge.addSponge(player)
 		}
 
 		if (Quirk.COMMANDER.enabled) {
@@ -260,11 +262,10 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-
 		if (Quirk.WET_SPONGE.enabled) {
 			if (Math.random() < 0.1) {
-				event.whoClicked as Player
-				event.whoClicked.inventory.addItem(ItemStack(Material.WET_SPONGE))
+				var player = event.whoClicked as Player
+				WetSponge.addSponge(player)
 			}
 		}
 
@@ -289,7 +290,7 @@ class EventListener : Listener {
 		val stack = event.itemDrop.itemStack
 
 		if (Quirk.WET_SPONGE.enabled) {
-			event.player.inventory.addItem(ItemStack(Material.WET_SPONGE, 1))
+			WetSponge.addSponge(event.player)
 		}
 
 		event.isCancelled = when {
@@ -359,26 +360,37 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onBreakBlock(event: BlockBreakEvent) {
-		var block = event.block;
-		var player = event.player;
+		var block = event.block
+		var player = event.player
 
 		val getTool = {
 			/* get what the player is holding */
 			/* pretend it isn't air if it is */
-			var tool = player.inventory.itemInMainHand;
-			if (tool.type == Material.AIR)
-				tool = ItemStack(Material.PORKCHOP);
+			var tool = player.inventory.itemInMainHand
 
 			/* get drops from block as if held item */
 			/* had fortune */
-			var fakeTool = tool.clone();
-			if (Quirk.ABUNDANCE.enabled) enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 5);
+			if (Quirk.ABUNDANCE.enabled) {
+				tool = tool.clone()
 
-			fakeTool;
+				if (tool.type == Material.AIR)
+					tool = ItemStack(Material.PORKCHOP)
+
+				enchantThing(tool, LOOT_BONUS_BLOCKS, 5)
+			}
+
+			tool
 		}
 
 		val breakBlock = {
 			var drops = block.getDrops(getTool())
+
+			if (AppleFix.isLeaves(block)) {
+				drops.removeIf { drop -> drop.type == Material.APPLE }
+
+				if (AppleFix.onbreakLeaves(player))
+					drops.add(ItemStack(Material.APPLE))
+			}
 
 			if (Quirk.ABUNDANCE.enabled)
 				Abundance.extraDrops(block, drops)
@@ -413,14 +425,13 @@ class EventListener : Listener {
 			} else {
 				player.sendActionBar("${ChatColor.GOLD}${ChatColor.BOLD}Block already broken!")
 			}
-		} else if (Quirk.ABUNDANCE.enabled) {
+		} else {
 			breakBlock()
 		}
 
 		if (Quirk.WET_SPONGE.enabled) {
-			if (Math.random() < 0.01) {
-				player.inventory.addItem(ItemStack(Material.WET_SPONGE))
-			}
+			if (Math.random() < 0.01)
+				WetSponge.addSponge(player)
 		}
 	}
 
@@ -456,7 +467,7 @@ class EventListener : Listener {
 		if (Quirk.WET_SPONGE.enabled) {
 			if (event.block.type == Material.WET_SPONGE) {
 				event.isCancelled = true
-				event.player.inventory.addItem(ItemStack(Material.WET_SPONGE))
+				WetSponge.addSponge(event.player)
 			}
 		}
 

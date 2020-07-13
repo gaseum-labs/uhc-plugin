@@ -1,5 +1,6 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.core.GameRunner.Companion.randRange
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Color
 import org.bukkit.FireworkEffect
@@ -66,10 +67,6 @@ object ModifiedDrops {
 		}
 
 		return itemStack
-	}
-
-	fun randRange(low: Int, high: Int): Int {
-		return ((Math.random() * high - low + 1) + low).toInt()
 	}
 
 	fun onDrop(type: EntityType, drops: MutableList<ItemStack>) {
