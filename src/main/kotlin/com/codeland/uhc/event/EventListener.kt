@@ -55,7 +55,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerJoin(event: PlayerJoinEvent) {
-		Phase.addToBossBar(event.player)
+		Phase.dimensionOne(event.player)
 
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			WaitingDefault.onPlayerJoin(event.player)
@@ -122,7 +122,7 @@ class EventListener : Listener {
 			event.entity.gameMode = GameMode.SPECTATOR
 		}
 
-		if (!wasPest)
+		if (!wasPest && !GameRunner.uhc.isPhase(PhaseType.WAITING))
 			GameRunner.playerDeath(event.entity)
 	}
 
@@ -166,11 +166,6 @@ class EventListener : Listener {
 
 		if (event.entityType.isAlive)
 			event.isCancelled = true
-	}
-
-	@EventHandler
-	fun onWorldLoad(event: WorldLoadEvent) {
-		GameRunner.uhc.startWaiting()
 	}
 
 	@EventHandler

@@ -203,6 +203,15 @@ class AdminCommands : BaseCommand() {
 			GameRunner.uhc.endUHC(lastRemaining)
 	}
 
+	@CommandAlias("test next")
+	@Description("Manually go to the next round")
+	fun testNext(sender : CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		if (!GameRunner.uhc.isPhase(PhaseType.POSTGAME))
+			GameRunner.uhc.startNextPhase()
+	}
+
 	@CommandAlias("reset")
 	@Description("reset things to the waiting stage")
 	fun testReset(sender : CommandSender) {

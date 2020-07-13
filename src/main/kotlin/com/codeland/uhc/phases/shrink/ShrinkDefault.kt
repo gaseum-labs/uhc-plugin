@@ -10,6 +10,7 @@ import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.GameRule
 import org.bukkit.World
+import org.bukkit.boss.BossBar
 
 class ShrinkDefault : Phase() {
 
@@ -19,10 +20,10 @@ class ShrinkDefault : Phase() {
 		GameRunner.uhc.updateMobCaps()
 	}
 
-	override fun updateActionBar(remainingSeconds: Long) {
+	override fun updateActionBar(bossBar: BossBar, world: World, remainingSeconds : Long) {
 		val text = "reaching ${minRadius!!.toLong()} in ${getRemainingTimeString(remainingSeconds)}"
 
-		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${Bukkit.getWorlds()[0].worldBorder.size.toLong() / 2} $text")
+		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${world.worldBorder.size.toLong() / 2} $text")
 	}
 
 	override fun customStart() {

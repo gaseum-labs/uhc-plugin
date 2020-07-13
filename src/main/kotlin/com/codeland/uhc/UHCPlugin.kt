@@ -10,6 +10,8 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.EventListener
 import com.codeland.uhc.gui.GuiListener
+import com.codeland.uhc.phases.Phase
+import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.RenderType
@@ -44,6 +46,10 @@ class UHCPlugin : JavaPlugin() {
 				server.scoreboardManager.mainScoreboard.registerNewObjective("hp", "health", "hp", RenderType.HEARTS)
 			}
 			server.scoreboardManager.mainScoreboard.getObjective("hp")!!.displaySlot = DisplaySlot.PLAYER_LIST
+
+			Phase.createBossBars(Bukkit.getWorlds())
+
+			GameRunner.uhc.startWaiting()
 		}
 	}
 

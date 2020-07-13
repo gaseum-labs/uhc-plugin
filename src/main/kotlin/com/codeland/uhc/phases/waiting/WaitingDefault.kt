@@ -3,6 +3,7 @@ package com.codeland.uhc.phases.waiting
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.quirk.Pests
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.EntityType
@@ -17,6 +18,7 @@ class WaitingDefault : Phase() {
             world.worldBorder.size = 50.0
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
             world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
+            world.setGameRule(GameRule.NATURAL_REGENERATION, true)
             world.time = 1000
             world.difficulty = Difficulty.NORMAL
 
@@ -51,6 +53,8 @@ class WaitingDefault : Phase() {
             player.foodLevel = 20
             player.teleport(Location(Bukkit.getWorlds()[0], 10000.5, GameRunner.topBlockY(Bukkit.getWorlds()[0], 10000, 10000) + 1.0, 10000.5))
             player.gameMode = GameMode.ADVENTURE
+
+            Pests.makeNotPest(player)
 
             /* get them on the health scoreboard */
             player.damage(1.0)

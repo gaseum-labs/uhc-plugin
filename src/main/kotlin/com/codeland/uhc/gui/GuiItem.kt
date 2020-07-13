@@ -2,6 +2,7 @@ package com.codeland.uhc.gui
 
 import org.bukkit.ChatColor
 import org.bukkit.Material
+import org.bukkit.attribute.Attribute
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
@@ -18,6 +19,13 @@ open class GuiItem(var opOnly: Boolean, var stack: ItemStack, var onClick: (GuiI
      */
     fun updateStack(newStack: ItemStack) {
         stack = newStack
+
+        val meta = stack.itemMeta
+        meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE)
+        meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_SPEED)
+        meta.removeAttributeModifier(Attribute.GENERIC_ARMOR)
+        meta.removeAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS)
+        stack.itemMeta = meta
     }
 
     fun changeStackType(material: Material) {

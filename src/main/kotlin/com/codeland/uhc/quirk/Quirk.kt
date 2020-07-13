@@ -29,7 +29,7 @@ enum class Quirk(var prettyName: String, var representation: Material, var descr
 	)),
 
 	WET_SPONGE("Wet Sponge (don't question it)", Material.WET_SPONGE, arrayOf(
-		"I have no idea"
+		"Gain an infinite amount of wet sponge that you must turn into dry sponge"
 	)),
 
 	MODIFIED_DROPS("Modified Drops", Material.ROTTEN_FLESH, arrayOf(
@@ -37,7 +37,7 @@ enum class Quirk(var prettyName: String, var representation: Material, var descr
 	)),
 
     CREATIVE("Creative", Material.STONE, arrayOf(
-		"You may place blocks without them emptying from your inventory"
+		"you may place tough to get blocks without them emptying from your inventory"
 	)),
 
 	AGGRO_SUMMONER("Summoner Aggro", Material.CREEPER_SPAWN_EGG, arrayOf(

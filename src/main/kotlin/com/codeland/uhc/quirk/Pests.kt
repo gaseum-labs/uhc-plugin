@@ -21,6 +21,10 @@ object Pests {
         player.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin as Plugin, true))
     }
 
+    fun makeNotPest(player: Player) {
+        player.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin as Plugin, false))
+    }
+
     private val pestArmorMeta = {
         var meta = ItemStack(Material.LEATHER_HELMET).itemMeta
 
