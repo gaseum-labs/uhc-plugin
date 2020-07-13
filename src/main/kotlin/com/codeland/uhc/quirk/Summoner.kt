@@ -50,6 +50,8 @@ object Summoner {
 		Summon(VEX, VEX_SPAWN_EGG)
 	)
 
+	private val inverseAggroSummons = aggroSummons.copyOf()
+
 	private val passiveSummons = arrayOf(
 		Summon(MULE, MULE_SPAWN_EGG),
 		Summon(BAT, BAT_SPAWN_EGG),
@@ -78,9 +80,13 @@ object Summoner {
 		Summon(STRIDER, STRIDER_SPAWN_EGG)
 	)
 
+	private val inversePassiveSummons = passiveSummons.copyOf()
+
 	init {
 		aggroSummons.sortBy { summon -> summon.type }
 		passiveSummons.sortBy { summon -> summon.type }
+		inverseAggroSummons.sortBy { summon -> summon.egg }
+		inversePassiveSummons.sortBy { summon -> summon.egg }
 	}
 
 	fun binarySearch(value: EntityType, array: Array<Summon>): Summon? {
@@ -101,7 +107,25 @@ object Summoner {
 		}
 	}
 
-	fun getSpawnEgg(entity : EntityType, allowAggro: Boolean, allowPassive: Boolean) : Material? {
+	fun binarySearch(value: Material, array: Array<Summon>): Summon? {
+		var start = 0
+		var end = array.size - 1
+		var lookFor = value.ordinal
+
+		while (true) {
+			var position = (end + start) / 2
+			var compare = array[position].egg.ordinal
+
+			when {
+				lookFor == compare -> return array[position]
+				end - start == 1 -> return null
+				lookFor < compare -> end = position
+				lookFor > compare -> start = position
+			}
+		}
+	}
+
+	fun getSpawnEgg(entity : EntityType, allowAggro: Boolean, allowPassive: Boolean): Material? {
 		var summon = null as Summon?
 
 		if (allowAggro) {
@@ -113,5 +137,19 @@ object Summoner {
 		}
 
 		return summon?.egg
+	}
+
+	fun getSpawnEntity(egg: Material, allowAggro: Boolean, allowPassive: Boolean): EntityType? {
+		var summon = null as Summon?
+
+		if (allowAggro) {
+			summon = binarySearch(egg, inverseAggroSummons)
+		}
+
+		if (summon == null && allowPassive) {
+			summon = binarySearch(egg, inversePassiveSummons)
+		}
+
+		return summon?.type
 	}
 }

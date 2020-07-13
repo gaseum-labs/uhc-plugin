@@ -46,6 +46,10 @@ enum class Quirk(var prettyName: String, var representation: Material, var descr
 
 	PASSIVE_SUMMONER("Summoner Passive", Material.CHICKEN_SPAWN_EGG, arrayOf(
 		"Passive mobs drop their spawn eggs"
+	)),
+
+	COMMANDER("Commander", Material.RED_BANNER, arrayOf(
+		"Spawned mobs obey your command"
 	));
 
     var enabled = false

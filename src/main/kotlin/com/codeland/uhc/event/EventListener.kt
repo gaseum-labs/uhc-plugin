@@ -69,22 +69,32 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		/*if (Quirk.MODIFIED_DROPS.enabled) {
-			if (ModifiedDrops.isSpawnEgg(event.item?.type)) {
-				if (event.action == Action.RIGHT_CLICK_BLOCK) {
-					val location = event.clickedBlock!!.location.add(event.blockFace.direction).add(0.5, 0.5, 0.5)
-					val entity = event.player.world.spawnEntity(location, ModifiedDrops.getEntityType(event.item?.type)!!, CreatureSpawnEvent.SpawnReason.EGG)
-					val team = GameRunner.playersTeam(event.player.name)
-					if (team != null) {
-						entity.customName = "${team.color}${team.displayName}${ChatColor.RESET} ${entity.name}"
-					}
-					if (event.item != null) {
-						event.item!!.amount = event.item!!.amount - 1
-					}
-					event.isCancelled = true
-				}
+		if (Quirk.COMMANDER.enabled) {
+			if (event.action != Action.RIGHT_CLICK_BLOCK)
+				return
+
+			val item = event.item
+				?: return
+
+			val block = event.clickedBlock
+				?: return
+
+			val type = Summoner.getSpawnEntity(item.type, Quirk.AGGRO_SUMMONER.enabled, Quirk.PASSIVE_SUMMONER.enabled)
+				?: return
+
+			val location = block.location.add(event.blockFace.direction).add(0.5, 0.5, 0.5)
+			val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.EGG)
+
+			val team = GameRunner.playersTeam(event.player.name)
+			if (team != null) {
+				entity.customName = "${team.color}${team.displayName}${ChatColor.RESET} ${entity.name}"
+				entity.setMetadata("commandedBy", FixedMetadataValue(GameRunner.plugin, team.color))
 			}
-		}*/
+
+			--item.amount
+
+			event.isCancelled = true
+		}
 
 		/* only can open uhc settings while in waiting */
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
@@ -161,11 +171,12 @@ class EventListener : Listener {
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
 		/* prevent spawns during waiting */
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
-			return
-
-		if (event.entityType.isAlive)
-			event.isCancelled = true
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			if (event.entityType.isAlive) {
+				event.isCancelled = true
+				return
+			}
+		}
 	}
 
 	@EventHandler
@@ -216,17 +227,17 @@ class EventListener : Listener {
 			}
 		}
 
-		if (Quirk.MODIFIED_DROPS.enabled) {
-			if (event.target != null) {
-				val team = GameRunner.playersTeam(event.target!!.name)
-				if (team != null) {
-					if (event.entity.customName != null) {
-						if (event.entity.customName!!.startsWith(team.color.toString())) {
-							event.isCancelled = true
-						}
-					}
-				}
-			}
+		if (Quirk.COMMANDER.enabled) {
+			val target = event.target ?: return
+
+			if (target !is Player)
+				return
+
+			val team = GameRunner.playersTeam(target.name) ?: return
+
+			val meta = event.entity.getMetadata("commandedBy")
+			if (meta.size > 0 && (meta[0].value() as org.bukkit.ChatColor) == team.color)
+				event.isCancelled = true
 		}
 
 		/* only do this on pests mode */

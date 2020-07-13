@@ -32,6 +32,7 @@ class UHC(var preset: Preset) {
 		Quirk.CREATIVE.updateEnabled(false)
 		Quirk.AGGRO_SUMMONER.updateEnabled(false)
 		Quirk.PASSIVE_SUMMONER.updateEnabled(false)
+		Quirk.COMMANDER.updateEnabled(false)
 
 		setVariant(PhaseVariant.WAITING_DEFAULT)
 		setVariant(PhaseVariant.GRACE_DEFAULT)
