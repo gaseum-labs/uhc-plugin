@@ -5,11 +5,11 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
+import com.codeland.uhc.quirk.AppleFix
 import com.codeland.uhc.phaseType.*
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.scoreboard.Team
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -223,7 +223,18 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("test insomnia")
 	@Description("get the insomnia of the sender")
 	fun testExhaustion(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
 		sender as Player
 		sender.sendMessage("${sender.name}'s insomnia: ${sender.getStatistic(Statistic.TIME_SINCE_REST)}")
+	}
+
+	@CommandAlias("test apple")
+	@Description("gets when the next apple will drop for you")
+	fun testApple(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		sender as Player
+		sender.sendMessage("leaves count: ${AppleFix.getLeavesCount(sender)} next apple: ${AppleFix.getAppleIndex(sender)}")
 	}
 }

@@ -23,16 +23,11 @@ class UHC(var preset: Preset) {
 	var phaseTimes = emptyArray<Long>()
 
 	init {
-		Quirk.PESTS.updateEnabled(false)
-		Quirk.ABUNDANCE.updateEnabled(false)
-		Quirk.HALF_ZATOICHI.updateEnabled(false)
-		Quirk.UNSHELTERED.updateEnabled(false)
-		Quirk.WET_SPONGE.updateEnabled(false)
-		Quirk.MODIFIED_DROPS.updateEnabled(false)
-		Quirk.CREATIVE.updateEnabled(false)
-		Quirk.AGGRO_SUMMONER.updateEnabled(false)
-		Quirk.PASSIVE_SUMMONER.updateEnabled(false)
-		Quirk.COMMANDER.updateEnabled(false)
+		Quirk.values().forEach { quirk ->
+			quirk.updateEnabled(false)
+		}
+
+		Quirk.APPLE_FIX.updateEnabled(true)
 
 		setVariant(PhaseVariant.WAITING_DEFAULT)
 		setVariant(PhaseVariant.GRACE_DEFAULT)

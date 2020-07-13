@@ -48,8 +48,12 @@ enum class Quirk(var prettyName: String, var representation: Material, var descr
 		"Passive mobs drop their spawn eggs"
 	)),
 
-	COMMANDER("Commander", Material.RED_BANNER, arrayOf(
+	COMMANDER("Commander", Material.NETHERITE_HELMET, arrayOf(
 		"Spawned mobs obey your command"
+	)),
+
+	APPLE_FIX("Apple Fix", Material.APPLE, arrayOf(
+		"Less random apple drops"
 	));
 
     var enabled = false

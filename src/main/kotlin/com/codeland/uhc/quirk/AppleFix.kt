@@ -1,4 +1,4 @@
-package com.codeland.uhc.event
+package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.GameRunner
 import org.bukkit.Material
@@ -42,6 +42,16 @@ object AppleFix {
 		player.setMetadata(META_COUNT, FixedMetadataValue(GameRunner.plugin, previous + 1))
 
 		return previous + 1
+	}
+
+	fun getLeavesCount(player: Player): Int {
+		val meta = player.getMetadata(META_COUNT)
+
+		return if (meta.size == 0) {
+			resetLeavesCount(player)
+		} else {
+			meta[0].asInt()
+		}
 	}
 
 	fun getAppleIndex(player: Player): Int {

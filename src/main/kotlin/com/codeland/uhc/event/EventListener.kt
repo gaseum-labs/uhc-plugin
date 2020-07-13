@@ -7,7 +7,6 @@ import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
-import com.destroystokyo.paper.Title
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -24,13 +23,12 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.block.LeavesDecayEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
-import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
-import org.bukkit.material.SpawnEgg
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 import java.util.logging.Level
@@ -70,34 +68,8 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		if (Quirk.COMMANDER.enabled || Quirk.AGGRO_SUMMONER.enabled || Quirk.PASSIVE_SUMMONER.enabled) {
-			if (event.action != Action.RIGHT_CLICK_BLOCK)
-				return
-
-			val item = event.item
-				?: return
-
-			val block = event.clickedBlock
-				?: return
-
-			val type = Summoner.getSpawnEntity(item.type, Quirk.AGGRO_SUMMONER.enabled, Quirk.PASSIVE_SUMMONER.enabled)
-				?: return
-
-			val location = block.location.add(event.blockFace.direction).add(0.5, 0.5, 0.5)
-			val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)
-
-			val team = GameRunner.playersTeam(event.player.name)
-			if (team != null) {
-				Commander.setCommandedBy(entity, team.color)
-
-				if (Quirk.COMMANDER.enabled)
-					entity.customName = "${team.color}${team.displayName}${ChatColor.RESET} ${entity.name}"
-			}
-
-			--item.amount
-
-			event.isCancelled = true
-		}
+		if (Quirk.COMMANDER.enabled || Quirk.AGGRO_SUMMONER.enabled || Quirk.PASSIVE_SUMMONER.enabled)
+			if (Commander.onSummon(event)) event.isCancelled = true
 
 		/* only can open uhc settings while in waiting */
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
@@ -385,7 +357,7 @@ class EventListener : Listener {
 		val breakBlock = {
 			var drops = block.getDrops(getTool())
 
-			if (AppleFix.isLeaves(block)) {
+			if (Quirk.APPLE_FIX.enabled && AppleFix.isLeaves(block)) {
 				drops.removeIf { drop -> drop.type == Material.APPLE }
 
 				if (AppleFix.onbreakLeaves(player))
@@ -460,6 +432,26 @@ class EventListener : Listener {
 
 	init {
 		acceptedBlocks.sort()
+	}
+
+	@EventHandler
+	fun onDecay(event: LeavesDecayEvent) {
+		if (Quirk.APPLE_FIX.enabled) {
+			var loc = event.block.location
+
+			Bukkit.getOnlinePlayers().forEach { player ->
+				val distance = player.location.distance(loc)
+
+				if (distance < 16) {
+					event.block.drops.removeIf { drop -> drop.type == Material.APPLE }
+
+					if (AppleFix.onbreakLeaves(player))
+						event.block.drops.add(ItemStack(Material.APPLE))
+
+					return
+				}
+			}
+		}
 	}
 
 	@EventHandler

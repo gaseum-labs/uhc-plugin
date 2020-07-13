@@ -1,8 +1,5 @@
 package com.codeland.uhc.quirk
 
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.event.AppleFix
-import com.codeland.uhc.event.EventListener
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.inventory.ItemStack
