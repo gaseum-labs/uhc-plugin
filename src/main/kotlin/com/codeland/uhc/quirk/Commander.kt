@@ -32,13 +32,13 @@ object Commander {
 			return false
 
 		val item = event.item
-				?: return false
+			?: return false
 
 		val block = event.clickedBlock
-				?: return false
+			?: return false
 
 		val type = Summoner.getSpawnEntity(item.type, Quirk.AGGRO_SUMMONER.enabled, Quirk.PASSIVE_SUMMONER.enabled)
-				?: return false
+			?: return false
 
 		val location = block.location.add(event.blockFace.direction).add(0.5, 0.5, 0.5)
 		val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)

@@ -4,6 +4,7 @@ import com.codeland.uhc.core.GameRunner
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
 object AppleFix {
@@ -26,8 +27,8 @@ object AppleFix {
 		leaves.sort()
 	}
 
-	fun isLeaves(block: Block): Boolean {
-		return GameRunner.binarySearch(block.type, leaves)
+	fun isLeaves(block: Material): Boolean {
+		return GameRunner.binarySearch(block, leaves)
 	}
 
 	fun increaseLeavesCount(player: Player): Int {
@@ -71,7 +72,7 @@ object AppleFix {
 	}
 
 	fun resetAppleIndex(player: Player): Int {
-		val index = GameRunner.randRange(50, 150)
+		val index = GameRunner.randRange(1, LEAVES_TO_BREAK)
 
 		player.setMetadata(META_INDEX, FixedMetadataValue(GameRunner.plugin, index))
 
@@ -91,5 +92,12 @@ object AppleFix {
 		}
 
 		return ret
+	}
+
+	fun modifyDrops(player: Player, drops: MutableCollection<ItemStack>) {
+		drops.removeIf { drop -> drop.type == Material.APPLE }
+
+		if (AppleFix.onbreakLeaves(player))
+			drops.add(ItemStack(Material.APPLE))
 	}
 }

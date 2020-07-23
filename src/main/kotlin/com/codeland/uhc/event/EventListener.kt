@@ -16,12 +16,14 @@ import org.bukkit.Material
 import org.bukkit.attribute.Attribute
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
+import org.bukkit.inventory.meta.Damageable
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.ExperienceOrb
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.block.LeavesDecayEvent
 import org.bukkit.event.entity.*
@@ -29,6 +31,7 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 import java.util.logging.Level
@@ -331,74 +334,72 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
+	fun onBlockDrop(event: BlockDropItemEvent) {
+		var block = event.blockState
+		var player = event.player
+		var baseItem = event.player.inventory.itemInMainHand
+		var drops = event.items
+		var blockMiddle = block.location.add(0.5, 0.5, 0.5)
+
+		if (Quirk.APPLE_FIX.enabled && AppleFix.isLeaves(block.type)) {
+			drops.removeIf { drop -> drop.type == Material.APPLE }
+
+			if (AppleFix.onbreakLeaves(player)) {
+				player.world.dropItem(blockMiddle, ItemStack(Material.APPLE, if (Quirk.ABUNDANCE.enabled) 2 else 1 ))
+			}
+
+		} else if (Quirk.ABUNDANCE.enabled) {
+			var fakeTool = baseItem.clone()
+
+			if (fakeTool.type == Material.AIR)
+				fakeTool = ItemStack(Material.PORKCHOP)
+
+			enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 4)
+
+			var destroyedType = event.block.type
+			var destroyedData = event.block.blockData
+
+			event.block.type = block.type
+			event.block.blockData = block.blockData
+
+			var extraDrops = block.block.getDrops(fakeTool)
+
+			event.block.type = destroyedType
+			event.block.blockData = destroyedData
+
+			drops.clear()
+
+			extraDrops.forEach { extraDrop ->
+				player.world.dropItem(blockMiddle, extraDrop)
+			}
+		}
+	}
+
+	@EventHandler
 	fun onBreakBlock(event: BlockBreakEvent) {
 		var block = event.block
 		var player = event.player
+		var baseItem = event.player.inventory.itemInMainHand;
 
-		val getTool = {
-			/* get what the player is holding */
-			/* pretend it isn't air if it is */
-			var tool = player.inventory.itemInMainHand
-
-			/* get drops from block as if held item */
-			/* had fortune */
-			if (Quirk.ABUNDANCE.enabled) {
-				tool = tool.clone()
-
-				if (tool.type == Material.AIR)
-					tool = ItemStack(Material.PORKCHOP)
-
-				enchantThing(tool, LOOT_BONUS_BLOCKS, 5)
-			}
-
-			tool
-		}
-
-		val breakBlock = {
-			var drops = block.getDrops(getTool())
-
-			if (Quirk.APPLE_FIX.enabled && AppleFix.isLeaves(block)) {
-				drops.removeIf { drop -> drop.type == Material.APPLE }
-
-				if (AppleFix.onbreakLeaves(player))
-					drops.add(ItemStack(Material.APPLE))
-			}
-
-			if (Quirk.ABUNDANCE.enabled)
-				Abundance.extraDrops(block, drops)
-
-			for (drop in drops)
-				player.world.dropItem(block.location.add(0.5, 0.5, 0.5), ItemStack(drop.type, drop.amount))
-
-			if (Quirk.UNSHELTERED.enabled) {
-				/* make sure we can't break this block again */
-				block.state.setMetadata("broken", FixedMetadataValue(GameRunner.plugin as Plugin, true))
-			} else {
-				block.type = Material.AIR
-			}
-		}
-
-		/* these replace regular block breaking behavior */
-		event.isCancelled = Quirk.UNSHELTERED.enabled || Quirk.ABUNDANCE.enabled;
-
-		if (Quirk.UNSHELTERED.enabled) {
-			/* regular block breaking behavior for acceptable blocks */
-			if (GameRunner.binarySearch(block.type, acceptedBlocks)) {
-				event.isCancelled = false
-				return
-			}
-
+		if (Quirk.UNSHELTERED.enabled && !GameRunner.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 			var broken = block.state.getMetadata("broken")
 
-			/* if we have not applied broken label or broken is explicitly set to false */
-			/* proceed to mine then set broken to true */
-			if (broken.size == 0 || !broken[0].asBoolean()) {
-				breakBlock()
-			} else {
+			var oldBlockType = block.type
+			var oldData = block.blockData
+
+			/* block has not been set as broken */
+			if (Unsheltered.isBroken(block)) {
 				player.sendActionBar("${ChatColor.GOLD}${ChatColor.BOLD}Block already broken!")
+				event.isCancelled = true
+
+			} else {
+				Bukkit.getScheduler().runTaskLater(GameRunner.plugin, {
+					block.type = oldBlockType
+					block.blockData = oldData
+					Unsheltered.setBroken(block, true)
+
+				} as () -> Unit, 0)
 			}
-		} else {
-			breakBlock()
 		}
 
 		if (Quirk.WET_SPONGE.enabled) {
@@ -407,48 +408,15 @@ class EventListener : Listener {
 		}
 	}
 
-	val acceptedBlocks = arrayOf<Material>(
-		Material.CRAFTING_TABLE,
-		Material.FURNACE,
-		Material.BREWING_STAND,
-		Material.WHEAT_SEEDS,
-		Material.BLAST_FURNACE,
-		Material.SMOKER,
-		Material.WATER,
-		Material.LAVA,
-		Material.LADDER,
-		Material.ENCHANTING_TABLE,
-		Material.BOOKSHELF,
-		Material.SMITHING_TABLE,
-		Material.LOOM,
-		Material.ANVIL,
-		Material.FLETCHING_TABLE,
-		Material.COMPOSTER,
-		Material.CHEST,
-		Material.BARREL,
-		Material.WET_SPONGE,
-		Material.TNT
-	)
-
-	init {
-		acceptedBlocks.sort()
-	}
-
 	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
-		if (Quirk.APPLE_FIX.enabled) {
-			var loc = event.block.location
+		if (!Quirk.APPLE_FIX.enabled)
+			return
 
-			Bukkit.getOnlinePlayers().forEach { player ->
-				val distance = player.location.distance(loc)
-
-				if (distance < 16) {
-					event.block.drops.removeIf { drop -> drop.type == Material.APPLE }
-
-					if (AppleFix.onbreakLeaves(player))
-						event.block.drops.add(ItemStack(Material.APPLE))
-
-					return
+		Bukkit.getOnlinePlayers().forEach { player ->
+			if (player.location.distance(event.block.location) < 16) {
+				if (AppleFix.onbreakLeaves(player)) {
+					player.world.dropItem(event.block.location.add(0.5, 0.5, 0.5), ItemStack(Material.APPLE, if (Quirk.ABUNDANCE.enabled) 2 else 1 ))
 				}
 			}
 		}
@@ -487,7 +455,7 @@ class EventListener : Listener {
 		} else if (Quirk.UNSHELTERED.enabled) {
 			var block = event.block
 
-			if (!GameRunner.binarySearch(block.type, acceptedBlocks)) {
+			if (!GameRunner.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 				event.isCancelled = true
 			}
 		}
