@@ -235,6 +235,9 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		sender as Player
-		sender.sendMessage("leaves count: ${AppleFix.getLeavesCount(sender)} next apple: ${AppleFix.getAppleIndex(sender)}")
+
+		AppleFix.ranges.forEach { range ->
+			sender.sendMessage("${range.prettyName} count: ${AppleFix.getCount(sender, range.countMeta)} next drop: ${AppleFix.getIndex(sender, range.indexMeta, range.range)}")
+		}
 	}
 }

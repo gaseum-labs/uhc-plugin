@@ -5,6 +5,7 @@ import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.scoreboard.Team
@@ -19,16 +20,14 @@ class UHC(var preset: Preset) {
 
 	var gameMaster = null as CommandSender?
 
-	var phaseVariants = Array<PhaseVariant>(7) {PhaseVariant.WAITING_DEFAULT}
+	var phaseVariants = Array<PhaseVariant>(PhaseType.values().size) {PhaseVariant.WAITING_DEFAULT}
 	var phaseTimes = emptyArray<Long>()
 
+	var quirks = Array<Quirk>(QuirkType.values().size) { index ->
+		QuirkType.values()[index].createQuirk()
+	}
+
 	init {
-		Quirk.values().forEach { quirk ->
-			quirk.updateEnabled(false)
-		}
-
-		Quirk.APPLE_FIX.updateEnabled(true)
-
 		setVariant(PhaseVariant.WAITING_DEFAULT)
 		setVariant(PhaseVariant.GRACE_DEFAULT)
 		setVariant(PhaseVariant.SHRINK_DEFAULT)
@@ -63,6 +62,10 @@ class UHC(var preset: Preset) {
 
 	fun startWaiting() {
 		startPhase(PhaseType.WAITING)
+
+		quirks.forEach { quirk ->
+			Gui.updateQuirk(quirk.type)
+		}
 	}
 
 	/**
@@ -104,6 +107,14 @@ class UHC(var preset: Preset) {
 		return phaseTimes[phaseType.ordinal]
 	}
 
+	fun getQuirk(quirkType: QuirkType): Quirk {
+		return quirks[quirkType.ordinal]
+	}
+
+	fun isEnabled(quirkType: QuirkType): Boolean {
+		return quirks[quirkType.ordinal].enabled
+	}
+
 	fun startNextPhase() {
 		++currentPhaseIndex
 
@@ -121,6 +132,10 @@ class UHC(var preset: Preset) {
 		currentPhaseIndex = phaseIndex
 
 		currentPhase = phaseVariants[phaseIndex].start(this, phaseTimes[phaseIndex], onInject)
+
+		quirks.forEach { quirk ->
+			if (quirk.enabled) quirk.onPhaseSwitch(phaseVariants[phaseIndex])
+		}
 	}
 
 	fun updateMobCaps() {

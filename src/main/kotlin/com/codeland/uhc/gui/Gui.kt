@@ -3,7 +3,7 @@ package com.codeland.uhc.gui
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -24,7 +24,7 @@ object Gui {
         }, 8, 3).setName("${ChatColor.RESET}${ChatColor.RED}close")
 
         /* programmatically add all quirks */
-        Quirk.values().forEach { quirk ->
+        QuirkType.values().forEach { quirk ->
             addItem(QuirkToggle(quirk), getQuirkPosition(quirk))
         }
 
@@ -43,7 +43,7 @@ object Gui {
         player.closeInventory()
     }
 
-    private fun getQuirkPosition(quirk: Quirk): Int {
+    private fun getQuirkPosition(quirk: QuirkType): Int {
         return quirk.ordinal
     }
 
@@ -55,7 +55,7 @@ object Gui {
         return INVENTORY_SIZE - INVENTORY_WIDTH
     }
 
-    fun updateQuirk(quirk: Quirk) {
+    fun updateQuirk(quirk: QuirkType) {
         (guiItems[getQuirkPosition(quirk)] as? QuirkToggle)?.updateDisplay()
     }
 

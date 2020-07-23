@@ -14,135 +14,141 @@ import org.bukkit.inventory.meta.Damageable
 import org.bukkit.inventory.meta.FireworkEffectMeta
 import org.bukkit.inventory.meta.ItemMeta
 
-object ModifiedDrops {
-	fun randomEnchantedBook(): ItemStack {
-		val ret = ItemStack(Material.ENCHANTED_BOOK)
+class ModifiedDrops(type: QuirkType) : Quirk(type) {
+	override fun onEnable() {}
 
-		val meta = ret.itemMeta
+	override fun onDisable() {}
 
-		val enchant = Enchantment.values()[randRange(0, Enchantment.values().size - 1)]
-		meta.addEnchant(enchant, randRange(1, enchant.maxLevel), true)
+	companion object {
+		fun randomEnchantedBook(): ItemStack {
+			val ret = ItemStack(Material.ENCHANTED_BOOK)
 
-		ret.itemMeta = meta
+			val meta = ret.itemMeta
 
-		return ret
-	}
+			val enchant = Enchantment.values()[randRange(0, Enchantment.values().size - 1)]
+			meta.addEnchant(enchant, randRange(1, enchant.maxLevel), true)
 
-	fun fireworkStar(amount: Int): ItemStack {
-		val stack = ItemStack(Material.FIREWORK_STAR, amount)
-		val meta = stack.itemMeta as FireworkEffectMeta
-		meta.effect = FireworkEffect.builder().withColor(Color.LIME).build()
-		stack.itemMeta = meta
+			ret.itemMeta = meta
 
-		return stack
-	}
-
-	fun randomDamagedItem(type: Material): ItemStack {
-		val ret = ItemStack(type)
-		val damageable = ret.itemMeta as Damageable
-		damageable.damage = randRange(0, type.maxDurability.toInt())
-		ret.itemMeta = damageable as ItemMeta
-
-		return ret
-	}
-
-	fun namedItem(type: Material, name: String): ItemStack {
-		val ret = ItemStack(Material.CARROT)
-		val meta = ret.itemMeta
-		meta.setDisplayName(name)
-		ret.itemMeta = meta
-
-		return ret
-	}
-
-	fun addRandomEnchants(itemStack: ItemStack, enchantList: Array<Enchantment>, probability: Float): ItemStack {
-		var enchantIndex = (Math.random() * enchantList.size * (1 / probability)).toInt()
-
-		if (enchantIndex < enchantList.size) {
-			val enchantment = enchantList[enchantIndex]
-
-			val meta = itemStack.itemMeta
-			meta.addEnchant(enchantment, randRange(1, enchantment.maxLevel), true)
-			itemStack.itemMeta = meta
+			return ret
 		}
 
-		return itemStack
-	}
+		fun fireworkStar(amount: Int): ItemStack {
+			val stack = ItemStack(Material.FIREWORK_STAR, amount)
+			val meta = stack.itemMeta as FireworkEffectMeta
+			meta.effect = FireworkEffect.builder().withColor(Color.LIME).build()
+			stack.itemMeta = meta
 
-	fun onDrop(type: EntityType, drops: MutableList<ItemStack>) {
-		val rand = Math.random()
+			return stack
+		}
 
-		when (type) {
-			EntityType.CREEPER -> {
-				val amount = randRange(1, 4)
+		fun randomDamagedItem(type: Material): ItemStack {
+			val ret = ItemStack(type)
+			val damageable = ret.itemMeta as Damageable
+			damageable.damage = randRange(0, type.maxDurability.toInt())
+			ret.itemMeta = damageable as ItemMeta
 
-				drops.add(when {
-					rand < 0.25 -> ItemStack(Material.TNT, amount)
-					rand < 0.5 -> fireworkStar(amount * 2)
-					else -> ItemStack(Material.GUNPOWDER, amount * 2)
-				})
+			return ret
+		}
+
+		fun namedItem(type: Material, name: String): ItemStack {
+			val ret = ItemStack(Material.CARROT)
+			val meta = ret.itemMeta
+			meta.setDisplayName(name)
+			ret.itemMeta = meta
+
+			return ret
+		}
+
+		fun addRandomEnchants(itemStack: ItemStack, enchantList: Array<Enchantment>, probability: Float): ItemStack {
+			var enchantIndex = (Math.random() * enchantList.size * (1 / probability)).toInt()
+
+			if (enchantIndex < enchantList.size) {
+				val enchantment = enchantList[enchantIndex]
+
+				val meta = itemStack.itemMeta
+				meta.addEnchant(enchantment, randRange(1, enchantment.maxLevel), true)
+				itemStack.itemMeta = meta
 			}
 
-			EntityType.PHANTOM -> {
-				if (Math.random() < 0.6) {
-					val elytra = randomDamagedItem(Material.ELYTRA)
+			return itemStack
+		}
 
-					addRandomEnchants(elytra, arrayOf(
-							Enchantment.DURABILITY
-					), 0.333f)
+		fun onDrop(type: EntityType, drops: MutableList<ItemStack>) {
+			val rand = Math.random()
 
-					drops.add(elytra)
+			when (type) {
+				EntityType.CREEPER -> {
+					val amount = randRange(1, 4)
+
+					drops.add(when {
+						rand < 0.25 -> ItemStack(Material.TNT, amount)
+						rand < 0.5 -> fireworkStar(amount * 2)
+						else -> ItemStack(Material.GUNPOWDER, amount * 2)
+					})
 				}
-			}
 
-			EntityType.ZOMBIE, EntityType.HUSK, EntityType.ZOMBIE_VILLAGER -> {
-				if (Math.random() < 0.04)
-					for (i in 0..30)
-						drops.add(namedItem(Material.CARROT, "${ChatColor.GOLD}${ChatColor.BOLD}Carrot Warrior #${randRange(0, Int.MAX_VALUE - 1)}"))
-				else
-					drops.add(ItemStack(Material.CARROT))
+				EntityType.PHANTOM -> {
+					if (Math.random() < 0.6) {
+						val elytra = randomDamagedItem(Material.ELYTRA)
 
-				if (Math.random() < 0.15) {
-					val egg = Summoner.getSpawnEgg(type, true, false)
+						addRandomEnchants(elytra, arrayOf(
+								Enchantment.DURABILITY
+						), 0.333f)
 
-					if (egg != null)
-						drops.add(ItemStack(egg))
+						drops.add(elytra)
+					}
 				}
-			}
 
-			EntityType.SKELETON, EntityType.STRAY -> {
-				val crossbow = randomDamagedItem(Material.CROSSBOW)
+				EntityType.ZOMBIE, EntityType.HUSK, EntityType.ZOMBIE_VILLAGER -> {
+					if (Math.random() < 0.04)
+						for (i in 0..30)
+							drops.add(namedItem(Material.CARROT, "${ChatColor.GOLD}${ChatColor.BOLD}Carrot Warrior #${randRange(0, Int.MAX_VALUE - 1)}"))
+					else
+						drops.add(ItemStack(Material.CARROT))
 
-				addRandomEnchants(crossbow, arrayOf(
-					Enchantment.MULTISHOT,
-					Enchantment.QUICK_CHARGE,
-					Enchantment.PIERCING
-				), 0.5f)
+					if (Math.random() < 0.15) {
+						val egg = Summoner.getSpawnEgg(type, true, false)
 
-				drops.add(crossbow)
-			}
+						if (egg != null)
+							drops.add(ItemStack(egg))
+					}
+				}
 
-			EntityType.SPIDER, EntityType.CAVE_SPIDER, EntityType.SILVERFISH -> {
-				val amount = randRange(0, 3)
+				EntityType.SKELETON, EntityType.STRAY -> {
+					val crossbow = randomDamagedItem(Material.CROSSBOW)
 
-				if (amount > 0)
-					drops.add(ItemStack(Material.PAPER, amount))
+					addRandomEnchants(crossbow, arrayOf(
+							Enchantment.MULTISHOT,
+							Enchantment.QUICK_CHARGE,
+							Enchantment.PIERCING
+					), 0.5f)
 
-				//if (Math.random() < 0.04)
-				//	drops.add(randomEnchantedBook())
-			}
+					drops.add(crossbow)
+				}
 
-			EntityType.DROWNED -> {
-				val trident = randomDamagedItem(Material.TRIDENT)
+				EntityType.SPIDER, EntityType.CAVE_SPIDER, EntityType.SILVERFISH -> {
+					val amount = randRange(0, 3)
 
-				addRandomEnchants(trident, arrayOf(
-					Enchantment.RIPTIDE,
-					//Enchantment.CHANNELING,
-					Enchantment.LOYALTY
-					//Enchantment.IMPALING
-				), 0.6f)
+					if (amount > 0)
+						drops.add(ItemStack(Material.PAPER, amount))
 
-				drops.add(trident)
+					//if (Math.random() < 0.04)
+					//	drops.add(randomEnchantedBook())
+				}
+
+				EntityType.DROWNED -> {
+					val trident = randomDamagedItem(Material.TRIDENT)
+
+					addRandomEnchants(trident, arrayOf(
+							Enchantment.RIPTIDE,
+							//Enchantment.CHANNELING,
+							Enchantment.LOYALTY
+							//Enchantment.IMPALING
+					), 0.6f)
+
+					drops.add(trident)
+				}
 			}
 		}
 	}

@@ -18,7 +18,6 @@ class WaitingDefault : Phase() {
             world.worldBorder.size = 50.0
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
             world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
-            world.setGameRule(GameRule.NATURAL_REGENERATION, true)
             world.time = 1000
             world.difficulty = Difficulty.NORMAL
 

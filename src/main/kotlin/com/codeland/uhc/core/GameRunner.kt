@@ -4,15 +4,13 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.quirk.Pests
 import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.phases.postgame.PostgameDefault
-import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.World
-import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.Team
 import java.util.logging.Level
@@ -36,7 +34,7 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 
 				when {
 					player == null -> false
-					Quirk.PESTS.enabled && Pests.isPest(player) -> false
+					uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(player) -> false
 					player.gameMode == GameMode.SURVIVAL -> true
 					else -> false
 				}

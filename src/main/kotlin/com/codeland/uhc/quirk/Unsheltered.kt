@@ -5,43 +5,49 @@ import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.metadata.FixedMetadataValue
 
-object Unsheltered {
-	const val TAG_NAME = "unsheltered broken"
+class Unsheltered(type: QuirkType) : Quirk(type) {
+	override fun onEnable() {}
 
-	val acceptedBlocks = arrayOf<Material>(
-		Material.CRAFTING_TABLE,
-		Material.FURNACE,
-		Material.BREWING_STAND,
-		Material.WHEAT_SEEDS,
-		Material.BLAST_FURNACE,
-		Material.SMOKER,
-		Material.WATER,
-		Material.LAVA,
-		Material.LADDER,
-		Material.ENCHANTING_TABLE,
-		Material.BOOKSHELF,
-		Material.SMITHING_TABLE,
-		Material.LOOM,
-		Material.ANVIL,
-		Material.FLETCHING_TABLE,
-		Material.COMPOSTER,
-		Material.CHEST,
-		Material.BARREL,
-		Material.WET_SPONGE,
-		Material.TNT
-	)
+	override fun onDisable() {}
 
-	init {
-		acceptedBlocks.sort()
-	}
+	companion object {
+		const val TAG_NAME = "unsheltered broken"
 
-	fun isBroken(block: Block): Boolean {
-		var broken = block.state.getMetadata(TAG_NAME)
+		val acceptedBlocks = arrayOf<Material>(
+				Material.CRAFTING_TABLE,
+				Material.FURNACE,
+				Material.BREWING_STAND,
+				Material.WHEAT_SEEDS,
+				Material.BLAST_FURNACE,
+				Material.SMOKER,
+				Material.WATER,
+				Material.LAVA,
+				Material.LADDER,
+				Material.ENCHANTING_TABLE,
+				Material.BOOKSHELF,
+				Material.SMITHING_TABLE,
+				Material.LOOM,
+				Material.ANVIL,
+				Material.FLETCHING_TABLE,
+				Material.COMPOSTER,
+				Material.CHEST,
+				Material.BARREL,
+				Material.WET_SPONGE,
+				Material.TNT
+		)
 
-		return broken.size != 0 && broken[0].asBoolean()
-	}
+		init {
+			acceptedBlocks.sort()
+		}
 
-	fun setBroken(block: Block, broken: Boolean) {
-		block.state.setMetadata(TAG_NAME, FixedMetadataValue(GameRunner.plugin, broken))
+		fun isBroken(block: Block): Boolean {
+			var broken = block.state.getMetadata(TAG_NAME)
+
+			return broken.size != 0 && broken[0].asBoolean()
+		}
+
+		fun setBroken(block: Block, broken: Boolean) {
+			block.state.setMetadata(TAG_NAME, FixedMetadataValue(GameRunner.plugin, broken))
+		}
 	}
 }

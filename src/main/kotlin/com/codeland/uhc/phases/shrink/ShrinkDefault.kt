@@ -27,11 +27,6 @@ class ShrinkDefault : Phase() {
 	}
 
 	override fun customStart() {
-		for (w in Bukkit.getServer().worlds) {
-			w.setGameRule(GameRule.NATURAL_REGENERATION, false)
-			w.pvp = true
-		}
-
 		for (player in Bukkit.getServer().onlinePlayers) {
 			GameRunner.sendPlayer(player, "Grace period has ended!")
 		}

@@ -1,10 +1,9 @@
 package com.codeland.uhc.phases.grace
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.quirk.Zatoichi
+import com.codeland.uhc.quirk.HalfZatoichi
 import com.codeland.uhc.phases.Phase
-import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.inventory.ItemStack
@@ -16,9 +15,10 @@ open class GraceDefault : Phase() {
 		Bukkit.getServer().onlinePlayers.forEach {
 			it.inventory.clear()
 			it.setItemOnCursor(null)
-			for (activePotionEffect in it.activePotionEffects) {
+
+			for (activePotionEffect in it.activePotionEffects)
 				it.removePotionEffect(activePotionEffect.type)
-			}
+
 			it.health = it.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
 			it.absorptionAmount = 0.0
 			it.exp = 0.0F
@@ -26,35 +26,28 @@ open class GraceDefault : Phase() {
 			it.foodLevel = 20
 			it.saturation = 20F
 			it.exhaustion = 0F
-			it.setStatistic(Statistic.TIME_SINCE_REST, 0)
-			if (Quirk.MODIFIED_DROPS.enabled) {
-				it.setStatistic(Statistic.TIME_SINCE_REST, 60000)
-			}
-			if (Quirk.WET_SPONGE.enabled) {
+
+			it.setStatistic(Statistic.TIME_SINCE_REST,
+				if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) 72000
+				else 0
+			)
+
+			if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE))
 				it.inventory.addItem(ItemStack(Material.WET_SPONGE, 1))
-			}
-			if (GameRunner.playersTeam(it.name) != null) {
-				it.gameMode = GameMode.SURVIVAL
-			} else {
-				it.gameMode = GameMode.SPECTATOR
-			}
+
+			it.gameMode = if (GameRunner.playersTeam(it.name) == null) GameMode.SPECTATOR else GameMode.SURVIVAL
 		}
 
 		for (w in Bukkit.getServer().worlds) {
-			w.setGameRule(GameRule.NATURAL_REGENERATION, true)
 			w.setGameRule(GameRule.DO_MOB_SPAWNING, true)
 			w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true)
 			w.worldBorder.setCenter(0.0, 0.0)
 			w.worldBorder.size = uhc.preset.startRadius * 2
-			w.pvp = false
 		}
 
 		val teamCount = 1 + Bukkit.getServer().scoreboardManager.mainScoreboard.teams.size
 
 		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.preset.startRadius / sqrt(teamCount.toDouble())), uhc.preset.startRadius))
-
-		if (Quirk.HALF_ZATOICHI.enabled)
-			Zatoichi.start(uhc, length)
 	}
 
 	override fun perSecond(remainingSeconds: Long) {

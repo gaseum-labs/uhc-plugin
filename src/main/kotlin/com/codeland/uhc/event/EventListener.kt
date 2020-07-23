@@ -16,9 +16,7 @@ import org.bukkit.Material
 import org.bukkit.attribute.Attribute
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
-import org.bukkit.inventory.meta.Damageable
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.ExperienceOrb
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -31,17 +29,12 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.ItemMeta
-import org.bukkit.metadata.FixedMetadataValue
-import org.bukkit.plugin.Plugin
 import java.util.logging.Level
-
 
 class EventListener : Listener {
 	@EventHandler
 	fun onPlayerHurt(event: EntityDamageEvent) {
-
-		if (Quirk.WET_SPONGE.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
 			val player = event.entity
 
 			if (player is Player)
@@ -71,7 +64,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		if (Quirk.COMMANDER.enabled || Quirk.AGGRO_SUMMONER.enabled || Quirk.PASSIVE_SUMMONER.enabled)
+		if (GameRunner.uhc.isEnabled(QuirkType.COMMANDER) || GameRunner.uhc.isEnabled(QuirkType.AGGRO_SUMMONER) || GameRunner.uhc.isEnabled(QuirkType.PASSIVE_SUMMONER))
 			if (Commander.onSummon(event)) event.isCancelled = true
 
 		/* only can open uhc settings while in waiting */
@@ -102,7 +95,7 @@ class EventListener : Listener {
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		var wasPest = Pests.isPest(event.entity)
 
-		if (Quirk.PESTS.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
 			if (event.entity.gameMode != GameMode.SPECTATOR)
 				Pests.makePest(event.entity)
 
@@ -160,7 +153,7 @@ class EventListener : Listener {
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
 		/* only do this on pests mode */
-		if (!Quirk.PESTS.enabled)
+		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
 			return
 
 		var player = event.player
@@ -189,24 +182,24 @@ class EventListener : Listener {
 		player.inventory.leggings = Pests.genPestArmor(Material.LEATHER_LEGGINGS)
 		player.inventory.boots = Pests.genPestArmor(Material.LEATHER_BOOTS)
 
-		player.inventory.setItem(0, Pests.genPestTool(Material.WOODEN_PICKAXE))
-		player.inventory.setItem(1, Pests.genPestTool(Material.WOODEN_AXE))
-		player.inventory.setItem(2, Pests.genPestTool(Material.WOODEN_SHOVEL))
-		player.inventory.setItem(3, Pests.genPestTool(Material.WOODEN_HOE))
-		player.inventory.setItem(4, Pests.genPestTool(Material.WOODEN_SWORD))
+		player.inventory.setItem(0, Pests.genPestTool(Material.WOODEN_SWORD))
+		player.inventory.setItem(1, Pests.genPestTool(Material.WOODEN_PICKAXE))
+		player.inventory.setItem(2, Pests.genPestTool(Material.WOODEN_AXE))
+		player.inventory.setItem(3, Pests.genPestTool(Material.WOODEN_SHOVEL))
+		player.inventory.setItem(4, Pests.genPestTool(Material.WOODEN_HOE))
 	}
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
 
-		if (Quirk.WET_SPONGE.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
 			val player = event.target
 
 			if (player is Player && Math.random() < 0.20)
 				WetSponge.addSponge(player)
 		}
 
-		if (Quirk.COMMANDER.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.COMMANDER)) {
 			val target = event.target ?: return
 
 			if (target !is Player)
@@ -219,7 +212,7 @@ class EventListener : Listener {
 		}
 
 		/* only do this on pests mode */
-		if (!Quirk.PESTS.enabled)
+		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
 			return
 
 		if (event.target == null)
@@ -237,7 +230,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-		if (Quirk.WET_SPONGE.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
 			if (Math.random() < 0.1) {
 				var player = event.whoClicked as Player
 				WetSponge.addSponge(player)
@@ -245,7 +238,7 @@ class EventListener : Listener {
 		}
 
 		/* only do this on pests mode */
-		if (!Quirk.PESTS.enabled)
+		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
 			return
 
 		var player = event.whoClicked;
@@ -264,31 +257,50 @@ class EventListener : Listener {
 	fun onPlayerDropItem(event: PlayerDropItemEvent) {
 		val stack = event.itemDrop.itemStack
 
-		if (Quirk.WET_SPONGE.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
 			WetSponge.addSponge(event.player)
 		}
 
 		event.isCancelled = when {
-			Zatoichi.isHalfZatoichi(stack) -> true
+			HalfZatoichi.isHalfZatoichi(stack) -> true
 			GuiOpener.isGuiOpener(stack) -> true
 			else -> false
 		}
 	}
 
 	@EventHandler
+	fun onHealthRegen(event: EntityRegainHealthEvent) {
+		/* no regeneration in UHC */
+		var player = event.entity
+
+		/* make sure it only applies to players */
+		/* make sure it only applies to regeneration due to hunger */
+		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
+			if (!(GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.GRACE))) {
+				/* pests can regenerate */
+				if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
+					event.isCancelled = !Pests.isPest(player)
+				} else {
+					event.isCancelled = true
+				}
+			}
+		}
+	}
+
+	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
-		if (Quirk.MODIFIED_DROPS.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
 		}
 
 		if (!Commander.isCommanded(event.entity)) {
-			val spawnEgg = Summoner.getSpawnEgg(event.entityType, Quirk.AGGRO_SUMMONER.enabled, Quirk.PASSIVE_SUMMONER.enabled)
+			val spawnEgg = Summoner.getSpawnEgg(event.entityType, GameRunner.uhc.isEnabled(QuirkType.AGGRO_SUMMONER), GameRunner.uhc.isEnabled(QuirkType.PASSIVE_SUMMONER))
 
 			if (spawnEgg != null)
 				event.drops.add(ItemStack(spawnEgg))
 		}
 
-		if (Quirk.ABUNDANCE.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
 			if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
 				event.drops.forEach { drop ->
 					drop.amount = drop.amount * 3
@@ -298,30 +310,43 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onEntityDamageEvent(e: EntityDamageByEntityEvent) {
-		if (!Quirk.HALF_ZATOICHI.enabled) {
-			return
-		}
-		if (e.damager is Player && e.entity is Player) {
-			val defender = e.entity as Player
-			val attacker = e.damager as Player
+	fun onEntityDamageEvent(event: EntityDamageByEntityEvent) {
+		var attacker = event.damager
+		var defender = event.entity
 
-			if (Zatoichi.isHalfZatoichi(attacker.inventory.itemInMainHand)) {
-				if (Zatoichi.isHalfZatoichi(defender.inventory.itemInMainHand)) {
-					defender.health = 0.0
-					defender.absorptionAmount = 0.0
-				}
-				if (defender.health + defender.absorptionAmount < e.finalDamage) {
-					if (attacker.health < 10.0) {
-						attacker.health += 10.0
-					} else {
-						attacker.absorptionAmount += attacker.health - 10.0
-						attacker.health = 20.0
+		if (attacker is Player && defender is Player) {
+			/* protected no pvp phases */
+			if (
+				GameRunner.uhc.isPhase(PhaseType.WAITING) ||
+				GameRunner.uhc.isPhase(PhaseType.GRACE) ||
+				GameRunner.uhc.isPhase(PhaseType.POSTGAME)
+			) {
+				event.isCancelled = true
+				return
+			}
+
+			/* pests cannot attack each other */
+			if (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(attacker) && Pests.isPest(defender))
+				event.isCancelled = true
+
+			if (GameRunner.uhc.isEnabled(QuirkType.HALF_ZATOICHI)) {
+				if (HalfZatoichi.isHalfZatoichi(attacker.inventory.itemInMainHand)) {
+					if (HalfZatoichi.isHalfZatoichi(defender.inventory.itemInMainHand)) {
+						defender.health = 0.0
+						defender.absorptionAmount = 0.0
 					}
-					val meta = attacker.inventory.itemInMainHand.itemMeta.clone()
-					meta.setDisplayName("Half Zatoichi (bloody)")
-					attacker.inventory.itemInMainHand.itemMeta = meta
-					PaperPluginLogger.getGlobal().log(Level.INFO, "damaged entity")
+					if (defender.health + defender.absorptionAmount < event.finalDamage) {
+						if (attacker.health < 10.0) {
+							attacker.health += 10.0
+						} else {
+							attacker.absorptionAmount += attacker.health - 10.0
+							attacker.health = 20.0
+						}
+						val meta = attacker.inventory.itemInMainHand.itemMeta.clone()
+						meta.setDisplayName("Half Zatoichi (bloody)")
+						attacker.inventory.itemInMainHand.itemMeta = meta
+						PaperPluginLogger.getGlobal().log(Level.INFO, "damaged entity")
+					}
 				}
 			}
 		}
@@ -341,14 +366,14 @@ class EventListener : Listener {
 		var drops = event.items
 		var blockMiddle = block.location.add(0.5, 0.5, 0.5)
 
-		if (Quirk.APPLE_FIX.enabled && AppleFix.isLeaves(block.type)) {
-			drops.removeIf { drop -> drop.type == Material.APPLE }
+		if (GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX) && AppleFix.isLeaves(block.type)) {
+			drops.clear()
 
-			if (AppleFix.onbreakLeaves(player)) {
-				player.world.dropItem(blockMiddle, ItemStack(Material.APPLE, if (Quirk.ABUNDANCE.enabled) 2 else 1 ))
+			AppleFix.onbreakLeaves(block.type, player).forEach { drop ->
+				player.world.dropItem(blockMiddle, drop)
 			}
 
-		} else if (Quirk.ABUNDANCE.enabled) {
+		} else if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
 			var fakeTool = baseItem.clone()
 
 			if (fakeTool.type == Material.AIR)
@@ -356,6 +381,7 @@ class EventListener : Listener {
 
 			enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 4)
 
+			/* this is so gross but it's the only way */
 			var destroyedType = event.block.type
 			var destroyedData = event.block.blockData
 
@@ -366,6 +392,7 @@ class EventListener : Listener {
 
 			event.block.type = destroyedType
 			event.block.blockData = destroyedData
+			/* end gross block */
 
 			drops.clear()
 
@@ -381,7 +408,7 @@ class EventListener : Listener {
 		var player = event.player
 		var baseItem = event.player.inventory.itemInMainHand;
 
-		if (Quirk.UNSHELTERED.enabled && !GameRunner.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
+		if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !GameRunner.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 			var broken = block.state.getMetadata("broken")
 
 			var oldBlockType = block.type
@@ -402,7 +429,7 @@ class EventListener : Listener {
 			}
 		}
 
-		if (Quirk.WET_SPONGE.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
 			if (Math.random() < 0.01)
 				WetSponge.addSponge(player)
 		}
@@ -410,28 +437,37 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
-		if (!Quirk.APPLE_FIX.enabled)
+		if (!GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX))
 			return
 
-		Bukkit.getOnlinePlayers().forEach { player ->
+		/* drop apple for the nearest player */
+		Bukkit.getOnlinePlayers().any { player ->
 			if (player.location.distance(event.block.location) < 16) {
-				if (AppleFix.onbreakLeaves(player)) {
-					player.world.dropItem(event.block.location.add(0.5, 0.5, 0.5), ItemStack(Material.APPLE, if (Quirk.ABUNDANCE.enabled) 2 else 1 ))
+				AppleFix.onbreakLeaves(event.block.type, player).forEach { drop ->
+					player.world.dropItem(event.block.location.add(0.5, 0.5, 0.5), drop)
 				}
+
+				true
 			}
+
+			false
 		}
+
+		/* prevent drops */
+		event.isCancelled = true
+		event.block.type = Material.AIR
 	}
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
-		if (Quirk.WET_SPONGE.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
 			if (event.block.type == Material.WET_SPONGE) {
 				event.isCancelled = true
 				WetSponge.addSponge(event.player)
 			}
 		}
 
-		if (Quirk.CREATIVE.enabled) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CREATIVE)) {
 			var material = event.itemInHand.type
 
 			/* replace these blocks */
@@ -452,7 +488,7 @@ class EventListener : Listener {
 				} as () -> Unit, 0)
 			}
 
-		} else if (Quirk.UNSHELTERED.enabled) {
+		} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED)) {
 			var block = event.block
 
 			if (!GameRunner.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
