@@ -55,10 +55,13 @@ abstract class Phase {
 	lateinit var uhc: UHC
 	var length = 0L
 
-	fun start(phaseType: PhaseType, uhc : UHC, length : Long, onInject: (Phase) -> Unit) {
+	var remainingSeconds = length
+
+	fun start(phaseType: PhaseType, uhc: UHC, length: Long, onInject: (Phase) -> Unit) {
 		this.phaseType = phaseType
 		this.uhc = uhc
 		this.length = length
+		this.remainingSeconds = length
 
 		dimensionBars.forEach { dimensionBar ->
 			dimensionBar.bossBar.progress = 1.0
@@ -68,7 +71,6 @@ abstract class Phase {
 
 		if (length > 0) {
 			runnable = object : BukkitRunnable() {
-				var remainingSeconds = length
 				var currentTick = 0
 
 				override fun run() {
@@ -149,6 +151,10 @@ abstract class Phase {
 			units += "s"
 		}
 		return timeRemaining.toString() + units
+	}
+
+	public fun getTimeRemaining(): Long {
+		return remainingSeconds
 	}
 
 	/* abstract */

@@ -14,26 +14,26 @@ class Unsheltered(type: QuirkType) : Quirk(type) {
 		const val TAG_NAME = "unsheltered broken"
 
 		val acceptedBlocks = arrayOf<Material>(
-				Material.CRAFTING_TABLE,
-				Material.FURNACE,
-				Material.BREWING_STAND,
-				Material.WHEAT_SEEDS,
-				Material.BLAST_FURNACE,
-				Material.SMOKER,
-				Material.WATER,
-				Material.LAVA,
-				Material.LADDER,
-				Material.ENCHANTING_TABLE,
-				Material.BOOKSHELF,
-				Material.SMITHING_TABLE,
-				Material.LOOM,
-				Material.ANVIL,
-				Material.FLETCHING_TABLE,
-				Material.COMPOSTER,
-				Material.CHEST,
-				Material.BARREL,
-				Material.WET_SPONGE,
-				Material.TNT
+			Material.CRAFTING_TABLE,
+			Material.FURNACE,
+			Material.BREWING_STAND,
+			Material.WHEAT_SEEDS,
+			Material.BLAST_FURNACE,
+			Material.SMOKER,
+			Material.WATER,
+			Material.LAVA,
+			Material.LADDER,
+			Material.ENCHANTING_TABLE,
+			Material.BOOKSHELF,
+			Material.SMITHING_TABLE,
+			Material.LOOM,
+			Material.ANVIL,
+			Material.FLETCHING_TABLE,
+			Material.COMPOSTER,
+			Material.CHEST,
+			Material.BARREL,
+			Material.WET_SPONGE,
+			Material.TNT
 		)
 
 		init {

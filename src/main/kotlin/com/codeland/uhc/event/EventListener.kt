@@ -1,5 +1,6 @@
 package com.codeland.uhc.event
 
+import com.codeland.uhc.command.TeamData
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
@@ -93,18 +94,24 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
-		var wasPest = Pests.isPest(event.entity)
+		val player = event.entity
+
+		var wasPest = Pests.isPest(player)
 
 		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-			if (event.entity.gameMode != GameMode.SPECTATOR)
-				Pests.makePest(event.entity)
+			if (event.entity.gameMode != GameMode.SPECTATOR) {
+				val team = GameRunner.playersTeam(player.name)
+				if (team != null) TeamData.removeFromTeam(team, player.name)
+
+				Pests.makePest(player)
+			}
 
 		} else {
-			event.entity.gameMode = GameMode.SPECTATOR
+			player.gameMode = GameMode.SPECTATOR
 		}
 
 		if (!wasPest && !GameRunner.uhc.isPhase(PhaseType.WAITING))
-			GameRunner.playerDeath(event.entity)
+			GameRunner.playerDeath(player)
 	}
 
 	@EventHandler

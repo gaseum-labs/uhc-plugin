@@ -20,81 +20,28 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 	override fun onDisable() {}
 
 	companion object {
-		fun randomEnchantedBook(): ItemStack {
-			val ret = ItemStack(Material.ENCHANTED_BOOK)
-
-			val meta = ret.itemMeta
-
-			val enchant = Enchantment.values()[randRange(0, Enchantment.values().size - 1)]
-			meta.addEnchant(enchant, randRange(1, enchant.maxLevel), true)
-
-			ret.itemMeta = meta
-
-			return ret
-		}
-
-		fun fireworkStar(amount: Int): ItemStack {
-			val stack = ItemStack(Material.FIREWORK_STAR, amount)
-			val meta = stack.itemMeta as FireworkEffectMeta
-			meta.effect = FireworkEffect.builder().withColor(Color.LIME).build()
-			stack.itemMeta = meta
-
-			return stack
-		}
-
-		fun randomDamagedItem(type: Material): ItemStack {
-			val ret = ItemStack(type)
-			val damageable = ret.itemMeta as Damageable
-			damageable.damage = randRange(0, type.maxDurability.toInt())
-			ret.itemMeta = damageable as ItemMeta
-
-			return ret
-		}
-
-		fun namedItem(type: Material, name: String): ItemStack {
-			val ret = ItemStack(Material.CARROT)
-			val meta = ret.itemMeta
-			meta.setDisplayName(name)
-			ret.itemMeta = meta
-
-			return ret
-		}
-
-		fun addRandomEnchants(itemStack: ItemStack, enchantList: Array<Enchantment>, probability: Float): ItemStack {
-			var enchantIndex = (Math.random() * enchantList.size * (1 / probability)).toInt()
-
-			if (enchantIndex < enchantList.size) {
-				val enchantment = enchantList[enchantIndex]
-
-				val meta = itemStack.itemMeta
-				meta.addEnchant(enchantment, randRange(1, enchantment.maxLevel), true)
-				itemStack.itemMeta = meta
-			}
-
-			return itemStack
-		}
-
 		fun onDrop(type: EntityType, drops: MutableList<ItemStack>) {
 			val rand = Math.random()
+			val third = 1 / 3.0
+			val twoThirds = 2 / 3.0
 
 			when (type) {
 				EntityType.CREEPER -> {
-					val amount = randRange(1, 4)
-
 					drops.add(when {
-						rand < 0.25 -> ItemStack(Material.TNT, amount)
-						rand < 0.5 -> fireworkStar(amount * 2)
-						else -> ItemStack(Material.GUNPOWDER, amount * 2)
+						rand < 0.25 -> ItemStack(Material.TNT, randRange(1, 3))
+						rand < 0.5 -> ItemUtil.fireworkStar(randRange(1, 3), Color.LIME)
+						else -> ItemStack(Material.GUNPOWDER, randRange(2, 6))
 					})
 				}
 
 				EntityType.PHANTOM -> {
-					if (Math.random() < 0.6) {
-						val elytra = randomDamagedItem(Material.ELYTRA)
+					if (Math.random() < twoThirds) {
+						val elytra = ItemUtil.randomDamagedItem(Material.ELYTRA)
 
-						addRandomEnchants(elytra, arrayOf(
-								Enchantment.DURABILITY
-						), 0.333f)
+						ItemUtil.addRandomEnchants(elytra, arrayOf(
+							Enchantment.DURABILITY,
+							Enchantment.MENDING
+						), 0.5)
 
 						drops.add(elytra)
 					}
@@ -103,7 +50,7 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 				EntityType.ZOMBIE, EntityType.HUSK, EntityType.ZOMBIE_VILLAGER -> {
 					if (Math.random() < 0.04)
 						for (i in 0..30)
-							drops.add(namedItem(Material.CARROT, "${ChatColor.GOLD}${ChatColor.BOLD}Carrot Warrior #${randRange(0, Int.MAX_VALUE - 1)}"))
+							drops.add(ItemUtil.namedItem(Material.CARROT, "${ChatColor.GOLD}${ChatColor.BOLD}Carrot Warrior #${randRange(0, Int.MAX_VALUE - 1)}"))
 					else
 						drops.add(ItemStack(Material.CARROT))
 
@@ -116,15 +63,36 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 				}
 
 				EntityType.SKELETON, EntityType.STRAY -> {
-					val crossbow = randomDamagedItem(Material.CROSSBOW)
+					/* if naturally drops bow let it */
+					if (drops.find { it.type == Material.BOW } == null) {
+						if (rand < 0.33) {
+							val bow = ItemUtil.randomDamagedItem(Material.BOW)
 
-					addRandomEnchants(crossbow, arrayOf(
-							Enchantment.MULTISHOT,
-							Enchantment.QUICK_CHARGE,
-							Enchantment.PIERCING
-					), 0.5f)
+							ItemUtil.addRandomEnchants(bow, arrayOf(
+									Enchantment.ARROW_DAMAGE,
+									Enchantment.ARROW_KNOCKBACK,
+									Enchantment.ARROW_INFINITE,
+									Enchantment.ARROW_FIRE,
+									Enchantment.MENDING,
+									Enchantment.DURABILITY
+							), 0.5)
 
-					drops.add(crossbow)
+							drops.add(bow)
+
+						} else if (rand < (2 / 3.0f)) {
+							val crossbow = ItemUtil.randomDamagedItem(Material.CROSSBOW)
+
+							ItemUtil.addRandomEnchants(crossbow, arrayOf(
+									Enchantment.MULTISHOT,
+									Enchantment.QUICK_CHARGE,
+									Enchantment.PIERCING,
+									Enchantment.MENDING,
+									Enchantment.DURABILITY
+							), 0.5)
+
+							drops.add(crossbow)
+						}
+					}
 				}
 
 				EntityType.SPIDER, EntityType.CAVE_SPIDER, EntityType.SILVERFISH -> {
@@ -133,19 +101,19 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 					if (amount > 0)
 						drops.add(ItemStack(Material.PAPER, amount))
 
-					//if (Math.random() < 0.04)
-					//	drops.add(randomEnchantedBook())
+					if (Math.random() < 0.04)
+						drops.add(ItemUtil.randomEnchantedBook())
 				}
 
 				EntityType.DROWNED -> {
-					val trident = randomDamagedItem(Material.TRIDENT)
+					val trident = ItemUtil.randomDamagedItem(Material.TRIDENT)
 
-					addRandomEnchants(trident, arrayOf(
+					ItemUtil.addRandomEnchants(trident, arrayOf(
 							Enchantment.RIPTIDE,
-							//Enchantment.CHANNELING,
-							Enchantment.LOYALTY
-							//Enchantment.IMPALING
-					), 0.6f)
+							Enchantment.LOYALTY,
+							Enchantment.MENDING,
+							Enchantment.DURABILITY
+					), 0.5)
 
 					drops.add(trident)
 				}

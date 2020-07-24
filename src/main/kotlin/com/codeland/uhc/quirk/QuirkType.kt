@@ -1,5 +1,6 @@
 package com.codeland.uhc.quirk
 
+import CarePackages
 import org.bukkit.Material
 
 enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, var defaultEnabled: Boolean, var representation: Material, var description: Array<String>) {
@@ -56,6 +57,11 @@ enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, v
 	RANDOM_EFFECTS("Random Effects", ::RandomEffects, false, Material.POTION, arrayOf(
 		"Every 5 minutes,",
 		"Everyone gets a random potion effect"
+	)),
+
+	CARE_PACKAGES("Care Packages", ::CarePackages, false, Material.CHEST, arrayOf(
+		"Care packages spawn randomly in the map",
+		"do you risk a fight to take the loot?"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()

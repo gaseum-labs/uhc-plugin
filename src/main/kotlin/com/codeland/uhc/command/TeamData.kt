@@ -20,7 +20,7 @@ object TeamData {
             ChatColor.DARK_BLUE,
             ChatColor.DARK_GREEN,
             ChatColor.DARK_GRAY
-    );
+    )
 
     val colorPrettyNames = arrayOf<String>(
             "Black",
@@ -45,44 +45,44 @@ object TeamData {
             "Underline",
             "Italic",
             "Reset"
-    );
+    )
 
     /**
      * prevents non-color font modifiers and white, black, and gold
      */
     fun isValidColor(color: ChatColor): Boolean {
-        return color.isColor && color != ChatColor.WHITE && color != ChatColor.BLACK && color != ChatColor.GOLD;
+        return color.isColor && color != ChatColor.WHITE && color != ChatColor.BLACK && color != ChatColor.GOLD
     }
 
     fun prettyTeamName(color: ChatColor): String {
-        return "Team ${colorPrettyNames[color.ordinal]}";
+        return "Team ${colorPrettyNames[color.ordinal]}"
     }
 
     fun addToTeam(scoreboard: Scoreboard, color: ChatColor, playerName: String) {
         /* remove player from old team if they are on one */
-        val oldTeam = scoreboard.getEntryTeam(playerName);
+        val oldTeam = scoreboard.getEntryTeam(playerName)
 
         if (oldTeam != null)
-            removeFromTeam(oldTeam, playerName);
+            removeFromTeam(oldTeam, playerName)
 
         /* find if the new team exists */
-        val teamName = color.name;
-        var team = scoreboard.getTeam(teamName);
+        val teamName = color.name
+        var team = scoreboard.getTeam(teamName)
 
         /* create the team if it doesn't exist */
         if (team == null) {
-            team = scoreboard.registerNewTeam(teamName);
-            team.color = color;
-            team.displayName = prettyTeamName(color);
+            team = scoreboard.registerNewTeam(teamName)
+            team.color = color
+            team.displayName = prettyTeamName(color)
         }
 
 	    GameRunner.bot.addPlayerToTeam(team, playerName)
 
-        team.addEntry(playerName);
+        team.addEntry(playerName)
     }
 
     fun removeFromTeam(team: Team, playerName: String) {
-        team.removeEntry(playerName);
+        team.removeEntry(playerName)
 
         /* remove the team if no one is left on it */
         if (team.entries.size == 0) {

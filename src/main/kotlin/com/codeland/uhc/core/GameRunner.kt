@@ -74,7 +74,7 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 			}
 
 			/* only give last alive if only one team is alive */
-			return retRemaining;
+			return retRemaining
 		}
 
 		fun playerDeath(deadPlayer: Player) {
@@ -167,6 +167,10 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 
 		fun randRange(low: Int, high: Int): Int {
 			return ((Math.random() * high - low + 1) + low).toInt()
+		}
+
+		fun randRange(low: Long, high: Long): Long {
+			return ((Math.random() * high - low + 1) + low).toLong()
 		}
 	}
 }
