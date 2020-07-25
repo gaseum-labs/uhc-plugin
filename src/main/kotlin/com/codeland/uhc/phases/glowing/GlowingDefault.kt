@@ -21,7 +21,7 @@ class GlowingDefault : Phase() {
 		}
 	}
 
-	override fun perSecond(remainingSeconds: Long) {
+	override fun perSecond(remainingSeconds: Int) {
 
 	}
 

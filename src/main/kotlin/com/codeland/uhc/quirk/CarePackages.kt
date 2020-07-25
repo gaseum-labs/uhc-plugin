@@ -1,9 +1,11 @@
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.Util
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.quirk.ItemUtil
 import com.codeland.uhc.quirk.ItemUtil.randFromArray
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import org.bukkit.ChatColor.*
 import org.bukkit.*
 import org.bukkit.block.Chest
 import org.bukkit.enchantments.Enchantment
@@ -12,18 +14,21 @@ import org.bukkit.entity.Firework
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.scheduler.BukkitRunnable
-import org.bukkit.scoreboard.DisplaySlot
-import org.bukkit.scoreboard.Objective
+import org.bukkit.scoreboard.*
 
 class CarePackages(type: QuirkType) : Quirk(type) {
+	val OBJECTIVE_NAME = "carePackageDrop"
+
 	override fun onEnable() {
+		/* start the carepackage timer loop */
 		currentRunnable = generateRunnable()
 		currentRunnable?.runTaskTimer(GameRunner.plugin, 0, 20)
 
+		/* get rid of any lingering objectives from this quirk */
 		var scoreboard = Bukkit.getScoreboardManager().mainScoreboard
-		scoreboard.getObjective("nextLocation")?.unregister()
+		scoreboard.getObjective(OBJECTIVE_NAME)?.unregister()
 
-		objective = scoreboard.registerNewObjective("nextLocation", "dummy", "Carepackage Drop Location")
+		objective = scoreboard.registerNewObjective(OBJECTIVE_NAME, "dummy", "Next Care Package Drop")
 		objective?.displaySlot = DisplaySlot.SIDEBAR
 	}
 
@@ -37,42 +42,124 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 	var objective = null as Objective?
 	var currentRunnable = null as BukkitRunnable?
 
+	var scoreT = null as Score?
+	var scoreP = null as Score?
+
 	fun generateRunnable(): BukkitRunnable {
 		return object : BukkitRunnable() {
+			val minTime = 2 * 60
+			val maxTime = 10 * 60
+
+			val minItems = 9
+			val maxItems = 18
+
 			var running = false
 
-			var minTime = 2L * 60L
-			var maxTime = 10L * 60L
-
-			var timer = 0L
-
+			var timer = 0
 			var nextLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
 
+			lateinit var dropTimes: Array<Int>
+			var dropIndex = 0
+
+			fun setScore(objective: Objective?, score: Score?, value: String, index: Int): Score {
+				/* trick kotlin in allowing us to return */
+				if (objective == null) return Bukkit.getScoreboardManager().mainScoreboard.registerNewObjective("", "", "").getScore("")
+
+				/* remove the previous score if applicable */
+				if (score != null) {
+					val scoreboard = objective.scoreboard
+					scoreboard?.resetScores(score.entry)
+				}
+
+				val ret = objective.getScore(value)
+				ret.score = index
+
+				return ret
+			}
+
+			fun shutOff() {
+				running = false
+				objective?.displaySlot = null
+			}
+
 			fun reset() {
-				timer = 10L//GameRunner.randRange(minTime, maxTime)
+				/* don't keep doing this outside of shrinking */
+				if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || dropIndex == dropTimes.size) {
+					shutOff()
+					return
+				}
+
+				timer = dropTimes[dropIndex]
+				++dropIndex
+
 				nextLocation = findDropSpot(timer, 16, Bukkit.getWorlds()[0].worldBorder)
 
-				var scoreboard = Bukkit.getScoreboardManager().mainScoreboard
+				val coordinateString = "at (${ChatColor.GOLD}${BOLD}${nextLocation.blockX}${RESET}, ${ChatColor.GOLD}${BOLD}${nextLocation.blockY}${RESET}, ${ChatColor.GOLD}${BOLD}${nextLocation.blockZ}${RESET})"
 
-				objective?.getScore("X")?.score = nextLocation.blockX
-				objective?.getScore("Y")?.score = nextLocation.blockY
-				objective?.getScore("Z")?.score = nextLocation.blockZ
-				objective?.getScore("TimeLeft")?.score = timer.toInt()
+				scoreT = setScore(objective, scoreT, "in ${ChatColor.GOLD}${BOLD}${Util.timeString(timer)}", 1)
+				scoreP = setScore(objective, scoreP, coordinateString, 0)
+			}
+
+			fun generateDropTimes(shrinkTime: Int): Array<Int> {
+				/* we want about 1 every 5 minutes */
+				val targetTime = 5 * 60
+
+				val numDrops = shrinkTime / targetTime
+				val averageTime = shrinkTime / numDrops
+
+				val ret = Array(numDrops) { averageTime }
+
+				/* add randomness in the times */
+				for (i in ret.indices) {
+					/* half a minute to a minute differences */
+					var shiftAmount = Util.randRange(60, 120)
+
+					var reduceIndex = Util.randRange(0, ret.lastIndex)
+					var gainIndex = Util.randRange(0, ret.lastIndex)
+
+					var oldReduce = ret[reduceIndex]
+					ret[reduceIndex] -= shiftAmount
+
+					/* don't reduce any time to less than a minute */
+					/* if it would, find the actual amount it got reduced by */
+					if (ret[reduceIndex] < 60) {
+						ret[reduceIndex] = 60
+						shiftAmount = oldReduce - ret[reduceIndex]
+					}
+
+					ret[gainIndex] += shiftAmount
+				}
+
+				return ret
+			}
+
+			fun generateDropAmount(dropIndex: Int, dropTimes: Array<Int>): Int {
+				val lastDropIndex = dropTimes.lastIndex
+
+				val along = dropIndex.toFloat() / lastDropIndex.toFloat()
+
+				return ((maxItems - minItems) * along).toInt() + minItems
 			}
 
 			override fun run() {
 				if (running) {
-					objective?.getScore("TimeLeft")?.score = timer.toInt()
-
 					--timer
-					if (timer == 0L) {
-						generateDrop(13, nextLocation)
-
+					if (timer == 0) {
+						generateDrop(generateDropAmount(dropIndex, dropTimes), nextLocation)
 						reset()
+					} else {
+						scoreT = setScore(objective, scoreT, "in ${ChatColor.GOLD}${BOLD}${Util.timeString(timer)}", 1)
 					}
 
-				} else if (GameRunner.uhc.isPhase(PhaseType.GRACE) || GameRunner.uhc.isPhase(PhaseType.SHRINK)) {
+				/* start making drops during shrinking round */
+				} else if (GameRunner.uhc.isPhase(PhaseType.SHRINK)) {
 					running = true
+					dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
+
+					dropTimes.forEach { drop ->
+						Util.log("time: $drop")
+					}
+
 					reset()
 				}
 			}
@@ -175,6 +262,18 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			))
 		)
 
+		val elytra = ToolInfo(arrayOf(Material.ELYTRA), arrayOf(
+			arrayOf(Enchantment.MENDING),
+			arrayOf(Enchantment.DURABILITY)
+		))
+
+		val trident = ToolInfo(arrayOf(Material.TRIDENT), arrayOf(
+			arrayOf(Enchantment.MENDING),
+			arrayOf(Enchantment.DURABILITY),
+			arrayOf(Enchantment.IMPALING),
+			arrayOf(Enchantment.CHANNELING, Enchantment.LOYALTY, Enchantment.RIPTIDE)
+		))
+
 		fun randTool(toolArray: Array<ToolInfo>, material: Int, enchantChance: Double): ItemStack {
 			var toolInfo = randFromArray(toolArray)
 			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[material]), toolInfo.enchants, enchantChance)
@@ -182,6 +281,10 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 		fun randTool(toolArray: Array<ToolInfo>, enchantChance: Double): ItemStack {
 			var toolInfo = randFromArray(toolArray)
+			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[0]), toolInfo.enchants, enchantChance)
+		}
+
+		fun aTool(toolInfo: ToolInfo, enchantChance: Double): ItemStack {
 			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[0]), toolInfo.enchants, enchantChance)
 		}
 
@@ -193,44 +296,55 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			LootEntry(4) { randTool(tools, GOLD, 0.5) },
 			LootEntry(4) { randTool(armor, GOLD, 0.5) },
 			LootEntry(4) { randTool(bows, 0.25) },
-			LootEntry(4) { ItemStack(       Material.LEATHER, GameRunner.randRange(2,  6)) },
-			LootEntry(4) { ItemStack(         Material.PAPER, GameRunner.randRange(2,  6)) },
-			LootEntry(4) { ItemStack(    Material.SUGAR_CANE, GameRunner.randRange(3,  7)) },
-			LootEntry(4) { ItemStack(   Material.COOKED_BEEF, GameRunner.randRange(2,  5)) },
-			LootEntry(4) { ItemStack(    Material.IRON_INGOT, GameRunner.randRange(3, 10)) },
-			LootEntry(4) { ItemStack(        Material.STRING, GameRunner.randRange(3, 10)) },
-			LootEntry(4) { ItemStack(  Material.RED_MUSHROOM, GameRunner.randRange(4, 12)) },
-			LootEntry(4) { ItemStack(Material.BROWN_MUSHROOM, GameRunner.randRange(4, 12)) },
-			LootEntry(4) { ItemStack(   Material.OXEYE_DAISY, GameRunner.randRange(4, 12)) },
+			LootEntry(4) { ItemStack(       Material.LEATHER, Util.randRange(2,  6)) },
+			LootEntry(4) { ItemStack(         Material.PAPER, Util.randRange(2,  6)) },
+			LootEntry(4) { ItemStack(   Material.COOKED_BEEF, Util.randRange(2,  5)) },
+			LootEntry(4) { ItemStack(    Material.IRON_INGOT, Util.randRange(3, 10)) },
+			LootEntry(4) { ItemStack(   Material.IRON_NUGGET, Util.randRange(5, 18)) },
+			LootEntry(4) { ItemStack(        Material.STRING, Util.randRange(3, 10)) },
+			LootEntry(4) { ItemStack(  Material.RED_MUSHROOM, Util.randRange(4, 12)) },
+			LootEntry(4) { ItemStack(Material.BROWN_MUSHROOM, Util.randRange(4, 12)) },
+			LootEntry(4) { ItemStack(   Material.OXEYE_DAISY, Util.randRange(4, 12)) },
+			LootEntry(4) { ItemStack(     Material.GUNPOWDER, Util.randRange(5, 12)) },
+			LootEntry(4) { ItemStack(          Material.BOOK, Util.randRange(1,  4)) },
 
 			/* medium */
 			LootEntry(3) { randTool(weapons, IRON, 0.25) },
 			LootEntry(3) { randTool(tools, IRON, 0.25) },
 			LootEntry(3) { randTool(armor, IRON, 0.25) },
-			LootEntry(3) { ItemUtil.fireworkStar(GameRunner.randRange(1, 7), Color.fromRGB(GameRunner.randRange(0, 0xffffff))) },
-			LootEntry(3) { ItemStack(   Material.GOLD_NUGGET, GameRunner.randRange(5,  9)) },
-			LootEntry(3) { ItemStack(    Material.GOLD_INGOT, GameRunner.randRange(1,  6)) },
-			LootEntry(3) { ItemStack( Material.GOLDEN_CARROT, GameRunner.randRange(3,  6)) },
-			LootEntry(3) { ItemStack(           Material.TNT, GameRunner.randRange(1,  9)) },
-			LootEntry(3) { ItemStack(      Material.OBSIDIAN, GameRunner.randRange(3,  6)) },
+			LootEntry(3) { ItemStack(   Material.GOLD_NUGGET, Util.randRange(5, 18)) },
+			LootEntry(3) { ItemStack(    Material.GOLD_INGOT, Util.randRange(1,  6)) },
+			LootEntry(3) { ItemStack( Material.GOLDEN_CARROT, Util.randRange(3,  6)) },
+			LootEntry(3) { ItemStack(           Material.TNT, Util.randRange(1,  9)) },
+			LootEntry(3) { ItemStack(      Material.OBSIDIAN, Util.randRange(3,  6)) },
+			LootEntry(3) { ItemStack(  Material.LAPIS_LAZULI, Util.randRange(8, 16)) },
+			LootEntry(3) { ItemUtil.randomFireworkStar(Util.randRange(3, 7)) },
+			LootEntry(3) { ItemUtil.randomRocket(Util.randRange(3, 6)) },
+			LootEntry(3) { ItemUtil.randomEnchantedBook() },
+			LootEntry(3) { ItemUtil.randomPotion(true, Math.random() < 0.5) },
 
 			/* rare */
 			LootEntry(2) { randTool(weapons, DIAMOND, 0.25) },
 			LootEntry(2) { randTool(tools, DIAMOND, 0.25) },
 			LootEntry(2) { randTool(armor, DIAMOND, 0.25) },
-			LootEntry(2) { ItemUtil.randomEnchantedBook() },
-			LootEntry(2) { ItemStack(       Material.DIAMOND, GameRunner.randRange(1,  3)) },
-			LootEntry(2) { ItemStack(     Material.BLAZE_ROD, GameRunner.randRange(1,  3)) },
-			LootEntry(2) { ItemStack(  Material.BLAZE_POWDER, GameRunner.randRange(1,  6)) },
-			LootEntry(2) { ItemStack(   Material.NETHER_WART, GameRunner.randRange(1,  7)) },
+			LootEntry(2) { ItemStack(       Material.DIAMOND, Util.randRange(1,  3)) },
+			LootEntry(2) { ItemStack(     Material.BLAZE_ROD, Util.randRange(1,  3)) },
+			LootEntry(2) { ItemStack(  Material.BLAZE_POWDER, Util.randRange(1,  6)) },
+			LootEntry(2) { ItemStack(   Material.NETHER_WART, Util.randRange(1,  7)) },
+			LootEntry(2) { ItemStack(  Material.GOLDEN_APPLE, Util.randRange(1,  3)) },
+			LootEntry(2) { ItemUtil.randomPotion(false, true) },
 
 			/* mythic */
+			LootEntry(1) { ItemStack(Material.NETHERITE_INGOT) },
 			LootEntry(1) { randTool(weapons, NETHERITE, 0.25) },
 			LootEntry(1) { randTool(tools, NETHERITE, 0.25) },
-			LootEntry(1) { randTool(armor, NETHERITE, 0.25) }
+			LootEntry(1) { randTool(armor, NETHERITE, 0.25) },
+			LootEntry(1) { ItemStack(Material.ENCHANTED_GOLDEN_APPLE) },
+			LootEntry(1) { aTool(elytra, 0.25) },
+			LootEntry(1) { aTool(trident, 0.25) }
 		)
 
-		val lootIndices: Array<Int>
+		private val lootIndices: Array<Int>
 
 		init {
 			/* find the length of the all the loot counts combined */
@@ -253,7 +367,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 		fun generateLoot(amount: Int, inventory: Inventory) {
 			for (i in 0 until amount) {
-				var space = GameRunner.randRange(0, inventory.size - 1)
+				var space = Util.randRange(0, inventory.size - 1)
 
 				while (inventory.getItem(space) != null) {
 					++space
@@ -266,19 +380,11 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			}
 		}
 
-		fun findDropSpot(timeUntil: Long, buffer: Int, worldBorder: WorldBorder): Location {
+		fun findDropSpot(timeUntil: Int, buffer: Int, worldBorder: WorldBorder): Location {
 			var currentRadius = worldBorder.size / 2
 
 			var startRadius = GameRunner.uhc.preset.startRadius
 			var endRadius = GameRunner.uhc.preset.endRadius
-
-			/*var timeUntil = if (GameRunner.uhc.isPhase(PhaseType.GRACE)) {
-				GameRunner.uhc.currentPhase?.getTimeRemaining()?.plus(GameRunner.uhc.preset.shrinkTime)
-			} else if (GameRunner.uhc.isPhase(PhaseType.SHRINK)) {
-				GameRunner.uhc.currentPhase?.getTimeRemaining()
-			} else {
-				null
-			} ?: return null*/
 
 			/* distance over time */
 			var speed = (startRadius - endRadius).toFloat() / (GameRunner.uhc.preset.shrinkTime).toFloat()
@@ -287,9 +393,9 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 			var world = Bukkit.getWorlds()[0]
 
-			var x = GameRunner.randRange(-maxRadius, maxRadius)
-			var z = GameRunner.randRange(-maxRadius, maxRadius)
-			var y = GameRunner.topBlockY(world, x, z) + 1
+			var x = Util.randRange(-maxRadius, maxRadius)
+			var z = Util.randRange(-maxRadius, maxRadius)
+			var y = Util.topBlockY(world, x, z) + 1
 
 			return Location(world, x.toDouble(), y.toDouble(), z.toDouble())
 		}
@@ -300,13 +406,16 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			var block = world.getBlockAt(location)
 			block.type = Material.CHEST
 
-			generateLoot(amount, (block.state as Chest).blockInventory)
+			var chest = block.getState(false) as Chest
+			chest.customName = "${ChatColor.GOLD}${ChatColor.BOLD}Care Package"
+
+			generateLoot(amount, chest.blockInventory)
 
 			var firework = world.spawnEntity(location.add(0.5, 0.5, 0.5), EntityType.FIREWORK) as Firework
 
 			/* add effect to the firework */
 			var meta = firework.fireworkMeta
-			meta.addEffect(FireworkEffect.builder().withColor(Color.YELLOW).withColor(Color.AQUA).withFlicker().build())
+			meta.addEffect(ItemUtil.randomFireworkEffect())
 			firework.fireworkMeta = meta
 
 			firework.detonate()

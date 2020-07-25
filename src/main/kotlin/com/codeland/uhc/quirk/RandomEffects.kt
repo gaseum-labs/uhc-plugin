@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.Util
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
 import org.bukkit.Bukkit
@@ -22,10 +23,7 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 	}
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
-		GameRunner.log("phase switching")
-
 		if (phase.type == PhaseType.GRACE) {
-			GameRunner.log("is grace")
 			giveEffects()
 		}
 	}
@@ -81,19 +79,15 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 
 		fun giveEffects() {
 			Bukkit.getOnlinePlayers().forEach { player ->
-				GameRunner.log("giving effect to player ${player.name}")
-
 				if (player.gameMode != GameMode.SURVIVAL) return
 
 				/* make sure to not give same effect twice */
-				var effectIndex = GameRunner.randRange(0, effects.lastIndex)
+				var effectIndex = Util.randRange(0, effects.lastIndex)
 
 				while (player.hasPotionEffect(effects[effectIndex])) {
 					++effectIndex
 					effectIndex %= effects.size
 				}
-
-				GameRunner.log("gave effect ${effects[effectIndex].name}")
 
 				/* give effect with a slight time overlap */
 				val effect = PotionEffect(effects[effectIndex], (time + 2) * 20, 1, false, true)

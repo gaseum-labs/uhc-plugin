@@ -1,6 +1,7 @@
 package com.codeland.uhc.phases.waiting
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.Util
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.Pests
@@ -10,7 +11,6 @@ import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 
 class WaitingDefault : Phase() {
-
     override fun customStart() {
         Bukkit.getWorlds().forEach { world ->
             world.setSpawnLocation(10000, 70, 10000)
@@ -32,7 +32,7 @@ class WaitingDefault : Phase() {
         }
     }
 
-    override fun perSecond(remainingSeconds: Long) {
+    override fun perSecond(remainingSeconds: Int) {
 
     }
 
@@ -50,7 +50,7 @@ class WaitingDefault : Phase() {
             player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
             player.health = 20.0
             player.foodLevel = 20
-            player.teleport(Location(Bukkit.getWorlds()[0], 10000.5, GameRunner.topBlockY(Bukkit.getWorlds()[0], 10000, 10000) + 1.0, 10000.5))
+            player.teleport(Location(Bukkit.getWorlds()[0], 10000.5, Util.topBlockY(Bukkit.getWorlds()[0], 10000, 10000) + 1.0, 10000.5))
             player.gameMode = GameMode.ADVENTURE
 
             Pests.makeNotPest(player)

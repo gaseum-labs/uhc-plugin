@@ -50,7 +50,7 @@ open class GraceDefault : Phase() {
 		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.preset.startRadius / sqrt(teamCount.toDouble())), uhc.preset.startRadius))
 	}
 
-	override fun perSecond(remainingSeconds: Long) {
+	override fun perSecond(remainingSeconds: Int) {
 
 	}
 

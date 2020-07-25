@@ -57,7 +57,7 @@ class PostgameDefault : Phase() {
         GameRunner.bot.clearTeamVCs()
     }
 
-    override fun perSecond(remainingSeconds: Long) {
+    override fun perSecond(remainingSeconds: Int) {
 
     }
 }

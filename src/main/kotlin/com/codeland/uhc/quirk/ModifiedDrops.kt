@@ -1,6 +1,6 @@
 package com.codeland.uhc.quirk
 
-import com.codeland.uhc.core.GameRunner.Companion.randRange
+import com.codeland.uhc.core.Util
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Color
 import org.bukkit.FireworkEffect
@@ -28,9 +28,9 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 			when (type) {
 				EntityType.CREEPER -> {
 					drops.add(when {
-						rand < 0.25 -> ItemStack(Material.TNT, randRange(1, 3))
-						rand < 0.5 -> ItemUtil.fireworkStar(randRange(1, 3), Color.LIME)
-						else -> ItemStack(Material.GUNPOWDER, randRange(2, 6))
+						rand < 0.25 -> ItemStack(Material.TNT, Util.randRange(1, 3))
+						rand < 0.5 -> ItemUtil.fireworkStar(Util.randRange(1, 3), Color.LIME)
+						else -> ItemStack(Material.GUNPOWDER, Util.randRange(2, 6))
 					})
 				}
 
@@ -50,7 +50,7 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 				EntityType.ZOMBIE, EntityType.HUSK, EntityType.ZOMBIE_VILLAGER -> {
 					if (Math.random() < 0.04)
 						for (i in 0..30)
-							drops.add(ItemUtil.namedItem(Material.CARROT, "${ChatColor.GOLD}${ChatColor.BOLD}Carrot Warrior #${randRange(0, Int.MAX_VALUE - 1)}"))
+							drops.add(ItemUtil.namedItem(Material.CARROT, "${ChatColor.GOLD}${ChatColor.BOLD}Carrot Warrior #${Util.randRange(0, Int.MAX_VALUE - 1)}"))
 					else
 						drops.add(ItemStack(Material.CARROT))
 
@@ -96,7 +96,7 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 				}
 
 				EntityType.SPIDER, EntityType.CAVE_SPIDER, EntityType.SILVERFISH -> {
-					val amount = randRange(0, 3)
+					val amount = Util.randRange(0, 3)
 
 					if (amount > 0)
 						drops.add(ItemStack(Material.PAPER, amount))

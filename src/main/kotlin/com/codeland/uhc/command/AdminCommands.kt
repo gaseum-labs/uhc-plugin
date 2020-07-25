@@ -138,7 +138,7 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("modify timing")
 	@Description("set the length of a phase")
-	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Long) {
+	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Int) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
@@ -168,7 +168,7 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("modify all")
 	@Description("set all details of the UHC")
-	fun modifyAll(sender : CommandSender, startRadius: Double, endRadius: Double, graceTime: Long, shrinkTime: Long, finalTime: Long, glowingTime: Long) {
+	fun modifyAll(sender : CommandSender, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowingTime: Int) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 

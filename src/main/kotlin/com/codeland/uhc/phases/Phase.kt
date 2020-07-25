@@ -53,11 +53,11 @@ abstract class Phase {
 
 	lateinit var phaseType: PhaseType
 	lateinit var uhc: UHC
-	var length = 0L
+	var length = 0
 
 	var remainingSeconds = length
 
-	fun start(phaseType: PhaseType, uhc: UHC, length: Long, onInject: (Phase) -> Unit) {
+	fun start(phaseType: PhaseType, uhc: UHC, length: Int, onInject: (Phase) -> Unit) {
 		this.phaseType = phaseType
 		this.uhc = uhc
 		this.length = length
@@ -75,7 +75,7 @@ abstract class Phase {
 
 				override fun run() {
 					if (currentTick == 0) {
-						if (remainingSeconds == 0L) {
+						if (remainingSeconds == 0) {
 							uhc.startNextPhase()
 
 							return
@@ -121,11 +121,11 @@ abstract class Phase {
 		customStart()
 	}
 
-	private fun countDownColor(secondsLeft: Long): ChatColor {
+	private fun countDownColor(secondsLeft: Int): ChatColor {
 		return when (secondsLeft) {
-			3L -> ChatColor.RED
-			2L -> ChatColor.GREEN
-			1L -> ChatColor.BLUE
+			3 -> ChatColor.RED
+			2 -> ChatColor.GREEN
+			1 -> ChatColor.BLUE
 			else -> ChatColor.GRAY
 		}
 	}
@@ -134,11 +134,11 @@ abstract class Phase {
 		runnable?.cancel()
 	}
 
-	protected open fun updateActionBar(bossBar: BossBar, world: World, remainingSeconds : Long) {
+	protected open fun updateActionBar(bossBar: BossBar, world: World, remainingSeconds: Int) {
 		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${getRemainingTimeString(remainingSeconds)}")
 	}
 
-	protected open fun getRemainingTimeString(remainingSeconds : Long) : String {
+	protected open fun getRemainingTimeString(remainingSeconds: Int) : String {
 		var timeRemaining = remainingSeconds
 		var units : String =
 				if (remainingSeconds >= 60) {
@@ -153,14 +153,14 @@ abstract class Phase {
 		return timeRemaining.toString() + units
 	}
 
-	public fun getTimeRemaining(): Long {
+	public fun getTimeRemaining(): Int {
 		return remainingSeconds
 	}
 
 	/* abstract */
 
 	abstract fun customStart()
-	protected abstract fun perSecond(remainingSeconds: Long)
+	protected abstract fun perSecond(remainingSeconds: Int)
 	abstract fun getCountdownString() : String
 	abstract fun endPhrase() : String
 }

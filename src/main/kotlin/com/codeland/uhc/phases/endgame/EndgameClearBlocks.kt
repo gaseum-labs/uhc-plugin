@@ -63,7 +63,7 @@ class EndgameClearBlocks : Phase() {
 		blockRunnable?.runTaskTimer(GameRunner.plugin!!, 0, 1)
 	}
 
-	override fun perSecond(remainingSeconds: Long) {
+	override fun perSecond(remainingSeconds: Int) {
 
 	}
 

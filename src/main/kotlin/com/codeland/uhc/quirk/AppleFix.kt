@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.Util
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -16,7 +17,7 @@ class AppleFix(type: QuirkType) : Quirk(type) {
 
 		val ranges = arrayOf(
 			Range("apple", "appleCount", "appleIndex", 200) { leaves -> ItemStack(Material.APPLE) },
-			Range("stick", "stickCount", "stickIndex", 50) { leaves -> ItemStack(Material.STICK, GameRunner.randRange(1, 2)) },
+			Range("stick", "stickCount", "stickIndex", 50) { leaves -> ItemStack(Material.STICK, Util.randRange(1, 2)) },
 			Range("sapling", "saplingCount", "saplingIndex", 20) { leaves ->
 				ItemStack(binarySearchSapling(leaves, leavesInfo) ?: Material.OAK_SAPLING)
 			}
@@ -100,7 +101,7 @@ class AppleFix(type: QuirkType) : Quirk(type) {
 		}
 
 		fun resetIndex(player: Player, indexMeta: String, range: Int): Int {
-			val index = GameRunner.randRange(1, range)
+			val index = Util.randRange(1, range)
 
 			player.setMetadata(indexMeta, FixedMetadataValue(GameRunner.plugin, index))
 

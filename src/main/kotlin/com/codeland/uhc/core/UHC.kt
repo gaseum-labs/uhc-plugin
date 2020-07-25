@@ -21,7 +21,7 @@ class UHC(var preset: Preset) {
 	var gameMaster = null as CommandSender?
 
 	var phaseVariants = Array<PhaseVariant>(PhaseType.values().size) {PhaseVariant.WAITING_DEFAULT}
-	var phaseTimes = emptyArray<Long>()
+	var phaseTimes = emptyArray<Int>()
 
 	var quirks = Array<Quirk>(QuirkType.values().size) { index ->
 		QuirkType.values()[index].createQuirk()
@@ -103,7 +103,7 @@ class UHC(var preset: Preset) {
 		return phaseVariants[phaseType.ordinal]
 	}
 
-	fun getTime(phaseType: PhaseType): Long {
+	fun getTime(phaseType: PhaseType): Int {
 		return phaseTimes[phaseType.ordinal]
 	}
 

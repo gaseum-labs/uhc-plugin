@@ -15,7 +15,7 @@ class GlowingTopTwo : Phase() {
 		}
 	}
 
-	override fun perSecond(second: Long) {
+	override fun perSecond(second: Int) {
 		val sortedTeams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams.sortedByDescending {
 			var ret = 0.0
 			for (entry in it.entries) {

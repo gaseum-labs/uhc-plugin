@@ -25,7 +25,7 @@ class EndgameDeathmatch : Phase() {
 		}
 	}
 
-	override fun perSecond(remainingSeconds: Long) {
+	override fun perSecond(remainingSeconds: Int) {
 
 	}
 

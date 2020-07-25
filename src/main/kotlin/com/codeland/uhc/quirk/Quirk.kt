@@ -18,8 +18,6 @@ abstract class Quirk(var type: QuirkType) {
 		field = value
 		Gui.updateQuirk(type)
 
-		GameRunner.log("${type.prettyName} enabled is set to $enabled")
-
 		type.incompatibilities.forEach { other ->
 			var otherQuirk = GameRunner.uhc.getQuirk(other)
 

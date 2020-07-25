@@ -2,6 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.command.TeamData
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.Util
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.PhaseType
@@ -178,7 +179,7 @@ class EventListener : Listener {
 		var x = ((Math.random() * right * 2) - right).toInt()
 		var z = ((Math.random() * down * 2) - down).toInt()
 
-		var y = GameRunner.topBlockY(player.world, x, z)
+		var y = Util.topBlockY(player.world, x, z)
 		event.respawnLocation.set(x + 0.5, y + 1.0, z + 0.5)
 
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
@@ -256,7 +257,7 @@ class EventListener : Listener {
 		var item = event.recipe.result.type
 
 		/* prevent crafting of banned items */
-		if (GameRunner.binarySearch(item, Pests.banList))
+		if (Util.binarySearch(item, Pests.banList))
 			event.isCancelled = true
 	}
 
@@ -415,7 +416,7 @@ class EventListener : Listener {
 		var player = event.player
 		var baseItem = event.player.inventory.itemInMainHand;
 
-		if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !GameRunner.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
+		if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 			var broken = block.state.getMetadata("broken")
 
 			var oldBlockType = block.type
@@ -478,7 +479,7 @@ class EventListener : Listener {
 			var material = event.itemInHand.type
 
 			/* replace these blocks */
-			if (GameRunner.binarySearch(material, Creative.blocks)) {
+			if (Util.binarySearch(material, Creative.blocks)) {
 
 				var oldItemStack = event.itemInHand.clone()
 
@@ -498,7 +499,7 @@ class EventListener : Listener {
 		} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED)) {
 			var block = event.block
 
-			if (!GameRunner.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
+			if (!Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 				event.isCancelled = true
 			}
 		}

@@ -5,7 +5,7 @@ import com.codeland.uhc.phases.Phase
 class EndgameNone : Phase() {
 
 	override fun customStart() {}
-	override fun perSecond(remainingSeconds: Long) {
+	override fun perSecond(remainingSeconds: Int) {
 
 	}
 

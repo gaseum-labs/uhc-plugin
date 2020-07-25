@@ -21,7 +21,7 @@ class EndgamePoison : Phase() {
 		posionRunnable?.runTaskTimer(GameRunner.plugin!!, 0, 10)
 	}
 
-	override fun perSecond(remainingSeconds: Long) {
+	override fun perSecond(remainingSeconds: Int) {
 
 	}
 

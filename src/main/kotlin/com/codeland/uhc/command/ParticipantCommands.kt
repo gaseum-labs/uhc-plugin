@@ -24,7 +24,7 @@ class ParticipantCommands : BaseCommand() {
 
 		val time = GameRunner.uhc.getTime(phaseType)
 
-		return if (time == 0L)
+		return if (time == 0)
 			ret
 		else
 			"$ret | $time seconds"

@@ -13,14 +13,13 @@ import org.bukkit.World
 import org.bukkit.boss.BossBar
 
 class ShrinkDefault : Phase() {
-
 	var minRadius : Double? = null
 
-	override fun perSecond(secondsLeft: Long) {
+	override fun perSecond(secondsLeft: Int) {
 		GameRunner.uhc.updateMobCaps()
 	}
 
-	override fun updateActionBar(bossBar: BossBar, world: World, remainingSeconds : Long) {
+	override fun updateActionBar(bossBar: BossBar, world: World, remainingSeconds: Int) {
 		val text = "reaching ${minRadius!!.toLong()} in ${getRemainingTimeString(remainingSeconds)}"
 
 		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${world.worldBorder.size.toLong() / 2} $text")
@@ -34,9 +33,9 @@ class ShrinkDefault : Phase() {
 		minRadius = uhc.preset.endRadius
 		for (w in Bukkit.getServer().worlds) {
 			if (w.environment == World.Environment.NETHER && uhc.netherToZero) {
-				w.worldBorder.setSize(0.0, length)
+				w.worldBorder.setSize(0.0, length.toLong())
 			} else {
-				w.worldBorder.setSize(minRadius!! * 2.0, length)
+				w.worldBorder.setSize(minRadius!! * 2.0, length.toLong())
 			}
 		}
 
