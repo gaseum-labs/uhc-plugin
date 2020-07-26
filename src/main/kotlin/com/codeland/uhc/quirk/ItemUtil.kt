@@ -93,11 +93,27 @@ object ItemUtil {
 		builder.flicker(Math.random() < 0.5)
 		builder.trail(Math.random() < 0.5)
 
-		/* effect types */
-		FireworkEffect.Type.values().forEach { type ->
-			if (Math.random() < 0.5)
-				builder.with(type)
+		/* effect type */
+		builder.with(randFromArray(FireworkEffect.Type.values()))
+
+		/* colors */
+		var numColors = Util.randRange(1, 8)
+		for (i in 0 until numColors) {
+			builder.withColor(Color.fromRGB(Util.randRange(0, 0xffffff)))
 		}
+
+		return builder.build()
+	}
+
+	fun fireworkEffect(type: FireworkEffect.Type): FireworkEffect {
+		val builder = FireworkEffect.builder()
+
+		/* toggles */
+		builder.flicker(Math.random() < 0.5)
+		builder.trail(Math.random() < 0.5)
+
+		/* effect type */
+		builder.with(type)
 
 		/* colors */
 		var numColors = Util.randRange(1, 8)
@@ -159,12 +175,30 @@ object ItemUtil {
 		PotionType.POISON
 	)
 
-	fun randomPotion(good: Boolean, splash: Boolean): ItemStack {
-		val itemStack = ItemStack(if (splash) Material.POTION else Material.SPLASH_POTION)
+	fun randomPotionData(good: Boolean): PotionData {
 		var potionType = randFromArray(if (good) goodEffects else badEffects)
 
+		val extended = potionType.isExtendable && Math.random() < 0.5
+		val upgraded = !extended && potionType.isUpgradeable && Math.random() < 0.5
+
+		return PotionData(potionType, extended, upgraded)
+	}
+
+	fun randomPotion(good: Boolean, throwType: Material): ItemStack {
+		val itemStack = ItemStack(throwType)
+
 		val meta = itemStack.itemMeta as PotionMeta
-		meta.basePotionData = PotionData(potionType, potionType.isExtendable && Math.random() < 0.5, potionType.isUpgradeable && Math.random() < 0.5)
+		meta.basePotionData = randomPotionData(good)
+		itemStack.itemMeta = meta
+
+		return itemStack
+	}
+
+	fun randomTippedArrow(amount: Int): ItemStack {
+		val itemStack = ItemStack(Material.TIPPED_ARROW, amount)
+
+		val meta = itemStack.itemMeta as PotionMeta
+		meta.basePotionData = randomPotionData(false)
 		itemStack.itemMeta = meta
 
 		return itemStack

@@ -5,16 +5,23 @@ import com.codeland.uhc.quirk.ItemUtil
 import com.codeland.uhc.quirk.ItemUtil.randFromArray
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import net.md_5.bungee.api.ChatColor.GOLD
 import org.bukkit.ChatColor.*
 import org.bukkit.*
 import org.bukkit.block.Chest
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
+import org.bukkit.entity.Item
+import org.bukkit.entity.SpectralArrow
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.SuspiciousStewMeta
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scoreboard.*
+import kotlin.math.roundToInt
 
 class CarePackages(type: QuirkType) : Quirk(type) {
 	val OBJECTIVE_NAME = "carePackageDrop"
@@ -90,7 +97,6 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				}
 
 				timer = dropTimes[dropIndex]
-				++dropIndex
 
 				nextLocation = findDropSpot(timer, 16, Bukkit.getWorlds()[0].worldBorder)
 
@@ -102,11 +108,9 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 			fun generateDropTimes(shrinkTime: Int): Array<Int> {
 				/* we want about 1 every 5 minutes */
-				val targetTime = 5 * 60
+				val numDrops = lootEntries.size
 
-				val numDrops = shrinkTime / targetTime
 				val averageTime = shrinkTime / numDrops
-
 				val ret = Array(numDrops) { averageTime }
 
 				/* add randomness in the times */
@@ -133,19 +137,33 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				return ret
 			}
 
-			fun generateDropAmount(dropIndex: Int, dropTimes: Array<Int>): Int {
+			fun generateDropAmount(dropIndex: Int, tiers: Int, dropTimes: Array<Int>): Array<Int> {
 				val lastDropIndex = dropTimes.lastIndex
-
 				val along = dropIndex.toFloat() / lastDropIndex.toFloat()
 
-				return ((maxItems - minItems) * along).toInt() + minItems
+				Util.log("dropindex: $dropIndex out of ${dropTimes.lastIndex}")
+				Util.log("along: $along")
+
+				return Array<Int>(tiers) { tier ->
+					var peak = (1.0 / (tiers - 1.0)) * tier
+
+					var amount = 7 - Math.abs(3 * tiers * (along - peak))
+
+					if (amount < 0) amount = 0.0
+
+					Util.log("amount for ${tier}: ${amount.roundToInt()}")
+
+					amount.roundToInt()
+				}
 			}
 
 			override fun run() {
 				if (running) {
 					--timer
 					if (timer == 0) {
-						generateDrop(generateDropAmount(dropIndex, dropTimes), nextLocation)
+						generateDrop(generateDropAmount(dropIndex, lootEntries.size, dropTimes), nextLocation)
+						++dropIndex
+
 						reset()
 					} else {
 						scoreT = setScore(objective, scoreT, "in ${ChatColor.GOLD}${BOLD}${Util.timeString(timer)}", 1)
@@ -167,15 +185,20 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 	}
 
 	companion object {
-		const val GOLD = 0
-		const val IRON = 1
-		const val DIAMOND = 2
-		const val NETHERITE = 3
-
-		class ToolInfo(val materials: Array<Material>, val enchants: Array<Array<Enchantment>>)
+		class ToolInfo(val materials: Array<Material>, val enchants: Array<Array<Enchantment>>) {
+			companion object {
+				val WOOD = 0; val LEATHER = 0
+				val GOLD = 1
+				val STONE = 2; val CHAIN = 2
+				val IRON = 3
+				val DIAMOND = 4
+				val NETHERITE = 5
+				val SHELL = 6
+			}
+		}
 
 		val weapons = arrayOf(
-			ToolInfo(arrayOf(Material.GOLDEN_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD), arrayOf(
+			ToolInfo(arrayOf(Material.WOODEN_SWORD, Material.GOLDEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.LOOT_BONUS_MOBS),
@@ -184,7 +207,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				arrayOf(Enchantment.SWEEPING_EDGE),
 				arrayOf(Enchantment.DAMAGE_ALL, Enchantment.DAMAGE_ARTHROPODS, Enchantment.DAMAGE_UNDEAD)
 			)),
-			ToolInfo(arrayOf(Material.GOLDEN_AXE, Material.IRON_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE), arrayOf(
+			ToolInfo(arrayOf(Material.WOODEN_AXE, Material.GOLDEN_AXE, Material.STONE_AXE, Material.IRON_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.DIG_SPEED),
@@ -194,19 +217,19 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 		)
 
 		val tools = arrayOf(
-			ToolInfo(arrayOf(Material.GOLDEN_PICKAXE, Material.IRON_PICKAXE, Material.DIAMOND_PICKAXE, Material.NETHERITE_PICKAXE), arrayOf(
+			ToolInfo(arrayOf(Material.WOODEN_PICKAXE, Material.GOLDEN_PICKAXE, Material.STONE_PICKAXE, Material.IRON_PICKAXE, Material.DIAMOND_PICKAXE, Material.NETHERITE_PICKAXE), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.DIG_SPEED),
 				arrayOf(Enchantment.LOOT_BONUS_BLOCKS, Enchantment.SILK_TOUCH)
 			)),
-			ToolInfo(arrayOf(Material.GOLDEN_SHOVEL, Material.IRON_SHOVEL, Material.DIAMOND_SHOVEL, Material.NETHERITE_SHOVEL), arrayOf(
+			ToolInfo(arrayOf(Material.WOODEN_SHOVEL, Material.GOLDEN_SHOVEL, Material.STONE_SHOVEL, Material.IRON_SHOVEL, Material.DIAMOND_SHOVEL, Material.NETHERITE_SHOVEL), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.DIG_SPEED),
 				arrayOf(Enchantment.LOOT_BONUS_BLOCKS, Enchantment.SILK_TOUCH)
 			)),
-			ToolInfo(arrayOf(Material.GOLDEN_HOE, Material.IRON_HOE, Material.DIAMOND_HOE, Material.NETHERITE_HOE), arrayOf(
+			ToolInfo(arrayOf(Material.WOODEN_HOE, Material.GOLDEN_HOE, Material.STONE_HOE, Material.IRON_HOE, Material.DIAMOND_HOE, Material.NETHERITE_HOE), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.DIG_SPEED),
@@ -215,7 +238,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 		)
 
 		val armor = arrayOf(
-			ToolInfo(arrayOf(Material.GOLDEN_HELMET, Material.IRON_HELMET, Material.DIAMOND_HELMET, Material.NETHERITE_HELMET), arrayOf(
+			ToolInfo(arrayOf(Material.LEATHER_HELMET, Material.GOLDEN_HELMET, Material.CHAINMAIL_HELMET, Material.IRON_HELMET, Material.DIAMOND_HELMET, Material.NETHERITE_HELMET, Material.TURTLE_HELMET), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.THORNS),
@@ -223,19 +246,19 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				arrayOf(Enchantment.WATER_WORKER),
 				arrayOf(Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_FIRE, Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_PROJECTILE)
 			)),
-			ToolInfo(arrayOf(Material.GOLDEN_CHESTPLATE, Material.IRON_CHESTPLATE, Material.DIAMOND_CHESTPLATE, Material.NETHERITE_CHESTPLATE), arrayOf(
+			ToolInfo(arrayOf(Material.LEATHER_CHESTPLATE, Material.GOLDEN_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE, Material.IRON_CHESTPLATE, Material.DIAMOND_CHESTPLATE, Material.NETHERITE_CHESTPLATE), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.THORNS),
 				arrayOf(Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_FIRE, Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_PROJECTILE)
 			)),
-			ToolInfo(arrayOf(Material.GOLDEN_LEGGINGS, Material.IRON_LEGGINGS, Material.DIAMOND_LEGGINGS, Material.NETHERITE_LEGGINGS), arrayOf(
+			ToolInfo(arrayOf(Material.LEATHER_LEGGINGS, Material.GOLDEN_LEGGINGS, Material.CHAINMAIL_LEGGINGS, Material.IRON_LEGGINGS, Material.DIAMOND_LEGGINGS, Material.NETHERITE_LEGGINGS), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.THORNS),
 				arrayOf(Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_FIRE, Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_PROJECTILE)
 			)),
-			ToolInfo(arrayOf(Material.GOLDEN_BOOTS, Material.IRON_BOOTS, Material.DIAMOND_BOOTS, Material.NETHERITE_BOOTS), arrayOf(
+			ToolInfo(arrayOf(Material.LEATHER_BOOTS, Material.GOLDEN_BOOTS, Material.CHAINMAIL_BOOTS, Material.IRON_BOOTS, Material.DIAMOND_BOOTS, Material.NETHERITE_BOOTS), arrayOf(
 				arrayOf(Enchantment.DURABILITY),
 				arrayOf(Enchantment.MENDING),
 				arrayOf(Enchantment.THORNS),
@@ -246,21 +269,20 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			))
 		)
 
-		val bows = arrayOf(
-			ToolInfo(arrayOf(Material.BOW), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING, Enchantment.ARROW_INFINITE),
-				arrayOf(Enchantment.ARROW_FIRE),
-				arrayOf(Enchantment.ARROW_KNOCKBACK),
-				arrayOf(Enchantment.ARROW_DAMAGE)
-			)),
-			ToolInfo(arrayOf(Material.CROSSBOW), arrayOf(
-				arrayOf(Enchantment.PIERCING, Enchantment.MULTISHOT),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.QUICK_CHARGE)
-			))
-		)
+		val bow = ToolInfo(arrayOf(Material.BOW), arrayOf(
+			arrayOf(Enchantment.DURABILITY),
+			arrayOf(Enchantment.MENDING, Enchantment.ARROW_INFINITE),
+			arrayOf(Enchantment.ARROW_FIRE),
+			arrayOf(Enchantment.ARROW_KNOCKBACK),
+			arrayOf(Enchantment.ARROW_DAMAGE)
+		))
+
+		val crossbow = ToolInfo(arrayOf(Material.CROSSBOW), arrayOf(
+			arrayOf(Enchantment.PIERCING, Enchantment.MULTISHOT),
+			arrayOf(Enchantment.MENDING),
+			arrayOf(Enchantment.DURABILITY),
+			arrayOf(Enchantment.QUICK_CHARGE)
+		))
 
 		val elytra = ToolInfo(arrayOf(Material.ELYTRA), arrayOf(
 			arrayOf(Enchantment.MENDING),
@@ -288,95 +310,205 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[0]), toolInfo.enchants, enchantChance)
 		}
 
-		class LootEntry(var count: Int, var makeStack: () -> ItemStack)
+		fun aTool(toolInfo: ToolInfo, material: Int, enchantChance: Double): ItemStack {
+			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[material]), toolInfo.enchants, enchantChance)
+		}
 
-		val lootEntries = arrayOf(
-			/* common */
-			LootEntry(4) { randTool(weapons, GOLD, 0.5) },
-			LootEntry(4) { randTool(tools, GOLD, 0.5) },
-			LootEntry(4) { randTool(armor, GOLD, 0.5) },
-			LootEntry(4) { randTool(bows, 0.25) },
-			LootEntry(4) { ItemStack(       Material.LEATHER, Util.randRange(2,  6)) },
-			LootEntry(4) { ItemStack(         Material.PAPER, Util.randRange(2,  6)) },
-			LootEntry(4) { ItemStack(   Material.COOKED_BEEF, Util.randRange(2,  5)) },
-			LootEntry(4) { ItemStack(    Material.IRON_INGOT, Util.randRange(3, 10)) },
-			LootEntry(4) { ItemStack(   Material.IRON_NUGGET, Util.randRange(5, 18)) },
-			LootEntry(4) { ItemStack(        Material.STRING, Util.randRange(3, 10)) },
-			LootEntry(4) { ItemStack(  Material.RED_MUSHROOM, Util.randRange(4, 12)) },
-			LootEntry(4) { ItemStack(Material.BROWN_MUSHROOM, Util.randRange(4, 12)) },
-			LootEntry(4) { ItemStack(   Material.OXEYE_DAISY, Util.randRange(4, 12)) },
-			LootEntry(4) { ItemStack(     Material.GUNPOWDER, Util.randRange(5, 12)) },
-			LootEntry(4) { ItemStack(          Material.BOOK, Util.randRange(1,  4)) },
+		fun stewPart(): ItemStack {
+			val rand = Math.random()
 
-			/* medium */
-			LootEntry(3) { randTool(weapons, IRON, 0.25) },
-			LootEntry(3) { randTool(tools, IRON, 0.25) },
-			LootEntry(3) { randTool(armor, IRON, 0.25) },
-			LootEntry(3) { ItemStack(   Material.GOLD_NUGGET, Util.randRange(5, 18)) },
-			LootEntry(3) { ItemStack(    Material.GOLD_INGOT, Util.randRange(1,  6)) },
-			LootEntry(3) { ItemStack( Material.GOLDEN_CARROT, Util.randRange(3,  6)) },
-			LootEntry(3) { ItemStack(           Material.TNT, Util.randRange(1,  9)) },
-			LootEntry(3) { ItemStack(      Material.OBSIDIAN, Util.randRange(3,  6)) },
-			LootEntry(3) { ItemStack(  Material.LAPIS_LAZULI, Util.randRange(8, 16)) },
-			LootEntry(3) { ItemUtil.randomFireworkStar(Util.randRange(3, 7)) },
-			LootEntry(3) { ItemUtil.randomRocket(Util.randRange(3, 6)) },
-			LootEntry(3) { ItemUtil.randomEnchantedBook() },
-			LootEntry(3) { ItemUtil.randomPotion(true, Math.random() < 0.5) },
+			return when {
+				rand < 0.2 -> ItemStack(Material.BOWL, Util.randRange(4, 16))
+				rand < 0.4 -> {
+					val stew = ItemStack(Material.SUSPICIOUS_STEW, Util.randRange(4, 16))
 
-			/* rare */
-			LootEntry(2) { randTool(weapons, DIAMOND, 0.25) },
-			LootEntry(2) { randTool(tools, DIAMOND, 0.25) },
-			LootEntry(2) { randTool(armor, DIAMOND, 0.25) },
-			LootEntry(2) { ItemStack(       Material.DIAMOND, Util.randRange(1,  3)) },
-			LootEntry(2) { ItemStack(     Material.BLAZE_ROD, Util.randRange(1,  3)) },
-			LootEntry(2) { ItemStack(  Material.BLAZE_POWDER, Util.randRange(1,  6)) },
-			LootEntry(2) { ItemStack(   Material.NETHER_WART, Util.randRange(1,  7)) },
-			LootEntry(2) { ItemStack(  Material.GOLDEN_APPLE, Util.randRange(1,  3)) },
-			LootEntry(2) { ItemUtil.randomPotion(false, true) },
+					val meta = stew.itemMeta as SuspiciousStewMeta
+					meta.addCustomEffect(PotionEffect(PotionEffectType.REGENERATION, 8, 0), true)
+					stew.itemMeta = meta
 
-			/* mythic */
-			LootEntry(1) { ItemStack(Material.NETHERITE_INGOT) },
-			LootEntry(1) { randTool(weapons, NETHERITE, 0.25) },
-			LootEntry(1) { randTool(tools, NETHERITE, 0.25) },
-			LootEntry(1) { randTool(armor, NETHERITE, 0.25) },
-			LootEntry(1) { ItemStack(Material.ENCHANTED_GOLDEN_APPLE) },
-			LootEntry(1) { aTool(elytra, 0.25) },
-			LootEntry(1) { aTool(trident, 0.25) }
-		)
-
-		private val lootIndices: Array<Int>
-
-		init {
-			/* find the length of the all the loot counts combined */
-			var count = 0
-			lootEntries.forEach { lootEntry ->
-				count += lootEntry.count
-			}
-
-			lootIndices = Array<Int>(count) { 0 }
-
-			/* add all of the entries to the indices */
-			count = 0
-			lootEntries.forEachIndexed { entryIndex, lootEntry ->
-				for (i in count until count + lootEntry.count)
-					lootIndices[i] = entryIndex
-
-				count += lootEntry.count
+					stew
+				}
+				rand < 0.6 -> ItemStack(Material.RED_MUSHROOM, Util.randRange(4, 16))
+				rand < 0.8 -> ItemStack(Material.BROWN_MUSHROOM, Util.randRange(4, 16))
+				else -> ItemStack(Material.OXEYE_DAISY, Util.randRange(4, 16))
 			}
 		}
 
-		fun generateLoot(amount: Int, inventory: Inventory) {
-			for (i in 0 until amount) {
-				var space = Util.randRange(0, inventory.size - 1)
+		fun canePart(): ItemStack {
+			return if (Math.random() < 0.5) {
+				ItemStack(Material.SUGAR_CANE, Util.randRange(6, 18))
+			} else {
+				ItemStack(Material.PAPER, Util.randRange(6, 18))
+			}
+		}
 
-				while (inventory.getItem(space) != null) {
-					++space
-					space %= inventory.size
+		fun ironPart(): ItemStack {
+			return if (Math.random() < 0.5) {
+				ItemStack(Material.IRON_INGOT, Util.randRange(3, 6))
+			} else {
+				ItemStack(Material.IRON_NUGGET, Util.randRange(12, 24))
+			}
+		}
+
+		fun goldPart(): ItemStack {
+			return if (Math.random() < 0.5) {
+				ItemStack(Material.GOLD_INGOT, Util.randRange(3, 6))
+			} else {
+				ItemStack(Material.GOLD_NUGGET, Util.randRange(12, 24))
+			}
+		}
+
+		fun bucket(): ItemStack {
+			val rand = Math.random()
+
+			return when {
+				rand < 1.0 / 3.0 -> ItemStack(Material.LAVA_BUCKET)
+				rand < 2.0 / 3.0 -> ItemStack(Material.WATER_BUCKET)
+				else -> ItemStack(Material.BUCKET)
+			}
+		}
+
+		val brewingIngredients = arrayOf(
+			Material.RABBIT_FOOT,
+			Material.GLISTERING_MELON_SLICE,
+			Material.SPIDER_EYE,
+			Material.GHAST_TEAR,
+			Material.MAGMA_CREAM,
+			Material.PUFFERFISH,
+			Material.PHANTOM_MEMBRANE,
+			Material.REDSTONE,
+			Material.GLOWSTONE_DUST,
+			Material.FERMENTED_SPIDER_EYE,
+			Material.DRAGON_BREATH,
+			Material.BLAZE_POWDER
+		)
+
+		fun brewingIngredient(): ItemStack {
+			return ItemStack(ItemUtil.randFromArray(brewingIngredients), Util.randRange(4, 16))
+		}
+
+		fun anyThrow(): Material {
+			val rand = Math.random()
+
+			return when {
+				rand < 0.5 -> Material.POTION
+				rand < 0.75 -> Material.SPLASH_POTION
+				else -> Material.LINGERING_POTION
+			}
+		}
+
+		fun splashLinger(): Material {
+			return if (Math.random() < 0.5)
+				Material.SPLASH_POTION
+			else
+				Material.LINGERING_POTION
+		}
+
+		fun arrowPart(): ItemStack {
+			val rand = Math.random()
+
+			return when {
+				rand < 1.0 / 3.0 -> ItemStack(Material.FLINT, Util.randRange(12, 24))
+				rand < 2.0 / 3.0 -> ItemStack(Material.STICK, Util.randRange(12, 24))
+				else -> ItemStack(Material.FEATHER, Util.randRange(12, 24))
+			}
+		}
+
+		class LootEntry(var makeStack: () -> ItemStack)
+
+		val lootEntries = arrayOf(
+			arrayOf(
+				LootEntry { randTool(weapons, ToolInfo.WOOD, 0.25) },
+				LootEntry { randTool(tools, ToolInfo.WOOD, 0.25) },
+				LootEntry { randTool(armor, ToolInfo.LEATHER, 0.25) },
+				LootEntry { ItemStack(Material.COOKED_BEEF, Util.randRange(2,  5)) },
+				LootEntry { ItemStack(Material.GUNPOWDER, Util.randRange(5, 12)) },
+				LootEntry { arrowPart() },
+				LootEntry { canePart() },
+				LootEntry { ItemStack(Material.STRING, Util.randRange(3, 10)) },
+				LootEntry { stewPart() },
+				LootEntry { ItemStack(Material.APPLE, Util.randRange(1, 6)) }
+			),
+			arrayOf(
+				LootEntry { randTool(weapons, ToolInfo.GOLD, 0.5) },
+				LootEntry { randTool(tools,  ToolInfo.GOLD, 0.5) },
+				LootEntry { randTool(armor,  ToolInfo.GOLD, 0.5) },
+				LootEntry { aTool(bow, 0.25) },
+				LootEntry { aTool(crossbow, 0.25) },
+				LootEntry { ItemStack(Material.LEATHER, Util.randRange(2,  6)) },
+				LootEntry { ItemStack(Material.BOOK, Util.randRange(4,  9)) },
+				LootEntry { ItemStack(Material.BOOKSHELF, Util.randRange(2, 4)) },
+				LootEntry { ItemStack(Material.ARROW, Util.randRange(8, 32)) },
+				LootEntry { ItemStack(Material.SADDLE) }
+			),
+			arrayOf(
+				LootEntry { randTool(weapons, ToolInfo.STONE, 0.25) },
+				LootEntry { randTool(tools, ToolInfo.STONE, 0.25) },
+				LootEntry { randTool(armor, ToolInfo.CHAIN, 0.25) },
+				LootEntry { ironPart() },
+				LootEntry { goldPart() },
+				LootEntry { ItemStack(Material.LAPIS_LAZULI, Util.randRange(8, 16)) },
+				LootEntry { ItemStack(Material.TNT, Util.randRange(1,  9)) },
+				LootEntry { ItemStack(Material.OBSIDIAN, Util.randRange(3,  7)) },
+				LootEntry { bucket() },
+				LootEntry { ItemStack(Material.ENDER_PEARL, Util.randRange(2,  7)) }
+			),
+			arrayOf(
+				LootEntry { randTool(weapons, ToolInfo.IRON, 0.25) },
+				LootEntry { randTool(tools, ToolInfo.IRON, 0.25) },
+				LootEntry { randTool(armor, ToolInfo.IRON, 0.25) },
+				LootEntry { aTool(armor[0], ToolInfo.SHELL, 0.25) },
+				LootEntry { ItemStack(Material.GOLDEN_CARROT, Util.randRange(3,  6)) },
+				LootEntry { ItemUtil.randomEnchantedBook() },
+				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(3, 7)) },
+				LootEntry { ItemUtil.randomRocket(Util.randRange(3, 6)) },
+				LootEntry { ItemStack(Material.GOLDEN_APPLE, Util.randRange(1,  3)) },
+				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) },
+				LootEntry { ItemStack(Material.SPECTRAL_ARROW, Util.randRange(4, 16)) }
+			),
+			arrayOf(
+				LootEntry { randTool(weapons, ToolInfo.DIAMOND, 0.25) },
+				LootEntry { randTool(tools, ToolInfo.DIAMOND, 0.25) },
+				LootEntry { randTool(armor, ToolInfo.DIAMOND, 0.25) },
+				LootEntry { aTool(trident, 0.25) },
+				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 4)) },
+				LootEntry { brewingIngredient() },
+				LootEntry { ItemStack(Material.NETHER_WART, Util.randRange(4,  7)) },
+				LootEntry { ItemUtil.randomPotion(true, anyThrow()) },
+				LootEntry { ItemUtil.randomPotion(false, splashLinger()) },
+				LootEntry { ItemStack(Material.DIAMOND, Util.randRange(1,  3)) },
+				LootEntry { ItemUtil.randomTippedArrow(Util.randRange(4, 16)) }
+			),
+			arrayOf(
+				LootEntry { randTool(weapons, ToolInfo.NETHERITE, 0.25) },
+				LootEntry { randTool(tools, ToolInfo.NETHERITE, 0.25) },
+				LootEntry { randTool(armor, ToolInfo.NETHERITE, 0.25) },
+				LootEntry { aTool(elytra, 0.25) },
+				LootEntry { ItemStack(Material.NETHERITE_INGOT) },
+				LootEntry { ItemStack(Material.BREWING_STAND) },
+				LootEntry { ItemStack(Material.ANVIL) },
+				LootEntry { ItemStack(Material.ENCHANTING_TABLE) },
+				LootEntry { ItemStack(Material.ANCIENT_DEBRIS, Util.randRange(4, 8)) },
+				LootEntry { ItemStack(Material.NETHERITE_SCRAP, Util.randRange(4, 8)) },
+				LootEntry { ItemStack(Material.ENCHANTED_GOLDEN_APPLE) },
+				LootEntry { ItemStack(Material.TOTEM_OF_UNDYING) }
+			)
+		)
+
+		fun generateLoot(amounts: Array<Int>, inventory: Inventory) {
+			amounts.forEachIndexed { tier, amount ->
+				for (i in 0 until amount) {
+					var space = Util.randRange(0, inventory.size - 1)
+
+					while (inventory.getItem(space) != null) {
+						++space
+						space %= inventory.size
+					}
+
+					var loot = ItemUtil.randFromArray(lootEntries[tier])
+
+					inventory.setItem(space, loot.makeStack())
 				}
-
-				var loot = lootEntries[ItemUtil.randFromArray(lootIndices)]
-
-				inventory.setItem(space, loot.makeStack())
 			}
 		}
 
@@ -390,6 +522,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			var speed = (startRadius - endRadius).toFloat() / (GameRunner.uhc.preset.shrinkTime).toFloat()
 
 			var maxRadius = (currentRadius - (speed * timeUntil) - buffer).toInt()
+			if (maxRadius < endRadius) maxRadius = endRadius.toInt()
 
 			var world = Bukkit.getWorlds()[0]
 
@@ -400,7 +533,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			return Location(world, x.toDouble(), y.toDouble(), z.toDouble())
 		}
 
-		fun generateDrop(amount: Int, location: Location) {
+		fun generateDrop(amounts: Array<Int>, location: Location) {
 			var world = Bukkit.getWorlds()[0]
 
 			var block = world.getBlockAt(location)
@@ -409,13 +542,13 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			var chest = block.getState(false) as Chest
 			chest.customName = "${ChatColor.GOLD}${ChatColor.BOLD}Care Package"
 
-			generateLoot(amount, chest.blockInventory)
+			generateLoot(amounts, chest.blockInventory)
 
 			var firework = world.spawnEntity(location.add(0.5, 0.5, 0.5), EntityType.FIREWORK) as Firework
 
 			/* add effect to the firework */
 			var meta = firework.fireworkMeta
-			meta.addEffect(ItemUtil.randomFireworkEffect())
+			meta.addEffect(ItemUtil.fireworkEffect(FireworkEffect.Type.BALL_LARGE))
 			firework.fireworkMeta = meta
 
 			firework.detonate()
