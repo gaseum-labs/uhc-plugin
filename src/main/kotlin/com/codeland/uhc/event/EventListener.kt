@@ -28,6 +28,8 @@ import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.block.LeavesDecayEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
+import org.bukkit.event.inventory.InventoryOpenEvent
+import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
@@ -249,7 +251,7 @@ class EventListener : Listener {
 		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
 			return
 
-		var player = event.whoClicked;
+		var player = event.whoClicked
 
 		if (!Pests.isPest(player as Player))
 			return
@@ -374,7 +376,7 @@ class EventListener : Listener {
 		var drops = event.items
 		var blockMiddle = block.location.add(0.5, 0.5, 0.5)
 
-		if (GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX) && AppleFix.isLeaves(block.type)) {
+		if (GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX) && AppleFix.isLeaves(block.type) && !(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))) {
 			drops.clear()
 
 			AppleFix.onbreakLeaves(block.type, player).forEach { drop ->
@@ -441,6 +443,15 @@ class EventListener : Listener {
 			if (Math.random() < 0.01)
 				WetSponge.addSponge(player)
 		}
+	}
+
+	@EventHandler
+	fun onInventory(event: InventoryOpenEvent) {
+		if (event.inventory.type != InventoryType.PLAYER) return
+		if (!GameRunner.uhc.isEnabled(QuirkType.SHARED_INVENTORY)) return
+
+		event.isCancelled = true
+		event.player.openInventory(SharedInventory.inventory)
 	}
 
 	@EventHandler

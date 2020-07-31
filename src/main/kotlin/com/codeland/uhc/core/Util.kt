@@ -42,6 +42,10 @@ object Util {
 		return ((Math.random() * (high - low + 1)) + low).toInt()
 	}
 
+	fun randRange(low: Float, high: Float): Float {
+		return ((Math.random() * (high - low)) + low).toFloat()
+	}
+
 	fun timeString(seconds: Int): String {
 		val minutes = seconds / 60
 		val seconds = seconds % 60

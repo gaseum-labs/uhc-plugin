@@ -2,18 +2,24 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Util
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.quirk.ItemUtil
+import com.codeland.uhc.quirk.ItemUtil.aTieredTool
+import com.codeland.uhc.quirk.ItemUtil.aTool
+import com.codeland.uhc.quirk.ItemUtil.armor
+import com.codeland.uhc.quirk.ItemUtil.bow
+import com.codeland.uhc.quirk.ItemUtil.crossbow
+import com.codeland.uhc.quirk.ItemUtil.elytra
 import com.codeland.uhc.quirk.ItemUtil.randFromArray
+import com.codeland.uhc.quirk.ItemUtil.randomEnchantedBook
+import com.codeland.uhc.quirk.ItemUtil.tools
+import com.codeland.uhc.quirk.ItemUtil.trident
+import com.codeland.uhc.quirk.ItemUtil.weapons
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import net.md_5.bungee.api.ChatColor.GOLD
 import org.bukkit.ChatColor.*
 import org.bukkit.*
 import org.bukkit.block.Chest
-import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
-import org.bukkit.entity.Item
-import org.bukkit.entity.SpectralArrow
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SuspiciousStewMeta
@@ -21,7 +27,6 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scoreboard.*
-import kotlin.math.roundToInt
 
 class CarePackages(type: QuirkType) : Quirk(type) {
 	val OBJECTIVE_NAME = "carePackageDrop"
@@ -54,15 +59,13 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 	fun generateRunnable(): BukkitRunnable {
 		return object : BukkitRunnable() {
-			val minTime = 2 * 60
-			val maxTime = 10 * 60
-
-			val minItems = 9
-			val maxItems = 18
+			val NUM_ITEMS = 18
+			val NUM_DROPS = 6
 
 			var running = false
 
 			var timer = 0
+			var previousLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
 			var nextLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
 
 			lateinit var dropTimes: Array<Int>
@@ -91,14 +94,13 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 			fun reset() {
 				/* don't keep doing this outside of shrinking */
-				if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || dropIndex == dropTimes.size) {
-					shutOff()
-					return
-				}
+				if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || dropIndex == dropTimes.size)
+					return shutOff()
 
 				timer = dropTimes[dropIndex]
 
-				nextLocation = findDropSpot(timer, 16, Bukkit.getWorlds()[0].worldBorder)
+				nextLocation = findDropSpot(previousLocation, timer, 16, Bukkit.getWorlds()[0].worldBorder)
+				previousLocation = nextLocation
 
 				val coordinateString = "at (${ChatColor.GOLD}${BOLD}${nextLocation.blockX}${RESET}, ${ChatColor.GOLD}${BOLD}${nextLocation.blockY}${RESET}, ${ChatColor.GOLD}${BOLD}${nextLocation.blockZ}${RESET})"
 
@@ -107,61 +109,49 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			}
 
 			fun generateDropTimes(shrinkTime: Int): Array<Int> {
-				/* we want about 1 every 5 minutes */
-				val numDrops = lootEntries.size
-
-				val averageTime = shrinkTime / numDrops
-				val ret = Array(numDrops) { averageTime }
+				val percentages = Array(NUM_DROPS) { 1.0f / NUM_DROPS }
 
 				/* add randomness in the times */
-				for (i in ret.indices) {
+				for (i in percentages.indices) {
 					/* half a minute to a minute differences */
-					var shiftAmount = Util.randRange(60, 120)
+					var shiftAmount = Util.randRange(0.025f, 0.1f)
 
-					var reduceIndex = Util.randRange(0, ret.lastIndex)
-					var gainIndex = Util.randRange(0, ret.lastIndex)
+					var reduceIndex = Util.randRange(0, percentages.lastIndex)
+					var gainIndex = Util.randRange(0, percentages.lastIndex)
 
-					var oldReduce = ret[reduceIndex]
-					ret[reduceIndex] -= shiftAmount
+					var reduced = percentages[reduceIndex]
+					var gained = percentages[gainIndex]
+					var valid = true
+
+					var oldReduce = reduced
+					reduced -= shiftAmount
 
 					/* don't reduce any time to less than a minute */
 					/* if it would, find the actual amount it got reduced by */
-					if (ret[reduceIndex] < 60) {
-						ret[reduceIndex] = 60
-						shiftAmount = oldReduce - ret[reduceIndex]
+					if (reduced < 0.05f) {
+						reduced = 0.05f
+						shiftAmount = oldReduce - percentages[reduceIndex]
+
+						if (shiftAmount < 0)
+							valid = false
 					}
 
-					ret[gainIndex] += shiftAmount
+					gained += shiftAmount
+
+					if (valid) {
+						percentages[reduceIndex] = reduced
+						percentages[gainIndex] = gained
+					}
 				}
 
-				return ret
-			}
-
-			fun generateDropAmount(dropIndex: Int, tiers: Int, dropTimes: Array<Int>): Array<Int> {
-				val lastDropIndex = dropTimes.lastIndex
-				val along = dropIndex.toFloat() / lastDropIndex.toFloat()
-
-				Util.log("dropindex: $dropIndex out of ${dropTimes.lastIndex}")
-				Util.log("along: $along")
-
-				return Array<Int>(tiers) { tier ->
-					var peak = (1.0 / (tiers - 1.0)) * tier
-
-					var amount = 7 - Math.abs(3 * tiers * (along - peak))
-
-					if (amount < 0) amount = 0.0
-
-					Util.log("amount for ${tier}: ${amount.roundToInt()}")
-
-					amount.roundToInt()
-				}
+				return Array(NUM_DROPS) { i -> (percentages[i] * shrinkTime).toInt() }
 			}
 
 			override fun run() {
 				if (running) {
 					--timer
 					if (timer == 0) {
-						generateDrop(generateDropAmount(dropIndex, lootEntries.size, dropTimes), nextLocation)
+						generateDrop(dropIndex, NUM_ITEMS, nextLocation)
 						++dropIndex
 
 						reset()
@@ -174,10 +164,6 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 					running = true
 					dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
 
-					dropTimes.forEach { drop ->
-						Util.log("time: $drop")
-					}
-
 					reset()
 				}
 			}
@@ -185,135 +171,6 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 	}
 
 	companion object {
-		class ToolInfo(val materials: Array<Material>, val enchants: Array<Array<Enchantment>>) {
-			companion object {
-				val WOOD = 0; val LEATHER = 0
-				val GOLD = 1
-				val STONE = 2; val CHAIN = 2
-				val IRON = 3
-				val DIAMOND = 4
-				val NETHERITE = 5
-				val SHELL = 6
-			}
-		}
-
-		val weapons = arrayOf(
-			ToolInfo(arrayOf(Material.WOODEN_SWORD, Material.GOLDEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.LOOT_BONUS_MOBS),
-				arrayOf(Enchantment.FIRE_ASPECT),
-				arrayOf(Enchantment.KNOCKBACK),
-				arrayOf(Enchantment.SWEEPING_EDGE),
-				arrayOf(Enchantment.DAMAGE_ALL, Enchantment.DAMAGE_ARTHROPODS, Enchantment.DAMAGE_UNDEAD)
-			)),
-			ToolInfo(arrayOf(Material.WOODEN_AXE, Material.GOLDEN_AXE, Material.STONE_AXE, Material.IRON_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.DIG_SPEED),
-				arrayOf(Enchantment.LOOT_BONUS_BLOCKS, Enchantment.SILK_TOUCH),
-				arrayOf(Enchantment.DAMAGE_ALL, Enchantment.DAMAGE_ARTHROPODS, Enchantment.DAMAGE_UNDEAD)
-			))
-		)
-
-		val tools = arrayOf(
-			ToolInfo(arrayOf(Material.WOODEN_PICKAXE, Material.GOLDEN_PICKAXE, Material.STONE_PICKAXE, Material.IRON_PICKAXE, Material.DIAMOND_PICKAXE, Material.NETHERITE_PICKAXE), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.DIG_SPEED),
-				arrayOf(Enchantment.LOOT_BONUS_BLOCKS, Enchantment.SILK_TOUCH)
-			)),
-			ToolInfo(arrayOf(Material.WOODEN_SHOVEL, Material.GOLDEN_SHOVEL, Material.STONE_SHOVEL, Material.IRON_SHOVEL, Material.DIAMOND_SHOVEL, Material.NETHERITE_SHOVEL), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.DIG_SPEED),
-				arrayOf(Enchantment.LOOT_BONUS_BLOCKS, Enchantment.SILK_TOUCH)
-			)),
-			ToolInfo(arrayOf(Material.WOODEN_HOE, Material.GOLDEN_HOE, Material.STONE_HOE, Material.IRON_HOE, Material.DIAMOND_HOE, Material.NETHERITE_HOE), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.DIG_SPEED),
-				arrayOf(Enchantment.LOOT_BONUS_BLOCKS, Enchantment.SILK_TOUCH)
-			))
-		)
-
-		val armor = arrayOf(
-			ToolInfo(arrayOf(Material.LEATHER_HELMET, Material.GOLDEN_HELMET, Material.CHAINMAIL_HELMET, Material.IRON_HELMET, Material.DIAMOND_HELMET, Material.NETHERITE_HELMET, Material.TURTLE_HELMET), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.THORNS),
-				arrayOf(Enchantment.OXYGEN),
-				arrayOf(Enchantment.WATER_WORKER),
-				arrayOf(Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_FIRE, Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_PROJECTILE)
-			)),
-			ToolInfo(arrayOf(Material.LEATHER_CHESTPLATE, Material.GOLDEN_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE, Material.IRON_CHESTPLATE, Material.DIAMOND_CHESTPLATE, Material.NETHERITE_CHESTPLATE), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.THORNS),
-				arrayOf(Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_FIRE, Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_PROJECTILE)
-			)),
-			ToolInfo(arrayOf(Material.LEATHER_LEGGINGS, Material.GOLDEN_LEGGINGS, Material.CHAINMAIL_LEGGINGS, Material.IRON_LEGGINGS, Material.DIAMOND_LEGGINGS, Material.NETHERITE_LEGGINGS), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.THORNS),
-				arrayOf(Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_FIRE, Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_PROJECTILE)
-			)),
-			ToolInfo(arrayOf(Material.LEATHER_BOOTS, Material.GOLDEN_BOOTS, Material.CHAINMAIL_BOOTS, Material.IRON_BOOTS, Material.DIAMOND_BOOTS, Material.NETHERITE_BOOTS), arrayOf(
-				arrayOf(Enchantment.DURABILITY),
-				arrayOf(Enchantment.MENDING),
-				arrayOf(Enchantment.THORNS),
-				arrayOf(Enchantment.PROTECTION_FALL),
-				arrayOf(Enchantment.SOUL_SPEED),
-				arrayOf(Enchantment.DEPTH_STRIDER, Enchantment.FROST_WALKER),
-				arrayOf(Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_FIRE, Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_PROJECTILE)
-			))
-		)
-
-		val bow = ToolInfo(arrayOf(Material.BOW), arrayOf(
-			arrayOf(Enchantment.DURABILITY),
-			arrayOf(Enchantment.MENDING, Enchantment.ARROW_INFINITE),
-			arrayOf(Enchantment.ARROW_FIRE),
-			arrayOf(Enchantment.ARROW_KNOCKBACK),
-			arrayOf(Enchantment.ARROW_DAMAGE)
-		))
-
-		val crossbow = ToolInfo(arrayOf(Material.CROSSBOW), arrayOf(
-			arrayOf(Enchantment.PIERCING, Enchantment.MULTISHOT),
-			arrayOf(Enchantment.MENDING),
-			arrayOf(Enchantment.DURABILITY),
-			arrayOf(Enchantment.QUICK_CHARGE)
-		))
-
-		val elytra = ToolInfo(arrayOf(Material.ELYTRA), arrayOf(
-			arrayOf(Enchantment.MENDING),
-			arrayOf(Enchantment.DURABILITY)
-		))
-
-		val trident = ToolInfo(arrayOf(Material.TRIDENT), arrayOf(
-			arrayOf(Enchantment.MENDING),
-			arrayOf(Enchantment.DURABILITY),
-			arrayOf(Enchantment.IMPALING),
-			arrayOf(Enchantment.CHANNELING, Enchantment.LOYALTY, Enchantment.RIPTIDE)
-		))
-
-		fun randTool(toolArray: Array<ToolInfo>, material: Int, enchantChance: Double): ItemStack {
-			var toolInfo = randFromArray(toolArray)
-			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[material]), toolInfo.enchants, enchantChance)
-		}
-
-		fun randTool(toolArray: Array<ToolInfo>, enchantChance: Double): ItemStack {
-			var toolInfo = randFromArray(toolArray)
-			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[0]), toolInfo.enchants, enchantChance)
-		}
-
-		fun aTool(toolInfo: ToolInfo, enchantChance: Double): ItemStack {
-			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[0]), toolInfo.enchants, enchantChance)
-		}
-
-		fun aTool(toolInfo: ToolInfo, material: Int, enchantChance: Double): ItemStack {
-			return ItemUtil.addRandomEnchants(ItemStack(toolInfo.materials[material]), toolInfo.enchants, enchantChance)
-		}
-
 		fun stewPart(): ItemStack {
 			val rand = Math.random()
 
@@ -331,14 +188,6 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				rand < 0.6 -> ItemStack(Material.RED_MUSHROOM, Util.randRange(4, 16))
 				rand < 0.8 -> ItemStack(Material.BROWN_MUSHROOM, Util.randRange(4, 16))
 				else -> ItemStack(Material.OXEYE_DAISY, Util.randRange(4, 16))
-			}
-		}
-
-		fun canePart(): ItemStack {
-			return if (Math.random() < 0.5) {
-				ItemStack(Material.SUGAR_CANE, Util.randRange(6, 18))
-			} else {
-				ItemStack(Material.PAPER, Util.randRange(6, 18))
 			}
 		}
 
@@ -378,9 +227,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			Material.PHANTOM_MEMBRANE,
 			Material.REDSTONE,
 			Material.GLOWSTONE_DUST,
-			Material.FERMENTED_SPIDER_EYE,
-			Material.DRAGON_BREATH,
-			Material.BLAZE_POWDER
+			Material.FERMENTED_SPIDER_EYE
 		)
 
 		fun brewingIngredient(): ItemStack {
@@ -404,115 +251,170 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				Material.LINGERING_POTION
 		}
 
-		fun arrowPart(): ItemStack {
-			val rand = Math.random()
-
-			return when {
-				rand < 1.0 / 3.0 -> ItemStack(Material.FLINT, Util.randRange(12, 24))
-				rand < 2.0 / 3.0 -> ItemStack(Material.STICK, Util.randRange(12, 24))
-				else -> ItemStack(Material.FEATHER, Util.randRange(12, 24))
-			}
-		}
-
 		class LootEntry(var makeStack: () -> ItemStack)
 
-		val lootEntries = arrayOf(
+		val guaranteedEntries = arrayOf(
 			arrayOf(
-				LootEntry { randTool(weapons, ToolInfo.WOOD, 0.25) },
-				LootEntry { randTool(tools, ToolInfo.WOOD, 0.25) },
-				LootEntry { randTool(armor, ToolInfo.LEATHER, 0.25) },
-				LootEntry { ItemStack(Material.COOKED_BEEF, Util.randRange(2,  5)) },
-				LootEntry { ItemStack(Material.GUNPOWDER, Util.randRange(5, 12)) },
-				LootEntry { arrowPart() },
-				LootEntry { canePart() },
-				LootEntry { ItemStack(Material.STRING, Util.randRange(3, 10)) },
-				LootEntry { stewPart() },
-				LootEntry { ItemStack(Material.APPLE, Util.randRange(1, 6)) }
+				LootEntry { aTieredTool(randFromArray(tools), ItemUtil.ToolInfo.IRON, 0, 0.25) },
+				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.IRON, 0, 0.25) },
+
+				LootEntry { randomEnchantedBook() },
+				LootEntry { ItemStack(Material.WATER_BUCKET) },
+				LootEntry { ItemStack(Material.LAVA_BUCKET) }
 			),
 			arrayOf(
-				LootEntry { randTool(weapons, ToolInfo.GOLD, 0.5) },
-				LootEntry { randTool(tools,  ToolInfo.GOLD, 0.5) },
-				LootEntry { randTool(armor,  ToolInfo.GOLD, 0.5) },
-				LootEntry { aTool(bow, 0.25) },
-				LootEntry { aTool(crossbow, 0.25) },
-				LootEntry { ItemStack(Material.LEATHER, Util.randRange(2,  6)) },
-				LootEntry { ItemStack(Material.BOOK, Util.randRange(4,  9)) },
-				LootEntry { ItemStack(Material.BOOKSHELF, Util.randRange(2, 4)) },
-				LootEntry { ItemStack(Material.ARROW, Util.randRange(8, 32)) },
-				LootEntry { ItemStack(Material.SADDLE) }
+				LootEntry { aTieredTool(randFromArray(tools), ItemUtil.ToolInfo.IRON, 1, 0.25) },
+				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.IRON, 0, 0.25) },
+
+				LootEntry { randomEnchantedBook() },
+
+				/* bucket section */
+				LootEntry { ItemStack(Material.WATER_BUCKET) },
+				LootEntry { ItemStack(Material.LAVA_BUCKET) },
+
+				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) }
 			),
 			arrayOf(
-				LootEntry { randTool(weapons, ToolInfo.STONE, 0.25) },
-				LootEntry { randTool(tools, ToolInfo.STONE, 0.25) },
-				LootEntry { randTool(armor, ToolInfo.CHAIN, 0.25) },
-				LootEntry { ironPart() },
-				LootEntry { goldPart() },
-				LootEntry { ItemStack(Material.LAPIS_LAZULI, Util.randRange(8, 16)) },
-				LootEntry { ItemStack(Material.TNT, Util.randRange(1,  9)) },
-				LootEntry { ItemStack(Material.OBSIDIAN, Util.randRange(3,  7)) },
-				LootEntry { bucket() },
-				LootEntry { ItemStack(Material.ENDER_PEARL, Util.randRange(2,  7)) }
+				LootEntry { aTieredTool(randFromArray(tools), ItemUtil.ToolInfo.IRON, 1, 0.25) },
+				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.IRON, 1, 0.25) },
+
+				LootEntry { randomEnchantedBook() },
+
+				/* bucket section */
+				LootEntry { ItemStack(Material.WATER_BUCKET) },
+				LootEntry { ItemStack(Material.LAVA_BUCKET) },
+
+				/* crossbow section */
+				LootEntry { aTieredTool(crossbow, 0, 0, 0.25) },
+				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(8, 16)) },
+				LootEntry { ItemUtil.randomRocket(Util.randRange(8, 16)) },
+
+				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) }
 			),
 			arrayOf(
-				LootEntry { randTool(weapons, ToolInfo.IRON, 0.25) },
-				LootEntry { randTool(tools, ToolInfo.IRON, 0.25) },
-				LootEntry { randTool(armor, ToolInfo.IRON, 0.25) },
-				LootEntry { aTool(armor[0], ToolInfo.SHELL, 0.25) },
-				LootEntry { ItemStack(Material.GOLDEN_CARROT, Util.randRange(3,  6)) },
-				LootEntry { ItemUtil.randomEnchantedBook() },
-				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(3, 7)) },
-				LootEntry { ItemUtil.randomRocket(Util.randRange(3, 6)) },
-				LootEntry { ItemStack(Material.GOLDEN_APPLE, Util.randRange(1,  3)) },
+				LootEntry { aTieredTool(randFromArray(weapons), ItemUtil.ToolInfo.IRON, 1, 0.25) },
+				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.IRON, 1, 0.25) },
+				LootEntry { aTieredTool(randFromArray(tools), ItemUtil.ToolInfo.DIAMOND, 2, 0.25) },
+
+				LootEntry { randomEnchantedBook() },
+
+				/* crossbow section */
+				LootEntry { aTieredTool(crossbow, 0, 2, 0.25) },
+				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(8, 16)) },
+				LootEntry { ItemUtil.randomRocket(Util.randRange(8, 16)) },
+
 				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) },
-				LootEntry { ItemStack(Material.SPECTRAL_ARROW, Util.randRange(4, 16)) }
-			),
-			arrayOf(
-				LootEntry { randTool(weapons, ToolInfo.DIAMOND, 0.25) },
-				LootEntry { randTool(tools, ToolInfo.DIAMOND, 0.25) },
-				LootEntry { randTool(armor, ToolInfo.DIAMOND, 0.25) },
-				LootEntry { aTool(trident, 0.25) },
-				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 4)) },
-				LootEntry { brewingIngredient() },
+
+				/* brewing section */
+				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 3)) },
 				LootEntry { ItemStack(Material.NETHER_WART, Util.randRange(4,  7)) },
-				LootEntry { ItemUtil.randomPotion(true, anyThrow()) },
-				LootEntry { ItemUtil.randomPotion(false, splashLinger()) },
-				LootEntry { ItemStack(Material.DIAMOND, Util.randRange(1,  3)) },
-				LootEntry { ItemUtil.randomTippedArrow(Util.randRange(4, 16)) }
+				LootEntry { ItemStack(Material.GLASS_BOTTLE, Util.randRange(2,  4)) },
+				LootEntry { brewingIngredient() }
 			),
 			arrayOf(
-				LootEntry { randTool(weapons, ToolInfo.NETHERITE, 0.25) },
-				LootEntry { randTool(tools, ToolInfo.NETHERITE, 0.25) },
-				LootEntry { randTool(armor, ToolInfo.NETHERITE, 0.25) },
+				LootEntry { aTieredTool(randFromArray(weapons), ItemUtil.ToolInfo.DIAMOND, 1, 0.25) },
+				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.DIAMOND, 1, 0.25) },
+				LootEntry { aTieredTool(bow, 0, 0, 0.5) },
+
+				LootEntry { aTool(trident, 0.25) },
+
+				/* brewing section */
+				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 3)) },
+				LootEntry { ItemStack(Material.NETHER_WART, Util.randRange(4,  7)) },
+				LootEntry { ItemStack(Material.GLASS_BOTTLE, Util.randRange(2,  4)) },
+				LootEntry { brewingIngredient() },
+				LootEntry { ItemUtil.randomPotion(true, Material.POTION) }
+			),
+			arrayOf(
+				LootEntry { aTieredTool(randFromArray(weapons), ItemUtil.ToolInfo.DIAMOND, 2, 0.25) },
+				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.DIAMOND, 2, 0.25) },
+				LootEntry { aTieredTool(bow, 0, 2, 0.5) },
+
 				LootEntry { aTool(elytra, 0.25) },
-				LootEntry { ItemStack(Material.NETHERITE_INGOT) },
-				LootEntry { ItemStack(Material.BREWING_STAND) },
-				LootEntry { ItemStack(Material.ANVIL) },
-				LootEntry { ItemStack(Material.ENCHANTING_TABLE) },
-				LootEntry { ItemStack(Material.ANCIENT_DEBRIS, Util.randRange(4, 8)) },
-				LootEntry { ItemStack(Material.NETHERITE_SCRAP, Util.randRange(4, 8)) },
-				LootEntry { ItemStack(Material.ENCHANTED_GOLDEN_APPLE) },
-				LootEntry { ItemStack(Material.TOTEM_OF_UNDYING) }
+				LootEntry { ItemUtil.randomShulker(1) },
+
+				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 3)) },
+				LootEntry { ItemStack(Material.NETHER_WART, Util.randRange(4,  7)) },
+				LootEntry { ItemStack(Material.DRAGON_BREATH, Util.randRange(2, 5)) },
+				LootEntry { brewingIngredient() },
+				LootEntry {ItemUtil.randomPotion(false, anyThrow()) },
+
+				LootEntry { ItemStack(Material.SPECTRAL_ARROW, Util.randRange(4, 16)) }
 			)
 		)
 
-		fun generateLoot(amounts: Array<Int>, inventory: Inventory) {
-			amounts.forEachIndexed { tier, amount ->
-				for (i in 0 until amount) {
-					var space = Util.randRange(0, inventory.size - 1)
+		val materialTiers = arrayOf(
+			// basic materials
+			arrayOf(
+				LootEntry { ItemStack(Material.COOKED_BEEF, Util.randRange(2,  5)) },
+				LootEntry { ItemStack(Material.GUNPOWDER, Util.randRange(5, 12)) },
+				LootEntry { ItemStack(Material.FEATHER, Util.randRange(6, 18)) },
+				LootEntry { ItemStack(Material.SUGAR_CANE, Util.randRange(6, 18)) },
+				LootEntry { ItemStack(Material.RED_MUSHROOM, Util.randRange(6, 16)) },
+				LootEntry { ItemStack(Material.BROWN_MUSHROOM, Util.randRange(6, 16)) },
+				LootEntry { ItemStack(Material.OXEYE_DAISY, Util.randRange(6, 16)) },
+				LootEntry { ItemStack(Material.LEATHER, Util.randRange(3,  8)) },
+				LootEntry { ItemStack(Material.CARROT, Util.randRange(8,  17)) },
+				LootEntry { ItemStack(Material.COAL, Util.randRange(8,  17)) }
+			),
+			// medium materials
+			arrayOf(
+				LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(8,  16)) },
+				LootEntry { ItemStack(Material.GOLD_INGOT, Util.randRange(8,  16)) },
+				LootEntry { ItemStack(Material.BOOK, Util.randRange(4,  9)) },
+				LootEntry { ItemStack(Material.ARROW, Util.randRange(8, 32)) },
+				LootEntry { ItemStack(Material.OBSIDIAN, Util.randRange(3,  7)) },
+				LootEntry { ItemStack(Material.LAPIS_LAZULI, Util.randRange(8, 16)) },
+				LootEntry { ItemStack(Material.APPLE, Util.randRange(2, 6)) },
+				LootEntry { ItemStack(Material.STRING, Util.randRange(3, 10)) },
+				LootEntry { ItemStack(Material.STONE, Util.randRange(32, 64)) }
+			),
+			// advanced materials
+			arrayOf(
+				LootEntry { ItemStack(Material.DIAMOND, Util.randRange(3,  8)) },
+				LootEntry { ItemStack(Material.IRON_BLOCK, Util.randRange(2,  4)) },
+				LootEntry { ItemStack(Material.GOLD_BLOCK, Util.randRange(2,  4)) },
+				LootEntry { ItemStack(Material.ANCIENT_DEBRIS, Util.randRange(4,  9)) },
+				LootEntry { ItemStack(Material.TNT, Util.randRange(2,  9)) },
+				LootEntry { ItemStack(Material.ENDER_PEARL, Util.randRange(2,  7)) }
+			)
+		)
 
-					while (inventory.getItem(space) != null) {
-						++space
-						space %= inventory.size
-					}
+		fun generateLoot(tier: Int, amount: Int, inventory: Inventory) {
+			val addItem = { item: ItemStack ->
+				var space = Util.randRange(0, inventory.size - 1)
 
-					var loot = ItemUtil.randFromArray(lootEntries[tier])
-
-					inventory.setItem(space, loot.makeStack())
+				while (inventory.getItem(space) != null) {
+					++space
+					space %= inventory.size
 				}
+
+				inventory.setItem(space, item)
+			}
+
+			val guaranteedArray = guaranteedEntries[tier]
+
+			guaranteedArray.forEach { entry ->
+				addItem(entry.makeStack())
+			}
+
+			for (i in guaranteedArray.size until amount) {
+				/* any material from base until max this tier allows */
+				val materialArray = materialTiers[Util.randRange(0, tier / 2)]
+
+				addItem(ItemUtil.randFromArray(materialArray).makeStack())
 			}
 		}
 
-		fun findDropSpot(timeUntil: Int, buffer: Int, worldBorder: WorldBorder): Location {
+		fun findDropSpot(lastLocation: Location, timeUntil: Int, buffer: Int, worldBorder: WorldBorder): Location {
+			val makeLocation = { x: Int, z: Int ->
+				val world = Bukkit.getWorlds()[0]
+
+				val y = Util.topBlockY(world, x, z) + 1
+
+				Location(world, x.toDouble(), y.toDouble(), z.toDouble())
+			}
+
 			var currentRadius = worldBorder.size / 2
 
 			var startRadius = GameRunner.uhc.preset.startRadius
@@ -521,28 +423,52 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			/* distance over time */
 			var speed = (startRadius - endRadius).toFloat() / (GameRunner.uhc.preset.shrinkTime).toFloat()
 
-			var maxRadius = (currentRadius - (speed * timeUntil) - buffer).toInt()
-			if (maxRadius < endRadius) maxRadius = endRadius.toInt()
+			var finalRadius = (currentRadius - (speed * timeUntil) - buffer).toInt()
+			if (finalRadius < endRadius) finalRadius = endRadius.toInt()
 
-			var world = Bukkit.getWorlds()[0]
+			/* generate the 8 zones of spawning */
+			val world = Bukkit.getWorlds()[0]
 
-			var x = Util.randRange(-maxRadius, maxRadius)
-			var z = Util.randRange(-maxRadius, maxRadius)
-			var y = Util.topBlockY(world, x, z) + 1
+			class Reference(var value: Int)
 
-			return Location(world, x.toDouble(), y.toDouble(), z.toDouble())
+			val choosePlaceIndex = { blockCoordinate: Int, lower: Reference, upper: Reference ->
+				lower.value = blockCoordinate - finalRadius / 2
+				upper.value = blockCoordinate + finalRadius / 2
+
+				val allows = arrayOf((lower.value >= -finalRadius), (upper.value <= finalRadius))
+				var placeIndex = Util.randRange(0, 1)
+				if (!allows[placeIndex]) placeIndex = placeIndex.inv()
+
+				placeIndex
+			}
+
+			var lower = Reference(0)
+			var upper = Reference(0)
+
+			return if (Math.random() < 0.5) {
+				if (choosePlaceIndex(lastLocation.blockX, lower, upper) == 0)
+					makeLocation(Util.randRange(-finalRadius, lower.value), Util.randRange(-finalRadius, finalRadius))
+				else
+					makeLocation(Util.randRange(upper.value, finalRadius), Util.randRange(-finalRadius, finalRadius))
+			} else {
+				if (choosePlaceIndex(lastLocation.blockZ, lower, upper) == 0)
+					makeLocation(Util.randRange(-finalRadius, finalRadius), Util.randRange(-finalRadius, lower.value))
+				else
+					makeLocation(Util.randRange(-finalRadius, finalRadius), Util.randRange(upper.value, finalRadius))
+			}
 		}
 
-		fun generateDrop(amounts: Array<Int>, location: Location) {
+		fun generateDrop(tier: Int, amount: Int, location: Location) {
 			var world = Bukkit.getWorlds()[0]
 
 			var block = world.getBlockAt(location)
+			block.breakNaturally()
 			block.type = Material.CHEST
 
 			var chest = block.getState(false) as Chest
 			chest.customName = "${ChatColor.GOLD}${ChatColor.BOLD}Care Package"
 
-			generateLoot(amounts, chest.blockInventory)
+			generateLoot(tier, amount, chest.blockInventory)
 
 			var firework = world.spawnEntity(location.add(0.5, 0.5, 0.5), EntityType.FIREWORK) as Firework
 

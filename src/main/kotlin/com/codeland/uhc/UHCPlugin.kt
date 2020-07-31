@@ -49,6 +49,7 @@ class UHCPlugin : JavaPlugin() {
 
 			Phase.createBossBars(Bukkit.getWorlds())
 
+			GameRunner.uhc.updateDisplays()
 			GameRunner.uhc.startWaiting()
 		}
 	}

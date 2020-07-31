@@ -32,8 +32,8 @@ class UHC(var preset: Preset) {
 		setVariant(PhaseVariant.GRACE_DEFAULT)
 		setVariant(PhaseVariant.SHRINK_DEFAULT)
 		setVariant(PhaseVariant.FINAL_DEFAULT)
-		setVariant(PhaseVariant.GLOWING_DEFAULT)
-		setVariant(PhaseVariant.ENDGAME_NONE)
+		setVariant(PhaseVariant.GLOWING_TOP_TWO)
+		setVariant(PhaseVariant.ENDGAME_CLEAR_BLOCKS)
 		setVariant(PhaseVariant.POSTGAME_DEFAULT)
 	}
 
@@ -56,16 +56,20 @@ class UHC(var preset: Preset) {
 		Gui.updatePreset(preset)
 	}
 
-	init {
+	/**
+	 * call after object is fully initialized
+	 */
+	fun updateDisplays() {
 		updatePreset(preset)
+
+		quirks.forEach { quirk ->
+			Util.log("${quirk.type.name} | ${quirk.enabled}")
+			quirk.enabled = quirk.enabled
+		}
 	}
 
 	fun startWaiting() {
 		startPhase(PhaseType.WAITING)
-
-		quirks.forEach { quirk ->
-			Gui.updateQuirk(quirk.type)
-		}
 	}
 
 	/**
