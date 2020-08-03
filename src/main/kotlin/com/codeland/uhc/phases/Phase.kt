@@ -47,7 +47,7 @@ abstract class Phase {
 		}
 	}
 
-	protected var runnable : BukkitRunnable? = null
+	private var runnable : BukkitRunnable? = null
 
 	/* default values */
 

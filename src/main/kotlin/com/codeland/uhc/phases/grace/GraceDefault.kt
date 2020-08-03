@@ -21,11 +21,11 @@ open class GraceDefault : Phase() {
 
 			it.health = it.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
 			it.absorptionAmount = 0.0
-			it.exp = 0.0F
+			it.exp = 0f
 			it.level = 0
 			it.foodLevel = 20
-			it.saturation = 20F
-			it.exhaustion = 0F
+			it.saturation = 5f
+			it.exhaustion = 0f
 
 			it.setStatistic(Statistic.TIME_SINCE_REST,
 				if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) 72000
@@ -42,12 +42,12 @@ open class GraceDefault : Phase() {
 			w.setGameRule(GameRule.DO_MOB_SPAWNING, true)
 			w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true)
 			w.worldBorder.setCenter(0.0, 0.0)
-			w.worldBorder.size = uhc.preset.startRadius * 2
+			w.worldBorder.size = uhc.startRadius * 2
 		}
 
 		val teamCount = 1 + Bukkit.getServer().scoreboardManager.mainScoreboard.teams.size
 
-		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.preset.startRadius / sqrt(teamCount.toDouble())), uhc.preset.startRadius))
+		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.startRadius / sqrt(teamCount.toDouble())), uhc.startRadius))
 	}
 
 	override fun perSecond(remainingSeconds: Int) {

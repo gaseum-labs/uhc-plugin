@@ -18,7 +18,7 @@ class VariantCycler(var phaseType: PhaseType)
         ++guiItem.currentIndex
         guiItem.currentIndex %= factories.size
 
-        GameRunner.uhc.setVariant(factories[guiItem.currentIndex])
+        GameRunner.uhc.updateVariant(factories[guiItem.currentIndex])
     }
 ) {
     var currentIndex = 0

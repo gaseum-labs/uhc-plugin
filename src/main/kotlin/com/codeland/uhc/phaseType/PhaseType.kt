@@ -5,7 +5,7 @@ import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.boss.BarColor
 import java.util.logging.Level
 
-enum class PhaseType(var prettyName: String, var hasTimer: Boolean, var color: BarColor) {
+enum class PhaseType(val prettyName: String, val hasTimer: Boolean, val color: BarColor) {
 	WAITING("Waiting lobby", false, BarColor.WHITE),
 	GRACE("Grace period", true, BarColor.BLUE),
 	SHRINK("Shrinking period", true, BarColor.GREEN),

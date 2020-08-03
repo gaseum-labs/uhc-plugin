@@ -30,7 +30,7 @@ class ShrinkDefault : Phase() {
 			GameRunner.sendPlayer(player, "Grace period has ended!")
 		}
 
-		minRadius = uhc.preset.endRadius
+		minRadius = uhc.endRadius
 		for (w in Bukkit.getServer().worlds) {
 			if (w.environment == World.Environment.NETHER && uhc.netherToZero) {
 				w.worldBorder.setSize(0.0, length.toLong())

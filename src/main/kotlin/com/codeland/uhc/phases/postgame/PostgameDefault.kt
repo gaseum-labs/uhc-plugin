@@ -54,6 +54,11 @@ class PostgameDefault : Phase() {
             }
         }
 
+        /* stop all world borders */
+        Bukkit.getWorlds().forEach { world ->
+            world.worldBorder.size = world.worldBorder.size
+        }
+
         GameRunner.bot.clearTeamVCs()
     }
 

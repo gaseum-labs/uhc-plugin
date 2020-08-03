@@ -62,4 +62,8 @@ object Util {
 
 		return "$minutesPart $secondsPart"
 	}
+
+	fun <T>randFromArray(array: Array<T>): T {
+		return array[(Math.random() * array.size).toInt()]
+	}
 }

@@ -1,5 +1,6 @@
 package com.codeland.uhc.discord
 
+import com.codeland.uhc.core.Util
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
@@ -217,7 +218,15 @@ class MixerBot(userDataPath: String, ip: String) : ListenerAdapter() {
 	}
 
 	init {
-		val reader = BufferedReader(FileReader(userDataPath))
+		/* safety check to make file if it doesn't exist */
+		val file = File(userDataPath)
+		if (!file.exists()) {
+			FileWriter(file).close()
+
+			Util.log("UHC cannot start because discorddata.txt was not found! Need it for the bot's token")
+		}
+
+		val reader = BufferedReader(FileReader(file))
 		val token = reader.readLine()
 		mixerBot = JDABuilder().setToken(token).setActivity(Activity.playing("UHC at $ip")).addEventListeners(this).build()
 		while (reader.ready()) {

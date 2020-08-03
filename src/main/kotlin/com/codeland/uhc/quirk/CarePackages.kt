@@ -1,18 +1,18 @@
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Util
 import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.quirk.ItemUtil
-import com.codeland.uhc.quirk.ItemUtil.aTieredTool
-import com.codeland.uhc.quirk.ItemUtil.aTool
-import com.codeland.uhc.quirk.ItemUtil.armor
-import com.codeland.uhc.quirk.ItemUtil.bow
-import com.codeland.uhc.quirk.ItemUtil.crossbow
-import com.codeland.uhc.quirk.ItemUtil.elytra
-import com.codeland.uhc.quirk.ItemUtil.randFromArray
-import com.codeland.uhc.quirk.ItemUtil.randomEnchantedBook
-import com.codeland.uhc.quirk.ItemUtil.tools
-import com.codeland.uhc.quirk.ItemUtil.trident
-import com.codeland.uhc.quirk.ItemUtil.weapons
+import com.codeland.uhc.core.ItemUtil
+import com.codeland.uhc.core.ItemUtil.aTieredTool
+import com.codeland.uhc.core.ItemUtil.aTool
+import com.codeland.uhc.core.ItemUtil.armor
+import com.codeland.uhc.core.ItemUtil.bow
+import com.codeland.uhc.core.ItemUtil.crossbow
+import com.codeland.uhc.core.ItemUtil.elytra
+import com.codeland.uhc.core.ItemUtil.randomEnchantedBook
+import com.codeland.uhc.core.ItemUtil.tools
+import com.codeland.uhc.core.ItemUtil.trident
+import com.codeland.uhc.core.ItemUtil.weapons
+import com.codeland.uhc.core.Util.randFromArray
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.ChatColor.*
@@ -99,12 +99,12 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 				timer = dropTimes[dropIndex]
 
-				nextLocation = findDropSpot(previousLocation, timer, 16, Bukkit.getWorlds()[0].worldBorder)
+				nextLocation = findDropSpot(previousLocation, timer, 16)
 				previousLocation = nextLocation
 
-				val coordinateString = "at (${ChatColor.GOLD}${BOLD}${nextLocation.blockX}${RESET}, ${ChatColor.GOLD}${BOLD}${nextLocation.blockY}${RESET}, ${ChatColor.GOLD}${BOLD}${nextLocation.blockZ}${RESET})"
+				val coordinateString = "at ($GOLD${BOLD}${nextLocation.blockX}${RESET}, $GOLD${BOLD}${nextLocation.blockY}${RESET}, $GOLD${BOLD}${nextLocation.blockZ}${RESET})"
 
-				scoreT = setScore(objective, scoreT, "in ${ChatColor.GOLD}${BOLD}${Util.timeString(timer)}", 1)
+				scoreT = setScore(objective, scoreT, "in $GOLD${BOLD}${Util.timeString(timer)}", 1)
 				scoreP = setScore(objective, scoreP, coordinateString, 0)
 			}
 
@@ -156,7 +156,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 						reset()
 					} else {
-						scoreT = setScore(objective, scoreT, "in ${ChatColor.GOLD}${BOLD}${Util.timeString(timer)}", 1)
+						scoreT = setScore(objective, scoreT, "in $GOLD${BOLD}${Util.timeString(timer)}", 1)
 					}
 
 				/* start making drops during shrinking round */
@@ -231,7 +231,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 		)
 
 		fun brewingIngredient(): ItemStack {
-			return ItemStack(ItemUtil.randFromArray(brewingIngredients), Util.randRange(4, 16))
+			return ItemStack(randFromArray(brewingIngredients), Util.randRange(4, 16))
 		}
 
 		fun anyThrow(): Material {
@@ -337,7 +337,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				LootEntry { ItemStack(Material.NETHER_WART, Util.randRange(4,  7)) },
 				LootEntry { ItemStack(Material.DRAGON_BREATH, Util.randRange(2, 5)) },
 				LootEntry { brewingIngredient() },
-				LootEntry {ItemUtil.randomPotion(false, anyThrow()) },
+				LootEntry { ItemUtil.randomPotion(false, anyThrow()) },
 
 				LootEntry { ItemStack(Material.SPECTRAL_ARROW, Util.randRange(4, 16)) }
 			)
@@ -402,11 +402,12 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				/* any material from base until max this tier allows */
 				val materialArray = materialTiers[Util.randRange(0, tier / 2)]
 
-				addItem(ItemUtil.randFromArray(materialArray).makeStack())
+				addItem(Util.randFromArray(materialArray).makeStack())
 			}
 		}
 
-		fun findDropSpot(lastLocation: Location, timeUntil: Int, buffer: Int, worldBorder: WorldBorder): Location {
+		fun findDropSpot(lastLocation: Location, timeUntil: Int, buffer: Int): Location {
+			/* helper classes and functions */
 			val makeLocation = { x: Int, z: Int ->
 				val world = Bukkit.getWorlds()[0]
 
@@ -415,46 +416,60 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				Location(world, x.toDouble(), y.toDouble(), z.toDouble())
 			}
 
-			var currentRadius = worldBorder.size / 2
+			class RangeReference(var value: Double = 0.0) {
+				fun intValue(): Int {
+					return value.toInt()
+				}
+			}
 
-			var startRadius = GameRunner.uhc.preset.startRadius
-			var endRadius = GameRunner.uhc.preset.endRadius
+			val uhc = GameRunner.uhc
+			val currentPhase = uhc.currentPhase ?: return makeLocation(0, 0)
 
-			/* distance over time */
-			var speed = (startRadius - endRadius).toFloat() / (GameRunner.uhc.preset.shrinkTime).toFloat()
+			/* these variables help us calculate the size of the border */
+			/* when the care package will drop */
+			var startRadius = uhc.startRadius
+			var endRadius = uhc.endRadius
 
-			var finalRadius = (currentRadius - (speed * timeUntil) - buffer).toInt()
-			if (finalRadius < endRadius) finalRadius = endRadius.toInt()
+			var speed = (startRadius - endRadius) / (uhc.getTime(PhaseType.SHRINK)).toDouble()
+			var along = 1.0 - ((currentPhase.remainingSeconds.toDouble() - timeUntil) / currentPhase.length.toDouble())
 
-			/* generate the 8 zones of spawning */
-			val world = Bukkit.getWorlds()[0]
+			var finalRadius = startRadius - (along * speed) - buffer
+			if (finalRadius < endRadius) finalRadius = endRadius
 
-			class Reference(var value: Int)
+			/* the next care package can spawn in one of 8 squares */
+			/* around a square of the previous drop */
 
-			val choosePlaceIndex = { blockCoordinate: Int, lower: Reference, upper: Reference ->
+			/* blockCoordinate can be the X or Z of the block */
+			val choosePlaceIndex = { blockCoordinate: Int, lower: RangeReference, upper: RangeReference ->
 				lower.value = blockCoordinate - finalRadius / 2
 				upper.value = blockCoordinate + finalRadius / 2
 
 				val allows = arrayOf((lower.value >= -finalRadius), (upper.value <= finalRadius))
 				var placeIndex = Util.randRange(0, 1)
-				if (!allows[placeIndex]) placeIndex = placeIndex.inv()
+				if (!allows[placeIndex]) placeIndex = placeIndex.xor(1)
 
 				placeIndex
 			}
 
-			var lower = Reference(0)
-			var upper = Reference(0)
+			val lower = RangeReference()
+			val upper = RangeReference()
 
+			/* use ints for the block position based off the values we got */
+			val intRadius = finalRadius.toInt()
+
+			/* random decide whether the chest will spawn guaranteed */
+			/* to the left or right of the last chest */
+			/* r to the up or down of the last chest */
 			return if (Math.random() < 0.5) {
 				if (choosePlaceIndex(lastLocation.blockX, lower, upper) == 0)
-					makeLocation(Util.randRange(-finalRadius, lower.value), Util.randRange(-finalRadius, finalRadius))
+					makeLocation(Util.randRange(-intRadius, lower.intValue()), Util.randRange(-intRadius, intRadius))
 				else
-					makeLocation(Util.randRange(upper.value, finalRadius), Util.randRange(-finalRadius, finalRadius))
+					makeLocation(Util.randRange(upper.intValue(), intRadius), Util.randRange(-intRadius, intRadius))
 			} else {
 				if (choosePlaceIndex(lastLocation.blockZ, lower, upper) == 0)
-					makeLocation(Util.randRange(-finalRadius, finalRadius), Util.randRange(-finalRadius, lower.value))
+					makeLocation(Util.randRange(-intRadius, intRadius), Util.randRange(-intRadius, lower.intValue()))
 				else
-					makeLocation(Util.randRange(-finalRadius, finalRadius), Util.randRange(upper.value, finalRadius))
+					makeLocation(Util.randRange(-intRadius, intRadius), Util.randRange(upper.intValue(), intRadius))
 			}
 		}
 
@@ -466,11 +481,11 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			block.type = Material.CHEST
 
 			var chest = block.getState(false) as Chest
-			chest.customName = "${ChatColor.GOLD}${ChatColor.BOLD}Care Package"
+			chest.customName = "$GOLD${BOLD}Care Package"
 
 			generateLoot(tier, amount, chest.blockInventory)
 
-			var firework = world.spawnEntity(location.add(0.5, 0.5, 0.5), EntityType.FIREWORK) as Firework
+			var firework = world.spawnEntity(location, EntityType.FIREWORK) as Firework
 
 			/* add effect to the firework */
 			var meta = firework.fireworkMeta
@@ -478,6 +493,11 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			firework.fireworkMeta = meta
 
 			firework.detonate()
+
+			/* announce in chat so positions are saved */
+			Bukkit.getOnlinePlayers().forEach { player ->
+				player.sendMessage("$GOLD${BOLD}Care Package Dropped at (${location.blockX}, ${location.blockY}, ${location.blockZ})")
+			}
 		}
 	}
 }

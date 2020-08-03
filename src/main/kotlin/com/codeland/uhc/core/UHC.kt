@@ -12,36 +12,42 @@ import org.bukkit.scoreboard.Team
 import kotlin.math.max
 import kotlin.math.min
 
-class UHC(var preset: Preset) {
+class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
+	var gameMaster = null as CommandSender?
+
 	/* time is measured in seconds here. */
 	var netherToZero = true
 	var mobCapCoefficient = 1.0
 	var killReward = KillReward.NONE
 
-	var gameMaster = null as CommandSender?
+	private var phaseVariants = Array(PhaseType.values().size) { index ->
+		defaultVariants[index]
+	}
 
-	var phaseVariants = Array<PhaseVariant>(PhaseType.values().size) {PhaseVariant.WAITING_DEFAULT}
-	var phaseTimes = emptyArray<Int>()
-
-	var quirks = Array<Quirk>(QuirkType.values().size) { index ->
+	private var quirks = Array(QuirkType.values().size) { index ->
 		QuirkType.values()[index].createQuirk()
 	}
 
-	init {
-		setVariant(PhaseVariant.WAITING_DEFAULT)
-		setVariant(PhaseVariant.GRACE_DEFAULT)
-		setVariant(PhaseVariant.SHRINK_DEFAULT)
-		setVariant(PhaseVariant.FINAL_DEFAULT)
-		setVariant(PhaseVariant.GLOWING_TOP_TWO)
-		setVariant(PhaseVariant.ENDGAME_CLEAR_BLOCKS)
-		setVariant(PhaseVariant.POSTGAME_DEFAULT)
-	}
+	/* set by init */
+	var phaseTimes = emptyArray<Int>()
+	var startRadius = 0.0
+	var endRadius = 0.0
 
 	var currentPhase = null as Phase?
-	var currentPhaseIndex = 0
+
+	init {
+		updatePreset(deafultPreset)
+
+		phaseVariants.forEach { variant ->
+			updateVariant(variant)
+		}
+	}
+
+	/* state setters */
 
 	fun updatePreset(preset: Preset) {
-		this.preset = preset
+		startRadius = preset.startRadius
+		endRadius = preset.endRadius
 
 		phaseTimes = arrayOf(
 			0,
@@ -56,52 +62,35 @@ class UHC(var preset: Preset) {
 		Gui.updatePreset(preset)
 	}
 
-	/**
-	 * call after object is fully initialized
-	 */
-	fun updateDisplays() {
-		updatePreset(preset)
-
-		quirks.forEach { quirk ->
-			Util.log("${quirk.type.name} | ${quirk.enabled}")
-			quirk.enabled = quirk.enabled
-		}
-	}
-
-	fun startWaiting() {
-		startPhase(PhaseType.WAITING)
-	}
-
-	/**
-	 * @return a string if the game couldn't start
-	 */
-	fun startUHC(commandSender : CommandSender): String? {
-		if (!isPhase(PhaseType.WAITING))
-			return "Game has already started!"
-
-		if (Bukkit.getScoreboardManager().mainScoreboard.teams.size == 0)
-			return "No one is playing!"
-
-		gameMaster = commandSender
-
-		startPhase(PhaseType.GRACE)
-
-		return null
-	}
-
-	fun endUHC(winner: Team?) {
-		startPhase(PhaseType.POSTGAME) { phase ->
-			phase as PostgameDefault
-
-			phase.winningTeam = winner
-		}
-	}
-
-	public fun setVariant(phaseVariant: PhaseVariant) {
+	fun updateVariant(phaseVariant: PhaseVariant) {
 		phaseVariants[phaseVariant.type.ordinal] = phaseVariant
 
 		Gui.updatePhaseVariant(phaseVariant)
 	}
+
+	fun updateQuirk(type: QuirkType, enabled: Boolean) {
+		quirks[type.ordinal].enabled = enabled
+
+		Gui.updateQuirk(type)
+
+		type.incompatibilities.forEach { other ->
+			var otherQuirk = GameRunner.uhc.getQuirk(other)
+
+			if (otherQuirk.enabled) {
+				otherQuirk.enabled = false
+				Gui.updateQuirk(other)
+			}
+		}
+	}
+
+	/**
+	 * call after object is fully initialized
+	 */
+	fun updateDisplays() {
+		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
+	}
+
+	/* state getters */
 
 	fun getVariant(phaseType: PhaseType): PhaseVariant {
 		return phaseVariants[phaseType.ordinal]
@@ -119,11 +108,61 @@ class UHC(var preset: Preset) {
 		return quirks[quirkType.ordinal].enabled
 	}
 
-	fun startNextPhase() {
-		++currentPhaseIndex
+	fun isPhase(compare: PhaseType): Boolean {
+		return currentPhase?.phaseType == compare
+	}
 
-		if (currentPhaseIndex < PhaseType.values().size)
-			startPhase(currentPhaseIndex)
+	/* game flow modifiers */
+
+	/**
+	 * should be called when the world is loaded
+	 *
+	 * starts the waiting phase
+	 */
+	fun startWaiting() {
+		startPhase(PhaseType.WAITING)
+	}
+
+	/**
+	 * starts the grace period and ends waiting phase
+	 *
+	 * @return a string if the game couldn't start
+	 */
+	fun startUHC(commandSender : CommandSender): String? {
+		if (!isPhase(PhaseType.WAITING))
+			return "Game has already started!"
+
+		if (Bukkit.getScoreboardManager().mainScoreboard.teams.size == 0)
+			return "No one is playing!"
+
+		gameMaster = commandSender
+
+		startPhase(PhaseType.GRACE)
+
+		return null
+	}
+
+	/**
+	 * called any time during the uhc to end it
+	 *
+	 * starts the postgame phase
+	 */
+	fun endUHC(winner: Team?) {
+		startPhase(PhaseType.POSTGAME) { phase ->
+			phase as PostgameDefault
+
+			phase.winningTeam = winner
+		}
+	}
+
+	/* starting phases */
+
+	fun startNextPhase() {
+		val oldPhase = currentPhase ?: return
+
+		var nextIndex = (oldPhase.phaseType.ordinal + 1) % PhaseType.values().size
+
+		startPhase(nextIndex)
 	}
 
 	fun startPhase(phaseType: PhaseType, onInject: (Phase) -> Unit = {}) {
@@ -132,8 +171,6 @@ class UHC(var preset: Preset) {
 
 	fun startPhase(phaseIndex: Int, onInject: (Phase) -> Unit = {}) {
 		currentPhase?.onEnd()
-
-		currentPhaseIndex = phaseIndex
 
 		currentPhase = phaseVariants[phaseIndex].start(this, phaseTimes[phaseIndex], onInject)
 
@@ -148,25 +185,24 @@ class UHC(var preset: Preset) {
 		for (world in Bukkit.getServer().worlds) {
 			var total = 0.0
 			var inBorder = 0.0
+
 			for (chunk in world.loadedChunks) {
 				++total
+
 				val width = min(world.worldBorder.size, chunk.x * 16.0 + 16.0) - max(-world.worldBorder.size, chunk.x * 16.0)
 				val height = min(world.worldBorder.size, chunk.z * 16.0 + 16.0) - max(-world.worldBorder.size, chunk.z * 16.0)
-				if (width < 0 || height < 0) {
-					continue
-				}
+
+				if (width < 0 || height < 0) continue
+
 				inBorder += width * height / 256.0
 			}
+
 			val coeff = inBorder / total
 
-			world.monsterSpawnLimit = (70 * coeff * mobCapCoefficient).toInt() + 1
-			world.animalSpawnLimit = (10 * coeff * mobCapCoefficient).toInt() + 1
-			world.ambientSpawnLimit = (15 * coeff * mobCapCoefficient).toInt() + 1
-			world.waterAnimalSpawnLimit = (5 * coeff * mobCapCoefficient).toInt() + 1
+			world.    monsterSpawnLimit = (70 * coeff * mobCapCoefficient).toInt() + 1
+			world.     animalSpawnLimit = (10 * coeff * mobCapCoefficient).toInt() + 1
+			world.    ambientSpawnLimit = (15 * coeff * mobCapCoefficient).toInt() + 1
+			world.waterAnimalSpawnLimit = ( 5 * coeff * mobCapCoefficient).toInt() + 1
 		}
-	}
-
-	fun isPhase(compare: PhaseType): Boolean {
-		return currentPhase?.phaseType == compare
 	}
 }

@@ -4,8 +4,9 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
 enum class Preset(var prettyName: String, var startRadius: Double, var endRadius: Double, var graceTime: Int, var shrinkTime: Int, var finalTime: Int, var glowTime: Int, var representation: Material) {
-	STANDARD("Standard", 400.0, 25.0, 1200, 2250, 600, 600, Material.GOLDEN_AXE),
-	SMALL("Small", 200.0, 25.0, 900, 1600, 600, 600, Material.STICK),
+	LARGE("Large", 550.0, 25.0, 1200, 2250, 300, 300, Material.ENCHANTING_TABLE),
+	MEDIUM("Medium", 400.0, 25.0, 1200, 2250, 300, 300, Material.GOLDEN_AXE),
+	SMALL("Small", 200.0, 25.0, 900, 1600, 300, 300, Material.STICK),
 	TEST("Testing", 100.0, 25.0, 300, 300, 300, 300, Material.STRUCTURE_VOID);
 
 	fun createLore(): List<String> {

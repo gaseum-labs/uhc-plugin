@@ -16,16 +16,6 @@ abstract class Quirk(var type: QuirkType) {
 		}
 
 		field = value
-		Gui.updateQuirk(type)
-
-		type.incompatibilities.forEach { other ->
-			var otherQuirk = GameRunner.uhc.getQuirk(other)
-
-			if (otherQuirk.enabled) {
-				otherQuirk.enabled = false
-				Gui.updateQuirk(other)
-			}
-		}
 	}
 
 	abstract fun onEnable()

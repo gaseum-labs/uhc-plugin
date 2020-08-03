@@ -10,6 +10,8 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.EventListener
 import com.codeland.uhc.gui.GuiListener
+import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.phaseType.VariantList
 import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
@@ -31,7 +33,17 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(EventListener(), this)
 		server.pluginManager.registerEvents(GuiListener(), this)
 
-		var uhc = UHC(Preset.STANDARD)
+		VariantList.create()
+
+		var uhc = UHC(Preset.LARGE, arrayOf(
+			PhaseVariant.WAITING_DEFAULT,
+			PhaseVariant.GRACE_DEFAULT,
+			PhaseVariant.SHRINK_DEFAULT,
+			PhaseVariant.FINAL_DEFAULT,
+			PhaseVariant.GLOWING_TOP_TWO,
+			PhaseVariant.ENDGAME_CLEAR_BLOCKS,
+			PhaseVariant.POSTGAME_DEFAULT
+		))
 
 		val niceWebsite = URL("http://checkip.amazonaws.com")
 		val `in` = BufferedReader(InputStreamReader(niceWebsite.openStream()))

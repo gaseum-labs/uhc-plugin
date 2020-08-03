@@ -133,7 +133,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
-		GameRunner.uhc.setVariant(factory)
+		GameRunner.uhc.updateVariant(factory)
 	}
 
 	@CommandAlias("modify timing")
@@ -154,7 +154,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
-		GameRunner.uhc.preset.startRadius = radius
+		GameRunner.uhc.startRadius = radius
 	}
 
 	@CommandAlias("modify endRadius")
@@ -163,7 +163,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
-		GameRunner.uhc.preset.endRadius = radius
+		GameRunner.uhc.endRadius = radius
 	}
 
 	@CommandAlias("modify all")
@@ -172,8 +172,8 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.waitGuard(sender)) return
 
-		GameRunner.uhc.preset.startRadius = startRadius
-		GameRunner.uhc.preset.endRadius = endRadius
+		GameRunner.uhc.startRadius = startRadius
+		GameRunner.uhc.endRadius = endRadius
 
 		val phaseTimes = GameRunner.uhc.phaseTimes
 

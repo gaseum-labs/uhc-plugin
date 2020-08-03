@@ -17,6 +17,9 @@ class WaitingDefault : Phase() {
             world.worldBorder.setCenter(10000.0, 10000.0)
             world.worldBorder.size = 50.0
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+            world.setGameRule(GameRule.DO_WEATHER_CYCLE, false)
+            world.isThundering = false
+            world.setStorm(false)
             world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
             world.time = 1000
             world.difficulty = Difficulty.NORMAL
@@ -56,7 +59,7 @@ class WaitingDefault : Phase() {
             Pests.makeNotPest(player)
 
             /* get them on the health scoreboard */
-            player.damage(1.0)
+            player.damage(0.1)
 
             val inventory = player.inventory
             inventory.clear()

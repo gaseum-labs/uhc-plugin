@@ -63,10 +63,6 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 		"Hooray, the match is over!"
 	));
 
-	init {
-		VariantList.list[type.ordinal].add(this)
-	}
-
 	fun start(uhc: UHC, time: Int, onInject: (Phase) -> Unit): Phase {
 		val ret = createPhase()
 

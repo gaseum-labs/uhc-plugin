@@ -1,18 +1,13 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.core.ItemUtil
 import com.codeland.uhc.core.Util
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Color
-import org.bukkit.FireworkEffect
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
-import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.Damageable
-import org.bukkit.inventory.meta.FireworkEffectMeta
-import org.bukkit.inventory.meta.ItemMeta
 
 class ModifiedDrops(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
