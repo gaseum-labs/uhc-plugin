@@ -12,6 +12,7 @@ import com.codeland.uhc.core.ItemUtil.randomEnchantedBook
 import com.codeland.uhc.core.ItemUtil.tools
 import com.codeland.uhc.core.ItemUtil.trident
 import com.codeland.uhc.core.ItemUtil.weapons
+import com.codeland.uhc.core.Util.log
 import com.codeland.uhc.core.Util.randFromArray
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -99,7 +100,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 				timer = dropTimes[dropIndex]
 
-				nextLocation = findDropSpot(previousLocation, timer, 16)
+				nextLocation = findDropSpot(Bukkit.getWorlds()[0], previousLocation, timer, 16)
 				previousLocation = nextLocation
 
 				val coordinateString = "at ($GOLD${BOLD}${nextLocation.blockX}${RESET}, $GOLD${BOLD}${nextLocation.blockY}${RESET}, $GOLD${BOLD}${nextLocation.blockZ}${RESET})"
@@ -406,34 +407,25 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			}
 		}
 
-		fun findDropSpot(lastLocation: Location, timeUntil: Int, buffer: Int): Location {
-			/* helper classes and functions */
-			val makeLocation = { x: Int, z: Int ->
-				val world = Bukkit.getWorlds()[0]
+		class XZReturn(val x: Int, val z: Int)
 
-				val y = Util.topBlockY(world, x, z) + 1
-
-				Location(world, x.toDouble(), y.toDouble(), z.toDouble())
-			}
-
+		/**
+		 * unit testable
+		 *
+		 * does not interact with bukkit
+		 * @return where a care package should land in terms of x and z
+		 */
+		fun findDropXZ(lastX: Int, lastZ: Int, startRadius: Double, endRadius: Double, remainingSeconds: Int, timeUntil: Int, phaseLength: Int, buffer: Int): XZReturn {
 			class RangeReference(var value: Double = 0.0) {
 				fun intValue(): Int {
 					return value.toInt()
 				}
 			}
 
-			val uhc = GameRunner.uhc
-			val currentPhase = uhc.currentPhase ?: return makeLocation(0, 0)
+			var speed = (startRadius - endRadius) / phaseLength.toDouble()
+			var invAlong = (remainingSeconds - timeUntil) / phaseLength.toDouble()
 
-			/* these variables help us calculate the size of the border */
-			/* when the care package will drop */
-			var startRadius = uhc.startRadius
-			var endRadius = uhc.endRadius
-
-			var speed = (startRadius - endRadius) / (uhc.getTime(PhaseType.SHRINK)).toDouble()
-			var along = 1.0 - ((currentPhase.remainingSeconds.toDouble() - timeUntil) / currentPhase.length.toDouble())
-
-			var finalRadius = startRadius - (along * speed) - buffer
+			var finalRadius = ((startRadius - endRadius) * invAlong + endRadius) - buffer
 			if (finalRadius < endRadius) finalRadius = endRadius
 
 			/* the next care package can spawn in one of 8 squares */
@@ -441,8 +433,8 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 			/* blockCoordinate can be the X or Z of the block */
 			val choosePlaceIndex = { blockCoordinate: Int, lower: RangeReference, upper: RangeReference ->
-				lower.value = blockCoordinate - finalRadius / 2
-				upper.value = blockCoordinate + finalRadius / 2
+				lower.value = blockCoordinate - (finalRadius / 2)
+				upper.value = blockCoordinate + (finalRadius / 2)
 
 				val allows = arrayOf((lower.value >= -finalRadius), (upper.value <= finalRadius))
 				var placeIndex = Util.randRange(0, 1)
@@ -461,16 +453,49 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			/* to the left or right of the last chest */
 			/* r to the up or down of the last chest */
 			return if (Math.random() < 0.5) {
-				if (choosePlaceIndex(lastLocation.blockX, lower, upper) == 0)
-					makeLocation(Util.randRange(-intRadius, lower.intValue()), Util.randRange(-intRadius, intRadius))
+				if (choosePlaceIndex(lastX, lower, upper) == 0)
+					XZReturn(Util.randRange(-intRadius, lower.intValue()), Util.randRange(-intRadius, intRadius))
 				else
-					makeLocation(Util.randRange(upper.intValue(), intRadius), Util.randRange(-intRadius, intRadius))
+					XZReturn(Util.randRange(upper.intValue(), intRadius), Util.randRange(-intRadius, intRadius))
 			} else {
-				if (choosePlaceIndex(lastLocation.blockZ, lower, upper) == 0)
-					makeLocation(Util.randRange(-intRadius, intRadius), Util.randRange(-intRadius, lower.intValue()))
+				if (choosePlaceIndex(lastZ, lower, upper) == 0)
+					XZReturn(Util.randRange(-intRadius, intRadius), Util.randRange(-intRadius, lower.intValue()))
 				else
-					makeLocation(Util.randRange(-intRadius, intRadius), Util.randRange(upper.intValue(), intRadius))
+					XZReturn(Util.randRange(-intRadius, intRadius), Util.randRange(upper.intValue(), intRadius))
 			}
+		}
+
+		fun testDropXZ() {
+			var xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+
+			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+
+			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+
+			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+
+			xz = findDropXZ(0, 0, 550.0, 25.0, 60, 900, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+		}
+
+		fun findDropSpot(world: World, lastLocation: Location, timeUntil: Int, buffer: Int): Location {
+			/* helper classes and functions */
+			val makeLocation = { x: Int, z: Int ->
+				val y = Util.topBlockY(world, x, z) + 1
+				Location(world, x.toDouble(), y.toDouble(), z.toDouble())
+			}
+
+			val uhc = GameRunner.uhc
+			val phaseTime = uhc.getTime(PhaseType.SHRINK)
+			val remainingSeconds = uhc.currentPhase?.remainingSeconds ?: return Location(world, 0.0, 0.0, 0.0)
+
+			val xz = findDropXZ(lastLocation.blockX, lastLocation.blockZ, uhc.startRadius, uhc.endRadius, remainingSeconds, timeUntil, phaseTime, buffer)
+
+			return makeLocation(xz.x, xz.z)
 		}
 
 		fun generateDrop(tier: Int, amount: Int, location: Location) {

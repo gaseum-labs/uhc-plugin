@@ -14,6 +14,7 @@ import kotlin.math.min
 
 class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	var gameMaster = null as CommandSender?
+	var ledger = Ledger()
 
 	/* time is measured in seconds here. */
 	var netherToZero = true
@@ -32,6 +33,7 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	var phaseTimes = emptyArray<Int>()
 	var startRadius = 0.0
 	var endRadius = 0.0
+	var elapsedTime = 0
 
 	var currentPhase = null as Phase?
 

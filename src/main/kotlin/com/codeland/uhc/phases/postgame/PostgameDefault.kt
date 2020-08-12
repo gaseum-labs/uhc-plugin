@@ -31,7 +31,11 @@ class PostgameDefault : Phase() {
             var playerString = ""
             team.entries.forEach { playerName ->
                 playerString += "$playerName "
+
+                uhc.ledger.addEntry(playerName, GameRunner.uhc.elapsedTime)
             }
+
+            uhc.ledger.createTextFile()
 
             val bottomMessage = TextComponent(playerString.removeSuffix(" "))
             bottomMessage.color = team.color.asBungee()

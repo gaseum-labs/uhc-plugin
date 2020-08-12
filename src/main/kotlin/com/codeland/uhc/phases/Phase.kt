@@ -75,11 +75,7 @@ abstract class Phase {
 
 				override fun run() {
 					if (currentTick == 0) {
-						if (remainingSeconds == 0) {
-							uhc.startNextPhase()
-
-							return
-						}
+						if (remainingSeconds == 0) return uhc.startNextPhase()
 
 						Bukkit.getOnlinePlayers().forEach { player ->
 							setPlayerBarDimension(player)
@@ -89,15 +85,15 @@ abstract class Phase {
 							updateActionBar(dimensionBar.bossBar, dimensionBar.world, remainingSeconds)
 						}
 
-						if (remainingSeconds <= 3) {
+						if (remainingSeconds <= 3)
 							Bukkit.getServer().onlinePlayers.forEach { player ->
 								player.sendTitle("${countDownColor(remainingSeconds)}${ChatColor.BOLD}$remainingSeconds", "${ChatColor.GOLD}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
 							}
-						}
 
 						perSecond(remainingSeconds)
 
 						--remainingSeconds
+						++uhc.elapsedTime
 					}
 
 					dimensionBars.forEach { dimensionBar ->
@@ -108,7 +104,7 @@ abstract class Phase {
 				}
 			}
 
-			runnable!!.runTaskTimer(GameRunner.plugin, 0, 1)
+			runnable?.runTaskTimer(GameRunner.plugin, 0, 1)
 
 		} else {
 			Bukkit.getOnlinePlayers().forEach { player ->
@@ -138,23 +134,20 @@ abstract class Phase {
 		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${getRemainingTimeString(remainingSeconds)}")
 	}
 
-	protected open fun getRemainingTimeString(remainingSeconds: Int) : String {
-		var timeRemaining = remainingSeconds
-		var units : String =
-				if (remainingSeconds >= 60) {
-					timeRemaining = timeRemaining / 60 + 1
-					" minute"
-				} else {
-					" second"
-				}
-		if (timeRemaining > 1) {
-			units += "s"
-		}
-		return timeRemaining.toString() + units
-	}
+	protected open fun getRemainingTimeString(seconds: Int) : String {
+		var time: Int
 
-	public fun getTimeRemaining(): Int {
-		return remainingSeconds
+		var units = if (seconds >= 60) {
+			time = seconds / 60 + 1
+			"minute"
+		} else {
+			time = seconds
+			"second"
+		}
+
+		if (time > 1) units += "s"
+
+		return "$time $units"
 	}
 
 	/* abstract */

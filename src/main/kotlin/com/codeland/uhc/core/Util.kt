@@ -60,7 +60,7 @@ object Util {
 		else
 			"$seconds second${if (seconds == 1) "" else "s"}"
 
-		return "$minutesPart $secondsPart"
+		return "$minutesPart${if(minutesPart == "") "" else " "}$secondsPart"
 	}
 
 	fun <T>randFromArray(array: Array<T>): T {

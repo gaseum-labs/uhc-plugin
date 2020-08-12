@@ -82,10 +82,12 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 
 			val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
-			var deadPlayerTeam = playersTeam(deadPlayer.name)
-					?: return
+			var deadPlayerTeam = playersTeam(deadPlayer.name) ?: return
 
 			var (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(deadPlayerTeam)
+
+			/* add to ledger */
+			uhc.ledger.addEntry(deadPlayer.name, uhc.elapsedTime)
 
 			/* broadcast elimination message */
 			if (!teamIsAlive) {
@@ -108,13 +110,10 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 				return uhc.endUHC(lastRemaining)
 
 			/* kill reward awarding */
-			val killer = deadPlayer.killer
-			if (killer != null) {
-				val killerTeam = playersTeam(killer.name)
-						?: return
+			val killer = deadPlayer.killer ?: return
+			val killerTeam = playersTeam(killer.name) ?: return
 
-				uhc.killReward.applyReward(killerTeam)
-			}
+			uhc.killReward.applyReward(killerTeam)
 		}
 
 		fun playersTeam(playerName: String) : Team? {

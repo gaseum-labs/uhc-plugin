@@ -439,8 +439,11 @@ object ItemUtil {
 
 		/* get more enchantments */
 		while (good && Math.random() < enchantChance) {
-			val enchantTier = Util.randRange(0, tier)
-			val enchantArray = toolTier.tiers[enchantTier]
+			var tierIndex = Util.randRange(0, tier)
+
+			/* highest non empty tier array */
+			while (toolTier.tiers[tierIndex].isEmpty()) --tierIndex
+			val enchantArray = toolTier.tiers[tierIndex]
 
 			val originalIndex = Util.randRange(0, enchantArray.lastIndex)
 			var enchantIndex = originalIndex

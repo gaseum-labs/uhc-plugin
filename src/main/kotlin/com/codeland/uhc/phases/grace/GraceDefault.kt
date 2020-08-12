@@ -1,6 +1,7 @@
 package com.codeland.uhc.phases.grace
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.Ledger
 import com.codeland.uhc.quirk.HalfZatoichi
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.QuirkType
@@ -48,6 +49,10 @@ open class GraceDefault : Phase() {
 		val teamCount = 1 + Bukkit.getServer().scoreboardManager.mainScoreboard.teams.size
 
 		Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, String.format("spreadplayers 0 0 %f %f true @a", (uhc.startRadius / sqrt(teamCount.toDouble())), uhc.startRadius))
+
+		/* reset the ledger */
+		uhc.elapsedTime = 0
+		uhc.ledger = Ledger()
 	}
 
 	override fun perSecond(remainingSeconds: Int) {
