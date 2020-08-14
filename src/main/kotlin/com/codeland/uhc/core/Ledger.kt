@@ -42,7 +42,7 @@ class Ledger {
 			"$baseFilepath$count.txt"
 		} else "$baseFilepath.txt"
 
-		val writer = FileWriter(File(baseFilepath))
+		val writer = FileWriter(File(filename))
 		writer.write(generateString())
 		writer.close()
 	}

@@ -12,9 +12,7 @@ import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 
 class Pests(type: QuirkType) : Quirk(type) {
-    override fun onEnable() {
-
-    }
+    override fun onEnable() {}
 
     override fun onDisable() {
         if (!(GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME))) {
