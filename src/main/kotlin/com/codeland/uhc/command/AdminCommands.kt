@@ -34,9 +34,9 @@ class AdminCommands : BaseCommand() {
 
 		val scoreboard = sender.server.scoreboardManager.mainScoreboard
 
-		scoreboard.teams.forEach {
-			GameRunner.bot.destroyTeam(it)
-			it.unregister()
+		scoreboard.teams.forEach { team ->
+			GameRunner.bot?.destroyTeam(team) {}
+			team.unregister()
 		}
 	}
 

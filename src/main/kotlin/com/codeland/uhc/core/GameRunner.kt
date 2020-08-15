@@ -15,7 +15,7 @@ import org.bukkit.entity.Player
 import org.bukkit.scoreboard.Team
 import java.util.logging.Level
 
-class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
+class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 
 	init {
 		GameRunner.uhc = uhc
@@ -26,7 +26,7 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 	companion object {
 		lateinit var uhc: UHC
 		lateinit var plugin: UHCPlugin
-		lateinit var bot: MixerBot
+		var bot: MixerBot? = null
 
 		fun teamIsAlive(team: Team): Boolean {
 			return team.entries.any { entry ->
@@ -53,7 +53,7 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot) {
 			Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
 				val alive = teamIsAlive(team)
 
-				if (team == focus) retFocus = alive;
+				if (team == focus) retFocus = alive
 
 				if (alive) {
 					++retRemaining

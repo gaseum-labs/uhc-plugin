@@ -93,7 +93,7 @@ class ParticipantCommands : BaseCommand() {
 			realNewName = realNewName.substring(1, realNewName.length - 1)
 		}
 
-		GameRunner.bot.renameTeam(team, realNewName)
+		GameRunner.bot?.renameTeam(team, realNewName) {}
 
 		team.displayName = realNewName
 

@@ -63,7 +63,12 @@ class PostgameDefault : Phase() {
             world.worldBorder.size = world.worldBorder.size
         }
 
-        GameRunner.bot.clearTeamVCs()
+        val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
+
+        scoreboard.teams.forEach { team ->
+            GameRunner.bot?.destroyTeam(team) {}
+            team.unregister()
+        }
     }
 
     override fun perSecond(remainingSeconds: Int) {

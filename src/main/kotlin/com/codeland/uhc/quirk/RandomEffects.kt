@@ -29,7 +29,7 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				resetEffects(player)
 			}
-			
+
 			giveEffects()
 		}
 	}
@@ -62,7 +62,7 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 	}
 
 	companion object {
-		var time = 150
+		var time = 180
 		var timer = 0
 
 		var effects = arrayOf(
@@ -76,7 +76,8 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 			PotionEffectType.NIGHT_VISION,
 			PotionEffectType.ABSORPTION,
 			PotionEffectType.SATURATION,
-			PotionEffectType.CONDUIT_POWER
+			PotionEffectType.CONDUIT_POWER,
+			PotionEffectType.SLOW_FALLING
 		)
 
 		fun giveEffects() {

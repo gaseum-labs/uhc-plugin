@@ -84,10 +84,6 @@ class EventListener : Listener {
 		Gui.open(event.player)
 	}
 
-	/**
-	 * this is a better way of preventing hunger loss during waiting
-	 * than a potion effect
-	 */
 	@EventHandler
 	fun onHunger(event: FoodLevelChangeEvent) {
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
@@ -118,24 +114,23 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onMessage(e: AsyncPlayerChatEvent) {
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			if (!e.message.startsWith("!")) {
-				val team = GameRunner.playersTeam(e.player.displayName)
-				if (team != null) {
-					e.isCancelled = true
-					PaperPluginLogger.getGlobal().log(Level.INFO, "PLAYER SENT MESSAGE IN TEAM CHAT")
-					for (entry in team.entries) {
-						val precomp = TextComponent("<")
-						val name = TextComponent(e.player.displayName)
-						name.color = team.color.asBungee()
-						name.isUnderlined = true
-						val remaining = TextComponent("> ${e.message}")
-						Bukkit.getPlayer(entry)?.sendMessage(precomp, name, remaining)
-					}
-				}
-			} else {
-				e.message = e.message.substring(1)
+	fun onMessage(event: AsyncPlayerChatEvent) {
+		/* only modify chat behavior with players on teams */
+		val team = GameRunner.playersTeam(event.player.name) ?: return
+
+		/* only modify chat when game is running */
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)) return
+
+		if (event.message.startsWith("!")) {
+			event.message = event.message.substring(1)
+
+		} else {
+			event.isCancelled = true
+
+			val component = "${team.color}<${event.player.displayName}> ${ChatColor.RESET}${event.message}"
+
+			team.entries.forEach { entry ->
+				Bukkit.getPlayer(entry)?.sendMessage(component)
 			}
 		}
 	}
@@ -201,7 +196,6 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
-
 		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
 			val player = event.target
 
@@ -443,15 +437,6 @@ class EventListener : Listener {
 			if (Math.random() < 0.01)
 				WetSponge.addSponge(player)
 		}
-	}
-
-	@EventHandler
-	fun onInventory(event: InventoryOpenEvent) {
-		if (event.inventory.type != InventoryType.PLAYER) return
-		if (!GameRunner.uhc.isEnabled(QuirkType.SHARED_INVENTORY)) return
-
-		event.isCancelled = true
-		event.player.openInventory(SharedInventory.inventory)
 	}
 
 	@EventHandler
