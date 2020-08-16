@@ -87,7 +87,7 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 			var (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(deadPlayerTeam)
 
 			/* add to ledger */
-			uhc.ledger.addEntry(deadPlayer.name, uhc.elapsedTime)
+			uhc.ledger.addEntry(deadPlayer.name, uhc.elapsedTime, deadPlayer.killer?.name)
 
 			/* broadcast elimination message */
 			if (!teamIsAlive) {

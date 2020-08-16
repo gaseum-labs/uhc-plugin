@@ -5,22 +5,22 @@ import java.io.FileWriter
 import java.time.LocalDateTime
 
 class Ledger {
-	class Entry(val username: String, val timeSurvived: Int, val winning: Boolean)
+	class Entry(val username: String, val timeSurvived: Int, val killedBy: String, val winning: Boolean)
 
 	val list = ArrayList<Entry>()
 
-	fun addEntry(username: String, timeSurvived: Int, winning: Boolean = false) {
-		list.add(Entry(username, timeSurvived, winning))
+	fun addEntry(username: String, timeSurvived: Int, killedBy: String?, winning: Boolean = false) {
+		list.add(Entry(username, timeSurvived, killedBy ?: "environment", winning))
 	}
 
 	fun generateString(): String {
 		var ret = ""
 		var position = 1
 
-		for (i in list.lastIndex downTo 0) {
-			ret += "$position ${list[i].username} ${list[i].timeSurvived}\n"
+		list.asReversed().forEach { entry ->
+			ret += "$position ${entry.username} ${entry.timeSurvived} ${entry.killedBy}\n"
 
-			if (!list[i].winning) ++position
+			if (!entry.winning) ++position
 		}
 
 		return ret

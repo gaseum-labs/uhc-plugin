@@ -32,7 +32,7 @@ class PostgameDefault : Phase() {
             team.entries.forEach { playerName ->
                 playerString += "$playerName "
 
-                uhc.ledger.addEntry(playerName, GameRunner.uhc.elapsedTime)
+                uhc.ledger.addEntry(playerName, GameRunner.uhc.elapsedTime, null)
             }
 
             uhc.ledger.createTextFile()

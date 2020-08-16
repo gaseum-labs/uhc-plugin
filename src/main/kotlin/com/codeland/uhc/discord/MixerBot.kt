@@ -226,18 +226,6 @@ class MixerBot(
 		}
 	}
 
-	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: Array<String>, losers: Array<String>) {
-		val embed = EmbedBuilder()
-			.setColor(0xe7c93c)
-			.setTitle("Summary of UHC #$gameNumber on $month/$day/$year")
-			.setDescription("Lasted ${Util.timeString(matchTime)}")
-			.addField("Winners", if (winners.isEmpty()) "No winners" else winners.fold("") { accum, winner -> accum + "1: ${winner}\n" }, false)
-			.addField("Losers", if (losers.isEmpty()) "No losers" else losers.foldIndexed("") { index, accum, loser -> accum + "${index + 1 + winners.size}: ${loser}\n"}, false)
-			.build()
-
-		channel.sendMessage(embed).queue()
-	}
-
 	/**
 	 * will create a new voice channel for
 	 * the team if none currently exists
@@ -294,6 +282,8 @@ class MixerBot(
 			}
 		}
 	}
+
+	class SummaryEntry(val name: String, val killedBy: String)
 
 	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
 		val message = event.message
@@ -379,8 +369,8 @@ class MixerBot(
 			val year = filenameParts[3].substring(0, filenameParts[3].indexOf('.')).toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
 
 			attachments[0].retrieveInputStream().thenAccept{ stream ->
-				val winningPlayers = ArrayList<String>()
-				val losingPlayers = ArrayList<String>()
+				val winningPlayers = ArrayList<SummaryEntry>()
+				val losingPlayers = ArrayList<SummaryEntry>()
 				var matchTime = 0
 
 				val reader = BufferedReader(InputStreamReader(stream))
@@ -389,7 +379,7 @@ class MixerBot(
 				val readerErr = lines.any { line ->
 					val parts = line.split(' ')
 
-					if (parts.size != 3)
+					if (parts.size != 4)
 						true
 					else {
 						if (parts[0].startsWith("1")) {
@@ -397,7 +387,7 @@ class MixerBot(
 							winningPlayers
 						} else {
 							losingPlayers
-						}.add(parts[1])
+						}.add(SummaryEntry(parts[1], parts[3]))
 
 						false
 					}
@@ -419,6 +409,18 @@ class MixerBot(
 				errResolve("Something went wrong with the connection")
 			}
 		}
+	}
+
+	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: Array<SummaryEntry>, losers: Array<SummaryEntry>) {
+		val embed = EmbedBuilder()
+			.setColor(0xe7c93c)
+			.setTitle("Summary of UHC #$gameNumber on $month/$day/$year")
+			.setDescription("Lasted ${Util.timeString(matchTime)}")
+			.addField("Winners", if (winners.isEmpty()) "No winners" else winners.fold("") { accum, winner -> accum + "1: ${winner.name}\n" }, false)
+			.addField("Losers", if (losers.isEmpty()) "No losers" else losers.foldIndexed("") { index, accum, loser -> accum + "${index + 1 + winners.size}: ${loser.name} | killed by ${loser.killedBy}\n"}, false)
+			.build()
+
+		channel.sendMessage(embed).queue()
 	}
 
 	override fun onReady(event: ReadyEvent) {
