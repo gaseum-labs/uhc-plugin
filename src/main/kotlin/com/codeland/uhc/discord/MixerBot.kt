@@ -2,9 +2,10 @@ package com.codeland.uhc.discord
 
 import com.codeland.uhc.command.TeamData
 import com.codeland.uhc.core.Util
-import com.codeland.uhc.core.Util.log
+import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -14,6 +15,7 @@ import org.bukkit.scoreboard.Team
 import java.io.*
 import java.lang.Exception
 import java.net.URL
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class MixerBot(
@@ -224,28 +226,17 @@ class MixerBot(
 		}
 	}
 
-	fun sendGameSummary(losers: Array<String>, winners: Array<String>, channelID: Long) {
-		val sb = StringBuilder()
-		if (winners.size > 1) {
-			sb.append("UHC Completed! Winners are ")
-		} else {
-			sb.append("UHC Completed! The winner is ")
-		}
-		sb.append("**").append(winners[0]).append("**")
-		for (i in 1 until winners.size - 1) {
-			sb.append(", **").append(winners[i]).append("**")
-		}
-		if (winners.size > 1) {
-			sb.append(" and **").append(winners[winners.size - 1]).append("**")
-		}
-		sb.append("\n\nThese are the other participants and their place\n")
-		for (i in losers.indices) {
-			sb.append(i + winners.size + 1).append(": ").append(losers[i]).append("\n")
-		}
-		val msg = sb.toString()
-		val tc: TextChannel = bot.getTextChannelById(channelID)!!
-		tc.sendMessage(msg).complete()
-	}//not used for now
+	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: Array<String>, losers: Array<String>) {
+		val embed = EmbedBuilder()
+			.setColor(0xe7c93c)
+			.setTitle("Summary of UHC #$gameNumber on $month/$day/$year")
+			.setDescription("Lasted ${Util.timeString(matchTime)}")
+			.addField("Winners", if (winners.isEmpty()) "No winners" else winners.fold("") { accum, winner -> accum + "1: ${winner}\n" }, false)
+			.addField("Losers", if (losers.isEmpty()) "No losers" else losers.foldIndexed("") { index, accum, loser -> accum + "${index + 1 + winners.size}: ${loser}\n"}, false)
+			.build()
+
+		channel.sendMessage(embed).queue()
+	}
 
 	/**
 	 * will create a new voice channel for
@@ -312,7 +303,8 @@ class MixerBot(
 		if (!content.startsWith("%")) return
 
 		/* safely exit and return expressions */
-		fun Any?.void() = Unit
+		fun Any?.unit() = Unit
+		fun Any?.void() = null
 
 		if (content.startsWith("%link ")) {
 			val userID = event.author.idLong
@@ -341,11 +333,14 @@ class MixerBot(
 			}
 
 		} else if (content.startsWith("%general")) {
+			if (!member.permissions.contains(Permission.ADMINISTRATOR))
+				return event.channel.sendMessage("You must be in an admin to use this command!").queue().unit()
+
 			val channel = member.voiceState?.channel
-				?: return event.channel.sendMessage("You must be in a vc to use this command!").queue().void()
+				?: return event.channel.sendMessage("You must be in a vc to use this command!").queue().unit()
 
 			val category = channel.parent
-				?: return event.channel.sendMessage("Voice channel ${channel.name} must be in a category!").queue().void()
+				?: return event.channel.sendMessage("Voice channel ${channel.name} must be in a category!").queue().unit()
 
 			guildID = message.guild.id
 			voiceCategoryID = category.id
@@ -358,6 +353,71 @@ class MixerBot(
 			saveDiscordData()
 
 			event.channel.sendMessage("${channel.name} successfully set as general channel!").queue().void()
+		} else if (content.startsWith("%summary")) {
+			val errResolve = { finalText: String ->
+				event.channel.sendMessage(finalText).queue { sent -> sent.delete().queueAfter(5, TimeUnit.SECONDS) }.void()
+				message.delete().queueAfter(5, TimeUnit.SECONDS).void()
+			}
+
+			if (!member.permissions.contains(Permission.ADMINISTRATOR))
+				return errResolve("You must be in an admin to use this command!").unit()
+
+			val attachments = message.attachments
+
+			if (attachments.size != 1 || attachments[0].isImage || attachments[0].fileExtension != "txt")
+				return errResolve("Please attach a summary .txt file").unit()
+
+			val filenameParts = attachments[0].fileName.split('_')
+			if (filenameParts.size != 4)
+				return errResolve("Summary filename incorrectly formatted\nShould be NUM_DAY_MONTH_YEAR.txt").unit()
+
+			val filenameNumberErrString = "Filename encountered an incorrectly formatted number"
+
+			val gameNumber = filenameParts[0].toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
+			val day = filenameParts[1].toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
+			val month = filenameParts[2].toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
+			val year = filenameParts[3].substring(0, filenameParts[3].indexOf('.')).toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
+
+			attachments[0].retrieveInputStream().thenAccept{ stream ->
+				val winningPlayers = ArrayList<String>()
+				val losingPlayers = ArrayList<String>()
+				var matchTime = 0
+
+				val reader = BufferedReader(InputStreamReader(stream))
+
+				val lines = reader.lineSequence()
+				val readerErr = lines.any { line ->
+					val parts = line.split(' ')
+
+					if (parts.size != 3)
+						true
+					else {
+						if (parts[0].startsWith("1")) {
+							matchTime = parts[2].toIntOrNull() ?: return@any true
+							winningPlayers
+						} else {
+							losingPlayers
+						}.add(parts[1])
+
+						false
+					}
+				}
+
+				reader.close()
+
+				if (readerErr) {
+					errResolve("Error reading summary file")
+				} else {
+					message.delete().submit().thenAccept {
+						sendGameSummary(message.channel, gameNumber, day, month, year, matchTime, Array(winningPlayers.size) { i -> winningPlayers[i] }, Array(losingPlayers.size) { i -> losingPlayers[i] })
+					}.exceptionally { err ->
+						errResolve(err.message ?: "Unknown error")
+					}
+				}
+
+			}.exceptionally {
+				errResolve("Something went wrong with the connection")
+			}
 		}
 	}
 

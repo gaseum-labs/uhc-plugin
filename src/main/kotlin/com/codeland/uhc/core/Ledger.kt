@@ -18,7 +18,7 @@ class Ledger {
 		var position = 1
 
 		for (i in list.lastIndex downTo 0) {
-			ret += "$position: ${list[i].username} | survived ${Util.timeString(list[i].timeSurvived)}\n"
+			ret += "$position ${list[i].username} ${list[i].timeSurvived}\n"
 
 			if (!list[i].winning) ++position
 		}
@@ -31,18 +31,13 @@ class Ledger {
 		if (!directory.exists()) directory.mkdir()
 
 		val date = LocalDateTime.now()
-		val baseFilepath = "${directory.path}/${date.hour}_${date.dayOfMonth}_${date.month}_${date.year}"
+		var matchNumber = 1
 
-		/* add numbers until file name conflict is resolved */
-		val filename = if (File("$baseFilepath.txt").exists()) {
-			var count = 0
+		val filePath = { number: Int -> "${directory.path}/${number}_${date.dayOfMonth}_${date.monthValue}_${date.year}.txt"}
 
-			while (File("$baseFilepath$count.txt").exists()) ++count
+		while (File(filePath(matchNumber)).exists()) ++matchNumber
 
-			"$baseFilepath$count.txt"
-		} else "$baseFilepath.txt"
-
-		val writer = FileWriter(File(filename))
+		val writer = FileWriter(File(filePath(matchNumber)))
 		writer.write(generateString())
 		writer.close()
 	}
