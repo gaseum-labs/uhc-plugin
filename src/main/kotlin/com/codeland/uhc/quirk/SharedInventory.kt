@@ -8,11 +8,11 @@ import org.bukkit.inventory.ItemStack
 
 class SharedInventory(type: QuirkType) : Quirk(type) {
 	companion object {
-		lateinit var contents: Array<ItemStack>
+		var contents: Array<out ItemStack?> = emptyArray()
 	}
 
 	override fun onEnable() {
-		GameRunner.plugin.server.scheduler.scheduleSyncRepeatingTask(GameRunner.plugin, Runnable {
+		GameRunner.plugin.server.scheduler.scheduleSyncRepeatingTask(GameRunner.plugin, {
 			for (player in Bukkit.getServer().onlinePlayers) {
 				val playersContents = player.inventory.contents
 				if (!playersContents.contentEquals(contents)) {
@@ -25,6 +25,14 @@ class SharedInventory(type: QuirkType) : Quirk(type) {
 				}
 			}
 		}, 1, 1)
+	}
+
+	fun contentsCopy(arr: Array<ItemStack?>): Array<ItemStack?> {
+		val newArr = arr.copyOf()
+		for (i in newArr.indices) {
+			newArr[i] = if (arr[i] != null) arr[i] else null
+		}
+		return newArr
 	}
 
 	override fun onDisable() {
