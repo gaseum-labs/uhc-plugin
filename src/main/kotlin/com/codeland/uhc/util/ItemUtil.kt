@@ -8,6 +8,8 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.*
 import org.bukkit.potion.PotionData
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 
 object ItemUtil {
@@ -150,7 +152,7 @@ object ItemUtil {
 		return itemStack
 	}
 
-	var goodEffects = arrayOf(
+	val goodPotionTypes = arrayOf(
 		PotionType.SPEED,
 		PotionType.STRENGTH,
 		PotionType.JUMP,
@@ -164,20 +166,50 @@ object ItemUtil {
 		PotionType.TURTLE_MASTER
 	)
 
-	var badEffects = arrayOf(
+	val goodPotionEffectTypes = arrayOf(
+		PotionEffectType.SPEED,
+		PotionEffectType.INCREASE_DAMAGE,
+		PotionEffectType.JUMP,
+		PotionEffectType.REGENERATION,
+		PotionEffectType.FIRE_RESISTANCE,
+		PotionEffectType.INVISIBILITY,
+		PotionEffectType.NIGHT_VISION,
+		PotionEffectType.HEAL,
+		PotionEffectType.WATER_BREATHING,
+		PotionEffectType.SLOW_FALLING
+	)
+
+	val badPotionTypes = arrayOf(
 		PotionType.SLOWNESS,
 		PotionType.INSTANT_DAMAGE,
 		PotionType.WEAKNESS,
 		PotionType.POISON
 	)
 
+	val badPotionEffectTypes = arrayOf(
+		PotionEffectType.SLOW,
+		PotionEffectType.HARM,
+		PotionEffectType.WEAKNESS,
+		PotionEffectType.POISON,
+		PotionEffectType.WITHER,
+		PotionEffectType.SLOW_DIGGING
+	)
+
+	fun randomPotionData(type: PotionType): PotionData {
+		val extended = type.isExtendable && Math.random() < 0.5
+		val upgraded = !extended && type.isUpgradeable && Math.random() < 0.5
+
+		return PotionData(type, extended, upgraded)
+	}
+
 	fun randomPotionData(good: Boolean): PotionData {
-		var potionType = randFromArray(if (good) goodEffects else badEffects)
+		return randomPotionData(randFromArray(if (good) goodPotionTypes else badPotionTypes))
+	}
 
-		val extended = potionType.isExtendable && Math.random() < 0.5
-		val upgraded = !extended && potionType.isUpgradeable && Math.random() < 0.5
+	fun randomPotionEffect(good: Boolean, duration: Int, amplifier: Int): PotionEffect {
+		var potionEffectType = randFromArray(if (good) goodPotionEffectTypes else badPotionEffectTypes)
 
-		return PotionData(potionType, extended, upgraded)
+		return PotionEffect(potionEffectType, duration, amplifier, false)
 	}
 
 	fun randomPotion(good: Boolean, throwType: Material): ItemStack {
@@ -198,6 +230,39 @@ object ItemUtil {
 		itemStack.itemMeta = meta
 
 		return itemStack
+	}
+
+	fun randomTippedArrow(amount: Int, potionType: PotionType): ItemStack {
+		val itemStack = ItemStack(Material.TIPPED_ARROW, amount)
+
+		val meta = itemStack.itemMeta as PotionMeta
+		meta.basePotionData = randomPotionData(potionType)
+		itemStack.itemMeta = meta
+
+		return itemStack
+	}
+
+	val dyes = arrayOf(
+		Material.WHITE_DYE,
+		Material.LIGHT_GRAY_DYE,
+		Material.GRAY_DYE,
+		Material.BLACK_DYE,
+		Material.BROWN_DYE,
+		Material.RED_DYE,
+		Material.ORANGE_DYE,
+		Material.YELLOW_DYE,
+		Material.LIME_DYE,
+		Material.GREEN_DYE,
+		Material.CYAN_DYE,
+		Material.LIGHT_BLUE_DYE,
+		Material.BLUE_DYE,
+		Material.PURPLE_DYE,
+		Material.MAGENTA_DYE,
+		Material.PINK_DYE
+	)
+
+	fun randomDye(amount: Int): ItemStack {
+		return ItemStack(randFromArray(dyes), amount)
 	}
 
 	val shulkerList = arrayOf(
@@ -222,5 +287,44 @@ object ItemUtil {
 
 	fun randomShulker(amount: Int): ItemStack {
 		return ItemStack(randFromArray(shulkerList), amount)
+	}
+
+	val musicDiscList = arrayOf(
+		Material.MUSIC_DISC_13,
+		Material.MUSIC_DISC_CAT,
+		Material.MUSIC_DISC_BLOCKS,
+		Material.MUSIC_DISC_CHIRP,
+		Material.MUSIC_DISC_FAR,
+		Material.MUSIC_DISC_MALL,
+		Material.MUSIC_DISC_MELLOHI,
+		Material.MUSIC_DISC_STAL,
+		Material.MUSIC_DISC_STRAD,
+		Material.MUSIC_DISC_WARD,
+		Material.MUSIC_DISC_11,
+		Material.MUSIC_DISC_WAIT,
+		Material.MUSIC_DISC_PIGSTEP
+	)
+
+	fun randomMusicDisc(): ItemStack {
+		return ItemStack(randFromArray(musicDiscList))
+	}
+
+	fun randomStew(): ItemStack {
+		val stack = ItemStack(Material.SUSPICIOUS_STEW)
+		val meta = stack.itemMeta as SuspiciousStewMeta
+
+		meta.addCustomEffect(randomPotionEffect(Math.random() < 0.5, 10 * 20, 1), true)
+
+		stack.itemMeta = meta
+		return stack
+	}
+
+	fun randomDyeArmor(armor: ItemStack): ItemStack {
+		val meta = armor.itemMeta as LeatherArmorMeta
+
+		meta.setColor(Color.fromRGB(Util.randRange(0, 0xffffff)))
+
+		armor.itemMeta = meta
+		return armor
 	}
 }

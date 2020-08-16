@@ -6,18 +6,27 @@ import com.codeland.uhc.util.ItemUtil.randomEnchantedBook
 import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
 import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.util.ItemUtil.randomDye
+import com.codeland.uhc.util.ItemUtil.randomDyeArmor
+import com.codeland.uhc.util.ItemUtil.randomMusicDisc
+import com.codeland.uhc.util.ItemUtil.randomStew
+import com.codeland.uhc.util.ItemUtil.randomTippedArrow
 import com.codeland.uhc.util.ToolTier
 import com.codeland.uhc.util.ToolTier.ARMOR_SET
 import com.codeland.uhc.util.ToolTier.BOW_SET
 import com.codeland.uhc.util.ToolTier.DIAMOND
 import com.codeland.uhc.util.ToolTier.IRON
+import com.codeland.uhc.util.ToolTier.LEATHER
 import com.codeland.uhc.util.ToolTier.ONLY_TOOL_SET
 import com.codeland.uhc.util.ToolTier.TIER_1
 import com.codeland.uhc.util.ToolTier.TIER_2
 import com.codeland.uhc.util.ToolTier.TIER_3
+import com.codeland.uhc.util.ToolTier.TIER_SHIELD
 import com.codeland.uhc.util.ToolTier.TIER_TRIDENT
 import com.codeland.uhc.util.ToolTier.TOOL_SET
 import com.codeland.uhc.util.ToolTier.WEAPON_SET
+import com.codeland.uhc.util.ToolTier.WOOD
+import com.codeland.uhc.util.ToolTier.getTieredBook
 import com.codeland.uhc.util.ToolTier.getTieredTool
 import org.bukkit.ChatColor.*
 import org.bukkit.*
@@ -29,6 +38,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SuspiciousStewMeta
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.bukkit.potion.PotionType
 import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scoreboard.*
 
@@ -208,7 +218,7 @@ class CarePackages {
 				if (running) {
 					--timer
 					if (timer == 0) {
-						generateDrop(getTier(), NUM_ITEMS, nextLocation)
+						generateDrop(getTier(), NUM_ITEMS, nextLocation, fastMode)
 
 						++dropIndex
 
@@ -318,7 +328,8 @@ class CarePackages {
 				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(TOOL_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
 
-				LootEntry { randomEnchantedBook() },
+				LootEntry { getTieredBook(TIER_1, 2, ENCHANT_CHANCE) },
+
 				LootEntry { ItemStack(Material.WATER_BUCKET) },
 				LootEntry { ItemStack(Material.LAVA_BUCKET) }
 			),
@@ -326,7 +337,7 @@ class CarePackages {
 				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(TOOL_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
 
-				LootEntry { randomEnchantedBook() },
+				LootEntry { getTieredBook(TIER_1, 2, ENCHANT_CHANCE) },
 
 				/* bucket section */
 				LootEntry { ItemStack(Material.WATER_BUCKET) },
@@ -338,16 +349,13 @@ class CarePackages {
 				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_2, 2, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(TOOL_SET, IRON, TIER_2, 2, ENCHANT_CHANCE) },
 
-				LootEntry { randomEnchantedBook() },
+				LootEntry { getTieredBook(TIER_2, 2, ENCHANT_CHANCE) },
 
 				/* bucket section */
 				LootEntry { ItemStack(Material.WATER_BUCKET) },
 				LootEntry { ItemStack(Material.LAVA_BUCKET) },
 
-				/* crossbow section */
 				LootEntry { getTieredTool(BOW_SET, TIER_1, 1, ENCHANT_CHANCE) },
-				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(8, 16)) },
-				LootEntry { ItemUtil.randomRocket(Util.randRange(8, 16)) },
 
 				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) }
 			),
@@ -356,19 +364,15 @@ class CarePackages {
 				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_2, 1, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(ONLY_TOOL_SET, DIAMOND, TIER_3, 1, ENCHANT_CHANCE) },
 
-				LootEntry { randomEnchantedBook() },
+				LootEntry { getTieredBook(TIER_2, 2, ENCHANT_CHANCE) },
 
-				/* crossbow section */
 				LootEntry { getTieredTool(BOW_SET, TIER_1, 1, ENCHANT_CHANCE) },
-				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(8, 16)) },
-				LootEntry { ItemUtil.randomRocket(Util.randRange(8, 16)) },
 
 				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) },
 
 				/* brewing section */
 				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 3)) },
 				LootEntry { ItemStack(Material.NETHER_WART, Util.randRange(4,  7)) },
-				LootEntry { ItemStack(Material.GLASS_BOTTLE, Util.randRange(2,  4)) },
 				LootEntry { brewingIngredient() }
 			),
 			arrayOf(
@@ -377,20 +381,21 @@ class CarePackages {
 				LootEntry { getTieredTool(BOW_SET, TIER_2, 1, ENCHANT_CHANCE) },
 
 				LootEntry { getTieredTool(TIER_TRIDENT, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredBook(TIER_3, 2, ENCHANT_CHANCE) },
 
 				/* brewing section */
 				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 3)) },
 				LootEntry { ItemStack(Material.NETHER_WART, Util.randRange(4,  7)) },
-				LootEntry { ItemStack(Material.GLASS_BOTTLE, Util.randRange(2,  4)) },
 				LootEntry { brewingIngredient() },
 				LootEntry { ItemUtil.randomPotion(true, Material.POTION) }
 			),
 			arrayOf(
 				LootEntry { getTieredTool(WEAPON_SET, DIAMOND, TIER_3, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(ARMOR_SET, DIAMOND, TIER_3, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(ARMOR_SET, DIAMOND, TIER_3, 2, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(BOW_SET, TIER_3, 1, ENCHANT_CHANCE) },
 
 				LootEntry { getTieredTool(ToolTier.TIER_ELYTRA, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredBook(TIER_3, 3, ENCHANT_CHANCE) },
 				LootEntry { ItemUtil.randomShulker(1) },
 
 				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 3)) },
@@ -403,44 +408,61 @@ class CarePackages {
 			)
 		)
 
-		val materialTiers = arrayOf(
-			// basic materials
-			arrayOf(
-				LootEntry { ItemStack(Material.COOKED_BEEF, Util.randRange(2,  5)) },
-				LootEntry { ItemStack(Material.GUNPOWDER, Util.randRange(5, 12)) },
-				LootEntry { ItemStack(Material.FEATHER, Util.randRange(6, 18)) },
-				LootEntry { ItemStack(Material.SUGAR_CANE, Util.randRange(6, 18)) },
-				LootEntry { ItemStack(Material.RED_MUSHROOM, Util.randRange(6, 16)) },
-				LootEntry { ItemStack(Material.BROWN_MUSHROOM, Util.randRange(6, 16)) },
-				LootEntry { ItemStack(Material.OXEYE_DAISY, Util.randRange(6, 16)) },
-				LootEntry { ItemStack(Material.LEATHER, Util.randRange(3,  8)) },
-				LootEntry { ItemStack(Material.CARROT, Util.randRange(8,  17)) },
-				LootEntry { ItemStack(Material.COAL, Util.randRange(8,  17)) }
-			),
-			// medium materials
-			arrayOf(
-				LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(8,  16)) },
-				LootEntry { ItemStack(Material.GOLD_INGOT, Util.randRange(8,  16)) },
-				LootEntry { ItemStack(Material.BOOK, Util.randRange(4,  9)) },
-				LootEntry { ItemStack(Material.ARROW, Util.randRange(8, 32)) },
-				LootEntry { ItemStack(Material.OBSIDIAN, Util.randRange(3,  7)) },
-				LootEntry { ItemStack(Material.LAPIS_LAZULI, Util.randRange(8, 16)) },
-				LootEntry { ItemStack(Material.APPLE, Util.randRange(2, 6)) },
-				LootEntry { ItemStack(Material.STRING, Util.randRange(3, 10)) },
-				LootEntry { ItemStack(Material.STONE, Util.randRange(32, 64)) }
-			),
-			// advanced materials
-			arrayOf(
-				LootEntry { ItemStack(Material.DIAMOND, Util.randRange(3,  8)) },
-				LootEntry { ItemStack(Material.IRON_BLOCK, Util.randRange(2,  4)) },
-				LootEntry { ItemStack(Material.GOLD_BLOCK, Util.randRange(2,  4)) },
-				LootEntry { ItemStack(Material.ANCIENT_DEBRIS, Util.randRange(4,  9)) },
-				LootEntry { ItemStack(Material.TNT, Util.randRange(2,  9)) },
-				LootEntry { ItemStack(Material.ENDER_PEARL, Util.randRange(2,  7)) }
-			)
+		val fillerMaterials = arrayOf(
+			LootEntry { ItemStack(Material.COOKED_PORKCHOP, Util.randRange(5,  9)) },
+			LootEntry { ItemStack(Material.GOLDEN_APPLE, Util.randRange(1, 2)) },
+			LootEntry { ItemStack(Material.GUNPOWDER, Util.randRange(5, 12)) },
+			LootEntry { ItemStack(Material.FEATHER, Util.randRange(5, 11)) },
+			LootEntry { ItemStack(Material.FLINT, Util.randRange(5, 11)) },
+			LootEntry { ItemStack(Material.BONE, Util.randRange(7, 17)) },
+			LootEntry { ItemStack(Material.SUGAR_CANE, Util.randRange(6, 15)) },
+			LootEntry { ItemStack(Material.PAPER, Util.randRange(6, 15)) },
+			LootEntry { ItemStack(Material.RED_MUSHROOM, Util.randRange(3, 9)) },
+			LootEntry { ItemStack(Material.BROWN_MUSHROOM, Util.randRange(3, 9)) },
+			LootEntry { ItemStack(Material.OXEYE_DAISY, Util.randRange(3, 9)) },
+			LootEntry { ItemStack(Material.LEATHER, Util.randRange(7,  15)) },
+			LootEntry { ItemStack(Material.COAL, Util.randRange(7,  19)) },
+			LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(6,  15)) },
+			LootEntry { ItemStack(Material.GOLD_INGOT, Util.randRange(6,  15)) },
+			LootEntry { ItemStack(Material.BOOK, Util.randRange(3,  7)) },
+			LootEntry { ItemStack(Material.ARROW, Util.randRange(5, 11)) },
+			LootEntry { ItemStack(Material.OBSIDIAN, Util.randRange(3,  7)) },
+			LootEntry { ItemStack(Material.LAPIS_LAZULI, Util.randRange(8, 17)) },
+			LootEntry { ItemStack(Material.APPLE, Util.randRange(2, 6)) },
+			LootEntry { ItemStack(Material.STRING, Util.randRange(3, 11)) },
+			LootEntry { ItemStack(Material.STONE, Util.randRange(32, 64)) },
+			LootEntry { ItemStack(Material.DIAMOND, Util.randRange(1,  3)) },
+			LootEntry { ItemStack(Material.NETHERITE_SCRAP, 4) },
+			LootEntry { ItemStack(Material.GLASS_BOTTLE, Util.randRange(3,  6)) },
+			LootEntry { ItemStack(Material.TNT, Util.randRange(2,  9)) },
+			LootEntry { ItemStack(Material.ENDER_PEARL, Util.randRange(2, 5)) },
+			LootEntry { ItemUtil.randomFireworkStar(Util.randRange(8, 16)) },
+			LootEntry { ItemUtil.randomRocket(Util.randRange(8, 16)) }
 		)
 
-		fun generateLoot(tier: Int, amount: Int, inventory: Inventory) {
+		val wackyMaterials = arrayOf(
+			LootEntry { ItemStack(Material.CARROT, Util.randRange(7, 18)) },
+			LootEntry { randomDye(Util.randRange(7, 18)) },
+			LootEntry { getTieredTool(WEAPON_SET, WOOD, TIER_3, 3, ENCHANT_CHANCE) },
+			LootEntry { getTieredTool(ONLY_TOOL_SET, WOOD, TIER_3, 3, ENCHANT_CHANCE) },
+			LootEntry { randomDyeArmor(getTieredTool(ARMOR_SET, LEATHER, TIER_3, 3, ENCHANT_CHANCE)) },
+			LootEntry { ItemStack(Material.TNT_MINECART) },
+			LootEntry { ItemStack(Material.RAIL, Util.randRange(16, 64)) },
+			LootEntry { ItemStack(Material.EGG, Util.randRange(7, 16)) },
+			LootEntry { getTieredTool(TIER_SHIELD, 1, ENCHANT_CHANCE) },
+			LootEntry { ItemStack(Material.ENDER_CHEST, Util.randRange(2, 8)) },
+			LootEntry { ItemStack(Material.NETHERITE_HOE) },
+			LootEntry { randomMusicDisc() },
+			LootEntry { ItemStack(Material.MAP, Util.randRange(4, 8)) },
+			LootEntry { ItemStack(Material.PANDA_SPAWN_EGG, Util.randRange(9, 21)) },
+			LootEntry { randomStew() },
+			LootEntry { randomTippedArrow(Util.randRange(6, 16), PotionType.INSTANT_HEAL) },
+			LootEntry { ItemStack(Material.PUFFERFISH_BUCKET) },
+			LootEntry { ItemStack(Material.MELON, 64) },
+			LootEntry { ItemStack(Material.SADDLE) }
+		)
+
+		fun generateLoot(tier: Int, amount: Int, inventory: Inventory, wacky: Boolean) {
 			val addItem = { item: ItemStack ->
 				var space = Util.randRange(0, inventory.size - 1)
 
@@ -459,10 +481,15 @@ class CarePackages {
 			}
 
 			for (i in guaranteedArray.size until amount) {
-				/* any material from base until max this tier allows */
-				val materialArray = materialTiers[Util.randRange(0, tier / 2)]
+				if (wacky) {
+					val index = Util.randRange(0, fillerMaterials.size + wackyMaterials.size + 1)
 
-				addItem(Util.randFromArray(materialArray).makeStack())
+					addItem(randFromArray(if (index < fillerMaterials.size)
+						fillerMaterials else wackyMaterials
+					).makeStack())
+				} else {
+					addItem(randFromArray(fillerMaterials).makeStack())
+				}
 			}
 		}
 
@@ -566,7 +593,7 @@ class CarePackages {
 			}
 		}
 
-		fun generateDrop(tier: Int, amount: Int, location: Location) {
+		fun generateDrop(tier: Int, amount: Int, location: Location, wacky: Boolean) {
 			var world = Bukkit.getWorlds()[0]
 
 			var block = world.getBlockAt(location)
@@ -576,7 +603,7 @@ class CarePackages {
 			var chest = block.getState(false) as Chest
 			chest.customName = "${dropTextColor(tier)}${BOLD}Care Package"
 
-			generateLoot(tier, amount, chest.blockInventory)
+			generateLoot(tier, amount, chest.blockInventory, wacky)
 
 			var firework = world.spawnEntity(location.add(0.5, 0.5, 0.5), EntityType.FIREWORK) as Firework
 

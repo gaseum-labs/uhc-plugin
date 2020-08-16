@@ -2,7 +2,9 @@ package com.codeland.uhc.util
 
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
+import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import org.bukkit.inventory.meta.ItemMeta
 
 object ToolTier {
@@ -325,6 +327,45 @@ object ToolTier {
 		)
 	)
 
+	val TIER_BOOK = ToolTieredInfo(
+		Material.ENCHANTED_BOOK,
+		arrayOf(
+			ToolEnchantmentTier(arrayOf(
+				EnchantmentPair(Enchantment.VANISHING_CURSE),
+				EnchantmentPair(Enchantment.DURABILITY, 3),
+				EnchantmentPair(Enchantment.DIG_SPEED, 3, 4),
+				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 1),
+				EnchantmentPair(Enchantment.DAMAGE_ALL, 1),
+				EnchantmentPair(Enchantment.QUICK_CHARGE, 1, 3)
+			)),
+			ToolEnchantmentTier(arrayOf(
+				EnchantmentPair(Enchantment.DIG_SPEED, 5),
+				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2, 3),
+				EnchantmentPair(Enchantment.DAMAGE_ALL, 2),
+				EnchantmentPair(Enchantment.ARROW_DAMAGE, 1, 2),
+				EnchantmentPair(Enchantment.PIERCING, 1, 2)
+			)),
+			ToolEnchantmentTier(arrayOf(
+				EnchantmentPair(Enchantment.ARROW_INFINITE),
+				EnchantmentPair(Enchantment.ARROW_FIRE),
+				EnchantmentPair(Enchantment.FIRE_ASPECT, 1, 2),
+				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 4),
+				EnchantmentPair(Enchantment.DAMAGE_ALL, 3, 5),
+				EnchantmentPair(Enchantment.ARROW_DAMAGE, 3, 5),
+				EnchantmentPair(Enchantment.PIERCING, 3, 4)
+			))
+		)
+	)
+
+	val TIER_SHIELD = ToolTieredInfo(
+		Material.ENCHANTED_BOOK,
+		ToolEnchantmentTier(arrayOf(
+			EnchantmentPair(Enchantment.MENDING),
+			EnchantmentPair(Enchantment.VANISHING_CURSE),
+			EnchantmentPair(Enchantment.DURABILITY)
+		))
+	)
+
 	/* sets */
 
 	val WEAPON_SET = arrayOf(
@@ -374,18 +415,41 @@ object ToolTier {
 	}
 
 	private fun getTieredTool(tieredInfo: ToolTieredInfo, materialType: Int, tier: Int, guaranteed: Int, enchantChance: Double): ItemStack {
-		val applyEnchant = { meta: ItemMeta, enchantmentPair: EnchantmentPair ->
-			meta.addEnchant(enchantmentPair.enchantment, Util.randRange(enchantmentPair.minLevel, enchantmentPair.maxLevel), true)
-		}
-
 		val item = ItemStack(tieredInfo.materials[materialType])
 		val meta = item.itemMeta
 
-		val enchantMentTier = tieredInfo.tiers[tier]
+		getEnchantmentStream(tieredInfo, tier, guaranteed, enchantChance) { enchantment, level ->
+			meta.addEnchant(enchantment, level, true)
+		}
+
+		item.itemMeta = meta
+
+		return item
+	}
+
+	fun getTieredBook(tier: Int, guaranteed: Int, enchantChance: Double): ItemStack {
+		val item = ItemStack(TIER_BOOK.materials[0])
+		val meta = item.itemMeta as EnchantmentStorageMeta
+
+		getEnchantmentStream(TIER_BOOK, tier, guaranteed, enchantChance) { enchantment, level ->
+			meta.addStoredEnchant(enchantment, level, true)
+		}
+
+		item.itemMeta = meta
+
+		return item
+	}
+
+	private fun getEnchantmentStream(tieredInfo: ToolTieredInfo, tier: Int, guaranteed: Int, enchantChance: Double, onEnchant: (enchantment: Enchantment, level: Int) -> Unit) {
+		val applyEnchant = { enchantmentPair: EnchantmentPair ->
+			onEnchant(enchantmentPair.enchantment, Util.randRange(enchantmentPair.minLevel, enchantmentPair.maxLevel))
+		}
+
+		val enchantmentTier = tieredInfo.tiers[tier]
 
 		var numApplied = 0
-		val optionIndex = enchantMentTier.available.size
-		val totalEnchants = enchantMentTier.available.size + if (enchantMentTier.option.isEmpty()) 0 else 1
+		val optionIndex = enchantmentTier.available.size
+		val totalEnchants = enchantmentTier.available.size + if (enchantmentTier.option.isEmpty()) 0 else 1
 
 		val willApply = Array(totalEnchants) { false }
 
@@ -397,14 +461,12 @@ object ToolTier {
 
 			++numApplied
 
-			applyEnchant(meta,
-					if (applyIndex == optionIndex) Util.randFromArray(enchantMentTier.option)
-					else enchantMentTier.available[applyIndex]
+			applyEnchant(
+				if (applyIndex == optionIndex)
+					Util.randFromArray(enchantmentTier.option)
+				else
+					enchantmentTier.available[applyIndex]
 			)
 		}
-
-		item.itemMeta = meta
-
-		return item
 	}
 }
