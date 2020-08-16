@@ -1,4 +1,4 @@
-package com.codeland.uhc.core
+package com.codeland.uhc.util
 
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.World

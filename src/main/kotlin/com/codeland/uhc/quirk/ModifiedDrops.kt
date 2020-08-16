@@ -1,7 +1,7 @@
 package com.codeland.uhc.quirk
 
-import com.codeland.uhc.core.ItemUtil
-import com.codeland.uhc.core.Util
+import com.codeland.uhc.util.ItemUtil
+import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Color
 import org.bukkit.Material

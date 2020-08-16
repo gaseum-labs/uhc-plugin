@@ -1,23 +1,24 @@
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.Util
+import com.codeland.uhc.util.Util
 import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.core.ItemUtil
-import com.codeland.uhc.core.ItemUtil.aTieredTool
-import com.codeland.uhc.core.ItemUtil.aTool
-import com.codeland.uhc.core.ItemUtil.armor
-import com.codeland.uhc.core.ItemUtil.bow
-import com.codeland.uhc.core.ItemUtil.crossbow
-import com.codeland.uhc.core.ItemUtil.elytra
-import com.codeland.uhc.core.ItemUtil.randomEnchantedBook
-import com.codeland.uhc.core.ItemUtil.tools
-import com.codeland.uhc.core.ItemUtil.trident
-import com.codeland.uhc.core.ItemUtil.weapons
-import com.codeland.uhc.core.Util.log
-import com.codeland.uhc.core.Util.randFromArray
+import com.codeland.uhc.util.ItemUtil
+import com.codeland.uhc.util.ItemUtil.randomEnchantedBook
+import com.codeland.uhc.util.Util.log
+import com.codeland.uhc.util.Util.randFromArray
 import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.phaseType.PhaseVariant
-import com.codeland.uhc.quirk.Quirk
-import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.util.ToolTier
+import com.codeland.uhc.util.ToolTier.ARMOR_SET
+import com.codeland.uhc.util.ToolTier.BOW_SET
+import com.codeland.uhc.util.ToolTier.DIAMOND
+import com.codeland.uhc.util.ToolTier.IRON
+import com.codeland.uhc.util.ToolTier.ONLY_TOOL_SET
+import com.codeland.uhc.util.ToolTier.TIER_1
+import com.codeland.uhc.util.ToolTier.TIER_2
+import com.codeland.uhc.util.ToolTier.TIER_3
+import com.codeland.uhc.util.ToolTier.TIER_TRIDENT
+import com.codeland.uhc.util.ToolTier.TOOL_SET
+import com.codeland.uhc.util.ToolTier.WEAPON_SET
+import com.codeland.uhc.util.ToolTier.getTieredTool
 import org.bukkit.ChatColor.*
 import org.bukkit.*
 import org.bukkit.block.Chest
@@ -63,18 +64,20 @@ class CarePackages {
 	fun onStart() {
 		currentRunnable = generateRunnable()
 		currentRunnable?.runTaskTimer(GameRunner.plugin, 0, 20)
+		objective?.displaySlot = DisplaySlot.SIDEBAR
 	}
 
 	fun onEnd() {
 		currentRunnable?.cancel()
 		currentRunnable = null
+		objective?.displaySlot = null
 	}
 
 	var objective = null as Objective?
 	var currentRunnable = null as BukkitRunnable?
 
-	var scoreT = null as Score?
-	var scoreP = null as Score?
+	var scoreTime = null as Score?
+	var scorePosition = null as Score?
 
 	val FAST_TIME = 5
 
@@ -112,6 +115,18 @@ class CarePackages {
 			lateinit var dropTimes: Array<Int>
 			var dropIndex = 0
 
+			fun getTier(): Int {
+				return if (fastMode) {
+					val phase = GameRunner.uhc.currentPhase
+					if (phase == null)
+						0
+					else
+						((1 - (phase.remainingSeconds.toDouble() / (phase.length + 1))) * NUM_DROPS).toInt()
+				} else {
+					dropIndex
+				}
+			}
+
 			fun setScore(objective: Objective?, score: Score?, value: String, index: Int): Score? {
 				/* trick kotlin in allowing us to return */
 				if (objective == null) return null
@@ -130,7 +145,7 @@ class CarePackages {
 
 			fun shutOff() {
 				running = false
-				objective?.displaySlot = null
+				onEnd()
 			}
 
 			fun reset() {
@@ -143,10 +158,11 @@ class CarePackages {
 				nextLocation = findDropSpot(Bukkit.getWorlds()[0], previousLocation, timer, 16)
 				previousLocation = nextLocation
 
-				val coordinateString = "at ($GOLD${BOLD}${nextLocation.blockX}${RESET}, $GOLD${BOLD}${nextLocation.blockY}${RESET}, $GOLD${BOLD}${nextLocation.blockZ}${RESET})"
+				val color = dropTextColor(getTier())
+				val coordinateString = "at ($color${BOLD}${nextLocation.blockX}${RESET}, $color${BOLD}${nextLocation.blockY}${RESET}, $color${BOLD}${nextLocation.blockZ}${RESET})"
 
-				scoreT = setScore(objective, scoreT, "in $GOLD${BOLD}${Util.timeString(timer)}", 1)
-				scoreP = setScore(objective, scoreP, coordinateString, 0)
+				scoreTime = setScore(objective, scoreTime, "in $color${BOLD}${Util.timeString(timer)}", 1)
+				scorePosition = setScore(objective, scorePosition, coordinateString, 0)
 			}
 
 			fun generateDropTimes(shrinkTime: Int): Array<Int> {
@@ -192,22 +208,13 @@ class CarePackages {
 				if (running) {
 					--timer
 					if (timer == 0) {
-						val tier = if (fastMode) {
-							val phase = GameRunner.uhc.currentPhase
-							if (phase == null)
-								0
-							else
-								((1 - (phase.remainingSeconds.toDouble() / (phase.length + 1))) * NUM_DROPS).toInt()
-						} else {
-							dropIndex
-						}
+						generateDrop(getTier(), NUM_ITEMS, nextLocation)
 
-						generateDrop(tier, NUM_ITEMS, nextLocation)
 						++dropIndex
 
 						reset()
 					} else {
-						scoreT = setScore(objective, scoreT, "in $GOLD${BOLD}${Util.timeString(timer)}", 1)
+						scoreTime = setScore(objective, scoreTime, "in ${dropTextColor(getTier())}${BOLD}${Util.timeString(timer)}", 1)
 					}
 
 				/* start making drops during shrinking round */
@@ -289,11 +296,10 @@ class CarePackages {
 		fun anyThrow(): Material {
 			val rand = Math.random()
 
-			return when {
-				rand < 0.5 -> Material.POTION
-				rand < 0.75 -> Material.SPLASH_POTION
-				else -> Material.LINGERING_POTION
-			}
+			return if (rand < 0.75)
+				Material.SPLASH_POTION
+			else
+				Material.LINGERING_POTION
 		}
 
 		fun splashLinger(): Material {
@@ -305,18 +311,20 @@ class CarePackages {
 
 		class LootEntry(var makeStack: () -> ItemStack)
 
+		const val ENCHANT_CHANCE = 0.25
+
 		val guaranteedEntries = arrayOf(
 			arrayOf(
-				LootEntry { aTieredTool(randFromArray(tools), ItemUtil.ToolInfo.IRON, 0, 0.25) },
-				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.IRON, 0, 0.25) },
+				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(TOOL_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
 
 				LootEntry { randomEnchantedBook() },
 				LootEntry { ItemStack(Material.WATER_BUCKET) },
 				LootEntry { ItemStack(Material.LAVA_BUCKET) }
 			),
 			arrayOf(
-				LootEntry { aTieredTool(randFromArray(tools), ItemUtil.ToolInfo.IRON, 1, 0.25) },
-				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.IRON, 0, 0.25) },
+				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(TOOL_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
 
 				LootEntry { randomEnchantedBook() },
 
@@ -327,8 +335,8 @@ class CarePackages {
 				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) }
 			),
 			arrayOf(
-				LootEntry { aTieredTool(randFromArray(tools), ItemUtil.ToolInfo.IRON, 1, 0.25) },
-				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.IRON, 1, 0.25) },
+				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_2, 2, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(TOOL_SET, IRON, TIER_2, 2, ENCHANT_CHANCE) },
 
 				LootEntry { randomEnchantedBook() },
 
@@ -337,21 +345,21 @@ class CarePackages {
 				LootEntry { ItemStack(Material.LAVA_BUCKET) },
 
 				/* crossbow section */
-				LootEntry { aTieredTool(crossbow, 0, 0, 0.25) },
+				LootEntry { getTieredTool(BOW_SET, TIER_1, 1, ENCHANT_CHANCE) },
 				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(8, 16)) },
 				LootEntry { ItemUtil.randomRocket(Util.randRange(8, 16)) },
 
 				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) }
 			),
 			arrayOf(
-				LootEntry { aTieredTool(randFromArray(weapons), ItemUtil.ToolInfo.IRON, 1, 0.25) },
-				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.IRON, 1, 0.25) },
-				LootEntry { aTieredTool(randFromArray(tools), ItemUtil.ToolInfo.DIAMOND, 2, 0.25) },
+				LootEntry { getTieredTool(WEAPON_SET, IRON, TIER_2, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_2, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(ONLY_TOOL_SET, DIAMOND, TIER_3, 1, ENCHANT_CHANCE) },
 
 				LootEntry { randomEnchantedBook() },
 
 				/* crossbow section */
-				LootEntry { aTieredTool(crossbow, 0, 2, 0.25) },
+				LootEntry { getTieredTool(BOW_SET, TIER_1, 1, ENCHANT_CHANCE) },
 				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(8, 16)) },
 				LootEntry { ItemUtil.randomRocket(Util.randRange(8, 16)) },
 
@@ -364,11 +372,11 @@ class CarePackages {
 				LootEntry { brewingIngredient() }
 			),
 			arrayOf(
-				LootEntry { aTieredTool(randFromArray(weapons), ItemUtil.ToolInfo.DIAMOND, 1, 0.25) },
-				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.DIAMOND, 1, 0.25) },
-				LootEntry { aTieredTool(bow, 0, 0, 0.5) },
+				LootEntry { getTieredTool(WEAPON_SET, DIAMOND, TIER_2, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(ARMOR_SET, DIAMOND, TIER_2, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(BOW_SET, TIER_2, 1, ENCHANT_CHANCE) },
 
-				LootEntry { aTool(trident, 0.25) },
+				LootEntry { getTieredTool(TIER_TRIDENT, 1, ENCHANT_CHANCE) },
 
 				/* brewing section */
 				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 3)) },
@@ -378,11 +386,11 @@ class CarePackages {
 				LootEntry { ItemUtil.randomPotion(true, Material.POTION) }
 			),
 			arrayOf(
-				LootEntry { aTieredTool(randFromArray(weapons), ItemUtil.ToolInfo.DIAMOND, 2, 0.25) },
-				LootEntry { aTieredTool(randFromArray(armor), ItemUtil.ToolInfo.DIAMOND, 2, 0.25) },
-				LootEntry { aTieredTool(bow, 0, 2, 0.5) },
+				LootEntry { getTieredTool(WEAPON_SET, DIAMOND, TIER_3, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(ARMOR_SET, DIAMOND, TIER_3, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(BOW_SET, TIER_3, 1, ENCHANT_CHANCE) },
 
-				LootEntry { aTool(elytra, 0.25) },
+				LootEntry { getTieredTool(ToolTier.TIER_ELYTRA, 1, ENCHANT_CHANCE) },
 				LootEntry { ItemUtil.randomShulker(1) },
 
 				LootEntry { ItemStack(Material.BLAZE_ROD, Util.randRange(2, 3)) },
@@ -549,6 +557,15 @@ class CarePackages {
 			return makeLocation(xz.x, xz.z)
 		}
 
+		fun dropTextColor(tier: Int): ChatColor {
+			return when (tier / 2) {
+				0 -> GOLD
+				1 -> BLUE
+				2 -> LIGHT_PURPLE
+				else -> GRAY
+			}
+		}
+
 		fun generateDrop(tier: Int, amount: Int, location: Location) {
 			var world = Bukkit.getWorlds()[0]
 
@@ -557,11 +574,11 @@ class CarePackages {
 			block.type = Material.CHEST
 
 			var chest = block.getState(false) as Chest
-			chest.customName = "$GOLD${BOLD}Care Package"
+			chest.customName = "${dropTextColor(tier)}${BOLD}Care Package"
 
 			generateLoot(tier, amount, chest.blockInventory)
 
-			var firework = world.spawnEntity(location, EntityType.FIREWORK) as Firework
+			var firework = world.spawnEntity(location.add(0.5, 0.5, 0.5), EntityType.FIREWORK) as Firework
 
 			/* add effect to the firework */
 			var meta = firework.fireworkMeta
@@ -572,7 +589,7 @@ class CarePackages {
 
 			/* announce in chat so positions are saved */
 			Bukkit.getOnlinePlayers().forEach { player ->
-				player.sendMessage("$GOLD${BOLD}Care Package Dropped at (${location.blockX}, ${location.blockY}, ${location.blockZ})")
+				player.sendMessage("${dropTextColor(tier)}${BOLD}Care Package Dropped at (${location.blockX}, ${location.blockY}, ${location.blockZ})")
 			}
 		}
 	}

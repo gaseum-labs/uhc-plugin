@@ -1,7 +1,6 @@
 package com.codeland.uhc.phases.waiting
 
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.Util
+import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.Pests
@@ -33,6 +32,8 @@ class WaitingDefault : Phase() {
         Bukkit.getServer().onlinePlayers.forEach { player ->
            onPlayerJoin(player)
         }
+
+        uhc.carePackages.onEnd()
     }
 
     override fun perSecond(remainingSeconds: Int) {

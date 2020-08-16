@@ -1,7 +1,6 @@
 package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.Util
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
 import org.bukkit.Bukkit
@@ -11,7 +10,6 @@ import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitRunnable
-import java.util.logging.Logger
 
 class RandomEffects(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {

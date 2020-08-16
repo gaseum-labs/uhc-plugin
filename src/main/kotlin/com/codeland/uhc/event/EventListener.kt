@@ -2,7 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.command.TeamData
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.Util
+import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.PhaseType
@@ -11,11 +11,9 @@ import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Material
-import org.bukkit.SoundCategory
 import org.bukkit.attribute.Attribute
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
@@ -29,8 +27,6 @@ import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.block.LeavesDecayEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
-import org.bukkit.event.inventory.InventoryOpenEvent
-import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
