@@ -14,6 +14,8 @@ import com.codeland.uhc.core.ItemUtil.trident
 import com.codeland.uhc.core.ItemUtil.weapons
 import com.codeland.uhc.core.Util.log
 import com.codeland.uhc.core.Util.randFromArray
+import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.ChatColor.*
@@ -29,27 +31,43 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scoreboard.*
 
-class CarePackages(type: QuirkType) : Quirk(type) {
+class CarePackages {
 	val OBJECTIVE_NAME = "carePackageDrop"
 
-	override fun onEnable() {
-		/* start the carepackage timer loop */
-		currentRunnable = generateRunnable()
-		currentRunnable?.runTaskTimer(GameRunner.plugin, 0, 20)
+	var enabled = true
+	set (value) {
+		field = value
 
-		/* get rid of any lingering objectives from this quirk */
+		if (value) onEnable() else onDisable()
+	}
+
+	fun onEnable() {
 		var scoreboard = Bukkit.getScoreboardManager().mainScoreboard
 		scoreboard.getObjective(OBJECTIVE_NAME)?.unregister()
 
 		objective = scoreboard.registerNewObjective(OBJECTIVE_NAME, "dummy", "Next Care Package Drop")
 		objective?.displaySlot = DisplaySlot.SIDEBAR
+
+		Gui.updateCarePackages(this)
 	}
 
-	override fun onDisable() {
+	fun onDisable() {
 		currentRunnable?.cancel()
 		currentRunnable = null
 
 		objective?.unregister()
+
+		Gui.updateCarePackages(this)
+	}
+
+	fun onStart() {
+		currentRunnable = generateRunnable()
+		currentRunnable?.runTaskTimer(GameRunner.plugin, 0, 20)
+	}
+
+	fun onEnd() {
+		currentRunnable?.cancel()
+		currentRunnable = null
 	}
 
 	var objective = null as Objective?
@@ -57,6 +75,28 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 	var scoreT = null as Score?
 	var scoreP = null as Score?
+
+	val FAST_TIME = 5
+
+	var fastMode = false
+	private set
+
+	/**
+	 * @return if the setting was successful
+	 *
+	 * won't let you change when carepackages is
+	 * already running
+	 */
+	fun setFastMode(value: Boolean): Boolean {
+		if (currentRunnable == null) {
+			fastMode = value
+			Gui.updateCarePackages(this)
+
+			return true
+		}
+
+		return false
+	}
 
 	fun generateRunnable(): BukkitRunnable {
 		return object : BukkitRunnable() {
@@ -72,9 +112,9 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			lateinit var dropTimes: Array<Int>
 			var dropIndex = 0
 
-			fun setScore(objective: Objective?, score: Score?, value: String, index: Int): Score {
+			fun setScore(objective: Objective?, score: Score?, value: String, index: Int): Score? {
 				/* trick kotlin in allowing us to return */
-				if (objective == null) return Bukkit.getScoreboardManager().mainScoreboard.registerNewObjective("", "", "").getScore("")
+				if (objective == null) return null
 
 				/* remove the previous score if applicable */
 				if (score != null) {
@@ -95,10 +135,10 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 
 			fun reset() {
 				/* don't keep doing this outside of shrinking */
-				if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || dropIndex == dropTimes.size)
+				if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || (!fastMode && dropIndex == dropTimes.size))
 					return shutOff()
 
-				timer = dropTimes[dropIndex]
+				timer = if (fastMode) FAST_TIME else dropTimes[dropIndex]
 
 				nextLocation = findDropSpot(Bukkit.getWorlds()[0], previousLocation, timer, 16)
 				previousLocation = nextLocation
@@ -152,7 +192,17 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				if (running) {
 					--timer
 					if (timer == 0) {
-						generateDrop(dropIndex, NUM_ITEMS, nextLocation)
+						val tier = if (fastMode) {
+							val phase = GameRunner.uhc.currentPhase
+							if (phase == null)
+								0
+							else
+								((1 - (phase.remainingSeconds.toDouble() / (phase.length + 1))) * NUM_DROPS).toInt()
+						} else {
+							dropIndex
+						}
+
+						generateDrop(tier, NUM_ITEMS, nextLocation)
 						++dropIndex
 
 						reset()
@@ -163,7 +213,8 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				/* start making drops during shrinking round */
 				} else if (GameRunner.uhc.isPhase(PhaseType.SHRINK)) {
 					running = true
-					dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
+
+					if (!fastMode) dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
 
 					reset()
 				}

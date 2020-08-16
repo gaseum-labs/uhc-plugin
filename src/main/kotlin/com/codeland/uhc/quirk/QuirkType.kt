@@ -59,11 +59,6 @@ enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, v
 		"Everyone gets a random potion effect"
 	)),
 
-	CARE_PACKAGES("Care Packages", ::CarePackages, true, Material.CHEST, arrayOf(
-		"Care packages spawn randomly in the map",
-		"do you risk a fight to take the loot?"
-	)),
-
 	SHARED_INVENTORY("Shared Inventory", ::SharedInventory, false, Material.KNOWLEDGE_BOOK, arrayOf(
 		"Everyone has one combined inventory"
 	));

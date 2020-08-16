@@ -1,5 +1,6 @@
 package com.codeland.uhc.gui
 
+import CarePackages
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phaseType.PhaseType
@@ -33,6 +34,7 @@ object Gui {
         }
 
         addItem(PresetCycler(), getPresetPosition())
+        addItem(CarePackageCycler(), getCarePackagesPosition())
     }
 
     fun open(player: Player) {
@@ -42,6 +44,8 @@ object Gui {
     fun close(player: Player) {
         player.closeInventory()
     }
+
+    /* positioning and updating */
 
     private fun getQuirkPosition(quirk: QuirkType): Int {
         return quirk.ordinal
@@ -55,6 +59,10 @@ object Gui {
         return INVENTORY_SIZE - INVENTORY_WIDTH
     }
 
+    private fun getCarePackagesPosition(): Int {
+        return INVENTORY_SIZE - INVENTORY_WIDTH + 1
+    }
+
     fun updateQuirk(quirk: QuirkType) {
         (guiItems[getQuirkPosition(quirk)] as? QuirkToggle)?.updateDisplay()
     }
@@ -66,6 +74,12 @@ object Gui {
     fun updatePreset(preset: Preset) {
         (guiItems[getPresetPosition()] as? PresetCycler)?.updateDisplay(preset)
     }
+
+    fun updateCarePackages(carePackages: CarePackages) {
+        (guiItems[getCarePackagesPosition()] as? CarePackageCycler)?.updateDisplay(carePackages)
+    }
+
+    /* positioning and updating */
 
     fun coordinateToIndex(x: Int, y: Int): Int {
         return y * INVENTORY_WIDTH + x

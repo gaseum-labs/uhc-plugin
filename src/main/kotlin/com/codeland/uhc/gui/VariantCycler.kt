@@ -13,33 +13,33 @@ class VariantCycler(var phaseType: PhaseType)
     { guiItem, player ->
         guiItem as VariantCycler
 
-        val factories = guiItem.getFactories()
+        val variants = guiItem.getVariants()
 
         ++guiItem.currentIndex
-        guiItem.currentIndex %= factories.size
+        guiItem.currentIndex %= variants.size
 
-        GameRunner.uhc.updateVariant(factories[guiItem.currentIndex])
+        GameRunner.uhc.updateVariant(variants[guiItem.currentIndex])
     }
 ) {
     var currentIndex = 0
 
-    private fun setFactoryDisplay(factory: PhaseVariant) {
+    private fun setVariantDisplay(factory: PhaseVariant) {
         changeStackType(factory.representation)
 
         setName("${ChatColor.RESET}${ChatColor.WHITE}${phaseType.prettyName} ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${factory.prettyName}")
         setLore(factory.description)
     }
 
-    private fun getFactories(): ArrayList<PhaseVariant> {
+    private fun getVariants(): ArrayList<PhaseVariant> {
         return VariantList.list[phaseType.ordinal]
     }
 
-    fun updateDisplay(phaseFactory: PhaseVariant) {
-        currentIndex = getFactories().indexOf(phaseFactory)
+    fun updateDisplay(phaseVariant: PhaseVariant) {
+        currentIndex = getVariants().indexOf(phaseVariant)
 
         if (currentIndex == -1)
             currentIndex = 0
 
-        setFactoryDisplay(getFactories()[currentIndex])
+        setVariantDisplay(getVariants()[currentIndex])
     }
 }

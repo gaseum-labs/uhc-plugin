@@ -53,6 +53,11 @@ open class GraceDefault : Phase() {
 		/* reset the ledger */
 		uhc.elapsedTime = 0
 		uhc.ledger = Ledger()
+
+		/* begin care packages */
+		if (uhc.carePackages.enabled) {
+			uhc.carePackages.onStart()
+		}
 	}
 
 	override fun perSecond(remainingSeconds: Int) {

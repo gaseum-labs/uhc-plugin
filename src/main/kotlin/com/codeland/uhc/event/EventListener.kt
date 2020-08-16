@@ -278,6 +278,15 @@ class EventListener : Listener {
 		/* no regeneration in UHC */
 		var player = event.entity
 
+		if (player is Player) {
+
+			val test = emptyArray<ItemStack?>().copyOf()
+
+			player.inventory.contents.copyOf().contentEquals(test)
+
+
+		}
+
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
 		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {

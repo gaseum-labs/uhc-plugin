@@ -1,5 +1,6 @@
 package com.codeland.uhc.core
 
+import CarePackages
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.Phase
@@ -36,6 +37,8 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	var elapsedTime = 0
 
 	var currentPhase = null as Phase?
+
+	var carePackages = CarePackages()
 
 	init {
 		updatePreset(deafultPreset)
@@ -90,6 +93,9 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	 */
 	fun updateDisplays() {
 		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
+
+		carePackages.onEnable()
+		Gui.updateCarePackages(carePackages)
 	}
 
 	/* state getters */

@@ -69,6 +69,8 @@ class PostgameDefault : Phase() {
             GameRunner.bot?.destroyTeam(team) {}
             team.unregister()
         }
+
+        uhc.carePackages.onEnd()
     }
 
     override fun perSecond(remainingSeconds: Int) {
