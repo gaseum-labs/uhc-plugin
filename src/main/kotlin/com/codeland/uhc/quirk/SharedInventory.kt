@@ -22,6 +22,7 @@ class SharedInventory(type: QuirkType) : Quirk(type) {
 					}
 					// this sucks because it'll override any other inventory changes
 					// todo: fix
+					break
 				}
 			}
 		}, 1, 1)
