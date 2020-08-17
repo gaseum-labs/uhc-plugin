@@ -2,12 +2,17 @@ package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.util.ItemUtil.randomDyeArmor
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.GameMode
 import org.bukkit.Material
+import org.bukkit.attribute.Attribute
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.ItemMeta
+import org.bukkit.inventory.meta.LeatherArmorMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 
@@ -32,6 +37,20 @@ class Pests(type: QuirkType) : Quirk(type) {
     companion object {
         private var META_TAG = "isPest"
 
+        private val pestArmorMeta: LeatherArmorMeta = ItemStack(Material.LEATHER_HELMET).itemMeta as LeatherArmorMeta
+        private val pestToolMeta: ItemMeta = ItemStack(Material.WOODEN_PICKAXE).itemMeta
+
+        init {
+            pestArmorMeta.isUnbreakable = true
+            pestArmorMeta.setDisplayName("${ChatColor.RESET}${ChatColor.GRAY}Pest Armor")
+            pestArmorMeta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
+            pestArmorMeta.addEnchant(Enchantment.VANISHING_CURSE, 1, true)
+
+            pestToolMeta.isUnbreakable = true
+            pestToolMeta.setDisplayName("${ChatColor.RESET}${ChatColor.GRAY}Pest Tool")
+            pestToolMeta.addEnchant(Enchantment.VANISHING_CURSE, 1, true)
+        }
+
         fun isPest(player: Player): Boolean {
             var meta = player.getMetadata(META_TAG)
 
@@ -42,35 +61,31 @@ class Pests(type: QuirkType) : Quirk(type) {
             player.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin as Plugin, true))
         }
 
+        fun givePestSetup(player: Player) {
+            player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
+
+            /* give pest a bunch of crap */
+            player.inventory.helmet = genPestArmor(Material.LEATHER_HELMET)
+            player.inventory.chestplate = genPestArmor(Material.LEATHER_CHESTPLATE)
+            player.inventory.leggings = genPestArmor(Material.LEATHER_LEGGINGS)
+            player.inventory.boots = genPestArmor(Material.LEATHER_BOOTS)
+
+            player.inventory.setItem(0, genPestTool(Material.WOODEN_SWORD))
+            player.inventory.setItem(1, genPestTool(Material.WOODEN_PICKAXE))
+            player.inventory.setItem(2, genPestTool(Material.WOODEN_AXE))
+            player.inventory.setItem(3, genPestTool(Material.WOODEN_SHOVEL))
+        }
+
         fun makeNotPest(player: Player) {
             player.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin as Plugin, false))
         }
 
-        private val pestArmorMeta = {
-            var meta = ItemStack(Material.LEATHER_HELMET).itemMeta
-
-            meta.isUnbreakable = true
-            meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
-            meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true)
-
-            meta
-        }()
-
-        private val pestToolMeta = {
-            var meta = ItemStack(Material.WOODEN_PICKAXE).itemMeta
-
-            meta.isUnbreakable = true;
-            meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true)
-
-            meta
-        }()
-
         fun genPestArmor(item: Material): ItemStack {
             var stack = ItemStack(item)
 
-            stack.itemMeta = pestArmorMeta;
+            stack.itemMeta = pestArmorMeta
 
-            return stack
+            return randomDyeArmor(stack)
         }
 
         fun genPestTool(item: Material): ItemStack {

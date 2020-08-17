@@ -53,6 +53,12 @@ object ItemUtil {
 		return ret
 	}
 
+	fun enchantThing(item: ItemStack, enchant: Enchantment, level: Int) {
+		val meta = item.itemMeta
+		meta.addEnchant(enchant, level, true)
+		item.itemMeta = meta
+	}
+
 	fun addRandomEnchants(itemStack: ItemStack, enchantList: Array<Enchantment>, probability: Double): ItemStack {
 		var enchantIndex = (Math.random() * enchantList.size * (1 / probability)).toInt()
 

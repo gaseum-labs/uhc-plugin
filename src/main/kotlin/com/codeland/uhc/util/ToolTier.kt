@@ -414,7 +414,7 @@ object ToolTier {
 		return getTieredTool(tieredInfo, 0, 0, guaranteed, enchantChance)
 	}
 
-	private fun getTieredTool(tieredInfo: ToolTieredInfo, materialType: Int, tier: Int, guaranteed: Int, enchantChance: Double): ItemStack {
+	fun getTieredTool(tieredInfo: ToolTieredInfo, materialType: Int, tier: Int, guaranteed: Int, enchantChance: Double): ItemStack {
 		val item = ItemStack(tieredInfo.materials[materialType])
 		val meta = item.itemMeta
 

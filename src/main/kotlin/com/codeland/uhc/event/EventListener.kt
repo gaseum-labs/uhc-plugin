@@ -9,13 +9,11 @@ import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
-import com.destroystokyo.paper.utils.PaperPluginLogger
+import com.codeland.uhc.util.ItemUtil
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Material
-import org.bukkit.attribute.Attribute
-import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
@@ -30,7 +28,6 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
-import java.util.logging.Level
 
 class EventListener : Listener {
 	@EventHandler
@@ -101,13 +98,18 @@ class EventListener : Listener {
 
 				Pests.makePest(player)
 			}
-
 		} else {
 			player.gameMode = GameMode.SPECTATOR
 		}
 
-		if (!wasPest && !GameRunner.uhc.isPhase(PhaseType.WAITING))
+		if (GameRunner.uhc.isEnabled(QuirkType.HALF_ZATOICHI)) {
+			val killer = player.killer
+			if (killer != null) HalfZatoichi.onKill(killer)
+		}
+
+		if (!wasPest && !GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			GameRunner.playerDeath(player)
+		}
 	}
 
 	@EventHandler
@@ -176,19 +178,7 @@ class EventListener : Listener {
 		var y = Util.topBlockY(player.world, x, z)
 		event.respawnLocation.set(x + 0.5, y + 1.0, z + 0.5)
 
-		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
-
-		/* give pest a bunch of crap */
-		player.inventory.helmet = Pests.genPestArmor(Material.LEATHER_HELMET)
-		player.inventory.chestplate = Pests.genPestArmor(Material.LEATHER_CHESTPLATE)
-		player.inventory.leggings = Pests.genPestArmor(Material.LEATHER_LEGGINGS)
-		player.inventory.boots = Pests.genPestArmor(Material.LEATHER_BOOTS)
-
-		player.inventory.setItem(0, Pests.genPestTool(Material.WOODEN_SWORD))
-		player.inventory.setItem(1, Pests.genPestTool(Material.WOODEN_PICKAXE))
-		player.inventory.setItem(2, Pests.genPestTool(Material.WOODEN_AXE))
-		player.inventory.setItem(3, Pests.genPestTool(Material.WOODEN_SHOVEL))
-		player.inventory.setItem(4, Pests.genPestTool(Material.WOODEN_HOE))
+		Pests.givePestSetup(player)
 	}
 
 	@EventHandler
@@ -212,7 +202,8 @@ class EventListener : Listener {
 				event.isCancelled = true
 		}
 
-		/* only do this on pests mode */
+		/* preventing pest targeting */
+
 		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
 			return
 
@@ -224,7 +215,6 @@ class EventListener : Listener {
 
 		var player = event.target as Player
 
-		/* monsters will not target the pests */
 		if (Pests.isPest(player))
 			event.isCancelled = true
 	}
@@ -238,7 +228,8 @@ class EventListener : Listener {
 			}
 		}
 
-		/* only do this on pests mode */
+		/* prevent pest crafting */
+
 		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
 			return
 
@@ -249,7 +240,6 @@ class EventListener : Listener {
 
 		var item = event.recipe.result.type
 
-		/* prevent crafting of banned items */
 		if (Util.binarySearch(item, Pests.banList))
 			event.isCancelled = true
 	}
@@ -340,32 +330,11 @@ class EventListener : Listener {
 				event.isCancelled = true
 
 			if (GameRunner.uhc.isEnabled(QuirkType.HALF_ZATOICHI)) {
-				if (HalfZatoichi.isHalfZatoichi(attacker.inventory.itemInMainHand)) {
-					if (HalfZatoichi.isHalfZatoichi(defender.inventory.itemInMainHand)) {
-						defender.health = 0.0
-						defender.absorptionAmount = 0.0
-					}
-					if (defender.health + defender.absorptionAmount < event.finalDamage) {
-						if (attacker.health < 10.0) {
-							attacker.health += 10.0
-						} else {
-							attacker.absorptionAmount += attacker.health - 10.0
-							attacker.health = 20.0
-						}
-						val meta = attacker.inventory.itemInMainHand.itemMeta.clone()
-						meta.setDisplayName("Half Zatoichi (bloody)")
-						attacker.inventory.itemInMainHand.itemMeta = meta
-						PaperPluginLogger.getGlobal().log(Level.INFO, "damaged entity")
-					}
+				if (HalfZatoichi.isHalfZatoichi(attacker.inventory.itemInMainHand) && HalfZatoichi.isHalfZatoichi(defender.inventory.itemInMainHand)) {
+					event.damage = 1000000000.0
 				}
 			}
 		}
-	}
-
-	fun enchantThing(item: ItemStack, enchant: Enchantment, level: Int) {
-		val meta = item.itemMeta
-		meta.addEnchant(enchant, level, true)
-		item.itemMeta = meta
 	}
 
 	@EventHandler
@@ -389,7 +358,7 @@ class EventListener : Listener {
 			if (fakeTool.type == Material.AIR)
 				fakeTool = ItemStack(Material.PORKCHOP)
 
-			enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 4)
+			ItemUtil.enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 4)
 
 			/* this is so gross but it's the only way */
 			var destroyedType = event.block.type

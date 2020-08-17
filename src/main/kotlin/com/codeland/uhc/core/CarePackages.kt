@@ -6,6 +6,9 @@ import com.codeland.uhc.util.ItemUtil.randomEnchantedBook
 import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
 import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.quirk.Creative
+import com.codeland.uhc.quirk.HalfZatoichi
+import com.codeland.uhc.quirk.Pests
 import com.codeland.uhc.util.ItemUtil.randomDye
 import com.codeland.uhc.util.ItemUtil.randomDyeArmor
 import com.codeland.uhc.util.ItemUtil.randomMusicDisc
@@ -18,9 +21,11 @@ import com.codeland.uhc.util.ToolTier.DIAMOND
 import com.codeland.uhc.util.ToolTier.IRON
 import com.codeland.uhc.util.ToolTier.LEATHER
 import com.codeland.uhc.util.ToolTier.ONLY_TOOL_SET
+import com.codeland.uhc.util.ToolTier.SHELL
 import com.codeland.uhc.util.ToolTier.TIER_1
 import com.codeland.uhc.util.ToolTier.TIER_2
 import com.codeland.uhc.util.ToolTier.TIER_3
+import com.codeland.uhc.util.ToolTier.TIER_HELMET
 import com.codeland.uhc.util.ToolTier.TIER_SHIELD
 import com.codeland.uhc.util.ToolTier.TIER_TRIDENT
 import com.codeland.uhc.util.ToolTier.TOOL_SET
@@ -459,7 +464,14 @@ class CarePackages {
 			LootEntry { randomTippedArrow(Util.randRange(6, 16), PotionType.INSTANT_HEAL) },
 			LootEntry { ItemStack(Material.PUFFERFISH_BUCKET) },
 			LootEntry { ItemStack(Material.MELON, 64) },
-			LootEntry { ItemStack(Material.SADDLE) }
+			LootEntry { ItemStack(Material.SADDLE) },
+			LootEntry { getTieredTool(TIER_HELMET, SHELL, Util.randRange(TIER_1, TIER_3), 1, ENCHANT_CHANCE) },
+			LootEntry { ItemStack(Material.SCAFFOLDING, Util.randRange(15, 29)) },
+			LootEntry { ItemStack(randFromArray(Creative.blocks), Util.randRange(16, 32)) },
+			LootEntry { ItemStack(Material.WET_SPONGE, Util.randRange(1, 5)) },
+			LootEntry { HalfZatoichi.createZatoichi() },
+			LootEntry { Pests.genPestArmor(Material.LEATHER_CHESTPLATE) },
+			LootEntry { Pests.genPestTool(Material.WOODEN_PICKAXE) }
 		)
 
 		fun generateLoot(tier: Int, amount: Int, inventory: Inventory, wacky: Boolean) {
