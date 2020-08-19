@@ -22,7 +22,7 @@ class LowGravity(type: QuirkType) : Quirk(type) {
     override fun onEnable() {
         taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
             for (player in Bukkit.getOnlinePlayers()) {
-                if (player.world.getBlockAt(player.location.subtract(0.0, 0.01, 0.0)).type == Material.AIR) {
+                if (player.world.getBlockAt(player.location.subtract(0.0, 0.01, 0.0)).type in airBlocks) {
                     // - G = 0.08 for living entities
                     // https://minecraft.gamepedia.com/Entity#Motion_of_entities
                     // - also give them a little push in the direction they're facing
