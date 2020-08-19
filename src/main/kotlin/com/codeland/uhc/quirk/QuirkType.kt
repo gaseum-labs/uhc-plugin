@@ -61,6 +61,10 @@ enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, v
 
 	SHARED_INVENTORY("Shared Inventory", ::SharedInventory, false, Material.KNOWLEDGE_BOOK, arrayOf(
 		"Everyone has one combined inventory"
+	)),
+
+	LOW_GRAVITY("Low Gravity", ::LowGravity, false, Material.END_STONE, arrayOf(
+		"Gravity is much lower than usual"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
