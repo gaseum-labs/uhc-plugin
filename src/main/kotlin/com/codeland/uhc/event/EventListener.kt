@@ -25,9 +25,12 @@ import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.block.LeavesDecayEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.PlayerInventory
 
 class EventListener : Listener {
 	@EventHandler
@@ -474,5 +477,14 @@ class EventListener : Listener {
 				event.isCancelled = true
 			}
 		}
+	}
+
+	@EventHandler
+	fun onInventoryClick(event: InventoryClickEvent) {
+		val inventory = event.inventory
+		if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR))
+			if (event.clickedInventory?.type == InventoryType.PLAYER && event.slot in 9..35) {
+				event.isCancelled = true
+			}
 	}
 }
