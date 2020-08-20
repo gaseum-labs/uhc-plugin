@@ -9,12 +9,10 @@ import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
-import com.codeland.uhc.util.ItemUtil
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Material
-import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -339,45 +337,22 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onBlockDrop(event: BlockDropItemEvent) {
-		var block = event.blockState
+		var blockState = event.blockState
+		var block = event.block
 		var player = event.player
 		var baseItem = event.player.inventory.itemInMainHand
 		var drops = event.items
-		var blockMiddle = block.location.add(0.5, 0.5, 0.5)
+		var blockMiddle = blockState.location.add(0.5, 0.5, 0.5)
 
-		if (GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX) && AppleFix.isLeaves(block.type) && !(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))) {
+		if (GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX) && AppleFix.isLeaves(blockState.type) && !(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))) {
 			drops.clear()
 
-			AppleFix.onbreakLeaves(block.type, player).forEach { drop ->
+			AppleFix.onbreakLeaves(blockState.type, player).forEach { drop ->
 				player.world.dropItem(blockMiddle, drop)
 			}
 
 		} else if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
-			var fakeTool = baseItem.clone()
-
-			if (fakeTool.type == Material.AIR)
-				fakeTool = ItemStack(Material.PORKCHOP)
-
-			ItemUtil.enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 4)
-
-			/* this is so gross but it's the only way */
-			var destroyedType = event.block.type
-			var destroyedData = event.block.blockData
-
-			event.block.type = block.type
-			event.block.blockData = block.blockData
-
-			var extraDrops = block.block.getDrops(fakeTool)
-
-			event.block.type = destroyedType
-			event.block.blockData = destroyedData
-			/* end gross block */
-
-			drops.clear()
-
-			extraDrops.forEach { extraDrop ->
-				player.world.dropItem(blockMiddle, extraDrop)
-			}
+			Abundance.replaceDrops(player, block, blockState, drops)
 		}
 	}
 

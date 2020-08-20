@@ -120,6 +120,10 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 		return currentPhase?.phaseType == compare
 	}
 
+	fun isGameGoing(): Boolean {
+		return currentPhase?.phaseType != PhaseType.WAITING && currentPhase?.phaseType != PhaseType.POSTGAME
+	}
+
 	/* game flow modifiers */
 
 	/**

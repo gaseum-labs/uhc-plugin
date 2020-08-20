@@ -109,7 +109,7 @@ object ItemUtil {
 		return builder.build()
 	}
 
-	fun fireworkEffect(type: FireworkEffect.Type): FireworkEffect {
+	fun fireworkEffect(type: FireworkEffect.Type, limitColors: Int = -1): FireworkEffect {
 		val builder = FireworkEffect.builder()
 
 		/* toggles */
@@ -120,7 +120,7 @@ object ItemUtil {
 		builder.with(type)
 
 		/* colors */
-		var numColors = Util.randRange(1, 8)
+		var numColors = if (limitColors == -1) Util.randRange(1, 8) else limitColors
 		for (i in 0 until numColors) {
 			builder.withColor(Color.fromRGB(Util.randRange(0, 0xffffff)))
 		}

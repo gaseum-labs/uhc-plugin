@@ -78,7 +78,7 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 		}
 
 		fun playerDeath(deadPlayer: Player) {
-			var aliveTeam: Team? = null
+			var aliveTeam = null as Team?
 
 			val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
