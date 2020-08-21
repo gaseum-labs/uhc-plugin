@@ -37,6 +37,10 @@ class EventListener : Listener {
 				WetSponge.addSponge(player)
 		}
 
+		if (GameRunner.uhc.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
+			event.isCancelled = true
+		}
+
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && !GameRunner.uhc.isPhase(PhaseType.POSTGAME))
 			return
 

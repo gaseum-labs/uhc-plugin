@@ -7,6 +7,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.quirk.AppleFix
 import com.codeland.uhc.phaseType.*
+import com.codeland.uhc.quirk.LowGravity
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -210,6 +211,12 @@ class AdminCommands : BaseCommand() {
 
 		if (!GameRunner.uhc.isPhase(PhaseType.POSTGAME))
 			GameRunner.uhc.startNextPhase()
+	}
+
+	@CommandAlias("test gravity")
+	@Description("change the gravity constant")
+	fun testGravity(sender: CommandSender, gravity: Double) {
+		LowGravity.gravity = gravity
 	}
 
 	@CommandAlias("reset")
