@@ -37,6 +37,9 @@ class LowGravity(type: QuirkType) : Quirk(type) {
                         is Arrow -> 0.05
                         is Projectile -> 0.03
                         is Item -> 0.04
+                        is FallingBlock -> 0.04
+                        is TNTPrimed -> 0.04
+                        is Boat -> 0.04
                         else -> 0.08
                     }
                     entity.velocity = Vector(entity.velocity.x, entity.velocity.y - gravity * normalGravity + normalGravity, entity.velocity.z)
