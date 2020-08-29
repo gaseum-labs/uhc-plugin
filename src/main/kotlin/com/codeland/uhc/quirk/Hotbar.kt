@@ -18,6 +18,12 @@ class Hotbar(type: QuirkType) : Quirk(type) {
             for (player in Bukkit.getOnlinePlayers()) {
                 val inv = player.inventory
                 for (slot in 9 until 36) {
+                    val item = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
+                    item.itemMeta = {
+                        val meta = item.itemMeta
+                        meta.setDisplayName("Unusable Slot")
+                        meta
+                    }()
                     inv.setItem(slot, ItemStack(Material.BLACK_STAINED_GLASS_PANE))
                 }
             }
