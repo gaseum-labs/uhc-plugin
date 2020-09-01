@@ -1,67 +1,89 @@
 package com.codeland.uhc.phases.waiting
 
+import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.gui.GuiOpener
+import com.codeland.uhc.gui.item.GuiOpener
+import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.Pests
-import com.codeland.uhc.util.Util.log
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
-import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
+import kotlin.math.log
 
 class WaitingDefault : Phase() {
-    override fun customStart() {
-        Bukkit.getWorlds().forEach { world ->
-            world.setSpawnLocation(10000, 70, 10000)
-            world.worldBorder.setCenter(10000.0, 10000.0)
-            world.worldBorder.size = 50.0
-            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
-            world.setGameRule(GameRule.DO_WEATHER_CYCLE, false)
-            world.isThundering = false
-            world.setStorm(false)
-            world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
-            world.time = 1000
-            world.difficulty = Difficulty.NORMAL
-        }
+	override fun customStart() {
+		Bukkit.getWorlds().forEach { world ->
+			world.setSpawnLocation(10000, 70, 10000)
+			world.worldBorder.setCenter(10000.0, 10000.0)
+			world.worldBorder.size = 50.0
+			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+			world.setGameRule(GameRule.DO_WEATHER_CYCLE, false)
+			world.isThundering = false
+			world.setStorm(false)
+			world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
+			world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0)
+			world.time = 1000
+			world.difficulty = Difficulty.NORMAL
+		}
 
-        Bukkit.getServer().onlinePlayers.forEach { player ->
-           onPlayerJoin(player)
-        }
+		Bukkit.getServer().onlinePlayers.forEach { player ->
+			player.inventory.clear()
+			onPlayerJoin(player)
+		}
 
-        uhc.carePackages.onEnd()
-    }
+		uhc.carePackages.onEnd()
+	}
 
-    override fun perSecond(remainingSeconds: Int) {
+	override fun customEnd() {
+		Bukkit.getWorlds().forEach { world ->
+			world.setGameRule(GameRule.RANDOM_TICK_SPEED, 3)
+		}
+	}
 
-    }
+	override fun onTick(currentTick: Int) {
+		if (currentTick % 3 == 0)
+			Bukkit.getOnlinePlayers().forEach { player ->
+				ParkourCheckpoint.updateCheckpoint(player)
+			}
+	}
 
-    override fun getCountdownString(): String {
-        return ""
-    }
+	override fun perSecond(remainingSeconds: Int) {
 
-    override fun endPhrase(): String {
-        return ""
-    }
+	}
 
-    companion object {
-        fun onPlayerJoin(player: Player) {
-            player.exp = 0.0F
-            player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
-            player.health = 20.0
-            player.foodLevel = 20
-            player.teleport(Location(Bukkit.getWorlds()[0], 10000.5, Util.topBlockY(Bukkit.getWorlds()[0], 10000, 10000) + 1.0, 10000.5))
-            player.gameMode = GameMode.ADVENTURE
+	override fun getCountdownString(): String {
+		return ""
+	}
 
-            Pests.makeNotPest(player)
+	override fun endPhrase(): String {
+		return ""
+	}
 
-            /* get them on the health scoreboard */
-            player.damage(0.1)
+	companion object {
+		fun onPlayerJoin(player: Player) {
+			player.exp = 0.0F
+			player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
+			player.health = 20.0
+			player.foodLevel = 20
+			player.teleport(Location(Bukkit.getWorlds()[0], 10000.5, Util.topBlockY(Bukkit.getWorlds()[0], 10000, 10000) + 1.0, 10000.5))
+			player.gameMode = GameMode.ADVENTURE
 
-            val inventory = player.inventory
-            inventory.clear()
+			Pests.makeNotPest(player)
 
-            inventory.addItem(GuiOpener.createGuiOpener())
-        }
-    }
+			/* get them on the health scoreboard */
+			player.damage(0.05)
+
+			val inventory = player.inventory
+
+			if (!GuiOpener.hasItem(inventory))
+				inventory.addItem(GuiOpener.create())
+
+			if (!AntiSoftlock.hasItem(inventory))
+				inventory.addItem(AntiSoftlock.create())
+
+			if (!ParkourCheckpoint.hasItem(inventory))
+				inventory.addItem(ParkourCheckpoint.create())
+		}
+	}
 }

@@ -4,6 +4,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -52,7 +53,7 @@ abstract class Phase {
 		}
 	}
 
-	private var runnable : BukkitRunnable? = null
+	private var taskID = -1
 
 	/* default values */
 
@@ -76,48 +77,45 @@ abstract class Phase {
 			dimensionBar.bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${phaseType.prettyName}")
 		}
 
-		if (length > 0) {
-			runnable = object : BukkitRunnable() {
-				var currentTick = 0
+		Bukkit.getOnlinePlayers().forEach { player ->
+			dimensionOne(player)
+		}
 
-				override fun run() {
-					if (currentTick == 0) {
-						if (remainingSeconds == 0) return uhc.startNextPhase()
+		var currentTick = 0
 
-						Bukkit.getOnlinePlayers().forEach { player ->
-							setPlayerBarDimension(player)
-						}
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
+			if (length > 0) {
+				if (currentTick == 0) {
+					if (remainingSeconds == 0) return@scheduleSyncRepeatingTask uhc.startNextPhase()
 
-						dimensionBars.forEach { dimensionBar ->
-							updateActionBar(dimensionBar.bossBar, dimensionBar.world, remainingSeconds)
-						}
-
-						if (remainingSeconds <= 3)
-							Bukkit.getServer().onlinePlayers.forEach { player ->
-								player.sendTitle("${countDownColor(remainingSeconds)}${ChatColor.BOLD}$remainingSeconds", "${ChatColor.GOLD}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
-							}
-
-						perSecond(remainingSeconds)
-
-						--remainingSeconds
-						++uhc.elapsedTime
+					Bukkit.getOnlinePlayers().forEach { player ->
+						setPlayerBarDimension(player)
 					}
 
 					dimensionBars.forEach { dimensionBar ->
-						dimensionBar.bossBar.progress = (remainingSeconds.toDouble() + 1 - (currentTick.toDouble() / 20.0)) / length.toDouble()
+						updateActionBar(dimensionBar.bossBar, dimensionBar.world, remainingSeconds)
 					}
 
-					currentTick = (currentTick + 1) % 20
+					if (remainingSeconds <= 3)
+						Bukkit.getServer().onlinePlayers.forEach { player ->
+							player.sendTitle("${countDownColor(remainingSeconds)}${ChatColor.BOLD}$remainingSeconds", "${ChatColor.GOLD}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
+						}
+
+					perSecond(remainingSeconds)
+
+					--remainingSeconds
+					++uhc.elapsedTime
+				}
+
+				dimensionBars.forEach { dimensionBar ->
+					dimensionBar.bossBar.progress = (remainingSeconds.toDouble() + 1 - (currentTick.toDouble() / 20.0)) / length.toDouble()
 				}
 			}
 
-			runnable?.runTaskTimer(GameRunner.plugin, 0, 1)
+			currentTick = (currentTick + 1) % 20
 
-		} else {
-			Bukkit.getOnlinePlayers().forEach { player ->
-				dimensionOne(player)
-			}
-		}
+			onTick(currentTick)
+		}, 0, 1)
 
 		onInject(this)
 
@@ -133,11 +131,13 @@ abstract class Phase {
 		}
 	}
 
-	public open fun onEnd() {
-		runnable?.cancel()
+	fun onEnd() {
+		Bukkit.getScheduler().cancelTask(taskID)
+
+		customEnd()
 	}
 
-	protected open fun updateActionBar(bossBar: BossBar, world: World, remainingSeconds: Int) {
+	open fun updateActionBar(bossBar: BossBar, world: World, remainingSeconds: Int) {
 		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${getRemainingTimeString(remainingSeconds)}")
 	}
 
@@ -160,7 +160,10 @@ abstract class Phase {
 	/* abstract */
 
 	abstract fun customStart()
-	protected abstract fun perSecond(remainingSeconds: Int)
+	abstract fun customEnd()
+	abstract fun onTick(currentTick: Int)
+
+	abstract fun perSecond(remainingSeconds: Int)
 	abstract fun getCountdownString() : String
 	abstract fun endPhrase() : String
 }

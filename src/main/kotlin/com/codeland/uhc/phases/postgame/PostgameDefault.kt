@@ -73,6 +73,10 @@ class PostgameDefault : Phase() {
         uhc.carePackages.onEnd()
     }
 
+    override fun customEnd() {}
+
+    override fun onTick(currentTick: Int) {}
+
     override fun perSecond(remainingSeconds: Int) {
 
     }

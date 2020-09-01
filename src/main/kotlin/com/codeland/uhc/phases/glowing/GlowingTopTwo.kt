@@ -15,6 +15,9 @@ class GlowingTopTwo : Phase() {
 		}
 	}
 
+	override fun customEnd() {}
+	override fun onTick(currentTick: Int) {}
+
 	override fun perSecond(second: Int) {
 		val sortedTeams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams.sortedByDescending {
 			var ret = 0.0

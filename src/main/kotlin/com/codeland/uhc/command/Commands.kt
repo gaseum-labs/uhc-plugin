@@ -5,10 +5,15 @@ import com.codeland.uhc.phaseType.PhaseType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 
 object Commands {
     fun errorMessage(sender: CommandSender, text: String) {
         sender.sendMessage("${ChatColor.RED}${ChatColor.BOLD}$text")
+    }
+
+    fun errorMessage(player: Player, text: String) {
+        player.sendMessage("${ChatColor.RED}${ChatColor.BOLD}$text")
     }
 
     /**

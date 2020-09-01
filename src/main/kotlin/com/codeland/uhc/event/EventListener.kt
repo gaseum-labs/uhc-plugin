@@ -1,10 +1,12 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.command.TeamData
+import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.gui.GuiOpener
+import com.codeland.uhc.gui.item.GuiOpener
+import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phases.Phase
@@ -13,6 +15,7 @@ import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
+import org.bukkit.command.Command
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -25,10 +28,8 @@ import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.world.ChunkLoadEvent
-import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
-import kotlin.math.log
 
 class EventListener : Listener {
 	@EventHandler
@@ -74,13 +75,23 @@ class EventListener : Listener {
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
 			return
 
-		val stack = event.item
-				?: return
+		val stack = event.item ?: return
 
-		if (!GuiOpener.isGuiOpener(stack))
-			return
+		if (GuiOpener.isItem(stack)) {
+			Gui.open(event.player)
+		} else if (AntiSoftlock.isItem(stack)) {
+			val world = Bukkit.getWorlds()[0]
+			event.player.teleport(Location(world, 10000.5, Util.topBlockY(world, 10000, 10000) + 1.0, 10000.5))
+		} else if (ParkourCheckpoint.isItem(stack)) {
+			val location = ParkourCheckpoint.getPlayerCheckpoint(event.player)?.toBlockLocation()
+				?: return Commands.errorMessage(event.player, "Reach a redstone block to get a checkpoint!")
 
-		Gui.open(event.player)
+			val block = Bukkit.getWorlds()[0].getBlockAt(location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation())
+			if (block.type != ParkourCheckpoint.CHECKPOINT)
+				return Commands.errorMessage(event.player, "Checkpoint has been removed!")
+
+			event.player.teleport(location.add(0.5, 0.0, 0.5))
+		}
 	}
 
 	@EventHandler
@@ -125,7 +136,11 @@ class EventListener : Listener {
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)) return
 
 		if (event.message.startsWith("!")) {
-			event.message = event.message.substring(1)
+			/* prevent blank global messages */
+			if (event.message.length == 1)
+				event.isCancelled = true
+			else
+				event.message = event.message.substring(1)
 
 		} else {
 			event.isCancelled = true
@@ -275,7 +290,9 @@ class EventListener : Listener {
 
 		event.isCancelled = when {
 			HalfZatoichi.isHalfZatoichi(stack) -> true
-			GuiOpener.isGuiOpener(stack) -> true
+			GuiOpener.isItem(stack) -> true
+			AntiSoftlock.isItem(stack) -> true
+			ParkourCheckpoint.isItem(stack) -> true
 			else -> false
 		}
 	}
@@ -284,15 +301,6 @@ class EventListener : Listener {
 	fun onHealthRegen(event: EntityRegainHealthEvent) {
 		/* no regeneration in UHC */
 		var player = event.entity
-
-		if (player is Player) {
-
-			val test = emptyArray<ItemStack?>().copyOf()
-
-			player.inventory.contents.copyOf().contentEquals(test)
-
-
-		}
 
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */

@@ -6,30 +6,16 @@ import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
 
 class EndgamePoison : Phase() {
+	override fun customStart() {}
+	override fun customEnd() {}
 
-	var posionRunnable = null as BukkitRunnable?
-
-	override fun customStart() {
-		posionRunnable = object : BukkitRunnable() {
-			override fun run() {
-				for (player in Bukkit.getServer().onlinePlayers) {
-					player.health -= 0.5
-				}
-			}
+	override fun onTick(currentTick: Int) {
+		for (player in Bukkit.getServer().onlinePlayers) {
+			player.health -= 0.05
 		}
-
-		posionRunnable?.runTaskTimer(GameRunner.plugin!!, 0, 10)
 	}
 
-	override fun perSecond(remainingSeconds: Int) {
-
-	}
-
-	override fun onEnd() {
-		super.onEnd()
-
-		posionRunnable?.cancel()
-	}
+	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun getCountdownString(): String {
 		return ""

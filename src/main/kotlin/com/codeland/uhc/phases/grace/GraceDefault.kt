@@ -6,6 +6,7 @@ import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
 import org.bukkit.*
+import org.bukkit.advancement.Advancement
 import org.bukkit.attribute.Attribute
 import org.bukkit.inventory.ItemStack
 import kotlin.math.*
@@ -18,6 +19,7 @@ open class GraceDefault : Phase() {
 	override fun customStart() {
 		Bukkit.getServer().onlinePlayers.forEach {
 			it.inventory.clear()
+			it.itemOnCursor.amount = 0
 			it.setItemOnCursor(null)
 
 			for (activePotionEffect in it.activePotionEffects)
@@ -35,6 +37,15 @@ open class GraceDefault : Phase() {
 				if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) 72000
 				else 0
 			)
+
+			/* remove all advancements */
+			Bukkit.getServer().advancementIterator().forEach { advancement ->
+				val progress = it.getAdvancementProgress(advancement)
+
+				progress.awardedCriteria.forEach { criteria ->
+					progress.revokeCriteria(criteria)
+				}
+			}
 
 			if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE))
 				it.inventory.addItem(ItemStack(Material.WET_SPONGE, 1))
@@ -71,9 +82,9 @@ open class GraceDefault : Phase() {
 		}
 	}
 
-	override fun perSecond(remainingSeconds: Int) {
-
-	}
+	override fun customEnd() {}
+	override fun onTick(currentTick: Int) {}
+	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun getCountdownString(): String {
 		return "Grace period ends in"

@@ -39,6 +39,10 @@ class ShrinkDefault : Phase() {
 		}
 	}
 
+	override fun customEnd() {}
+
+	override fun onTick(currentTick: Int) {}
+
 	override fun getCountdownString(): String {
 		return "Border radius:"
 	}
