@@ -5,7 +5,6 @@ import org.bukkit.scoreboard.Scoreboard
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
-import java.io.IOException
 import java.util.*
 import kotlin.math.abs
 
@@ -29,13 +28,13 @@ object TeamMaker {
 	 * will return null if color list could not be created
 	 */
 	fun getColorList(size: Int, scoreboard: Scoreboard): Array<ChatColor>? {
-		if (size > TeamData.teamColours.size - scoreboard.teams.size)
+		if (size > TeamData.teamColors.size - scoreboard.teams.size)
 			return null
 
-		var availableColors = arrayOfNulls<ChatColor>(TeamData.teamColours.size)
+		var availableColors = arrayOfNulls<ChatColor>(TeamData.teamColors.size)
 		var numAvailableColors = 0
 
-		TeamData.teamColours.forEach { color ->
+		TeamData.teamColors.forEach { color ->
 			if(!scoreboard.teams.any { team ->
 				if (color == team.color)
 					return@any true

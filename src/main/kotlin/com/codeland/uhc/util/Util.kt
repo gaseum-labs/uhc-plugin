@@ -20,6 +20,22 @@ object Util {
 		return 0
 	}
 
+	fun topLiquidSolidY(world: World, x: Int, z: Int): Pair<Int, Int> {
+		for (y in 255 downTo 0) {
+			var block = world.getBlockAt(x, y, z)
+
+			if (block.isLiquid) {
+				return Pair(y, -1)
+			}
+
+			if (!block.isPassable) {
+				return Pair(-1, y)
+			}
+		}
+
+		return Pair(-1, -1)
+	}
+
 	fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
 		var start = 0
 		var end = array.size - 1

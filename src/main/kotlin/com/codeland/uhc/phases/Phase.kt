@@ -3,6 +3,7 @@ package com.codeland.uhc.phases
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phaseType.PhaseVariant
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -23,7 +24,11 @@ abstract class Phase {
 		protected var dimensionBars = emptyArray<DimensionBar>()
 
 		fun createBossBars(worlds: List<World>) {
-			dimensionBars = Array(worlds.size) { i -> DimensionBar(Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID), worlds[i]) }
+			dimensionBars = Array(worlds.size) { i ->
+				val key = NamespacedKey(GameRunner.plugin, "B$i")
+
+				DimensionBar(Bukkit.getBossBar(key) ?: Bukkit.createBossBar(key, "",  BarColor.WHITE, BarStyle.SOLID), worlds[i])
+			}
 		}
 
 		fun setPlayerBarDimension(player: Player) {
@@ -52,13 +57,15 @@ abstract class Phase {
 	/* default values */
 
 	lateinit var phaseType: PhaseType
+	lateinit var phaseVariant: PhaseVariant
 	lateinit var uhc: UHC
 	var length = 0
 
 	var remainingSeconds = length
 
-	fun start(phaseType: PhaseType, uhc: UHC, length: Int, onInject: (Phase) -> Unit) {
+	fun start(phaseType: PhaseType, phaseVariant: PhaseVariant, uhc: UHC, length: Int, onInject: (Phase) -> Unit) {
 		this.phaseType = phaseType
+		this.phaseVariant = phaseVariant
 		this.uhc = uhc
 		this.length = length
 		this.remainingSeconds = length

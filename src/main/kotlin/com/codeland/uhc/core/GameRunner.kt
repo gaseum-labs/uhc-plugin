@@ -10,7 +10,10 @@ import com.codeland.uhc.util.Util.log
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.scoreboard.DisplaySlot
+import org.bukkit.scoreboard.RenderType
 import org.bukkit.scoreboard.Team
 
 class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
@@ -115,8 +118,21 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 			player.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}$message")
 		}
 
+		fun sendGameMessage(sender: CommandSender, message: String) {
+			sender.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}$message")
+		}
+
 		fun netherIsAllowed() : Boolean {
 			return !(uhc.netherToZero && (uhc.isPhase(PhaseType.FINAL) || uhc.isPhase(PhaseType.GLOWING) || uhc.isPhase(PhaseType.ENDGAME)))
+		}
+
+		fun registerHearts() {
+			val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
+
+			val objective = scoreboard.getObjective("hp")
+				?: scoreboard.registerNewObjective("hp", "health", "hp", RenderType.HEARTS)
+
+			objective.displaySlot = DisplaySlot.PLAYER_LIST
 		}
 	}
 }

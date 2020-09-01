@@ -8,11 +8,7 @@ import org.bukkit.command.CommandSender
 
 object Commands {
     fun errorMessage(sender: CommandSender, text: String) {
-        val message = TextComponent(text)
-        message.color = ChatColor.RED.asBungee()
-        message.isBold = true
-
-        sender.sendMessage(message)
+        sender.sendMessage("${ChatColor.RED}${ChatColor.BOLD}$text")
     }
 
     /**
@@ -29,8 +25,8 @@ object Commands {
         return false
     }
 
-    fun waitGuard(sender: CommandSender): Boolean {
-        if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+    fun notGoingGuard(sender: CommandSender): Boolean {
+        if (GameRunner.uhc.isGameGoing()) {
             errorMessage(sender, "This command cannot be used while the game is running")
 
             return true

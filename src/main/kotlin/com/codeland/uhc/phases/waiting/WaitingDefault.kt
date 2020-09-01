@@ -4,6 +4,7 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.quirk.Pests
+import com.codeland.uhc.util.Util.log
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.EntityType
@@ -22,11 +23,6 @@ class WaitingDefault : Phase() {
             world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
             world.time = 1000
             world.difficulty = Difficulty.NORMAL
-
-            world.entities.forEach { entity ->
-                if (entity.type != EntityType.PLAYER)
-                    entity.remove()
-            }
         }
 
         Bukkit.getServer().onlinePlayers.forEach { player ->

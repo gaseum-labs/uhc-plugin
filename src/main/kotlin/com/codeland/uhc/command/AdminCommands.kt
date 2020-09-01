@@ -7,10 +7,14 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.quirk.AppleFix
 import com.codeland.uhc.phaseType.*
+import com.codeland.uhc.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.LowGravity
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
+import org.bukkit.scoreboard.Team
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -109,6 +113,7 @@ class AdminCommands : BaseCommand() {
 			w.ambientSpawnLimit = (w.ambientSpawnLimit * (coefficient / GameRunner.uhc.mobCapCoefficient)).toInt()
 			w.waterAnimalSpawnLimit = (w.waterAnimalSpawnLimit * (coefficient / GameRunner.uhc.mobCapCoefficient)).toInt()
 		}
+
 		GameRunner.uhc.mobCapCoefficient = coefficient
 	}
 
@@ -132,7 +137,7 @@ class AdminCommands : BaseCommand() {
 	@Description("set variant")
 	fun setPhase(sender: CommandSender, factory: PhaseVariant) {
 		if (Commands.opGuard(sender)) return
-		if (Commands.waitGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.updateVariant(factory)
 	}
@@ -141,7 +146,7 @@ class AdminCommands : BaseCommand() {
 	@Description("set the length of a phase")
 	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Int) {
 		if (Commands.opGuard(sender)) return
-		if (Commands.waitGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
 
 		if (!type.hasTimer)
 			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
@@ -153,7 +158,7 @@ class AdminCommands : BaseCommand() {
 	@Description("set the starting radius")
 	fun setStartRadius(sender : CommandSender, radius : Double) {
 		if (Commands.opGuard(sender)) return
-		if (Commands.waitGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.startRadius = radius
 	}
@@ -162,7 +167,7 @@ class AdminCommands : BaseCommand() {
 	@Description("set the final radius")
 	fun setEndRadius(sender : CommandSender, radius : Double) {
 		if (Commands.opGuard(sender)) return
-		if (Commands.waitGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.endRadius = radius
 	}
@@ -171,7 +176,7 @@ class AdminCommands : BaseCommand() {
 	@Description("set all details of the UHC")
 	fun modifyAll(sender : CommandSender, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowingTime: Int) {
 		if (Commands.opGuard(sender)) return
-		if (Commands.waitGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.startRadius = startRadius
 		GameRunner.uhc.endRadius = endRadius
@@ -184,11 +189,71 @@ class AdminCommands : BaseCommand() {
 		phaseTimes[PhaseType.GLOWING.ordinal] = glowingTime
 	}
 
+	fun lateTeamTeleport(sender: CommandSender, player: Player, location: Location, team: Team) {
+		player.teleportAsync(location).thenAccept {
+			player.gameMode = GameMode.SURVIVAL
+
+			/* make sure the player doesn't die when they get teleported */
+			player.fallDistance = 0f
+			player.addPotionEffect(PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100, 10, true))
+
+			GameRunner.sendGameMessage(sender, "${player.name} successfully added to team ${ChatColor.RESET}${team.color}${team.displayName}")
+		}
+	}
+
+	@CommandAlias("addLate")
+	@Description("adds a player to the game after it has already started")
+	fun addLate(sender: CommandSender, player: Player, teammate: Player) {
+		if (Commands.opGuard(sender)) return
+
+		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
+		if (player.gameMode != GameMode.SPECTATOR) return Commands.errorMessage(sender, "${player.name} is already playing!")
+
+		val joinTeam = GameRunner.playersTeam(teammate.name) ?: return Commands.errorMessage(sender, "${teammate.name} has no team to join!")
+		TeamData.addToTeam(Bukkit.getScoreboardManager().mainScoreboard, joinTeam.color, player.name)
+
+		lateTeamTeleport(sender, player, teammate.location, joinTeam)
+	}
+
+	@CommandAlias("addLate")
+	@Description("adds a player to the game after it has already started")
+	fun addLate(sender: CommandSender, player: Player) {
+		if (Commands.opGuard(sender)) return
+
+		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
+		if (player.gameMode != GameMode.SPECTATOR) return Commands.errorMessage(sender, "${player.name} is already playing!")
+
+		val world = Bukkit.getWorlds()[0]
+		val teleportLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+			?: return Commands.errorMessage(sender, "No suitible teleport location found!")
+
+		val maxTeams = TeamData.teamColors.size
+		val teams = Bukkit.getScoreboardManager().mainScoreboard.teams
+		if (teams.size == maxTeams)
+			return Commands.errorMessage(sender, "There are already the maximum amount of teams (${maxTeams})")
+
+		/* all available team colors */
+		val taken = Array(maxTeams) { false }
+		teams.forEach { team ->
+			val index = TeamData.teamColorIndices[team.color.ordinal]
+			if (index != -1) taken[index] = true
+		}
+
+		var colorIndex = (Math.random() * maxTeams).toInt()
+		while (taken[colorIndex]) {
+			colorIndex = (colorIndex + 1) % maxTeams
+		}
+
+		val joinTeam = TeamData.addToTeam(Bukkit.getScoreboardManager().mainScoreboard, TeamData.teamColors[colorIndex], player.name)
+
+		lateTeamTeleport(sender, player, teleportLocation, joinTeam)
+	}
+
 	@CommandAlias("preset")
 	@Description("set all details of the UHC")
 	fun modifyAll(sender : CommandSender, preset: Preset) {
 		if (Commands.opGuard(sender)) return
-		if (Commands.waitGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.updatePreset(preset)
 	}

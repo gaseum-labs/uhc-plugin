@@ -6,13 +6,13 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiOpener
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phases.grace.GraceDefault
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import net.md_5.bungee.api.ChatColor
-import org.bukkit.Bukkit
-import org.bukkit.GameMode
-import org.bukkit.Material
+import org.bukkit.*
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -24,8 +24,11 @@ import org.bukkit.event.block.LeavesDecayEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
+import org.bukkit.event.world.ChunkLoadEvent
+import org.bukkit.event.world.WorldLoadEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import kotlin.math.log
 
 class EventListener : Listener {
 	@EventHandler
@@ -92,21 +95,25 @@ class EventListener : Listener {
 		if (!GameRunner.uhc.isGameGoing()) return
 
 		val player = event.entity
-		val wasPest = Pests.isPest(player)
-
-		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-			if (!wasPest && event.entity.gameMode != GameMode.SPECTATOR)
-				Pests.makePest(player)
-		} else {
-			player.gameMode = GameMode.SPECTATOR
-		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.HALF_ZATOICHI)) {
 			val killer = player.killer
 			if (killer != null) HalfZatoichi.onKill(killer)
 		}
 
-		if (!wasPest) GameRunner.playerDeath(player, Pests.isPest(player))
+		/* normal respawns in grace */
+		if (!GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
+			val wasPest = Pests.isPest(player)
+
+			if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
+				if (!wasPest && event.entity.gameMode != GameMode.SPECTATOR)
+					Pests.makePest(player)
+			} else {
+				player.gameMode = GameMode.SPECTATOR
+			}
+
+			if (!wasPest) GameRunner.playerDeath(player, Pests.isPest(player))
+		}
 	}
 
 	@EventHandler
@@ -141,41 +148,58 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onEntitySpawn(event: EntitySpawnEvent) {
-		/* prevent spawns during waiting */
+	fun onChunkLoad(event: ChunkLoadEvent) {
+		/* prevent animals when the chunks load for waiting area */
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			if (event.entityType.isAlive) {
-				event.isCancelled = true
-				return
+			if (event.isNewChunk) {
+				event.chunk.entities.forEach { entity ->
+					entity.remove()
+				}
 			}
 		}
 	}
 
 	@EventHandler
+	fun onEntitySpawn(event: EntitySpawnEvent) {
+		/* prevent monsters during waiting */
+		event.isCancelled = GameRunner.uhc.isPhase(PhaseType.WAITING) &&
+			(
+				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL ||
+				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.BEEHIVE
+			) &&
+			event.entityType.isAlive
+	}
+
+	private fun spreadRespawn(event: PlayerRespawnEvent) {
+		val world = Bukkit.getWorlds()[0]
+		val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+		if (location != null) event.respawnLocation = location
+	}
+
+	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
-		/* only do this on pests mode */
-		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
-			return
+		/* grace respawning */
+		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
+			spreadRespawn(event)
 
-		var player = event.player
+		/* pest respawning */
+		} else {
+			if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
+				return
 
-		/* player is set to pest on death */
-		if (!Pests.isPest(player))
-			return
+			var player = event.player
 
-		var border = player.world.worldBorder
+			/* player is set to pest on death */
+			if (!Pests.isPest(player))
+				return
 
-		/* spread player */
-		var right = border.center.x + border.size / 2 - 10
-		var down = border.center.z + border.size / 2 - 10
+			var border = player.world.worldBorder
 
-		var x = ((Math.random() * right * 2) - right).toInt()
-		var z = ((Math.random() * down * 2) - down).toInt()
+			/* spread player */
+			spreadRespawn(event)
 
-		var y = Util.topBlockY(player.world, x, z)
-		event.respawnLocation.set(x + 0.5, y + 1.0, z + 0.5)
-
-		Pests.givePestSetup(player)
+			Pests.givePestSetup(player)
+		}
 	}
 
 	@EventHandler

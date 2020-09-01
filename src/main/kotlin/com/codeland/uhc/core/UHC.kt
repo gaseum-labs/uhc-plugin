@@ -4,6 +4,7 @@ import CarePackages
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phases.grace.GraceDefault
 import com.codeland.uhc.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -120,6 +121,10 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 		return currentPhase?.phaseType == compare
 	}
 
+	fun isVariant(compare: PhaseVariant): Boolean {
+		return currentPhase?.phaseVariant == compare
+	}
+
 	fun isGameGoing(): Boolean {
 		return currentPhase?.phaseType != PhaseType.WAITING && currentPhase?.phaseType != PhaseType.POSTGAME
 	}
@@ -141,15 +146,26 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	 * @return a string if the game couldn't start
 	 */
 	fun startUHC(commandSender : CommandSender): String? {
-		if (!isPhase(PhaseType.WAITING))
+		if (isGameGoing())
 			return "Game has already started!"
 
-		if (Bukkit.getScoreboardManager().mainScoreboard.teams.size == 0)
+		val numTeams = Bukkit.getScoreboardManager().mainScoreboard.teams.size
+		if (numTeams == 0)
 			return "No one is playing!"
 
 		gameMaster = commandSender
 
-		startPhase(PhaseType.GRACE)
+		val teleportLocations = GraceDefault.spreadPlayers(
+			Bukkit.getWorlds()[0], numTeams, startRadius - 5
+		)
+
+		if (teleportLocations.isNotEmpty()) {
+			startPhase(PhaseType.GRACE) { phase ->
+				(phase as GraceDefault).teleportLocations = teleportLocations
+			}
+		} else {
+			return "Not enough valid spaces to teleport in this world!"
+		}
 
 		return null
 	}
@@ -161,9 +177,7 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	 */
 	fun endUHC(winner: Team?) {
 		startPhase(PhaseType.POSTGAME) { phase ->
-			phase as PostgameDefault
-
-			phase.winningTeam = winner
+			(phase as PostgameDefault).winningTeam = winner
 		}
 	}
 
