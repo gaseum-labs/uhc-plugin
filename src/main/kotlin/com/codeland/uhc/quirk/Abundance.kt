@@ -19,7 +19,7 @@ class Abundance(type: QuirkType) : Quirk(type) {
 	}
 
 	companion object {
-		fun makeFortunteTool(itemInHand: ItemStack): ItemStack {
+		private fun makeFortuneTool(itemInHand: ItemStack): ItemStack {
 			var fakeTool = itemInHand.clone()
 
 			if (fakeTool.type == Material.AIR)
@@ -31,25 +31,28 @@ class Abundance(type: QuirkType) : Quirk(type) {
 		}
 
 		fun replaceDrops(player: Player, block: Block, oldState: BlockState, drops: MutableList<Item>) {
-			val fakeTool = makeFortunteTool(player.inventory.itemInMainHand)
+			val fakeTool = makeFortuneTool(player.inventory.itemInMainHand)
 
-			/* this is so gross but it's the only way */
+			/* remember what the block is after it is destroyed */
 			val destroyedType = block.type
 			val destroyedData = block.blockData
 
-			block.type = block.type
-			block.blockData = oldState.block.blockData
+			/* set the block back to what it was before it was destroyed */
+			block.type = oldState.type
+			block.blockData = oldState.blockData
 
-			val extraDrops = block.getDrops(fakeTool)
+			val abundanceDrops = block.getDrops(fakeTool)
 
+			/* set the block back to what it was after it was destroyed */
 			block.type = destroyedType
 			block.blockData = destroyedData
-			/* end gross block */
 
 			drops.clear()
 
-			extraDrops.forEach { extraDrop ->
-				player.world.dropItem(block.location.add(0.5, 0.5, 0.5), extraDrop)
+			abundanceDrops.forEach { drop ->
+				/* mushroom blocks like to drop air for some reason */
+				if (drop.type != Material.AIR)
+					player.world.dropItem(block.location.add(0.5, 0.5, 0.5), drop)
 			}
 		}
 	}

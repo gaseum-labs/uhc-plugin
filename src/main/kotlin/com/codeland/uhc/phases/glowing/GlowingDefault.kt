@@ -11,7 +11,7 @@ class GlowingDefault : Phase() {
 
 	override fun customStart() {
 		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "Glowing has been applied")
+			GameRunner.sendGameMessage(player, "Glowing has been applied")
 		}
 
 		for (player in Bukkit.getServer().onlinePlayers) {

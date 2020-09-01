@@ -1,19 +1,17 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.command.TeamData
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.quirk.Pests
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.quirk.QuirkType
-import com.destroystokyo.paper.utils.PaperPluginLogger
+import com.codeland.uhc.util.Util.log
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
-import org.bukkit.World
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.Team
-import java.util.logging.Level
 
 class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 
@@ -77,32 +75,25 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 			return retRemaining
 		}
 
-		fun playerDeath(deadPlayer: Player) {
+		fun playerDeath(deadPlayer: Player, removeTeam: Boolean) {
 			var aliveTeam = null as Team?
-
 			val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
 			var deadPlayerTeam = playersTeam(deadPlayer.name) ?: return
-
 			var (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(deadPlayerTeam)
 
 			/* add to ledger */
 			uhc.ledger.addEntry(deadPlayer.name, uhc.elapsedTime, deadPlayer.killer?.name)
 
 			/* broadcast elimination message */
-			if (!teamIsAlive) {
-				val message = TextComponent("${deadPlayerTeam.displayName} has been Eliminated!")
-				message.color = ChatColor.GOLD
-				message.isBold = true
+			if (!teamIsAlive) Bukkit.getServer().onlinePlayers.forEach { player ->
+				sendGameMessage(player, "${deadPlayerTeam.displayName} has been Eliminated!")
+				sendGameMessage(player, "$remainingTeams teams remain")
+			}
 
-				val message2 = TextComponent("$remainingTeams teams remain")
-				message2.color = ChatColor.GOLD
-				message2.isBold = true
-
-				Bukkit.getServer().onlinePlayers.forEach { player ->
-					player.sendMessage(message)
-					player.sendMessage(message2)
-				}
+			if (removeTeam) {
+				val team = playersTeam(deadPlayer.name)
+				if (team != null) TeamData.removeFromTeam(team, deadPlayer.name)
 			}
 
 			/* uhc ending point (stops kill reward) */
@@ -120,11 +111,8 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 			return Bukkit.getServer().scoreboardManager.mainScoreboard.getEntryTeam(playerName);
 		}
 
-		fun sendPlayer(player: Player, message: String) {
-			val comp = TextComponent(message)
-			comp.color = ChatColor.GOLD
-			comp.isBold = true
-			player.sendMessage(comp)
+		fun sendGameMessage(player: Player, message: String) {
+			player.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}$message")
 		}
 
 		fun netherIsAllowed() : Boolean {

@@ -10,7 +10,7 @@ class FinalDefault : Phase() {
 
 	override fun customStart() {
 		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "The border has stopped shrinking")
+			GameRunner.sendGameMessage(player, "The border has stopped shrinking")
 		}
 
 		if (uhc.netherToZero) {

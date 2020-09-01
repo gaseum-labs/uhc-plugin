@@ -108,15 +108,13 @@ class AppleFix(type: QuirkType) : Quirk(type) {
 			return index
 		}
 
-		fun onbreakLeaves(block: Material, player: Player): ArrayList<ItemStack> {
-			var ret = ArrayList<ItemStack>()
-
+		fun onBreakLeaves(block: Material, player: Player, onItem: (ItemStack) -> Unit) {
 			if (isLeaves(block)) {
 				ranges.forEach { range ->
 					var count = increaseCount(player, range.countMeta)
 
 					if (count == getIndex(player, range.indexMeta, range.range))
-						ret.add(range.getDrop(block))
+						onItem(range.getDrop(block))
 
 					if (count == range.range) {
 						resetIndex(player, range.indexMeta, range.range)
@@ -124,8 +122,6 @@ class AppleFix(type: QuirkType) : Quirk(type) {
 					}
 				}
 			}
-
-			return ret
 		}
 	}
 }

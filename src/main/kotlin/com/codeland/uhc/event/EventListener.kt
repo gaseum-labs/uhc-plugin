@@ -89,17 +89,14 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
-		val player = event.entity
+		if (!GameRunner.uhc.isGameGoing()) return
 
-		var wasPest = Pests.isPest(player)
+		val player = event.entity
+		val wasPest = Pests.isPest(player)
 
 		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-			if (event.entity.gameMode != GameMode.SPECTATOR) {
-				val team = GameRunner.playersTeam(player.name)
-				if (team != null) TeamData.removeFromTeam(team, player.name)
-
+			if (!wasPest && event.entity.gameMode != GameMode.SPECTATOR)
 				Pests.makePest(player)
-			}
 		} else {
 			player.gameMode = GameMode.SPECTATOR
 		}
@@ -109,9 +106,7 @@ class EventListener : Listener {
 			if (killer != null) HalfZatoichi.onKill(killer)
 		}
 
-		if (!wasPest && !GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			GameRunner.playerDeath(player)
-		}
+		if (!wasPest) GameRunner.playerDeath(player, Pests.isPest(player))
 	}
 
 	@EventHandler
@@ -343,15 +338,21 @@ class EventListener : Listener {
 	fun onBlockDrop(event: BlockDropItemEvent) {
 		var blockState = event.blockState
 		var block = event.block
+
 		var player = event.player
 		var baseItem = event.player.inventory.itemInMainHand
 		var drops = event.items
 		var blockMiddle = blockState.location.add(0.5, 0.5, 0.5)
 
-		if (GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX) && AppleFix.isLeaves(blockState.type) && !(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))) {
+		if (GameRunner.uhc.isEnabled(
+			QuirkType.APPLE_FIX) &&
+			AppleFix.isLeaves(blockState.type) &&
+			/* don't replace leaf block drops from shears */
+			!(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))
+		) {
 			drops.clear()
 
-			AppleFix.onbreakLeaves(blockState.type, player).forEach { drop ->
+			AppleFix.onBreakLeaves(blockState.type, player) { drop ->
 				player.world.dropItem(blockMiddle, drop)
 			}
 
@@ -401,7 +402,7 @@ class EventListener : Listener {
 		/* drop apple for the nearest player */
 		Bukkit.getOnlinePlayers().any { player ->
 			if (player.location.distance(event.block.location) < 16) {
-				AppleFix.onbreakLeaves(event.block.type, player).forEach { drop ->
+				AppleFix.onBreakLeaves(event.block.type, player) { drop ->
 					player.world.dropItem(event.block.location.add(0.5, 0.5, 0.5), drop)
 				}
 

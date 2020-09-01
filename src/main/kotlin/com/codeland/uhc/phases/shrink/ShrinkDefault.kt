@@ -1,14 +1,9 @@
 package com.codeland.uhc.phases.shrink
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phases.Phase
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.ChatMessageType
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
-import org.bukkit.GameRule
 import org.bukkit.World
 import org.bukkit.boss.BossBar
 
@@ -27,7 +22,7 @@ class ShrinkDefault : Phase() {
 
 	override fun customStart() {
 		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "Grace period has ended!")
+			GameRunner.sendGameMessage(player, "Grace period has ended!")
 		}
 
 		minRadius = uhc.endRadius
@@ -40,7 +35,7 @@ class ShrinkDefault : Phase() {
 		}
 
 		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "The border is now shrinking")
+			GameRunner.sendGameMessage(player, "The border is now shrinking")
 		}
 	}
 

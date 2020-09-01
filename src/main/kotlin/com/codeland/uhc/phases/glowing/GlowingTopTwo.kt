@@ -11,7 +11,7 @@ class GlowingTopTwo : Phase() {
 
 	override fun customStart() {
 		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "Glowing will be applied to the top two teams")
+			GameRunner.sendGameMessage(player, "Glowing will be applied to the top two teams")
 		}
 	}
 
