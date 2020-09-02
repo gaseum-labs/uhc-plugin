@@ -36,7 +36,7 @@ object ParkourCheckpoint {
 	}
 
 	val META_TAG = "uhc_checkpoint"
-	val CHECKPOINT = Material.REDSTONE_BLOCK
+	val CHECKPOINT = Material.GOLD_BLOCK
 
 	fun setPlayerCheckpoint(player: Player, location: Location) {
 		player.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin, location))

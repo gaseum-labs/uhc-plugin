@@ -15,6 +15,7 @@ import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
+import org.bukkit.attribute.Attribute
 import org.bukkit.command.Command
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
@@ -84,7 +85,7 @@ class EventListener : Listener {
 			event.player.teleport(Location(world, 10000.5, Util.topBlockY(world, 10000, 10000) + 1.0, 10000.5))
 		} else if (ParkourCheckpoint.isItem(stack)) {
 			val location = ParkourCheckpoint.getPlayerCheckpoint(event.player)?.toBlockLocation()
-				?: return Commands.errorMessage(event.player, "Reach a redstone block to get a checkpoint!")
+				?: return Commands.errorMessage(event.player, "Reach a gold block to get a checkpoint!")
 
 			val block = Bukkit.getWorlds()[0].getBlockAt(location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation())
 			if (block.type != ParkourCheckpoint.CHECKPOINT)
@@ -112,8 +113,11 @@ class EventListener : Listener {
 			if (killer != null) HalfZatoichi.onKill(killer)
 		}
 
+		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_UNFORGIVING))
+			event.drops.clear()
+
 		/* normal respawns in grace */
-		if (!GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
+		if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING) || GameRunner.uhc.isVariant(PhaseVariant.GRACE_UNFORGIVING))) {
 			val wasPest = Pests.isPest(player)
 
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
@@ -194,7 +198,7 @@ class EventListener : Listener {
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
 		/* grace respawning */
-		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
+		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING) || GameRunner.uhc.isVariant(PhaseVariant.GRACE_UNFORGIVING)) {
 			spreadRespawn(event)
 
 		/* pest respawning */
