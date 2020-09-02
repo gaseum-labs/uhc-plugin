@@ -7,70 +7,51 @@ import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.scheduler.BukkitRunnable
+import java.lang.Integer.min
 import kotlin.math.max
 
 class EndgameClearBlocks : Phase() {
 
-	var blockRunnable = null as BukkitRunnable?
+	var topBoundary = 255
+	var botBoundary = -135
 
-	override fun customStart() {
-		var w : World? = null
+	override fun customStart() {}
 
-		for (world in Bukkit.getServer().worlds) {
-			if (world.environment == World.Environment.NORMAL) {
-				w = world
-			}
-		}
+	override fun customEnd() {}
 
-		blockRunnable = object : BukkitRunnable() {
-			var topBoundary = 255
-			var botBoundary = -135
-			var frame = 0
-			override fun run() {
-				val extrema = w!!.worldBorder.size.toInt() / 2 + 1
-				for (y in 0..255) {
-					if (y < botBoundary || y > topBoundary) {
-						val min = extrema * 2 * frame / 20
-						val max = extrema * 2 * (frame + 1) / 20 + 1
-						for (x in ((min - extrema)..(max - extrema))) {
-							for (z in (-extrema..extrema)) {
-								val block = w.getBlockAt(x, y, z)
-								if (block.type != Material.AIR) {
-									block.type = Material.AIR
-								}
-							}
-						}
+	override fun onTick(currentTick: Int) {
+		val world = Bukkit.getWorlds()[0]
+
+		val extrema = world.worldBorder.size.toInt() / 2 + 1
+		for (y in 0..255) {
+			if (y < botBoundary || y > topBoundary) {
+				val min = extrema * 2 * currentTick / 20
+				val max = extrema * 2 * (currentTick + 1) / 20 + 1
+				for (x in ((min - extrema)..(max - extrema))) {
+					for (z in (-extrema..extrema)) {
+						world.getBlockAt(x, y, z).type = Material.AIR
 					}
 				}
-
-				Bukkit.getServer().onlinePlayers.forEach { player ->
-					player.sendActionBar("Block range is between ${ChatColor.GOLD}${ChatColor.BOLD}${max(botBoundary, 0)} ${ChatColor.RESET}and ${ChatColor.GOLD}${ChatColor.BOLD}$topBoundary")
-				}
-
-				if (frame == 0) {
-					--topBoundary
-					++botBoundary
-				}
-
-				frame = (frame + 1) % 20
-				if (botBoundary > 60 || topBoundary < 60) {
-					botBoundary = 60
-					topBoundary = 60
-				}
 			}
 		}
 
-		blockRunnable?.runTaskTimer(GameRunner.plugin!!, 0, 1)
+		if (currentTick == 0) {
+			--topBoundary
+			++botBoundary
+
+			Bukkit.getServer().onlinePlayers.forEach { player ->
+				player.sendActionBar("Block range is between ${ChatColor.GOLD}${ChatColor.BOLD}${max(botBoundary, 0)} ${ChatColor.RESET}and ${ChatColor.GOLD}${ChatColor.BOLD}$topBoundary")
+			}
+		}
+
+		if (botBoundary > 60 || topBoundary < 60) {
+			botBoundary = 60
+			topBoundary = 60
+		}
 	}
 
 	override fun perSecond(remainingSeconds: Int) {
 
-	}
-
-	override fun onEnd() {
-		super.onEnd()
-
-		blockRunnable?.cancel()
 	}
 
 	override fun getCountdownString(): String {

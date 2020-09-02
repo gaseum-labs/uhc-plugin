@@ -16,8 +16,6 @@ import com.codeland.uhc.phaseType.VariantList
 import com.codeland.uhc.phases.Phase
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import org.bukkit.scoreboard.DisplaySlot
-import org.bukkit.scoreboard.RenderType
 import java.lang.Exception
 
 
@@ -36,7 +34,7 @@ class UHCPlugin : JavaPlugin() {
 
 		var uhc = UHC(Preset.LARGE, arrayOf(
 			PhaseVariant.WAITING_DEFAULT,
-			PhaseVariant.GRACE_DEFAULT,
+			PhaseVariant.GRACE_FORGIVING,
 			PhaseVariant.SHRINK_DEFAULT,
 			PhaseVariant.FINAL_DEFAULT,
 			PhaseVariant.GLOWING_TOP_TWO,
@@ -57,10 +55,7 @@ class UHCPlugin : JavaPlugin() {
 		TeamMaker.readData()
 
 		server.scheduler.scheduleSyncDelayedTask(this) {
-			if (server.scoreboardManager.mainScoreboard.getObjective("hp") == null) {
-				server.scoreboardManager.mainScoreboard.registerNewObjective("hp", "health", "hp", RenderType.HEARTS)
-			}
-			server.scoreboardManager.mainScoreboard.getObjective("hp")!!.displaySlot = DisplaySlot.PLAYER_LIST
+			GameRunner.registerHearts()
 
 			Phase.createBossBars(Bukkit.getWorlds())
 

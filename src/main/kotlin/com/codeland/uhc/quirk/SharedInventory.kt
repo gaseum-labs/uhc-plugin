@@ -11,36 +11,35 @@ class SharedInventory(type: QuirkType) : Quirk(type) {
     }
 
     override fun onEnable() {
-        contents = Bukkit.getOnlinePlayers().iterator().next().inventory.contents
+        contents = Bukkit.getOnlinePlayers().first().inventory.contents
+
         taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
-            for (player in Bukkit.getOnlinePlayers()) {
+            Bukkit.getOnlinePlayers().any { player ->
                 val playersContents = player.inventory.contents
+
                 if (!contentsSimilar(contents, playersContents)) {
                     contents = contentsCopy(playersContents)
-                    for (other in Bukkit.getOnlinePlayers()) {
-                        if (other != player) other.inventory.contents = contents as Array<out @org.jetbrains.annotations.NotNull ItemStack>
+
+                    Bukkit.getOnlinePlayers().forEach { otherPlayer ->
+                        if (otherPlayer != player) otherPlayer.inventory.contents = contents as Array<out ItemStack>
                     }
-                    break
+
+                    true
                 }
+
+                false
             }
         }, 1, 1)
     }
+
     private fun contentsSimilar(contents1: Array<out ItemStack?>, contents2: Array<out ItemStack?>): Boolean {
-        for (i in contents1.indices) {
-            if (contents1[i] == null && contents2[i] != null) return false
-            if (contents1[i] != null && contents2[i] == null) return false
-            if (contents1[i] == null && contents2[i] == null) continue
-            if (contents1[i] != contents2[i]) return false
-        }
+        for (i in contents1.indices) if (contents1[i] != contents2[i]) return false
+
         return true
     }
 
     private fun contentsCopy(contents: Array<out ItemStack?>): Array<out ItemStack?> {
-        val newContents = arrayOfNulls<ItemStack>(contents.size)
-        for (i in contents.indices) {
-            newContents[i] = if (contents[i] == null) null else contents[i]!!.clone()
-        }
-        return newContents
+        return Array(contents.size) { i -> contents[i]?.clone() }
     }
 
     override fun onDisable() {

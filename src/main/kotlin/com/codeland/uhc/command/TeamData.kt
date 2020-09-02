@@ -6,45 +6,49 @@ import org.bukkit.scoreboard.Scoreboard
 import org.bukkit.scoreboard.Team
 
 object TeamData {
-    val teamColours = arrayOf<ChatColor>(
-            ChatColor.BLUE,
-            ChatColor.RED,
-            ChatColor.GREEN,
-            ChatColor.AQUA,
-            ChatColor.LIGHT_PURPLE,
-            ChatColor.YELLOW,
-            ChatColor.DARK_RED,
-            ChatColor.DARK_AQUA,
-            ChatColor.DARK_PURPLE,
-            ChatColor.GRAY,
-            ChatColor.DARK_BLUE,
-            ChatColor.DARK_GREEN,
-            ChatColor.DARK_GRAY
+    val teamColors = arrayOf(
+        ChatColor.BLUE,
+        ChatColor.RED,
+        ChatColor.GREEN,
+        ChatColor.AQUA,
+        ChatColor.LIGHT_PURPLE,
+        ChatColor.YELLOW,
+        ChatColor.DARK_RED,
+        ChatColor.DARK_AQUA,
+        ChatColor.DARK_PURPLE,
+        ChatColor.GRAY,
+        ChatColor.DARK_BLUE,
+        ChatColor.DARK_GREEN,
+        ChatColor.DARK_GRAY
     )
 
-    val colorPrettyNames = arrayOf<String>(
-            "Black",
-            "Dark Blue",
-            "Dark Green",
-            "Dark Aqua",
-            "Dark Red",
-            "Dark Purple",
-            "Gold",
-            "Gray",
-            "Dark Gray",
-            "Blue",
-            "Green",
-            "Aqua",
-            "Red",
-            "Light Purple",
-            "Yellow",
-            "White",
-            "Magic",
-            "Bold",
-            "Strike",
-            "Underline",
-            "Italic",
-            "Reset"
+    val teamColorIndices = Array(ChatColor.values().size) { i ->
+        teamColors.indexOf(ChatColor.values()[i])
+    }
+
+    val colorPrettyNames = arrayOf(
+        "Black",
+        "Dark Blue",
+        "Dark Green",
+        "Dark Aqua",
+        "Dark Red",
+        "Dark Purple",
+        "Gold",
+        "Gray",
+        "Dark Gray",
+        "Blue",
+        "Green",
+        "Aqua",
+        "Red",
+        "Light Purple",
+        "Yellow",
+        "White",
+        "Magic",
+        "Bold",
+        "Strike",
+        "Underline",
+        "Italic",
+        "Reset"
     )
 
     /**
@@ -58,7 +62,7 @@ object TeamData {
         return "Team ${colorPrettyNames[color.ordinal]}"
     }
 
-    fun addToTeam(scoreboard: Scoreboard, color: ChatColor, playerName: String) {
+    fun addToTeam(scoreboard: Scoreboard, color: ChatColor, playerName: String): Team {
         /* remove player from old team if they are on one */
         val oldTeam = scoreboard.getEntryTeam(playerName)
 
@@ -79,6 +83,8 @@ object TeamData {
 	    GameRunner.bot?.addPlayerToTeam(team, playerName) {}
 
         team.addEntry(playerName)
+
+        return team
     }
 
     fun removeFromTeam(team: Team, playerName: String) {

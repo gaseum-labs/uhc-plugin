@@ -17,56 +17,45 @@ import org.bukkit.scheduler.BukkitRunnable
 
 class HalfZatoichi(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {
-		if (GameRunner.uhc.currentPhase?.phaseType != PhaseType.WAITING) {
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			giveAllZatoichi()
 		}
 
-		currentRunnable = getRunnable()
-		currentRunnable?.runTaskTimer(GameRunner.plugin, 0, 5)
+		Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
+			Bukkit.getServer().onlinePlayers.forEach { player ->
+				val lastHolding = getZatoichiMeta(player, HOLDING_META_TAG)
+				val currentlyHolding = isHalfZatoichi(player.inventory.itemInMainHand)
+
+				if (lastHolding) {
+					if (!currentlyHolding) {
+						setZatoichiMeta(player, HOLDING_META_TAG, false)
+
+						if (!getZatoichiMeta(player, BLOODY_META_TAG))
+							player.damage(5.0)
+						else
+							setZatoichiMeta(player, BLOODY_META_TAG, false)
+					}
+				} else if (currentlyHolding) {
+					setZatoichiMeta(player, HOLDING_META_TAG, true)
+				}
+			}
+		}, 0, 5)
 	}
 
 	override fun onDisable() {
 		removeAllZatoichi()
 
-		currentRunnable?.cancel()
-		currentRunnable = null
+		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE) {
+		if (phase.type == PhaseType.GRACE)
 			giveAllZatoichi()
-		} else if (phase.type == PhaseType.WAITING) {
+		else if (phase.type == PhaseType.WAITING)
 			removeAllZatoichi()
-		}
 	}
 
-	var currentRunnable = null as BukkitRunnable?
-
-	private fun getRunnable(): BukkitRunnable {
-		return object : BukkitRunnable() {
-			/* punishment loop for sheathing without killing */
-			override fun run() {
-				Bukkit.getServer().onlinePlayers.forEach { player ->
-					val lastHolding = getZatoichiMeta(player, HOLDING_META_TAG)
-					val currentlyHolding = isHalfZatoichi(player.inventory.itemInMainHand)
-
-					if (lastHolding) {
-						if (!currentlyHolding) {
-							setZatoichiMeta(player, HOLDING_META_TAG, false)
-
-							if (!getZatoichiMeta(player, BLOODY_META_TAG))
-								player.damage(5.0)
-							else
-								setZatoichiMeta(player, BLOODY_META_TAG, false)
-						}
-					} else if (currentlyHolding) {
-						setZatoichiMeta(player, HOLDING_META_TAG, true)
-					}
-				}
-
-			}
-		}
-	}
+	var taskID = 0
 
 	companion object {
 		const val HOLDING_META_TAG = "uhc_zatoichi_holding"

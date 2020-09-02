@@ -10,7 +10,7 @@ class FinalDefault : Phase() {
 
 	override fun customStart() {
 		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendPlayer(player, "The border has stopped shrinking")
+			GameRunner.sendGameMessage(player, "The border has stopped shrinking")
 		}
 
 		if (uhc.netherToZero) {
@@ -24,9 +24,9 @@ class FinalDefault : Phase() {
 		}
 	}
 
-	override fun perSecond(remainingSeconds: Int) {
-
-	}
+	override fun customEnd() {}
+	override fun onTick(currentTick: Int) {}
+	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun getCountdownString(): String {
 		return "Glowing starts in"

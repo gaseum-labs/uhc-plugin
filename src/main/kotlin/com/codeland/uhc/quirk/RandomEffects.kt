@@ -15,10 +15,16 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {
 		timer = time
 
-		currentRunnable = getRunnable()
-		currentRunnable?.runTaskTimer(GameRunner.plugin, 0, 20)
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
+			if (!GameRunner.uhc.isGameGoing()) return@scheduleSyncRepeatingTask
 
-		if (!(GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)))
+			if (--timer == 0) {
+				timer = time
+				giveEffects()
+			}
+		}, 0, 20)
+
+		if (GameRunner.uhc.isGameGoing())
 			giveEffects()
 	}
 
@@ -38,26 +44,10 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 				player.removePotionEffect(activePotionEffect.type)
 		}
 
-		currentRunnable?.cancel()
-		currentRunnable = null
+		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
-	var currentRunnable = null as BukkitRunnable?
-
-	fun getRunnable(): BukkitRunnable {
-		return object : BukkitRunnable() {
-			override fun run() {
-				if (GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)) return
-
-				--timer
-				if (timer == 0) {
-					timer = time
-
-					giveEffects()
-				}
-			}
-		}
-	}
+	var taskID = 0
 
 	companion object {
 		var time = 180
@@ -92,8 +82,8 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 
 		/* meta tags for potioned players */
 
-		const val LIST_TAG = "UHC_Q_POTION_LIST"
-		const val INDEX_TAG = "UHC_Q_POTION_INDEX"
+		private const val LIST_TAG = "UHC_Q_POTION_LIST"
+		private const val INDEX_TAG = "UHC_Q_POTION_INDEX"
 
 		private fun createEffectsList(): Array<PotionEffectType> {
 			val ret = effects.copyOf()

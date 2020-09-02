@@ -1,20 +1,21 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.command.TeamData
+import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.gui.GuiOpener
+import com.codeland.uhc.gui.item.GuiOpener
+import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phases.grace.GraceDefault
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
-import com.codeland.uhc.util.ItemUtil
 import net.md_5.bungee.api.ChatColor
-import org.bukkit.Bukkit
-import org.bukkit.GameMode
-import org.bukkit.Material
-import org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS
+import org.bukkit.*
+import org.bukkit.command.Command
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -28,6 +29,7 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
+import org.bukkit.event.world.ChunkLoadEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.PlayerInventory
@@ -40,6 +42,10 @@ class EventListener : Listener {
 
 			if (player is Player)
 				WetSponge.addSponge(player)
+		}
+
+		if (GameRunner.uhc.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
+			event.isCancelled = true
 		}
 
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && !GameRunner.uhc.isPhase(PhaseType.POSTGAME))
@@ -72,13 +78,23 @@ class EventListener : Listener {
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
 			return
 
-		val stack = event.item
-				?: return
+		val stack = event.item ?: return
 
-		if (!GuiOpener.isGuiOpener(stack))
-			return
+		if (GuiOpener.isItem(stack)) {
+			Gui.open(event.player)
+		} else if (AntiSoftlock.isItem(stack)) {
+			val world = Bukkit.getWorlds()[0]
+			event.player.teleport(Location(world, 10000.5, Util.topBlockY(world, 10000, 10000) + 1.0, 10000.5))
+		} else if (ParkourCheckpoint.isItem(stack)) {
+			val location = ParkourCheckpoint.getPlayerCheckpoint(event.player)?.toBlockLocation()
+				?: return Commands.errorMessage(event.player, "Reach a redstone block to get a checkpoint!")
 
-		Gui.open(event.player)
+			val block = Bukkit.getWorlds()[0].getBlockAt(location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation())
+			if (block.type != ParkourCheckpoint.CHECKPOINT)
+				return Commands.errorMessage(event.player, "Checkpoint has been removed!")
+
+			event.player.teleport(location.add(0.5, 0.0, 0.5))
+		}
 	}
 
 	@EventHandler
@@ -90,28 +106,27 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
+		if (!GameRunner.uhc.isGameGoing()) return
+
 		val player = event.entity
-
-		var wasPest = Pests.isPest(player)
-
-		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-			if (event.entity.gameMode != GameMode.SPECTATOR) {
-				val team = GameRunner.playersTeam(player.name)
-				if (team != null) TeamData.removeFromTeam(team, player.name)
-
-				Pests.makePest(player)
-			}
-		} else {
-			player.gameMode = GameMode.SPECTATOR
-		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.HALF_ZATOICHI)) {
 			val killer = player.killer
 			if (killer != null) HalfZatoichi.onKill(killer)
 		}
 
-		if (!wasPest && !GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			GameRunner.playerDeath(player)
+		/* normal respawns in grace */
+		if (!GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
+			val wasPest = Pests.isPest(player)
+
+			if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
+				if (!wasPest && event.entity.gameMode != GameMode.SPECTATOR)
+					Pests.makePest(player)
+			} else {
+				player.gameMode = GameMode.SPECTATOR
+			}
+
+			if (!wasPest) GameRunner.playerDeath(player, Pests.isPest(player))
 		}
 	}
 
@@ -124,7 +139,11 @@ class EventListener : Listener {
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)) return
 
 		if (event.message.startsWith("!")) {
-			event.message = event.message.substring(1)
+			/* prevent blank global messages */
+			if (event.message.length == 1)
+				event.isCancelled = true
+			else
+				event.message = event.message.substring(1)
 
 		} else {
 			event.isCancelled = true
@@ -147,41 +166,58 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onEntitySpawn(event: EntitySpawnEvent) {
-		/* prevent spawns during waiting */
+	fun onChunkLoad(event: ChunkLoadEvent) {
+		/* prevent animals when the chunks load for waiting area */
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			if (event.entityType.isAlive) {
-				event.isCancelled = true
-				return
+			if (event.isNewChunk) {
+				event.chunk.entities.forEach { entity ->
+					entity.remove()
+				}
 			}
 		}
 	}
 
 	@EventHandler
+	fun onEntitySpawn(event: EntitySpawnEvent) {
+		/* prevent monsters during waiting */
+		event.isCancelled = GameRunner.uhc.isPhase(PhaseType.WAITING) &&
+			(
+				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL ||
+				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.BEEHIVE
+			) &&
+			event.entityType.isAlive
+	}
+
+	private fun spreadRespawn(event: PlayerRespawnEvent) {
+		val world = Bukkit.getWorlds()[0]
+		val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+		if (location != null) event.respawnLocation = location
+	}
+
+	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
-		/* only do this on pests mode */
-		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
-			return
+		/* grace respawning */
+		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
+			spreadRespawn(event)
 
-		var player = event.player
+		/* pest respawning */
+		} else {
+			if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
+				return
 
-		/* player is set to pest on death */
-		if (!Pests.isPest(player))
-			return
+			var player = event.player
 
-		var border = player.world.worldBorder
+			/* player is set to pest on death */
+			if (!Pests.isPest(player))
+				return
 
-		/* spread player */
-		var right = border.center.x + border.size / 2 - 10
-		var down = border.center.z + border.size / 2 - 10
+			var border = player.world.worldBorder
 
-		var x = ((Math.random() * right * 2) - right).toInt()
-		var z = ((Math.random() * down * 2) - down).toInt()
+			/* spread player */
+			spreadRespawn(event)
 
-		var y = Util.topBlockY(player.world, x, z)
-		event.respawnLocation.set(x + 0.5, y + 1.0, z + 0.5)
-
-		Pests.givePestSetup(player)
+			Pests.givePestSetup(player)
+		}
 	}
 
 	@EventHandler
@@ -257,7 +293,9 @@ class EventListener : Listener {
 
 		event.isCancelled = when {
 			HalfZatoichi.isHalfZatoichi(stack) -> true
-			GuiOpener.isGuiOpener(stack) -> true
+			GuiOpener.isItem(stack) -> true
+			AntiSoftlock.isItem(stack) -> true
+			ParkourCheckpoint.isItem(stack) -> true
 			else -> false
 		}
 	}
@@ -266,15 +304,6 @@ class EventListener : Listener {
 	fun onHealthRegen(event: EntityRegainHealthEvent) {
 		/* no regeneration in UHC */
 		var player = event.entity
-
-		if (player is Player) {
-
-			val test = emptyArray<ItemStack?>().copyOf()
-
-			player.inventory.contents.copyOf().contentEquals(test)
-
-
-		}
 
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
@@ -342,45 +371,28 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onBlockDrop(event: BlockDropItemEvent) {
-		var block = event.blockState
+		var blockState = event.blockState
+		var block = event.block
+
 		var player = event.player
 		var baseItem = event.player.inventory.itemInMainHand
 		var drops = event.items
-		var blockMiddle = block.location.add(0.5, 0.5, 0.5)
+		var blockMiddle = blockState.location.add(0.5, 0.5, 0.5)
 
-		if (GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX) && AppleFix.isLeaves(block.type) && !(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))) {
+		if (GameRunner.uhc.isEnabled(
+			QuirkType.APPLE_FIX) &&
+			AppleFix.isLeaves(blockState.type) &&
+			/* don't replace leaf block drops from shears */
+			!(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))
+		) {
 			drops.clear()
 
-			AppleFix.onbreakLeaves(block.type, player).forEach { drop ->
+			AppleFix.onBreakLeaves(blockState.type, player) { drop ->
 				player.world.dropItem(blockMiddle, drop)
 			}
 
 		} else if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
-			var fakeTool = baseItem.clone()
-
-			if (fakeTool.type == Material.AIR)
-				fakeTool = ItemStack(Material.PORKCHOP)
-
-			ItemUtil.enchantThing(fakeTool, LOOT_BONUS_BLOCKS, 4)
-
-			/* this is so gross but it's the only way */
-			var destroyedType = event.block.type
-			var destroyedData = event.block.blockData
-
-			event.block.type = block.type
-			event.block.blockData = block.blockData
-
-			var extraDrops = block.block.getDrops(fakeTool)
-
-			event.block.type = destroyedType
-			event.block.blockData = destroyedData
-			/* end gross block */
-
-			drops.clear()
-
-			extraDrops.forEach { extraDrop ->
-				player.world.dropItem(blockMiddle, extraDrop)
-			}
+			Abundance.replaceDrops(player, block, blockState, drops)
 		}
 	}
 
@@ -425,7 +437,7 @@ class EventListener : Listener {
 		/* drop apple for the nearest player */
 		Bukkit.getOnlinePlayers().any { player ->
 			if (player.location.distance(event.block.location) < 16) {
-				AppleFix.onbreakLeaves(event.block.type, player).forEach { drop ->
+				AppleFix.onBreakLeaves(event.block.type, player) { drop ->
 					player.world.dropItem(event.block.location.add(0.5, 0.5, 0.5), drop)
 				}
 

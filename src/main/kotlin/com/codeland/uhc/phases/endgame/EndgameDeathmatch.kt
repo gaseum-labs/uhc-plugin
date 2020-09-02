@@ -25,9 +25,9 @@ class EndgameDeathmatch : Phase() {
 		}
 	}
 
-	override fun perSecond(remainingSeconds: Int) {
-
-	}
+	override fun customEnd() {}
+	override fun onTick(currentTick: Int) {}
+	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun getCountdownString(): String {
 		return ""

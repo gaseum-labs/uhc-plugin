@@ -36,21 +36,21 @@ class ParticipantCommands : BaseCommand() {
 		sender as Player
 		val uhc = GameRunner.uhc
 
-		GameRunner.sendPlayer(sender, "Starting radius : ${uhc.startRadius.toInt()} blocks")
-		GameRunner.sendPlayer(sender, "Ending radius : ${uhc.endRadius.toInt()} blocks")
-		GameRunner.sendPlayer(sender, "Nether closes after shrinking : ${uhc.netherToZero}")
-		GameRunner.sendPlayer(sender, "Spawn cap coefficient : ${uhc.mobCapCoefficient}")
-		GameRunner.sendPlayer(sender, "Team Kill Bounty : ${uhc.killReward}")
+		GameRunner.sendGameMessage(sender, "Starting radius : ${uhc.startRadius.toInt()} blocks")
+		GameRunner.sendGameMessage(sender, "Ending radius : ${uhc.endRadius.toInt()} blocks")
+		GameRunner.sendGameMessage(sender, "Nether closes after shrinking : ${uhc.netherToZero}")
+		GameRunner.sendGameMessage(sender, "Spawn cap coefficient : ${uhc.mobCapCoefficient}")
+		GameRunner.sendGameMessage(sender, "Team Kill Bounty : ${uhc.killReward}")
 
-		GameRunner.sendPlayer(sender, "----------------PHASES----------------")
+		GameRunner.sendGameMessage(sender, "----------------PHASES----------------")
 
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.WAITING))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.GRACE))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.SHRINK))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.FINAL))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.GLOWING))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.ENDGAME))
-		GameRunner.sendPlayer(sender, phaseString(PhaseType.POSTGAME))
+		GameRunner.sendGameMessage(sender, phaseString(PhaseType.WAITING))
+		GameRunner.sendGameMessage(sender, phaseString(PhaseType.GRACE))
+		GameRunner.sendGameMessage(sender, phaseString(PhaseType.SHRINK))
+		GameRunner.sendGameMessage(sender, phaseString(PhaseType.FINAL))
+		GameRunner.sendGameMessage(sender, phaseString(PhaseType.GLOWING))
+		GameRunner.sendGameMessage(sender, phaseString(PhaseType.ENDGAME))
+		GameRunner.sendGameMessage(sender, phaseString(PhaseType.POSTGAME))
 	}
 
 	@CommandAlias("gui")
@@ -67,18 +67,9 @@ class ParticipantCommands : BaseCommand() {
 	fun startSpecting(sender: CommandSender) {
 		sender as Player
 
-		if (sender.gameMode != GameMode.SPECTATOR) {
-			val team = GameRunner.playersTeam(sender.name)
-
-			if (team != null) {
-				TeamData.removeFromTeam(team, sender.name)
-			}
-
-			if (!GameRunner.uhc.isPhase(PhaseType.POSTGAME) && !GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-				sender.gameMode = GameMode.SPECTATOR
-
-				GameRunner.playerDeath(sender)
-			}
+		if (sender.gameMode != GameMode.SPECTATOR && GameRunner.uhc.isGameGoing()) {
+			sender.gameMode = GameMode.SPECTATOR
+			GameRunner.playerDeath(sender, true)
 		}
 	}
 
@@ -139,10 +130,10 @@ class ParticipantCommands : BaseCommand() {
 	fun getMobCaps(sender: CommandSender) {
 		sender as Player
 
-		GameRunner.sendPlayer(sender, "Monster spawn limit: " + sender.world.monsterSpawnLimit)
-		GameRunner.sendPlayer(sender, "Animal spawn limit: " + sender.world.animalSpawnLimit)
-		GameRunner.sendPlayer(sender, "Ambient spawn limit: " + sender.world.ambientSpawnLimit)
-		GameRunner.sendPlayer(sender, "Water animal spawn limit: " + sender.world.waterAnimalSpawnLimit)
+		GameRunner.sendGameMessage(sender, "Monster spawn limit: " + sender.world.monsterSpawnLimit)
+		GameRunner.sendGameMessage(sender, "Animal spawn limit: " + sender.world.animalSpawnLimit)
+		GameRunner.sendGameMessage(sender, "Ambient spawn limit: " + sender.world.ambientSpawnLimit)
+		GameRunner.sendGameMessage(sender, "Water animal spawn limit: " + sender.world.waterAnimalSpawnLimit)
 	}
 
 	@CommandAlias("help")
@@ -151,10 +142,10 @@ class ParticipantCommands : BaseCommand() {
 	fun help(sender: CommandSender) {
 		sender as Player
 
-		GameRunner.sendPlayer(sender, "Commands:")
+		GameRunner.sendGameMessage(sender, "Commands:")
 
 		this.registeredCommands.forEach { command ->
-			GameRunner.sendPlayer(sender, "${command.getSyntaxText()} > ${command.getHelpText()}")
+			GameRunner.sendGameMessage(sender, "${command.getSyntaxText()} > ${command.getHelpText()}")
 		}
 	}
 }

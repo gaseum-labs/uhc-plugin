@@ -5,14 +5,15 @@ import com.codeland.uhc.phaseType.PhaseType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 
 object Commands {
     fun errorMessage(sender: CommandSender, text: String) {
-        val message = TextComponent(text)
-        message.color = ChatColor.RED.asBungee()
-        message.isBold = true
+        sender.sendMessage("${ChatColor.RED}${ChatColor.BOLD}$text")
+    }
 
-        sender.sendMessage(message)
+    fun errorMessage(player: Player, text: String) {
+        player.sendMessage("${ChatColor.RED}${ChatColor.BOLD}$text")
     }
 
     /**
@@ -29,8 +30,8 @@ object Commands {
         return false
     }
 
-    fun waitGuard(sender: CommandSender): Boolean {
-        if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+    fun notGoingGuard(sender: CommandSender): Boolean {
+        if (GameRunner.uhc.isGameGoing()) {
             errorMessage(sender, "This command cannot be used while the game is running")
 
             return true

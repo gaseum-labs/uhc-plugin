@@ -133,10 +133,9 @@ class CarePackages {
 			fun getTier(): Int {
 				return if (fastMode) {
 					val phase = GameRunner.uhc.currentPhase
-					if (phase == null)
-						0
-					else
-						((1 - (phase.remainingSeconds.toDouble() / (phase.length + 1))) * NUM_DROPS).toInt()
+
+					if (phase == null) 0
+					else ((1 - (phase.remainingSeconds.toDouble() / (phase.length + 1))) * NUM_DROPS).toInt()
 				} else {
 					dropIndex
 				}
@@ -265,22 +264,6 @@ class CarePackages {
 			}
 		}
 
-		fun ironPart(): ItemStack {
-			return if (Math.random() < 0.5) {
-				ItemStack(Material.IRON_INGOT, Util.randRange(3, 6))
-			} else {
-				ItemStack(Material.IRON_NUGGET, Util.randRange(12, 24))
-			}
-		}
-
-		fun goldPart(): ItemStack {
-			return if (Math.random() < 0.5) {
-				ItemStack(Material.GOLD_INGOT, Util.randRange(3, 6))
-			} else {
-				ItemStack(Material.GOLD_NUGGET, Util.randRange(12, 24))
-			}
-		}
-
 		fun bucket(): ItemStack {
 			val rand = Math.random()
 
@@ -309,16 +292,7 @@ class CarePackages {
 		}
 
 		fun anyThrow(): Material {
-			val rand = Math.random()
-
-			return if (rand < 0.75)
-				Material.SPLASH_POTION
-			else
-				Material.LINGERING_POTION
-		}
-
-		fun splashLinger(): Material {
-			return if (Math.random() < 0.5)
+			return if (Math.random() < 0.75)
 				Material.SPLASH_POTION
 			else
 				Material.LINGERING_POTION
@@ -333,10 +307,7 @@ class CarePackages {
 				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(TOOL_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
 
-				LootEntry { getTieredBook(TIER_1, 2, ENCHANT_CHANCE) },
-
-				LootEntry { ItemStack(Material.WATER_BUCKET) },
-				LootEntry { ItemStack(Material.LAVA_BUCKET) }
+				LootEntry { bucket() }
 			),
 			arrayOf(
 				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_1, 2, ENCHANT_CHANCE) },
@@ -344,9 +315,7 @@ class CarePackages {
 
 				LootEntry { getTieredBook(TIER_1, 2, ENCHANT_CHANCE) },
 
-				/* bucket section */
-				LootEntry { ItemStack(Material.WATER_BUCKET) },
-				LootEntry { ItemStack(Material.LAVA_BUCKET) },
+				LootEntry { bucket() },
 
 				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(4, 8)) }
 			),
@@ -356,9 +325,7 @@ class CarePackages {
 
 				LootEntry { getTieredBook(TIER_2, 2, ENCHANT_CHANCE) },
 
-				/* bucket section */
-				LootEntry { ItemStack(Material.WATER_BUCKET) },
-				LootEntry { ItemStack(Material.LAVA_BUCKET) },
+				LootEntry { bucket() },
 
 				LootEntry { getTieredTool(BOW_SET, TIER_1, 1, ENCHANT_CHANCE) },
 
@@ -471,17 +438,16 @@ class CarePackages {
 			LootEntry { ItemStack(Material.WET_SPONGE, Util.randRange(1, 5)) },
 			LootEntry { HalfZatoichi.createZatoichi() },
 			LootEntry { Pests.genPestArmor(Material.LEATHER_CHESTPLATE) },
-			LootEntry { Pests.genPestTool(Material.WOODEN_PICKAXE) }
+			LootEntry { Pests.genPestTool(Material.WOODEN_PICKAXE) },
+			LootEntry { ItemStack(Material.STICKY_PISTON, Util.randRange(8, 13)) }
 		)
 
 		fun generateLoot(tier: Int, amount: Int, inventory: Inventory, wacky: Boolean) {
 			val addItem = { item: ItemStack ->
 				var space = Util.randRange(0, inventory.size - 1)
 
-				while (inventory.getItem(space) != null) {
-					++space
-					space %= inventory.size
-				}
+				while (inventory.getItem(space) != null)
+					space = (space + 1) % inventory.size
 
 				inventory.setItem(space, item)
 			}
@@ -621,7 +587,7 @@ class CarePackages {
 
 			/* add effect to the firework */
 			var meta = firework.fireworkMeta
-			meta.addEffect(ItemUtil.fireworkEffect(FireworkEffect.Type.BALL_LARGE))
+			meta.addEffect(ItemUtil.fireworkEffect(FireworkEffect.Type.BALL_LARGE, 1))
 			firework.fireworkMeta = meta
 
 			firework.detonate()
