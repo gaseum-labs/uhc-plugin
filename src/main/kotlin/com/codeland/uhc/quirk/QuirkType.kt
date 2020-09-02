@@ -65,7 +65,12 @@ enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, v
 
 	LOW_GRAVITY("Low Gravity", ::LowGravity, false, Material.END_STONE, arrayOf(
 		"Gravity is much lower than usual"
-	));
+	)),
+
+	HOTBAR("Limited Inventory", ::Hotbar, false, Material.OBSIDIAN, arrayOf(
+		"All players are limited to only",
+		"their hotbar to store items"
+  ));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
 
@@ -91,7 +96,8 @@ enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, v
     companion object {
         init {
             CREATIVE.setIncompatible(UNSHELTERED)
-        }
+			SHARED_INVENTORY.setIncompatible(HOTBAR) // could this be compatible?
+		}
     }
 
 	fun createQuirk(): Quirk {
