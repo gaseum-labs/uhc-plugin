@@ -70,7 +70,7 @@ enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, v
 	HOTBAR("Limited Inventory", ::Hotbar, false, Material.OBSIDIAN, arrayOf(
 		"All players are limited to only",
 		"their hotbar to store items"
-  ));
+  	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
 

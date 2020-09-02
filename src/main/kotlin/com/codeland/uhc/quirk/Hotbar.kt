@@ -1,5 +1,6 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -14,7 +15,7 @@ class Hotbar(type: QuirkType) : Quirk(type) {
     }
 
     override fun onPhaseSwitch(phase: PhaseVariant) {
-        if (phase == PhaseVariant.GRACE_DEFAULT) {
+        if (phase.type == PhaseType.GRACE) {
             for (player in Bukkit.getOnlinePlayers()) {
                 val inv = player.inventory
                 for (slot in 9 until 36) {
