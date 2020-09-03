@@ -6,6 +6,8 @@ import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import org.bukkit.inventory.meta.ItemMeta
+import java.lang.Integer.max
+import java.lang.Integer.min
 
 object ToolTier {
 	const val WOOD = 0; const val LEATHER = 0
@@ -136,7 +138,7 @@ object ToolTier {
 				EnchantmentPair(Enchantment.DURABILITY, 3)
 			),
 			arrayOf(
-				EnchantmentPair(Enchantment.LOOT_BONUS_BLOCKS, 1, 3),
+				EnchantmentPair(Enchantment.LOOT_BONUS_BLOCKS, 2, 3),
 				EnchantmentPair(Enchantment.SILK_TOUCH)
 			)
 		),
@@ -146,7 +148,7 @@ object ToolTier {
 				EnchantmentPair(Enchantment.DURABILITY, 3)
 			),
 			arrayOf(
-				EnchantmentPair(Enchantment.LOOT_BONUS_BLOCKS, 1, 3),
+				EnchantmentPair(Enchantment.LOOT_BONUS_BLOCKS, 3),
 				EnchantmentPair(Enchantment.SILK_TOUCH)
 			)
 		)
@@ -318,9 +320,6 @@ object ToolTier {
 		Material.TRIDENT,
 		ToolEnchantmentTier(
 			arrayOf(
-				EnchantmentPair(Enchantment.VANISHING_CURSE)
-			),
-			arrayOf(
 				EnchantmentPair(Enchantment.LOYALTY, 1, 3),
 				EnchantmentPair(Enchantment.RIPTIDE, 1, 3)
 			)
@@ -358,7 +357,7 @@ object ToolTier {
 	)
 
 	val TIER_SHIELD = ToolTieredInfo(
-		Material.ENCHANTED_BOOK,
+		Material.SHIELD,
 		ToolEnchantmentTier(arrayOf(
 			EnchantmentPair(Enchantment.MENDING),
 			EnchantmentPair(Enchantment.VANISHING_CURSE),
@@ -449,7 +448,7 @@ object ToolTier {
 
 		var numApplied = 0
 		val optionIndex = enchantmentTier.available.size
-		val totalEnchants = enchantmentTier.available.size + if (enchantmentTier.option.isEmpty()) 0 else 1
+		val totalEnchants = enchantmentTier.available.size + min(enchantmentTier.option.size, 1)
 
 		val willApply = Array(totalEnchants) { false }
 
@@ -460,6 +459,7 @@ object ToolTier {
 				applyIndex = (applyIndex + 1) % totalEnchants
 
 			++numApplied
+			willApply[applyIndex] = true
 
 			applyEnchant(
 				if (applyIndex == optionIndex)

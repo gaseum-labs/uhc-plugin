@@ -34,6 +34,7 @@ import org.bukkit.event.world.ChunkLoadEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.PlayerInventory
+import kotlin.math.log
 
 class EventListener : Listener {
 	@EventHandler

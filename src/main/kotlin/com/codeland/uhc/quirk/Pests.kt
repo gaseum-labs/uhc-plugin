@@ -88,10 +88,17 @@ class Pests(type: QuirkType) : Quirk(type) {
             return randomDyeArmor(stack)
         }
 
+        val pestToolList = arrayOf(
+            Material.WOODEN_SWORD,
+            Material.WOODEN_PICKAXE,
+            Material.WOODEN_AXE,
+            Material.WOODEN_SHOVEL
+        )
+
         fun genPestTool(item: Material): ItemStack {
             var stack = ItemStack(item)
 
-            stack.itemMeta = pestToolMeta;
+            stack.itemMeta = pestToolMeta
 
             return stack
         }

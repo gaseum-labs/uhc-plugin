@@ -1,9 +1,11 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.util.Util
 import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.EntityType.*
+import org.bukkit.inventory.ItemStack
 
 class Summoner(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
@@ -155,6 +157,14 @@ class Summoner(type: QuirkType) : Quirk(type) {
 			}
 
 			return summon?.type
+		}
+
+		fun randomPassiveEgg(amount: Int): ItemStack {
+			return ItemStack(Util.randFromArray(passiveSummons).egg, amount)
+		}
+
+		fun randomAggroEgg(amount: Int): ItemStack {
+			return ItemStack(Util.randFromArray(aggroSummons).egg, amount)
 		}
 	}
 }
