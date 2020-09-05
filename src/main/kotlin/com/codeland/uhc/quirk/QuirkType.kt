@@ -55,7 +55,7 @@ enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, v
 	)),
 
 	RANDOM_EFFECTS("Random Effects", ::RandomEffects, false, Material.POTION, arrayOf(
-		"Every 5 minutes,",
+		"Every 3 minutes,",
 		"Everyone gets a random potion effect"
 	)),
 

@@ -37,8 +37,10 @@ import org.bukkit.*
 import org.bukkit.block.Chest
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
+import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.CompassMeta
 import org.bukkit.inventory.meta.SuspiciousStewMeta
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -69,8 +71,8 @@ class CarePackages {
 	}
 
 	fun onDisable() {
-		currentRunnable?.cancel()
-		currentRunnable = null
+		Bukkit.getScheduler().cancelTask(taskID)
+		taskID = -1
 
 		objective?.unregister()
 
@@ -78,19 +80,23 @@ class CarePackages {
 	}
 
 	fun onStart() {
-		currentRunnable = generateRunnable()
-		currentRunnable?.runTaskTimer(GameRunner.plugin, 0, 20)
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, ::runnable, 0, 20)
 		objective?.displaySlot = DisplaySlot.SIDEBAR
 	}
 
 	fun onEnd() {
-		currentRunnable?.cancel()
-		currentRunnable = null
+		Bukkit.getScheduler().cancelTask(taskID)
+		taskID = -1
+
 		objective?.displaySlot = null
 	}
 
+	fun isGoing(): Boolean {
+		return taskID != -1
+	}
+
+	var taskID = -1
 	var objective = null as Objective?
-	var currentRunnable = null as BukkitRunnable?
 
 	var scoreTime = null as Score?
 	var scorePosition = null as Score?
@@ -100,6 +106,18 @@ class CarePackages {
 	var fastMode = false
 	private set
 
+	val NUM_ITEMS = 18
+	val NUM_DROPS = 6
+
+	var running = false
+
+	var timer = 0
+
+	lateinit var previousLocation: Location
+	lateinit var nextLocation: Location
+	lateinit var dropTimes: Array<Int>
+	var dropIndex = 0
+
 	/**
 	 * @return if the setting was successful
 	 *
@@ -107,7 +125,7 @@ class CarePackages {
 	 * already running
 	 */
 	fun setFastMode(value: Boolean): Boolean {
-		if (currentRunnable == null) {
+		if (!isGoing()) {
 			fastMode = value
 			Gui.updateCarePackages(this)
 
@@ -117,130 +135,95 @@ class CarePackages {
 		return false
 	}
 
-	fun generateRunnable(): BukkitRunnable {
-		return object : BukkitRunnable() {
-			val NUM_ITEMS = 18
-			val NUM_DROPS = 6
+	private fun getTier(): Int {
+		return if (fastMode) {
+			val phase = GameRunner.uhc.currentPhase
 
-			var running = false
+			if (phase == null) 0
+			else ((1 - (phase.remainingSeconds.toDouble() / (phase.length + 1))) * NUM_DROPS).toInt() / 2
+		} else {
+			dropIndex / 2
+		}
+	}
 
-			var timer = 0
-			var previousLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
-			var nextLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
+	private fun setScore(objective: Objective?, score: Score?, value: String, index: Int): Score? {
+		/* trick kotlin in allowing us to return */
+		if (objective == null) return null
 
-			lateinit var dropTimes: Array<Int>
-			var dropIndex = 0
+		/* remove the previous score if applicable */
+		if (score != null) {
+			val scoreboard = objective.scoreboard
+			scoreboard?.resetScores(score.entry)
+		}
 
-			fun getTier(): Int {
-				return if (fastMode) {
-					val phase = GameRunner.uhc.currentPhase
+		val ret = objective.getScore(value)
+		ret.score = index
 
-					if (phase == null) 0
-					else ((1 - (phase.remainingSeconds.toDouble() / (phase.length + 1))) * NUM_DROPS).toInt() / 2
-				} else {
-					dropIndex / 2
-				}
+		return ret
+	}
+
+	private fun shutOff() {
+		running = false
+		onEnd()
+	}
+
+	private fun reset() {
+		/* don't keep doing this outside of shrinking */
+		if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || (!fastMode && dropIndex == dropTimes.size))
+			return shutOff()
+
+		timer = if (fastMode) FAST_TIME else dropTimes[dropIndex]
+
+		nextLocation = findDropSpot(Bukkit.getWorlds()[0], previousLocation, timer, 16)
+		previousLocation = nextLocation
+
+		Bukkit.getOnlinePlayers().forEach { player ->
+			player.compassTarget = nextLocation
+		}
+
+		val color = dropTextColor(getTier())
+		val coordinateString = "at ($color${BOLD}${nextLocation.blockX}${RESET}, $color${BOLD}${nextLocation.blockY}${RESET}, $color${BOLD}${nextLocation.blockZ}${RESET})"
+
+		scoreTime = setScore(objective, scoreTime, "in $color${BOLD}${Util.timeString(timer)}", 1)
+		scorePosition = setScore(objective, scorePosition, coordinateString, 0)
+	}
+
+	private fun generateDropTimes(shrinkTime: Int): Array<Int> {
+		val alongs = Array(NUM_DROPS) { i -> (i + 1.0f) / NUM_DROPS }
+		val range = (1.0f / NUM_DROPS) / 4
+
+		/* add randomness to every time except the last which has to be 1 */
+		for (i in 0 until alongs.lastIndex)
+			alongs[i] += Util.randRange(-range, range)
+
+		return Array(NUM_DROPS) { i ->
+			((if (i == 0) alongs[i] else (alongs[i] - alongs[i - 1])) * shrinkTime).toInt()
+		}
+	}
+
+	private fun runnable() {
+		if (running) {
+			--timer
+			if (timer == 0) {
+				generateDrop(getTier(), if (fastMode) NUM_ITEMS / 2 else NUM_ITEMS, nextLocation.toBlockLocation(), fastMode)
+
+				++dropIndex
+
+				reset()
+			} else {
+				scoreTime = setScore(objective, scoreTime, "in ${dropTextColor(getTier())}${BOLD}${Util.timeString(timer)}", 1)
 			}
 
-			fun setScore(objective: Objective?, score: Score?, value: String, index: Int): Score? {
-				/* trick kotlin in allowing us to return */
-				if (objective == null) return null
+		/* start making drops during shrinking round */
+		} else if (GameRunner.uhc.isPhase(PhaseType.SHRINK)) {
+			running = true
 
-				/* remove the previous score if applicable */
-				if (score != null) {
-					val scoreboard = objective.scoreboard
-					scoreboard?.resetScores(score.entry)
-				}
+			previousLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
+			nextLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
 
-				val ret = objective.getScore(value)
-				ret.score = index
+			if (!fastMode) dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
 
-				return ret
-			}
-
-			fun shutOff() {
-				running = false
-				onEnd()
-			}
-
-			fun reset() {
-				/* don't keep doing this outside of shrinking */
-				if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || (!fastMode && dropIndex == dropTimes.size))
-					return shutOff()
-
-				timer = if (fastMode) FAST_TIME else dropTimes[dropIndex]
-
-				nextLocation = findDropSpot(Bukkit.getWorlds()[0], previousLocation, timer, 16)
-				previousLocation = nextLocation
-
-				val color = dropTextColor(getTier())
-				val coordinateString = "at ($color${BOLD}${nextLocation.blockX}${RESET}, $color${BOLD}${nextLocation.blockY}${RESET}, $color${BOLD}${nextLocation.blockZ}${RESET})"
-
-				scoreTime = setScore(objective, scoreTime, "in $color${BOLD}${Util.timeString(timer)}", 1)
-				scorePosition = setScore(objective, scorePosition, coordinateString, 0)
-			}
-
-			fun generateDropTimes(shrinkTime: Int): Array<Int> {
-				val percentages = Array(NUM_DROPS) { 1.0f / NUM_DROPS }
-
-				/* add randomness in the times */
-				for (i in percentages.indices) {
-					/* half a minute to a minute differences */
-					var shiftAmount = Util.randRange(0.025f, 0.1f)
-
-					var reduceIndex = Util.randRange(0, percentages.lastIndex)
-					var gainIndex = Util.randRange(0, percentages.lastIndex)
-
-					var reduced = percentages[reduceIndex]
-					var gained = percentages[gainIndex]
-					var valid = true
-
-					var oldReduce = reduced
-					reduced -= shiftAmount
-
-					/* don't reduce any time to less than a minute */
-					/* if it would, find the actual amount it got reduced by */
-					if (reduced < 0.05f) {
-						reduced = 0.05f
-						shiftAmount = oldReduce - percentages[reduceIndex]
-
-						if (shiftAmount < 0)
-							valid = false
-					}
-
-					gained += shiftAmount
-
-					if (valid) {
-						percentages[reduceIndex] = reduced
-						percentages[gainIndex] = gained
-					}
-				}
-
-				return Array(NUM_DROPS) { i -> (percentages[i] * shrinkTime).toInt() }
-			}
-
-			override fun run() {
-				if (running) {
-					--timer
-					if (timer == 0) {
-						generateDrop(getTier(), if (fastMode) NUM_ITEMS / 2 else NUM_ITEMS, nextLocation.toBlockLocation(), fastMode)
-
-						++dropIndex
-
-						reset()
-					} else {
-						scoreTime = setScore(objective, scoreTime, "in ${dropTextColor(getTier())}${BOLD}${Util.timeString(timer)}", 1)
-					}
-
-				/* start making drops during shrinking round */
-				} else if (GameRunner.uhc.isPhase(PhaseType.SHRINK)) {
-					running = true
-
-					if (!fastMode) dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
-
-					reset()
-				}
-			}
+			reset()
 		}
 	}
 
@@ -276,12 +259,9 @@ class CarePackages {
 		}
 
 		fun bucket(): ItemStack {
-			val rand = Math.random()
-
 			return when {
-				rand < 1.0 / 3.0 -> ItemStack(Material.LAVA_BUCKET)
-				rand < 2.0 / 3.0 -> ItemStack(Material.WATER_BUCKET)
-				else -> ItemStack(Material.BUCKET)
+				Math.random() < 0.5 -> ItemStack(Material.LAVA_BUCKET)
+				else -> ItemStack(Material.WATER_BUCKET)
 			}
 		}
 
@@ -291,7 +271,6 @@ class CarePackages {
 			Material.GHAST_TEAR,
 			Material.MAGMA_CREAM,
 			Material.FERMENTED_SPIDER_EYE,
-			Material.REDSTONE,
 			Material.GLOWSTONE_DUST
 		)
 
@@ -318,7 +297,7 @@ class CarePackages {
 				LootEntry { ItemStack(Material.RED_MUSHROOM, Util.randRange(4, 8)) },
 				LootEntry { ItemStack(Material.BROWN_MUSHROOM, Util.randRange(4, 8)) },
 				LootEntry { ItemStack(Material.OXEYE_DAISY, Util.randRange(4, 8)) },
-				LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(4,  8)) },
+				LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(6,  12)) },
 				LootEntry { ItemStack(Material.GUNPOWDER, Util.randRange(6, 12)) },
 				LootEntry { ItemStack(Material.FEATHER, Util.randRange(6, 12)) },
 				LootEntry { ItemStack(Material.LEATHER, Util.randRange(6,  12)) },

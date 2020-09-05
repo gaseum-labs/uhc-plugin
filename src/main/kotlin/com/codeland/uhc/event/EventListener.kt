@@ -2,6 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.NetherFix
 import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.Gui
@@ -16,9 +17,14 @@ import com.codeland.uhc.quirk.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
+import org.bukkit.block.Biome
+import org.bukkit.block.BlockFace
+import org.bukkit.block.data.Ageable
 import org.bukkit.command.Command
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
@@ -31,6 +37,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.world.ChunkLoadEvent
+import org.bukkit.event.world.ChunkPopulateEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.PlayerInventory
@@ -171,15 +178,48 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onChunkLoad(event: ChunkLoadEvent) {
+	fun onChunkLoad(event: ChunkPopulateEvent) {
+		val world = event.world
+		val chunk = event.chunk
+
 		/* prevent animals when the chunks load for waiting area */
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			if (event.isNewChunk) {
-				event.chunk.entities.forEach { entity ->
-					entity.remove()
-				}
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING) && world.environment == World.Environment.NORMAL) {
+			chunk.entities.forEach { entity ->
+				entity.remove()
 			}
 		}
+
+		/* nether wart generation */
+		/* also, generate one in every 4 chunks */
+		if (world.environment == World.Environment.NETHER && Math.random() < 0.25)
+			when (world.getBiome(chunk.x * 16, 64, chunk.z * 16)) {
+				Biome.NETHER_WASTES -> {
+					NetherFix.placeWart(chunk, 32, 34) { block, under ->
+						block.type == Material.AIR && under.type == Material.SOUL_SAND
+					}
+				}
+				Biome.BASALT_DELTAS -> {
+					NetherFix.placeWart(chunk, 32, 99) { block, under ->
+						block.type == Material.AIR && under.type == Material.MAGMA_BLOCK
+					}
+				}
+				Biome.CRIMSON_FOREST -> {
+					NetherFix.placeWart(chunk, 32, 99) { block, under ->
+						block.type == Material.CRIMSON_ROOTS || block.type == Material.CRIMSON_FUNGUS
+					}
+				}
+				Biome.WARPED_FOREST -> {
+					NetherFix.placeWart(chunk, 32, 99) { block, under ->
+						block.type == Material.WARPED_ROOTS || block.type == Material.WARPED_FUNGUS
+					}
+				}
+				Biome.SOUL_SAND_VALLEY -> {
+					NetherFix.placeWart(chunk, 32, 99) { block, under ->
+						block.type == Material.AIR && under.type == Material.SOUL_SAND
+					}
+				}
+				else -> {}
+			}
 	}
 
 	@EventHandler
@@ -191,6 +231,14 @@ class EventListener : Listener {
 				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.BEEHIVE
 			) &&
 			event.entityType.isAlive
+
+		val world = event.location.world
+		if (world.environment == World.Environment.NETHER) {
+			if (event.entity is LivingEntity && Math.random() < 0.01) {
+				event.isCancelled = true
+				world.spawnEntity(event.location, EntityType.BLAZE)
+			}
+		}
 	}
 
 	private fun spreadRespawn(event: PlayerRespawnEvent) {
@@ -227,40 +275,24 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-			val player = event.target
+		val player = event.target
+		if (player !is Player) return
 
-			if (player is Player && Math.random() < 0.20)
-				WetSponge.addSponge(player)
+		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
+			if (Math.random() < 0.20) WetSponge.addSponge(player)
 		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.COMMANDER)) {
-			val target = event.target ?: return
+			val team = GameRunner.playersTeam(player.name)
 
-			if (target !is Player)
-				return
-
-			val team = GameRunner.playersTeam(target.name) ?: return
-
-			if (Commander.isCommandedBy(event.entity, team.color))
+			if (team != null && Commander.isCommandedBy(event.entity, team.color))
 				event.isCancelled = true
 		}
 
-		/* preventing pest targeting */
-
-		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
-			return
-
-		if (event.target == null)
-			return
-
-		if (event.target !is Player)
-			return
-
-		var player = event.target as Player
-
-		if (Pests.isPest(player))
-			event.isCancelled = true
+		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
+			if (Pests.isPest(player))
+				event.isCancelled = true
+		}
 	}
 
 	@EventHandler
@@ -441,9 +473,9 @@ class EventListener : Listener {
 
 		/* drop apple for the nearest player */
 		Bukkit.getOnlinePlayers().any { player ->
-			if (player.location.distance(event.block.location) < 16) {
+			if (player.location.distance(event.block.location.toCenterLocation()) < 16) {
 				AppleFix.onBreakLeaves(event.block.type, player) { drop ->
-					player.world.dropItem(event.block.location.add(0.5, 0.5, 0.5), drop)
+					player.world.dropItem(event.block.location.toCenterLocation(), drop)
 				}
 
 				true
