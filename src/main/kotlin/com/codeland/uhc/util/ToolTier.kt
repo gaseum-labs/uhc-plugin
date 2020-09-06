@@ -289,20 +289,14 @@ object ToolTier {
 			)),
 			ToolEnchantmentTier(
 				arrayOf(
-					EnchantmentPair(Enchantment.QUICK_CHARGE, 2, 3)
-				),
-				arrayOf(
-					EnchantmentPair(Enchantment.MULTISHOT),
-					EnchantmentPair(Enchantment.PIERCING, 1, 2)
+					EnchantmentPair(Enchantment.QUICK_CHARGE, 2, 3),
+					EnchantmentPair(Enchantment.MULTISHOT)
 				)
 			),
 			ToolEnchantmentTier(
 				arrayOf(
-					EnchantmentPair(Enchantment.QUICK_CHARGE, 3)
-				),
-				arrayOf(
-					EnchantmentPair(Enchantment.MULTISHOT),
-					EnchantmentPair(Enchantment.PIERCING, 3, 4)
+					EnchantmentPair(Enchantment.QUICK_CHARGE, 3),
+					EnchantmentPair(Enchantment.MULTISHOT)
 				)
 			)
 		)
@@ -341,17 +335,16 @@ object ToolTier {
 				EnchantmentPair(Enchantment.DIG_SPEED, 5),
 				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2, 3),
 				EnchantmentPair(Enchantment.DAMAGE_ALL, 2),
-				EnchantmentPair(Enchantment.ARROW_DAMAGE, 1, 2),
-				EnchantmentPair(Enchantment.PIERCING, 1, 2)
+				EnchantmentPair(Enchantment.ARROW_DAMAGE, 1, 2)
 			)),
 			ToolEnchantmentTier(arrayOf(
 				EnchantmentPair(Enchantment.ARROW_INFINITE),
 				EnchantmentPair(Enchantment.ARROW_FIRE),
-				EnchantmentPair(Enchantment.FIRE_ASPECT, 1, 2),
+				EnchantmentPair(Enchantment.FIRE_ASPECT, 1),
 				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 4),
 				EnchantmentPair(Enchantment.DAMAGE_ALL, 3, 5),
-				EnchantmentPair(Enchantment.ARROW_DAMAGE, 3, 5),
-				EnchantmentPair(Enchantment.PIERCING, 3, 4)
+				EnchantmentPair(Enchantment.ARROW_DAMAGE, 3),
+				EnchantmentPair(Enchantment.PIERCING, 1)
 			))
 		)
 	)

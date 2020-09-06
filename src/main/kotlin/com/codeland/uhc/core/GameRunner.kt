@@ -19,15 +19,17 @@ import org.bukkit.scoreboard.Team
 class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 
 	init {
-		GameRunner.uhc = uhc
 		GameRunner.plugin = plugin
 		GameRunner.bot = bot
+
+		GameRunner.uhc = uhc
 	}
 
 	companion object {
-		lateinit var uhc: UHC
 		lateinit var plugin: UHCPlugin
 		var bot: MixerBot? = null
+
+		lateinit var uhc: UHC
 
 		fun teamIsAlive(team: Team): Boolean {
 			return team.entries.any { entry ->
@@ -111,7 +113,7 @@ class GameRunner(uhc: UHC, plugin: UHCPlugin, bot: MixerBot?) {
 		}
 
 		fun playersTeam(playerName: String) : Team? {
-			return Bukkit.getServer().scoreboardManager.mainScoreboard.getEntryTeam(playerName);
+			return Bukkit.getServer().scoreboardManager.mainScoreboard.getEntryTeam(playerName)
 		}
 
 		fun sendGameMessage(player: Player, message: String) {

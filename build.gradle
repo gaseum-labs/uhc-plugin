@@ -13,8 +13,8 @@ plugins {
 group = pluginGroup
 version = pluginVersion
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 idea {
     module {
@@ -24,12 +24,12 @@ idea {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
     kotlinOptions.javaParameters = true
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 repositories {
@@ -66,20 +66,15 @@ dependencies {
     implementation 'com.destroystokyo.paper:paper-api:1.16.1-R0.1-SNAPSHOT'
     implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
     implementation 'net.dv8tion:JDA:4.2.0_168'
+    api files('./WorldGeneratorApi.jar')
+    api files('./paper-184.jar')
 }
 
 shadowJar {
     relocate 'co.aikar.commands', 'com.codeland.uhc.acf'
     relocate 'co.aikar.locales', 'com.codeland.uhc.locales'
+    exclude 'WorldGeneratorApi.jar'
+    exclude 'paper-184.jar'
 }
 
 build.dependsOn shadowJar
-
-/*import org.apache.tools.ant.filters.ReplaceTokens
-
-processResources {
-    from(sourceSets.main.resources.srcDirs) {
-        filter ReplaceTokens, tokens: [version: version]
-    }
-}*/
-

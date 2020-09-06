@@ -14,7 +14,7 @@ import org.bukkit.scoreboard.Team
 import kotlin.math.max
 import kotlin.math.min
 
-class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
+class UHC(defaultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	var gameMaster = null as CommandSender?
 	var ledger = Ledger()
 
@@ -32,26 +32,36 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	}
 
 	/* set by init */
-	var phaseTimes = emptyArray<Int>()
-	var startRadius = 0.0
-	var endRadius = 0.0
+	private var phaseTimes = arrayOf(
+		0,
+		defaultPreset.graceTime,
+		defaultPreset.shrinkTime,
+		defaultPreset.finalTime,
+		defaultPreset.glowTime,
+		0,
+		0
+	)
+
+	var startRadius = defaultPreset.startRadius
+	private set
+	var endRadius = defaultPreset.endRadius
+	private set
 	var elapsedTime = 0
+
+	/* null if it is a custom preset */
+	var preset: Preset? = defaultPreset
 
 	var currentPhase = null as Phase?
 
 	var carePackages = CarePackages()
 
-	init {
-		updatePreset(deafultPreset)
-
-		phaseVariants.forEach { variant ->
-			updateVariant(variant)
-		}
-	}
+	val gui = Gui(this)
 
 	/* state setters */
 
 	fun updatePreset(preset: Preset) {
+		this.preset = preset
+
 		startRadius = preset.startRadius
 		endRadius = preset.endRadius
 
@@ -65,26 +75,66 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 			0
 		)
 
-		Gui.updatePreset(preset)
+		gui.presetCycler.updateDisplay()
+	}
+
+	fun updatePreset(startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowTime: Int) {
+		this.preset = null
+
+		this.startRadius = startRadius
+		this.endRadius = endRadius
+
+		phaseTimes = arrayOf(
+			0,
+			graceTime,
+			shrinkTime,
+			finalTime,
+			glowTime,
+			0,
+			0
+		)
+
+		gui.presetCycler.updateDisplay()
+	}
+
+	fun updateTime(phaseType: PhaseType, time: Int) {
+		this.preset = null
+		phaseTimes[phaseType.ordinal] = time
+
+		gui.presetCycler.updateDisplay()
+	}
+
+	fun updateStartRadius(startRadius: Double) {
+		this.preset = null
+		this.startRadius = startRadius
+
+		gui.presetCycler.updateDisplay()
+	}
+
+	fun updateEndRadius(endRadius: Double) {
+		this.preset = null
+		this.endRadius = endRadius
+
+		gui.presetCycler.updateDisplay()
 	}
 
 	fun updateVariant(phaseVariant: PhaseVariant) {
-		phaseVariants[phaseVariant.type.ordinal] = phaseVariant
+		val index = phaseVariant.type.ordinal
 
-		Gui.updatePhaseVariant(phaseVariant)
+		phaseVariants[index] = phaseVariant
+		gui.variantCylers[index].updateDisplay()
 	}
 
 	fun updateQuirk(type: QuirkType, enabled: Boolean) {
 		quirks[type.ordinal].enabled = enabled
-
-		Gui.updateQuirk(type)
+		gui.quirkToggles[type.ordinal].updateDisplay()
 
 		type.incompatibilities.forEach { other ->
 			var otherQuirk = GameRunner.uhc.getQuirk(other)
 
 			if (otherQuirk.enabled) {
 				otherQuirk.enabled = false
-				Gui.updateQuirk(other)
+				gui.quirkToggles[otherQuirk.type.ordinal].updateDisplay()
 			}
 		}
 	}
@@ -96,7 +146,7 @@ class UHC(deafultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
 
 		carePackages.onEnable()
-		Gui.updateCarePackages(carePackages)
+		gui.carePackageCycler.updateDisplay()
 	}
 
 	/* state getters */

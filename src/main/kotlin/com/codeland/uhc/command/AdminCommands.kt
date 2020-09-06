@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
+import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.quirk.AppleFix
 import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.grace.GraceDefault
@@ -151,25 +152,25 @@ class AdminCommands : BaseCommand() {
 		if (!type.hasTimer)
 			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
 
-		GameRunner.uhc.phaseTimes[type.ordinal] = length
+		GameRunner.uhc.updateTime(type, length)
 	}
 
 	@CommandAlias("modify startRadius")
 	@Description("set the starting radius")
-	fun setStartRadius(sender : CommandSender, radius : Double) {
+	fun setStartRadius(sender: CommandSender, radius: Double) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.startRadius = radius
+		GameRunner.uhc.updateStartRadius(radius)
 	}
 
 	@CommandAlias("modify endRadius")
 	@Description("set the final radius")
-	fun setEndRadius(sender : CommandSender, radius : Double) {
+	fun setEndRadius(sender: CommandSender, radius: Double) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.endRadius = radius
+		GameRunner.uhc.updateEndRadius(radius)
 	}
 
 	@CommandAlias("modify all")
@@ -178,15 +179,16 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.startRadius = startRadius
-		GameRunner.uhc.endRadius = endRadius
+		GameRunner.uhc.updatePreset(startRadius, endRadius, graceTime, shrinkTime, finalTime, glowingTime)
+	}
 
-		val phaseTimes = GameRunner.uhc.phaseTimes
+	@CommandAlias("preset")
+	@Description("set all details of the UHC")
+	fun modifyAll(sender : CommandSender, preset: Preset) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
 
-		phaseTimes[PhaseType.GRACE.ordinal] = graceTime
-		phaseTimes[PhaseType.SHRINK.ordinal] = shrinkTime
-		phaseTimes[PhaseType.FINAL.ordinal] = finalTime
-		phaseTimes[PhaseType.GLOWING.ordinal] = glowingTime
+		GameRunner.uhc.updatePreset(preset)
 	}
 
 	fun lateTeamTeleport(sender: CommandSender, player: Player, location: Location, team: Team) {
@@ -247,15 +249,6 @@ class AdminCommands : BaseCommand() {
 		val joinTeam = TeamData.addToTeam(Bukkit.getScoreboardManager().mainScoreboard, TeamData.teamColors[colorIndex], player.name)
 
 		lateTeamTeleport(sender, player, teleportLocation, joinTeam)
-	}
-
-	@CommandAlias("preset")
-	@Description("set all details of the UHC")
-	fun modifyAll(sender : CommandSender, preset: Preset) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		GameRunner.uhc.updatePreset(preset)
 	}
 
 	@CommandAlias("test end")

@@ -10,13 +10,21 @@ enum class Preset(var prettyName: String, var startRadius: Double, var endRadius
 	TEST("Testing", 100.0, 25.0, 300, 300, 300, 300, Material.STRUCTURE_VOID);
 
 	fun createLore(): List<String> {
-		return listOf(
-			"Start radius: $startRadius",
-			"End radius: $endRadius",
-			"Grace time: ${Util.timeString(graceTime)}",
-			"Shrink time: ${Util.timeString(shrinkTime)}",
-			"Final time: ${Util.timeString(finalTime)}",
-			"Glow time: ${Util.timeString(glowTime)}"
-		)
+		return createLore(startRadius, endRadius, graceTime, shrinkTime, finalTime, glowTime)
+	}
+
+	companion object {
+		val NO_PRESET_REPRESENTATION = Material.END_CRYSTAL
+
+		fun createLore(startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowTime: Int): List<String> {
+			return listOf(
+				"Start radius: $startRadius",
+				"End radius: $endRadius",
+				"Grace time: ${Util.timeString(graceTime)}",
+				"Shrink time: ${Util.timeString(shrinkTime)}",
+				"Final time: ${Util.timeString(finalTime)}",
+				"Glow time: ${Util.timeString(glowTime)}"
+			)
+		}
 	}
 }

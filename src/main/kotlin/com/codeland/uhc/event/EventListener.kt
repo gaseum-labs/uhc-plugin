@@ -15,6 +15,9 @@ import com.codeland.uhc.phases.grace.GraceDefault
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import net.md_5.bungee.api.ChatColor
+import nl.rutgerkok.worldgeneratorapi.BaseNoiseGenerator
+import nl.rutgerkok.worldgeneratorapi.BiomeGenerator
+import nl.rutgerkok.worldgeneratorapi.event.WorldGeneratorInitEvent
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.block.Biome
@@ -90,7 +93,7 @@ class EventListener : Listener {
 		val stack = event.item ?: return
 
 		if (GuiOpener.isItem(stack)) {
-			Gui.open(event.player)
+			GameRunner.uhc.gui.open(event.player)
 		} else if (AntiSoftlock.isItem(stack)) {
 			val world = Bukkit.getWorlds()[0]
 			event.player.teleport(Location(world, 10000.5, Util.topBlockY(world, 10000, 10000) + 1.0, 10000.5))
@@ -232,11 +235,15 @@ class EventListener : Listener {
 			) &&
 			event.entityType.isAlive
 
+		val location = event.location
 		val world = event.location.world
+
 		if (world.environment == World.Environment.NETHER) {
-			if (event.entity is LivingEntity && Math.random() < 0.01) {
+			val chance = if (world.getBiome(location.blockX, location.blockY, location.blockZ) == Biome.BASALT_DELTAS) 0.05 else 0.02
+
+			if (event.entity is LivingEntity && Math.random() < chance) {
 				event.isCancelled = true
-				world.spawnEntity(event.location, EntityType.BLAZE)
+				world.spawnEntity(location, EntityType.BLAZE)
 			}
 		}
 	}

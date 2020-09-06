@@ -67,7 +67,7 @@ class CarePackages {
 		objective = scoreboard.registerNewObjective(OBJECTIVE_NAME, "dummy", "Next Care Package Drop")
 		objective?.displaySlot = DisplaySlot.SIDEBAR
 
-		Gui.updateCarePackages(this)
+		GameRunner.uhc.gui.carePackageCycler.updateDisplay()
 	}
 
 	fun onDisable() {
@@ -76,7 +76,7 @@ class CarePackages {
 
 		objective?.unregister()
 
-		Gui.updateCarePackages(this)
+		GameRunner.uhc.gui.carePackageCycler.updateDisplay()
 	}
 
 	fun onStart() {
@@ -127,7 +127,7 @@ class CarePackages {
 	fun setFastMode(value: Boolean): Boolean {
 		if (!isGoing()) {
 			fastMode = value
-			Gui.updateCarePackages(this)
+			GameRunner.uhc.gui.carePackageCycler.updateDisplay()
 
 			return true
 		}

@@ -7,19 +7,30 @@ import com.codeland.uhc.command.TeamMaker
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.util.Util
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.EventListener
 import com.codeland.uhc.gui.GuiListener
 import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.phaseType.VariantList
 import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.util.Util
+import com.codeland.uhc.worldgen.ChunkGeneratorOverworld
+import com.codeland.uhc.worldgen.OverworldGenSettings
+import nl.rutgerkok.worldgeneratorapi.WorldGeneratorApi
+import nl.rutgerkok.worldgeneratorapi.WorldRef
 import org.bukkit.Bukkit
+import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
-import java.lang.Exception
 
 
 class UHCPlugin : JavaPlugin() {
+	init {
+		plugin = this
+	}
+
+	companion object {
+		lateinit var plugin: JavaPlugin
+	}
 
 	private val commandManager: PaperCommandManager by lazy { PaperCommandManager(this) }
 
@@ -28,7 +39,6 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(ParticipantCommands())
 
 		server.pluginManager.registerEvents(EventListener(), this)
-		server.pluginManager.registerEvents(GuiListener(), this)
 
 		VariantList.create()
 
@@ -52,6 +62,8 @@ class UHCPlugin : JavaPlugin() {
 
 		GameRunner(uhc, this, bot)
 
+		server.pluginManager.registerEvents(GuiListener(uhc.gui, uhc), GameRunner.plugin)
+
 		TeamMaker.readData()
 
 		server.scheduler.scheduleSyncDelayedTask(this) {
@@ -66,5 +78,15 @@ class UHCPlugin : JavaPlugin() {
 
 	override fun onDisable() {
 		commandManager.unregisterCommands()
+	}
+
+	/* will only get called if you modify bukkit.yml so don't worry */
+	override fun getDefaultWorldGenerator(worldName: String, id: String?): ChunkGenerator? {
+		val ref = WorldRef.ofName(worldName)
+
+		return WorldGeneratorApi.getInstance(this, 1, 4).createCustomGenerator(ref) { worldGenerator ->
+			val overworldSettings = OverworldGenSettings(this, ref)
+			worldGenerator.setBaseNoiseGenerator(ChunkGeneratorOverworld(overworldSettings))
+		}
 	}
 }

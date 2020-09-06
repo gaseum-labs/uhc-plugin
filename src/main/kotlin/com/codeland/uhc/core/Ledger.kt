@@ -10,6 +10,10 @@ class Ledger {
 	val list = ArrayList<Entry>()
 
 	fun addEntry(username: String, timeSurvived: Int, killedBy: String?, winning: Boolean = false) {
+		/* remove any prior entries for this player */
+		/* this would only happen if a player dies not as part of the game and is respawned manually */
+		list.removeIf { entry -> entry.username == username }
+
 		list.add(Entry(username, timeSurvived, killedBy ?: "environment", winning))
 	}
 

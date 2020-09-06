@@ -5,6 +5,7 @@ authors:
   - Balduvian
   - Varas
   - Sumdumdude
+depend: [WorldGeneratorApi]
 load: STARTUP
 main: com.codeland.uhc.UHCPlugin
 api-version: 1.16

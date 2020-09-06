@@ -1,46 +1,61 @@
 package com.codeland.uhc.gui
 
-import org.bukkit.ChatColor
+import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import org.bukkit.Material
-import org.bukkit.attribute.Attribute
+import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
+import org.bukkit.enchantments.EnchantmentTarget
 import org.bukkit.entity.Player
-import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import org.jetbrains.annotations.NotNull
 
-open class GuiItem(var opOnly: Boolean, var stack: ItemStack, var onClick: (GuiItem, Player) -> Unit) {
-    var index = 0
+abstract class GuiItem(val gui: Gui, val uhc: UHC, val index: Int, val opOnly: Boolean) {
+	lateinit var guiStack: ItemStack
 
-    /**
-     * called when the guiItem is added
-     *
-     * the stack you pass in is not the same stack in the inventory
-     * this makes the internal stack the one from the inventory
-     */
-    fun updateStack(newStack: ItemStack) {
-        stack = newStack
+	abstract fun onClick(player: Player)
+	abstract fun getStack(): ItemStack
 
-        val meta = stack.itemMeta
-        meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE)
-        meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_SPEED)
-        meta.removeAttributeModifier(Attribute.GENERIC_ARMOR)
-        meta.removeAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS)
-        stack.itemMeta = meta
-    }
+	fun updateDisplay() {
+		gui.inventory.setItem(index, getStack())
+		guiStack = gui.inventory.getItem(index) ?: ItemStack(Material.POTION)
+	}
 
-    fun changeStackType(material: Material) {
-        stack.type = material
-    }
+	companion object {
+		fun setName(stack: ItemStack, name: String): ItemStack {
+			val meta = stack.itemMeta
+			meta.setDisplayName(name)
+			stack.itemMeta = meta
 
-    fun setName(name: String) {
-        val meta = stack.itemMeta
-        meta.setDisplayName(name)
-        stack.itemMeta = meta
-    }
+			return stack
+		}
 
-    fun setLore(lore: List<String>) {
-        val meta = stack.itemMeta
-        meta.lore = lore
-        stack.itemMeta = meta
-    }
+		fun setLore(stack: ItemStack, lore: List<String>): ItemStack {
+			val meta = stack.itemMeta
+			meta.lore = lore
+			stack.itemMeta = meta
+
+			return stack
+		}
+
+		class FakeEnchantment : Enchantment(NamespacedKey(UHCPlugin.plugin, "fakeEnchantment")) {
+			override fun getName() = ""
+			override fun getMaxLevel() = 0
+			override fun getStartLevel() = 0
+			override fun getItemTarget() =EnchantmentTarget.ARMOR
+			override fun isTreasure() = false
+			override fun isCursed() = false
+			override fun conflictsWith(other: Enchantment) = false
+			override fun canEnchantItem(item: ItemStack) = true
+		}
+
+		fun setEnchanted(stack: ItemStack): ItemStack {
+			val meta = stack.itemMeta
+			meta.addEnchant(FakeEnchantment(), 0, true)
+			stack.itemMeta = meta
+
+			return stack
+		}
+	}
 }
