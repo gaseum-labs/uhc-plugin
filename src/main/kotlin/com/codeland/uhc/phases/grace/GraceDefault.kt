@@ -17,58 +17,48 @@ open class GraceDefault : Phase() {
 	lateinit var teleportLocations: ArrayList<Location>
 
 	override fun customStart() {
-		Bukkit.getServer().onlinePlayers.forEach {
-			it.inventory.clear()
-			it.itemOnCursor.amount = 0
-			it.setItemOnCursor(null)
+		Bukkit.getServer().onlinePlayers.forEach { player ->
+			player.inventory.clear()
+			player.itemOnCursor.amount = 0
+			player.setItemOnCursor(null)
 
-			for (activePotionEffect in it.activePotionEffects)
-				it.removePotionEffect(activePotionEffect.type)
+			for (activePotionEffect in player.activePotionEffects)
+				player.removePotionEffect(activePotionEffect.type)
 
-			it.health = it.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
-			it.absorptionAmount = 0.0
-			it.exp = 0f
-			it.level = 0
-			it.foodLevel = 20
-			it.saturation = 5f
-			it.exhaustion = 0f
-
-			it.setStatistic(Statistic.TIME_SINCE_REST,
-				if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) 72000
-				else 0
-			)
+			player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
+			player.health = 20.0
+			player.absorptionAmount = 0.0
+			player.exp = 0f
+			player.level = 0
+			player.foodLevel = 20
+			player.saturation = 5f
+			player.exhaustion = 0f
+			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
 
 			/* remove all advancements */
 			Bukkit.getServer().advancementIterator().forEach { advancement ->
-				val progress = it.getAdvancementProgress(advancement)
+				val progress = player.getAdvancementProgress(advancement)
 
 				progress.awardedCriteria.forEach { criteria ->
 					progress.revokeCriteria(criteria)
 				}
 			}
 
-			if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE))
-				it.inventory.addItem(ItemStack(Material.WET_SPONGE, 1))
-
-			it.gameMode = if (GameRunner.playersTeam(it.name) == null) GameMode.SPECTATOR else GameMode.SURVIVAL
+			player.gameMode = if (GameRunner.playersTeam(player.name) == null) GameMode.SPECTATOR else GameMode.SURVIVAL
 		}
 
-		for (w in Bukkit.getServer().worlds) {
-			w.setGameRule(GameRule.DO_MOB_SPAWNING, true)
-			w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true)
-			w.worldBorder.setCenter(0.0, 0.0)
-			w.worldBorder.size = uhc.startRadius * 2
+		Bukkit.getServer().worlds.forEach { world ->
+			world.time = 0
+			world.worldBorder.setCenter(0.0, 0.0)
+			world.worldBorder.size = uhc.startRadius * 2
 		}
-
-		val teamCount = 1 + Bukkit.getServer().scoreboardManager.mainScoreboard.teams.size
 
 		Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
 			team.entries.forEachIndexed { i, entry ->
 				val player = Bukkit.getPlayer(entry)
 
-				player?.teleportAsync(teleportLocations[i])?.thenAccept {
-					player?.fallDistance = 0f
-				}
+				player?.fallDistance = 0f
+				player?.teleport(teleportLocations[i])
 			}
 		}
 

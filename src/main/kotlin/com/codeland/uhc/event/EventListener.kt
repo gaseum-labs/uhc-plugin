@@ -5,7 +5,6 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.NetherFix
 import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.item.GuiOpener
 import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phaseType.PhaseType
@@ -15,19 +14,11 @@ import com.codeland.uhc.phases.grace.GraceDefault
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import net.md_5.bungee.api.ChatColor
-import nl.rutgerkok.worldgeneratorapi.BaseNoiseGenerator
-import nl.rutgerkok.worldgeneratorapi.BiomeGenerator
-import nl.rutgerkok.worldgeneratorapi.event.WorldGeneratorInitEvent
 import org.bukkit.*
-import org.bukkit.attribute.Attribute
 import org.bukkit.block.Biome
-import org.bukkit.block.BlockFace
-import org.bukkit.block.data.Ageable
-import org.bukkit.command.Command
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
-import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
@@ -39,12 +30,12 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
-import org.bukkit.event.world.ChunkLoadEvent
+import org.bukkit.event.weather.WeatherChangeEvent
+import org.bukkit.event.weather.WeatherEvent
 import org.bukkit.event.world.ChunkPopulateEvent
+import org.bukkit.event.world.TimeSkipEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.PlayerInventory
-import kotlin.math.log
 
 class EventListener : Listener {
 	@EventHandler
@@ -172,12 +163,15 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onPlayerTeleport(e: PlayerTeleportEvent) {
-		if (!GameRunner.netherIsAllowed()) {
-			if (e.cause == PlayerTeleportEvent.TeleportCause.NETHER_PORTAL && e.player.gameMode == GameMode.SURVIVAL) {
-				e.isCancelled = true
-			}
-		}
+	fun onWeather(event: WeatherChangeEvent) {
+		event.isCancelled = GameRunner.uhc.isPhase(PhaseType.WAITING) && event.toWeatherState()
+	}
+
+	@EventHandler
+	fun onPlayerTeleport(event: PlayerTeleportEvent) {
+		if (event.cause != PlayerTeleportEvent.TeleportCause.NETHER_PORTAL) return
+
+		event.isCancelled = (!GameRunner.netherIsAllowed() && event.player.gameMode == GameMode.SURVIVAL)
 	}
 
 	@EventHandler

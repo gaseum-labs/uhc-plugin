@@ -6,6 +6,7 @@ import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import org.bukkit.scoreboard.Team
 
 class PostgameDefault : Phase() {
@@ -30,9 +31,12 @@ class PostgameDefault : Phase() {
 
             var playerString = ""
             team.entries.forEach { playerName ->
-                playerString += "$playerName "
+                val player = Bukkit.getPlayer(playerName)
 
-                uhc.ledger.addEntry(playerName, GameRunner.uhc.elapsedTime, null)
+                if (player != null && player.gameMode == GameMode.SURVIVAL) {
+                    playerString += "$playerName "
+                    uhc.ledger.addEntry(playerName, GameRunner.uhc.elapsedTime, null)
+                }
             }
 
             uhc.ledger.createTextFile()

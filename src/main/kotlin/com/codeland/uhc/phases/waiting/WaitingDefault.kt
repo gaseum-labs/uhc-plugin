@@ -18,7 +18,6 @@ class WaitingDefault : Phase() {
 			world.worldBorder.setCenter(10000.0, 10000.0)
 			world.worldBorder.size = 50.0
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
-			world.setGameRule(GameRule.DO_WEATHER_CYCLE, false)
 			world.isThundering = false
 			world.setStorm(false)
 			world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
@@ -37,6 +36,7 @@ class WaitingDefault : Phase() {
 
 	override fun customEnd() {
 		Bukkit.getWorlds().forEach { world ->
+			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true)
 			world.setGameRule(GameRule.RANDOM_TICK_SPEED, 3)
 		}
 	}

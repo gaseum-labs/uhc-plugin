@@ -1,10 +1,14 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
+import org.bukkit.Bukkit
 import org.bukkit.Color
 import org.bukkit.Material
+import org.bukkit.Statistic
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.EntityType
 import org.bukkit.inventory.ItemStack
@@ -14,6 +18,13 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 
 	override fun onDisable() {}
 
+	override fun onPhaseSwitch(phase: PhaseVariant) {
+		if (phase.type == PhaseType.GRACE) {
+			Bukkit.getServer().onlinePlayers.forEach { player ->
+				player.setStatistic(Statistic.TIME_SINCE_REST, 72000)
+			}
+		}
+	}
 	companion object {
 		fun onDrop(type: EntityType, drops: MutableList<ItemStack>) {
 			val rand = Math.random()
