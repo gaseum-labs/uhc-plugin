@@ -1,15 +1,15 @@
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
-import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.item.GuiOpener
-import com.codeland.uhc.quirk.Creative
-import com.codeland.uhc.quirk.HalfZatoichi
-import com.codeland.uhc.quirk.Pests
-import com.codeland.uhc.quirk.Summoner
+import com.codeland.uhc.quirk.quirks.Creative
+import com.codeland.uhc.quirk.quirks.HalfZatoichi
+import com.codeland.uhc.quirk.quirks.Pests
+import com.codeland.uhc.quirk.quirks.Summoner
 import com.codeland.uhc.util.ItemUtil.randomDye
 import com.codeland.uhc.util.ItemUtil.randomDyeArmor
 import com.codeland.uhc.util.ItemUtil.randomMusicDisc
@@ -37,15 +37,12 @@ import org.bukkit.*
 import org.bukkit.block.Chest
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
-import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.CompassMeta
 import org.bukkit.inventory.meta.SuspiciousStewMeta
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
-import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scoreboard.*
 import java.lang.Integer.min
 import kotlin.math.ceil
@@ -80,7 +77,7 @@ class CarePackages {
 	}
 
 	fun onStart() {
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, ::runnable, 0, 20)
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::runnable, 0, 20)
 		objective?.displaySlot = DisplaySlot.SIDEBAR
 	}
 

@@ -1,5 +1,6 @@
 package com.codeland.uhc.event
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.NetherFix
@@ -13,6 +14,7 @@ import com.codeland.uhc.phases.Phase
 import com.codeland.uhc.phases.grace.GraceDefault
 import com.codeland.uhc.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
+import com.codeland.uhc.quirk.quirks.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.block.Biome
@@ -31,9 +33,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.event.weather.WeatherEvent
 import org.bukkit.event.world.ChunkPopulateEvent
-import org.bukkit.event.world.TimeSkipEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 
@@ -74,17 +74,13 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
+		val stack = event.item ?: return
+
 		if (GameRunner.uhc.isEnabled(QuirkType.COMMANDER) || GameRunner.uhc.isEnabled(QuirkType.AGGRO_SUMMONER) || GameRunner.uhc.isEnabled(QuirkType.PASSIVE_SUMMONER))
 			if (Commander.onSummon(event)) event.isCancelled = true
 
-		/* only can open uhc settings while in waiting */
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING))
-			return
-
-		val stack = event.item ?: return
-
 		if (GuiOpener.isItem(stack)) {
-			GameRunner.uhc.gui.open(event.player)
+			GameRunner.uhc.gui.inventory.open(event.player)
 		} else if (AntiSoftlock.isItem(stack)) {
 			val world = Bukkit.getWorlds()[0]
 			event.player.teleport(Location(world, 10000.5, Util.topBlockY(world, 10000, 10000) + 1.0, 10000.5))
@@ -168,10 +164,20 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onPlayerTeleport(event: PlayerTeleportEvent) {
-		if (event.cause != PlayerTeleportEvent.TeleportCause.NETHER_PORTAL) return
+	fun onPlayerPortal(event: PlayerPortalEvent) {
+		if (
+			!GameRunner.netherIsAllowed() &&
+			event.player.gameMode == GameMode.SURVIVAL
+		) {
+			val location = event.player.location
+			val world = location.world
 
-		event.isCancelled = (!GameRunner.netherIsAllowed() && event.player.gameMode == GameMode.SURVIVAL)
+			/* break the portal */
+			world.getBlockAt(location).type = Material.AIR
+			Commands.errorMessage(event.player, "Nether is closed!")
+
+			event.isCancelled = true
+		}
 	}
 
 	@EventHandler
@@ -201,12 +207,12 @@ class EventListener : Listener {
 					}
 				}
 				Biome.CRIMSON_FOREST -> {
-					NetherFix.placeWart(chunk, 32, 99) { block, under ->
+					NetherFix.placeWart(chunk, 32, 99) { block, _ ->
 						block.type == Material.CRIMSON_ROOTS || block.type == Material.CRIMSON_FUNGUS
 					}
 				}
 				Biome.WARPED_FOREST -> {
-					NetherFix.placeWart(chunk, 32, 99) { block, under ->
+					NetherFix.placeWart(chunk, 32, 99) { block, _ ->
 						block.type == Material.WARPED_ROOTS || block.type == Material.WARPED_FUNGUS
 					}
 				}
@@ -264,8 +270,6 @@ class EventListener : Listener {
 			/* player is set to pest on death */
 			if (!Pests.isPest(player))
 				return
-
-			var border = player.world.worldBorder
 
 			/* spread player */
 			spreadRespawn(event)
@@ -452,7 +456,7 @@ class EventListener : Listener {
 				event.isCancelled = true
 
 			} else {
-				Bukkit.getScheduler().runTaskLater(GameRunner.plugin, {
+				Bukkit.getScheduler().runTaskLater(UHCPlugin.plugin, {
 					block.type = oldBlockType
 					block.blockData = oldData
 					Unsheltered.setBroken(block, true)
@@ -512,7 +516,7 @@ class EventListener : Listener {
 				else
 					event.player.inventory.itemInOffHand.clone()
 
-				Bukkit.getScheduler().runTaskLater(GameRunner.plugin, {
+				Bukkit.getScheduler().runTaskLater(UHCPlugin.plugin, {
 					if (event.hand === EquipmentSlot.HAND)
 						event.player.inventory.setItemInMainHand(inHand)
 					else

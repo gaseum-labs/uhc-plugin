@@ -5,11 +5,10 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
-import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.quirk.AppleFix
+import com.codeland.uhc.quirk.quirks.AppleFix
 import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.grace.GraceDefault
-import com.codeland.uhc.quirk.LowGravity
+import com.codeland.uhc.quirk.quirks.LowGravity
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -41,7 +40,7 @@ class AdminCommands : BaseCommand() {
 		val scoreboard = sender.server.scoreboardManager.mainScoreboard
 
 		scoreboard.teams.forEach { team ->
-			GameRunner.bot?.destroyTeam(team) {}
+			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
 			team.unregister()
 		}
 	}

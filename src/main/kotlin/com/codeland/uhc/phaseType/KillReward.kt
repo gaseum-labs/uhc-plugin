@@ -11,7 +11,7 @@ enum class KillReward {
 	fun applyReward(team : Team) {
 		if (this == STRENGTH) {
 			for (entry in team.entries) {
-				Bukkit.getServer().getPlayer(entry)?.addPotionEffect(PotionEffect(PotionEffectType.INCREASE_DAMAGE, 5 * 20 * 60, 0, false, false, false))
+				Bukkit.getServer().getPlayer(entry)?.addPotionEffect(PotionEffect(PotionEffectType.INCREASE_DAMAGE, 5 * 20 * 60, 0, false, true, true))
 			}
 		}
 	}

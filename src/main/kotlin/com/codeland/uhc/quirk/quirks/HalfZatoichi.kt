@@ -1,27 +1,29 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.attribute.Attribute
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
-import org.bukkit.scheduler.BukkitRunnable
 
-class HalfZatoichi(type: QuirkType) : Quirk(type) {
+class HalfZatoichi(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && giveZatoichi) {
 			giveAllZatoichi()
 		}
 
-		Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
+		Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
 			Bukkit.getServer().onlinePlayers.forEach { player ->
 				val lastHolding = getZatoichiMeta(player, HOLDING_META_TAG)
 				val currentlyHolding = isHalfZatoichi(player.inventory.itemInMainHand)
@@ -43,16 +45,34 @@ class HalfZatoichi(type: QuirkType) : Quirk(type) {
 	}
 
 	override fun onDisable() {
-		removeAllZatoichi()
+		if (giveZatoichi) removeAllZatoichi()
 
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE)
+		if (phase.type == PhaseType.GRACE && giveZatoichi)
 			giveAllZatoichi()
 		else if (phase.type == PhaseType.WAITING)
 			removeAllZatoichi()
+	}
+
+	var giveZatoichi = true
+
+	init {
+		inventory.addItem(object : GuiItem(inventory, uhc, 9 + 1, true) {
+			override fun onClick(player: Player, shift: Boolean) {
+				giveZatoichi = !giveZatoichi
+			}
+			override fun getStack(): ItemStack {
+				val stack = if (giveZatoichi)
+					setName(ItemStack(Material.IRON_SWORD), "${ChatColor.RESET}${ChatColor.GREEN}Give Zatoichi")
+				else
+					setName(ItemStack(Material.WOODEN_SWORD), "${ChatColor.RESET}${ChatColor.RED}Do not give Zatoichi")
+
+				return setLore(stack, listOf("Give players the Half Zatoichi when the game starts"))
+			}
+		})
 	}
 
 	var taskID = 0
@@ -68,7 +88,7 @@ class HalfZatoichi(type: QuirkType) : Quirk(type) {
 			val meta = player.getMetadata(tag)
 
 			return if (meta.size == 0) {
-				player.setMetadata(tag, FixedMetadataValue(GameRunner.plugin, false))
+				player.setMetadata(tag, FixedMetadataValue(UHCPlugin.plugin, false))
 				false
 			} else {
 				meta[0].asBoolean()
@@ -76,7 +96,7 @@ class HalfZatoichi(type: QuirkType) : Quirk(type) {
 		}
 
 		fun setZatoichiMeta(player: Player, tag: String, holding: Boolean) {
-			player.setMetadata(tag, FixedMetadataValue(GameRunner.plugin, holding))
+			player.setMetadata(tag, FixedMetadataValue(UHCPlugin.plugin, holding))
 		}
 
 		fun setBloody(player: Player) {

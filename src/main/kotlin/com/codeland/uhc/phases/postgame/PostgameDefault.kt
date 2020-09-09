@@ -70,7 +70,7 @@ class PostgameDefault : Phase() {
         val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
         scoreboard.teams.forEach { team ->
-            GameRunner.bot?.destroyTeam(team) {}
+           if (uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
             team.unregister()
         }
 

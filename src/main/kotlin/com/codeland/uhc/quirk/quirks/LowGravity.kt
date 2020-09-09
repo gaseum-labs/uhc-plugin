@@ -1,8 +1,10 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
-import org.bukkit.Bukkit.getWorld
 import org.bukkit.Bukkit.getWorlds
 import org.bukkit.GameMode
 import org.bukkit.Material
@@ -10,7 +12,7 @@ import org.bukkit.entity.*
 import org.bukkit.util.Vector
 
 
-class LowGravity(type: QuirkType) : Quirk(type) {
+class LowGravity(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
     companion object {
         var taskId: Int = 0
@@ -18,7 +20,7 @@ class LowGravity(type: QuirkType) : Quirk(type) {
     }
 
     override fun onEnable() {
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
+        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
             for (player in Bukkit.getOnlinePlayers()) {
                 val block = player.world.getBlockAt(player.location.subtract(0.0, 0.01, 0.0)).type
                 if (!block.isSolid && block != Material.WATER && player.gameMode == GameMode.SURVIVAL) {

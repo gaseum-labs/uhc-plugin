@@ -1,89 +1,77 @@
 package com.codeland.uhc.gui
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.guiItem.CarePackageCycler
-import com.codeland.uhc.gui.guiItem.PresetCycler
-import com.codeland.uhc.gui.guiItem.QuirkToggle
-import com.codeland.uhc.gui.guiItem.VariantCycler
+import com.codeland.uhc.gui.guiItem.*
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
 class Gui(val uhc: UHC) {
-	companion object {
-		const val INVENTORY_WIDTH = 9
-		const val INVENTORY_SIZE = INVENTORY_WIDTH * 4
-	}
+	val listener = GuiListener()
 
-	var inventory = Bukkit.createInventory(null, INVENTORY_SIZE, "UHC Setup")
-	var guiItems = arrayOfNulls<GuiItem>(INVENTORY_SIZE)
+	var inventory = GuiInventory(4, "UHC Setup")
 
 	val quirkToggles: Array<QuirkToggle>
 	val variantCylers: Array<VariantCycler>
 
 	val presetCycler: PresetCycler
 	val carePackageCycler: CarePackageCycler
+	val botToggle: BotToggle
+
+	val resetButton: GuiItem
 	val cancelButton: GuiItem
 
 	init {
 		quirkToggles = Array(QuirkType.values().size) { i ->
-			addItem(QuirkToggle(this, uhc, i, QuirkType.values()[i]))
+			val item = inventory.addItem(QuirkToggle(inventory, uhc, i, QuirkType.values()[i]))
+
+			listener.registerInventory(uhc.getQuirk(QuirkType.values()[i]).inventory)
+
+			item
 		}
 
 		variantCylers = Array(PhaseType.values().size) { i ->
-			addItem(VariantCycler(this, uhc, i + (INVENTORY_WIDTH * 2), PhaseType.values()[i]))
+			inventory.addItem(VariantCycler(inventory, uhc, i + (GuiInventory.WIDTH * 2), PhaseType.values()[i]))
 		}
 
-		presetCycler = addItem(PresetCycler(this, uhc, INVENTORY_WIDTH * 3))
-		carePackageCycler = addItem(CarePackageCycler(this, uhc, INVENTORY_WIDTH * 3 + 1))
+		presetCycler = inventory.addItem(PresetCycler(inventory, uhc, GuiInventory.WIDTH * 3))
+		carePackageCycler = inventory.addItem(CarePackageCycler(inventory, uhc, GuiInventory.WIDTH * 3 + 1))
+		botToggle = inventory.addItem(BotToggle(inventory, uhc, GuiInventory.WIDTH * 3 + 2))
 
-		val thisGui = this
-		cancelButton = addItem(object : GuiItem(thisGui, uhc, INVENTORY_SIZE - 1, false) {
-			override fun onClick(player: Player) = close(player)
-			override fun getStack() = ItemStack(Material.BARRIER)
+		resetButton = inventory.addItem(object : GuiItem(inventory, uhc, inventory.inventory.size - 2, true) {
+			override fun onClick(player: Player, shift: Boolean) {
+				uhc.updatePreset(uhc.defaultPreset)
+				uhc.defaultVariants.forEach { variant ->
+					uhc.updateVariant(variant)
+				}
+				QuirkType.values().forEach { quirkType ->
+					uhc.updateQuirk(quirkType, quirkType.defaultEnabled)
+				}
+				uhc.updateCarePackages(enabled = true, fast = false)
+				uhc.updateUsingBot(true)
+			}
+			override fun getStack(): ItemStack {
+				val stack = ItemStack(Material.MUSIC_DISC_WAIT)
+				setName(stack, "${ChatColor.RESET}${ChatColor.AQUA}Reset")
+				return stack
+			}
 		})
-	}
 
-	fun open(player: Player) {
-		player.openInventory(inventory)
-	}
+		cancelButton = inventory.addItem(object : GuiItem(inventory, uhc, inventory.inventory.size - 1, false) {
+			override fun onClick(player: Player, shift: Boolean) = inventory.close(player)
+			override fun getStack(): ItemStack {
+				val stack = ItemStack(Material.BARRIER)
+				setName(stack, "${ChatColor.RESET}${ChatColor.RED}Close")
+				return stack
+			}
+		})
 
-	fun close(player: Player) {
-		player.closeInventory()
-	}
-
-	/* positioning and updating */
-
-	private fun coordinateToIndex(x: Int, y: Int): Int {
-		return y * INVENTORY_WIDTH + x
-	}
-
-	private fun IndexToCoordinate(index: Int): Pair<Int, Int> {
-		return Pair(index % INVENTORY_WIDTH, index / INVENTORY_WIDTH)
-	}
-
-	private fun <ItemType : GuiItem> addItem(guiItem: ItemType): ItemType {
-		val index = guiItem.index
-
-		inventory.setItem(index, guiItem.getStack())
-		guiItems[index] = guiItem
-
-		val guiStack = inventory.getItem(index) ?: return guiItem
-		guiItem.guiStack = guiStack
-
-		return guiItem
-	}
-
-	private fun removeItem(x: Int, y: Int) {
-		val index = coordinateToIndex(x, y)
-		removeItem(index)
-	}
-
-	private fun removeItem(index: Int) {
-		inventory.setItem(index, null)
-		guiItems[index] = null
+		Bukkit.getPluginManager().registerEvents(listener, UHCPlugin.plugin)
+		listener.registerInventory(inventory)
 	}
 }

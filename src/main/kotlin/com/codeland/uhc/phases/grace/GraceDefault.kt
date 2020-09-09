@@ -12,6 +12,8 @@ import org.bukkit.inventory.ItemStack
 import kotlin.math.*
 
 open class GraceDefault : Phase() {
+	/* set to true after async teleport completes */
+	var ready = false
 
 	/* to be injected on phase creation */
 	lateinit var teleportLocations: ArrayList<Location>
@@ -53,12 +55,24 @@ open class GraceDefault : Phase() {
 			world.worldBorder.size = uhc.startRadius * 2
 		}
 
-		Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
+		val teams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams
+		var totalTeleports = 0
+		var numComplete = 0
+
+		teams.forEach { team ->
 			team.entries.forEachIndexed { i, entry ->
 				val player = Bukkit.getPlayer(entry)
 
-				player?.fallDistance = 0f
-				player?.teleport(teleportLocations[i])
+				if (player != null) {
+					++totalTeleports
+
+					player.fallDistance = 0f
+					player.teleportAsync(teleportLocations[i]).thenAccept {
+						if (++numComplete == totalTeleports) {
+							ready = true
+						}
+					}
+				}
 			}
 		}
 

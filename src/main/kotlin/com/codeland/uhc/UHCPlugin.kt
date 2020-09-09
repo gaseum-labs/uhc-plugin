@@ -42,7 +42,15 @@ class UHCPlugin : JavaPlugin() {
 
 		VariantList.create()
 
-		var uhc = UHC(Preset.LARGE, arrayOf(
+		GameRunner.bot = try {
+			MixerBot.createMixerBot("./discordData.txt", "./linkData.txt")
+		} catch (ex: Exception) {
+			Util.log(ex.message ?: "unknown error")
+			Util.log("BOT INIT FAILED | STARTING IN NO-BOT MODE")
+			null
+		}
+
+		GameRunner.uhc = UHC(Preset.LARGE, arrayOf(
 			PhaseVariant.WAITING_DEFAULT,
 			PhaseVariant.GRACE_FORGIVING,
 			PhaseVariant.SHRINK_DEFAULT,
@@ -51,18 +59,6 @@ class UHCPlugin : JavaPlugin() {
 			PhaseVariant.ENDGAME_CLEAR_BLOCKS,
 			PhaseVariant.POSTGAME_DEFAULT
 		))
-
-		val bot = try {
-			MixerBot.createMixerBot("./discordData.txt", "./linkData.txt")
-		} catch (ex: Exception) {
-			Util.log(ex.message ?: "unknown error")
-			Util.log("BOT INIT FAILED | STARTING IN NO-BOT MODE")
-			null
-		}
-
-		GameRunner(uhc, this, bot)
-
-		server.pluginManager.registerEvents(GuiListener(uhc.gui, uhc), GameRunner.plugin)
 
 		TeamMaker.readData()
 

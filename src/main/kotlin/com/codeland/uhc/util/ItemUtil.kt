@@ -45,7 +45,8 @@ object ItemUtil {
 	}
 
 	fun namedItem(type: Material, name: String): ItemStack {
-		val ret = ItemStack(Material.CARROT)
+		val ret = ItemStack(type)
+
 		val meta = ret.itemMeta
 		meta.setDisplayName(name)
 		ret.itemMeta = meta

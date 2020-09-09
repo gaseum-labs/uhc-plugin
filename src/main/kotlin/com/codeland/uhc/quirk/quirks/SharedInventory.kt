@@ -1,10 +1,13 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.inventory.ItemStack
 
-class SharedInventory(type: QuirkType) : Quirk(type) {
+class SharedInventory(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
     companion object {
         lateinit var contents: Array<out ItemStack?>
         var taskId: Int = 0
@@ -13,7 +16,7 @@ class SharedInventory(type: QuirkType) : Quirk(type) {
     override fun onEnable() {
         contents = Bukkit.getOnlinePlayers().first().inventory.contents
 
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
+        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
             Bukkit.getOnlinePlayers().any { player ->
                 val playersContents = player.inventory.contents
 

@@ -1,6 +1,10 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.entity.Entity
@@ -9,7 +13,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.metadata.FixedMetadataValue
 
-class Commander(type: QuirkType) : Quirk(type) {
+class Commander(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {
@@ -26,11 +30,11 @@ class Commander(type: QuirkType) : Quirk(type) {
 		const val META_TAG = "commandedBy"
 
 		fun setCommandedBy(entity: Entity, color: ChatColor) {
-			entity.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin, color))
+			entity.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin, color))
 		}
 
 		fun setCommandedByNone(entity: Entity) {
-			entity.removeMetadata(META_TAG, GameRunner.plugin)
+			entity.removeMetadata(META_TAG, UHCPlugin.plugin)
 
 			entity.customName = null
 		}

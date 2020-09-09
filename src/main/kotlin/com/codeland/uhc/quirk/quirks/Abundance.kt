@@ -1,5 +1,8 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.ItemUtil
 import org.bukkit.Material
 import org.bukkit.block.Block
@@ -9,7 +12,7 @@ import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class Abundance(type: QuirkType) : Quirk(type) {
+class Abundance(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {
 		/* ya nothing needs to be done */
 	}

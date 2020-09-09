@@ -1,7 +1,11 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.ItemUtil.randomDyeArmor
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -16,7 +20,7 @@ import org.bukkit.inventory.meta.LeatherArmorMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 
-class Pests(type: QuirkType) : Quirk(type) {
+class Pests(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
     override fun onEnable() {}
 
     override fun onDisable() {
@@ -58,7 +62,7 @@ class Pests(type: QuirkType) : Quirk(type) {
         }
 
         fun makePest(player: Player) {
-            player.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin as Plugin, true))
+            player.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin as Plugin, true))
         }
 
         fun givePestSetup(player: Player) {
@@ -77,7 +81,7 @@ class Pests(type: QuirkType) : Quirk(type) {
         }
 
         fun makeNotPest(player: Player) {
-            player.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin as Plugin, false))
+            player.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin as Plugin, false))
         }
 
         fun genPestArmor(item: Material): ItemStack {

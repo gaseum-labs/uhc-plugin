@@ -3,20 +3,21 @@ package com.codeland.uhc.gui.guiItem
 import CarePackages
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.gui.GuiInventory
 import com.codeland.uhc.gui.GuiItem
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class CarePackageCycler(gui: Gui, uhc: UHC, index: Int) : GuiItem(gui, uhc, index, true) {
-	override fun onClick(player: Player) {
+class CarePackageCycler(gui: GuiInventory, uhc: UHC, index: Int) : GuiItem(gui, uhc, index, true) {
+	override fun onClick(player: Player, shift: Boolean) {
 		val carePackages = uhc.carePackages
 
 		when (asIndex(carePackages)) {
-			0 -> { carePackages.enabled = true; carePackages.setFastMode(true) }
-			1 -> { carePackages.enabled = false; }
-			2 -> { carePackages.enabled = true; carePackages.setFastMode(false) }
+			0 -> { uhc.updateCarePackages(true, true) }
+			1 -> { uhc.updateCarePackages(false, false) }
+			2 -> { uhc.updateCarePackages(true, false) }
 		}
 	}
 

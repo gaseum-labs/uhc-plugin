@@ -1,5 +1,6 @@
 package com.codeland.uhc.gui.item
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import org.bukkit.ChatColor
 import org.bukkit.Location
@@ -39,7 +40,7 @@ object ParkourCheckpoint {
 	val CHECKPOINT = Material.GOLD_BLOCK
 
 	fun setPlayerCheckpoint(player: Player, location: Location) {
-		player.setMetadata(META_TAG, FixedMetadataValue(GameRunner.plugin, location))
+		player.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin, location))
 	}
 
 	fun getPlayerCheckpoint(player: Player): Location? {

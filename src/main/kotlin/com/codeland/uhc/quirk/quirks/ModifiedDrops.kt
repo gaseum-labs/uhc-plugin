@@ -1,7 +1,10 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
@@ -13,7 +16,7 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.EntityType
 import org.bukkit.inventory.ItemStack
 
-class ModifiedDrops(type: QuirkType) : Quirk(type) {
+class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}

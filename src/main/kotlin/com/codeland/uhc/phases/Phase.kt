@@ -1,5 +1,6 @@
 package com.codeland.uhc.phases
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
@@ -26,7 +27,7 @@ abstract class Phase {
 
 		fun createBossBars(worlds: List<World>) {
 			dimensionBars = Array(worlds.size) { i ->
-				val key = NamespacedKey(GameRunner.plugin, "B$i")
+				val key = NamespacedKey(UHCPlugin.plugin, "B$i")
 
 				DimensionBar(Bukkit.getBossBar(key) ?: Bukkit.createBossBar(key, "",  BarColor.WHITE, BarStyle.SOLID), worlds[i])
 			}
@@ -83,7 +84,7 @@ abstract class Phase {
 
 		var currentTick = 0
 
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
 			if (length > 0) {
 				if (currentTick == 0) {
 					if (remainingSeconds == 0) return@scheduleSyncRepeatingTask uhc.startNextPhase()

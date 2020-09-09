@@ -56,7 +56,7 @@ class ParticipantCommands : BaseCommand() {
 	@CommandAlias("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
-		GameRunner.uhc.gui.open(sender as Player)
+		GameRunner.uhc.gui.inventory.open(sender as Player)
 	}
 
 	@CommandAlias("spectate")

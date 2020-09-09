@@ -80,7 +80,7 @@ object TeamData {
             team.displayName = prettyTeamName(color)
         }
 
-	    GameRunner.bot?.addPlayerToTeam(team, playerName) {}
+	    if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, playerName) {}
 
         team.addEntry(playerName)
 
@@ -92,7 +92,7 @@ object TeamData {
 
         /* remove the team if no one is left on it */
         if (team.entries.size == 0) {
-	        GameRunner.bot?.destroyTeam(team) {}
+            if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
 	        team.unregister()
         }
     }

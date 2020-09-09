@@ -5,11 +5,10 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.item.GuiOpener
 import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phases.Phase
-import com.codeland.uhc.quirk.Pests
+import com.codeland.uhc.quirk.quirks.Pests
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
-import kotlin.math.log
 
 class WaitingDefault : Phase() {
 	override fun customStart() {
@@ -22,7 +21,7 @@ class WaitingDefault : Phase() {
 			world.setStorm(false)
 			world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false) // could cause issue with dynamic spawn limit if true
 			world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0)
-			world.time = 1000
+			world.time = 6000
 			world.difficulty = Difficulty.NORMAL
 		}
 

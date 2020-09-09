@@ -14,11 +14,10 @@ import org.bukkit.scoreboard.Team
 import kotlin.math.max
 import kotlin.math.min
 
-class UHC(defaultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
+class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var gameMaster = null as CommandSender?
 	var ledger = Ledger()
 
-	/* time is measured in seconds here. */
 	var netherToZero = true
 	var mobCapCoefficient = 1.0
 	var killReward = KillReward.NONE
@@ -28,7 +27,7 @@ class UHC(defaultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	}
 
 	private var quirks = Array(QuirkType.values().size) { index ->
-		QuirkType.values()[index].createQuirk()
+		QuirkType.values()[index].createQuirk(this)
 	}
 
 	/* set by init */
@@ -54,6 +53,26 @@ class UHC(defaultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	var currentPhase = null as Phase?
 
 	var carePackages = CarePackages()
+
+	var usingBot = GameRunner.bot != null
+	private set
+
+	fun updateUsingBot(using: Boolean) {
+		val bot = GameRunner.bot
+
+		usingBot = if (bot == null) {
+			false
+
+		} else {
+			if (!using) Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
+				bot.destroyTeam(team) {}
+			}
+
+			using
+		}
+
+		gui.botToggle.updateDisplay()
+	}
 
 	val gui = Gui(this)
 
@@ -129,7 +148,7 @@ class UHC(defaultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 		quirks[type.ordinal].enabled = enabled
 		gui.quirkToggles[type.ordinal].updateDisplay()
 
-		type.incompatibilities.forEach { other ->
+		if (enabled) type.incompatibilities.forEach { other ->
 			var otherQuirk = GameRunner.uhc.getQuirk(other)
 
 			if (otherQuirk.enabled) {
@@ -137,6 +156,13 @@ class UHC(defaultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 				gui.quirkToggles[otherQuirk.type.ordinal].updateDisplay()
 			}
 		}
+	}
+
+	fun updateCarePackages(enabled: Boolean, fast: Boolean) {
+		carePackages.enabled = enabled
+		carePackages.setFastMode(fast)
+
+		gui.carePackageCycler.updateDisplay()
 	}
 
 	/**
@@ -176,7 +202,10 @@ class UHC(defaultPreset: Preset, defaultVariants: Array<PhaseVariant>) {
 	}
 
 	fun isGameGoing(): Boolean {
-		return currentPhase?.phaseType != PhaseType.WAITING && currentPhase?.phaseType != PhaseType.POSTGAME
+		return if (currentPhase?.phaseType == PhaseType.GRACE)
+			(currentPhase as GraceDefault).ready
+		else
+			currentPhase?.phaseType != PhaseType.WAITING && currentPhase?.phaseType != PhaseType.POSTGAME
 	}
 
 	/* game flow modifiers */

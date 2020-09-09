@@ -1,21 +1,24 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.entity.Player
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import org.bukkit.scheduler.BukkitRunnable
 
-class RandomEffects(type: QuirkType) : Quirk(type) {
+class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {
 		timer = time
 
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(GameRunner.plugin, {
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
 			if (!GameRunner.uhc.isGameGoing()) return@scheduleSyncRepeatingTask
 
 			if (--timer == 0) {
@@ -104,7 +107,7 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 			val indexMeta = player.getMetadata(INDEX_TAG)
 
 			return if (indexMeta.size === 0) {
-				player.setMetadata(INDEX_TAG, FixedMetadataValue(GameRunner.plugin, 1))
+				player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 1))
 
 				effectList[0]
 
@@ -113,13 +116,13 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 
 				if (index == effectList.size) {
 					val newEffectList = createEffectsList()
-					player.setMetadata(LIST_TAG, FixedMetadataValue(GameRunner.plugin, newEffectList))
-					player.setMetadata(INDEX_TAG, FixedMetadataValue(GameRunner.plugin, 1))
+					player.setMetadata(LIST_TAG, FixedMetadataValue(UHCPlugin.plugin, newEffectList))
+					player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 1))
 
 					newEffectList[0]
 
 				} else {
-					player.setMetadata(INDEX_TAG, FixedMetadataValue(GameRunner.plugin, index + 1))
+					player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, index + 1))
 
 					effectList[index]
 				}
@@ -133,8 +136,8 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 			if (listMeta.size === 0) {
 				val effectList = createEffectsList()
 
-				player.setMetadata(LIST_TAG, FixedMetadataValue(GameRunner.plugin, effectList))
-				player.setMetadata(INDEX_TAG, FixedMetadataValue(GameRunner.plugin, 1))
+				player.setMetadata(LIST_TAG, FixedMetadataValue(UHCPlugin.plugin, effectList))
+				player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 1))
 
 				return effectList[0]
 			}
@@ -146,8 +149,8 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 		}
 
 		fun resetEffects(player: Player) {
-			player.setMetadata(LIST_TAG, FixedMetadataValue(GameRunner.plugin, createEffectsList()))
-			player.setMetadata(INDEX_TAG, FixedMetadataValue(GameRunner.plugin, 0))
+			player.setMetadata(LIST_TAG, FixedMetadataValue(UHCPlugin.plugin, createEffectsList()))
+			player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 0))
 		}
 	}
 }

@@ -1,12 +1,15 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
-class Hotbar(type: QuirkType) : Quirk(type) {
+class Hotbar(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
     override fun onEnable() {
     }

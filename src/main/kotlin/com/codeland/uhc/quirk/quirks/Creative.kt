@@ -1,15 +1,17 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
-import org.bukkit.Material
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material.*
 
-class Creative(type: QuirkType) : Quirk(type) {
+class Creative(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}
 
 	companion object {
-		val blocks = arrayOf<Material>(
+		val blocks = arrayOf(
 			MOSSY_COBBLESTONE,
 			MOSSY_COBBLESTONE_SLAB,
 			MOSSY_COBBLESTONE_STAIRS,

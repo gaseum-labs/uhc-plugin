@@ -1,9 +1,10 @@
 package com.codeland.uhc.quirk
 
-import CarePackages
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.quirk.quirks.*
 import org.bukkit.Material
 
-enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, var defaultEnabled: Boolean, var representation: Material, var description: Array<String>) {
+enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Quirk, var defaultEnabled: Boolean, var representation: Material, var description: Array<String>) {
     HALF_ZATOICHI("Half Zatoichi", ::HalfZatoichi, false, Material.IRON_SWORD, arrayOf(
         "Everyone gets a special sword",
         "You are honor bound to kill",
@@ -100,7 +101,7 @@ enum class QuirkType(var prettyName: String, var create: (QuirkType) -> Quirk, v
 		}
     }
 
-	fun createQuirk(): Quirk {
-		return create(this)
+	fun createQuirk(uhc: UHC): Quirk {
+		return create(uhc, this)
 	}
 }

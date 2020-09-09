@@ -1,5 +1,8 @@
-package com.codeland.uhc.quirk
+package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
 import org.bukkit.Material
 import org.bukkit.Material.*
@@ -7,7 +10,7 @@ import org.bukkit.entity.EntityType
 import org.bukkit.entity.EntityType.*
 import org.bukkit.inventory.ItemStack
 
-class Summoner(type: QuirkType) : Quirk(type) {
+class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}
