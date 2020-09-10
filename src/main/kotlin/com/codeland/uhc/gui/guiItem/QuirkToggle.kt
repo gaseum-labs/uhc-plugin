@@ -9,7 +9,7 @@ import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class QuirkToggle(gui: GuiInventory, uhc: UHC, index: Int, var type: QuirkType) : GuiItem(gui, uhc, index, true) {
+class QuirkToggle(uhc: UHC, index: Int, var type: QuirkType) : GuiItem(uhc, index, true) {
     override fun onClick(player: Player, shift: Boolean) {
         if (shift)
             uhc.getQuirk(type).inventory.open(player)
@@ -21,10 +21,10 @@ class QuirkToggle(gui: GuiInventory, uhc: UHC, index: Int, var type: QuirkType) 
         val stack = ItemStack(type.representation)
 
         if (uhc.isEnabled(type)) {
-            setName(stack, "${ChatColor.RESET}${ChatColor.WHITE}${type.prettyName} ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
+            setName(stack, "${ChatColor.WHITE}${type.prettyName} ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
             setEnchanted(stack)
         } else {
-            setName(stack, "${ChatColor.RESET}${ChatColor.WHITE}${type.prettyName} ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
+            setName(stack, "${ChatColor.WHITE}${type.prettyName} ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
         }
 
         setLore(stack, type.description.asList())

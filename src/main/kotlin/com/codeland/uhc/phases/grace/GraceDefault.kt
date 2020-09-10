@@ -20,9 +20,15 @@ open class GraceDefault : Phase() {
 
 	override fun customStart() {
 		Bukkit.getServer().onlinePlayers.forEach { player ->
+			/* absolutely nuke the inventory */
 			player.inventory.clear()
 			player.itemOnCursor.amount = 0
 			player.setItemOnCursor(null)
+
+			/* clear crafting slots */
+			player.inventory.extraContents.forEach { stack ->
+				stack.amount = 0
+			}
 
 			for (activePotionEffect in player.activePotionEffects)
 				player.removePotionEffect(activePotionEffect.type)

@@ -283,7 +283,7 @@ class MixerBot(
 		}
 	}
 
-	class SummaryEntry(val name: String, val killedBy: String)
+	class SummaryEntry(val place: String, val name: String, val killedBy: String)
 
 	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
 		val message = event.message
@@ -382,12 +382,12 @@ class MixerBot(
 					if (parts.size != 4)
 						true
 					else {
-						if (parts[0].startsWith("1")) {
+						if (parts[0] == "1") {
 							matchTime = parts[2].toIntOrNull() ?: return@any true
 							winningPlayers
 						} else {
 							losingPlayers
-						}.add(SummaryEntry(parts[1], parts[3]))
+						}.add(SummaryEntry(parts[0], parts[1], parts[3]))
 
 						false
 					}
@@ -399,7 +399,7 @@ class MixerBot(
 					errResolve("Error reading summary file")
 				} else {
 					message.delete().submit().thenAccept {
-						sendGameSummary(message.channel, gameNumber, day, month, year, matchTime, Array(winningPlayers.size) { i -> winningPlayers[i] }, Array(losingPlayers.size) { i -> losingPlayers[i] })
+						sendGameSummary(message.channel, gameNumber, day, month, year, matchTime, winningPlayers, losingPlayers)
 					}.exceptionally { err ->
 						errResolve(err.message ?: "Unknown error")
 					}
@@ -411,13 +411,13 @@ class MixerBot(
 		}
 	}
 
-	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: Array<SummaryEntry>, losers: Array<SummaryEntry>) {
+	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: ArrayList<SummaryEntry>, losers: ArrayList<SummaryEntry>) {
 		val embed = EmbedBuilder()
 			.setColor(0xe7c93c)
 			.setTitle("Summary of UHC #$gameNumber on $month/$day/$year")
 			.setDescription("Lasted ${Util.timeString(matchTime)}")
-			.addField("Winners", if (winners.isEmpty()) "No winners" else winners.fold("") { accum, winner -> accum + "1: ${winner.name}\n" }, false)
-			.addField("Losers", if (losers.isEmpty()) "No losers" else losers.foldIndexed("") { index, accum, loser -> accum + "${index + 1 + winners.size}: ${loser.name} | killed by ${loser.killedBy}\n"}, false)
+			.addField("Winners", if (winners.isEmpty()) "No winners" else winners.fold("") { accum, winner -> accum + "${winner.place}: ${winner.name}\n" }, false)
+			.addField("Losers", if (losers.isEmpty()) "No losers" else losers.foldIndexed("") { index, accum, loser -> accum + "${loser.place}: ${loser.name} | killed by ${loser.killedBy}\n"}, false)
 			.build()
 
 		channel.sendMessage(embed).queue()

@@ -3,6 +3,7 @@ package com.codeland.uhc.gui
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
+import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
@@ -11,7 +12,8 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.jetbrains.annotations.NotNull
 
-abstract class GuiItem(val guiInventory: GuiInventory, val uhc: UHC, val index: Int, val opOnly: Boolean) {
+abstract class GuiItem(val uhc: UHC, val index: Int, val opOnly: Boolean) {
+	lateinit var guiInventory: GuiInventory
 	lateinit var guiStack: ItemStack
 
 	abstract fun onClick(player: Player, shift: Boolean)
@@ -25,7 +27,7 @@ abstract class GuiItem(val guiInventory: GuiInventory, val uhc: UHC, val index: 
 	companion object {
 		fun setName(stack: ItemStack, name: String): ItemStack {
 			val meta = stack.itemMeta
-			meta.setDisplayName(name)
+			meta.setDisplayName("${ChatColor.RESET}$name")
 			stack.itemMeta = meta
 
 			return stack

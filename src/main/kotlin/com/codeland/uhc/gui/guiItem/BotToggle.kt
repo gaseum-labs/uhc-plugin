@@ -11,7 +11,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class BotToggle(gui: GuiInventory, uhc: UHC, index: Int) : GuiItem(gui, uhc, index, true) {
+class BotToggle(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
 	override fun onClick(player: Player, shift: Boolean) {
 		uhc.updateUsingBot(!uhc.usingBot)
 	}
@@ -25,10 +25,10 @@ class BotToggle(gui: GuiInventory, uhc: UHC, index: Int) : GuiItem(gui, uhc, ind
 		} else {
 			if (uhc.usingBot) {
 				stack = ItemStack(Material.NAUTILUS_SHELL)
-				setName(stack, "${ChatColor.RESET}${ChatColor.WHITE}Bot Vcs ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
+				setName(stack, "${ChatColor.WHITE}Bot Vcs ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
 			} else {
 				stack = ItemStack(Material.HONEYCOMB)
-				setName(stack, "${ChatColor.RESET}${ChatColor.WHITE}Bot Vcs ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
+				setName(stack, "${ChatColor.WHITE}Bot Vcs ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
 			}
 		}
 

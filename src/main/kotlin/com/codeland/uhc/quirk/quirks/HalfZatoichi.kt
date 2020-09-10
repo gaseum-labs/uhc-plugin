@@ -6,6 +6,8 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.phaseType.PhaseType
 import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.quirk.BoolProperty
+import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
@@ -19,7 +21,7 @@ import org.bukkit.metadata.FixedMetadataValue
 
 class HalfZatoichi(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && giveZatoichi) {
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && giveZatoichi.value) {
 			giveAllZatoichi()
 		}
 
@@ -45,34 +47,26 @@ class HalfZatoichi(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	}
 
 	override fun onDisable() {
-		if (giveZatoichi) removeAllZatoichi()
+		if (giveZatoichi.value) removeAllZatoichi()
 
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE && giveZatoichi)
+		if (phase.type == PhaseType.GRACE && giveZatoichi.value)
 			giveAllZatoichi()
 		else if (phase.type == PhaseType.WAITING)
 			removeAllZatoichi()
 	}
 
-	var giveZatoichi = true
+	var giveZatoichi = addProperty(BoolProperty(true))
 
 	init {
-		inventory.addItem(object : GuiItem(inventory, uhc, 9 + 1, true) {
-			override fun onClick(player: Player, shift: Boolean) {
-				giveZatoichi = !giveZatoichi
-			}
-			override fun getStack(): ItemStack {
-				val stack = if (giveZatoichi)
-					setName(ItemStack(Material.IRON_SWORD), "${ChatColor.RESET}${ChatColor.GREEN}Give Zatoichi")
-				else
-					setName(ItemStack(Material.WOODEN_SWORD), "${ChatColor.RESET}${ChatColor.RED}Do not give Zatoichi")
-
-				return setLore(stack, listOf("Give players the Half Zatoichi when the game starts"))
-			}
-		})
+		inventory.addItem(BoolToggle(uhc, 10, giveZatoichi, {
+			GuiItem.setName(ItemStack(Material.IRON_SWORD), "${ChatColor.GREEN}Give Zatoichi")
+		}, {
+			GuiItem.setName(ItemStack(Material.WOODEN_SWORD), "${ChatColor.RED}Do not give Zatoichi")
+		}))
 	}
 
 	var taskID = 0

@@ -4,6 +4,8 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.quirk.BoolProperty
+import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
@@ -33,50 +35,32 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 	}
 
-	var allowAggro = true
-	var allowPassive = true
-	var commander = true
+	var allowAggro = addProperty(BoolProperty(true))
+	var allowPassive = addProperty(BoolProperty(true))
+	var commander = addProperty(BoolProperty(true))
 
 	init {
-		inventory.addItem(object : GuiItem(inventory, uhc, 11, true) {
-			override fun onClick(player: Player, shift: Boolean) {
-				allowAggro = !allowAggro
-			}
-			override fun getStack(): ItemStack {
-				return if (allowAggro)
-					setName(ItemStack(CREEPER_SPAWN_EGG), "${ChatColor.RESET}Aggro ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
-				else
-					setName(ItemStack(GUNPOWDER), "${ChatColor.RESET}Aggro ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
-			}
-		})
+		inventory.addItem(BoolToggle(uhc, 11, allowAggro, {
+			GuiItem.setName(ItemStack(CREEPER_SPAWN_EGG), "Aggro ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
+		}, {
+			GuiItem.setName(ItemStack(GUNPOWDER), "Aggro ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
+		}))
 
-		inventory.addItem(object : GuiItem(inventory, uhc, 15, true) {
-			override fun onClick(player: Player, shift: Boolean) {
-				allowPassive = !allowPassive
-			}
-			override fun getStack(): ItemStack {
-				return if (allowPassive)
-					setName(ItemStack(CHICKEN_SPAWN_EGG), "${ChatColor.RESET}Passive ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
-				else
-					setName(ItemStack(FEATHER), "${ChatColor.RESET}Passive ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
-			}
-		})
+		inventory.addItem(BoolToggle(uhc, 15, allowPassive, {
+			GuiItem.setName(ItemStack(CHICKEN_SPAWN_EGG), "Passive ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
+		}, {
+			GuiItem.setName(ItemStack(FEATHER), "Passive ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
+		}))
 
-		inventory.addItem(object : GuiItem(inventory, uhc, 22, true) {
-			override fun onClick(player: Player, shift: Boolean) {
-				commander = !commander
-			}
-			override fun getStack(): ItemStack {
-				return if (commander)
-					setName(ItemStack(NETHERITE_HELMET), "${ChatColor.RESET}Summoner ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
-				else
-					setName(ItemStack(LEATHER_HELMET), "${ChatColor.RESET}Summoner ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
-			}
-		})
+		inventory.addItem(BoolToggle(uhc, 22, commander, {
+			GuiItem.setName(ItemStack(NETHERITE_HELMET), "Summoner ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
+		}, {
+			GuiItem.setName(ItemStack(LEATHER_HELMET), "Summoner ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
+		}))
 	}
 
 	fun getSpawnEgg(entity: EntityType): Material? {
-		return getSpawnEgg(entity, allowAggro, allowPassive)
+		return getSpawnEgg(entity, allowAggro.value, allowPassive.value)
 	}
 
 	fun onSummon(event: PlayerInteractEvent): Boolean {
@@ -95,7 +79,7 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		if (team != null) {
 			setCommandedBy(entity, team.color)
 
-			if (commander) entity.customName = "${team.color}${team.displayName}${net.md_5.bungee.api.ChatColor.RESET} ${entity.name}"
+			if (commander.value) entity.customName = "${team.color}${team.displayName}${net.md_5.bungee.api.ChatColor.RESET} ${entity.name}"
 		}
 
 		--item.amount

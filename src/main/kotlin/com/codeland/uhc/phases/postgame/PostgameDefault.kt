@@ -33,7 +33,7 @@ class PostgameDefault : Phase() {
 
                 if (player != null && player.gameMode == GameMode.SURVIVAL) {
                     playerString += "$playerName "
-                    uhc.ledger.addEntry(playerName, GameRunner.uhc.elapsedTime, null)
+                    uhc.ledger.addEntry(playerName, GameRunner.uhc.elapsedTime, "winning", true)
                 }
             }
 

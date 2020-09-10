@@ -10,7 +10,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class CarePackageCycler(gui: GuiInventory, uhc: UHC, index: Int) : GuiItem(gui, uhc, index, true) {
+class CarePackageCycler(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
 	override fun onClick(player: Player, shift: Boolean) {
 		val carePackages = uhc.carePackages
 
@@ -46,7 +46,7 @@ class CarePackageCycler(gui: GuiInventory, uhc: UHC, index: Int) : GuiItem(gui, 
 		private fun makeItem(material: Material, name: String): ItemStack {
 			val stack = ItemStack(material)
 
-			setName(stack, "${ChatColor.RESET}${ChatColor.WHITE}Care packages ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${name}")
+			setName(stack, "${ChatColor.WHITE}Care packages ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${name}")
 			setLore(stack, listOf("Fight over periodic falling chests containing good loot"))
 
 			return stack

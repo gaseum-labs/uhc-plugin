@@ -223,9 +223,9 @@ class EventListener : Listener {
 				else -> {}
 			}
 
-		if (world.environment == World.Environment.NORMAL) {
-			OreFix.removeOres(chunk)
-		}
+		//if (world.environment == World.Environment.NORMAL) {
+		//	OreFix.removeOres(chunk)
+		//}
 	}
 
 	@EventHandler
@@ -291,7 +291,7 @@ class EventListener : Listener {
 		}
 
 		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
-		if (summoner.enabled && summoner.commander) {
+		if (summoner.enabled && summoner.commander.value) {
 			val team = GameRunner.playersTeam(player.name)
 
 			if (team != null && Summoner.isCommandedBy(event.entity, team.color))
@@ -315,18 +315,13 @@ class EventListener : Listener {
 
 		/* prevent pest crafting */
 
-		if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
-			return
+		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
+			val player = event.whoClicked
 
-		var player = event.whoClicked
+			if (!Pests.isPest(player as Player)) return
 
-		if (!Pests.isPest(player as Player))
-			return
-
-		var item = event.recipe.result.type
-
-		if (Util.binarySearch(item, Pests.banList))
-			event.isCancelled = true
+			event.isCancelled = Util.binarySearch(event.recipe.result.type, Pests.banList)
+		}
 	}
 
 	@EventHandler
@@ -375,8 +370,7 @@ class EventListener : Listener {
 		if (!Summoner.isCommanded(event.entity) && summoner.enabled) {
 			val spawnEgg = summoner.getSpawnEgg(event.entityType)
 
-			if (spawnEgg != null)
-				event.drops.add(ItemStack(spawnEgg))
+			if (spawnEgg != null) event.drops.add(ItemStack(spawnEgg))
 		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {

@@ -11,7 +11,7 @@ import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class PresetCycler(gui: GuiInventory, uhc: UHC, index: Int) : GuiItem(gui, uhc, index, true) {
+class PresetCycler(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
 	override fun onClick(player: Player, shift: Boolean) {
 		val oldPreset = uhc.preset
 
@@ -34,7 +34,7 @@ class PresetCycler(gui: GuiInventory, uhc: UHC, index: Int) : GuiItem(gui, uhc, 
 			uhc.getTime(PhaseType.GLOWING)
 		))
 
-		setName(stack, "${ ChatColor.RESET}${ ChatColor.WHITE}Preset ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${preset?.prettyName ?: "Custom"}")
+		setName(stack, "${ChatColor.WHITE}Preset ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${preset?.prettyName ?: "Custom"}")
 
 		return stack
 	}

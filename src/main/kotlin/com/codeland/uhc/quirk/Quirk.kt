@@ -25,6 +25,8 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 		field = value
 	}
 
+	private val properties = ArrayList<BoolProperty>()
+
 	val inventory: GuiInventory = GuiInventory(4, type.prettyName)
 
 	init {
@@ -34,7 +36,7 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 			internal.setItem(i, backgroundItem)
 		}
 
-		inventory.addItem(object : GuiItem(inventory, uhc, inventory.inventory.size - 1, false) {
+		inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 1, false) {
 			override fun onClick(player: Player, shift: Boolean) {
 				if (shift)
 					inventory.close(player)
@@ -42,9 +44,20 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 					uhc.gui.inventory.open(player)
 			}
 			override fun getStack(): ItemStack {
-				return setName(ItemStack(Material.PRISMARINE_SHARD), "${ChatColor.RESET}${ChatColor.BLUE}Back")
+				return setName(ItemStack(Material.PRISMARINE_SHARD), "${ChatColor.BLUE}Back")
 			}
 		})
+	}
+
+	protected fun addProperty(property: BoolProperty): BoolProperty {
+		properties.add(property)
+		return property
+	}
+
+	fun resetProperties() {
+		properties.forEach { property ->
+			property.value = property.defaultValue
+		}
 	}
 
 	abstract fun onEnable()

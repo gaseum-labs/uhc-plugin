@@ -34,6 +34,8 @@ class GuiInventory(val height: Int, val name: String) {
 		inventory.setItem(index, guiItem.getStack())
 		guiItems[index] = guiItem
 
+		guiItem.guiInventory = this
+
 		val guiStack = inventory.getItem(index) ?: return guiItem
 		guiItem.guiStack = guiStack
 

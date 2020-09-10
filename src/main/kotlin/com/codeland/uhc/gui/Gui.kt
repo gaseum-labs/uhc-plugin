@@ -29,7 +29,7 @@ class Gui(val uhc: UHC) {
 
 	init {
 		quirkToggles = Array(QuirkType.values().size) { i ->
-			val item = inventory.addItem(QuirkToggle(inventory, uhc, i, QuirkType.values()[i]))
+			val item = inventory.addItem(QuirkToggle(uhc, i, QuirkType.values()[i]))
 
 			listener.registerInventory(uhc.getQuirk(QuirkType.values()[i]).inventory)
 
@@ -37,15 +37,15 @@ class Gui(val uhc: UHC) {
 		}
 
 		variantCylers = Array(PhaseType.values().size) { i ->
-			inventory.addItem(VariantCycler(inventory, uhc, i + (GuiInventory.WIDTH * 2), PhaseType.values()[i]))
+			inventory.addItem(VariantCycler(uhc, i + (GuiInventory.WIDTH * 2), PhaseType.values()[i]))
 		}
 
-		presetCycler = inventory.addItem(PresetCycler(inventory, uhc, GuiInventory.WIDTH * 3))
-		carePackageCycler = inventory.addItem(CarePackageCycler(inventory, uhc, GuiInventory.WIDTH * 3 + 1))
-		appleFixToggle = inventory.addItem(AppleFixToggle(inventory, uhc, GuiInventory.WIDTH * 3 + 2))
-		botToggle = inventory.addItem(BotToggle(inventory, uhc, GuiInventory.WIDTH * 3 + 3))
+		presetCycler = inventory.addItem(PresetCycler(uhc, GuiInventory.WIDTH * 3))
+		carePackageCycler = inventory.addItem(CarePackageCycler(uhc, GuiInventory.WIDTH * 3 + 1))
+		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 2))
+		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 3))
 
-		resetButton = inventory.addItem(object : GuiItem(inventory, uhc, inventory.inventory.size - 2, true) {
+		resetButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
 				uhc.updatePreset(uhc.defaultPreset)
 				presetCycler.updateDisplay()
@@ -58,6 +58,12 @@ class Gui(val uhc: UHC) {
 				QuirkType.values().forEach { quirkType ->
 					uhc.updateQuirk(quirkType, quirkType.defaultEnabled)
 					quirkToggles[quirkType.ordinal].updateDisplay()
+
+					val quirk = uhc.getQuirk(quirkType)
+					quirk.resetProperties()
+					quirk.inventory.guiItems.forEach { guiItem ->
+						guiItem?.updateDisplay()
+					}
 				}
 
 				uhc.updateCarePackages(enabled = true, fast = false)
@@ -71,16 +77,16 @@ class Gui(val uhc: UHC) {
 			}
 			override fun getStack(): ItemStack {
 				val stack = ItemStack(Material.MUSIC_DISC_WAIT)
-				setName(stack, "${ChatColor.RESET}${ChatColor.AQUA}Reset")
+				setName(stack, "${ChatColor.AQUA}Reset")
 				return stack
 			}
 		})
 
-		cancelButton = inventory.addItem(object : GuiItem(inventory, uhc, inventory.inventory.size - 1, false) {
+		cancelButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 1, false) {
 			override fun onClick(player: Player, shift: Boolean) = inventory.close(player)
 			override fun getStack(): ItemStack {
 				val stack = ItemStack(Material.BARRIER)
-				setName(stack, "${ChatColor.RESET}${ChatColor.RED}Close")
+				setName(stack, "${ChatColor.RED}Close")
 				return stack
 			}
 		})

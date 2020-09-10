@@ -85,10 +85,10 @@ object ToolTier {
 				EnchantmentPair(Enchantment.SWEEPING_EDGE, 3),
 				EnchantmentPair(Enchantment.DAMAGE_ALL, 2),
 				EnchantmentPair(Enchantment.VANISHING_CURSE),
-				EnchantmentPair(Enchantment.KNOCKBACK, 1)
+				EnchantmentPair(Enchantment.KNOCKBACK, 1, 2)
 			)),
 			ToolEnchantmentTier(arrayOf(
-				EnchantmentPair(Enchantment.DAMAGE_ALL, 3, 4),
+				EnchantmentPair(Enchantment.DAMAGE_ALL, 2, 3),
 				EnchantmentPair(Enchantment.VANISHING_CURSE),
 				EnchantmentPair(Enchantment.KNOCKBACK, 2)
 			))
@@ -110,11 +110,11 @@ object ToolTier {
 			),
 			ToolEnchantmentTier(arrayOf(
 				EnchantmentPair(Enchantment.DIG_SPEED, 5),
-				EnchantmentPair(Enchantment.DAMAGE_ALL, 1, 2),
+				EnchantmentPair(Enchantment.DAMAGE_ALL, 2),
 				EnchantmentPair(Enchantment.VANISHING_CURSE)
 			)),
 			ToolEnchantmentTier(arrayOf(
-				EnchantmentPair(Enchantment.DAMAGE_ALL, 3, 4),
+				EnchantmentPair(Enchantment.DAMAGE_ALL, 2, 3),
 				EnchantmentPair(Enchantment.VANISHING_CURSE)
 			))
 		)
@@ -167,11 +167,17 @@ object ToolTier {
 	val TIER_HELMET = ToolTieredInfo(
 		arrayOf(Material.LEATHER_HELMET, Material.GOLDEN_HELMET, Material.CHAINMAIL_HELMET, Material.IRON_HELMET, Material.DIAMOND_HELMET, Material.NETHERITE_HELMET, Material.TURTLE_HELMET),
 		arrayOf(
-			ToolEnchantmentTier(arrayOf(
-				EnchantmentPair(Enchantment.WATER_WORKER),
-				EnchantmentPair(Enchantment.PROTECTION_EXPLOSIONS, 1, 4),
-				EnchantmentPair(Enchantment.VANISHING_CURSE)
-			)),
+			ToolEnchantmentTier(
+				arrayOf(
+					EnchantmentPair(Enchantment.WATER_WORKER),
+					EnchantmentPair(Enchantment.VANISHING_CURSE)
+				), arrayOf(
+					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 1),
+					EnchantmentPair(Enchantment.PROTECTION_FIRE, 1),
+					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 1),
+					EnchantmentPair(Enchantment.PROTECTION_EXPLOSIONS, 1, 3)
+				)
+			),
 			ToolEnchantmentTier(
 				arrayOf(
 					EnchantmentPair(Enchantment.WATER_WORKER),
@@ -179,42 +185,48 @@ object ToolTier {
 					EnchantmentPair(Enchantment.VANISHING_CURSE)
 				),
 				arrayOf(
-					EnchantmentPair(Enchantment.PROTECTION_FIRE, 1, 4),
-					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 1, 4),
-					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 1, 2)
+					EnchantmentPair(Enchantment.PROTECTION_FIRE, 2),
+					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 2),
+					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2)
 				)
 			),
 			ToolEnchantmentTier(
-				arrayOf(EnchantmentPair(Enchantment.THORNS, 2, 3)),
+				arrayOf(EnchantmentPair(Enchantment.THORNS, 1, 2)),
 				arrayOf(
-					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 4),
-					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 3, 4)
+					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 2, 3),
+					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2, 3)
 				)
 			)
 		)
 	)
 
 	private val plainArmorTiers = arrayOf(
-		ToolEnchantmentTier(arrayOf(
-			EnchantmentPair(Enchantment.PROTECTION_EXPLOSIONS, 1, 4),
-			EnchantmentPair(Enchantment.VANISHING_CURSE)
-		)),
+		ToolEnchantmentTier(
+			arrayOf(
+				EnchantmentPair(Enchantment.VANISHING_CURSE)
+			), arrayOf(
+				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 1),
+				EnchantmentPair(Enchantment.PROTECTION_FIRE, 1),
+				EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 1),
+				EnchantmentPair(Enchantment.PROTECTION_EXPLOSIONS, 1, 3)
+			)
+		),
 		ToolEnchantmentTier(
 			arrayOf(
 				EnchantmentPair(Enchantment.THORNS, 1),
 				EnchantmentPair(Enchantment.VANISHING_CURSE)
 			),
 			arrayOf(
-				EnchantmentPair(Enchantment.PROTECTION_FIRE, 1, 4),
-				EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 1, 4),
-				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 1, 2)
+				EnchantmentPair(Enchantment.PROTECTION_FIRE, 2),
+				EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 2),
+				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2)
 			)
 		),
 		ToolEnchantmentTier(
-			arrayOf(EnchantmentPair(Enchantment.THORNS, 2, 3)),
+			arrayOf(EnchantmentPair(Enchantment.THORNS, 1, 2)),
 			arrayOf(
-				EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 4),
-				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 3, 4)
+				EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 2, 3),
+				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2, 3)
 			)
 		)
 	)
@@ -232,32 +244,34 @@ object ToolTier {
 	val TIER_BOOTS = ToolTieredInfo(
 		arrayOf(Material.LEATHER_BOOTS, Material.GOLDEN_BOOTS, Material.CHAINMAIL_BOOTS, Material.IRON_BOOTS, Material.DIAMOND_BOOTS, Material.NETHERITE_BOOTS),
 		arrayOf(
-			ToolEnchantmentTier(arrayOf(
-				EnchantmentPair(Enchantment.DEPTH_STRIDER, 1, 3),
-				EnchantmentPair(Enchantment.PROTECTION_EXPLOSIONS, 1, 4),
-				EnchantmentPair(Enchantment.VANISHING_CURSE)
-			)),
 			ToolEnchantmentTier(
 				arrayOf(
-					EnchantmentPair(Enchantment.FROST_WALKER, 1, 2),
-					EnchantmentPair(Enchantment.THORNS, 1),
 					EnchantmentPair(Enchantment.VANISHING_CURSE),
-					EnchantmentPair(Enchantment.PROTECTION_FALL, 1, 2)
-				),
-				arrayOf(
-					EnchantmentPair(Enchantment.PROTECTION_FIRE, 1, 4),
-					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 1, 4),
-					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 1, 2)
+					EnchantmentPair(Enchantment.DEPTH_STRIDER, 3)
+				), arrayOf(
+					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 1),
+					EnchantmentPair(Enchantment.PROTECTION_FIRE, 1),
+					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 1),
+					EnchantmentPair(Enchantment.PROTECTION_EXPLOSIONS, 1, 3)
 				)
 			),
 			ToolEnchantmentTier(
 				arrayOf(
-					EnchantmentPair(Enchantment.THORNS, 2, 3),
-					EnchantmentPair(Enchantment.PROTECTION_FALL, 3, 4)
+					EnchantmentPair(Enchantment.THORNS, 1),
+					EnchantmentPair(Enchantment.VANISHING_CURSE),
+					EnchantmentPair(Enchantment.FROST_WALKER)
 				),
 				arrayOf(
-					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 4),
-					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 3, 4)
+					EnchantmentPair(Enchantment.PROTECTION_FIRE, 2),
+					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 2),
+					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2)
+				)
+			),
+			ToolEnchantmentTier(
+				arrayOf(EnchantmentPair(Enchantment.THORNS, 1, 2)),
+				arrayOf(
+					EnchantmentPair(Enchantment.PROTECTION_PROJECTILE, 2, 3),
+					EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2, 3)
 				)
 			)
 		)
@@ -287,18 +301,14 @@ object ToolTier {
 			ToolEnchantmentTier(arrayOf(
 				EnchantmentPair(Enchantment.QUICK_CHARGE, 1, 2)
 			)),
-			ToolEnchantmentTier(
-				arrayOf(
-					EnchantmentPair(Enchantment.QUICK_CHARGE, 2, 3),
-					EnchantmentPair(Enchantment.MULTISHOT)
-				)
-			),
-			ToolEnchantmentTier(
-				arrayOf(
-					EnchantmentPair(Enchantment.QUICK_CHARGE, 3),
-					EnchantmentPair(Enchantment.MULTISHOT)
-				)
-			)
+			ToolEnchantmentTier(arrayOf(
+				EnchantmentPair(Enchantment.QUICK_CHARGE, 2, 3),
+				EnchantmentPair(Enchantment.MULTISHOT)
+			)),
+			ToolEnchantmentTier(arrayOf(
+				EnchantmentPair(Enchantment.QUICK_CHARGE, 3),
+				EnchantmentPair(Enchantment.MULTISHOT)
+			))
 		)
 	)
 
@@ -312,12 +322,10 @@ object ToolTier {
 
 	val TIER_TRIDENT = ToolTieredInfo(
 		Material.TRIDENT,
-		ToolEnchantmentTier(
-			arrayOf(
-				EnchantmentPair(Enchantment.LOYALTY, 1, 3),
-				EnchantmentPair(Enchantment.RIPTIDE, 1, 3)
-			)
-		)
+		ToolEnchantmentTier(arrayOf(
+			EnchantmentPair(Enchantment.LOYALTY, 1, 3),
+			EnchantmentPair(Enchantment.RIPTIDE, 1, 3)
+		))
 	)
 
 	val TIER_BOOK = ToolTieredInfo(
@@ -333,18 +341,17 @@ object ToolTier {
 			)),
 			ToolEnchantmentTier(arrayOf(
 				EnchantmentPair(Enchantment.DIG_SPEED, 5),
-				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2, 3),
-				EnchantmentPair(Enchantment.DAMAGE_ALL, 2),
-				EnchantmentPair(Enchantment.ARROW_DAMAGE, 1, 2)
+				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 1, 2),
+				EnchantmentPair(Enchantment.DAMAGE_ALL, 1, 2),
+				EnchantmentPair(Enchantment.ARROW_DAMAGE, 1)
 			)),
 			ToolEnchantmentTier(arrayOf(
 				EnchantmentPair(Enchantment.ARROW_INFINITE),
 				EnchantmentPair(Enchantment.ARROW_FIRE),
 				EnchantmentPair(Enchantment.FIRE_ASPECT, 1),
-				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 4),
-				EnchantmentPair(Enchantment.DAMAGE_ALL, 3, 5),
-				EnchantmentPair(Enchantment.ARROW_DAMAGE, 3),
-				EnchantmentPair(Enchantment.PIERCING, 1)
+				EnchantmentPair(Enchantment.PROTECTION_ENVIRONMENTAL, 2, 3),
+				EnchantmentPair(Enchantment.DAMAGE_ALL, 2, 3),
+				EnchantmentPair(Enchantment.ARROW_DAMAGE, 2, 3)
 			))
 		)
 	)

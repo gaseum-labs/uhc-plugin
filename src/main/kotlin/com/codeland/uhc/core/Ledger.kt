@@ -19,12 +19,28 @@ class Ledger {
 
 	fun generateString(): String {
 		var ret = ""
+
+		var heldPosition = 1
 		var position = 1
 
-		list.asReversed().forEach { entry ->
-			ret += "$position ${entry.username} ${entry.timeSurvived} ${entry.killedBy}\n"
+		var lastWinning = true
+		var lastTime = -1
 
-			if (!entry.winning) ++position
+		list.asReversed().forEach { entry ->
+			if (lastWinning) {
+				heldPosition = if (!entry.winning) position else 1
+				lastTime = -1
+			} else {
+				if (lastTime != entry.timeSurvived)
+					heldPosition = position
+			}
+
+			ret += "$heldPosition ${entry.username} ${entry.timeSurvived} ${entry.killedBy}\n"
+
+			lastWinning = entry.winning
+			lastTime = entry.timeSurvived
+
+			++position
 		}
 
 		return ret
@@ -44,5 +60,20 @@ class Ledger {
 		val writer = FileWriter(File(filePath(matchNumber)))
 		writer.write(generateString())
 		writer.close()
+	}
+
+	fun makeTest() {
+		addEntry("test_user_8",  45, "environment")
+		addEntry("test_user_0",  400, "environment")
+		addEntry("test_user_5",  400, "environment")
+		addEntry("test_user_11", 567, "environment")
+		addEntry("test_user_1",  1945, "environment")
+		addEntry("test_user_2",  1945, "environment")
+		addEntry("test_user_7",  1945, "environment")
+		addEntry("test_user_4",  2666, "environment")
+		addEntry("test_user_9",  3011, "environment")
+		addEntry("test_user_3",  4567, "environment")
+		addEntry("test_user_6",  4567, "winning", true)
+		addEntry("test_user_10", 4567, "winning", true)
 	}
 }
