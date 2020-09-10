@@ -2,8 +2,10 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.command.Commands
+import com.codeland.uhc.core.AppleFix
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.NetherFix
+import com.codeland.uhc.core.OreFix
 import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.item.GuiOpener
@@ -34,28 +36,25 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.event.world.ChunkPopulateEvent
+import org.bukkit.generator.BlockPopulator
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 
 class EventListener : Listener {
 	@EventHandler
 	fun onPlayerHurt(event: EntityDamageEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-			val player = event.entity
+		if (GameRunner.uhc.isGameGoing()) {
+			if (GameRunner.uhc.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
+				event.isCancelled = true
 
-			if (player is Player)
-				WetSponge.addSponge(player)
+			} else if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
+				val player = event.entity
+				if (player is Player) WetSponge.addSponge(player)
+				
+			}
+		} else {
+			event.isCancelled = !GameRunner.uhc.isGameGoing() && event.entityType == EntityType.PLAYER
 		}
-
-		if (GameRunner.uhc.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
-			event.isCancelled = true
-		}
-
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && !GameRunner.uhc.isPhase(PhaseType.POSTGAME))
-			return
-
-		if (event.entityType == EntityType.PLAYER)
-			event.isCancelled = true
 	}
 
 	@EventHandler
@@ -76,8 +75,8 @@ class EventListener : Listener {
 	fun onUseItem(event: PlayerInteractEvent) {
 		val stack = event.item ?: return
 
-		if (GameRunner.uhc.isEnabled(QuirkType.COMMANDER) || GameRunner.uhc.isEnabled(QuirkType.AGGRO_SUMMONER) || GameRunner.uhc.isEnabled(QuirkType.PASSIVE_SUMMONER))
-			if (Commander.onSummon(event)) event.isCancelled = true
+		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
+		if (summoner.enabled && summoner.onSummon(event)) event.isCancelled = true
 
 		if (GuiOpener.isItem(stack)) {
 			GameRunner.uhc.gui.inventory.open(event.player)
@@ -223,6 +222,10 @@ class EventListener : Listener {
 				}
 				else -> {}
 			}
+
+		if (world.environment == World.Environment.NORMAL) {
+			OreFix.removeOres(chunk)
+		}
 	}
 
 	@EventHandler
@@ -287,10 +290,11 @@ class EventListener : Listener {
 			if (Math.random() < 0.20) WetSponge.addSponge(player)
 		}
 
-		if (GameRunner.uhc.isEnabled(QuirkType.COMMANDER)) {
+		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
+		if (summoner.enabled && summoner.commander) {
 			val team = GameRunner.playersTeam(player.name)
 
-			if (team != null && Commander.isCommandedBy(event.entity, team.color))
+			if (team != null && Summoner.isCommandedBy(event.entity, team.color))
 				event.isCancelled = true
 		}
 
@@ -367,8 +371,9 @@ class EventListener : Listener {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
 		}
 
-		if (!Commander.isCommanded(event.entity)) {
-			val spawnEgg = Summoner.getSpawnEgg(event.entityType, GameRunner.uhc.isEnabled(QuirkType.AGGRO_SUMMONER), GameRunner.uhc.isEnabled(QuirkType.PASSIVE_SUMMONER))
+		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
+		if (!Summoner.isCommanded(event.entity) && summoner.enabled) {
+			val spawnEgg = summoner.getSpawnEgg(event.entityType)
 
 			if (spawnEgg != null)
 				event.drops.add(ItemStack(spawnEgg))
@@ -421,8 +426,8 @@ class EventListener : Listener {
 		var drops = event.items
 		var blockMiddle = blockState.location.add(0.5, 0.5, 0.5)
 
-		if (GameRunner.uhc.isEnabled(
-			QuirkType.APPLE_FIX) &&
+		if (
+			GameRunner.uhc.appleFix &&
 			AppleFix.isLeaves(blockState.type) &&
 			/* don't replace leaf block drops from shears */
 			!(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))
@@ -473,7 +478,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
-		if (!GameRunner.uhc.isEnabled(QuirkType.APPLE_FIX))
+		if (!GameRunner.uhc.appleFix)
 			return
 
 		/* drop apple for the nearest player */

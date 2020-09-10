@@ -11,8 +11,6 @@ import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.scoreboard.Team
-import kotlin.math.max
-import kotlin.math.min
 
 class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var gameMaster = null as CommandSender?
@@ -54,6 +52,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	var carePackages = CarePackages()
 
+	var appleFix = true
+
 	var usingBot = GameRunner.bot != null
 	private set
 
@@ -70,8 +70,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 			using
 		}
-
-		gui.botToggle.updateDisplay()
 	}
 
 	val gui = Gui(this)
@@ -79,26 +77,15 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	/* state setters */
 
 	fun updatePreset(preset: Preset) {
-		this.preset = preset
-
-		startRadius = preset.startRadius
-		endRadius = preset.endRadius
-
-		phaseTimes = arrayOf(
-			0,
-			preset.graceTime,
-			preset.shrinkTime,
-			preset.finalTime,
-			preset.glowTime,
-			0,
-			0
-		)
-
-		gui.presetCycler.updateDisplay()
+		updatePreset(preset, preset.startRadius, preset.endRadius, preset.graceTime, preset.shrinkTime, preset.finalTime, preset.glowTime)
 	}
 
 	fun updatePreset(startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowTime: Int) {
-		this.preset = null
+		updatePreset(null, startRadius, endRadius, graceTime, shrinkTime, finalTime, glowTime)
+	}
+
+	private fun updatePreset(preset: Preset?, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowTime: Int) {
+		this.preset = preset
 
 		this.startRadius = startRadius
 		this.endRadius = endRadius
@@ -112,41 +99,31 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			0,
 			0
 		)
-
-		gui.presetCycler.updateDisplay()
 	}
 
 	fun updateTime(phaseType: PhaseType, time: Int) {
 		this.preset = null
 		phaseTimes[phaseType.ordinal] = time
-
-		gui.presetCycler.updateDisplay()
 	}
 
 	fun updateStartRadius(startRadius: Double) {
 		this.preset = null
 		this.startRadius = startRadius
-
-		gui.presetCycler.updateDisplay()
 	}
 
 	fun updateEndRadius(endRadius: Double) {
 		this.preset = null
 		this.endRadius = endRadius
-
-		gui.presetCycler.updateDisplay()
 	}
 
 	fun updateVariant(phaseVariant: PhaseVariant) {
 		val index = phaseVariant.type.ordinal
 
 		phaseVariants[index] = phaseVariant
-		gui.variantCylers[index].updateDisplay()
 	}
 
 	fun updateQuirk(type: QuirkType, enabled: Boolean) {
 		quirks[type.ordinal].enabled = enabled
-		gui.quirkToggles[type.ordinal].updateDisplay()
 
 		if (enabled) type.incompatibilities.forEach { other ->
 			var otherQuirk = GameRunner.uhc.getQuirk(other)
@@ -161,18 +138,15 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	fun updateCarePackages(enabled: Boolean, fast: Boolean) {
 		carePackages.enabled = enabled
 		carePackages.setFastMode(fast)
-
-		gui.carePackageCycler.updateDisplay()
 	}
 
 	/**
 	 * call after object is fully initialized
 	 */
 	fun updateDisplays() {
-		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
-
 		carePackages.onEnable()
-		gui.carePackageCycler.updateDisplay()
+
+		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
 	}
 
 	/* state getters */
@@ -288,6 +262,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		/* mobCap = constant × chunks ÷ 289                           */
 		/* https://minecraft.gamepedia.com/Spawn#Java_Edition_mob_cap */
 		for (world in Bukkit.getServer().worlds) {
+			/*
 			var total = 0.0
 			var inBorder = 0.0
 
@@ -308,6 +283,20 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			world.     animalSpawnLimit = (10 * coeff * mobCapCoefficient).toInt() + 1
 			world.    ambientSpawnLimit = (15 * coeff * mobCapCoefficient).toInt() + 1
 			world.waterAnimalSpawnLimit = ( 5 * coeff * mobCapCoefficient).toInt() + 1
+			 */
+
+			val radius = world.worldBorder.size / 2
+			var inverseAlong = 1 - (((radius - startRadius) / (endRadius - startRadius)))
+
+			/* range for mobcaps is from [0.25 - 1] */
+			inverseAlong *= 0.75
+			inverseAlong += 0.25
+
+			world.     monsterSpawnLimit = (70 * inverseAlong * mobCapCoefficient).toInt() + 1
+			world.      animalSpawnLimit = (10 * inverseAlong * mobCapCoefficient).toInt() + 1
+			world.     ambientSpawnLimit = (15 * inverseAlong * mobCapCoefficient).toInt() + 1
+			world. waterAnimalSpawnLimit = ( 5 * inverseAlong * mobCapCoefficient).toInt() + 1
+			world.waterAmbientSpawnLimit = (20 * inverseAlong * mobCapCoefficient).toInt() + 1
 		}
 	}
 }

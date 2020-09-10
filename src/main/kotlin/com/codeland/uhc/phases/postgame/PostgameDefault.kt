@@ -22,15 +22,13 @@ class PostgameDefault : Phase() {
     var winningTeam = null as Team?
 
     override fun customStart() {
-        var team = winningTeam
+        var winningTeam = winningTeam
 
-        if (team != null) {
-            val topMessage = TextComponent("${team.displayName} Has Won!")
-            topMessage.isBold = true
-            topMessage.color = team.color.asBungee()
+        if (winningTeam != null) {
+            val topMessage = TextComponent("${winningTeam.color}${ChatColor.BOLD}${winningTeam.displayName} Has Won!")
 
-            var playerString = ""
-            team.entries.forEach { playerName ->
+            var playerString = "${winningTeam.color}"
+            winningTeam.entries.forEach { playerName ->
                 val player = Bukkit.getPlayer(playerName)
 
                 if (player != null && player.gameMode == GameMode.SURVIVAL) {
@@ -39,23 +37,17 @@ class PostgameDefault : Phase() {
                 }
             }
 
-            uhc.ledger.createTextFile()
-
             val bottomMessage = TextComponent(playerString.removeSuffix(" "))
-            bottomMessage.color = team.color.asBungee()
-
             val title = Title(topMessage, bottomMessage, 0, 200, 40)
 
             Bukkit.getServer().onlinePlayers.forEach { player ->
                 player.sendTitle(title)
             }
 
-        } else {
-            val topMessage = TextComponent("No one wins?")
-            topMessage.isBold = true
-            topMessage.color = ChatColor.GOLD
+            uhc.ledger.createTextFile()
 
-            val title = Title(topMessage, TextComponent(""), 0, 200, 40)
+        } else {
+            val title = Title(TextComponent("${ChatColor.GOLD}${ChatColor.BOLD}No one wins?"), TextComponent(""), 0, 200, 40)
 
             Bukkit.getServer().onlinePlayers.forEach { player ->
                 player.sendTitle(title)
@@ -70,7 +62,7 @@ class PostgameDefault : Phase() {
         val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
         scoreboard.teams.forEach { team ->
-           if (uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
+            if (uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
             team.unregister()
         }
 

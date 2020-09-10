@@ -1,5 +1,6 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.core.AppleFix
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.quirks.*
 import org.bukkit.Material
@@ -39,20 +40,8 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 		"you may place tough to get blocks without them emptying from your inventory"
 	)),
 
-	AGGRO_SUMMONER("Summoner Aggro", ::Summoner, false, Material.CREEPER_SPAWN_EGG, arrayOf(
-		"Hostile mobs drop their spawn eggs"
-	)),
-
-	PASSIVE_SUMMONER("Summoner Passive", ::Summoner, false, Material.CHICKEN_SPAWN_EGG, arrayOf(
-		"Passive mobs drop their spawn eggs"
-	)),
-
-	COMMANDER("Commander", ::Commander, false, Material.NETHERITE_HELMET, arrayOf(
-		"Spawned mobs obey your command"
-	)),
-
-	APPLE_FIX("Apple Fix", ::AppleFix, true, Material.APPLE, arrayOf(
-		"Less random apple drops"
+	SUMMONER("Summoner", ::Summoner, false, Material.MULE_SPAWN_EGG, arrayOf(
+		"Mobs drop their spawn eggs when killed"
 	)),
 
 	RANDOM_EFFECTS("Random Effects", ::RandomEffects, false, Material.POTION, arrayOf(

@@ -5,16 +5,18 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
-import com.codeland.uhc.quirk.quirks.AppleFix
+import com.codeland.uhc.core.AppleFix
 import com.codeland.uhc.phaseType.*
 import com.codeland.uhc.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.quirks.LowGravity
+import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scoreboard.Team
+import kotlin.math.log
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -28,7 +30,9 @@ class AdminCommands : BaseCommand() {
 
 		val errMessage = GameRunner.uhc.startUHC(sender)
 
-		if (errMessage != null)
+		if (errMessage == null)
+			Commands.errorMessage(sender, "Starting UHC...")
+		else
 			Commands.errorMessage(sender, errMessage)
 	}
 
@@ -43,6 +47,8 @@ class AdminCommands : BaseCommand() {
 			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
 			team.unregister()
 		}
+
+		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
 
 	@CommandAlias("team add")
@@ -57,9 +63,11 @@ class AdminCommands : BaseCommand() {
 		}
 
 		/* apparently players can not have names */
-		val playerName = player.name ?: return Commands.errorMessage(sender, "Player doesn't exist!");
+		val playerName = player.name ?: return Commands.errorMessage(sender, "Player doesn't exist!")
 
-		TeamData.addToTeam(sender.server.scoreboardManager.mainScoreboard, teamColor, playerName);
+		TeamData.addToTeam(sender.server.scoreboardManager.mainScoreboard, teamColor, playerName)
+
+		GameRunner.sendGameMessage(sender, "${ChatColor.RESET}Added ${player.name} to ${teamColor}${TeamData.prettyTeamName(teamColor)}")
 	}
 
 	@CommandAlias("team random")
@@ -74,24 +82,37 @@ class AdminCommands : BaseCommand() {
 		doRandomTeams(sender, 1)
 	}
 
+	@CommandAlias("team swap")
+	@Description("swap the teams of two players")
+	fun swapTemas(sender: CommandSender, player1: Player, player2: Player) {
+		val team1Color = GameRunner.playersTeam(player1.name)?.color ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
+		val team2Color = GameRunner.playersTeam(player2.name)?.color ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
+
+		val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
+
+		TeamData.addToTeam(scoreboard, team2Color, player1.name)
+		TeamData.addToTeam(scoreboard, team1Color, player2.name)
+
+		GameRunner.sendGameMessage(sender, "${ChatColor.RESET}${team2Color}${player1.name} ${ChatColor.RESET}${ChatColor.GOLD}${ChatColor.BOLD}and ${team1Color}${player2.name} ${ChatColor.RESET}${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
+	}
+
 	private fun doRandomTeams(sender: CommandSender, teamSize: Int) {
-		if (Commands.opGuard(sender)) return;
+		if (Commands.opGuard(sender)) return
 
 		val onlinePlayers = sender.server.onlinePlayers
 		val scoreboard = sender.server.scoreboardManager.mainScoreboard
 		val playerArray = ArrayList<String>()
 
-		onlinePlayers.forEach {
-			if (scoreboard.getEntryTeam(it.name) == null) {
-				playerArray.add(it.name)
-			}
+		onlinePlayers.forEach { player ->
+			if (scoreboard.getEntryTeam(player.name) == null)
+				playerArray.add(player.name)
 		}
 
 		val teams = TeamMaker.getTeamsRandom(playerArray, teamSize)
 		val numPreMadeTeams = teams.size
 
 		val teamColors = TeamMaker.getColorList(numPreMadeTeams, scoreboard)
-				?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!");
+			?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!")
 
 		teams.forEachIndexed { index, playerNames ->
 			playerNames.forEach {
@@ -100,19 +121,14 @@ class AdminCommands : BaseCommand() {
 				}
 			}
 		}
+
+		GameRunner.sendGameMessage(sender, "Created ${teams.size} teams with a team size of ${teamSize}!")
 	}
 
 	@CommandAlias("modify mobCoefficient")
 	@Description("change the mob spawn cap coefficient")
 	fun modifyMobCapCoefficient(sender : CommandSender, coefficient : Double) {
 		if (Commands.opGuard(sender)) return
-
-		for (w in Bukkit.getServer().worlds) {
-			w.monsterSpawnLimit = (w.monsterSpawnLimit * (coefficient / GameRunner.uhc.mobCapCoefficient)).toInt()
-			w.animalSpawnLimit = (w.animalSpawnLimit * (coefficient / GameRunner.uhc.mobCapCoefficient)).toInt()
-			w.ambientSpawnLimit = (w.ambientSpawnLimit * (coefficient / GameRunner.uhc.mobCapCoefficient)).toInt()
-			w.waterAnimalSpawnLimit = (w.waterAnimalSpawnLimit * (coefficient / GameRunner.uhc.mobCapCoefficient)).toInt()
-		}
 
 		GameRunner.uhc.mobCapCoefficient = coefficient
 	}
@@ -135,11 +151,12 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("modify variant")
 	@Description("set variant")
-	fun setPhase(sender: CommandSender, factory: PhaseVariant) {
+	fun setPhase(sender: CommandSender, variant: PhaseVariant) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.updateVariant(factory)
+		GameRunner.uhc.updateVariant(variant)
+		GameRunner.uhc.gui.variantCylers[variant.type.ordinal].updateDisplay()
 	}
 
 	@CommandAlias("modify timing")
@@ -152,6 +169,7 @@ class AdminCommands : BaseCommand() {
 			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
 
 		GameRunner.uhc.updateTime(type, length)
+		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
 	@CommandAlias("modify startRadius")
@@ -161,6 +179,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.updateStartRadius(radius)
+		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
 	@CommandAlias("modify endRadius")
@@ -170,24 +189,27 @@ class AdminCommands : BaseCommand() {
 		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.updateEndRadius(radius)
+		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
 	@CommandAlias("modify all")
 	@Description("set all details of the UHC")
-	fun modifyAll(sender : CommandSender, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowingTime: Int) {
+	fun modifyAll(sender: CommandSender, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowingTime: Int) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.updatePreset(startRadius, endRadius, graceTime, shrinkTime, finalTime, glowingTime)
+		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
 	@CommandAlias("preset")
 	@Description("set all details of the UHC")
-	fun modifyAll(sender : CommandSender, preset: Preset) {
+	fun modifyAll(sender: CommandSender, preset: Preset) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
 		GameRunner.uhc.updatePreset(preset)
+		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
 	fun lateTeamTeleport(sender: CommandSender, player: Player, location: Location, team: Team) {
@@ -204,11 +226,13 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("addLate")
 	@Description("adds a player to the game after it has already started")
-	fun addLate(sender: CommandSender, player: Player, teammate: Player) {
+	fun addLate(sender: CommandSender, playerName: String, teammateName: String) {
+		val player = Bukkit.getPlayer(playerName) ?: return Commands.errorMessage(sender, "Can't find player ${playerName}")
+		val teammate = Bukkit.getPlayer(teammateName) ?: return Commands.errorMessage(sender, "Can't find player ${teammateName}")
+
 		if (Commands.opGuard(sender)) return
 
 		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
-		if (player.gameMode != GameMode.SPECTATOR) return Commands.errorMessage(sender, "${player.name} is already playing!")
 
 		val joinTeam = GameRunner.playersTeam(teammate.name) ?: return Commands.errorMessage(sender, "${teammate.name} has no team to join!")
 		TeamData.addToTeam(Bukkit.getScoreboardManager().mainScoreboard, joinTeam.color, player.name)
@@ -218,11 +242,12 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("addLate")
 	@Description("adds a player to the game after it has already started")
-	fun addLate(sender: CommandSender, player: Player) {
+	fun addLate(sender: CommandSender, playerName: String) {
+		val player = Bukkit.getPlayer(playerName) ?: return Commands.errorMessage(sender, "Can't find player ${playerName}")
+
 		if (Commands.opGuard(sender)) return
 
 		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
-		if (player.gameMode != GameMode.SPECTATOR) return Commands.errorMessage(sender, "${player.name} is already playing!")
 
 		val world = Bukkit.getWorlds()[0]
 		val teleportLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
@@ -266,7 +291,9 @@ class AdminCommands : BaseCommand() {
 	fun testNext(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		if (!GameRunner.uhc.isPhase(PhaseType.POSTGAME))
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING))
+			Commands.errorMessage(sender, "In waiting phase, use /start instead")
+		else
 			GameRunner.uhc.startNextPhase()
 	}
 

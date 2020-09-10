@@ -56,19 +56,23 @@ open class GraceDefault : Phase() {
 		}
 
 		val teams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams
-		var totalTeleports = 0
-		var numComplete = 0
 
-		teams.forEach { team ->
-			team.entries.forEachIndexed { i, entry ->
+		var totalTeleports = 0
+		teams.forEachIndexed { i, team ->
+			team.entries.forEach { entry ->
+				if (Bukkit.getPlayer(entry) != null) ++totalTeleports
+			}
+		}
+
+		var numTeleports = 0
+		teams.forEachIndexed { i, team ->
+			team.entries.forEach { entry ->
 				val player = Bukkit.getPlayer(entry)
 
 				if (player != null) {
-					++totalTeleports
-
-					player.fallDistance = 0f
 					player.teleportAsync(teleportLocations[i]).thenAccept {
-						if (++numComplete == totalTeleports) {
+						player.fallDistance = 0f
+						if (++numTeleports == totalTeleports) {
 							ready = true
 						}
 					}
@@ -84,6 +88,8 @@ open class GraceDefault : Phase() {
 		if (uhc.carePackages.enabled) {
 			uhc.carePackages.onStart()
 		}
+
+		uhc.updateMobCaps()
 	}
 
 	override fun customEnd() {}

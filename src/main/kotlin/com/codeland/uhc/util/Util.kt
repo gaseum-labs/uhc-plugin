@@ -36,22 +36,29 @@ object Util {
 		return Pair(-1, -1)
 	}
 
-	fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
+	fun <T, E : Enum<E>> binaryFind(value: E, array: Array<T>, getValue: (T) -> E): T? {
 		var start = 0
-		var end = array.size - 1
-		var lookFor = value.ordinal
+		var end = array.size
 
 		while (true) {
-			var position = (end + start) / 2
-			var compare = array[position].ordinal
+			val position = (end + start) / 2
+			val currentValue = getValue(array[position])
 
 			when {
-				lookFor == compare -> return true
-				end - start == 1 -> return false
-				lookFor < compare -> end = position
-				lookFor > compare -> start = position
+				currentValue == value -> return array[position]
+				end - start == 1 -> return null
+				value < currentValue -> end = position
+				value > currentValue -> start = position
 			}
 		}
+	}
+
+	fun <T, E : Enum<E>> binarySearch(value: E, array: Array<T>, getValue: (T) -> E): Boolean {
+		return binaryFind(value, array, getValue) != null
+	}
+
+	fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
+		return binaryFind(value, array, { item -> item }) != null
 	}
 
 	fun randRange(low: Int, high: Int): Int {

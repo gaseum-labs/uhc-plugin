@@ -14,6 +14,7 @@ class EndgameClearBlocks : Phase() {
 
 	var topBoundary = 255
 	var botBoundary = -135
+	var finished = false
 
 	override fun customStart() {}
 
@@ -35,7 +36,7 @@ class EndgameClearBlocks : Phase() {
 			}
 		}
 
-		if (currentTick == 0) {
+		if (currentTick == 0 && !finished) {
 			--topBoundary
 			++botBoundary
 
@@ -45,8 +46,10 @@ class EndgameClearBlocks : Phase() {
 		}
 
 		if (botBoundary > 60 || topBoundary < 60) {
+			finished = true
+
+			topBoundary = 62
 			botBoundary = 60
-			topBoundary = 60
 		}
 	}
 

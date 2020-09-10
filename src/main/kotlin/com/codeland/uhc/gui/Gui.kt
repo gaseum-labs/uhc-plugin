@@ -21,6 +21,7 @@ class Gui(val uhc: UHC) {
 
 	val presetCycler: PresetCycler
 	val carePackageCycler: CarePackageCycler
+	val appleFixToggle: AppleFixToggle
 	val botToggle: BotToggle
 
 	val resetButton: GuiItem
@@ -41,19 +42,32 @@ class Gui(val uhc: UHC) {
 
 		presetCycler = inventory.addItem(PresetCycler(inventory, uhc, GuiInventory.WIDTH * 3))
 		carePackageCycler = inventory.addItem(CarePackageCycler(inventory, uhc, GuiInventory.WIDTH * 3 + 1))
-		botToggle = inventory.addItem(BotToggle(inventory, uhc, GuiInventory.WIDTH * 3 + 2))
+		appleFixToggle = inventory.addItem(AppleFixToggle(inventory, uhc, GuiInventory.WIDTH * 3 + 2))
+		botToggle = inventory.addItem(BotToggle(inventory, uhc, GuiInventory.WIDTH * 3 + 3))
 
 		resetButton = inventory.addItem(object : GuiItem(inventory, uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
 				uhc.updatePreset(uhc.defaultPreset)
+				presetCycler.updateDisplay()
+
 				uhc.defaultVariants.forEach { variant ->
 					uhc.updateVariant(variant)
+					variantCylers[variant.type.ordinal].updateDisplay()
 				}
+
 				QuirkType.values().forEach { quirkType ->
 					uhc.updateQuirk(quirkType, quirkType.defaultEnabled)
+					quirkToggles[quirkType.ordinal].updateDisplay()
 				}
+
 				uhc.updateCarePackages(enabled = true, fast = false)
+				carePackageCycler.updateDisplay()
+
 				uhc.updateUsingBot(true)
+				botToggle.updateDisplay()
+
+				uhc.appleFix = true
+				appleFixToggle.updateDisplay()
 			}
 			override fun getStack(): ItemStack {
 				val stack = ItemStack(Material.MUSIC_DISC_WAIT)

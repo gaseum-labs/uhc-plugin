@@ -59,8 +59,7 @@ object GameRunner {
 		var retRemaining = 0
 
 		Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
-			if (teamIsAlive(team))
-				++retRemaining
+			if (teamIsAlive(team)) ++retRemaining
 		}
 
 		/* only give last alive if only one team is alive */
@@ -68,18 +67,24 @@ object GameRunner {
 	}
 
 	fun playerDeath(deadPlayer: Player, removeTeam: Boolean) {
-		var aliveTeam = null as Team?
-		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
-
 		var deadPlayerTeam = playersTeam(deadPlayer.name) ?: return
 		var (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(deadPlayerTeam)
 
+		var killerName = deadPlayer.killer?.name
+		if (killerName != null) {
+			val team = playersTeam(deadPlayer.name)
+
+			/* prevent teamkills from counting as player kills */
+			if (team != null && team.entries.contains(killerName))
+				killerName = "teammate"
+		}
+
 		/* add to ledger */
-		uhc.ledger.addEntry(deadPlayer.name, uhc.elapsedTime, deadPlayer.killer?.name)
+		uhc.ledger.addEntry(deadPlayer.name, uhc.elapsedTime, killerName)
 
 		/* broadcast elimination message */
 		if (!teamIsAlive) Bukkit.getServer().onlinePlayers.forEach { player ->
-			sendGameMessage(player, "${deadPlayerTeam.displayName} has been Eliminated!")
+			sendGameMessage(player, "${deadPlayerTeam.color}${ChatColor.BOLD}${deadPlayerTeam.displayName} ${ChatColor.GOLD}${ChatColor.BOLD}has been Eliminated!")
 			sendGameMessage(player, "$remainingTeams teams remain")
 		}
 

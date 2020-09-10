@@ -5,7 +5,6 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.HelpCommand
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phaseType.PhaseType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -97,28 +96,28 @@ class ParticipantCommands : BaseCommand() {
 
 	@CommandAlias("color")
 	@Description("change your team color")
-	fun teamColor(sender: CommandSender, color: ChatColor) {
+	fun teamColor(sender: CommandSender, newColor: ChatColor) {
 		val team = GameRunner.playersTeam(sender.name)
 			?: return Commands.errorMessage(sender, "You are not on a team!")
 
-		if (!TeamData.isValidColor(color))
+		if (!TeamData.isValidColor(newColor))
 			return Commands.errorMessage(sender, "That color is not allowed!")
 
 		if (Bukkit.getServer().scoreboardManager.mainScoreboard.teams.any { team ->
-				return@any team.color == color
+				return@any team.color == newColor
 		})
 			return Commands.errorMessage(sender, "That color is already being used by another team!")
 
-		/* now finally change color */
-		team.color = color
+		/* change team name to be default name for new color if no custom name has been set */
+		if (team.displayName == TeamData.prettyTeamName(team.color))
+			team.displayName = TeamData.prettyTeamName(newColor)
 
-		val message = TextComponent("Your team color has been changed to ${TeamData.colorPrettyNames[color.ordinal].toLowerCase()}")
-		message.color = color.asBungee()
-		message.isBold = true
+		/* now finally change color */
+		team.color = newColor
 
 		/* broadcast change to all teammates */
 		team.entries.forEach { entry ->
-			Bukkit.getServer().getPlayer(entry)?.sendMessage(message)
+			Bukkit.getServer().getPlayer(entry)?.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}Your team color has been changed to ${newColor}${TeamData.colorPrettyNames[newColor.ordinal].toLowerCase()}")
 		}
 	}
 
@@ -131,18 +130,6 @@ class ParticipantCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Animal spawn limit: " + sender.world.animalSpawnLimit)
 		GameRunner.sendGameMessage(sender, "Ambient spawn limit: " + sender.world.ambientSpawnLimit)
 		GameRunner.sendGameMessage(sender, "Water animal spawn limit: " + sender.world.waterAnimalSpawnLimit)
-	}
-
-	@CommandAlias("help")
-	@Description("display a list of commands and how to use them")
-	@HelpCommand("bruh what?")
-	fun help(sender: CommandSender) {
-		sender as Player
-
-		GameRunner.sendGameMessage(sender, "Commands:")
-
-		this.registeredCommands.forEach { command ->
-			GameRunner.sendGameMessage(sender, "${command.getSyntaxText()} > ${command.getHelpText()}")
-		}
+		GameRunner.sendGameMessage(sender, "Water ambient spawn limit: " + sender.world.waterAmbientSpawnLimit)
 	}
 }
