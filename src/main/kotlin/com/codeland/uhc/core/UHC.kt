@@ -147,9 +147,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		carePackages.onEnable()
 
 		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
-
-		ledger.makeTest()
-		ledger.createTextFile()
 	}
 
 	/* state getters */

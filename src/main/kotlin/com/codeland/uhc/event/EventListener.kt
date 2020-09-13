@@ -230,24 +230,17 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
-		/* prevent monsters during waiting */
-		event.isCancelled = GameRunner.uhc.isPhase(PhaseType.WAITING) &&
-			(
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			event.isCancelled = (
 				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL ||
 				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.BEEHIVE
-			) &&
-			event.entityType.isAlive
+			) && event.entityType.isAlive
 
-		val location = event.location
-		val world = event.location.world
+		} else {
+			val world = event.location.world
 
-		if (world.environment == World.Environment.NETHER) {
-			val chance = if (world.getBiome(location.blockX, location.blockY, location.blockZ) == Biome.BASALT_DELTAS) 0.05 else 0.02
-
-			if (event.entity is LivingEntity && Math.random() < chance) {
-				event.isCancelled = true
-				world.spawnEntity(location, EntityType.BLAZE)
-			}
+			if (world.environment == World.Environment.NETHER)
+				event.isCancelled = NetherFix.replaceSpawn(event.entity)
 		}
 	}
 

@@ -26,9 +26,8 @@ open class GraceDefault : Phase() {
 			player.setItemOnCursor(null)
 
 			/* clear crafting slots */
-			player.inventory.extraContents.forEach { stack ->
-				stack.amount = 0
-			}
+			player.openInventory.topInventory.clear()
+			player.openInventory.bottomInventory.clear()
 
 			for (activePotionEffect in player.activePotionEffects)
 				player.removePotionEffect(activePotionEffect.type)
