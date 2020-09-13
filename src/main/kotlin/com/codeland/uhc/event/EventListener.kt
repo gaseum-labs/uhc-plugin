@@ -129,6 +129,13 @@ class EventListener : Listener {
 
 			if (!wasPest) GameRunner.playerDeath(player, Pests.isPest(player))
 		}
+
+		if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) {
+			event.drops.removeAll { itemStack ->
+				itemStack.type == Material.BLACK_STAINED_GLASS_PANE
+						&& itemStack.itemMeta.displayName == "Unusable Slot"
+			}
+		}
 	}
 
 	@EventHandler
@@ -527,7 +534,6 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onInventoryClick(event: InventoryClickEvent) {
-		val inventory = event.inventory
 		if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR))
 			if (event.clickedInventory?.type == InventoryType.PLAYER && event.slot in 9..35) {
 				event.isCancelled = true
