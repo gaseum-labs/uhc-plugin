@@ -28,7 +28,7 @@ class Hotbar(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
                         meta.setDisplayName("Unusable Slot")
                         meta
                     }()
-                    inv.setItem(slot, ItemStack(Material.BLACK_STAINED_GLASS_PANE))
+                    inv.setItem(slot, item)
                 }
             }
         }
