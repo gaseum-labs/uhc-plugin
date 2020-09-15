@@ -1,14 +1,12 @@
-package com.codeland.uhc.phases.grace
+package com.codeland.uhc.phase.phases.grace
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
-import com.codeland.uhc.phases.Phase
-import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import org.bukkit.*
-import org.bukkit.advancement.Advancement
 import org.bukkit.attribute.Attribute
-import org.bukkit.inventory.ItemStack
+import org.bukkit.boss.BossBar
 import kotlin.math.*
 
 open class GraceDefault : Phase() {
@@ -54,11 +52,13 @@ open class GraceDefault : Phase() {
 			player.gameMode = if (GameRunner.playersTeam(player.name) == null) GameMode.SPECTATOR else GameMode.SURVIVAL
 		}
 
-		Bukkit.getServer().worlds.forEach { world ->
-			world.time = 0
-			world.worldBorder.setCenter(0.0, 0.0)
-			world.worldBorder.size = uhc.startRadius * 2
-		}
+		/* set border in overworld */
+
+		val world = Bukkit.getWorlds()[0]
+
+		world.time = 0
+		world.worldBorder.setCenter(0.0, 0.0)
+		world.worldBorder.size = uhc.startRadius * 2
 
 		val teams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams
 
@@ -74,12 +74,10 @@ open class GraceDefault : Phase() {
 			team.entries.forEach { entry ->
 				val player = Bukkit.getPlayer(entry)
 
-				if (player != null) {
-					player.teleportAsync(teleportLocations[i]).thenAccept {
-						player.fallDistance = 0f
-						if (++numTeleports == totalTeleports) {
-							ready = true
-						}
+				player?.teleportAsync(teleportLocations[i])?.thenAccept {
+					player.fallDistance = 0f
+					if (++numTeleports == totalTeleports) {
+						ready = true
 					}
 				}
 			}
@@ -101,8 +99,8 @@ open class GraceDefault : Phase() {
 	override fun onTick(currentTick: Int) {}
 	override fun perSecond(remainingSeconds: Int) {}
 
-	override fun getCountdownString(): String {
-		return "Grace period ends in"
+	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
+		barTimer(bossBar, remainingSeconds, "Grace period ends in")
 	}
 
 	override fun endPhrase(): String {

@@ -3,20 +3,20 @@ package com.codeland.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
+import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
-import com.codeland.uhc.core.AppleFix
-import com.codeland.uhc.phaseType.*
-import com.codeland.uhc.phases.grace.GraceDefault
+import com.codeland.uhc.blockfix.LeavesFix
+import com.codeland.uhc.core.KillReward
+import com.codeland.uhc.phase.*
+import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.quirks.LowGravity
-import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scoreboard.Team
-import kotlin.math.log
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -31,7 +31,7 @@ class AdminCommands : BaseCommand() {
 		val errMessage = GameRunner.uhc.startUHC(sender)
 
 		if (errMessage == null)
-			Commands.errorMessage(sender, "Starting UHC...")
+			GameRunner.sendGameMessage(sender, "Starting UHC...")
 		else
 			Commands.errorMessage(sender, errMessage)
 	}
@@ -133,14 +133,6 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.mobCapCoefficient = coefficient
 	}
 
-	@CommandAlias("modify netherCloses")
-	@Description("specify how the nether ends")
-	fun setNetherSolution(sender : CommandSender, netherCloses : Boolean) {
-		if (Commands.opGuard(sender)) return
-
-		GameRunner.uhc.netherToZero = netherCloses
-	}
-
 	@CommandAlias("modify killBounty")
 	@Description("change the reward for killing a team")
 	fun setKillBounty(sender : CommandSender, reward : KillReward) {
@@ -198,7 +190,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.updatePreset(startRadius, endRadius, graceTime, shrinkTime, finalTime, glowingTime)
+		GameRunner.uhc.updatePreset(startRadius, endRadius, graceTime, shrinkTime, finalTime)
 		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
@@ -320,15 +312,24 @@ class AdminCommands : BaseCommand() {
 		sender.sendMessage("${sender.name}'s insomnia: ${sender.getStatistic(Statistic.TIME_SINCE_REST)}")
 	}
 
-	@CommandAlias("test apple")
+	@CommandAlias("test blockFix")
 	@Description("gets when the next apple will drop for you")
-	fun testApple(sender: CommandSender) {
+	fun testBlockFix(sender: CommandSender, blockFixType: BlockFixType) {
+		if (Commands.opGuard(sender)) return
+		sender as Player
+
+		blockFixType.blockFix.getInfoString(sender) { info ->
+			GameRunner.sendGameMessage(sender, info)
+		}
+	}
+
+	@CommandAlias("test elapsed")
+	@Description("gets how long this UHC has been going for")
+	fun testElapsed(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
 		sender as Player
 
-		AppleFix.ranges.forEach { range ->
-			sender.sendMessage("${range.prettyName} count: ${AppleFix.getCount(sender, range.countMeta)} next drop: ${AppleFix.getIndex(sender, range.indexMeta, range.range)}")
-		}
+		GameRunner.sendGameMessage(sender, "Elapsed time: ${GameRunner.uhc.elapsedTime}")
 	}
 }

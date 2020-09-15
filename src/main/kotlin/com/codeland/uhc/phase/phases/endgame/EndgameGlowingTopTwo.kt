@@ -1,14 +1,15 @@
-package com.codeland.uhc.phases.glowing
+package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phase.Phase
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.World
+import org.bukkit.boss.BossBar
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
-class GlowingTopTwo : Phase() {
-
+class EndgameGlowingTopTwo : Phase() {
 	override fun customStart() {
 		for (player in Bukkit.getServer().onlinePlayers) {
 			GameRunner.sendGameMessage(player, "Glowing will be applied to the top two teams")
@@ -45,11 +46,9 @@ class GlowingTopTwo : Phase() {
 		}
 	}
 
-	override fun getCountdownString(): String {
-		return "Endgame starts in"
+	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
+		barStatic(bossBar)
 	}
 
-	override fun endPhrase(): String {
-		return "ENDGAME STARTING"
-	}
+	override fun endPhrase() = ""
 }

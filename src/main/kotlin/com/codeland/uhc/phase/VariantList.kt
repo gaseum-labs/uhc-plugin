@@ -1,4 +1,4 @@
-package com.codeland.uhc.phaseType
+package com.codeland.uhc.phase
 
 object VariantList {
     var list = emptyArray<ArrayList<PhaseVariant>>()

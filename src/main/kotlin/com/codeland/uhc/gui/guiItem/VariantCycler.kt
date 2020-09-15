@@ -1,11 +1,9 @@
 package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.gui.GuiInventory
 import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.phaseType.VariantList
-import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phase.VariantList
+import com.codeland.uhc.phase.PhaseType
 import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack

@@ -1,6 +1,5 @@
 package com.codeland.uhc.quirk
 
-import com.codeland.uhc.core.AppleFix
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.quirks.*
 import org.bukkit.Material

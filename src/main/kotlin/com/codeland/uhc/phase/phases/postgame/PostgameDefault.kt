@@ -1,18 +1,19 @@
-package com.codeland.uhc.phases.postgame
+package com.codeland.uhc.phase.phases.postgame
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phase.Phase
 import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.World
+import org.bukkit.boss.BossBar
 import org.bukkit.scoreboard.Team
 
 class PostgameDefault : Phase() {
-
-    override fun getCountdownString(): String {
-        return ""
+    override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
+        barStatic(bossBar)
     }
 
     override fun endPhrase(): String {

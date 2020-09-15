@@ -3,9 +3,8 @@ package com.codeland.uhc.command;
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
-import co.aikar.commands.annotation.HelpCommand
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phase.PhaseType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -37,7 +36,6 @@ class ParticipantCommands : BaseCommand() {
 
 		GameRunner.sendGameMessage(sender, "Starting radius : ${uhc.startRadius.toInt()} blocks")
 		GameRunner.sendGameMessage(sender, "Ending radius : ${uhc.endRadius.toInt()} blocks")
-		GameRunner.sendGameMessage(sender, "Nether closes after shrinking : ${uhc.netherToZero}")
 		GameRunner.sendGameMessage(sender, "Spawn cap coefficient : ${uhc.mobCapCoefficient}")
 		GameRunner.sendGameMessage(sender, "Team Kill Bounty : ${uhc.killReward}")
 
@@ -47,7 +45,6 @@ class ParticipantCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.GRACE))
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.SHRINK))
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.FINAL))
-		GameRunner.sendGameMessage(sender, phaseString(PhaseType.GLOWING))
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.ENDGAME))
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.POSTGAME))
 	}

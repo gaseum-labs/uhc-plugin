@@ -3,8 +3,8 @@ package com.codeland.uhc.quirk.quirks
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
@@ -106,7 +106,7 @@ class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		private fun increaseMetaIndex(player: Player, effectList: Array<PotionEffectType>): PotionEffectType {
 			val indexMeta = player.getMetadata(INDEX_TAG)
 
-			return if (indexMeta.size === 0) {
+			return if (indexMeta.size == 0) {
 				player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 1))
 
 				effectList[0]
@@ -133,7 +133,7 @@ class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			val listMeta = player.getMetadata(LIST_TAG)
 
 			/* first time getting effect, need to create meta */
-			if (listMeta.size === 0) {
+			if (listMeta.size == 0) {
 				val effectList = createEffectsList()
 
 				player.setMetadata(LIST_TAG, FixedMetadataValue(UHCPlugin.plugin, effectList))

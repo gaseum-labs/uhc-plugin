@@ -1,4 +1,4 @@
-package com.codeland.uhc.phaseType
+package com.codeland.uhc.core
 
 import org.bukkit.Bukkit
 import org.bukkit.potion.PotionEffect

@@ -1,9 +1,12 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.command.TeamData
+import com.codeland.uhc.blockfix.BrownMushroomFix
+import com.codeland.uhc.blockfix.LeavesFix
+import com.codeland.uhc.blockfix.RedMushroomFix
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.quirk.quirks.Pests
-import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
@@ -17,6 +20,10 @@ import org.bukkit.scoreboard.Team
 object GameRunner {
 	var bot: MixerBot? = null
 	lateinit var uhc: UHC
+
+	val leavesFix = LeavesFix()
+	val redMushroomFix = RedMushroomFix()
+	val brownMushroomFix = BrownMushroomFix()
 
 	fun teamIsAlive(team: Team): Boolean {
 		return team.entries.any { entry ->
@@ -117,7 +124,7 @@ object GameRunner {
 	}
 
 	fun netherIsAllowed() : Boolean {
-		return !(uhc.netherToZero && (uhc.isPhase(PhaseType.FINAL) || uhc.isPhase(PhaseType.GLOWING) || uhc.isPhase(PhaseType.ENDGAME)))
+		return !(uhc.isPhase(PhaseType.FINAL) || uhc.isPhase(PhaseType.ENDGAME))
 	}
 
 	fun registerHearts() {

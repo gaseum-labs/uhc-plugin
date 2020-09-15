@@ -1,10 +1,9 @@
 package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.GuiInventory
 import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.util.ItemUtil
 import org.bukkit.ChatColor
 import org.bukkit.Material

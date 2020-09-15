@@ -4,8 +4,8 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.phaseType.PhaseVariant
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.BoolProperty
 import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk

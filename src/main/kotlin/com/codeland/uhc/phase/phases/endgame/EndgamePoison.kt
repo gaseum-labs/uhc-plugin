@@ -1,9 +1,9 @@
-package com.codeland.uhc.phases.endgame
+package com.codeland.uhc.phase.phases.endgame
 
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phase.Phase
 import org.bukkit.Bukkit
-import org.bukkit.scheduler.BukkitRunnable
+import org.bukkit.World
+import org.bukkit.boss.BossBar
 
 class EndgamePoison : Phase() {
 	override fun customStart() {}
@@ -17,8 +17,8 @@ class EndgamePoison : Phase() {
 
 	override fun perSecond(remainingSeconds: Int) {}
 
-	override fun getCountdownString(): String {
-		return ""
+	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
+		barStatic(bossBar)
 	}
 
 	override fun endPhrase(): String {

@@ -9,10 +9,9 @@ import com.codeland.uhc.core.Preset
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.EventListener
-import com.codeland.uhc.gui.GuiListener
-import com.codeland.uhc.phaseType.PhaseVariant
-import com.codeland.uhc.phaseType.VariantList
-import com.codeland.uhc.phases.Phase
+import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.phase.VariantList
+import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.worldgen.ChunkGeneratorOverworld
 import com.codeland.uhc.worldgen.OverworldGenSettings
@@ -55,7 +54,6 @@ class UHCPlugin : JavaPlugin() {
 			PhaseVariant.GRACE_FORGIVING,
 			PhaseVariant.SHRINK_DEFAULT,
 			PhaseVariant.FINAL_DEFAULT,
-			PhaseVariant.GLOWING_TOP_TWO,
 			PhaseVariant.ENDGAME_CLEAR_BLOCKS,
 			PhaseVariant.POSTGAME_DEFAULT
 		))

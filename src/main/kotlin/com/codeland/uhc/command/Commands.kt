@@ -1,8 +1,6 @@
 package com.codeland.uhc.command
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phaseType.PhaseType
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player

@@ -3,7 +3,7 @@ package com.codeland.uhc.gui
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.guiItem.*
-import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -22,6 +22,7 @@ class Gui(val uhc: UHC) {
 	val presetCycler: PresetCycler
 	val carePackageCycler: CarePackageCycler
 	val appleFixToggle: AppleFixToggle
+	val stewFixToggle: StewFixToggle
 	val botToggle: BotToggle
 
 	val resetButton: GuiItem
@@ -43,7 +44,8 @@ class Gui(val uhc: UHC) {
 		presetCycler = inventory.addItem(PresetCycler(uhc, GuiInventory.WIDTH * 3))
 		carePackageCycler = inventory.addItem(CarePackageCycler(uhc, GuiInventory.WIDTH * 3 + 1))
 		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 2))
-		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 3))
+		stewFixToggle = inventory.addItem(StewFixToggle(uhc, GuiInventory.WIDTH * 3 + 3))
+		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 4))
 
 		resetButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
@@ -74,6 +76,9 @@ class Gui(val uhc: UHC) {
 
 				uhc.appleFix = true
 				appleFixToggle.updateDisplay()
+
+				uhc.stewFix = true
+				stewFixToggle.updateDisplay()
 			}
 			override fun getStack(): ItemStack {
 				val stack = ItemStack(Material.MUSIC_DISC_WAIT)

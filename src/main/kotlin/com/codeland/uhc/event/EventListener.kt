@@ -1,34 +1,31 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands
-import com.codeland.uhc.core.AppleFix
+import com.codeland.uhc.blockfix.LeavesFix
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.NetherFix
-import com.codeland.uhc.core.OreFix
+import com.codeland.uhc.core.StewFix
 import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.item.GuiOpener
 import com.codeland.uhc.gui.item.ParkourCheckpoint
-import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.phaseType.PhaseVariant
-import com.codeland.uhc.phases.Phase
-import com.codeland.uhc.phases.grace.GraceDefault
-import com.codeland.uhc.phases.waiting.WaitingDefault
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.block.Biome
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.block.BlockDropItemEvent
-import org.bukkit.event.block.BlockPlaceEvent
-import org.bukkit.event.block.LeavesDecayEvent
+import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -36,9 +33,10 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.event.world.ChunkPopulateEvent
-import org.bukkit.generator.BlockPopulator
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 
 class EventListener : Listener {
 	@EventHandler
@@ -62,7 +60,7 @@ class EventListener : Listener {
 		Phase.dimensionOne(event.player)
 
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			WaitingDefault.onPlayerJoin(event.player)
+			(GameRunner.uhc.currentPhase as WaitingDefault?)?.onPlayerJoin(event.player)
 		} else {
 			if (GameRunner.playersTeam(event.player.name) == null)
 				event.player.gameMode = GameMode.SPECTATOR
@@ -82,7 +80,9 @@ class EventListener : Listener {
 			GameRunner.uhc.gui.inventory.open(event.player)
 		} else if (AntiSoftlock.isItem(stack)) {
 			val world = Bukkit.getWorlds()[0]
-			event.player.teleport(Location(world, 10000.5, Util.topBlockY(world, 10000, 10000) + 1.0, 10000.5))
+			val center = (GameRunner.uhc.currentPhase as WaitingDefault?)?.center ?: 10000
+
+			event.player.teleport(Location(world, center + 0.5, Util.topBlockY(world, center, center) + 1.0, center + 0.5))
 		} else if (ParkourCheckpoint.isItem(stack)) {
 			val location = ParkourCheckpoint.getPlayerCheckpoint(event.player)?.toBlockLocation()
 				?: return Commands.errorMessage(event.player, "Reach a gold block to get a checkpoint!")
@@ -230,6 +230,10 @@ class EventListener : Listener {
 				else -> {}
 			}
 
+		if (GameRunner.uhc.stewFix) {
+			StewFix.removeOxeye(chunk)
+		}
+
 		//if (world.environment == World.Environment.NORMAL) {
 		//	OreFix.removeOres(chunk)
 		//}
@@ -342,6 +346,18 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
+	fun onBlockBreaking(event: BlockDamageEvent) {
+		if (
+			GameRunner.uhc.stewFix && (
+				event.block.type == Material.RED_MUSHROOM_BLOCK ||
+				event.block.type == Material.BROWN_MUSHROOM_BLOCK
+			)
+		) {
+			event.player.addPotionEffect(PotionEffect(PotionEffectType.SLOW_DIGGING, 20, 2, true, false, false))
+		}
+	}
+
+	@EventHandler
 	fun onHealthRegen(event: EntityRegainHealthEvent) {
 		/* no regeneration in UHC */
 		var player = event.entity
@@ -414,25 +430,19 @@ class EventListener : Listener {
 	fun onBlockDrop(event: BlockDropItemEvent) {
 		var blockState = event.blockState
 		var block = event.block
+		val type = blockState.type
 
 		var player = event.player
-		var baseItem = event.player.inventory.itemInMainHand
 		var drops = event.items
-		var blockMiddle = blockState.location.add(0.5, 0.5, 0.5)
+		var blockMiddle = block.location.toCenterLocation()
 
-		if (
-			GameRunner.uhc.appleFix &&
-			AppleFix.isLeaves(blockState.type) &&
-			/* don't replace leaf block drops from shears */
-			!(drops.size > 0 && AppleFix.isLeaves(drops[0].itemStack.type))
-		) {
-			drops.clear()
-
-			AppleFix.onBreakLeaves(blockState.type, player) { drop ->
-				player.world.dropItem(blockMiddle, drop)
+		if (event.player.gameMode != GameMode.CREATIVE &&
+			BlockFixType.values().any { blockFixType ->
+				blockFixType.blockFix.onBreakBlock(GameRunner.uhc, type, drops, player) { drop ->
+					player.world.dropItem(blockMiddle, drop)
+				}
 			}
-
-		} else if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
+		) else if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
 			Abundance.replaceDrops(player, block, blockState, drops)
 		}
 	}
@@ -478,7 +488,7 @@ class EventListener : Listener {
 		/* drop apple for the nearest player */
 		Bukkit.getOnlinePlayers().any { player ->
 			if (player.location.distance(event.block.location.toCenterLocation()) < 16) {
-				AppleFix.onBreakLeaves(event.block.type, player) { drop ->
+				BlockFixType.LEAVES_FIX.blockFix.onBreakBlock(event.block.type, player) { drop ->
 					player.world.dropItem(event.block.location.toCenterLocation(), drop)
 				}
 

@@ -1,13 +1,8 @@
-package com.codeland.uhc.phases
+package com.codeland.uhc.phase
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phaseType.PhaseType
-import com.codeland.uhc.phaseType.PhaseVariant
 import com.codeland.uhc.util.Util
-import net.md_5.bungee.api.ChatMessageType
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.NamespacedKey
@@ -15,9 +10,7 @@ import org.bukkit.World
 import org.bukkit.boss.BarColor
 import org.bukkit.boss.BarStyle
 import org.bukkit.boss.BossBar
-import org.bukkit.entity.Boss
 import org.bukkit.entity.Player
-import org.bukkit.scheduler.BukkitRunnable
 
 abstract class Phase {
 	companion object {
@@ -37,19 +30,15 @@ abstract class Phase {
 			var world = player.world
 
 			dimensionBars.forEach { dimensionBar ->
-				if (world === dimensionBar.world)
-					dimensionBar.bossBar.addPlayer(player)
-				else
-					dimensionBar.bossBar.removePlayer(player)
+				if (world === dimensionBar.world) dimensionBar.bossBar.addPlayer(player)
+				else dimensionBar.bossBar.removePlayer(player)
 			}
 		}
 
 		fun dimensionOne(player: Player) {
 			dimensionBars.forEachIndexed { i, dimensionBar ->
-				if (i == 0)
-					dimensionBar.bossBar.addPlayer(player)
-				else
-					dimensionBar.bossBar.removePlayer(player)
+				if (i == 0) dimensionBar.bossBar.addPlayer(player)
+				else dimensionBar.bossBar.removePlayer(player)
 			}
 		}
 	}
@@ -74,8 +63,8 @@ abstract class Phase {
 
 		dimensionBars.forEach { dimensionBar ->
 			dimensionBar.bossBar.progress = 1.0
-			dimensionBar.bossBar.color = phaseType.color
-			dimensionBar.bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${phaseType.prettyName}")
+			dimensionBar.bossBar.color = phaseType.barColor
+			updateBarPerSecond(dimensionBar.bossBar, dimensionBar.world, remainingSeconds)
 		}
 
 		Bukkit.getOnlinePlayers().forEach { player ->
@@ -85,38 +74,46 @@ abstract class Phase {
 		var currentTick = 0
 
 		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
-			if (length > 0) {
-				if (currentTick == 0) {
+			if (currentTick == 0) {
+				/* for phases that have a timer */
+				if (length != 0) {
 					if (remainingSeconds == 0) return@scheduleSyncRepeatingTask uhc.startNextPhase()
 
-					Bukkit.getOnlinePlayers().forEach { player ->
-						setPlayerBarDimension(player)
+					if (remainingSeconds <= 3) Bukkit.getServer().onlinePlayers.forEach { player ->
+						player.sendTitle("${countDownColor(remainingSeconds)}${ChatColor.BOLD}$remainingSeconds", "${phaseType.chatColor}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
 					}
-
-					dimensionBars.forEach { dimensionBar ->
-						updateActionBar(dimensionBar.bossBar, dimensionBar.world, remainingSeconds)
-					}
-
-					if (remainingSeconds <= 3)
-						Bukkit.getServer().onlinePlayers.forEach { player ->
-							player.sendTitle("${countDownColor(remainingSeconds)}${ChatColor.BOLD}$remainingSeconds", "${ChatColor.GOLD}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
-						}
-
-					perSecond(remainingSeconds)
 
 					--remainingSeconds
-					++uhc.elapsedTime
 				}
+
+				/* general per second for all phases regardless of having a timer */
 
 				dimensionBars.forEach { dimensionBar ->
-					dimensionBar.bossBar.progress = (remainingSeconds.toDouble() + 1 - (currentTick.toDouble() / 20.0)) / length.toDouble()
+					updateBarPerSecond(dimensionBar.bossBar, dimensionBar.world, remainingSeconds)
 				}
+
+				perSecond(remainingSeconds)
+				if (phaseType.gameGoing) ++uhc.elapsedTime
 			}
 
-			currentTick = (currentTick + 1) % 20
+			/* bar progress section */
 
+			val progress = if (length == 0) 1.0
+			else (remainingSeconds + 1.0 - (currentTick / 20.0)) / length
+
+			dimensionBars.forEach { dimensionBar ->
+				dimensionBar.bossBar.progress = progress
+			}
+
+			Bukkit.getOnlinePlayers().forEach { player ->
+				setPlayerBarDimension(player)
+			}
+
+			/* every tick determine the subtick within the second */
+
+			currentTick = (currentTick + 1) % 20
 			onTick(currentTick)
-		}, 0, 1)
+		}, 20, 1)
 
 		onInject(this)
 
@@ -138,24 +135,14 @@ abstract class Phase {
 		customEnd()
 	}
 
-	open fun updateActionBar(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		bossBar.setTitle("${ChatColor.GOLD}${ChatColor.BOLD}${getCountdownString()} ${getRemainingTimeString(remainingSeconds)}")
+	/* helpers for update bar per second */
+
+	protected fun barTimer(bossBar: BossBar, remainingSeconds: Int, countdownString: String) {
+		bossBar.setTitle("${phaseType.chatColor}${ChatColor.BOLD}$countdownString ${Util.timeString(remainingSeconds)}")
 	}
 
-	protected open fun getRemainingTimeString(seconds: Int) : String {
-		var time: Int
-
-		var units = if (seconds >= 60) {
-			time = seconds / 60 + 1
-			"minute"
-		} else {
-			time = seconds
-			"second"
-		}
-
-		if (time > 1) units += "s"
-
-		return "$time $units"
+	protected fun barStatic(bossBar: BossBar) {
+		bossBar.setTitle("${phaseType.chatColor}${ChatColor.BOLD}${phaseType.prettyName}")
 	}
 
 	/* abstract */
@@ -165,6 +152,6 @@ abstract class Phase {
 	abstract fun onTick(currentTick: Int)
 
 	abstract fun perSecond(remainingSeconds: Int)
-	abstract fun getCountdownString() : String
+	abstract fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int)
 	abstract fun endPhrase() : String
 }

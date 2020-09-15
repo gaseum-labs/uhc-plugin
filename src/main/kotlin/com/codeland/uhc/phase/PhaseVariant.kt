@@ -1,18 +1,12 @@
-package com.codeland.uhc.phaseType
+package com.codeland.uhc.phase
 
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phases.Phase
-import com.codeland.uhc.phases.endgame.EndgameClearBlocks
-import com.codeland.uhc.phases.endgame.EndgameDeathmatch
-import com.codeland.uhc.phases.endgame.EndgameNone
-import com.codeland.uhc.phases.endgame.EndgamePoison
-import com.codeland.uhc.phases.final.FinalDefault
-import com.codeland.uhc.phases.glowing.GlowingDefault
-import com.codeland.uhc.phases.glowing.GlowingTopTwo
-import com.codeland.uhc.phases.grace.GraceDefault
-import com.codeland.uhc.phases.postgame.PostgameDefault
-import com.codeland.uhc.phases.shrink.ShrinkDefault
-import com.codeland.uhc.phases.waiting.WaitingDefault
+import com.codeland.uhc.phase.phases.endgame.*
+import com.codeland.uhc.phase.phases.final.FinalDefault
+import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.phase.phases.postgame.PostgameDefault
+import com.codeland.uhc.phase.phases.shrink.ShrinkDefault
+import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import org.bukkit.Material
 
 enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var prettyName: String, var representation: Material, var description: List<String>) {
@@ -43,15 +37,6 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 		"All players are now in the final small center radius"
 	)),
 
-	GLOWING_DEFAULT(PhaseType.GLOWING, ::GlowingDefault, "Default", Material.GLOWSTONE_DUST, listOf(
-		"Glowing is applied to everyone",
-		"Now you cannot hide"
-	)),
-
-	GLOWING_TOP_TWO(PhaseType.GLOWING, ::GlowingTopTwo, "Top two", Material.SPECTRAL_ARROW, listOf(
-		"The two teams with the most health will always be glowing"
-	)),
-
 	ENDGAME_NONE(PhaseType.ENDGAME, ::EndgameNone, "None", Material.STONE_SWORD, listOf(
 		"Fight to the death without intervention"
 	)),
@@ -68,6 +53,15 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 
 	ENDGAME_POISON(PhaseType.ENDGAME, ::EndgamePoison, "Poision", Material.WITHER_SKELETON_SKULL, listOf(
 		"Health will be continuously taken away until everyone dies"
+	)),
+
+	ENDGAME_GLOWING_ALL(PhaseType.ENDGAME, ::EndgameGlowingAll, "Glowing all", Material.GLOWSTONE_DUST, listOf(
+		"Glowing is applied to everyone",
+		"Now you cannot hide"
+	)),
+
+	ENDGAME_GLOWING_TOP_TWO(PhaseType.ENDGAME, ::EndgameGlowingTopTwo, "Glowing Top Wwo", Material.SPECTRAL_ARROW, listOf(
+		"The two teams with the most health will always be glowing"
 	)),
 
 	POSTGAME_DEFAULT(PhaseType.POSTGAME, ::PostgameDefault, "Default", Material.FILLED_MAP, listOf(

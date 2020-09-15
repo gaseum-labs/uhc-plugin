@@ -1,7 +1,7 @@
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.phaseType.PhaseType
+import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
@@ -50,7 +50,7 @@ import kotlin.math.ceil
 class CarePackages {
 	val OBJECTIVE_NAME = "carePackageDrop"
 
-	var enabled = true
+	var enabled = false
 	set (value) {
 		field = value
 
@@ -103,7 +103,7 @@ class CarePackages {
 	var fastMode = false
 	private set
 
-	val NUM_ITEMS = 18
+	val NUM_ITEMS = 16
 	val NUM_DROPS = 6
 
 	var running = false
@@ -290,20 +290,20 @@ class CarePackages {
 				LootEntry { getTieredTool(BOW_SET, TIER_1, 1, ENCHANT_CHANCE) },
 				LootEntry { getTieredBook(TIER_1, 2, ENCHANT_CHANCE) },
 				LootEntry { bucket() },
-				LootEntry { ItemStack(Material.APPLE, Util.randRange(2, 4)) },
-				LootEntry { ItemStack(Material.RED_MUSHROOM, Util.randRange(4, 8)) },
-				LootEntry { ItemStack(Material.BROWN_MUSHROOM, Util.randRange(4, 8)) },
-				LootEntry { ItemStack(Material.OXEYE_DAISY, Util.randRange(4, 8)) },
+				LootEntry { ItemStack(Material.APPLE, Util.randRange(1, 2)) },
+				LootEntry { ItemStack(Material.RED_MUSHROOM, 2) },
+				LootEntry { ItemStack(Material.BROWN_MUSHROOM, 2) },
+				LootEntry { ItemStack(Material.OXEYE_DAISY, 2) },
+				LootEntry { ItemStack(Material.STRING, Util.randRange(4, 8)) },
 				LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(6,  12)) },
 				LootEntry { ItemStack(Material.GUNPOWDER, Util.randRange(6, 12)) },
 				LootEntry { ItemStack(Material.FEATHER, Util.randRange(6, 12)) },
 				LootEntry { ItemStack(Material.LEATHER, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(Material.STRING, Util.randRange(6, 12)) },
 				LootEntry { ItemStack(Material.FLINT, Util.randRange(8, 16)) },
 				LootEntry { ItemStack(Material.BONE, Util.randRange(8, 16)) },
 				LootEntry { ItemStack(Material.COOKED_PORKCHOP, Util.randRange(8,  16)) },
+				LootEntry { ItemStack(Material.SUGAR_CANE, Util.randRange(8, 16)) },
 				LootEntry { ItemStack(Material.COAL, Util.randRange(10,  20)) },
-				LootEntry { ItemStack(Material.SUGAR_CANE, Util.randRange(10, 20)) },
 				LootEntry { ItemStack(Material.STONE, Util.randRange(32, 64)) }
 			),
 			arrayOf(
@@ -313,10 +313,8 @@ class CarePackages {
 				LootEntry { getTieredTool(BOW_SET, TIER_2, 1, ENCHANT_CHANCE) },
 				LootEntry { getTieredBook(TIER_2, 2, ENCHANT_CHANCE) },
 				LootEntry { regenerationStew() },
-				LootEntry { ItemStack(Material.APPLE, Util.randRange(2, 4)) },
-				LootEntry { ItemStack(Material.ENDER_PEARL, Util.randRange(2, 4)) },
+				LootEntry { ItemStack(Material.APPLE, Util.randRange(1, 2)) },
 				LootEntry { ItemStack(Material.DIAMOND, Util.randRange(3,  6)) },
-				LootEntry { ItemStack(Material.OBSIDIAN, Util.randRange(6,  12)) },
 				LootEntry { ItemStack(Material.LEATHER, Util.randRange(6,  12)) },
 				LootEntry { ItemStack(Material.STRING, Util.randRange(6, 12)) },
 				LootEntry { ItemStack(Material.ARROW, Util.randRange(6, 12)) },
@@ -329,19 +327,15 @@ class CarePackages {
 				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(10, 20)) }
 			),
 			arrayOf(
-				LootEntry { getTieredTool(WEAPON_SET, DIAMOND, TIER_3, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(ARMOR_SET, DIAMOND, TIER_3, 2, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(WEAPON_SET, if (Math.random() < 0.75) DIAMOND else IRON, TIER_3, 1, ENCHANT_CHANCE) },
+				LootEntry { getTieredTool(ARMOR_SET, if (Math.random() < 0.75) DIAMOND else IRON, TIER_3, 2, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(BOW_SET, TIER_3, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(TIER_TRIDENT, 1, ENCHANT_CHANCE) },
 				LootEntry { getTieredBook(TIER_3, 2, ENCHANT_CHANCE) },
-				LootEntry { ItemStack(Material.GOLDEN_APPLE, Util.randRange(1, 2)) },
-				LootEntry { ItemStack(Material.ENDER_PEARL, Util.randRange(2, 4)) },
-				LootEntry { ItemStack(Material.ANCIENT_DEBRIS, 4) },
+				LootEntry { ItemStack(Material.GOLDEN_APPLE, 1) },
 				LootEntry { ItemStack(Material.DIAMOND, Util.randRange(3,  6)) },
+				LootEntry { ItemStack(Material.BOOK, Util.randRange(4,  8)) },
 				LootEntry { ItemStack(Material.OBSIDIAN, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(Material.BOOK, Util.randRange(6,  12)) },
 				LootEntry { ItemStack(Material.LEATHER, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(randFromArray(brewingIngredients), Util.randRange(6, 12)) },
 				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(6, 12)) },
 				LootEntry { ItemStack(Material.GOLD_INGOT, Util.randRange(8,  16)) },
 				LootEntry { ItemStack(Material.ARROW, Util.randRange(8, 16)) },

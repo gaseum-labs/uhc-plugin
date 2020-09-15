@@ -1,11 +1,13 @@
 package com.codeland.uhc.core
 
 import CarePackages
+import com.codeland.uhc.blockfix.BlockFixType
+import com.codeland.uhc.blockfix.LeavesFix
 import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.phaseType.*
-import com.codeland.uhc.phases.Phase
-import com.codeland.uhc.phases.grace.GraceDefault
-import com.codeland.uhc.phases.postgame.PostgameDefault
+import com.codeland.uhc.phase.*
+import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.phase.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
@@ -16,7 +18,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var gameMaster = null as CommandSender?
 	var ledger = Ledger()
 
-	var netherToZero = true
 	var mobCapCoefficient = 1.0
 	var killReward = KillReward.NONE
 
@@ -34,7 +35,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		defaultPreset.graceTime,
 		defaultPreset.shrinkTime,
 		defaultPreset.finalTime,
-		defaultPreset.glowTime,
 		0,
 		0
 	)
@@ -53,6 +53,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var carePackages = CarePackages()
 
 	var appleFix = true
+	var stewFix = true
 
 	var usingBot = GameRunner.bot != null
 	private set
@@ -77,14 +78,14 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	/* state setters */
 
 	fun updatePreset(preset: Preset) {
-		updatePreset(preset, preset.startRadius, preset.endRadius, preset.graceTime, preset.shrinkTime, preset.finalTime, preset.glowTime)
+		updatePreset(preset, preset.startRadius, preset.endRadius, preset.graceTime, preset.shrinkTime, preset.finalTime)
 	}
 
-	fun updatePreset(startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowTime: Int) {
-		updatePreset(null, startRadius, endRadius, graceTime, shrinkTime, finalTime, glowTime)
+	fun updatePreset(startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int) {
+		updatePreset(null, startRadius, endRadius, graceTime, shrinkTime, finalTime)
 	}
 
-	private fun updatePreset(preset: Preset?, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowTime: Int) {
+	private fun updatePreset(preset: Preset?, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int) {
 		this.preset = preset
 
 		this.startRadius = startRadius
@@ -95,7 +96,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			graceTime,
 			shrinkTime,
 			finalTime,
-			glowTime,
 			0,
 			0
 		)
@@ -144,7 +144,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	 * call after object is fully initialized
 	 */
 	fun updateDisplays() {
-		carePackages.onEnable()
+		carePackages.onDisable()
 
 		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
 	}
@@ -179,7 +179,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		return if (currentPhase?.phaseType == PhaseType.GRACE)
 			(currentPhase as GraceDefault).ready
 		else
-			currentPhase?.phaseType != PhaseType.WAITING && currentPhase?.phaseType != PhaseType.POSTGAME
+			currentPhase?.phaseType?.gameGoing ?: false
 	}
 
 	/* game flow modifiers */
@@ -259,44 +259,45 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	}
 
 	fun updateMobCaps() {
+		val world = Bukkit.getWorlds()[0]
+
 		/* mobCap = constant × chunks ÷ 289                           */
 		/* https://minecraft.gamepedia.com/Spawn#Java_Edition_mob_cap */
-		for (world in Bukkit.getServer().worlds) {
-			/*
-			var total = 0.0
-			var inBorder = 0.0
 
-			for (chunk in world.loadedChunks) {
-				++total
+		/*
+		var total = 0.0
+		var inBorder = 0.0
 
-				val width = min(world.worldBorder.size, chunk.x * 16.0 + 16.0) - max(-world.worldBorder.size, chunk.x * 16.0)
-				val height = min(world.worldBorder.size, chunk.z * 16.0 + 16.0) - max(-world.worldBorder.size, chunk.z * 16.0)
+		for (chunk in world.loadedChunks) {
+			++total
 
-				if (width < 0 || height < 0) continue
+			val width = min(world.worldBorder.size, chunk.x * 16.0 + 16.0) - max(-world.worldBorder.size, chunk.x * 16.0)
+			val height = min(world.worldBorder.size, chunk.z * 16.0 + 16.0) - max(-world.worldBorder.size, chunk.z * 16.0)
 
-				inBorder += width * height / 256.0
-			}
+			if (width < 0 || height < 0) continue
 
-			val coeff = inBorder / total
-
-			world.    monsterSpawnLimit = (70 * coeff * mobCapCoefficient).toInt() + 1
-			world.     animalSpawnLimit = (10 * coeff * mobCapCoefficient).toInt() + 1
-			world.    ambientSpawnLimit = (15 * coeff * mobCapCoefficient).toInt() + 1
-			world.waterAnimalSpawnLimit = ( 5 * coeff * mobCapCoefficient).toInt() + 1
-			 */
-
-			val radius = world.worldBorder.size / 2
-			var inverseAlong = 1 - (((radius - startRadius) / (endRadius - startRadius)))
-
-			/* range for mobcaps is from [0.25 - 1] */
-			inverseAlong *= 0.75
-			inverseAlong += 0.25
-
-			world.     monsterSpawnLimit = (70 * inverseAlong * mobCapCoefficient).toInt() + 1
-			world.      animalSpawnLimit = (10 * inverseAlong * mobCapCoefficient).toInt() + 1
-			world.     ambientSpawnLimit = (15 * inverseAlong * mobCapCoefficient).toInt() + 1
-			world. waterAnimalSpawnLimit = ( 5 * inverseAlong * mobCapCoefficient).toInt() + 1
-			world.waterAmbientSpawnLimit = (20 * inverseAlong * mobCapCoefficient).toInt() + 1
+			inBorder += width * height / 256.0
 		}
+
+		val coeff = inBorder / total
+
+		world.    monsterSpawnLimit = (70 * coeff * mobCapCoefficient).toInt() + 1
+		world.     animalSpawnLimit = (10 * coeff * mobCapCoefficient).toInt() + 1
+		world.    ambientSpawnLimit = (15 * coeff * mobCapCoefficient).toInt() + 1
+		world.waterAnimalSpawnLimit = ( 5 * coeff * mobCapCoefficient).toInt() + 1
+		 */
+
+		val radius = world.worldBorder.size / 2
+		var inverseAlong = 1 - (((radius - startRadius) / (endRadius - startRadius)))
+
+		/* range for mobcaps is from [0.25 - 1] */
+		inverseAlong *= 0.75
+		inverseAlong += 0.25
+
+		world.     monsterSpawnLimit = (70 * inverseAlong * mobCapCoefficient).toInt() + 1
+		world.      animalSpawnLimit = (10 * inverseAlong * mobCapCoefficient).toInt() + 1
+		world.     ambientSpawnLimit = (15 * inverseAlong * mobCapCoefficient).toInt() + 1
+		world. waterAnimalSpawnLimit = ( 5 * inverseAlong * mobCapCoefficient).toInt() + 1
+		world.waterAmbientSpawnLimit = (20 * inverseAlong * mobCapCoefficient).toInt() + 1
 	}
 }
