@@ -2,7 +2,6 @@ package com.codeland.uhc.phase
 
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.phases.endgame.*
-import com.codeland.uhc.phase.phases.final.FinalDefault
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.postgame.PostgameDefault
 import com.codeland.uhc.phase.phases.shrink.ShrinkDefault
@@ -31,10 +30,6 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 
 	SHRINK_DEFAULT(PhaseType.SHRINK, ::ShrinkDefault, "Default", Material.SPAWNER, listOf(
 		"The border begins to force you to the center"
-	)),
-
-	FINAL_DEFAULT(PhaseType.FINAL, ::FinalDefault, "Default", Material.NETHERITE_SCRAP, listOf(
-		"All players are now in the final small center radius"
 	)),
 
 	ENDGAME_NONE(PhaseType.ENDGAME, ::EndgameNone, "None", Material.STONE_SWORD, listOf(

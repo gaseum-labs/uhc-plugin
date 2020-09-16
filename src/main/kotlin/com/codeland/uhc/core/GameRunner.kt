@@ -124,7 +124,7 @@ object GameRunner {
 	}
 
 	fun netherIsAllowed() : Boolean {
-		return !(uhc.isPhase(PhaseType.FINAL) || uhc.isPhase(PhaseType.ENDGAME))
+		return !uhc.isPhase(PhaseType.ENDGAME)
 	}
 
 	fun registerHearts() {

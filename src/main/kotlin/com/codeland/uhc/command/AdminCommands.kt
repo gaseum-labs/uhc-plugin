@@ -151,11 +151,14 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.gui.variantCylers[variant.type.ordinal].updateDisplay()
 	}
 
-	@CommandAlias("modify timing")
+	@CommandAlias("setLength")
 	@Description("set the length of a phase")
 	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Int) {
 		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
+		if (GameRunner.uhc.isPhase(type)) {
+			Commands.errorMessage(sender, "Cannot modify the phase you are in!")
+			return
+		}
 
 		if (!type.hasTimer)
 			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
@@ -186,11 +189,11 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("modify all")
 	@Description("set all details of the UHC")
-	fun modifyAll(sender: CommandSender, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int, glowingTime: Int) {
+	fun modifyAll(sender: CommandSender, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.updatePreset(startRadius, endRadius, graceTime, shrinkTime, finalTime)
+		GameRunner.uhc.updatePreset(startRadius, endRadius, graceTime, shrinkTime)
 		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 

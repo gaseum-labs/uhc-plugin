@@ -1,5 +1,6 @@
 package com.codeland.uhc.phase.phases.shrink
 
+import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
@@ -26,18 +27,30 @@ class ShrinkDefault : Phase() {
 		}
 
 		val world = Bukkit.getServer().worlds[0]
-		world.worldBorder.setSize(uhc.endRadius * 2, length.toLong())
+		world.worldBorder.setSize(uhc.endRadius * 2 + 1, length.toLong())
 
 		for (player in Bukkit.getServer().onlinePlayers) {
 			GameRunner.sendGameMessage(player, "The border is now shrinking")
 		}
 	}
 
-	override fun customEnd() {}
+	override fun customEnd() {
+		Bukkit.getOnlinePlayers().forEach { player ->
+			/* kill people in the nether */
+			if (player.world.environment == World.Environment.NETHER) {
+				Commands.errorMessage(player, "The Nether has closed!")
+				player.damage(100000000.0)
+			}
+		}
+
+		/* jhust in case it was ended early */
+		val world = Bukkit.getWorlds()[0]
+		world.worldBorder.setSize(uhc.endRadius * 2 + 1)
+	}
 
 	override fun onTick(currentTick: Int) {}
 
 	override fun endPhrase(): String {
-		return "BORDER STOPPING"
+		return "Endgame Starting"
 	}
 }

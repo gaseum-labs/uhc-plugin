@@ -57,8 +57,8 @@ open class GraceDefault : Phase() {
 		val world = Bukkit.getWorlds()[0]
 
 		world.time = 0
-		world.worldBorder.setCenter(0.0, 0.0)
-		world.worldBorder.size = uhc.startRadius * 2
+		world.worldBorder.setCenter(0.5, 0.5)
+		world.worldBorder.size = uhc.startRadius * 2 + 1
 
 		val teams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams
 
@@ -104,7 +104,7 @@ open class GraceDefault : Phase() {
 	}
 
 	override fun endPhrase(): String {
-		return "GRACE PERIOD ENDING"
+		return "Grace Period Ending"
 	}
 
 	companion object {

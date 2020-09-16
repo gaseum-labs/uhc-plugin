@@ -11,17 +11,17 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class StewFixToggle(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
+class OreFixToggle(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
 	override fun onClick(player: Player, shift: Boolean) {
-		uhc.stewFix = !uhc.stewFix
+		uhc.oreFix = !uhc.oreFix
 	}
 
 	override fun getStack(): ItemStack {
-		val stack = if (uhc.stewFix)
-			setName(ItemStack(Material.SUSPICIOUS_STEW), "Stew Fix ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
+		val stack = if (uhc.oreFix)
+			setName(ItemStack(Material.DIAMOND_ORE), "Ore Fix ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
 		else
-			setName(ItemStack(Material.BOWL), "Stew Fix ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
+			setName(ItemStack(Material.STONE), "Ore Fix ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
 
-		return setLore(stack, listOf("Makes stews not dominate the meta", "It's harder to get ingredients"))
+		return setLore(stack, listOf("Forces cave exploration instead of strip mining", "Uniformly distributes ores across the world"))
 	}
 }

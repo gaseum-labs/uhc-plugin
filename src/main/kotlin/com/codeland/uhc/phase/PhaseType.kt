@@ -7,7 +7,6 @@ enum class PhaseType(val prettyName: String, val hasTimer: Boolean, val gameGoin
 	 WAITING(   "Waiting lobby", false, false,  BarColor.WHITE, ChatColor.WHITE),
 	   GRACE(    "Grace period",  true,  true,   BarColor.BLUE, ChatColor.AQUA),
 	  SHRINK("Shrinking period",  true,  true,  BarColor.RED, ChatColor.RED),
-	   FINAL(      "Final zone",  true,  true,    BarColor.GREEN, ChatColor.GREEN),
 	 ENDGAME(         "Endgame", false,  true, BarColor.YELLOW, ChatColor.GOLD),
 	POSTGAME(        "Postgame", false, false,  BarColor.WHITE, ChatColor.WHITE);
 }

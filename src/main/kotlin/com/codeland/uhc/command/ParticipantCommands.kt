@@ -44,7 +44,6 @@ class ParticipantCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.WAITING))
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.GRACE))
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.SHRINK))
-		GameRunner.sendGameMessage(sender, phaseString(PhaseType.FINAL))
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.ENDGAME))
 		GameRunner.sendGameMessage(sender, phaseString(PhaseType.POSTGAME))
 	}

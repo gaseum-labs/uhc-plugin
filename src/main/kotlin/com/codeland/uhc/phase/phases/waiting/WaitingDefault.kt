@@ -11,6 +11,8 @@ import org.bukkit.attribute.Attribute
 import org.bukkit.block.Biome
 import org.bukkit.boss.BossBar
 import org.bukkit.entity.Player
+import org.bukkit.inventory.Recipe
+import org.bukkit.inventory.meta.KnowledgeBookMeta
 
 class WaitingDefault : Phase() {
 	var center = 0
@@ -41,7 +43,7 @@ class WaitingDefault : Phase() {
 
 		world.setSpawnLocation(center, 70, center)
 		world.worldBorder.setCenter(center + 0.5, center + 0.5)
-		world.worldBorder.size = radius * 2
+		world.worldBorder.size = radius * 2 + 1
 		world.isThundering = false
 		world.setStorm(false)
 		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false)

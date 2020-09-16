@@ -6,6 +6,7 @@ import com.codeland.uhc.command.Commands
 import com.codeland.uhc.blockfix.LeavesFix
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.NetherFix
+import com.codeland.uhc.core.OreFix
 import com.codeland.uhc.core.StewFix
 import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
@@ -234,9 +235,10 @@ class EventListener : Listener {
 			StewFix.removeOxeye(chunk)
 		}
 
-		//if (world.environment == World.Environment.NORMAL) {
-		//	OreFix.removeOres(chunk)
-		//}
+		if (GameRunner.uhc.oreFix && world.environment == World.Environment.NORMAL) {
+			OreFix.removeOres(chunk)
+			OreFix.addOres(chunk, world.seed.toInt())
+		}
 	}
 
 	@EventHandler

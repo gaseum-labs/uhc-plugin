@@ -34,7 +34,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		0,
 		defaultPreset.graceTime,
 		defaultPreset.shrinkTime,
-		defaultPreset.finalTime,
 		0,
 		0
 	)
@@ -54,6 +53,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	var appleFix = true
 	var stewFix = true
+	var oreFix = true
 
 	var usingBot = GameRunner.bot != null
 	private set
@@ -78,14 +78,14 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	/* state setters */
 
 	fun updatePreset(preset: Preset) {
-		updatePreset(preset, preset.startRadius, preset.endRadius, preset.graceTime, preset.shrinkTime, preset.finalTime)
+		updatePreset(preset, preset.startRadius, preset.endRadius, preset.graceTime, preset.shrinkTime)
 	}
 
-	fun updatePreset(startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int) {
-		updatePreset(null, startRadius, endRadius, graceTime, shrinkTime, finalTime)
+	fun updatePreset(startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int) {
+		updatePreset(null, startRadius, endRadius, graceTime, shrinkTime)
 	}
 
-	private fun updatePreset(preset: Preset?, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int, finalTime: Int) {
+	private fun updatePreset(preset: Preset?, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int) {
 		this.preset = preset
 
 		this.startRadius = startRadius
@@ -95,7 +95,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			0,
 			graceTime,
 			shrinkTime,
-			finalTime,
 			0,
 			0
 		)

@@ -53,7 +53,6 @@ class UHCPlugin : JavaPlugin() {
 			PhaseVariant.WAITING_DEFAULT,
 			PhaseVariant.GRACE_FORGIVING,
 			PhaseVariant.SHRINK_DEFAULT,
-			PhaseVariant.FINAL_DEFAULT,
 			PhaseVariant.ENDGAME_CLEAR_BLOCKS,
 			PhaseVariant.POSTGAME_DEFAULT
 		))

@@ -50,10 +50,10 @@ class GuiInventory(val height: Int, val name: String) {
 	fun onClick(event: InventoryClickEvent): Boolean {
 		if (event.inventory !== inventory) return false
 
+		event.isCancelled = true
+
 		val slot = event.rawSlot
 		if (slot >= inventory.size || slot < 0) return false
-
-		event.isCancelled = true
 
 		val guiItem = guiItems[slot] ?: return false
 

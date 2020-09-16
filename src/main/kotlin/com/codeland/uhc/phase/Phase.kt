@@ -61,6 +61,11 @@ abstract class Phase {
 		this.length = length
 		this.remainingSeconds = length
 
+		onInject(this)
+		customStart()
+
+		perSecond(remainingSeconds)
+
 		dimensionBars.forEach { dimensionBar ->
 			dimensionBar.bossBar.progress = 1.0
 			dimensionBar.bossBar.color = phaseType.barColor
@@ -68,7 +73,7 @@ abstract class Phase {
 		}
 
 		Bukkit.getOnlinePlayers().forEach { player ->
-			dimensionOne(player)
+			setPlayerBarDimension(player)
 		}
 
 		var currentTick = 0
@@ -87,22 +92,19 @@ abstract class Phase {
 				}
 
 				/* general per second for all phases regardless of having a timer */
+				perSecond(remainingSeconds)
 
 				dimensionBars.forEach { dimensionBar ->
 					updateBarPerSecond(dimensionBar.bossBar, dimensionBar.world, remainingSeconds)
 				}
 
-				perSecond(remainingSeconds)
 				if (phaseType.gameGoing) ++uhc.elapsedTime
 			}
 
 			/* bar progress section */
 
-			val progress = if (length == 0) 1.0
-			else (remainingSeconds + 1.0 - (currentTick / 20.0)) / length
-
-			dimensionBars.forEach { dimensionBar ->
-				dimensionBar.bossBar.progress = progress
+			if (length != 0) dimensionBars.forEach { dimensionBar ->
+				dimensionBar.bossBar.progress =  (remainingSeconds + 1.0 - (currentTick / 20.0)) / length
 			}
 
 			Bukkit.getOnlinePlayers().forEach { player ->
@@ -114,10 +116,6 @@ abstract class Phase {
 			currentTick = (currentTick + 1) % 20
 			onTick(currentTick)
 		}, 20, 1)
-
-		onInject(this)
-
-		customStart()
 	}
 
 	private fun countDownColor(secondsLeft: Int): ChatColor {

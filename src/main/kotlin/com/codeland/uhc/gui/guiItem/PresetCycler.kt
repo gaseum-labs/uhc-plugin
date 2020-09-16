@@ -27,8 +27,7 @@ class PresetCycler(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
 			uhc.startRadius,
 			uhc.endRadius,
 			uhc.getTime(PhaseType.GRACE),
-			uhc.getTime(PhaseType.SHRINK),
-			uhc.getTime(PhaseType.FINAL)
+			uhc.getTime(PhaseType.SHRINK)
 		))
 
 		setName(stack, "${ChatColor.WHITE}Preset ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${preset?.prettyName ?: "Custom"}")
