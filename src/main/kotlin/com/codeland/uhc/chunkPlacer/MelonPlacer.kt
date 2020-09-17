@@ -12,11 +12,12 @@ class MelonPlacer(size: Int, uniqueSeed: Int) : ChunkPlacer(size, uniqueSeed) {
 			val world = block.world
 
 			if (
-				Util.binarySearch(world.getBiome(chunk.x * 16 + x, 60, chunk.z * 16 + z), allowedBiomes) &&
+				Util.binarySearch(world.getBiome(chunk.x * 16 + x, y, chunk.z * 16 + z), allowedBiomes) &&
 				block.type == Material.AIR &&
 				block.getRelative(BlockFace.DOWN).type == Material.GRASS_BLOCK
 			) {
 				block.setType(Material.MELON, false)
+				block.getRelative(BlockFace.DOWN).setType(Material.DIRT, false)
 				true
 			} else {
 				false
@@ -25,8 +26,6 @@ class MelonPlacer(size: Int, uniqueSeed: Int) : ChunkPlacer(size, uniqueSeed) {
 	}
 
 	val allowedBiomes = arrayOf(
-		Biome.PLAINS,
-		Biome.SUNFLOWER_PLAINS,
 		Biome.FOREST,
 		Biome.FLOWER_FOREST,
 		Biome.BIRCH_FOREST,

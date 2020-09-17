@@ -28,13 +28,6 @@ object StewFix {
 					break
 				}
 			}
-
-			for (y in 63..121) {
-				val block = chunk.getBlock(x, y, z)
-
-				if (block.lightLevel > 12 && (block.type == Material.BROWN_MUSHROOM || block.type == Material.RED_MUSHROOM))
-					block.setType(Material.AIR, false)
-			}
 		}
 	}
 

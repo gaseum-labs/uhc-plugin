@@ -34,19 +34,7 @@ class ShrinkDefault : Phase() {
 		}
 	}
 
-	override fun customEnd() {
-		Bukkit.getOnlinePlayers().forEach { player ->
-			/* kill people in the nether */
-			if (player.world.environment == World.Environment.NETHER) {
-				Commands.errorMessage(player, "The Nether has closed!")
-				player.damage(100000000.0)
-			}
-		}
-
-		/* jhust in case it was ended early */
-		val world = Bukkit.getWorlds()[0]
-		world.worldBorder.setSize(uhc.endRadius * 2 + 1)
-	}
+	override fun customEnd() {}
 
 	override fun onTick(currentTick: Int) {}
 

@@ -67,7 +67,7 @@ class PostgameDefault : Phase() {
             team.unregister()
         }
 
-        uhc.carePackages.onEnd()
+        if (uhc.carePackages.enabled) uhc.carePackages.onEnd()
     }
 
     override fun customEnd() {}

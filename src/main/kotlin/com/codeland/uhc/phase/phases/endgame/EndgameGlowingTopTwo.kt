@@ -11,6 +11,8 @@ import org.bukkit.potion.PotionEffectType
 
 class EndgameGlowingTopTwo : Phase() {
 	override fun customStart() {
+		EndgameNone.closeNether()
+
 		for (player in Bukkit.getServer().onlinePlayers) {
 			GameRunner.sendGameMessage(player, "Glowing will be applied to the top two teams")
 		}

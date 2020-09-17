@@ -10,6 +10,8 @@ import org.bukkit.boss.BossBar
 class EndgameDeathmatch : Phase() {
 
 	override fun customStart() {
+		EndgameNone.closeNether()
+
 		for (w in Bukkit.getServer().worlds) {
 			if (w.environment == World.Environment.NORMAL) {
 				var border = w.worldBorder.size.toInt() / 2 + 1

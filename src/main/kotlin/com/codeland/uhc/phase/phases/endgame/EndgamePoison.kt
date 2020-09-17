@@ -6,7 +6,10 @@ import org.bukkit.World
 import org.bukkit.boss.BossBar
 
 class EndgamePoison : Phase() {
-	override fun customStart() {}
+	override fun customStart() {
+		EndgameNone.closeNether()
+	}
+
 	override fun customEnd() {}
 
 	override fun onTick(currentTick: Int) {

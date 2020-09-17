@@ -24,6 +24,8 @@ class EndgameClearBlocks : Phase() {
 	var finished = false
 
 	override fun customStart() {
+		EndgameNone.closeNether()
+
 		center = Util.randRange(50, 60)
 
 		topBoundary = 255

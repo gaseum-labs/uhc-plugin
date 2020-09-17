@@ -41,5 +41,10 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(ItemStack(Material.FEATHER, 2), ItemStack(Material.CHICKEN))
 	), arrayOf(
 		ItemStack(Material.CHICKEN)
-	)));
+	))),
+	GHAST(DropFix(EntityType.GHAST, arrayOf(
+		arrayOf(ItemStack(Material.GUNPOWDER), ItemStack(Material.GHAST_TEAR))
+	), arrayOf(
+		ItemStack(Material.GUNPOWDER)
+	)))
 }
