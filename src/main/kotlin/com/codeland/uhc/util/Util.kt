@@ -9,6 +9,13 @@ object Util {
 		PaperPluginLogger.getGlobal().log(Level.INFO, message)
 	}
 
+	/**
+	 * positive mod
+	 */
+	fun mod(a: Int, b: Int): Int {
+		return ((a % b) + b) % b
+	}
+
 	fun topBlockY(world: World, x: Int, z: Int): Int {
 		for (y in 255 downTo 0) {
 			var block = world.getBlockAt(x, y, z)

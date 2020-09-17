@@ -24,6 +24,7 @@ class Gui(val uhc: UHC) {
 	val appleFixToggle: AppleFixToggle
 	val stewFixToggle: StewFixToggle
 	val oreFixToggle: OreFixToggle
+	val melonFixToggle: MelonFixToggle
 	val botToggle: BotToggle
 
 	val resetButton: GuiItem
@@ -47,7 +48,8 @@ class Gui(val uhc: UHC) {
 		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 2))
 		stewFixToggle = inventory.addItem(StewFixToggle(uhc, GuiInventory.WIDTH * 3 + 3))
 		oreFixToggle = inventory.addItem(OreFixToggle(uhc, GuiInventory.WIDTH * 3 + 4))
-		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 5))
+		melonFixToggle = inventory.addItem(MelonFixToggle(uhc, GuiInventory.WIDTH * 3 + 5))
+		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 6))
 
 		resetButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
@@ -84,6 +86,9 @@ class Gui(val uhc: UHC) {
 
 				uhc.oreFix = true
 				oreFixToggle.updateDisplay()
+
+				uhc.melonFix = true
+				melonFixToggle.updateDisplay()
 			}
 			override fun getStack(): ItemStack {
 				val stack = ItemStack(Material.MUSIC_DISC_WAIT)

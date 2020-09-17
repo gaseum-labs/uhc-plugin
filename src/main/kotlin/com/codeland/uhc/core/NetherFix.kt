@@ -11,6 +11,7 @@ import org.bukkit.block.data.Ageable
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
+import org.bukkit.event.entity.CreatureSpawnEvent
 
 object NetherFix {
 	fun placeWart(chunk: Chunk, low: Int, high: Int, check: (Block, Block) -> Boolean) {
@@ -47,9 +48,9 @@ object NetherFix {
 		val location = entity.location
 		var world = entity.world
 
-		val chance = if (world.getBiome(location.blockX, location.blockY, location.blockZ) == Biome.BASALT_DELTAS) 0.05 else 0.02
+		val chance = if (world.getBiome(location.blockX, location.blockY, location.blockZ) == Biome.BASALT_DELTAS) 0.08 else 0.05
 
-		if (entity is LivingEntity && Math.random() < chance) {
+		if (entity is LivingEntity && (entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL) && Math.random() < chance) {
 			world.spawnEntity(location, EntityType.BLAZE)
 
 			return true

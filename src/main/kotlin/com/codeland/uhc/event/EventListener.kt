@@ -3,11 +3,8 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands
-import com.codeland.uhc.blockfix.LeavesFix
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.NetherFix
-import com.codeland.uhc.core.OreFix
-import com.codeland.uhc.core.StewFix
+import com.codeland.uhc.core.*
+import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.item.GuiOpener
@@ -231,13 +228,18 @@ class EventListener : Listener {
 				else -> {}
 			}
 
-		if (GameRunner.uhc.stewFix) {
+		if (GameRunner.uhc.stewFix && world.environment == World.Environment.NORMAL) {
 			StewFix.removeOxeye(chunk)
+			StewFix.addCaveMushrooms(chunk, world.seed.toInt())
 		}
 
 		if (GameRunner.uhc.oreFix && world.environment == World.Environment.NORMAL) {
 			OreFix.removeOres(chunk)
 			OreFix.addOres(chunk, world.seed.toInt())
+		}
+
+		if (GameRunner.uhc.melonFix && world.environment == World.Environment.NORMAL) {
+			MelonFix.melonPlacer.place(chunk, world.seed.toInt())
 		}
 	}
 
@@ -382,6 +384,12 @@ class EventListener : Listener {
 	fun onEntityDeath(event: EntityDeathEvent) {
 		if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
+		} else {
+			val killer = event.entity.killer
+			DropFixType.values().any { dropFix ->
+				if (killer == null) dropFix.dropFix.onNaturalDeath(event.entity, event.drops)
+				else dropFix.dropFix.onKillEntity(killer, event.entity, event.drops)
+			}
 		}
 
 		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
