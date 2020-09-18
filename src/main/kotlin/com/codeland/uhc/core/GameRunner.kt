@@ -8,6 +8,7 @@ import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
@@ -24,6 +25,25 @@ object GameRunner {
 	val leavesFix = LeavesFix()
 	val redMushroomFix = RedMushroomFix()
 	val brownMushroomFix = BrownMushroomFix()
+
+	val netherWorldFix: Boolean
+	val mushroomWorldFix: Boolean
+	val oreWorldFix: Boolean
+	val melonWorldFix: Boolean
+
+	init {
+		val worldGenInfo = WorldGenFile.getSettings()
+
+		netherWorldFix = worldGenInfo.netherFix
+		mushroomWorldFix = worldGenInfo.mushroomFix
+		oreWorldFix = worldGenInfo.oreFix
+		melonWorldFix = worldGenInfo.melonFix
+
+		Util.log("${ChatColor.GOLD}Nether World Fix: ${ChatColor.RED}$netherWorldFix")
+		Util.log("${ChatColor.GOLD}Mushroom World Fix: ${ChatColor.RED}$mushroomWorldFix")
+		Util.log("${ChatColor.GOLD}Ore World Fix: ${ChatColor.RED}$oreWorldFix")
+		Util.log("${ChatColor.GOLD}Melon World Fix: ${ChatColor.RED}$melonWorldFix")
+	}
 
 	fun teamIsAlive(team: Team): Boolean {
 		return team.entries.any { entry ->

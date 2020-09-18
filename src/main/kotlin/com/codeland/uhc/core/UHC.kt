@@ -53,8 +53,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	var appleFix = true
 	var stewFix = true
-	var oreFix = true
-	var melonFix = true
 
 	var usingBot = GameRunner.bot != null
 	private set

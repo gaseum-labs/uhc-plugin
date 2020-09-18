@@ -191,13 +191,14 @@ class EventListener : Listener {
 		val world = event.world
 		val chunk = event.chunk
 
-		/* prevent animals when the chunks load for waiting area */
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING) && world.environment == World.Environment.NORMAL) {
+		/* prevent animal spawns in the waiting area */
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING) && world.environment == World.Environment.NORMAL && (abs(chunk.x) > 10 || abs(chunk.z) > 10)) {
 			chunk.entities.forEach { entity ->
 				entity.remove()
 			}
 		}
 
+		/* mushroom fix */
 		for (x in 0..15) {
 			for (z in 0..15) {
 				for (y in 63..121) {
@@ -208,49 +209,21 @@ class EventListener : Listener {
 			}
 		}
 
-		/* nether wart generation */
-		/* also, generate one in every 4 chunks */
-		if (world.environment == World.Environment.NETHER && Math.random() < 0.25)
-			when (world.getBiome(chunk.x * 16, 64, chunk.z * 16)) {
-				Biome.NETHER_WASTES -> {
-					NetherFix.placeWart(chunk, 32, 34) { block, under ->
-						block.type == Material.AIR && under.type == Material.SOUL_SAND
-					}
-				}
-				Biome.BASALT_DELTAS -> {
-					NetherFix.placeWart(chunk, 32, 99) { block, under ->
-						block.type == Material.AIR && under.type == Material.MAGMA_BLOCK
-					}
-				}
-				Biome.CRIMSON_FOREST -> {
-					NetherFix.placeWart(chunk, 32, 99) { block, _ ->
-						block.type == Material.CRIMSON_ROOTS || block.type == Material.CRIMSON_FUNGUS
-					}
-				}
-				Biome.WARPED_FOREST -> {
-					NetherFix.placeWart(chunk, 32, 99) { block, _ ->
-						block.type == Material.WARPED_ROOTS || block.type == Material.WARPED_FUNGUS
-					}
-				}
-				Biome.SOUL_SAND_VALLEY -> {
-					NetherFix.placeWart(chunk, 32, 99) { block, under ->
-						block.type == Material.AIR && under.type == Material.SOUL_SAND
-					}
-				}
-				else -> {}
-			}
+		if (GameRunner.netherWorldFix && world.environment == World.Environment.NETHER) {
+			NetherFix.wartPlacer.place(chunk, world.seed.toInt())
+		}
 
-		if (GameRunner.uhc.stewFix && world.environment == World.Environment.NORMAL) {
+		if (GameRunner.mushroomWorldFix && world.environment == World.Environment.NORMAL) {
 			StewFix.removeOxeye(chunk)
 			StewFix.addCaveMushrooms(chunk, world.seed.toInt())
 		}
 
-		if (GameRunner.uhc.oreFix && world.environment == World.Environment.NORMAL) {
+		if (GameRunner.oreWorldFix && world.environment == World.Environment.NORMAL) {
 			OreFix.removeOres(chunk)
 			OreFix.addOres(chunk, world.seed.toInt())
 		}
 
-		if (GameRunner.uhc.melonFix && world.environment == World.Environment.NORMAL) {
+		if (GameRunner.melonWorldFix && world.environment == World.Environment.NORMAL) {
 			MelonFix.melonPlacer.place(chunk, world.seed.toInt())
 		}
 	}
