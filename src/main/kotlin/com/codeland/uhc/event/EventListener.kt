@@ -30,13 +30,12 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.event.world.ChunkLoadEvent
 import org.bukkit.event.world.ChunkPopulateEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import kotlin.math.abs
+import java.lang.StringBuilder
 
 class EventListener : Listener {
 	@EventHandler
@@ -138,20 +137,121 @@ class EventListener : Listener {
 		}
 	}
 
+	// making it into a function so it'll work in the waiting area as well
+
+	class SpecialMention(val name: String, val includes: (Player) -> Boolean, val needsOp: Boolean = false)
+
+	private val specialMentions = listOf<SpecialMention>(
+			SpecialMention("everyone", {_ -> true}, needsOp = true),
+			SpecialMention("players", {p -> p.gameMode == GameMode.SURVIVAL}),
+			SpecialMention("spectators", {p -> p.gameMode == GameMode.SPECTATOR})
+	)
+
+	private fun addMentions(event: AsyncPlayerChatEvent) {
+
+		fun findAll(message: String, name: String): MutableList<Int> {
+			val list = mutableListOf<Int>()
+			var index = message.indexOf(name)
+			while (index != -1) {
+				list.add(index)
+				index = message.indexOf(name, index + 1)
+			}
+			return list
+		}
+
+		fun prefixAll(message: String, prefix: String, target: String): String {
+			val mentions = findAll(message, target)
+			val builder = StringBuilder(message)
+			var offset = 0
+			for (m in mentions) {
+				builder.insert(m + offset, prefix)
+				offset += prefix.length
+			}
+			return builder.toString()
+		}
+
+		fun postfixAll(message: String, prefix: String, target: String): String {
+			val mentions = findAll(message, target)
+			val builder = StringBuilder(message)
+			var offset = 0
+			for (m in mentions) {
+				builder.insert(m + target.length + offset, prefix)
+				offset += prefix.length
+			}
+			return builder.toString()
+		}
+
+		fun formatted(player: Player, message: String): String {
+			return "<" + player.name + "> " + message
+		}
+
+		event.isCancelled = true
+
+		val mentioned = mutableListOf<Player>()
+		val specialMentioned = mutableListOf<SpecialMention>()
+
+		for (player in Bukkit.getOnlinePlayers()) {
+			val mention = "@" + player.name
+			if (event.message.contains(mention)) {
+				event.message = prefixAll(event.message, ChatColor.BLUE.toString(), mention)
+				event.message = postfixAll(event.message, ChatColor.WHITE.toString(), mention)
+				mentioned += player
+			}
+		}
+		for (special in specialMentions) {
+			val mention = "@" + special.name
+			if (event.message.contains(mention) && (!special.needsOp || event.player.isOp)) {
+				event.message = prefixAll(event.message, ChatColor.BLUE.toString(), mention)
+				event.message = postfixAll(event.message, ChatColor.WHITE.toString(), mention)
+				specialMentioned += special
+			}
+		}
+
+		for (player in Bukkit.getOnlinePlayers()) {
+			var forPlayer = event.message
+			var wasMentioned = false
+			if (player in mentioned) {
+				wasMentioned = true
+				forPlayer = prefixAll(forPlayer, ChatColor.UNDERLINE.toString(), "@" + player.name)
+			}
+			for (special in specialMentioned) {
+				if (special.includes(player)) {
+					wasMentioned = true
+					forPlayer = prefixAll(forPlayer, ChatColor.UNDERLINE.toString(), "@" + special.name)
+				}
+			}
+			if (wasMentioned) player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 2f, 2f)
+			player.sendMessage(formatted(event.player, forPlayer))//
+		}
+	}
+
 	@EventHandler
 	fun onMessage(event: AsyncPlayerChatEvent) {
 		/* only modify chat behavior with players on teams */
 		val team = GameRunner.playersTeam(event.player.name) ?: return
 
 		/* only modify chat when game is running */
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)) return
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)) {
+			addMentions(event)
+			return
+		}
 
-		if (event.message.startsWith("!")) {
+		fun firstIsMention(message: String): Boolean {
+			for (player in Bukkit.getOnlinePlayers()) {
+				if (message.length < player.name.length + 1 || message.substring(player.name.length + 1) == "@" + player.name) return true
+			}
+			return false
+		}
+
+		if (event.message.startsWith("!") || firstIsMention(event.message)) {
 			/* prevent blank global messages */
 			if (event.message.length == 1)
 				event.isCancelled = true
 			else
-				event.message = event.message.substring(1)
+				if (event.message.startsWith("!"))
+					event.message = event.message.substring(1)
+
+			addMentions(event)
 
 		} else {
 			event.isCancelled = true
