@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands
+import com.codeland.uhc.command.TeamData
 import com.codeland.uhc.core.*
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.AntiSoftlock
@@ -139,13 +140,20 @@ class EventListener : Listener {
 
 	// making it into a function so it'll work in the waiting area as well
 
-	class SpecialMention(val name: String, val includes: (Player) -> Boolean, val needsOp: Boolean = false)
+	class SpecialMention(val name: String, val includes: (Player) -> Boolean, val needsOp: Boolean = false, val color: org.bukkit.ChatColor = org.bukkit.ChatColor.GOLD)
 
-	private val specialMentions = listOf<SpecialMention>(
-			SpecialMention("everyone", {_ -> true}, needsOp = true),
-			SpecialMention("players", {p -> p.gameMode == GameMode.SURVIVAL}),
-			SpecialMention("spectators", {p -> p.gameMode == GameMode.SPECTATOR})
-	)
+	private val specialMentions = {
+		val l = mutableListOf(
+				SpecialMention("everyone", { true }, needsOp = true),
+				SpecialMention("players", { p -> p.gameMode == GameMode.SURVIVAL }),
+				SpecialMention("spectators", { p -> p.gameMode == GameMode.SPECTATOR }),
+				SpecialMention("admins", { p -> p.isOp})
+		)
+		for (c in TeamData.teamColors) {
+			l += SpecialMention(TeamData.prettyTeamName(c).replace(" ", "").toLowerCase().substring(4), { p -> GameRunner.playersTeam(p.name)?.color == c}, color = c)
+		}
+		l
+	}()
 
 	private fun addMentions(event: AsyncPlayerChatEvent) {
 
@@ -193,16 +201,18 @@ class EventListener : Listener {
 		for (player in Bukkit.getOnlinePlayers()) {
 			val mention = "@" + player.name
 			if (event.message.contains(mention)) {
-				event.message = prefixAll(event.message, ChatColor.BLUE.toString(), mention)
-				event.message = postfixAll(event.message, ChatColor.WHITE.toString(), mention)
+				var color = GameRunner.playersTeam(player.name)?.color
+				if (color == null) color = org.bukkit.ChatColor.BLUE
+				event.message = prefixAll(event.message, color.toString(), mention)
+				event.message = postfixAll(event.message, org.bukkit.ChatColor.WHITE.toString(), mention)
 				mentioned += player
 			}
 		}
 		for (special in specialMentions) {
 			val mention = "@" + special.name
 			if (event.message.contains(mention) && (!special.needsOp || event.player.isOp)) {
-				event.message = prefixAll(event.message, ChatColor.BLUE.toString(), mention)
-				event.message = postfixAll(event.message, ChatColor.WHITE.toString(), mention)
+				event.message = prefixAll(event.message, special.color.toString(), mention)
+				event.message = postfixAll(event.message, org.bukkit.ChatColor.WHITE.toString(), mention)
 				specialMentioned += special
 			}
 		}
@@ -212,12 +222,12 @@ class EventListener : Listener {
 			var wasMentioned = false
 			if (player in mentioned) {
 				wasMentioned = true
-				forPlayer = prefixAll(forPlayer, ChatColor.UNDERLINE.toString(), "@" + player.name)
+				forPlayer = prefixAll(forPlayer, org.bukkit.ChatColor.UNDERLINE.toString(), "@" + player.name)
 			}
 			for (special in specialMentioned) {
 				if (special.includes(player)) {
 					wasMentioned = true
-					forPlayer = prefixAll(forPlayer, ChatColor.UNDERLINE.toString(), "@" + special.name)
+					forPlayer = prefixAll(forPlayer, org.bukkit.ChatColor.UNDERLINE.toString(), "@" + special.name)
 				}
 			}
 			if (wasMentioned) player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 2f, 2f)
@@ -227,18 +237,21 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onMessage(event: AsyncPlayerChatEvent) {
-		/* only modify chat behavior with players on teams */
-		val team = GameRunner.playersTeam(event.player.name) ?: return
-
 		/* only modify chat when game is running */
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)) {
 			addMentions(event)
 			return
 		}
 
+		/* only modify chat behavior with players on teams */
+		val team = GameRunner.playersTeam(event.player.name) ?: return
+
 		fun firstIsMention(message: String): Boolean {
 			for (player in Bukkit.getOnlinePlayers()) {
-				if (message.length < player.name.length + 1 || message.substring(player.name.length + 1) == "@" + player.name) return true
+				if (message.length >= player.name.length + 1 && message.substring(0, player.name.length + 1) == "@" + player.name) return true
+			}
+			for (special in specialMentions) {
+				if (message.length >= special.name.length + 1 && message.substring(0, special.name.length + 1) == "@" + special.name) return true
 			}
 			return false
 		}
@@ -256,7 +269,7 @@ class EventListener : Listener {
 		} else {
 			event.isCancelled = true
 
-			val component = "${team.color}<${event.player.displayName}> ${ChatColor.RESET}${event.message}"
+			val component = "${team.color}<${event.player.displayName}> ${org.bukkit.ChatColor.RESET}${event.message}"
 
 			team.entries.forEach { entry ->
 				Bukkit.getPlayer(entry)?.sendMessage(component)
