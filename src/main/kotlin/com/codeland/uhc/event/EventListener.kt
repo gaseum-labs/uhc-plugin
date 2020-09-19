@@ -18,7 +18,7 @@ import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
-import org.bukkit.block.Biome
+import org.bukkit.block.data.Orientable
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -30,8 +30,8 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.event.world.ChunkLoadEvent
 import org.bukkit.event.world.ChunkPopulateEvent
+import org.bukkit.event.world.LootGenerateEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
@@ -171,6 +171,8 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerPortal(event: PlayerPortalEvent) {
+		val player = event.player
+
 		if (
 			!GameRunner.netherIsAllowed() &&
 			event.player.gameMode == GameMode.SURVIVAL
@@ -183,6 +185,82 @@ class EventListener : Listener {
 			Commands.errorMessage(event.player, "Nether is closed!")
 
 			event.isCancelled = true
+
+		/* PORTAL FIX */
+		} else {
+			val toWorld = if (player.world.environment == World.Environment.NORMAL) Bukkit.getWorlds()[1]
+			else Bukkit.getWorlds()[0]
+
+			event.canCreatePortal = false
+
+			var teleportedX = player.location.blockX
+			var teleportedY = player.location.blockY
+			var teleportedZ = player.location.blockZ
+
+			fun findPortalBlock() {
+				for (x in -1..1) for (y in -1..1) for (z in -1..1) {
+					if (player.world.getBlockAt(teleportedX + x, teleportedY + y, teleportedZ + z).type == Material.NETHER_PORTAL) {
+						teleportedX += x
+						teleportedY += y
+						teleportedZ += z
+
+						return
+					}
+				}
+			}
+			findPortalBlock()
+
+			/* find the lowest corner of the portal */
+			while (player.world.getBlockAt(teleportedX, teleportedY, teleportedZ).type == Material.NETHER_PORTAL) --teleportedX
+			++teleportedX
+			while (player.world.getBlockAt(teleportedX, teleportedY, teleportedZ).type == Material.NETHER_PORTAL) --teleportedY
+			++teleportedY
+			while (player.world.getBlockAt(teleportedX, teleportedY, teleportedZ).type == Material.NETHER_PORTAL) --teleportedZ
+			++teleportedZ
+
+			val borderRadius = ((toWorld.worldBorder.size / 2) - 10).toInt()
+
+			if (teleportedX < -borderRadius) teleportedX = -borderRadius
+			else if (teleportedX > borderRadius) teleportedX = borderRadius
+			if (teleportedZ < -borderRadius) teleportedZ = -borderRadius
+			else if (teleportedZ > borderRadius) teleportedZ = borderRadius
+
+			if (toWorld.environment == World.Environment.NETHER) {
+				/* make sure that you don't spawn in lava ocean or on ceiling */
+				if (teleportedY < 31) teleportedY = 31
+				else if (teleportedY > 118) teleportedY = 118
+			}
+
+			/* generate the portal if it isn't there */
+			if (toWorld.getBlockAt(teleportedX, teleportedY, teleportedZ).type != Material.NETHER_PORTAL) {
+				/* (0, 0, 0) for generated portals is the portal block with the smallest coordinate */
+
+				/* place air buffer around portal entrances */
+				for (x in -1..1) for (z in -1..2) for (y in 0..3)
+					toWorld.getBlockAt(teleportedX + x, teleportedY + y, teleportedZ + z).setType(Material.AIR, false)
+
+				/* place portal obsidian border */
+				for (z in -1..2) for (y in -1..3)
+					toWorld.getBlockAt(teleportedX, teleportedY + y, teleportedZ + z).setType(Material.OBSIDIAN, false)
+
+				/* place portal within border */
+				for (z in 0..1) for (y in 0..2) {
+					val block = toWorld.getBlockAt(teleportedX, teleportedY + y, teleportedZ + z)
+					block.setType(Material.NETHER_PORTAL, false)
+
+					val data = block.blockData as Orientable
+					data.axis = Axis.Z
+					block.blockData = data
+				}
+
+				/* place portal landing pad */
+				for (x in -1..1) for (z in 0..1) {
+					val block = toWorld.getBlockAt(teleportedX + x, teleportedY - 1, teleportedZ + z)
+					if (block.isPassable) block.setType(Material.OBSIDIAN, false)
+				}
+			}
+
+			player.teleport(Location(toWorld, teleportedX + 0.5, teleportedY.toDouble(), teleportedZ + 1.0))
 		}
 	}
 
@@ -239,10 +317,11 @@ class EventListener : Listener {
 		} else {
 			val world = event.location.world
 
-			if (world.environment == World.Environment.NETHER)
+			if (world.environment == World.Environment.NETHER && GameRunner.netherWorldFix)
 				event.isCancelled = NetherFix.replaceSpawn(event.entity)
 		}
 	}
+
 
 	private fun spreadRespawn(event: PlayerRespawnEvent) {
 		val world = Bukkit.getWorlds()[0]

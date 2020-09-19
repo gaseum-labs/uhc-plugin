@@ -87,8 +87,6 @@ abstract class Phase {
 					if (remainingSeconds <= 3) Bukkit.getServer().onlinePlayers.forEach { player ->
 						player.sendTitle("${countDownColor(remainingSeconds)}${ChatColor.BOLD}$remainingSeconds", "${phaseType.chatColor}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
 					}
-
-					--remainingSeconds
 				}
 
 				/* general per second for all phases regardless of having a timer */
@@ -98,6 +96,7 @@ abstract class Phase {
 					updateBarPerSecond(dimensionBar.bossBar, dimensionBar.world, remainingSeconds)
 				}
 
+				if (length != 0) --remainingSeconds
 				if (phaseType.gameGoing) ++uhc.elapsedTime
 			}
 

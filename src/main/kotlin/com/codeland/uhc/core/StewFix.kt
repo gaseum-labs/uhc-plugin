@@ -31,8 +31,8 @@ object StewFix {
 		}
 	}
 
-	val redMushroomPlacer = CaveMushroomPlacer(10, 92022, Material.RED_MUSHROOM)
-	val brownMushroomPlacer = CaveMushroomPlacer(10, 5021, Material.BROWN_MUSHROOM)
+	val redMushroomPlacer = CaveMushroomPlacer(12, 92022, Material.RED_MUSHROOM)
+	val brownMushroomPlacer = CaveMushroomPlacer(12, 5021, Material.BROWN_MUSHROOM)
 
 	fun addCaveMushrooms(chunk: Chunk, seed: Int) {
 		redMushroomPlacer.place(chunk, seed)
