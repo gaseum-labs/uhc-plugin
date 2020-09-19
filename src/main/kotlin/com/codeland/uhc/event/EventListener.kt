@@ -20,6 +20,7 @@ import com.codeland.uhc.quirk.quirks.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.block.data.Orientable
+import org.bukkit.entity.Arrow
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -376,6 +377,10 @@ class EventListener : Listener {
 
 			player.teleport(Location(toWorld, teleportedX + 0.5, teleportedY.toDouble(), teleportedZ + 1.0))
 		}
+	}
+	
+	fun onBowShoot(event: EntityShootBowEvent) {
+		if (event.projectile is Arrow) (event.projectile as Arrow).isCritical = false
 	}
 
 	@EventHandler
