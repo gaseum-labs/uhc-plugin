@@ -16,7 +16,7 @@ import org.bukkit.inventory.meta.KnowledgeBookMeta
 
 class WaitingDefault : Phase() {
 	var center = 0
-	val radius = 40.0
+	val radius = 30
 
 	override fun customStart() {
 		val world = Bukkit.getWorlds()[0]
@@ -36,14 +36,21 @@ class WaitingDefault : Phase() {
 		)
 
 		var tries = 0
-		while (oceans.contains(world.getBiome(center, 60, center)) && tries < 1000) {
+		while (
+			(
+				oceans.contains(world.getBiome(center + radius, 60, center + radius)) ||
+				oceans.contains(world.getBiome(center + radius, 60, center - radius)) ||
+				oceans.contains(world.getBiome(center - radius, 60, center + radius)) ||
+				oceans.contains(world.getBiome(center - radius, 60, center - radius))
+			) && tries < 1000
+		) {
 			center += 16
 			++tries
 		}
 
 		world.setSpawnLocation(center, 70, center)
 		world.worldBorder.setCenter(center + 0.5, center + 0.5)
-		world.worldBorder.size = radius * 2 + 1
+		world.worldBorder.size = radius * 2.0 + 1
 		world.isThundering = false
 		world.setStorm(false)
 		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false)

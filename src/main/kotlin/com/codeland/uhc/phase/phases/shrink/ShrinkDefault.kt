@@ -4,7 +4,8 @@ import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
-import net.md_5.bungee.api.ChatColor
+import net.md_5.bungee.api.ChatColor.BOLD
+import net.md_5.bungee.api.ChatColor.RESET
 import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.boss.BossBar
@@ -16,9 +17,9 @@ class ShrinkDefault : Phase() {
 
 	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
 		if (world.environment == World.Environment.NETHER)
-			bossBar.setTitle("${phaseType.chatColor}${ChatColor.BOLD}Nether closes in ${Util.timeString(remainingSeconds)}")
+			bossBar.setTitle("${RESET}Nether closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}")
 		else
-			bossBar.setTitle("${phaseType.chatColor}${ChatColor.BOLD}Border radius: ${(world.worldBorder.size / 2).toInt()} reaching ${uhc.endRadius.toInt()} in ${Util.timeString(remainingSeconds)}")
+			bossBar.setTitle("${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${uhc.endRadius.toInt()} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}")
 	}
 
 	override fun customStart() {

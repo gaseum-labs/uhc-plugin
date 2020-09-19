@@ -100,7 +100,7 @@ open class GraceDefault : Phase() {
 	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		barTimer(bossBar, remainingSeconds, "Grace period ends in")
+		bossBar.setTitle("${ChatColor.RESET}Grace period ends in ${phaseType.chatColor}${ChatColor.BOLD}${Util.timeString(remainingSeconds)}")
 	}
 
 	override fun endPhrase(): String {

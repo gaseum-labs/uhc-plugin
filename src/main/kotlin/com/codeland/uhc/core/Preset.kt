@@ -4,9 +4,9 @@ import com.codeland.uhc.util.Util
 import org.bukkit.Material
 
 enum class Preset(var prettyName: String, var startRadius: Double, var endRadius: Double, var graceTime: Int, var shrinkTime: Int, var representation: Material) {
-	LARGE("Large", 550.0, 30.0, 1200, 3600, Material.ENCHANTING_TABLE),
+	LARGE("Large", 500.0, 30.0, 1200, 3600, Material.ENCHANTING_TABLE),
 	MEDIUM("Medium", 400.0, 30.0, 1200, 3600, Material.GOLDEN_AXE),
-	SMALL("Small", 200.0, 30.0, 900, 2700, Material.STICK),
+	SMALL("Small", 300.0, 30.0, 900, 2700, Material.STICK),
 	TEST("Testing", 100.0, 30.0, 300, 300, Material.STRUCTURE_VOID);
 
 	fun createLore(): List<String> {
