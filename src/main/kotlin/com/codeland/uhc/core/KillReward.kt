@@ -1,16 +1,23 @@
 package com.codeland.uhc.core
 
 import org.bukkit.Bukkit
+import org.bukkit.Material
+import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scoreboard.Team
 
-enum class KillReward {
-	STRENGTH,
-	NONE;
-	fun applyReward(team : Team) {
-		if (this == STRENGTH) {
-			for (entry in team.entries) {
+enum class KillReward(val prettyName: String, val representation: Material, val lore: List<String>) {
+	REGENERATION("Regeneration", Material.GHAST_TEAR, listOf("Kill a team to have your team each regenerate 2 hearts")),
+	STRENGTH("Strength", Material.BLAZE_POWDER, listOf("Kill a team to have your team get strength for 5 minutes")),
+	NONE("None", Material.NETHER_WART, listOf("No reward for killing a team"));
+
+	fun applyReward(team: Team) {
+		when (this) {
+			REGENERATION -> for (entry in team.entries) {
+				Bukkit.getServer().getPlayer(entry)?.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 200, 0, false, true, true))
+			}
+			STRENGTH ->	for (entry in team.entries) {
 				Bukkit.getServer().getPlayer(entry)?.addPotionEffect(PotionEffect(PotionEffectType.INCREASE_DAMAGE, 5 * 20 * 60, 0, false, true, true))
 			}
 		}

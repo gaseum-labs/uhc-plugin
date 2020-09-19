@@ -19,6 +19,8 @@ import com.codeland.uhc.quirk.quirks.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.block.data.Orientable
+import org.bukkit.entity.Arrow
+import org.bukkit.entity.Creeper
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -412,6 +414,17 @@ class EventListener : Listener {
 			else -> false
 		}
 	}
+
+	// MARA CODE
+	//@EventHandler
+	//fun onDamage(event: EntityDamageByEntityEvent) {
+	//	if (event.entityType == EntityType.CREEPER && event.damager.type == EntityType.ARROW) {
+	//		val arrow = event.damager as Arrow
+	//		val creeper = event.entity as Creeper
+//
+	//		if (arrow.fireTicks > 0) creeper.explode()
+	//	}
+	//}
 
 	@EventHandler
 	fun onBlockBreaking(event: BlockDamageEvent) {

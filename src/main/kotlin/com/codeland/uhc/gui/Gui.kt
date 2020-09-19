@@ -1,6 +1,7 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.KillReward
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.guiItem.*
 import com.codeland.uhc.phase.PhaseType
@@ -20,6 +21,7 @@ class Gui(val uhc: UHC) {
 	val variantCylers: Array<VariantCycler>
 
 	val presetCycler: PresetCycler
+	val killRewardCycler: KillRewardCycler
 	val carePackageCycler: CarePackageCycler
 	val appleFixToggle: AppleFixToggle
 	val stewFixToggle: StewFixToggle
@@ -42,15 +44,19 @@ class Gui(val uhc: UHC) {
 		}
 
 		presetCycler = inventory.addItem(PresetCycler(uhc, GuiInventory.WIDTH * 3))
-		carePackageCycler = inventory.addItem(CarePackageCycler(uhc, GuiInventory.WIDTH * 3 + 1))
-		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 2))
-		stewFixToggle = inventory.addItem(StewFixToggle(uhc, GuiInventory.WIDTH * 3 + 3))
-		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 4))
+		killRewardCycler = inventory.addItem(KillRewardCycler(uhc, GuiInventory.WIDTH * 3 + 1))
+		carePackageCycler = inventory.addItem(CarePackageCycler(uhc, GuiInventory.WIDTH * 3 + 2))
+		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 3))
+		stewFixToggle = inventory.addItem(StewFixToggle(uhc, GuiInventory.WIDTH * 3 + 4))
+		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 5))
 
 		resetButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
 				uhc.updatePreset(uhc.defaultPreset)
 				presetCycler.updateDisplay()
+
+				uhc.killReward = KillReward.REGENERATION
+				killRewardCycler.updateDisplay()
 
 				uhc.defaultVariants.forEach { variant ->
 					uhc.updateVariant(variant)
