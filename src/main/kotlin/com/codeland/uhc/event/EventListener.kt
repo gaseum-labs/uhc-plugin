@@ -38,6 +38,7 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import java.lang.Math.abs
 import java.lang.StringBuilder
 
 class EventListener : Listener {
@@ -378,7 +379,7 @@ class EventListener : Listener {
 			player.teleport(Location(toWorld, teleportedX + 0.5, teleportedY.toDouble(), teleportedZ + 1.0))
 		}
 	}
-	
+
 	fun onBowShoot(event: EntityShootBowEvent) {
 		if (event.projectile is Arrow) (event.projectile as Arrow).isCritical = false
 	}
