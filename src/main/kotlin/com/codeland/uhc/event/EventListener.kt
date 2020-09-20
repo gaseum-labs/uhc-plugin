@@ -533,6 +533,17 @@ class EventListener : Listener {
 		}
 	}
 
+	// MARA CODE
+	//@EventHandler
+	//fun onDamage(event: EntityDamageByEntityEvent) {
+	//	if (event.entityType == EntityType.CREEPER && event.damager.type == EntityType.ARROW) {
+	//		val arrow = event.damager as Arrow
+	//		val creeper = event.entity as Creeper
+//
+	//		if (arrow.fireTicks > 0) creeper.explode()
+	//	}
+	//}
+
 	@EventHandler
 	fun onBlockBreaking(event: BlockDamageEvent) {
 		if (

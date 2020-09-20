@@ -19,7 +19,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var ledger = Ledger()
 
 	var mobCapCoefficient = 1.0
-	var killReward = KillReward.NONE
+	var killReward = KillReward.REGENERATION
 
 	private var phaseVariants = Array(PhaseType.values().size) { index ->
 		defaultVariants[index]
