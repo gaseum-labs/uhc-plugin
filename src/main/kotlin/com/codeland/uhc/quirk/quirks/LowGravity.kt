@@ -34,22 +34,22 @@ class LowGravity(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
                         player.velocity = Vector(player.velocity.x + direction.x * 0.03, player.velocity.y, player.velocity.z + direction.z * 0.03)
                     }
                 }
+            }
+            getWorlds()[0].entities.filter { e -> e !is Player }.forEach { entity ->
+                val block = entity.world.getBlockAt(entity.location.subtract(0.0, 0.01, 0.0)).type
 
-                getWorlds()[0].entities.filter { e -> e !is Player }.forEach { entity ->
-                    val block = entity.world.getBlockAt(entity.location.subtract(0.0, 0.01, 0.0)).type
-
-                    if (!block.isSolid && block != Material.WATER) {
-                        val normalGravity = when (entity) {
-                            is Arrow -> 0.05
-                            is Projectile -> 0.03
-                            is Item -> 0.04
-                            is FallingBlock -> 0.04
-                            is TNTPrimed -> 0.04
-                            is Boat -> 0.04
-                            else -> 0.08
-                        }
-                        entity.velocity = Vector(entity.velocity.x, entity.velocity.y - gravity * normalGravity + normalGravity, entity.velocity.z)
+                if (!block.isSolid && block != Material.WATER) {
+                    val normalGravity = when (entity) {
+                        is Arrow -> 0.05
+                        is Projectile -> 0.03
+                        is Item -> 0.04
+                        is FallingBlock -> 0.04
+                        is TNTPrimed -> 0.04
+                        is Boat -> 0.04
+                        is Chicken -> 0.04
+                        else -> 0.08
                     }
+                    entity.velocity = Vector(entity.velocity.x, entity.velocity.y - gravity * normalGravity + normalGravity, entity.velocity.z)
                 }
             }
         }, 1, 1)
