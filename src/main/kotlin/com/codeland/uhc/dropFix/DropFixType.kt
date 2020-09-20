@@ -35,12 +35,24 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(ItemStack(Material.CHICKEN)),
 		arrayOf(ItemStack(Material.CHICKEN)),
 		arrayOf(ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.CHICKEN)),
 		arrayOf(ItemStack(Material.FEATHER, 1), ItemStack(Material.CHICKEN)),
 		arrayOf(ItemStack(Material.FEATHER, 1), ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.FEATHER, 2), ItemStack(Material.CHICKEN))
+		arrayOf(ItemStack(Material.FEATHER, 1), ItemStack(Material.CHICKEN)),
+		arrayOf(ItemStack(Material.FEATHER, 1), ItemStack(Material.CHICKEN))
 	), arrayOf(
 		ItemStack(Material.CHICKEN)
+	))),
+	ENDERMAN(DropFix(EntityType.ENDERMAN, arrayOf(
+		arrayOf(ItemStack(Material.AIR)),
+		arrayOf(ItemStack(Material.AIR)),
+		arrayOf(ItemStack(Material.AIR)),
+		arrayOf(ItemStack(Material.AIR)),
+		arrayOf(ItemStack(Material.ENDER_PEARL)),
+		arrayOf(ItemStack(Material.ENDER_PEARL)),
+		arrayOf(ItemStack(Material.ENDER_PEARL)),
+		arrayOf(ItemStack(Material.ENDER_PEARL))
+	), arrayOf(
+		ItemStack(Material.AIR)
 	))),
 	GHAST(DropFix(EntityType.GHAST, arrayOf(
 		arrayOf(ItemStack(Material.GUNPOWDER), ItemStack(Material.GHAST_TEAR))
