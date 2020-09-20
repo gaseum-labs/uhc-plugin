@@ -135,6 +135,11 @@ object GameRunner {
 		return Bukkit.getServer().scoreboardManager.mainScoreboard.getEntryTeam(playerName)
 	}
 
+	fun prettyPlayerName(name: String): String {
+		val team = playersTeam(name)
+		return (team?.color ?: ChatColor.WHITE).toString() + name
+	}
+
 	fun sendGameMessage(player: Player, message: String) {
 		player.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}$message")
 	}

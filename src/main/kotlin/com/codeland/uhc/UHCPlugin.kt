@@ -3,6 +3,7 @@ package com.codeland.uhc
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.AdminCommands
 import com.codeland.uhc.command.ParticipantCommands
+import com.codeland.uhc.command.ShareCoordsCommand
 import com.codeland.uhc.command.TeamMaker
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
@@ -36,6 +37,7 @@ class UHCPlugin : JavaPlugin() {
 	override fun onEnable() {
 		commandManager.registerCommand(AdminCommands())
 		commandManager.registerCommand(ParticipantCommands())
+		commandManager.registerCommand(ShareCoordsCommand())
 
 		server.pluginManager.registerEvents(EventListener(), this)
 

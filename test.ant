@@ -1,5 +1,0 @@
-<project name="java-ant project" default="run">
-    <target name="run">
-        <move file="C:\Users\Ayden\Desktop\uhc-plugin\build\uhc-plugin-0.1-all.jar" todir="C:\Users\Ayden\Desktop\uhc-testing\plugins"/>
-    </target>
-</project>
