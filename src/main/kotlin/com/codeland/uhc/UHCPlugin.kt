@@ -4,7 +4,7 @@ import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.AdminCommands
 import com.codeland.uhc.command.ParticipantCommands
 import com.codeland.uhc.command.ShareCoordsCommand
-import com.codeland.uhc.command.TeamMaker
+import com.codeland.uhc.team.TeamMaker
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.core.UHC
@@ -13,15 +13,11 @@ import com.codeland.uhc.event.*
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.team.TeamListener
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.worldgen.ChunkGeneratorOverworld
-import com.codeland.uhc.worldgen.OverworldGenSettings
-import nl.rutgerkok.worldgeneratorapi.WorldGeneratorApi
-import nl.rutgerkok.worldgeneratorapi.WorldRef
 import org.bukkit.Bukkit
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
-
 
 class UHCPlugin : JavaPlugin() {
 	init {
@@ -45,6 +41,7 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(EventListener(), this)
 		server.pluginManager.registerEvents(Generation(), this)
 		server.pluginManager.registerEvents(Portal(), this)
+		TeamListener.teamListen()
 
 		VariantList.create()
 
@@ -78,15 +75,5 @@ class UHCPlugin : JavaPlugin() {
 
 	override fun onDisable() {
 		commandManager.unregisterCommands()
-	}
-
-	/* will only get called if you modify bukkit.yml so don't worry */
-	override fun getDefaultWorldGenerator(worldName: String, id: String?): ChunkGenerator? {
-		val ref = WorldRef.ofName(worldName)
-
-		return WorldGeneratorApi.getInstance(this, 1, 4).createCustomGenerator(ref) { worldGenerator ->
-			val overworldSettings = OverworldGenSettings(this, ref)
-			worldGenerator.setBaseNoiseGenerator(ChunkGeneratorOverworld(overworldSettings))
-		}
 	}
 }

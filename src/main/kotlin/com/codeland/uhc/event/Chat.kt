@@ -1,6 +1,6 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.command.TeamData
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.PhaseType
 import org.bukkit.Bukkit

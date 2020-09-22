@@ -1,6 +1,6 @@
 package com.codeland.uhc.discord
 
-import com.codeland.uhc.command.TeamData
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA

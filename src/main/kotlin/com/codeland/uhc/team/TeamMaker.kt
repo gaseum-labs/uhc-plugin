@@ -1,4 +1,4 @@
-package com.codeland.uhc.command
+package com.codeland.uhc.team
 
 import org.bukkit.ChatColor
 import org.bukkit.scoreboard.Scoreboard

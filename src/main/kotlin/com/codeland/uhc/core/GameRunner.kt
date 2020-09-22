@@ -1,6 +1,6 @@
 package com.codeland.uhc.core
 
-import com.codeland.uhc.command.TeamData
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.blockfix.BrownMushroomFix
 import com.codeland.uhc.blockfix.LeavesFix
 import com.codeland.uhc.blockfix.RedMushroomFix

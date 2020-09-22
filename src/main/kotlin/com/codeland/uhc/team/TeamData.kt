@@ -1,4 +1,4 @@
-package com.codeland.uhc.command
+package com.codeland.uhc.team
 
 import com.codeland.uhc.core.GameRunner
 import org.bukkit.ChatColor
