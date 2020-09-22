@@ -1,15 +1,21 @@
+package com.codeland.uhc.quirk.quirks
+
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
 import com.codeland.uhc.gui.item.GuiOpener
-import com.codeland.uhc.quirk.quirks.Creative
-import com.codeland.uhc.quirk.quirks.HalfZatoichi
-import com.codeland.uhc.quirk.quirks.Pests
-import com.codeland.uhc.quirk.quirks.Summoner
+import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.quirk.BoolProperty
+import com.codeland.uhc.quirk.BoolToggle
+import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.util.ItemUtil.namedItem
 import com.codeland.uhc.util.ItemUtil.randomDye
 import com.codeland.uhc.util.ItemUtil.randomDyeArmor
 import com.codeland.uhc.util.ItemUtil.randomMusicDisc
@@ -27,7 +33,6 @@ import com.codeland.uhc.util.ToolTier.TIER_3
 import com.codeland.uhc.util.ToolTier.TIER_ELYTRA
 import com.codeland.uhc.util.ToolTier.TIER_HELMET
 import com.codeland.uhc.util.ToolTier.TIER_SHIELD
-import com.codeland.uhc.util.ToolTier.TIER_TRIDENT
 import com.codeland.uhc.util.ToolTier.WEAPON_SET
 import com.codeland.uhc.util.ToolTier.WOOD
 import com.codeland.uhc.util.ToolTier.getTieredBook
@@ -37,6 +42,7 @@ import org.bukkit.*
 import org.bukkit.block.Chest
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
+import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SuspiciousStewMeta
@@ -47,38 +53,39 @@ import org.bukkit.scoreboard.*
 import java.lang.Integer.min
 import kotlin.math.ceil
 
-class CarePackages {
+class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	val OBJECTIVE_NAME = "carePackageDrop"
 
-	var enabled = false
-	set (value) {
-		field = value
-
-		if (value) onEnable() else onDisable()
-	}
-
-	fun onEnable() {
+	override fun onEnable() {
 		var scoreboard = Bukkit.getScoreboardManager().mainScoreboard
 		scoreboard.getObjective(OBJECTIVE_NAME)?.unregister()
 
 		objective = scoreboard.registerNewObjective(OBJECTIVE_NAME, "dummy", "Next Care Package Drop")
 		objective?.displaySlot = DisplaySlot.SIDEBAR
-
-		GameRunner.uhc.gui.carePackageCycler.updateDisplay()
 	}
 
-	fun onDisable() {
+	override fun onDisable() {
 		Bukkit.getScheduler().cancelTask(taskID)
 		taskID = -1
 
 		objective?.unregister()
+	}
 
-		GameRunner.uhc.gui.carePackageCycler.updateDisplay()
+	override fun onPhaseSwitch(phase: PhaseVariant) {
+		if (phase.type == PhaseType.SHRINK) onStart()
+		else if (phase.type == PhaseType.WAITING) onEnd()
 	}
 
 	fun onStart() {
 		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::runnable, 0, 20)
 		objective?.displaySlot = DisplaySlot.SIDEBAR
+
+		previousLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
+		nextLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
+
+		if (!fastMode.value) dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
+
+		reset()
 	}
 
 	fun onEnd() {
@@ -100,7 +107,7 @@ class CarePackages {
 
 	val FAST_TIME = 5
 
-	var fastMode = false
+	var fastMode = BoolProperty(false)
 	private set
 
 	val NUM_ITEMS = 16
@@ -115,25 +122,16 @@ class CarePackages {
 	lateinit var dropTimes: Array<Int>
 	var dropIndex = 0
 
-	/**
-	 * @return if the setting was successful
-	 *
-	 * won't let you change when carepackages is
-	 * already running
-	 */
-	fun setFastMode(value: Boolean): Boolean {
-		if (!isGoing()) {
-			fastMode = value
-			GameRunner.uhc.gui.carePackageCycler.updateDisplay()
-
-			return true
-		}
-
-		return false
+	init {
+		inventory.addItem(BoolToggle(uhc, 13, fastMode, {
+			GuiItem.setName(ItemStack(Material.ENDER_CHEST), "${ChatColor.DARK_PURPLE}${ChatColor.MAGIC}%|f ${ChatColor.WHITE}${ChatColor.BOLD}Chaotic ${ChatColor.DARK_PURPLE}${ChatColor.MAGIC}f|%")
+		}, {
+			GuiItem.setName(ItemStack(Material.CHEST), "${ChatColor.BOLD}Normal")
+		}))
 	}
 
 	private fun getTier(): Int {
-		return if (fastMode) {
+		return if (fastMode.value) {
 			val phase = GameRunner.uhc.currentPhase
 
 			if (phase == null) 0
@@ -166,10 +164,10 @@ class CarePackages {
 
 	private fun reset() {
 		/* don't keep doing this outside of shrinking */ // -2 so that the last two care packages are not dropped
-		if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || (!fastMode && dropIndex == dropTimes.size - 2))
+		if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || (!fastMode.value && dropIndex == dropTimes.size - 2))
 			return shutOff()
 
-		timer = if (fastMode) FAST_TIME else dropTimes[dropIndex]
+		timer = if (fastMode.value) FAST_TIME else dropTimes[dropIndex]
 
 		nextLocation = findDropSpot(Bukkit.getWorlds()[0], previousLocation, timer, 16)
 		previousLocation = nextLocation
@@ -199,29 +197,17 @@ class CarePackages {
 	}
 
 	private fun runnable() {
-		if (running) {
-			--timer
-			if (timer == 0) {
-				generateDrop(getTier(), if (fastMode) NUM_ITEMS / 2 else NUM_ITEMS, nextLocation.toBlockLocation(), fastMode)
+		if (timer == 0) {
+			generateDrop(getTier(), if (fastMode.value) NUM_ITEMS / 2 else NUM_ITEMS, nextLocation.toBlockLocation(), fastMode.value)
 
-				++dropIndex
-
-				reset()
-			} else {
-				scoreTime = setScore(objective, scoreTime, "in ${dropTextColor(getTier())}${BOLD}${Util.timeString(timer)}", 1)
-			}
-
-		/* start making drops during shrinking round */
-		} else if (GameRunner.uhc.isPhase(PhaseType.SHRINK)) {
-			running = true
-
-			previousLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
-			nextLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
-
-			if (!fastMode) dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
+			++dropIndex
 
 			reset()
+		} else {
+			scoreTime = setScore(objective, scoreTime, "in ${dropTextColor(getTier())}${BOLD}${Util.timeString(timer)}", 1)
 		}
+
+		--timer
 	}
 
 	companion object {

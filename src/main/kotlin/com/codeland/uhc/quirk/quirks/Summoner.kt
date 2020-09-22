@@ -4,6 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.GuiItem.Companion.enabledName
 import com.codeland.uhc.quirk.BoolProperty
 import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
@@ -41,21 +42,21 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	init {
 		inventory.addItem(BoolToggle(uhc, 11, allowAggro, {
-			GuiItem.setName(ItemStack(CREEPER_SPAWN_EGG), "Aggro ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
+			GuiItem.setName(ItemStack(CREEPER_SPAWN_EGG), enabledName("Aggro", true))
 		}, {
-			GuiItem.setName(ItemStack(GUNPOWDER), "Aggro ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
+			GuiItem.setName(ItemStack(GUNPOWDER), enabledName("Aggro", false))
 		}))
 
 		inventory.addItem(BoolToggle(uhc, 15, allowPassive, {
-			GuiItem.setName(ItemStack(CHICKEN_SPAWN_EGG), "Passive ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
+			GuiItem.setName(ItemStack(CHICKEN_SPAWN_EGG), enabledName("Passive", true))
 		}, {
-			GuiItem.setName(ItemStack(FEATHER), "Passive ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
+			GuiItem.setName(ItemStack(FEATHER), enabledName("Passive", false))
 		}))
 
 		inventory.addItem(BoolToggle(uhc, 22, commander, {
-			GuiItem.setName(ItemStack(NETHERITE_HELMET), "Summoner ${ChatColor.GRAY}- ${ChatColor.GREEN}Allowed")
+			GuiItem.setName(ItemStack(NETHERITE_HELMET), enabledName("Commander", true))
 		}, {
-			GuiItem.setName(ItemStack(LEATHER_HELMET), "Summoner ${ChatColor.GRAY}- ${ChatColor.RED}Disallowed")
+			GuiItem.setName(ItemStack(LEATHER_HELMET), enabledName("Commander", false))
 		}))
 	}
 

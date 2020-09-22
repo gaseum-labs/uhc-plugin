@@ -22,7 +22,7 @@ class VariantCycler(uhc: UHC, index: Int, var phaseType: PhaseType) : GuiItem(uh
         val variant = uhc.getVariant(phaseType)
 
         val stack = ItemStack(variant.representation)
-        setName(stack, "${ChatColor.RESET}${ChatColor.WHITE}${phaseType.prettyName} ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${variant.prettyName}")
+        setName(stack, stateName(phaseType.prettyName, variant.prettyName))
         setLore(stack, variant.description)
 
         return stack

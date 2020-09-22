@@ -22,9 +22,8 @@ class Gui(val uhc: UHC) {
 
 	val presetCycler: PresetCycler
 	val killRewardCycler: KillRewardCycler
-	val carePackageCycler: CarePackageCycler
 	val appleFixToggle: AppleFixToggle
-	val stewFixToggle: StewFixToggle
+	val mushroomBlockNerfToggle: MushroomBlockNerfToggle
 	val botToggle: BotToggle
 
 	val resetButton: GuiItem
@@ -45,10 +44,9 @@ class Gui(val uhc: UHC) {
 
 		presetCycler = inventory.addItem(PresetCycler(uhc, GuiInventory.WIDTH * 3))
 		killRewardCycler = inventory.addItem(KillRewardCycler(uhc, GuiInventory.WIDTH * 3 + 1))
-		carePackageCycler = inventory.addItem(CarePackageCycler(uhc, GuiInventory.WIDTH * 3 + 2))
-		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 3))
-		stewFixToggle = inventory.addItem(StewFixToggle(uhc, GuiInventory.WIDTH * 3 + 4))
-		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 5))
+		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 2))
+		mushroomBlockNerfToggle = inventory.addItem(MushroomBlockNerfToggle(uhc, GuiInventory.WIDTH * 3 + 3))
+		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 4))
 
 		resetButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
@@ -74,17 +72,14 @@ class Gui(val uhc: UHC) {
 					}
 				}
 
-				uhc.updateCarePackages(enabled = true, fast = false)
-				carePackageCycler.updateDisplay()
-
 				uhc.updateUsingBot(true)
 				botToggle.updateDisplay()
 
 				uhc.appleFix = true
 				appleFixToggle.updateDisplay()
 
-				uhc.stewFix = true
-				stewFixToggle.updateDisplay()
+				uhc.mushroomBlockNerf = true
+				mushroomBlockNerfToggle.updateDisplay()
 			}
 			override fun getStack(): ItemStack {
 				val stack = ItemStack(Material.MUSIC_DISC_WAIT)

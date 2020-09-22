@@ -87,11 +87,6 @@ open class GraceDefault : Phase() {
 		uhc.elapsedTime = 0
 		uhc.ledger = Ledger()
 
-		/* begin care packages */
-		if (uhc.carePackages.enabled) {
-			uhc.carePackages.onStart()
-		}
-
 		uhc.updateMobCaps()
 	}
 

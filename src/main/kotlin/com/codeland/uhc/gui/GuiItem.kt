@@ -3,6 +3,7 @@ package com.codeland.uhc.gui
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.event.Chat
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -58,6 +59,14 @@ abstract class GuiItem(val uhc: UHC, val index: Int, val opOnly: Boolean) {
 			stack.itemMeta = meta
 
 			return stack
+		}
+
+		fun stateName(base: String, state: String): String {
+			return "$base ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}$state"
+		}
+
+		fun enabledName(base: String, enabled: Boolean): String {
+			return "$base ${ChatColor.GRAY}- ${if (enabled) ChatColor.GREEN else ChatColor.RED}${ChatColor.BOLD}${if (enabled) "Enabled" else "Disabled"}"
 		}
 	}
 }

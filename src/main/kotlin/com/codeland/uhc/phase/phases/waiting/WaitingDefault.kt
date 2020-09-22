@@ -63,8 +63,6 @@ class WaitingDefault : Phase() {
 			player.inventory.clear()
 			onPlayerJoin(player)
 		}
-
-		uhc.carePackages.onEnd()
 	}
 
 	override fun customEnd() {

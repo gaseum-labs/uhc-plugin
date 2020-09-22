@@ -9,7 +9,7 @@ class BrownMushroomFix : BlockFix("Brown mushroom block", arrayOf(
 	Range("Mushroom", "mushroomCount", "mushroomIndex", 50) { mushroomBlock -> ItemStack(Material.BROWN_MUSHROOM) }
 )) {
 	override fun reject(uhc: UHC, drops: List<Item>): Boolean {
-		return !uhc.stewFix ||
+		return !uhc.mushroomBlockNerf ||
 			(drops.isNotEmpty() && drops[0].itemStack.type == Material.BROWN_MUSHROOM_BLOCK)
 	}
 

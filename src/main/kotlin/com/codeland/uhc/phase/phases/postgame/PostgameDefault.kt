@@ -66,8 +66,6 @@ class PostgameDefault : Phase() {
             if (uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
             team.unregister()
         }
-
-        if (uhc.carePackages.enabled) uhc.carePackages.onEnd()
     }
 
     override fun customEnd() {}

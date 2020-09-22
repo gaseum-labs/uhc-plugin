@@ -17,11 +17,7 @@ class AppleFixToggle(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
 	}
 
 	override fun getStack(): ItemStack {
-		val stack = if (uhc.appleFix)
-			setName(ItemStack(Material.APPLE), "Apple Fix ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
-		else
-			setName(ItemStack(Material.OAK_SAPLING), "Apple Fix ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
-
-		return setLore(stack, listOf("Less random apple drops"))
+		val stack = setName(ItemStack(if (uhc.appleFix) Material.APPLE else Material.OAK_SAPLING), enabledName("Apple Fix", uhc.appleFix))
+		return setLore(stack, listOf("Expect one apple in every 200 leaf blocks mined", "All types of leaves drop apples"))
 	}
 }

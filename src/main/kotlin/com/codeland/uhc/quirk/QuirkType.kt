@@ -59,7 +59,12 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	HOTBAR("Limited Inventory", ::Hotbar, false, Material.OBSIDIAN, arrayOf(
 		"All players are limited to only",
 		"their hotbar to store items"
-  	));
+  	)),
+
+	CARE_PACKAGES("Care Packages", ::CarePackages, false, Material.CHEST_MINECART, arrayOf(
+		"Chests periodically drop containing good loot",
+		"go there and you should expect a fight"
+	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
 

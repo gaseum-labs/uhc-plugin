@@ -3,7 +3,6 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands
-import com.codeland.uhc.command.TeamData
 import com.codeland.uhc.core.*
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.AntiSoftlock
@@ -19,8 +18,6 @@ import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
-import org.bukkit.block.data.Orientable
-import org.bukkit.entity.Arrow
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -32,14 +29,10 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.event.world.ChunkPopulateEvent
-import org.bukkit.event.world.LootGenerateEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import java.lang.Math.abs
-import java.lang.StringBuilder
 
 class EventListener : Listener {
 	@EventHandler
@@ -255,7 +248,7 @@ class EventListener : Listener {
 	@EventHandler
 	fun onBlockBreaking(event: BlockDamageEvent) {
 		if (
-			GameRunner.uhc.stewFix && (
+			GameRunner.uhc.mushroomBlockNerf && (
 				event.block.type == Material.RED_MUSHROOM_BLOCK ||
 				event.block.type == Material.BROWN_MUSHROOM_BLOCK
 			)

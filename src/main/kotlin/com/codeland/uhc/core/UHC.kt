@@ -1,8 +1,6 @@
 package com.codeland.uhc.core
 
-import CarePackages
-import com.codeland.uhc.blockfix.BlockFixType
-import com.codeland.uhc.blockfix.LeavesFix
+import com.codeland.uhc.quirk.quirks.CarePackages
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.phase.*
 import com.codeland.uhc.phase.Phase
@@ -49,10 +47,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	var currentPhase = null as Phase?
 
-	var carePackages = CarePackages()
-
 	var appleFix = true
-	var stewFix = true
+	var mushroomBlockNerf = true
 
 	var usingBot = GameRunner.bot != null
 	private set
@@ -133,17 +129,10 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		}
 	}
 
-	fun updateCarePackages(enabled: Boolean, fast: Boolean) {
-		carePackages.enabled = enabled
-		carePackages.setFastMode(fast)
-	}
-
 	/**
 	 * call after object is fully initialized
 	 */
 	fun updateDisplays() {
-		carePackages.onDisable()
-
 		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
 	}
 

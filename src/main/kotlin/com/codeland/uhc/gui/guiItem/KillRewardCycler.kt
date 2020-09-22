@@ -20,7 +20,7 @@ class KillRewardCycler(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
 		val stack = ItemStack(killReward.representation)
 		setLore(stack, killReward.lore)
 
-		setName(stack, "${ChatColor.WHITE}Preset ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}${killReward.prettyName}")
+		setName(stack, stateName("Kill Reward", killReward.prettyName))
 
 		return stack
 	}

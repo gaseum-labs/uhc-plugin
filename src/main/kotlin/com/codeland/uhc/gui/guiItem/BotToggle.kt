@@ -17,20 +17,10 @@ class BotToggle(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
 	}
 
 	override fun getStack(): ItemStack {
-		val stack: ItemStack
-
-		if (GameRunner.bot == null) {
-			stack = ItemStack(Material.GUNPOWDER)
-			setName(stack, "${ChatColor.RED}${ChatColor.BOLD}Bot is not running")
-		} else {
-			if (uhc.usingBot) {
-				stack = ItemStack(Material.NAUTILUS_SHELL)
-				setName(stack, "${ChatColor.WHITE}Bot Vcs ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
-			} else {
-				stack = ItemStack(Material.HONEYCOMB)
-				setName(stack, "${ChatColor.WHITE}Bot Vcs ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
-			}
-		}
+		val stack = if (GameRunner.bot == null)
+			setName(ItemStack(Material.GUNPOWDER), "${ChatColor.RED}${ChatColor.BOLD}Bot is not running")
+		else
+			setName(ItemStack(if (uhc.usingBot) Material.NAUTILUS_SHELL else Material.HONEYCOMB), enabledName("Bot VCs", uhc.usingBot))
 
 		setLore(stack, listOf("Separate teams into separate discord vcs?"))
 

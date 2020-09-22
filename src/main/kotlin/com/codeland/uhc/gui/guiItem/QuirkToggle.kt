@@ -11,21 +11,13 @@ import org.bukkit.inventory.ItemStack
 
 class QuirkToggle(uhc: UHC, index: Int, var type: QuirkType) : GuiItem(uhc, index, true) {
     override fun onClick(player: Player, shift: Boolean) {
-        if (shift)
-            uhc.getQuirk(type).inventory.open(player)
-        else
-            uhc.updateQuirk(type, !uhc.getQuirk(type).enabled)
+        if (shift) uhc.getQuirk(type).inventory.open(player)
+        else uhc.updateQuirk(type, !uhc.getQuirk(type).enabled)
     }
 
     override fun getStack(): ItemStack {
-        val stack = ItemStack(type.representation)
-
-        if (uhc.isEnabled(type)) {
-            setName(stack, "${ChatColor.WHITE}${type.prettyName} ${ChatColor.GRAY}- ${ChatColor.GREEN}${ChatColor.BOLD}Enabled")
-            setEnchanted(stack)
-        } else {
-            setName(stack, "${ChatColor.WHITE}${type.prettyName} ${ChatColor.GRAY}- ${ChatColor.RED}${ChatColor.BOLD}Disabled")
-        }
+        val stack = setName(ItemStack(type.representation), enabledName(type.prettyName, uhc.isEnabled(type)))
+        if (uhc.isEnabled(type)) setEnchanted(stack)
 
         setLore(stack, type.description.asList())
 
