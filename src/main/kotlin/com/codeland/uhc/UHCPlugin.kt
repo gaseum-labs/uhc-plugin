@@ -9,7 +9,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
-import com.codeland.uhc.event.EventListener
+import com.codeland.uhc.event.*
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.phase.Phase
@@ -39,7 +39,12 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(ParticipantCommands())
 		commandManager.registerCommand(ShareCoordsCommand())
 
+		/* register all events */
+		server.pluginManager.registerEvents(Chat(), this)
+		server.pluginManager.registerEvents(Crits(), this)
 		server.pluginManager.registerEvents(EventListener(), this)
+		server.pluginManager.registerEvents(Generation(), this)
+		server.pluginManager.registerEvents(Portal(), this)
 
 		VariantList.create()
 

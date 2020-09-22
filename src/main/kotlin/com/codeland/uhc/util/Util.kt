@@ -2,6 +2,7 @@ package com.codeland.uhc.util
 
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.World
+import java.awt.geom.Arc2D
 import java.util.logging.Level
 
 object Util {
@@ -95,5 +96,23 @@ object Util {
 
 	fun <T>randFromArray(array: Array<T>): T {
 		return array[(Math.random() * array.size).toInt()]
+	}
+
+	fun interp(low: Float, high: Float, along: Float): Float {
+		return (high - low) * along + low
+	}
+
+	fun interpClamp(low: Float, high: Float, along: Float): Float {
+		var value = (high - low) * along + low
+
+		return when {
+			value < low -> low
+			value > high -> high
+			else -> value
+		}
+	}
+
+	fun invInterp(low: Float, high: Float, value: Float): Float {
+		return (value - low) / (high - low)
 	}
 }

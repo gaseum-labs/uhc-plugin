@@ -165,8 +165,8 @@ class CarePackages {
 	}
 
 	private fun reset() {
-		/* don't keep doing this outside of shrinking */
-		if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || (!fastMode && dropIndex == dropTimes.size))
+		/* don't keep doing this outside of shrinking */ // -2 so that the last two care packages are not dropped
+		if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || (!fastMode && dropIndex == dropTimes.size - 2))
 			return shutOff()
 
 		timer = if (fastMode) FAST_TIME else dropTimes[dropIndex]
@@ -287,7 +287,6 @@ class CarePackages {
 				LootEntry { getTieredTool(WEAPON_SET, IRON, TIER_1, 1, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_1, 1, ENCHANT_CHANCE) },
 				LootEntry { getTieredTool(ONLY_TOOL_SET, IRON, TIER_2, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(BOW_SET, TIER_1, 1, ENCHANT_CHANCE) },
 				LootEntry { getTieredBook(TIER_1, 2, ENCHANT_CHANCE) },
 				LootEntry { bucket() },
 				LootEntry { ItemStack(Material.APPLE, Util.randRange(1, 2)) },
