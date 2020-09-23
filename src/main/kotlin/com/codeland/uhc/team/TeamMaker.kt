@@ -1,68 +1,52 @@
 package com.codeland.uhc.team
 
 import org.bukkit.ChatColor
-import org.bukkit.scoreboard.Scoreboard
+import org.bukkit.OfflinePlayer
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.ceil
 
 object TeamMaker {
-	fun getTeamsRandom(names: ArrayList<String>, teamSize: Int): Array<Array<String?>> {
-		val ret = ArrayList<Array<String?>>()
-		while (names.size > 0) {
-			val tem = arrayOfNulls<String>(teamSize)
-			for (i in tem.indices) {
-				if (names.size > 0) {
-					val rand = (Math.random() * names.size).toInt()
-					tem[i] = names.removeAt(rand)
+	fun getTeamsRandom(players: ArrayList<OfflinePlayer>, teamSize: Int): Array<Array<OfflinePlayer?>> {
+		val used = Array(players.size) { false }
+
+		val numTeams = ceil(players.size / teamSize.toDouble()).toInt()
+		return Array(numTeams) {
+			Array(teamSize) {
+				var index = (Math.random() * players.size).toInt()
+				val startIndex = index
+
+				while (used[index]) {
+					index = (index + 1) % players.size
+					if (index == startIndex) return@Array null
 				}
+
+				players[index]
 			}
-			ret.add(tem)
 		}
-		return ret.toArray(arrayOf())
 	}
 
 	/**
 	 * will return null if color list could not be created
 	 */
-	fun getColorList(size: Int, scoreboard: Scoreboard): Array<ChatColor>? {
-		if (size > TeamData.teamColors.size - scoreboard.teams.size)
+	fun getColorList(size: Int): Array<ColorPair>? {
+		if (size > TeamData.teamColors.size - TeamData.teams.size)
 			return null
 
-		var availableColors = arrayOfNulls<ChatColor>(TeamData.teamColors.size)
-		var numAvailableColors = 0
+		return Array(size) {
+			var index = (Math.random() * TeamData.MAX_TEAMS).toInt()
 
-		TeamData.teamColors.forEach { color ->
-			if(!scoreboard.teams.any { team ->
-				if (color == team.color)
-					return@any true
-
-				return@any false
-			}) {
-				availableColors[numAvailableColors] = color
-				++numAvailableColors
-			}
-		}
-
-		var ret = arrayOfNulls<ChatColor>(size)
-
-		ret.forEachIndexed { i, _ ->
-			var position = (Math.random() * numAvailableColors).toInt()
-			var usingColor = null as ChatColor?
-
-			while (availableColors[position] == null) {
-				++position
-				position %= numAvailableColors
+			var colorPair = TeamData.colorPairFromIndex(index) ?: return null
+			while (TeamData.teamExists(colorPair)) {
+				index = (index + 1) % TeamData.MAX_TEAMS
+				colorPair = TeamData.colorPairFromIndex(index) ?: return null
 			}
 
-			usingColor = availableColors[position]
-			availableColors[position] = null
-			ret[i] = usingColor
+			colorPair
 		}
-
-		return ret as Array<ChatColor>
 	}
 
 	/* ranked */

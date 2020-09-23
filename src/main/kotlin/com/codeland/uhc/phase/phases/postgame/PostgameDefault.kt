@@ -2,6 +2,8 @@ package com.codeland.uhc.phase.phases.postgame
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.team.Team
+import com.codeland.uhc.team.TeamData
 import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
@@ -9,7 +11,6 @@ import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.World
 import org.bukkit.boss.BossBar
-import org.bukkit.scoreboard.Team
 
 class PostgameDefault : Phase() {
     override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
@@ -26,17 +27,18 @@ class PostgameDefault : Phase() {
         var winningTeam = winningTeam
 
         if (winningTeam != null) {
-            val topMessage = TextComponent("${winningTeam.color}${ChatColor.BOLD}${winningTeam.displayName} Has Won!")
+            val topMessage = TextComponent(winningTeam.colorPair.colorString("${winningTeam.displayName} Has Won!"))
 
-            var playerString = "${winningTeam.color}"
-            winningTeam.entries.forEach { playerName ->
-                val player = Bukkit.getPlayer(playerName)
+            var playerString = ""
+            winningTeam.members.forEach { member ->
+                val player = member.player
 
-                if (player != null && player.gameMode == GameMode.SURVIVAL) {
-                    playerString += "$playerName "
-                    uhc.ledger.addEntry(playerName, GameRunner.uhc.elapsedTime, "winning", true)
+                if (player != null && GameRunner.playerIsAlive(player)) {
+                    playerString += "${player.name} "
+                    uhc.ledger.addEntry(player.name, GameRunner.uhc.elapsedTime, "winning", true)
                 }
             }
+            playerString = winningTeam.colorPair.colorString(playerString.dropLast(1))
 
             val bottomMessage = TextComponent(playerString.removeSuffix(" "))
             val title = Title(topMessage, bottomMessage, 0, 200, 40)
@@ -60,19 +62,12 @@ class PostgameDefault : Phase() {
             world.worldBorder.size = world.worldBorder.size
         }
 
-        val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
-
-        scoreboard.teams.forEach { team ->
-            if (uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
-            team.unregister()
-        }
+        TeamData.removeAllTeams()
     }
 
     override fun customEnd() {}
 
     override fun onTick(currentTick: Int) {}
 
-    override fun perSecond(remainingSeconds: Int) {
-
-    }
+    override fun perSecond(remainingSeconds: Int) {}
 }

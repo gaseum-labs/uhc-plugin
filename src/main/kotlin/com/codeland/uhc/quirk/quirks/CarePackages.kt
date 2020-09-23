@@ -235,7 +235,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			val stew = ItemStack(Material.SUSPICIOUS_STEW)
 
 			val meta = stew.itemMeta as SuspiciousStewMeta
-			meta.addCustomEffect(PotionEffect(PotionEffectType.REGENERATION, 8, 0), true)
+			meta.addCustomEffect(PotionEffect(PotionEffectType.REGENERATION, 8 * 20, 0), true)
 			stew.itemMeta = meta
 
 			return stew

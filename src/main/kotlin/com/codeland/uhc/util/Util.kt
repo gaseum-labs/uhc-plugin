@@ -115,4 +115,51 @@ object Util {
 	fun invInterp(low: Float, high: Float, value: Float): Float {
 		return (value - low) / (high - low)
 	}
+
+	fun getCombination(index: Int, size: Int): Pair<Int, Int> {
+		var gate = size
+		var numIters = 0
+		var modIndex = index
+
+		while (numIters < size) {
+			if (index < gate) {
+				var firstIndex = numIters
+				var secondIndex = modIndex
+
+				return Pair(firstIndex, secondIndex)
+
+			} else {
+				++numIters
+				modIndex -= size - numIters
+				gate += size - numIters
+			}
+		}
+
+		return Pair(-1, -1)
+	}
+
+	val colorPrettyNames = arrayOf(
+		"Black",
+		"Dark Blue",
+		"Dark Green",
+		"Dark Aqua",
+		"Dark Red",
+		"Dark Purple",
+		"Gold",
+		"Gray",
+		"Dark Gray",
+		"Blue",
+		"Green",
+		"Aqua",
+		"Red",
+		"Light Purple",
+		"Yellow",
+		"White",
+		"Magic",
+		"Bold",
+		"Strike",
+		"Underline",
+		"Italic",
+		"Reset"
+	)
 }

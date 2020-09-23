@@ -9,6 +9,8 @@ import com.codeland.uhc.quirk.BoolProperty
 import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.team.Team
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -76,11 +78,11 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		val location = block.location.add(event.blockFace.direction).toCenterLocation()
 		val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)
 
-		val team = GameRunner.playersTeam(event.player.name)
+		val team = TeamData.playersTeam(event.player)
 		if (team != null) {
-			setCommandedBy(entity, team.color)
+			setCommandedBy(entity, team)
 
-			if (commander.value) entity.customName = "${team.color}${team.displayName}${net.md_5.bungee.api.ChatColor.RESET} ${entity.name}"
+			if (commander.value) entity.customName = "${team.colorPair.colorString(team.displayName)}${ChatColor.RESET} ${entity.name}"
 		}
 
 		--item.amount
@@ -207,8 +209,8 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 		const val META_TAG = "commandedBy"
 
-		fun setCommandedBy(entity: Entity, color: ChatColor) {
-			entity.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin, color))
+		fun setCommandedBy(entity: Entity, team: Team) {
+			entity.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin, team))
 		}
 
 		fun setCommandedByNone(entity: Entity) {
@@ -217,10 +219,10 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			entity.customName = null
 		}
 
-		fun isCommandedBy(entity: Entity, color: ChatColor): Boolean {
+		fun isCommandedBy(entity: Entity, team: Team): Boolean {
 			val meta = entity.getMetadata(META_TAG)
 
-			return (meta.size > 0 && (meta[0].value() as ChatColor) == color)
+			return (meta.size > 0 && (meta[0].value() as Team) === team)
 		}
 
 		fun isCommanded(entity: Entity): Boolean {

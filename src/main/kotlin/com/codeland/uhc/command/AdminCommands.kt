@@ -10,6 +10,7 @@ import com.codeland.uhc.core.KillReward
 import com.codeland.uhc.phase.*
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.quirks.LowGravity
+import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.team.TeamMaker
 import org.bukkit.*
@@ -17,7 +18,6 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import org.bukkit.scoreboard.Team
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -31,10 +31,8 @@ class AdminCommands : BaseCommand() {
 
 		val errMessage = GameRunner.uhc.startUHC(sender)
 
-		if (errMessage == null)
-			GameRunner.sendGameMessage(sender, "Starting UHC...")
-		else
-			Commands.errorMessage(sender, errMessage)
+		if (errMessage == null) GameRunner.sendGameMessage(sender, "Starting UHC...")
+		else Commands.errorMessage(sender, errMessage)
 	}
 
 	@CommandAlias("team clear")
@@ -42,33 +40,25 @@ class AdminCommands : BaseCommand() {
 	fun clearTeams(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		val scoreboard = sender.server.scoreboardManager.mainScoreboard
-
-		scoreboard.teams.forEach { team ->
-			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
-			team.unregister()
-		}
+		TeamData.removeAllTeams()
 
 		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
 
 	@CommandAlias("team add")
 	@Description("add a player to a team")
-	fun addPlayerToTeamCommand(sender : CommandSender, teamColor : ChatColor, player : OfflinePlayer) {
+	fun addPlayerToTeamCommand(sender: CommandSender, index: Int, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
-		/* make sure no kek team colors */
-		if (!TeamData.isValidColor(teamColor)) {
-			Commands.errorMessage(sender, "Invalid team color!")
-			return
-		}
+		val colorPair = TeamData.colorPairFromIndex(index)
+			?: return Commands.errorMessage(sender, "Index out of range, should be at least 0 and at most ${TeamData.MAX_TEAMS - 1}")
 
 		/* apparently players can not have names */
 		val playerName = player.name ?: return Commands.errorMessage(sender, "Player doesn't exist!")
 
-		TeamData.addToTeam(sender.server.scoreboardManager.mainScoreboard, teamColor, playerName)
+		val team = TeamData.addToTeam(colorPair, player)
 
-		GameRunner.sendGameMessage(sender, "${ChatColor.RESET}Added ${player.name} to ${teamColor}${TeamData.prettyTeamName(teamColor)}")
+		GameRunner.sendGameMessage(sender, "${ChatColor.RESET}Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
 	}
 
 	@CommandAlias("team random")
@@ -77,49 +67,38 @@ class AdminCommands : BaseCommand() {
 		doRandomTeams(sender, teamSize)
 	}
 
-	@CommandAlias("team random")
-	@Description("create random teams")
-	fun randomTeams(sender : CommandSender) {
-		doRandomTeams(sender, 1)
-	}
-
 	@CommandAlias("team swap")
 	@Description("swap the teams of two players")
-	fun swapTemas(sender: CommandSender, player1: Player, player2: Player) {
-		val team1Color = GameRunner.playersTeam(player1.name)?.color ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
-		val team2Color = GameRunner.playersTeam(player2.name)?.color ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
+	fun swapTemas(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
+		val team1 = TeamData.playersTeam(player1) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
+		val team2 = TeamData.playersTeam(player2) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
 
-		val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
+		TeamData.addToTeam(team2, player1)
+		TeamData.addToTeam(team1, player2)
 
-		TeamData.addToTeam(scoreboard, team2Color, player1.name)
-		TeamData.addToTeam(scoreboard, team1Color, player2.name)
-
-		GameRunner.sendGameMessage(sender, "${ChatColor.RESET}${team2Color}${player1.name} ${ChatColor.RESET}${ChatColor.GOLD}${ChatColor.BOLD}and ${team1Color}${player2.name} ${ChatColor.RESET}${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
+		GameRunner.sendGameMessage(sender, "${team2.colorPair.colorString(player1.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}and ${team1.colorPair.colorString(player2.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
 	}
 
 	private fun doRandomTeams(sender: CommandSender, teamSize: Int) {
 		if (Commands.opGuard(sender)) return
 
 		val onlinePlayers = sender.server.onlinePlayers
-		val scoreboard = sender.server.scoreboardManager.mainScoreboard
-		val playerArray = ArrayList<String>()
+		val playerArray = ArrayList<OfflinePlayer>()
 
 		onlinePlayers.forEach { player ->
-			if (scoreboard.getEntryTeam(player.name) == null)
-				playerArray.add(player.name)
+			if (TeamData.playersTeam(player) == null)
+				playerArray.add(player)
 		}
 
 		val teams = TeamMaker.getTeamsRandom(playerArray, teamSize)
 		val numPreMadeTeams = teams.size
 
-		val teamColors = TeamMaker.getColorList(numPreMadeTeams, scoreboard)
+		val teamColorPairs = TeamMaker.getColorList(numPreMadeTeams)
 			?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!")
 
-		teams.forEachIndexed { index, playerNames ->
-			playerNames.forEach {
-				if (it != null) {
-					TeamData.addToTeam(scoreboard, teamColors[index], it)
-				}
+		teams.forEachIndexed { index, players ->
+			players.forEach { player ->
+				if (player != null) TeamData.addToTeam(teamColorPairs[index], player)
 			}
 		}
 
@@ -216,22 +195,22 @@ class AdminCommands : BaseCommand() {
 			player.fallDistance = 0f
 			player.addPotionEffect(PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100, 10, true))
 
-			GameRunner.sendGameMessage(sender, "${player.name} successfully added to team ${ChatColor.RESET}${team.color}${team.displayName}")
+			GameRunner.sendGameMessage(sender, "${player.name} successfully added to team ${team.colorPair.colorString(team.displayName)}")
 		}
 	}
 
 	@CommandAlias("addLate")
 	@Description("adds a player to the game after it has already started")
 	fun addLate(sender: CommandSender, playerName: String, teammateName: String) {
-		val player = Bukkit.getPlayer(playerName) ?: return Commands.errorMessage(sender, "Can't find player ${playerName}")
-		val teammate = Bukkit.getPlayer(teammateName) ?: return Commands.errorMessage(sender, "Can't find player ${teammateName}")
+		val player = Bukkit.getPlayer(playerName) ?: return Commands.errorMessage(sender, "Can't find player $playerName")
+		val teammate = Bukkit.getPlayer(teammateName) ?: return Commands.errorMessage(sender, "Can't find player $teammateName")
 
 		if (Commands.opGuard(sender)) return
 
 		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
 
-		val joinTeam = GameRunner.playersTeam(teammate.name) ?: return Commands.errorMessage(sender, "${teammate.name} has no team to join!")
-		TeamData.addToTeam(Bukkit.getScoreboardManager().mainScoreboard, joinTeam.color, player.name)
+		val joinTeam = TeamData.playersTeam(teammate) ?: return Commands.errorMessage(sender, "${teammate.name} has no team to join!")
+		TeamData.addToTeam(joinTeam, player)
 
 		lateTeamTeleport(sender, player, teammate.location, joinTeam)
 	}
@@ -249,24 +228,9 @@ class AdminCommands : BaseCommand() {
 		val teleportLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 			?: return Commands.errorMessage(sender, "No suitible teleport location found!")
 
-		val maxTeams = TeamData.teamColors.size
-		val teams = Bukkit.getScoreboardManager().mainScoreboard.teams
-		if (teams.size == maxTeams)
-			return Commands.errorMessage(sender, "There are already the maximum amount of teams (${maxTeams})")
+		var teamColorPairs = TeamMaker.getColorList(1) ?: return Commands.errorMessage(sender, "There are already the maximum amount of teams (${TeamData.MAX_TEAMS})")
 
-		/* all available team colors */
-		val taken = Array(maxTeams) { false }
-		teams.forEach { team ->
-			val index = TeamData.teamColorIndices[team.color.ordinal]
-			if (index != -1) taken[index] = true
-		}
-
-		var colorIndex = (Math.random() * maxTeams).toInt()
-		while (taken[colorIndex]) {
-			colorIndex = (colorIndex + 1) % maxTeams
-		}
-
-		val joinTeam = TeamData.addToTeam(Bukkit.getScoreboardManager().mainScoreboard, TeamData.teamColors[colorIndex], player.name)
+		val joinTeam = TeamData.addToTeam(teamColorPairs[0], player)
 
 		lateTeamTeleport(sender, player, teleportLocation, joinTeam)
 	}
@@ -335,5 +299,20 @@ class AdminCommands : BaseCommand() {
 		sender as Player
 
 		GameRunner.sendGameMessage(sender, "Elapsed time: ${GameRunner.uhc.elapsedTime}")
+	}
+
+	@CommandAlias("test teams")
+	@Description("gives an overview of teams")
+	fun testTeams(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		val teams = TeamData.teams
+
+		teams.forEach { team ->
+			GameRunner.sendGameMessage(sender, team.colorPair.colorString(team.displayName))
+			team.members.forEach { member ->
+				GameRunner.sendGameMessage(sender, team.colorPair.colorString(member.name ?: "unknown"))
+			}
+		}
 	}
 }

@@ -8,6 +8,7 @@ import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
@@ -16,7 +17,6 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.RenderType
-import org.bukkit.scoreboard.Team
 
 object GameRunner {
 	var bot: MixerBot? = null
@@ -45,17 +45,17 @@ object GameRunner {
 		Util.log("${ChatColor.GOLD}Melon World Fix: ${ChatColor.RED}$melonWorldFix")
 	}
 
-	fun teamIsAlive(team: Team): Boolean {
-		return team.entries.any { entry ->
-			val player = Bukkit.getServer().getPlayer(entry)
-
-			when {
-				player == null -> false
-				uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(player) -> false
-				player.gameMode == GameMode.SURVIVAL -> true
-				else -> false
-			}
+	fun playerIsAlive(player: Player?): Boolean {
+		return when {
+			player == null -> false
+			uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(player) -> false
+			player.gameMode == GameMode.SURVIVAL -> true
+			else -> false
 		}
+	}
+
+	fun teamIsAlive(team: Team): Boolean {
+		return team.members.any { entry -> playerIsAlive(entry.player) }
 	}
 
 	/**
@@ -67,7 +67,7 @@ object GameRunner {
 		var retAlive = null as Team?
 		var retFocus = false
 
-		Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
+		TeamData.teams.forEach { team ->
 			val alive = teamIsAlive(team)
 
 			if (team == focus) retFocus = alive
@@ -85,7 +85,7 @@ object GameRunner {
 	fun quickRemainingTeams() : Int {
 		var retRemaining = 0
 
-		Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
+		TeamData.teams.forEach { team ->
 			if (teamIsAlive(team)) ++retRemaining
 		}
 
@@ -94,50 +94,46 @@ object GameRunner {
 	}
 
 	fun playerDeath(deadPlayer: Player, removeTeam: Boolean) {
-		var deadPlayerTeam = playersTeam(deadPlayer.name) ?: return
+		var deadPlayerTeam = TeamData.playersTeam(deadPlayer) ?: return
 		var (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(deadPlayerTeam)
 
-		var killerName = deadPlayer.killer?.name
-		if (killerName != null) {
-			val team = playersTeam(deadPlayer.name)
+		val killer = deadPlayer.killer
+		val killerTeam = if (killer == null) null else TeamData.playersTeam(killer)
 
-			/* prevent teamkills from counting as player kills */
-			if (team != null && team.entries.contains(killerName))
-				killerName = "teammate"
+		var killerName = if (killer == null) {
+			null
+		} else {
+			if (deadPlayerTeam === killerTeam) "teammate"
+			else killer.name
 		}
 
 		/* add to ledger */
 		uhc.ledger.addEntry(deadPlayer.name, uhc.elapsedTime, killerName)
 
 		/* broadcast elimination message */
+		val message0 = "${deadPlayerTeam.colorPair.colorString(deadPlayerTeam.displayName)} ${ChatColor.GOLD}${ChatColor.BOLD}has been Eliminated!"
+		val message1 = "$remainingTeams teams remain"
+
 		if (!teamIsAlive) Bukkit.getServer().onlinePlayers.forEach { player ->
-			sendGameMessage(player, "${deadPlayerTeam.color}${ChatColor.BOLD}${deadPlayerTeam.displayName} ${ChatColor.GOLD}${ChatColor.BOLD}has been Eliminated!")
-			sendGameMessage(player, "$remainingTeams teams remain")
+			sendGameMessage(player, message0)
+			sendGameMessage(player, message1)
 		}
 
-		if (removeTeam) {
-			val team = playersTeam(deadPlayer.name)
-			if (team != null) TeamData.removeFromTeam(team, deadPlayer.name)
-		}
+		if (removeTeam) TeamData.removeFromTeam(deadPlayerTeam, deadPlayer)
 
 		/* uhc ending point (stops kill reward) */
 		if (lastRemaining != null || remainingTeams == 0)
 			return uhc.endUHC(lastRemaining)
 
 		/* kill reward awarding */
-		val killer = deadPlayer.killer ?: return
-		val killerTeam = playersTeam(killer.name) ?: return
-
-		uhc.killReward.applyReward(killerTeam)
+		if (killerTeam != null) {
+			if (!teamIsAlive) uhc.killReward.applyReward(killerTeam)
+		}
 	}
 
-	fun playersTeam(playerName: String) : Team? {
-		return Bukkit.getServer().scoreboardManager.mainScoreboard.getEntryTeam(playerName)
-	}
-
-	fun prettyPlayerName(name: String): String {
-		val team = playersTeam(name)
-		return (team?.color ?: ChatColor.WHITE).toString() + name
+	fun prettyPlayerName(player: Player): String {
+		val team = TeamData.playersTeam(player)
+		return team?.colorPair?.colorString(player.name) ?: player.name
 	}
 
 	fun sendGameMessage(player: Player, message: String) {

@@ -6,6 +6,7 @@ import com.codeland.uhc.gui.item.GuiOpener
 import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.quirk.quirks.Pests
+import com.codeland.uhc.team.TeamData
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.block.Biome
@@ -58,6 +59,8 @@ class WaitingDefault : Phase() {
 		world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0)
 		world.time = 6000
 		world.difficulty = Difficulty.NORMAL
+
+		TeamData.removeAllTeams()
 
 		Bukkit.getServer().onlinePlayers.forEach { player ->
 			player.inventory.clear()

@@ -18,16 +18,19 @@ class Chat : Listener {
 	class SpecialMention(val name: String, val includes: (Player) -> Boolean, val needsOp: Boolean = false, val color: org.bukkit.ChatColor = org.bukkit.ChatColor.GOLD)
 
 	private val specialMentions = {
-		val l = mutableListOf(
+		val list = arrayListOf(
 			SpecialMention("everyone", { true }, needsOp = true),
 			SpecialMention("players", { p -> p.gameMode == GameMode.SURVIVAL }),
 			SpecialMention("spectators", { p -> p.gameMode == GameMode.SPECTATOR }),
 			SpecialMention("admins", { p -> p.isOp})
 		)
-		for (c in TeamData.teamColors) {
-			l += SpecialMention(TeamData.prettyTeamName(c).replace(" ", "").toLowerCase().substring(4), { p -> GameRunner.playersTeam(p.name)?.color == c}, color = c)
+
+		for (c in 0 until TeamData.MAX_TEAMS) {
+			val colorPair = TeamData.colorPairFromIndex(c) ?: continue
+			list += SpecialMention(colorPair.getName().replace(" ", "").toLowerCase(), { p -> TeamData.playersTeam(p)?.colorPair == colorPair}, color = colorPair.color0)
 		}
-		l
+
+		list
 	}()
 
 	private fun addMentions(event: AsyncPlayerChatEvent) {
@@ -76,7 +79,7 @@ class Chat : Listener {
 		for (player in Bukkit.getOnlinePlayers()) {
 			val mention = "@" + player.name
 			if (event.message.contains(mention)) {
-				var color = GameRunner.playersTeam(player.name)?.color
+				var color = TeamData.playersTeam(player)?.colorPair?.color0
 				if (color == null) color = org.bukkit.ChatColor.BLUE
 				event.message = prefixAll(event.message, color.toString(), mention)
 				event.message = postfixAll(event.message, org.bukkit.ChatColor.WHITE.toString(), mention)
@@ -119,7 +122,7 @@ class Chat : Listener {
 		}
 
 		/* only modify chat behavior with players on teams */
-		val team = GameRunner.playersTeam(event.player.name) ?: return
+		val team = TeamData.playersTeam(event.player) ?: return
 
 		fun firstIsMention(message: String): Boolean {
 			for (player in Bukkit.getOnlinePlayers()) {
@@ -144,10 +147,10 @@ class Chat : Listener {
 		} else {
 			event.isCancelled = true
 
-			val component = "${team.color}<${event.player.displayName}> ${org.bukkit.ChatColor.RESET}${event.message}"
+			val component = "${team.colorPair.color0}<${event.player.displayName}> ${org.bukkit.ChatColor.RESET}${event.message}"
 
-			team.entries.forEach { entry ->
-				Bukkit.getPlayer(entry)?.sendMessage(component)
+			team.members.forEach { member ->
+				member.player?.sendMessage(component)
 			}
 		}
 	}
