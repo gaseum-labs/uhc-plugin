@@ -1,8 +1,8 @@
 package com.codeland.uhc.phase.phases.grace
 
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
@@ -49,7 +49,7 @@ open class GraceDefault : Phase() {
 				}
 			}
 
-			player.gameMode = if (GameRunner.playersTeam(player.name) == null) GameMode.SPECTATOR else GameMode.SURVIVAL
+			player.gameMode = if (TeamData.playersTeam(player) == null) GameMode.SPECTATOR else GameMode.SURVIVAL
 		}
 
 		/* set border in overworld */
@@ -60,19 +60,19 @@ open class GraceDefault : Phase() {
 		world.worldBorder.setCenter(0.5, 0.5)
 		world.worldBorder.size = uhc.startRadius * 2 + 1
 
-		val teams = Bukkit.getServer().scoreboardManager.mainScoreboard.teams
+		val teams = TeamData.teams
 
 		var totalTeleports = 0
 		teams.forEachIndexed { i, team ->
-			team.entries.forEach { entry ->
-				if (Bukkit.getPlayer(entry) != null) ++totalTeleports
+			team.members.forEach { member ->
+				if (member.player != null) ++totalTeleports
 			}
 		}
 
 		var numTeleports = 0
 		teams.forEachIndexed { i, team ->
-			team.entries.forEach { entry ->
-				val player = Bukkit.getPlayer(entry)
+			team.members.forEach { member ->
+				val player = member.player
 
 				player?.teleportAsync(teleportLocations[i])?.thenAccept {
 					player.fallDistance = 0f

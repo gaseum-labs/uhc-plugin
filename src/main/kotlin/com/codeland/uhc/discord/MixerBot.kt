@@ -1,6 +1,6 @@
 package com.codeland.uhc.discord
 
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
@@ -11,10 +11,11 @@ import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-import org.bukkit.scoreboard.Team
+import org.bukkit.Bukkit
 import java.io.*
 import java.lang.Exception
 import java.net.URL
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
@@ -29,7 +30,7 @@ class MixerBot(
 ) : ListenerAdapter() {
 	private val bot: JDA = JDABuilder.createDefault(token).build()
 
-	private val mcUserNames: ArrayList<String> = ArrayList()
+	private val minecraftIDs: ArrayList<String> = ArrayList()
 	private val discordIDs: ArrayList<Long> = ArrayList()
 
 	var guild: Guild? = null
@@ -101,18 +102,18 @@ class MixerBot(
 		writer.close()
 	}
 
-	private fun saveLinkData() {
-		val writer = FileWriter(File(linkDataPath), false)
+	fun saveLinkData() {
+		val writer = FileWriter(File(linkDataPath), true)
 
-		for (i in mcUserNames.indices) {
-			writer.write("${mcUserNames[i]} ${discordIDs[i]}\n")
+		for (i in discordIDs.indices) {
+			writer.write("${discordIDs[i]} ${minecraftIDs[i]}${if (i == discordIDs.lastIndex) "" else "\n"}")
 		}
 
 		writer.close()
 	}
 
 	fun readLinkData(linkDataPath: String) {
-		mcUserNames.clear()
+		minecraftIDs.clear()
 		discordIDs.clear()
 
 		val file = File(linkDataPath)
@@ -124,7 +125,7 @@ class MixerBot(
 				val line = reader.readLine()
 
 				if (line.contains(" ")) {
-					mcUserNames.add(line.substring(0, line.indexOf(" ")))
+					minecraftIDs.add(line.substring(0, line.indexOf(" ")))
 					discordIDs.add(line.substring(line.lastIndexOf(" ") + 1).toLong())
 				}
 			}
@@ -172,11 +173,12 @@ class MixerBot(
 		}
 	}
 
-	fun addPlayerToTeam(team: Team, name: String, accept: (Boolean) -> Unit) {
+	fun addPlayerToTeam(team: Team, uniqueID: UUID, accept: (Boolean) -> Unit) {
 		val guild = guild ?: return accept(false)
+		val idString = uniqueID.toString()
 
-		for (i in mcUserNames.indices) {
-			if (mcUserNames[i] == name) {
+		for (i in minecraftIDs.indices) {
+			if (minecraftIDs[i] == idString) {
 				val member = guild.getMemberById(discordIDs[i])
 
 				if (member?.voiceState?.inVoiceChannel() == true) {
@@ -202,12 +204,13 @@ class MixerBot(
 		}
 	}
 
-	fun moveToGeneral(playerUsername: String, accept: (Boolean) -> Unit) {
+	fun moveToGeneral(uniqueID: UUID, accept: (Boolean) -> Unit) {
 		val general = voiceChannel ?: return accept(false)
 		val guild = guild ?: return accept(false)
+		val idString = uniqueID.toString()
 
-		for (i in mcUserNames.indices) {
-			if (mcUserNames[i] == playerUsername) {
+		for (i in minecraftIDs.indices) {
+			if (minecraftIDs[i] == idString) {
 				val member = guild.getMemberById(discordIDs[i]) ?: break
 
 				if (member.voiceState?.inVoiceChannel() == true)
@@ -220,9 +223,11 @@ class MixerBot(
 		accept(false)
 	}
 
-	fun isLinked(username: String): Boolean {
-		return mcUserNames.any { name ->
-			name == username
+	fun isLinked(uuid: UUID): Boolean {
+		val idString = uuid.toString()
+
+		return minecraftIDs.any { id ->
+			id == idString
 		}
 	}
 
@@ -237,8 +242,8 @@ class MixerBot(
 		val category = voiceCategory ?: return accept(null)
 
 		category.voiceChannels.find { channel ->
-			if (channel.name == TeamData.prettyTeamName(team.color)) { accept(channel); true } else false
-		} ?: category.createVoiceChannel(team.displayName).queue { created -> accept(created) }
+			if (channel.name == team.colorPair.getName()) { accept(channel); true } else false
+		} ?: category.createVoiceChannel(team.colorPair.getName()).queue { created -> accept(created) }
 	}
 
 	fun clearTeamVCs() {
@@ -300,26 +305,32 @@ class MixerBot(
 			val userID = event.author.idLong
 
 			val username = content.substring(1 + content.lastIndexOf(' '))
-			for (i in discordIDs.indices) {
-				if (discordIDs[i] == userID) {
-					mcUserNames[i] = username
-					saveLinkData()
 
-					event.channel.sendMessage("changed minecraft username from \"${mcUserNames[i]}\" to \"$username\"").queue()
-					return
-				}
+			val player = Bukkit.getOnlinePlayers().find { player ->
+				player.name == username
 			}
 
-			mcUserNames.add(username)
-			discordIDs.add(userID)
-			event.channel.sendMessage("set minecraft username to \"$username\"").complete()
+			if (player == null) {
+				event.channel.sendMessage("You must be in the server to link").queue()
+			} else {
+				val minecraftID = player.uniqueId.toString()
 
-			try {
-				val fr = FileWriter(File(linkDataPath), true)
-				fr.write("\n$username $userID")
-				fr.close()
-			} catch (e: IOException) {
-				e.printStackTrace()
+				var playerIndex = -1
+				for (i in discordIDs.indices) {
+					if (discordIDs[i] == userID) {
+						playerIndex = i
+						break
+					}
+				}
+
+				if (playerIndex == -1) {
+					discordIDs.add(userID)
+					minecraftIDs.add(minecraftID)
+				} else {
+					minecraftIDs[playerIndex] = minecraftID
+				}
+
+				saveLinkData()
 			}
 
 		} else if (content.startsWith("%general")) {
@@ -452,8 +463,8 @@ class MixerBot(
 	}
 
 	private fun getDiscordID(username: String): Long {
-		for (i in mcUserNames.indices) {
-			if (username == mcUserNames[i]) {
+		for (i in minecraftIDs.indices) {
+			if (username == minecraftIDs[i]) {
 				return discordIDs[i]
 			}
 		}

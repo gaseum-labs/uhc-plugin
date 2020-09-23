@@ -4,14 +4,18 @@ import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 
-class Team(var color: ChatColor, var colorModifer: ChatColor) {
+class Team(var colorPair: ColorPair) {
 	val members = ArrayList<OfflinePlayer>()
 
-	fun getColorString(): String {
-		return "${color}${colorModifer}"
+	var displayName = colorPair.getName()
+
+	fun isDefaultName(): Boolean {
+		return displayName == colorPair.getName()
 	}
 
-	fun modifyMember(player: Player) {
-
+	companion object {
+		fun isValidColor(color: ChatColor): Boolean {
+			return color.isColor && color != ChatColor.WHITE && color != ChatColor.BLACK && color != ChatColor.GOLD
+		}
 	}
 }

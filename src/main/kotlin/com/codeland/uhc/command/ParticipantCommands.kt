@@ -4,8 +4,12 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.event.Chat
 import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.team.ColorPair
+import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -69,7 +73,7 @@ class ParticipantCommands : BaseCommand() {
 	@CommandAlias("name")
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
-		val team = GameRunner.playersTeam(sender.name)
+		val team = TeamData.playersTeam(sender as Player)
 			?: return Commands.errorMessage(sender, "You are not on a team!")
 
 		var realNewName = newName
@@ -77,44 +81,55 @@ class ParticipantCommands : BaseCommand() {
 			realNewName = realNewName.substring(1, realNewName.length - 1)
 		}
 
-		GameRunner.bot?.renameTeam(team, realNewName) {}
-
 		team.displayName = realNewName
 
-		val message = TextComponent("Your team name has been changed to \"$realNewName\"")
-		message.color = team.color.asBungee()
-		message.isBold = true
-
 		/* broadcast change to all teammates */
-		team.entries.forEach { entry ->
-			Bukkit.getServer().getPlayer(entry)?.sendMessage(message)
+		team.members.forEach { member ->
+			member.player?.sendMessage("Your team name has been changed to \"${team.colorPair.colorString(realNewName)}\"")
 		}
 	}
 
 	@CommandAlias("color")
 	@Description("change your team color")
-	fun teamColor(sender: CommandSender, newColor: ChatColor) {
-		val team = GameRunner.playersTeam(sender.name)
+	fun teamColor(sender: CommandSender, color0: ChatColor) {
+		changeTeamColor(sender, color0, null)
+	}
+
+	@CommandAlias("color")
+	@Description("change your team color")
+	fun teamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor) {
+		changeTeamColor(sender, color0, color1)
+	}
+
+	private fun changeTeamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor?) {
+		val team = TeamData.playersTeam(sender as Player)
 			?: return Commands.errorMessage(sender, "You are not on a team!")
 
-		if (!TeamData.isValidColor(newColor))
-			return Commands.errorMessage(sender, "That color is not allowed!")
+		fun colorError(color: ChatColor) {
+			Commands.errorMessage(sender, "${color}${Util.colorPrettyNames[color.ordinal]} ${ChatColor.RESET}is not a valid team color!")
+		}
 
-		if (Bukkit.getServer().scoreboardManager.mainScoreboard.teams.any { team ->
-				return@any team.color == newColor
-		})
-			return Commands.errorMessage(sender, "That color is already being used by another team!")
+		if (!Team.isValidColor(color0)) return colorError(color0)
+		if (color1 != null && !Team.isValidColor(color1)) return colorError(color1)
+
+		val colorPair = ColorPair(color0, color1)
+
+		if (colorPair.color0 == colorPair.color1)
+			return Commands.errorMessage(sender, "Invalid color combination!")
+
+		if (TeamData.teamExists(colorPair))
+			return Commands.errorMessage(sender, "That color combination is already being used by another team!")
 
 		/* change team name to be default name for new color if no custom name has been set */
-		if (team.displayName == TeamData.prettyTeamName(team.color))
-			team.displayName = TeamData.prettyTeamName(newColor)
+		if (team.isDefaultName()) team.displayName = colorPair.getName()
+		team.colorPair = colorPair
 
-		/* now finally change color */
-		team.color = newColor
+		val message = "Your team color has been changed to ${colorPair.colorString(colorPair.getName())}"
 
 		/* broadcast change to all teammates */
-		team.entries.forEach { entry ->
-			Bukkit.getServer().getPlayer(entry)?.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}Your team color has been changed to ${newColor}${TeamData.colorPrettyNames[newColor.ordinal].toLowerCase()}")
+		team.members.forEach { member ->
+			val player = member.player
+			if (player != null) GameRunner.sendGameMessage(player, message)
 		}
 	}
 
@@ -123,10 +138,10 @@ class ParticipantCommands : BaseCommand() {
 	fun getMobCaps(sender: CommandSender) {
 		sender as Player
 
-		GameRunner.sendGameMessage(sender, "Monster spawn limit: " + sender.world.monsterSpawnLimit)
-		GameRunner.sendGameMessage(sender, "Animal spawn limit: " + sender.world.animalSpawnLimit)
-		GameRunner.sendGameMessage(sender, "Ambient spawn limit: " + sender.world.ambientSpawnLimit)
-		GameRunner.sendGameMessage(sender, "Water animal spawn limit: " + sender.world.waterAnimalSpawnLimit)
-		GameRunner.sendGameMessage(sender, "Water ambient spawn limit: " + sender.world.waterAmbientSpawnLimit)
+		GameRunner.sendGameMessage(sender, "Monster spawn limit: ${sender.world.monsterSpawnLimit}")
+		GameRunner.sendGameMessage(sender, "Animal spawn limit: ${sender.world.animalSpawnLimit}")
+		GameRunner.sendGameMessage(sender, "Ambient spawn limit: ${sender.world.ambientSpawnLimit}")
+		GameRunner.sendGameMessage(sender, "Water animal spawn limit: ${sender.world.waterAnimalSpawnLimit}")
+		GameRunner.sendGameMessage(sender, "Water ambient spawn limit: ${sender.world.waterAmbientSpawnLimit}")
 	}
 }

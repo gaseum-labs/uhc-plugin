@@ -16,6 +16,7 @@ import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
+import com.codeland.uhc.team.TeamData
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.entity.EntityType
@@ -58,7 +59,7 @@ class EventListener : Listener {
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			(GameRunner.uhc.currentPhase as WaitingDefault?)?.onPlayerJoin(event.player)
 		} else {
-			if (GameRunner.playersTeam(event.player.name) == null)
+			if (TeamData.playersTeam(event.player) == null)
 				event.player.gameMode = GameMode.SPECTATOR
 
 			return
@@ -196,9 +197,9 @@ class EventListener : Listener {
 
 		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
 		if (summoner.enabled && summoner.commander.value) {
-			val team = GameRunner.playersTeam(player.name)
+			val team = TeamData.playersTeam(player)
 
-			if (team != null && Summoner.isCommandedBy(event.entity, team.color))
+			if (team != null && Summoner.isCommandedBy(event.entity, team))
 				event.isCancelled = true
 		}
 

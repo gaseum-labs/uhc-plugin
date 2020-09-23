@@ -1,99 +1,115 @@
 package com.codeland.uhc.team
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Util
+import org.bukkit.ChatColor.*
 import org.bukkit.ChatColor
-import org.bukkit.scoreboard.Scoreboard
-import org.bukkit.scoreboard.Team
+import org.bukkit.OfflinePlayer
+import org.bukkit.entity.Player
+import org.bukkit.metadata.FixedMetadataValue
 
 object TeamData {
-    val teamColors = arrayOf(
-        ChatColor.BLUE,
-        ChatColor.RED,
-        ChatColor.GREEN,
-        ChatColor.AQUA,
-        ChatColor.LIGHT_PURPLE,
-        ChatColor.YELLOW,
-        ChatColor.DARK_RED,
-        ChatColor.DARK_AQUA,
-        ChatColor.DARK_PURPLE,
-        ChatColor.GRAY,
-        ChatColor.DARK_BLUE,
-        ChatColor.DARK_GREEN,
-        ChatColor.DARK_GRAY
-    )
+	val teamColors = arrayOf(
+		BLUE,
+		RED,
+		GREEN,
+		AQUA,
+		LIGHT_PURPLE,
+		YELLOW,
+		DARK_RED,
+		DARK_AQUA,
+		DARK_PURPLE,
+		GRAY,
+		DARK_BLUE,
+		DARK_GREEN,
+		DARK_GRAY
+	)
 
-    val teamColorIndices = Array(ChatColor.values().size) { i ->
-        teamColors.indexOf(ChatColor.values()[i])
-    }
+	val teamColorIndices = Array(ChatColor.values().size) { i ->
+		teamColors.indexOf(ChatColor.values()[i])
+	}
 
-    val colorPrettyNames = arrayOf(
-        "Black",
-        "Dark Blue",
-        "Dark Green",
-        "Dark Aqua",
-        "Dark Red",
-        "Dark Purple",
-        "Gold",
-        "Gray",
-        "Dark Gray",
-        "Blue",
-        "Green",
-        "Aqua",
-        "Red",
-        "Light Purple",
-        "Yellow",
-        "White",
-        "Magic",
-        "Bold",
-        "Strike",
-        "Underline",
-        "Italic",
-        "Reset"
-    )
+	val MAX_TEAMS = 91
 
-    /**
-     * prevents non-color font modifiers and white, black, and gold
-     */
-    fun isValidColor(color: ChatColor): Boolean {
-        return color.isColor && color != ChatColor.WHITE && color != ChatColor.BLACK && color != ChatColor.GOLD
-    }
+	val teams = ArrayList<Team>()
 
-    fun prettyTeamName(color: ChatColor): String {
-        return "Team ${colorPrettyNames[color.ordinal]}"
-    }
+	fun colorPairFromIndex(index: Int): ColorPair? {
+		val pair = Util.getCombination(index, teamColors.size)
 
-    fun addToTeam(scoreboard: Scoreboard, color: ChatColor, playerName: String): Team {
-        /* remove player from old team if they are on one */
-        val oldTeam = scoreboard.getEntryTeam(playerName)
+		if (pair.first == -1) return null
+		if (pair.first == pair.second) return ColorPair(teamColors[pair.first])
 
-        if (oldTeam != null)
-            removeFromTeam(oldTeam, playerName)
+		return ColorPair(teamColors[pair.first], teamColors[pair.second])
+	}
 
-        /* find if the new team exists */
-        val teamName = color.name
-        var team = scoreboard.getTeam(teamName)
+	fun teamExists(colorPair: ColorPair): Boolean {
+		return teams.any { team -> team.colorPair == colorPair }
+	}
 
-        /* create the team if it doesn't exist */
-        if (team == null) {
-            team = scoreboard.registerNewTeam(teamName)
-            team.color = color
-            team.displayName = prettyTeamName(color)
-        }
+	fun playersTeam(player: OfflinePlayer): Team? {
+		for (team in teams)
+			for (member in team.members)
+				if (member.uniqueId == player.uniqueId) return team
 
-	    if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, playerName) {}
+		return null
+	}
 
-        team.addEntry(playerName)
+	fun addToTeam(colorPair: ColorPair, player: OfflinePlayer): Team {
+		/* remove player from old team if they are on one */
+		val oldTeam = playersTeam(player)
+		if (oldTeam != null) removeFromTeam(oldTeam, player)
 
-        return team
-    }
+		/* find if the new team exists */
+		var newTeam = teams.find { team -> team.colorPair == colorPair }
 
-    fun removeFromTeam(team: Team, playerName: String) {
-        team.removeEntry(playerName)
+		/* create the team if it doesn't exist */
+		if (newTeam == null) {
+			newTeam = Team(colorPair)
+			teams.add(newTeam)
+		}
 
-        /* remove the team if no one is left on it */
-        if (team.entries.size == 0) {
-            if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
-	        team.unregister()
-        }
-    }
+		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(newTeam, player.uniqueId) {}
+
+		newTeam.members.add(player)
+
+		return newTeam
+	}
+
+	fun addToTeam(team: Team, player: OfflinePlayer): Team {
+		/* remove player from old team if they are on one */
+		val oldTeam = playersTeam(player)
+		if (oldTeam != null) removeFromTeam(oldTeam, player)
+
+		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, player.uniqueId) {}
+
+		team.members.add(player)
+
+		return team
+	}
+
+	fun removeFromTeam(player: OfflinePlayer) {
+		removeFromTeam(playersTeam(player), player)
+	}
+
+	fun removeFromTeam(oldTeam: Team?, player: OfflinePlayer): Boolean {
+		oldTeam ?: return false
+
+		oldTeam.members.removeIf { offlinePlayer -> offlinePlayer.uniqueId == player.uniqueId }
+
+		/* remove the team if no one is left on it */
+		if (oldTeam.members.isEmpty()) {
+			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(oldTeam) {}
+			teams.removeIf { team -> team === oldTeam }
+		}
+
+		return true
+	}
+
+	fun removeAllTeams() {
+		teams.removeIf { team ->
+			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
+			true
+		}
+	}
 }

@@ -8,9 +8,10 @@ import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.team.Team
+import com.codeland.uhc.team.TeamData
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
-import org.bukkit.scoreboard.Team
 
 class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var gameMaster = null as CommandSender?
@@ -60,7 +61,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			false
 
 		} else {
-			if (!using) Bukkit.getServer().scoreboardManager.mainScoreboard.teams.forEach { team ->
+			if (!using) TeamData.teams.forEach { team ->
 				bot.destroyTeam(team) {}
 			}
 
@@ -189,9 +190,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		if (isGameGoing())
 			return "Game has already started!"
 
-		val numTeams = Bukkit.getScoreboardManager().mainScoreboard.teams.size
-		if (numTeams == 0)
-			return "No one is playing!"
+		val numTeams = TeamData.teams.size
+		if (numTeams == 0) return "No one is playing!"
 
 		gameMaster = commandSender
 
