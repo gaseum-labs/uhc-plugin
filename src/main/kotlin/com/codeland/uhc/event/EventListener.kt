@@ -320,6 +320,10 @@ class EventListener : Listener {
 				return
 			}
 
+			if (GameRunner.uhc.isEnabled(QuirkType.DEATHSWAP) && Deathswap.elapsed() < Deathswap.IMMUNITY) {
+				event.isCancelled = true
+			}
+
 			/* pests cannot attack each other */
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(attacker) && Pests.isPest(defender))
 				event.isCancelled = true

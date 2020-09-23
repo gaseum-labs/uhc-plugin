@@ -148,6 +148,10 @@ object GameRunner {
 		sender.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}$message")
 	}
 
+	fun broadcast(message: String) {
+		Bukkit.getOnlinePlayers().forEach { sendGameMessage(it, message)}
+	}
+
 	fun netherIsAllowed() : Boolean {
 		return !uhc.isPhase(PhaseType.ENDGAME)
 	}
