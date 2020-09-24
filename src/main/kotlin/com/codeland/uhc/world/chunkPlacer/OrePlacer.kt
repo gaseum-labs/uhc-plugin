@@ -1,4 +1,4 @@
-package com.codeland.uhc.chunkPlacer
+package com.codeland.uhc.world.chunkPlacer
 
 import com.codeland.uhc.util.Util
 import org.bukkit.Chunk

@@ -10,6 +10,7 @@ import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldGenFile
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode

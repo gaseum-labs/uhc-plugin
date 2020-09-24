@@ -17,6 +17,7 @@ import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.world.NetherFix
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.entity.EntityType

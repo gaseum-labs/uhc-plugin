@@ -1,10 +1,8 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.command.CavePicture
 import com.codeland.uhc.core.*
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.util.Util
-import org.bukkit.ChatColor
+import com.codeland.uhc.world.*
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.World
@@ -16,7 +14,6 @@ import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.abs
 import kotlin.math.ceil
-import kotlin.math.log
 
 class Generation : Listener {
 	@EventHandler
@@ -57,6 +54,10 @@ class Generation : Listener {
 		if (GameRunner.oreWorldFix && world.environment == World.Environment.NORMAL) {
 			OreFix.removeOres(chunk)
 			OreFix.addOres(chunk, world.seed.toInt())
+
+			CaveLocator.removeMinerals(chunk)
+
+			CaveLocatorQueue.onGenerate(chunk, GameRunner.uhc.startRadius.toInt())
 		}
 
 		if (GameRunner.melonWorldFix && world.environment == World.Environment.NORMAL) {

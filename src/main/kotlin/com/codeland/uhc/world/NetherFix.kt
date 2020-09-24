@@ -1,14 +1,7 @@
-package com.codeland.uhc.core;
+package com.codeland.uhc.world;
 
-import com.codeland.uhc.chunkPlacer.WartPlacer
-import com.codeland.uhc.util.Util
-import org.bukkit.Chunk
-import org.bukkit.Location
-import org.bukkit.Material
+import com.codeland.uhc.world.chunkPlacer.WartPlacer
 import org.bukkit.block.Biome
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
-import org.bukkit.block.data.Ageable
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity

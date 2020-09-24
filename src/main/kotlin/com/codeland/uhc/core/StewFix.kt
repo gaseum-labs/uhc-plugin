@@ -1,10 +1,8 @@
 package com.codeland.uhc.core
 
-import com.codeland.uhc.chunkPlacer.CaveMushroomPlacer
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.chunkPlacer.CaveMushroomPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.block.Biome
 
 object StewFix {
 	fun removeOxeye(chunk: Chunk) {

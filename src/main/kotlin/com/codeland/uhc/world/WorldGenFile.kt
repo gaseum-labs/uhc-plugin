@@ -1,6 +1,5 @@
-package com.codeland.uhc.core
+package com.codeland.uhc.world
 
-import com.codeland.uhc.util.Util
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter

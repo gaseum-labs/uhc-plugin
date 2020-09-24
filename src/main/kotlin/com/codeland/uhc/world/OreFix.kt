@@ -1,13 +1,8 @@
-package com.codeland.uhc.core
+package com.codeland.uhc.world
 
-import com.codeland.uhc.chunkPlacer.ChunkPlacer
-import com.codeland.uhc.chunkPlacer.OrePlacer
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.chunkPlacer.OrePlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.block.BlockFace
-import kotlin.math.abs
-import kotlin.math.sin
 
 object OreFix {
 	fun isOre(type: Material): Boolean {

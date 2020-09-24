@@ -3,6 +3,10 @@ package com.codeland.uhc.team
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.util.Util
+import com.comphenix.protocol.PacketType
+import com.comphenix.protocol.ProtocolLibrary
+import com.comphenix.protocol.events.PacketContainer
+import com.comphenix.protocol.reflect.StructureModifier
 import org.bukkit.ChatColor.*
 import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
@@ -72,6 +76,9 @@ object TeamData {
 		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(newTeam, player.uniqueId) {}
 
 		newTeam.members.add(player)
+
+		val packet = TeamListener.lastPacket
+		if (packet != null) ProtocolLibrary.getProtocolManager().broadcastServerPacket(packet)
 
 		return newTeam
 	}

@@ -4,6 +4,7 @@ import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.World
 import java.awt.geom.Arc2D
 import java.util.logging.Level
+import kotlin.math.pow
 
 object Util {
 	fun log(message: String) {
@@ -71,6 +72,10 @@ object Util {
 
 	fun randRange(low: Int, high: Int): Int {
 		return ((Math.random() * (high - low + 1)) + low).toInt()
+	}
+
+	fun lowBiasRandom(high: Int): Int {
+		return (Math.random().pow(3.0) * high).toInt()
 	}
 
 	fun randRange(low: Float, high: Float): Float {

@@ -10,6 +10,8 @@ import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.world.CaveLocator
+import com.codeland.uhc.world.CaveLocatorQueue
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 

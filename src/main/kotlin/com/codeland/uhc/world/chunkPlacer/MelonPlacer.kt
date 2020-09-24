@@ -1,7 +1,6 @@
-package com.codeland.uhc.chunkPlacer
+package com.codeland.uhc.world.chunkPlacer
 
 import com.codeland.uhc.util.Util
-import org.bukkit.ChatColor
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Biome

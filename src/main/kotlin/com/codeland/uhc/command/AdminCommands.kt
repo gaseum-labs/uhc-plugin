@@ -29,10 +29,11 @@ class AdminCommands : BaseCommand() {
 	fun startGame(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
+		GameRunner.sendGameMessage(sender, "Starting UHC...")
+
 		val errMessage = GameRunner.uhc.startUHC(sender)
 
-		if (errMessage == null) GameRunner.sendGameMessage(sender, "Starting UHC...")
-		else Commands.errorMessage(sender, errMessage)
+		if (errMessage != null) Commands.errorMessage(sender, errMessage)
 	}
 
 	@CommandAlias("team clear")
