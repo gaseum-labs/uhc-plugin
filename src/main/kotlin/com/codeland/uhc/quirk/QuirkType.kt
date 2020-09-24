@@ -64,6 +64,12 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	CARE_PACKAGES("Care Packages", ::CarePackages, false, Material.CHEST_MINECART, arrayOf(
 		"Chests periodically drop containing good loot",
 		"go there and you should expect a fight"
+	)),
+
+	DEATHSWAP("Deathswap", ::Deathswap, false, Material.MAGENTA_GLAZED_TERRACOTTA, arrayOf(
+			"it's deathswap",
+			"you swap",
+			"yeah"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
