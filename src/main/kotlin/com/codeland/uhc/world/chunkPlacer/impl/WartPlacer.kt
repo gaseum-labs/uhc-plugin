@@ -1,6 +1,7 @@
-package com.codeland.uhc.world.chunkPlacer
+package com.codeland.uhc.world.chunkPlacer.impl
 
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Biome
@@ -8,9 +9,9 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Ageable
 
-class WartPlacer(size: Int, uniqueSeed: Int) : ChunkPlacer(size, uniqueSeed) {
-	override fun onGenerate(chunk: Chunk) {
-		randomPosition(chunk, 0, 32, 99) { block, x, y, z ->
+class WartPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqueSeed) {
+	override fun place(chunk: Chunk) {
+		randomPosition(chunk, 32, 99) { block, x, y, z ->
 			val world = block.world
 			val under = block.getRelative(BlockFace.DOWN)
 

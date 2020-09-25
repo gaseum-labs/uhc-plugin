@@ -1,6 +1,6 @@
 package com.codeland.uhc.core
 
-import com.codeland.uhc.world.chunkPlacer.CaveMushroomPlacer
+import com.codeland.uhc.world.chunkPlacer.impl.CaveMushroomPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 
@@ -31,9 +31,4 @@ object StewFix {
 
 	val redMushroomPlacer = CaveMushroomPlacer(12, 92022, Material.RED_MUSHROOM)
 	val brownMushroomPlacer = CaveMushroomPlacer(12, 5021, Material.BROWN_MUSHROOM)
-
-	fun addCaveMushrooms(chunk: Chunk, seed: Int) {
-		redMushroomPlacer.place(chunk, seed)
-		brownMushroomPlacer.place(chunk, seed)
-	}
 }

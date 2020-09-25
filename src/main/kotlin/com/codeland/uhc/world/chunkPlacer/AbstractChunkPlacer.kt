@@ -1,21 +1,22 @@
 package com.codeland.uhc.world.chunkPlacer
 
-import com.codeland.uhc.util.Util.mod
+import com.codeland.uhc.util.Util
 import org.bukkit.Chunk
 import org.bukkit.block.Block
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.sin
 
-abstract class ChunkPlacer(val size: Int, val uniqueSeed: Int) {
+abstract class AbstractChunkPlacer(val size: Int, val uniqueSeed: Int) {
+	abstract fun place(chunk: Chunk)
 
-	abstract fun onGenerate(chunk: Chunk)
-
-	fun place(chunk: Chunk, seed: Int) {
-		if (shouldGenerate(chunk.x, chunk.z, seed, uniqueSeed, size)) onGenerate(chunk)
-	}
+	abstract fun onGenerate(chunk: Chunk, seed: Int, radius: Int)
 
 	companion object {
 		fun shouldGenerate(chunkX: Int, chunkZ: Int, seed0: Int, seed1: Int, size: Int): Boolean {
+			if (size == 1) return true
+
 			val regionSeed = hashToInt(hash4(chunkX / size, chunkZ / size, seed0, seed1))
 
 			/* which chunks in this region can generate */
@@ -31,10 +32,35 @@ abstract class ChunkPlacer(val size: Int, val uniqueSeed: Int) {
 				generates[spot] = true
 
 				/* region subchunk positions converted to 1d array index */
-				if (spot == mod(chunkX, size) * size + mod(chunkZ, size)) return true
+				if (spot == Util.mod(chunkX, size) * size + Util.mod(chunkZ, size)) return true
 			}
 
 			return false
+		}
+
+		fun randomPosition(chunk: Chunk, low: Int, high: Int, placeBlock: (block: Block, x: Int, y: Int, z: Int) -> Boolean) {
+			val height = high - low + 1
+			val width = 16
+
+			val size = width * width * height
+			val offset = (Math.random() * size).toInt()
+
+			for (i in 0 until size) {
+				val x = ((i + offset) % width)
+				val z = (((i + offset) / width) % width)
+				val y = (((i + offset) / (width * width)) % height) + low
+
+				if (placeBlock(chunk.getBlock(x, y, z), x, y, z)) return
+			}
+		}
+
+		fun chunkInRadius(chunk: Chunk, radius: Int): Boolean {
+			if (radius == -1) return true
+
+			val left = floor(-radius / 16.0).toInt()
+			val right = ceil(radius / 16.0).toInt()
+
+			return chunk.x >= left && chunk.z >= left && chunk.x <= right && chunk.z <= right
 		}
 
 		/* math helpers */
@@ -58,22 +84,6 @@ abstract class ChunkPlacer(val size: Int, val uniqueSeed: Int) {
 
 		fun hashToInt(hash: Double): Int {
 			return (hash * Integer.MAX_VALUE).toInt()
-		}
-
-		fun randomPosition(chunk: Chunk, buffer: Int, low: Int, high: Int, placeBlock: (block: Block, x: Int, y: Int, z: Int) -> Boolean) {
-			val height = high - low + 1
-			val width = 16 - buffer * 2
-
-			val size = width * width * height
-			val offset = (Math.random() * size).toInt()
-
-			for (i in 0 until size) {
-				val x = ((i + offset) % width) + buffer
-				val z = (((i + offset) / width) % width) + buffer
-				val y = (((i + offset) / (width * width)) % height) + low
-
-				if (placeBlock(chunk.getBlock(x, y, z), x, y, z)) return
-			}
 		}
 	}
 }

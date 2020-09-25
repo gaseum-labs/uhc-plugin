@@ -1,6 +1,6 @@
 package com.codeland.uhc.world;
 
-import com.codeland.uhc.world.chunkPlacer.WartPlacer
+import com.codeland.uhc.world.chunkPlacer.impl.WartPlacer
 import org.bukkit.block.Biome
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
