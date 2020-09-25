@@ -13,6 +13,7 @@ import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.phase.phases.waiting.LobbyPvp
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
@@ -52,7 +53,13 @@ class EventListener : Listener {
 				event.isCancelled = true
 			}
 		} else {
-			event.isCancelled = !GameRunner.uhc.isGameGoing() && event.entityType == EntityType.PLAYER
+			if (!GameRunner.uhc.isGameGoing() && event.entityType == EntityType.PLAYER) {
+				event.isCancelled = true
+				val player = event.entity as Player
+				if (LobbyPvp.getPvpData(player).inPvp) {
+					event.isCancelled = false
+				}
+			}
 		}
 	}
 
@@ -105,7 +112,12 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
-		if (!GameRunner.uhc.isGameGoing()) return
+		if (!GameRunner.uhc.isGameGoing()) {
+			if (LobbyPvp.getPvpData(event.entity).inPvp) {
+				LobbyPvp.disablePvp(event.entity, LobbyPvp.getPvpData(event.entity))
+			}
+			return
+		}
 
 		val player = event.entity
 
@@ -310,14 +322,24 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
+	fun onAchievement(event: PlayerAdvancementDoneEvent) {
+		if (!GameRunner.uhc.isGameGoing()) {
+			for (c in event.advancement.criteria)
+				event.player.getAdvancementProgress(event.advancement).revokeCriteria(c)
+		}
+	}
+
+	@EventHandler
 	fun onEntityDamageEvent(event: EntityDamageByEntityEvent) {
 		var attacker = event.damager
 		var defender = event.entity
 
 		if (attacker is Player && defender is Player) {
 			/* protected no pvp phases */
+			if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+				event.isCancelled = !(LobbyPvp.pvpMap[attacker]?.inPvp ?: false) || !(LobbyPvp.pvpMap[defender]?.inPvp ?: false)
+			}
 			if (
-				GameRunner.uhc.isPhase(PhaseType.WAITING) ||
 				GameRunner.uhc.isPhase(PhaseType.GRACE) ||
 				GameRunner.uhc.isPhase(PhaseType.POSTGAME)
 			) {

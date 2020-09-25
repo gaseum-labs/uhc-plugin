@@ -1,5 +1,6 @@
 package com.codeland.uhc.phase.phases.waiting
 
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.item.GuiOpener
@@ -12,12 +13,13 @@ import org.bukkit.attribute.Attribute
 import org.bukkit.block.Biome
 import org.bukkit.boss.BossBar
 import org.bukkit.entity.Player
-import org.bukkit.inventory.Recipe
-import org.bukkit.inventory.meta.KnowledgeBookMeta
+import org.bukkit.inventory.Inventory
+import org.bukkit.inventory.ItemStack
 
 class WaitingDefault : Phase() {
 	var center = 0
 	val radius = 30
+
 
 	override fun customStart() {
 		val world = Bukkit.getWorlds()[0]
@@ -73,13 +75,18 @@ class WaitingDefault : Phase() {
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true)
 			world.setGameRule(GameRule.RANDOM_TICK_SPEED, 3)
 		}
+		LobbyPvp.pvpMap.clear()
 	}
 
 	override fun onTick(currentTick: Int) {
-		if (currentTick % 3 == 0)
+		if (currentTick % 3 == 0) {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				ParkourCheckpoint.updateCheckpoint(player)
 			}
+			Bukkit.getOnlinePlayers().forEach { player ->
+				LobbyPvp.updatePvp(player)
+			}
+		}
 	}
 
 	override fun perSecond(remainingSeconds: Int) {}
