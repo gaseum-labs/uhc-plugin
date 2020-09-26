@@ -5,6 +5,7 @@ import com.codeland.uhc.world.chunkPlacer.impl.OrePlacer
 import com.codeland.uhc.world.chunkPlacer.impl.MineralPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
+import org.bukkit.block.Block
 
 object OreFix {
 	fun isOre(type: Material): Boolean {
@@ -63,23 +64,51 @@ object OreFix {
 		}
 	}
 
-	fun reduceLava(chunk: Chunk) {
-		for (x in 0..15) {
-			for (z in 0..15) {
-				for (y in 9 downTo 0) {
-					val block = chunk.getBlock(x, y, z)
-					val above = chunk.getBlock(x, y + 1, z)
+	fun layerHasEmpty(chunk: Chunk, y: Int): Boolean {
+		for (x in 0..15) for (z in 0..15) {
+			val block = chunk.getBlock(x, y, z)
 
-					if (block.type == Material.LAVA && above.type == Material.LAVA) {
-						above.setType(Material.AIR, false)
-					}
-				}
-			}
+			if (block.isPassable) return true
+		}
+
+		return false
+	}
+
+	fun removeLavaLayer(chunk: Chunk, y: Int) {
+		for (x in 0..15) for (z in 0..15) {
+			val block = chunk.getBlock(x, y, z)
+
+			if (block.type == Material.LAVA) block.setType(Material.CAVE_AIR, false)
 		}
 	}
 
+	fun edgeGuardBlock(block: Block) {
+		if (block.isPassable) block.setType(Material.STONE, false)
+	}
+
+	fun edgeGuardLavaLayer(chunk: Chunk, y: Int) {
+		for (x in 0..15) {
+			edgeGuardBlock(chunk.getBlock(x, y, 0))
+			edgeGuardBlock(chunk.getBlock(x, y, 15))
+		}
+
+		for (z in 1..14) {
+			edgeGuardBlock(chunk.getBlock(0, y, z))
+			edgeGuardBlock(chunk.getBlock(15, y, z))
+		}
+	}
+
+	fun reduceLava(chunk: Chunk) {
+		var lowestY = 9
+
+		for (y in 9 downTo 4) if (layerHasEmpty(chunk, y)) lowestY = y
+
+		for (y in lowestY + 2..10) removeLavaLayer(chunk, y)
+		for (y in lowestY..lowestY + 1) edgeGuardLavaLayer(chunk, y)
+	}
+
 	val mineralPlacer = MineralPlacer(1, 0)
-	val    goldPlacer = OrePlacer(3, 3247892, 1, 32, 5, 8, Material.GOLD_ORE)
-	val   lapisPlacer = OrePlacer(4,    9837, 1, 32, 3, 8, Material.LAPIS_ORE)
-	val diamondPlacer = OrePlacer(5,  572919, 1, 14, 3, 5, Material.DIAMOND_ORE)
+	val    goldPlacer = OrePlacer(3, 3247892, 5, 32, 5, 8, Material.GOLD_ORE)
+	val   lapisPlacer = OrePlacer(4,    9837, 5, 32, 3, 8, Material.LAPIS_ORE)
+	val diamondPlacer = OrePlacer(5,  572919, 5, 14, 3, 5, Material.DIAMOND_ORE)
 }

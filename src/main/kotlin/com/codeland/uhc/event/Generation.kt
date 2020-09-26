@@ -49,13 +49,6 @@ class Generation : Listener {
 				NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt(), -1)
 			}
 
-			if (GameRunner.mushroomWorldFix && world.environment == World.Environment.NORMAL) {
-				StewFix.removeOxeye(chunk)
-
-				StewFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
-				StewFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
-			}
-
 			if (GameRunner.oreWorldFix && world.environment == World.Environment.NORMAL) {
 				OreFix.removeMinerals(chunk)
 				OreFix.removeOres(chunk)
@@ -65,6 +58,13 @@ class Generation : Listener {
 				OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
 				OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
 				OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
+			}
+
+			if (GameRunner.mushroomWorldFix && world.environment == World.Environment.NORMAL) {
+				StewFix.removeOxeye(chunk)
+
+				StewFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
+				StewFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
 			}
 
 			if (GameRunner.melonWorldFix && world.environment == World.Environment.NORMAL) {
