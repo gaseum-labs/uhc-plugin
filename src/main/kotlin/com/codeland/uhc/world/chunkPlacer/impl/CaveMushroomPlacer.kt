@@ -7,7 +7,7 @@ import org.bukkit.block.BlockFace
 
 class CaveMushroomPlacer(size: Int, uniqueSeed: Int, val type: Material) : ImmediateChunkPlacer(size, uniqueSeed) {
 	override fun place(chunk: Chunk) {
-		randomPosition(chunk, 11, 42) { block, x, y, z ->
+		randomPosition(chunk, 6, 42) { block, x, y, z ->
 			if (canPlaceIn(block.type) && canPlaceOn(block.getRelative(BlockFace.DOWN).type) && block.lightLevel <= 12) {
 				block.setType(type, false)
 				true

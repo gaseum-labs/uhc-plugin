@@ -1,62 +1,93 @@
 package com.codeland.uhc.dropFix
 
+import com.codeland.uhc.dropFix.DropEntry.Companion.loot
+import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
+import com.codeland.uhc.dropFix.DropEntry.Companion.lootMulti
+import com.codeland.uhc.dropFix.DropEntry.Companion.onFire
+import com.codeland.uhc.dropFix.DropEntry.Companion.saddle
 import org.bukkit.Material
+import org.bukkit.Material.*
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.EntityType.*
-import org.bukkit.inventory.ItemStack
 
 enum class DropFixType(val dropFix: DropFix) {
 	BLAZE(DropFix(EntityType.BLAZE, arrayOf(
-		arrayOf(ItemStack(Material.BLAZE_ROD))
+		arrayOf(loot(BLAZE_ROD, ::lootItem))
 	), arrayOf(
-		ItemStack(Material.BLAZE_POWDER)
+		DropEntry.item(BLAZE_POWDER)
 	))),
+
 	SPIDER(DropFix(EntityType.SPIDER, arrayOf(
-		arrayOf(ItemStack(Material.STRING)),
-		arrayOf(ItemStack(Material.STRING)),
-		arrayOf(ItemStack(Material.STRING), ItemStack(Material.SPIDER_EYE))
+		arrayOf(loot(STRING, ::lootItem), loot(SPIDER_EYE, lootMulti(-1))),
+		arrayOf(loot(STRING, ::lootItem), loot(SPIDER_EYE, lootMulti( 0))),
+		arrayOf(loot(STRING, ::lootItem), loot(SPIDER_EYE, lootMulti( 1)))
 	), arrayOf(
-		ItemStack(Material.AIR)
+		DropEntry.nothing()
 	))),
+
 	SKELETON(DropFix(EntityType.SKELETON, arrayOf(
-		arrayOf(ItemStack(Material.BONE), ItemStack(Material.ARROW))
+		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem)),
+		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem)),
+		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem))
 	), arrayOf(
-		ItemStack(Material.BONE)
+		DropEntry.item(BONE)
 	))),
+
 	COW(DropFix(EntityType.COW, arrayOf(
-		arrayOf(ItemStack(Material.LEATHER), ItemStack(Material.BEEF, 1)),
-		arrayOf(ItemStack(Material.LEATHER), ItemStack(Material.BEEF, 2)),
-		arrayOf(ItemStack(Material.LEATHER), ItemStack(Material.BEEF, 3))
+		arrayOf(loot(LEATHER, ::lootItem), DropEntry.lootEntity(onFire(BEEF, COOKED_BEEF), lootMulti(1))),
+		arrayOf(loot(LEATHER, ::lootItem), DropEntry.lootEntity(onFire(BEEF, COOKED_BEEF), lootMulti(2))),
+		arrayOf(loot(LEATHER, ::lootItem), DropEntry.lootEntity(onFire(BEEF, COOKED_BEEF), lootMulti(3)))
 	), arrayOf(
-		ItemStack(Material.BEEF, 1)
+		DropEntry.item(BEEF)
 	))),
+
+	HORSE(DropFix(EntityType.HORSE, arrayOf(
+		arrayOf(DropEntry.entity(::saddle), loot(LEATHER, ::lootItem))
+	), arrayOf(
+		DropEntry.nothing()
+	))),
+
+	LLAMA(DropFix(EntityType.LLAMA, arrayOf(
+		arrayOf(loot(LEATHER, ::lootItem))
+	), arrayOf(
+		DropEntry.nothing()
+	))),
+
 	CHICKEN(DropFix(EntityType.CHICKEN, arrayOf(
-		arrayOf(ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.FEATHER, 1), ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.FEATHER, 1), ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.FEATHER, 1), ItemStack(Material.CHICKEN)),
-		arrayOf(ItemStack(Material.FEATHER, 1), ItemStack(Material.CHICKEN))
+		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, lootMulti(-2))),
+		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, lootMulti(-1))),
+		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, lootMulti( 0))),
+		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, ::lootItem)),
+		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, ::lootItem)),
+		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, ::lootItem))
 	), arrayOf(
-		ItemStack(Material.CHICKEN)
+		DropEntry.item(Material.CHICKEN)
 	))),
+
 	ENDERMAN(DropFix(EntityType.ENDERMAN, arrayOf(
-		arrayOf(ItemStack(Material.AIR)),
-		arrayOf(ItemStack(Material.AIR)),
-		arrayOf(ItemStack(Material.AIR)),
-		arrayOf(ItemStack(Material.AIR)),
-		arrayOf(ItemStack(Material.ENDER_PEARL)),
-		arrayOf(ItemStack(Material.ENDER_PEARL)),
-		arrayOf(ItemStack(Material.ENDER_PEARL)),
-		arrayOf(ItemStack(Material.ENDER_PEARL))
+		arrayOf(loot(ENDER_PEARL, lootMulti(-2))),
+		arrayOf(loot(ENDER_PEARL, lootMulti(-1))),
+		arrayOf(loot(ENDER_PEARL, lootMulti(0))),
+		arrayOf(loot(ENDER_PEARL, lootMulti(1))),
+		arrayOf(loot(ENDER_PEARL, lootMulti(1))),
+		arrayOf(loot(ENDER_PEARL, lootMulti(1)))
 	), arrayOf(
-		ItemStack(Material.AIR)
+		DropEntry.nothing()
 	))),
+
 	GHAST(DropFix(EntityType.GHAST, arrayOf(
-		arrayOf(ItemStack(Material.GUNPOWDER), ItemStack(Material.GHAST_TEAR))
+		arrayOf(loot(GUNPOWDER, ::lootItem), loot(GHAST_TEAR, ::lootItem))
 	), arrayOf(
-		ItemStack(Material.GUNPOWDER)
-	)))
+		DropEntry.item(GUNPOWDER)
+	))),
+
+	STRIDER(DropFix(EntityType.STRIDER, arrayOf(
+		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(1))),
+		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(2))),
+		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(2))),
+		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(3))),
+		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(3))),
+		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(4)))
+	), arrayOf(
+		DropEntry.item(STRING)
+	)));
 }

@@ -1,13 +1,18 @@
 package com.codeland.uhc.dropFix
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.quirk.quirks.ModifiedDrops.Companion.onDrop
+import com.codeland.uhc.util.Util
+import com.destroystokyo.paper.utils.PaperPluginLogger
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
+import java.util.logging.Level
 
-class DropFix(val entityType: EntityType, val dropCycle: Array<Array<ItemStack>>, val naturalDeath: Array<ItemStack>) {
+class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>, val naturalDeath: Array<DropEntry>) {
 	val metaIndexName = "Dfix_${entityType.name}_I"
 	val metaCycleName = "Dfix_${entityType.name}_C"
 
@@ -37,7 +42,7 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<ItemStack>>
 		return 0
 	}
 
-	fun resetDropCycle(player: Player): Array<Array<ItemStack>> {
+	fun resetDropCycle(player: Player): Array<Array<DropEntry>> {
 		val used = Array(dropCycle.size) { false }
 
 		val shuffledArray = Array(dropCycle.size) {
@@ -54,11 +59,11 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<ItemStack>>
 		return shuffledArray
 	}
 
-	fun getDrops(player: Player): Array<ItemStack> {
+	fun getDrops(player: Player): Array<DropEntry> {
 		val meta = player.getMetadata(metaCycleName)
 
 		val playerCycle = if (meta.size == 0) resetDropCycle(player)
-		else meta[0].value() as Array<Array<ItemStack>>
+		else meta[0].value() as Array<Array<DropEntry>>
 
 		val ret = playerCycle[getIndex(player)]
 		increaseIndex(player)
@@ -69,8 +74,23 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<ItemStack>>
 	fun onKillEntity(player: Player, entity: Entity, drops: MutableList<ItemStack>): Boolean {
 		if (entity.type != entityType) return false
 
+		var looting = 0
+
+		player.inventory.itemInMainHand.enchantments.any { enchantment ->
+			if (enchantment.key == Enchantment.LOOT_BONUS_MOBS) {
+				looting = enchantment.value
+				true
+			} else {
+				false
+			}
+		}
+
 		drops.clear()
-		getDrops(player).forEach { stack -> drops.add(stack.clone()) }
+
+		getDrops(player).forEach { entry ->
+			val stack = entry.onDrop(looting, entity)
+			if (stack != null && stack.amount > 0) drops.add(stack)
+		}
 
 		return true
 	}
@@ -79,7 +99,11 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<ItemStack>>
 		if (entity.type != entityType) return false
 
 		drops.clear()
-		naturalDeath.forEach { stack -> drops.add(stack.clone()) }
+
+		naturalDeath.forEach { entry ->
+			val stack = entry.onDrop(0, entity)
+			if (stack != null && stack.amount > 0) drops.add(stack)
+		}
 
 		return true
 	}
