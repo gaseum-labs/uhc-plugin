@@ -42,12 +42,11 @@ object LobbyPvp {
     }
 
     fun enablePvp(player: Player, pvpData: PvpData) {
-        GameRunner.sendGameMessage(player, "You've enabled pvp.")
+        GameRunner.sendGameMessage(player, "You enabled pvp.")
         pvpData.inPvp = true
 
         // save
         pvpData.inventoryContents = player.inventory.contents.clone()
-        println(player.inventory.contents.clone().size)
         pvpData.gameMode = player.gameMode
 
         player.gameMode = GameMode.ADVENTURE
@@ -64,7 +63,7 @@ object LobbyPvp {
     }
 
     fun disablePvp(player: Player, pvpData: PvpData) {
-        GameRunner.sendGameMessage(player, "You've disabled pvp.")
+        GameRunner.sendGameMessage(player, "You disabled pvp.")
         pvpData.inPvp = false
 
         // restore
@@ -96,7 +95,7 @@ object LobbyPvp {
             }
         }
         if (player.location.block.getRelative(0, -1, 0).type == REGEN_BLOCK && getPvpData(player).inPvp) {
-            player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 40, 0))
+            player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 40, 1))
         }
     }
 }

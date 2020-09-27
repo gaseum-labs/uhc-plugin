@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
@@ -66,6 +67,8 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
         if (phase.type == PhaseType.GRACE) {
             updateSwapVars()
             taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
+                if (!GameRunner.uhc.isGameGoing())
+                    return@scheduleSyncRepeatingTask
                 if (timeLeft() < 0) {
                     sendAll("${ChatColor.GOLD}Swapped!")
                     swap()

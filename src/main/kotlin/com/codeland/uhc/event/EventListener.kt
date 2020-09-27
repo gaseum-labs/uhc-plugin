@@ -114,7 +114,7 @@ class EventListener : Listener {
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		if (!GameRunner.uhc.isGameGoing()) {
 			if (LobbyPvp.getPvpData(event.entity).inPvp) {
-				LobbyPvp.disablePvp(event.entity, LobbyPvp.getPvpData(event.entity))
+				event.drops.clear()
 			}
 			return
 		}
@@ -180,6 +180,12 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING))
+			if (LobbyPvp.getPvpData(event.player).inPvp) {
+				LobbyPvp.disablePvp(event.player, LobbyPvp.getPvpData(event.player))
+			}
+
+
 		/* grace respawning */
 		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING) || GameRunner.uhc.isVariant(PhaseVariant.GRACE_UNFORGIVING)) {
 			spreadRespawn(event)
@@ -282,7 +288,10 @@ class EventListener : Listener {
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
 		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
-			if (!(GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.GRACE))) {
+			if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+				event.isCancelled = LobbyPvp.getPvpData(player).inPvp
+			}
+			if (!(GameRunner.uhc.isPhase(PhaseType.GRACE))) {
 				/* pests can regenerate */
 				if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
 					event.isCancelled = !Pests.isPest(player)
@@ -318,14 +327,6 @@ class EventListener : Listener {
 					drop.amount = drop.amount * 3
 				}
 			}
-		}
-	}
-
-	@EventHandler
-	fun onAchievement(event: PlayerAdvancementDoneEvent) {
-		if (!GameRunner.uhc.isGameGoing()) {
-			for (c in event.advancement.criteria)
-				event.player.getAdvancementProgress(event.advancement).revokeCriteria(c)
 		}
 	}
 

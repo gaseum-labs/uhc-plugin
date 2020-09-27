@@ -47,6 +47,14 @@ object TeamData {
 		return ColorPair(teamColors[pair.first], teamColors[pair.second])
 	}
 
+	fun colorPairPermutation(n: Int): ColorPair? {
+		if (n > teamColors.size * teamColors.size) return null
+		val first: ChatColor = teamColors[n / teamColors.size]
+		var second: ChatColor? = teamColors[n % teamColors.size]
+		if (second == first) second = null
+		return ColorPair(first, second)
+	}
+
 	fun teamExists(colorPair: ColorPair): Boolean {
 		return teams.any { team -> team.colorPair == colorPair }
 	}

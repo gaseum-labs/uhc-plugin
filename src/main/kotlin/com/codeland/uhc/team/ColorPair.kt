@@ -40,6 +40,31 @@ class ColorPair {
 		}
 	}
 
+	/**
+	 * colors a string based on this colorPair
+	 * single colored pairs will just make the string one color
+	 * double colored pairs will alternate colors for each character in the string
+	 *
+	 * @return a new string that is colored
+	 */
+	fun colorStringModified(string: String, modifier: ChatColor): String {
+		return if (color1 == null) {
+			"${color0}${modifier}$string"
+		} else {
+			val byteArray = CharArray(string.length * 5)
+
+			for (i in string.indices) {
+				byteArray[i * 5] = ChatColor.COLOR_CHAR
+				byteArray[i * 5 + 1] = if (i % 2 == 0) color0.char else color1.char
+				byteArray[i * 5 + 2] = ChatColor.COLOR_CHAR
+				byteArray[i * 5 + 3] = modifier.char
+				byteArray[i * 5 + 4] = string[i]
+			}
+
+			String(byteArray)
+		}
+	}
+
 	fun getName(): String {
 		return "${Util.colorPrettyNames[color0.ordinal]}${if (color1 == null) "" else " ${Util.colorPrettyNames[color1.ordinal]}"}"
 	}
