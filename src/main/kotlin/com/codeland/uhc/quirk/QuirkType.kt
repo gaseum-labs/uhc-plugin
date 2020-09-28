@@ -61,7 +61,7 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 		"their hotbar to store items"
   	)),
 
-	CARE_PACKAGES("Care Packages", ::CarePackages, false, Material.CHEST_MINECART, arrayOf(
+	CARE_PACKAGES("Care Packages", ::CarePackages, true, Material.CHEST_MINECART, arrayOf(
 		"Chests periodically drop containing good loot",
 		"go there and you should expect a fight"
 	)),
