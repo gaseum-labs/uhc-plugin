@@ -13,6 +13,7 @@ import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.phase.phases.waiting.LobbyPvp
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
@@ -48,8 +49,17 @@ class EventListener : Listener {
 				if (player is Player) WetSponge.addSponge(player)
 				
 			}
+			if (event.entity is Player && GameRunner.uhc.isEnabled(QuirkType.DEATHSWAP) && Deathswap.elapsed() < Deathswap.IMMUNITY) {
+				event.isCancelled = true
+			}
 		} else {
-			event.isCancelled = !GameRunner.uhc.isGameGoing() && event.entityType == EntityType.PLAYER
+			if (!GameRunner.uhc.isGameGoing() && event.entityType == EntityType.PLAYER) {
+				event.isCancelled = true
+				val player = event.entity as Player
+				if (LobbyPvp.getPvpData(player).inPvp) {
+					event.isCancelled = false
+				}
+			}
 		}
 	}
 
@@ -102,7 +112,12 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
-		if (!GameRunner.uhc.isGameGoing()) return
+		if (!GameRunner.uhc.isGameGoing()) {
+			if (LobbyPvp.getPvpData(event.entity).inPvp) {
+				event.drops.clear()
+			}
+			return
+		}
 
 		val player = event.entity
 
@@ -165,6 +180,12 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING))
+			if (LobbyPvp.getPvpData(event.player).inPvp) {
+				LobbyPvp.disablePvp(event.player, LobbyPvp.getPvpData(event.player))
+			}
+
+
 		/* grace respawning */
 		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING) || GameRunner.uhc.isVariant(PhaseVariant.GRACE_UNFORGIVING)) {
 			spreadRespawn(event)
@@ -267,7 +288,10 @@ class EventListener : Listener {
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
 		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
-			if (!(GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.GRACE))) {
+			if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+				event.isCancelled = LobbyPvp.getPvpData(player).inPvp
+			}
+			if (!(GameRunner.uhc.isPhase(PhaseType.GRACE))) {
 				/* pests can regenerate */
 				if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
 					event.isCancelled = !Pests.isPest(player)
@@ -313,8 +337,10 @@ class EventListener : Listener {
 
 		if (attacker is Player && defender is Player) {
 			/* protected no pvp phases */
+			if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+				event.isCancelled = !(LobbyPvp.pvpMap[attacker]?.inPvp ?: false) || !(LobbyPvp.pvpMap[defender]?.inPvp ?: false)
+			}
 			if (
-				GameRunner.uhc.isPhase(PhaseType.WAITING) ||
 				GameRunner.uhc.isPhase(PhaseType.GRACE) ||
 				GameRunner.uhc.isPhase(PhaseType.POSTGAME)
 			) {
@@ -322,9 +348,6 @@ class EventListener : Listener {
 				return
 			}
 
-			if (GameRunner.uhc.isEnabled(QuirkType.DEATHSWAP) && Deathswap.elapsed() < Deathswap.IMMUNITY) {
-				event.isCancelled = true
-			}
 
 			/* pests cannot attack each other */
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(attacker) && Pests.isPest(defender))

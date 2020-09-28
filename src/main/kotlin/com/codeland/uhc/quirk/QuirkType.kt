@@ -67,9 +67,8 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	)),
 
 	DEATHSWAP("Deathswap", ::Deathswap, false, Material.MAGENTA_GLAZED_TERRACOTTA, arrayOf(
-			"it's deathswap",
-			"you swap",
-			"yeah"
+			"Players switch places with each other",
+			"at randomly chosen intervals"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()

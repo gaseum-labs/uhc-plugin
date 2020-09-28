@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
@@ -24,14 +25,16 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
         var swapTime = 0L
         val random = Random()
         // average # of seconds between swaps
-        val average = 20
-        var lastAnnounced = WARNING / 1000L
+        val average = 60
+        var lastAnnounced = WARNING / 1000L - 1
 
         var immunityEndAnnouncement = true
+        var hasSwappedOnce = false
 
 
         fun swap() {
             val playerList = Bukkit.getOnlinePlayers()
+            if (playerList.isEmpty()) return
             val newList = playerList.toList().shuffled()
             val tempLocation = newList[0].location
 
@@ -41,11 +44,12 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
             newList.last().teleport(tempLocation)
             updateSwapVars()
             immunityEndAnnouncement = false
+            hasSwappedOnce = true
         }
 
         fun updateSwapVars() {
             lastSwap = System.currentTimeMillis()
-            swapTime = ThreadLocalRandom.current().nextLong(average * 1000L * 2 + 5000L)
+            swapTime = ThreadLocalRandom.current().nextLong(average * 1000L * 2 + WARNING + 1000)
         }
 
         fun timeLeft() = swapTime - (System.currentTimeMillis() - lastSwap)
@@ -63,21 +67,23 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
         if (phase.type == PhaseType.GRACE) {
             updateSwapVars()
             taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
+                if (!GameRunner.uhc.isGameGoing())
+                    return@scheduleSyncRepeatingTask
                 if (timeLeft() < 0) {
                     sendAll("${ChatColor.GOLD}Swapped!")
                     swap()
-                    lastAnnounced = WARNING / 1000L
-                } else if (timeLeft() <= WARNING && timeLeft()/1000 < lastAnnounced) {
+                    lastAnnounced = WARNING / 1000L - 1
+                } else if (timeLeft() / 1000L == lastAnnounced) {
                     sendAll("${ChatColor.GOLD}Swapping in ${ChatColor.BLUE}${timeLeft()/1000 + 1}${ChatColor.GOLD}...")
-                    lastAnnounced = timeLeft()/1000 + 1
+                    lastAnnounced--
                 }
-                if (elapsed() < IMMUNITY) {
+                if (elapsed() < IMMUNITY && hasSwappedOnce) {
                     val bars = StringBuilder()
-                    val immunityLeft = (IMMUNITY - elapsed()) / 1000 + 1
-                    println(immunityLeft)
-                    for (i in 0 until immunityLeft)
+                    val immunityLeft = (IMMUNITY - elapsed())
+                    val percent = (immunityLeft/IMMUNITY.toDouble())
+                    for (i in 0 until (10 * percent).toInt())
                         bars.append(ChatColor.GOLD.toString() + "▮")
-                    for (i in 0 until (IMMUNITY - immunityLeft))
+                    for (i in 0 until 10 - (10 * percent).toInt())
                         bars.append(ChatColor.GRAY.toString() + "▮")
                     for (player in Bukkit.getOnlinePlayers().filter {it.gameMode == GameMode.SURVIVAL}) {
                         player.sendActionBar("${ChatColor.GOLD}Immune ${ChatColor.GRAY}- $bars")
