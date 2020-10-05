@@ -16,7 +16,6 @@ import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamListener
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
-import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
 
 class UHCPlugin : JavaPlugin() {

@@ -1,5 +1,9 @@
 package com.codeland.uhc.discord
 
+import com.codeland.uhc.discord.command.GeneralCommand
+import com.codeland.uhc.discord.command.LinkCommand
+import com.codeland.uhc.discord.command.MixerCommand
+import com.codeland.uhc.discord.command.SummaryCommand
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
@@ -30,12 +34,18 @@ class MixerBot(
 ) : ListenerAdapter() {
 	private val bot: JDA = JDABuilder.createDefault(token).build()
 
-	private val minecraftIDs: ArrayList<String> = ArrayList()
-	private val discordIDs: ArrayList<Long> = ArrayList()
+	val discordIDs: ArrayList<String> = ArrayList()
+	val minecraftIDs: ArrayList<String> = ArrayList()
 
 	var guild: Guild? = null
 	var voiceCategory: Category? = null
 	var voiceChannel: VoiceChannel? = null
+
+	val commands = arrayOf(
+		GeneralCommand(),
+		LinkCommand(),
+		SummaryCommand()
+	)
 
 	init {
 		bot.presence.activity = Activity.playing("UHC at $ip")
@@ -94,7 +104,7 @@ class MixerBot(
 
 	/* disk data reading writing */
 
-	private fun saveDiscordData() {
+	fun saveDiscordData() {
 		val writer = FileWriter(File(discordDataPath), false)
 
 		writer.write("${token}\n$guildID\n$voiceCategoryID\n$voiceChannelID")
@@ -103,7 +113,7 @@ class MixerBot(
 	}
 
 	fun saveLinkData() {
-		val writer = FileWriter(File(linkDataPath), true)
+		val writer = FileWriter(File(linkDataPath), false)
 
 		for (i in discordIDs.indices) {
 			writer.write("${discordIDs[i]} ${minecraftIDs[i]}${if (i == discordIDs.lastIndex) "" else "\n"}")
@@ -113,8 +123,8 @@ class MixerBot(
 	}
 
 	fun readLinkData(linkDataPath: String) {
-		minecraftIDs.clear()
 		discordIDs.clear()
+		minecraftIDs.clear()
 
 		val file = File(linkDataPath)
 
@@ -125,8 +135,8 @@ class MixerBot(
 				val line = reader.readLine()
 
 				if (line.contains(" ")) {
-					minecraftIDs.add(line.substring(0, line.indexOf(" ")))
-					discordIDs.add(line.substring(line.lastIndexOf(" ") + 1).toLong())
+					discordIDs.add(line.substring(0, line.indexOf(" ")))
+					minecraftIDs.add(line.substring(line.lastIndexOf(" ") + 1))
 				}
 			}
 		} else {
@@ -175,25 +185,22 @@ class MixerBot(
 
 	fun addPlayerToTeam(team: Team, uniqueID: UUID, accept: (Boolean) -> Unit) {
 		val guild = guild ?: return accept(false)
-		val idString = uniqueID.toString()
 
-		for (i in minecraftIDs.indices) {
-			if (minecraftIDs[i] == idString) {
-				val member = guild.getMemberById(discordIDs[i])
+		val userIndex = getMinecraftUserIndex(uniqueID)
+		if (userIndex == -1) return accept(false)
 
-				if (member?.voiceState?.inVoiceChannel() == true) {
-					getTeamChannel(team) { teamChannel ->
-						teamChannel ?: return@getTeamChannel
+		val member = guild.getMemberById(discordIDs[userIndex])
 
-						guild.moveVoiceMember(member, teamChannel).queue { accept(true) }
-					}
-				}
+		if (member?.voiceState?.inVoiceChannel() == true) {
+			getTeamChannel(team) { teamChannel ->
+				teamChannel ?: return@getTeamChannel
 
-				return
+				guild.moveVoiceMember(member, teamChannel).queue { accept(true) }
 			}
-		}
 
-		accept(false)
+		} else {
+			accept(false)
+		}
 	}
 
 	fun renameTeam(team: Team, newName: String, accept: (Boolean) -> Unit) {
@@ -207,24 +214,20 @@ class MixerBot(
 	fun moveToGeneral(uniqueID: UUID, accept: (Boolean) -> Unit) {
 		val general = voiceChannel ?: return accept(false)
 		val guild = guild ?: return accept(false)
-		val idString = uniqueID.toString()
 
-		for (i in minecraftIDs.indices) {
-			if (minecraftIDs[i] == idString) {
-				val member = guild.getMemberById(discordIDs[i]) ?: break
+		val userIndex = getMinecraftUserIndex(uniqueID)
+		if (userIndex == -1) return accept(false)
 
-				if (member.voiceState?.inVoiceChannel() == true)
-					return guild.moveVoiceMember(member, general).queue { accept(true) }
-				else
-					break
-			}
-		}
+		val member = guild.getMemberById(discordIDs[userIndex])
 
-		accept(false)
+		if (member?.voiceState?.inVoiceChannel() == true)
+			guild.moveVoiceMember(member, general).queue { accept(true) }
+		else
+			accept(false)
 	}
 
 	fun isLinked(uuid: UUID): Boolean {
-		val idString = uuid.toString()
+		val idString = uuidString(uuid)
 
 		return minecraftIDs.any { id ->
 			id == idString
@@ -293,131 +296,18 @@ class MixerBot(
 	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
 		val message = event.message
 		val content = message.contentRaw
-
 		val member = event.member ?: return
-		if (!content.startsWith("%")) return
 
-		/* safely exit and return expressions */
-		fun Any?.unit() = Unit
-		fun Any?.void() = null
+		commands.any { command ->
+			if (command.isCommand(content)) {
+				if (!member.permissions.contains(Permission.ADMINISTRATOR))
+					MixerCommand.errorMessage(event, "You must be an administrator to use this command!")
+				else
+					command.onCommand(content, event, this)
 
-		if (content.startsWith("%link ")) {
-			val userID = event.author.idLong
-
-			val username = content.substring(1 + content.lastIndexOf(' '))
-
-			val player = Bukkit.getOnlinePlayers().find { player ->
-				player.name == username
-			}
-
-			if (player == null) {
-				event.channel.sendMessage("You must be in the server to link").queue()
+				true
 			} else {
-				val minecraftID = player.uniqueId.toString()
-
-				var playerIndex = -1
-				for (i in discordIDs.indices) {
-					if (discordIDs[i] == userID) {
-						playerIndex = i
-						break
-					}
-				}
-
-				if (playerIndex == -1) {
-					discordIDs.add(userID)
-					minecraftIDs.add(minecraftID)
-				} else {
-					minecraftIDs[playerIndex] = minecraftID
-				}
-
-				saveLinkData()
-			}
-
-		} else if (content.startsWith("%general")) {
-			if (!member.permissions.contains(Permission.ADMINISTRATOR))
-				return event.channel.sendMessage("You must be in an admin to use this command!").queue().unit()
-
-			val channel = member.voiceState?.channel
-				?: return event.channel.sendMessage("You must be in a vc to use this command!").queue().unit()
-
-			val category = channel.parent
-				?: return event.channel.sendMessage("Voice channel ${channel.name} must be in a category!").queue().unit()
-
-			guildID = message.guild.id
-			voiceCategoryID = category.id
-			voiceChannelID = channel.id
-
-			guild = message.guild
-			voiceCategory = category
-			voiceChannel = channel
-
-			saveDiscordData()
-
-			event.channel.sendMessage("${channel.name} successfully set as general channel!").queue().void()
-		} else if (content.startsWith("%summary")) {
-			val errResolve = { finalText: String ->
-				event.channel.sendMessage(finalText).queue { sent -> sent.delete().queueAfter(5, TimeUnit.SECONDS) }.void()
-				message.delete().queueAfter(5, TimeUnit.SECONDS).void()
-			}
-
-			if (!member.permissions.contains(Permission.ADMINISTRATOR))
-				return errResolve("You must be in an admin to use this command!").unit()
-
-			val attachments = message.attachments
-
-			if (attachments.size != 1 || attachments[0].isImage || attachments[0].fileExtension != "txt")
-				return errResolve("Please attach a summary .txt file").unit()
-
-			val filenameParts = attachments[0].fileName.split('_')
-			if (filenameParts.size != 4)
-				return errResolve("Summary filename incorrectly formatted\nShould be NUM_DAY_MONTH_YEAR.txt").unit()
-
-			val filenameNumberErrString = "Filename encountered an incorrectly formatted number"
-
-			val gameNumber = filenameParts[0].toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
-			val day = filenameParts[1].toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
-			val month = filenameParts[2].toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
-			val year = filenameParts[3].substring(0, filenameParts[3].indexOf('.')).toIntOrNull() ?: return errResolve(filenameNumberErrString).unit()
-
-			attachments[0].retrieveInputStream().thenAccept{ stream ->
-				val winningPlayers = ArrayList<SummaryEntry>()
-				val losingPlayers = ArrayList<SummaryEntry>()
-				var matchTime = 0
-
-				val reader = BufferedReader(InputStreamReader(stream))
-
-				val lines = reader.lineSequence()
-				val readerErr = lines.any { line ->
-					val parts = line.split(' ')
-
-					if (parts.size != 4)
-						true
-					else {
-						if (parts[0] == "1") {
-							matchTime = parts[2].toIntOrNull() ?: return@any true
-							winningPlayers
-						} else {
-							losingPlayers
-						}.add(SummaryEntry(parts[0], parts[1], parts[3]))
-
-						false
-					}
-				}
-
-				reader.close()
-
-				if (readerErr) {
-					errResolve("Error reading summary file")
-				} else {
-					message.delete().submit().thenAccept {
-						sendGameSummary(message.channel, gameNumber, day, month, year, matchTime, winningPlayers, losingPlayers)
-					}.exceptionally { err ->
-						errResolve(err.message ?: "Unknown error")
-					}
-				}
-
-			}.exceptionally {
-				errResolve("Something went wrong with the connection")
+				false
 			}
 		}
 	}
@@ -452,22 +342,23 @@ class MixerBot(
 		bot.shutdownNow()
 	}
 
-	/* unused */
+	fun getDiscordUserIndex(discordID: String): Int {
+		for (i in discordIDs.indices)
+			if (discordID == discordIDs[i]) return i
 
-	private fun stripTeams(m: Member) {
-		for (r in m.roles) {
-			if (r.name.startsWith("Team ")) {
-				m.guild.removeRoleFromMember(m, r).complete()
-			}
-		}
+		return -1
 	}
 
-	private fun getDiscordID(username: String): Long {
-		for (i in minecraftIDs.indices) {
-			if (username == minecraftIDs[i]) {
-				return discordIDs[i]
-			}
-		}
+	fun uuidString(uuid: UUID): String {
+		return "${String.format("%016x", uuid.mostSignificantBits)}${String.format("%016x", uuid.leastSignificantBits)}"
+	}
+
+	fun getMinecraftUserIndex(uuid: UUID): Int {
+		val uuidString = uuidString(uuid)
+
+		for (i in discordIDs.indices)
+			if (uuidString == minecraftIDs[i]) return i
+
 		return -1
 	}
 }
