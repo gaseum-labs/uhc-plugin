@@ -37,20 +37,28 @@ class EndgameClearBlocks : Phase() {
 
 	override fun perSecond(remainingSeconds: Int) {
 		val world = Bukkit.getWorlds()[0]
+		val extrema = ceil(uhc.endRadius).toInt()
 
 		if (!finished) {
 			--topBoundary
 			++botBoundary
 
-			if (botBoundary > center || topBoundary < center) {
+			if (topBoundary - botBoundary == 4) {
+				/* fill in stone layer so no cave fall throughs */
+				for (x in -extrema..extrema)
+					for (z in -extrema..extrema) {
+						val block = world.getBlockAt(x, center, z)
+						if (block.isPassable) block.setType(Material.STONE, false)
+					}
+			}
+
+			if (topBoundary < center) {
 				finished = true
 
 				topBoundary = center + allowedHeight
 				botBoundary = center
 			}
 		}
-
-		val extrema = ceil(uhc.endRadius).toInt()
 
 		for (y in 0..255)
 			if (y < botBoundary || y > topBoundary)

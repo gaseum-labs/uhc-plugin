@@ -8,6 +8,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.World
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.world.ChunkPopulateEvent
@@ -27,7 +28,7 @@ class Generation : Listener {
 			/* prevent animal spawns in the waiting area */
 			if (GameRunner.uhc.isPhase(PhaseType.WAITING) && world.environment == World.Environment.NORMAL && (abs(chunk.x) > 10 || abs(chunk.z) > 10)) {
 				chunk.entities.forEach { entity ->
-					entity.remove()
+					if (entity !is Player) entity.remove()
 				}
 			}
 

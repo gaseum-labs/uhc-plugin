@@ -65,22 +65,6 @@ class AdminCommands : BaseCommand() {
 	@CommandAlias("team random")
 	@Description("create random teams")
 	fun randomTeams(sender : CommandSender, teamSize : Int) {
-		doRandomTeams(sender, teamSize)
-	}
-
-	@CommandAlias("team swap")
-	@Description("swap the teams of two players")
-	fun swapTemas(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
-		val team1 = TeamData.playersTeam(player1) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
-		val team2 = TeamData.playersTeam(player2) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
-
-		TeamData.addToTeam(team2, player1)
-		TeamData.addToTeam(team1, player2)
-
-		GameRunner.sendGameMessage(sender, "${team2.colorPair.colorString(player1.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}and ${team1.colorPair.colorString(player2.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
-	}
-
-	private fun doRandomTeams(sender: CommandSender, teamSize: Int) {
 		if (Commands.opGuard(sender)) return
 
 		val onlinePlayers = sender.server.onlinePlayers
@@ -104,6 +88,18 @@ class AdminCommands : BaseCommand() {
 		}
 
 		GameRunner.sendGameMessage(sender, "Created ${teams.size} teams with a team size of ${teamSize}!")
+	}
+
+	@CommandAlias("team swap")
+	@Description("swap the teams of two players")
+	fun swapTemas(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
+		val team1 = TeamData.playersTeam(player1) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
+		val team2 = TeamData.playersTeam(player2) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
+
+		TeamData.addToTeam(team2, player1)
+		TeamData.addToTeam(team1, player2)
+
+		GameRunner.sendGameMessage(sender, "${team2.colorPair.colorString(player1.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}and ${team1.colorPair.colorString(player2.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
 	}
 
 	@CommandAlias("modify mobCoefficient")

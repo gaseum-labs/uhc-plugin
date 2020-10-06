@@ -84,6 +84,7 @@ object LobbyPvp {
 
     fun updatePvp(player: Player) {
         val pvpData = getPvpData(player)
+
         if (player.location.block.getRelative(0, -1, 0).type == PVP_BLOCK) {
             if (!pvpData.onPvpBlock) {
                 pvpData.onPvpBlock = true
@@ -94,8 +95,13 @@ object LobbyPvp {
                 pvpData.onPvpBlock = false
             }
         }
-        if (player.location.block.getRelative(0, -1, 0).type == REGEN_BLOCK && getPvpData(player).inPvp) {
-            player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 40, 1))
+
+        if (
+            player.location.block.getRelative(0, -1, 0).type == REGEN_BLOCK &&
+            getPvpData(player).inPvp &&
+            !player.hasPotionEffect(PotionEffectType.REGENERATION)
+        ) {
+            player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 40, 2))
         }
     }
 }

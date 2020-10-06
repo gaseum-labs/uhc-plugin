@@ -14,6 +14,7 @@ object TeamMaker {
 		val used = Array(players.size) { false }
 
 		val numTeams = ceil(players.size / teamSize.toDouble()).toInt()
+
 		return Array(numTeams) {
 			Array(teamSize) {
 				var index = (Math.random() * players.size).toInt()
@@ -23,6 +24,7 @@ object TeamMaker {
 					index = (index + 1) % players.size
 					if (index == startIndex) return@Array null
 				}
+				used[index] = true
 
 				players[index]
 			}

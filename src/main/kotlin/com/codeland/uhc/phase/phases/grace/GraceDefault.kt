@@ -10,9 +10,6 @@ import org.bukkit.boss.BossBar
 import kotlin.math.*
 
 open class GraceDefault : Phase() {
-	/* set to true after async teleport completes */
-	var ready = false
-
 	/* to be injected on phase creation */
 	lateinit var teleportLocations: ArrayList<Location>
 
@@ -38,6 +35,7 @@ open class GraceDefault : Phase() {
 			player.foodLevel = 20
 			player.saturation = 5f
 			player.exhaustion = 0f
+			player.fireTicks = 0
 			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
 
 			/* remove all advancements */
@@ -61,25 +59,9 @@ open class GraceDefault : Phase() {
 		world.worldBorder.size = uhc.startRadius * 2 + 1
 
 		val teams = TeamData.teams
-
-		var totalTeleports = 0
 		teams.forEachIndexed { i, team ->
 			team.members.forEach { member ->
-				if (member.player != null) ++totalTeleports
-			}
-		}
-
-		var numTeleports = 0
-		teams.forEachIndexed { i, team ->
-			team.members.forEach { member ->
-				val player = member.player
-
-				player?.teleportAsync(teleportLocations[i])?.thenAccept {
-					player.fallDistance = 0f
-					if (++numTeleports == totalTeleports) {
-						ready = true
-					}
-				}
+				member.player?.teleport(teleportLocations[i])
 			}
 		}
 

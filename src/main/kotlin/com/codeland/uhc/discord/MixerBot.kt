@@ -300,7 +300,7 @@ class MixerBot(
 
 		commands.any { command ->
 			if (command.isCommand(content)) {
-				if (!member.permissions.contains(Permission.ADMINISTRATOR))
+				if (command.requiresAdmin && !member.permissions.contains(Permission.ADMINISTRATOR))
 					MixerCommand.errorMessage(event, "You must be an administrator to use this command!")
 				else
 					command.onCommand(content, event, this)

@@ -163,10 +163,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	}
 
 	fun isGameGoing(): Boolean {
-		return if (currentPhase?.phaseType == PhaseType.GRACE)
-			(currentPhase as GraceDefault).ready
-		else
-			currentPhase?.phaseType?.gameGoing ?: false
+		return currentPhase?.phaseType?.gameGoing ?: false
 	}
 
 	/* game flow modifiers */

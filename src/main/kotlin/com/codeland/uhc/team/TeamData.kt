@@ -12,6 +12,9 @@ import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import org.bukkit.metadata.FixedMetadataValue
+import java.util.*
+import javax.naming.Name
+import kotlin.collections.ArrayList
 
 object TeamData {
 	val teamColors = arrayOf(
@@ -85,8 +88,9 @@ object TeamData {
 
 		newTeam.members.add(player)
 
-		val packet = TeamListener.lastPacket
-		if (packet != null) ProtocolLibrary.getProtocolManager().broadcastServerPacket(packet)
+		val onlinePlayer = player.player
+		if (onlinePlayer != null)
+			NameManager.updateName(onlinePlayer)
 
 		return newTeam
 	}
@@ -118,13 +122,16 @@ object TeamData {
 			teams.removeIf { team -> team === oldTeam }
 		}
 
+		val onlinePlayer = player.player
+		if (onlinePlayer != null)
+			NameManager.updateName(onlinePlayer)
+
 		return true
 	}
 
 	fun removeAllTeams() {
-		teams.removeIf { team ->
-			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(team) {}
-			true
+		while (teams.isNotEmpty()) {
+			removeFromTeam(teams[0], teams[0].members[0])
 		}
 	}
 }

@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
@@ -83,9 +84,11 @@ class Chat : Listener {
 		}
 
 		event.isCancelled = true
+
 		for (p in Bukkit.getOnlinePlayers()) {
 			var message = event.message
 			var mentioned = false
+
 			for (player in Bukkit.getOnlinePlayers()) {
 				val mention = "@" + player.name
 				val mentions = findAll(message, mention)
@@ -100,6 +103,7 @@ class Chat : Listener {
 					message = colorAll(message, c, mention)
 				}
 			}
+
 			for (special in specialMentions) {
 				val mention = "@" + special.name
 				val mentions = findAll(message, mention)
@@ -113,6 +117,7 @@ class Chat : Listener {
 					message = colorAll(message, c, mention)
 				}
 			}
+
 			if (mentioned) p.playSound(p.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 5f, 5f)
 			p.sendMessage(formatted(event.player, message))
 		}
@@ -121,7 +126,7 @@ class Chat : Listener {
 	@EventHandler
 	fun onMessage(event: AsyncPlayerChatEvent) {
 		/* only modify chat when game is running */
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME)) {
+		if (!GameRunner.uhc.isGameGoing()) {
 			addMentions(event)
 			return
 		}
@@ -130,12 +135,16 @@ class Chat : Listener {
 		val team = TeamData.playersTeam(event.player) ?: return
 
 		fun firstIsMention(message: String): Boolean {
-			for (player in Bukkit.getOnlinePlayers()) {
-				if (message.length >= player.name.length + 1 && message.substring(0, player.name.length + 1) == "@" + player.name) return true
+			if (message.startsWith("@")) {
+				for (player in Bukkit.getOnlinePlayers()) {
+					if (message.length >= player.name.length + 1 && message.substring(1, player.name.length + 2) == player.name) return true
+				}
+
+				for (special in specialMentions) {
+					if (message.length >= special.name.length + 1 && message.substring(1, special.name.length + 2) == special.name) return true
+				}
 			}
-			for (special in specialMentions) {
-				if (message.length >= special.name.length + 1 && message.substring(0, special.name.length + 1) == "@" + special.name) return true
-			}
+
 			return false
 		}
 
@@ -150,12 +159,21 @@ class Chat : Listener {
 			addMentions(event)
 
 		} else {
+			Util.log("${event.player.name} sent a message for team ${team.colorPair.getName()} || ${event.message}")
+
 			event.isCancelled = true
 
 			val component = "${team.colorPair.color0}<${event.player.displayName}> ${org.bukkit.ChatColor.RESET}${event.message}"
 
 			team.members.forEach { member ->
-				member.player?.sendMessage(component)
+				val onlinePlayer = member.player
+
+				if (onlinePlayer == null) {
+					Util.log("NULL")
+				} else {
+					Util.log("player")
+					member.player?.sendMessage(component)
+				}
 			}
 		}
 	}

@@ -61,14 +61,14 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 		"their hotbar to store items"
   	)),
 
-	CARE_PACKAGES("Care Packages", ::CarePackages, true, Material.CHEST_MINECART, arrayOf(
+	CARE_PACKAGES("Care Packages", ::CarePackages, false, Material.CHEST_MINECART, arrayOf(
 		"Chests periodically drop containing good loot",
 		"go there and you should expect a fight"
 	)),
 
 	DEATHSWAP("Deathswap", ::Deathswap, false, Material.MAGENTA_GLAZED_TERRACOTTA, arrayOf(
-			"Players switch places with each other",
-			"at randomly chosen intervals"
+		"Players switch places with each other",
+		"at randomly chosen intervals"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
@@ -95,7 +95,7 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
     companion object {
         init {
             CREATIVE.setIncompatible(UNSHELTERED)
-			SHARED_INVENTORY.setIncompatible(HOTBAR) // could this be compatible?
+			//SHARED_INVENTORY.setIncompatible(HOTBAR) // could this be compatible?
 		}
     }
 

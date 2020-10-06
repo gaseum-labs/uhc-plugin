@@ -17,10 +17,12 @@ import com.codeland.uhc.phase.phases.waiting.LobbyPvp
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
+import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.world.NetherFix
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
+import org.bukkit.entity.Arrow
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -65,6 +67,8 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerJoin(event: PlayerJoinEvent) {
+		NameManager.updateName(event.player)
+
 		Phase.dimensionOne(event.player)
 
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
@@ -335,11 +339,20 @@ class EventListener : Listener {
 		var attacker = event.damager
 		var defender = event.entity
 
-		if (attacker is Player && defender is Player) {
+		if (attacker is Arrow && defender is Player) {
+			if (
+				GameRunner.uhc.isPhase(PhaseType.GRACE) &&
+				attacker.shooter is Player
+			) {
+				event.isCancelled = true
+			}
+
+		} else if (attacker is Player && defender is Player) {
 			/* protected no pvp phases */
 			if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 				event.isCancelled = !(LobbyPvp.pvpMap[attacker]?.inPvp ?: false) || !(LobbyPvp.pvpMap[defender]?.inPvp ?: false)
 			}
+
 			if (
 				GameRunner.uhc.isPhase(PhaseType.GRACE) ||
 				GameRunner.uhc.isPhase(PhaseType.POSTGAME)
@@ -417,12 +430,17 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
+		val world = event.block.world
+
 		if (!GameRunner.uhc.appleFix)
 			return
 
 		/* drop apple for the nearest player */
 		Bukkit.getOnlinePlayers().any { player ->
-			if (player.location.distance(event.block.location.toCenterLocation()) < 16) {
+			if (
+				world == player.world &&
+				player.location.distance(event.block.location.toCenterLocation()) < 16
+			) {
 				BlockFixType.LEAVES_FIX.blockFix.onBreakBlock(event.block.type, player) { drop ->
 					player.world.dropItem(event.block.location.toCenterLocation(), drop)
 				}
