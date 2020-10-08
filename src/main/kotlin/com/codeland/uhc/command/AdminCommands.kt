@@ -4,6 +4,8 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.blockfix.BlockFixType
+import com.codeland.uhc.command.ubt.PartialUBT
+import com.codeland.uhc.command.ubt.UBT
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.core.KillReward
@@ -13,7 +15,9 @@ import com.codeland.uhc.quirk.quirks.LowGravity
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.team.TeamMaker
+import com.codeland.uhc.util.Util
 import org.bukkit.*
+import org.bukkit.block.data.BlockData
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
@@ -311,5 +315,86 @@ class AdminCommands : BaseCommand() {
 				GameRunner.sendGameMessage(sender, team.colorPair.colorString(member.name ?: "unknown"))
 			}
 		}
+	}
+
+	@CommandAlias("gbs")
+	fun gbs(sender: CommandSender, location: Location) {
+		val originalString = location.world.getBlockAt(location).blockData.getAsString(true)
+
+		val string = UBT.NBTStringToString(originalString.substring(originalString.indexOf('[')))
+		Util.log(string)
+
+		val nbtString = UBT.stringToNBTString(string)
+		Util.log(nbtString)
+	}
+
+	@CommandAlias("sbs")
+	fun sbs(sender: CommandSender, location: Location, blockData: String) {
+		location.world.getBlockAt(location).setBlockData(Bukkit.createBlockData(blockData), false)
+	}
+
+	@CommandAlias("ubt corner0")
+	fun ubtCorner0(sender: CommandSender, x: Int, y: Int, z: Int) {
+		val partialUBT = PartialUBT.getPlayersPartialUBT(sender as Player)
+		partialUBT.setCorner0(x, y, z)
+	}
+
+	@CommandAlias("ubt corner1")
+	fun ubtCorner1(sender: CommandSender, x: Int, y: Int, z: Int) {
+		val partialUBT = PartialUBT.getPlayersPartialUBT(sender as Player)
+		partialUBT.setCorner1(x, y, z)
+	}
+
+	@CommandAlias("ubt save")
+	fun ubtCorner(sender: CommandSender) {
+		sender as Player
+		val world = sender.world
+
+		val partialUBT = PartialUBT.getPlayersPartialUBT(sender)
+
+		var headerStr = "${partialUBT.width()};${partialUBT.height()};${partialUBT.depth()};"
+		var dataStr = ""
+
+		val blockMap = HashMap<String, Short>()
+		var numBlocks = 0
+
+		for (x in partialUBT.corner0X..partialUBT.corner1X) {
+			for (y in partialUBT.corner0Y..partialUBT.corner1Y) {
+				for (z in partialUBT.corner0Z..partialUBT.corner1Z) {
+					val block = world.getBlockAt(x, y, z)
+
+					val materialName = block.type.key.key
+					var id = blockMap.get(materialName)
+
+					if (id == null) {
+						id = numBlocks.toShort()
+						blockMap.set(materialName, id)
+						++numBlocks
+					}
+
+					var blockString = block.blockData.asString.substringAfter(':')
+					val bracketIndex = blockString.indexOf('[')
+
+					blockString = if (bracketIndex == -1) {
+						id.toString()
+					} else {
+						id.toString() + blockString.substring(bracketIndex)
+					}
+
+					dataStr += "$blockString;"
+				}
+			}
+		}
+
+		headerStr += "$numBlocks;"
+
+		val numberIter = blockMap.values.iterator()
+		val materialIter = blockMap.keys.iterator()
+
+		for (i in 0 until numBlocks) {
+			headerStr += "${numberIter.next()}-${materialIter.next()};"
+		}
+
+		Util.log(headerStr + dataStr)
 	}
 }

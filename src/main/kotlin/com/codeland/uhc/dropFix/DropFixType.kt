@@ -89,5 +89,11 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(4)))
 	), arrayOf(
 		DropEntry.item(STRING)
+	))),
+
+	CREEPER(DropFix(EntityType.CREEPER, arrayOf(
+		arrayOf(loot(GUNPOWDER, ::lootItem))
+	), arrayOf(
+		DropEntry.item(GUNPOWDER)
 	)));
 }
