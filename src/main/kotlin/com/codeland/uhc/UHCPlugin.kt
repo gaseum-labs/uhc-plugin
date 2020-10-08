@@ -2,6 +2,7 @@ package com.codeland.uhc
 
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.AdminCommands
+import com.codeland.uhc.command.NicknameCommand
 import com.codeland.uhc.command.ParticipantCommands
 import com.codeland.uhc.command.ShareCoordsCommand
 import com.codeland.uhc.team.TeamMaker
@@ -34,6 +35,9 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(AdminCommands())
 		commandManager.registerCommand(ParticipantCommands())
 		commandManager.registerCommand(ShareCoordsCommand())
+
+		commandManager.registerCommand(NicknameCommand())
+		Chat.loadFile()
 
 		/* register all events */
 		server.pluginManager.registerEvents(Chat(), this)
@@ -75,5 +79,6 @@ class UHCPlugin : JavaPlugin() {
 
 	override fun onDisable() {
 		commandManager.unregisterCommands()
+		Chat.saveFile()
 	}
 }

@@ -2,6 +2,8 @@ package com.codeland.uhc.team
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.event.Chat
+import com.codeland.uhc.event.Coloring
 import com.codeland.uhc.util.Util
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
@@ -65,6 +67,11 @@ object TeamData {
 				if (member.uniqueId == player.uniqueId) return team
 
 		return null
+	}
+
+	fun playersColor(player: OfflinePlayer): Coloring {
+		val team = playersTeam(player) ?: return Chat.solid(BLUE)
+		return team.colorPair::colorString
 	}
 
 	fun addToTeam(colorPair: ColorPair, player: OfflinePlayer): Team {
