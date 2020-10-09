@@ -12,35 +12,108 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.AsyncPlayerChatEvent
-import java.lang.StringBuilder
+import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
+import java.util.*
 
 typealias Coloring = (String) -> String
 
 class Chat : Listener {
 
 	companion object {
+
 		fun solid(chatColor: ChatColor): Coloring {
-			return { chatColor.toString() + it }
+			// don't ask
+			return { chatColor.toString() + it.replace("@", "@$chatColor") }
+		}
+
+		fun loadFile() {
+			val file = File("./nicknames.txt")
+			if (!file.exists()) {
+				return
+			}
+			FileReader(file).use { reader ->
+				val list = reader.readLines().map { it.split(",")}
+				list.forEach { l ->
+					nickMap[UUID.fromString(l.first())] = MutableList(l.size - 1) {l.takeLast(l.size - 1)[it]}
+				}
+			}
+		}
+
+		fun saveFile() {
+			val file = File("./nicknames.txt")
+			file.writeText("")
+			FileWriter(file).use { writer ->
+				nickMap.entries.forEach { e ->
+					writer.append(e.key.toString() + "," + e.value.joinToString(separator = ",") + "\n")
+				}
+			}
+		}
+
+		fun underline(string: String): String {
+			var newString = string
+			newString = ChatColor.UNDERLINE.toString() + newString
+			var index = newString.indexOf(ChatColor.COLOR_CHAR)
+			while (index != -1) {
+				newString = newString.substring(0, index + 2) + ChatColor.UNDERLINE + newString.substring(index + 2, newString.length)
+				index = newString.indexOf(ChatColor.COLOR_CHAR, index + 3)
+			}
+			return newString
+		}
+
+		val nickMap = mutableMapOf<UUID, MutableList<String>>()
+
+		fun addNick(player: Player, nickname: String) {
+			getNicks(player).add(nickname)
+		}
+
+		fun removeNick(player: Player, nickname: String) {
+			getNicks(player).removeIf {
+				it.toLowerCase() == nickname.toLowerCase()
+			}
+		}
+
+		fun getNicks(player: Player): MutableList<String> {
+			return nickMap[player.uniqueId] ?: {
+				nickMap[player.uniqueId] = mutableListOf()
+				nickMap[player.uniqueId]!!
+			}()
 		}
 	}
 
 	class SpecialMention(val name: String, val includes: (Player) -> Boolean, val needsOp: Boolean = false, val coloring: Coloring = solid(ChatColor.GOLD))
 
-	private val specialMentions = {
-		val list = arrayListOf(
-			SpecialMention("everyone", { true }, needsOp = true),
-			SpecialMention("players", { p -> p.gameMode == GameMode.SURVIVAL }),
-			SpecialMention("spectators", { p -> p.gameMode == GameMode.SPECTATOR }),
-			SpecialMention("admins", { p -> p.isOp})
-		)
+	private val mentions = {
+		val list = mutableListOf<SpecialMention>()
+
+		list.addAll(mutableListOf(
+				SpecialMention("everyone", { true }, needsOp = true),
+				SpecialMention("players", { p -> p.gameMode == GameMode.SURVIVAL }),
+				SpecialMention("spectators", { p -> p.gameMode == GameMode.SPECTATOR }),
+				SpecialMention("admins", { p -> p.isOp})
+		))
 
 		for (c in 0 until TeamData.teamColors.size * TeamData.teamColors.size) {
 			val colorPair = TeamData.colorPairPermutation(c) ?: continue
 			list += SpecialMention(colorPair.getName().replace(" ", "").toLowerCase(), { p -> TeamData.playersTeam(p)?.colorPair == colorPair}, coloring = colorPair::colorString)
 		}
 
-		list
-	}()
+		list.addAll(
+			Bukkit.getOnlinePlayers().map { p ->
+				SpecialMention(name = p.name, coloring = TeamData.playersColor(p), includes = { it == p})
+			}
+		)
+
+		for (e in nickMap.entries.filter { Bukkit.getPlayer(it.key) != null }) {
+			list.addAll(e.value.map { nickname ->
+				val player = Bukkit.getPlayer(e.key)!!
+				SpecialMention(name = nickname, coloring = TeamData.playersColor(player), includes = { it == player})
+			})
+		}
+
+		list.sortedByDescending { it.name.length }
+	}
 
 	private fun addMentions(event: AsyncPlayerChatEvent) {
 
@@ -72,45 +145,18 @@ class Chat : Listener {
 			return "<" + player.name + "> " + message
 		}
 
-		fun underline(string: String): String {
-			var newString = string
-			newString = ChatColor.UNDERLINE.toString() + newString
-			var index = newString.indexOf(ChatColor.COLOR_CHAR)
-			while (index != -1) {
-				newString = newString.substring(0, index + 2) + ChatColor.UNDERLINE + newString.substring(index + 2, newString.length)
-				index = newString.indexOf(ChatColor.COLOR_CHAR, index + 3)
-			}
-			return newString
-		}
-
 		event.isCancelled = true
 
 		for (p in Bukkit.getOnlinePlayers()) {
 			var message = event.message
 			var mentioned = false
-
-			for (player in Bukkit.getOnlinePlayers()) {
-				val mention = "@" + player.name
+			for (dynamic in mentions()) {
+				val mention = "@" + dynamic.name
 				val mentions = findAll(message, mention)
-				if (mentions.size > 0) {
-					val colorPair = TeamData.playersTeam(player)?.colorPair
-					var coloring = if (colorPair == null) solid(ChatColor.BLUE) else colorPair!!::colorString
+				if (mentions.size > 0 && (!dynamic.needsOp || event.player.isOp)) {
+					var coloring = dynamic.coloring
 					var c: Coloring
-					c = if (p == player) {
-						mentioned = true
-						{ underline(coloring(it)) }
-					} else coloring
-					message = colorAll(message, c, mention)
-				}
-			}
-
-			for (special in specialMentions) {
-				val mention = "@" + special.name
-				val mentions = findAll(message, mention)
-				if (mentions.size > 0 && (!special.needsOp || event.player.isOp)) {
-					var coloring = special.coloring
-					var c: Coloring
-					c = if (special.includes(p)) {
+					c = if (dynamic.includes(p)) {
 						mentioned = true
 						{ underline(coloring(it)) }
 					} else coloring
@@ -136,15 +182,10 @@ class Chat : Listener {
 
 		fun firstIsMention(message: String): Boolean {
 			if (message.startsWith("@")) {
-				for (player in Bukkit.getOnlinePlayers()) {
-					if (message.length >= player.name.length + 1 && message.substring(1, player.name.length + 2) == player.name) return true
-				}
-
-				for (special in specialMentions) {
-					if (message.length >= special.name.length + 1 && message.substring(1, special.name.length + 2) == special.name) return true
+				for (dynamic in mentions()) {
+					if (message.length >= dynamic.name.length + 1 && message.substring(0, dynamic.name.length + 1) == "@" + dynamic.name) return true
 				}
 			}
-
 			return false
 		}
 
