@@ -7,6 +7,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.Chat
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.team.ColorPair
+import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
@@ -129,7 +130,11 @@ class ParticipantCommands : BaseCommand() {
 		/* broadcast change to all teammates */
 		team.members.forEach { member ->
 			val player = member.player
-			if (player != null) GameRunner.sendGameMessage(player, message)
+
+			if (player != null) {
+				GameRunner.sendGameMessage(player, message)
+				NameManager.updateName(player)
+			}
 		}
 	}
 

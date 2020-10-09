@@ -12,6 +12,7 @@ import com.codeland.uhc.core.KillReward
 import com.codeland.uhc.phase.*
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.quirks.LowGravity
+import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.team.TeamMaker
@@ -25,9 +26,6 @@ import org.bukkit.potion.PotionEffectType
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
-
-	/* COMMANDS */
-
 	@CommandAlias("start")
 	@Description("start the UHC")
 	fun startGame(sender : CommandSender) {
@@ -52,14 +50,32 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("team add")
 	@Description("add a player to a team")
-	fun addPlayerToTeamCommand(sender: CommandSender, index: Int, player: OfflinePlayer) {
+	fun addPlayerToTeamCommand(sender: CommandSender, color: ChatColor, player: OfflinePlayer) {
+		if (!Team.isValidColor(color)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color.ordinal]} is not a valid color")
+
+		internalAddPlayerToTeam(sender, ColorPair(color), player)
+	}
+
+	@CommandAlias("team add")
+	@Description("add a player to a team")
+	fun addPlayerToTeamCommand(sender: CommandSender, color0: ChatColor, color1: ChatColor, player: OfflinePlayer) {
+		if (!Team.isValidColor(color0)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color0.ordinal]} is not a valid color")
+		if (!Team.isValidColor(color1)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color1.ordinal]} is not a valid color")
+
+		internalAddPlayerToTeam(sender, ColorPair(color0, color1), player)
+	}
+
+	@CommandAlias("team join")
+	@Description("add a player to a team")
+	fun addPlayerToTeamCommand(sender: CommandSender, teamPlayer: OfflinePlayer, player: OfflinePlayer) {
+		val team = TeamData.playersTeam(teamPlayer)
+			?: return Commands.errorMessage(sender, "${teamPlayer.name} is not on a team!")
+
+		internalAddPlayerToTeam(sender, team.colorPair, player)
+	}
+
+	private fun internalAddPlayerToTeam(sender: CommandSender, colorPair: ColorPair, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
-
-		val colorPair = TeamData.colorPairFromIndex(index)
-			?: return Commands.errorMessage(sender, "Index out of range, should be at least 0 and at most ${TeamData.MAX_TEAMS - 1}")
-
-		/* apparently players can not have names */
-		val playerName = player.name ?: return Commands.errorMessage(sender, "Player doesn't exist!")
 
 		val team = TeamData.addToTeam(colorPair, player)
 
@@ -100,8 +116,8 @@ class AdminCommands : BaseCommand() {
 		val team1 = TeamData.playersTeam(player1) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
 		val team2 = TeamData.playersTeam(player2) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
 
-		TeamData.addToTeam(team2, player1)
-		TeamData.addToTeam(team1, player2)
+		TeamData.addToTeam(team2, player1, false)
+		TeamData.addToTeam(team1, player2, false)
 
 		GameRunner.sendGameMessage(sender, "${team2.colorPair.colorString(player1.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}and ${team1.colorPair.colorString(player2.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
 	}

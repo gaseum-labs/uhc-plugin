@@ -72,6 +72,17 @@ object TeamData {
 		return null
 	}
 
+	fun refreshPlayer(player: Player) {
+		for (team in teams) {
+			for (i in team.members.indices) {
+				if (team.members[i].uniqueId == player.uniqueId) {
+					team.members[i] = player
+					return
+				}
+			}
+		}
+	}
+
 	fun playersColor(player: OfflinePlayer): Coloring {
 		val team = playersTeam(player) ?: return Chat.solid(BLUE)
 		return team.colorPair::colorString
@@ -102,29 +113,33 @@ object TeamData {
 		return newTeam
 	}
 
-	fun addToTeam(team: Team, player: OfflinePlayer): Team {
+	fun addToTeam(team: Team, player: OfflinePlayer, destroyTeam: Boolean = true): Team {
 		/* remove player from old team if they are on one */
 		val oldTeam = playersTeam(player)
-		if (oldTeam != null) removeFromTeam(oldTeam, player)
+		if (oldTeam != null) removeFromTeam(oldTeam, player, destroyTeam)
 
 		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, player.uniqueId) {}
 
 		team.members.add(player)
 
+		val onlinePlayer = player.player
+		if (onlinePlayer != null)
+			NameManager.updateName(onlinePlayer)
+
 		return team
 	}
 
-	fun removeFromTeam(player: OfflinePlayer) {
-		removeFromTeam(playersTeam(player), player)
+	fun removeFromTeam(player: OfflinePlayer, destroyTeam: Boolean = true) {
+		removeFromTeam(playersTeam(player), player, destroyTeam)
 	}
 
-	fun removeFromTeam(oldTeam: Team?, player: OfflinePlayer): Boolean {
+	fun removeFromTeam(oldTeam: Team?, player: OfflinePlayer, destroyTeam: Boolean = true): Boolean {
 		oldTeam ?: return false
 
 		oldTeam.members.removeIf { offlinePlayer -> offlinePlayer.uniqueId == player.uniqueId }
 
 		/* remove the team if no one is left on it */
-		if (oldTeam.members.isEmpty()) {
+		if (destroyTeam && oldTeam.members.isEmpty()) {
 			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(oldTeam) {}
 			teams.removeIf { team -> team === oldTeam }
 		}
