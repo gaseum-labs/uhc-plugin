@@ -130,7 +130,7 @@ class AdminCommands : BaseCommand() {
 
 		GameRunner.uhc.updateVariant(variant)
 		GameRunner.uhc.gui.variantCylers[variant.type.ordinal].updateDisplay()
-	}
+	} 
 
 	@CommandAlias("setLength")
 	@Description("set the length of a phase")
