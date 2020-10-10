@@ -2,6 +2,7 @@ package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
