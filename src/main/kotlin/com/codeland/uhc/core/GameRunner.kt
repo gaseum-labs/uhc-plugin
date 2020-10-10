@@ -11,8 +11,8 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenFile
-import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.GameMode
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -143,6 +143,10 @@ object GameRunner {
 
 	fun sendGameMessage(sender: CommandSender, message: String) {
 		sender.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}$message")
+	}
+
+	fun coloredInGameMessage(string: String, color: ChatColor): String {
+		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
 	}
 
 	fun broadcast(message: String) {
