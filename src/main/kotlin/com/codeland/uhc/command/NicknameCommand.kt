@@ -70,7 +70,7 @@ class NicknameCommand : BaseCommand() {
             return
         }
         val targetPlayer = Bukkit.getPlayer(target)!!
-        val coloring: Coloring = { Chat.underline(TeamData.playersColor(targetPlayer)(it)) }
+        val coloring: Coloring = { Chat.underline(TeamData.playersColor(targetPlayer.uniqueId)(it)) }
         if (Chat.getNicks(targetPlayer).size == 0) {
             GameRunner.sendGameMessage(player, "This player has no nicknames.")
         } else {

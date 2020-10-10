@@ -2,7 +2,6 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -20,9 +19,7 @@ import java.util.*
 typealias Coloring = (String) -> String
 
 class Chat : Listener {
-
 	companion object {
-
 		fun solid(chatColor: ChatColor): Coloring {
 			// don't ask
 			return { chatColor.toString() + it.replace("@", "@$chatColor") }
@@ -96,19 +93,19 @@ class Chat : Listener {
 
 		for (c in 0 until TeamData.teamColors.size * TeamData.teamColors.size) {
 			val colorPair = TeamData.colorPairPermutation(c) ?: continue
-			list += SpecialMention(colorPair.getName().replace(" ", "").toLowerCase(), { p -> TeamData.playersTeam(p)?.colorPair == colorPair}, coloring = colorPair::colorString)
+			list += SpecialMention(colorPair.getName().replace(" ", "").toLowerCase(), { p -> TeamData.playersTeam(p.uniqueId)?.colorPair == colorPair}, coloring = colorPair::colorString)
 		}
 
 		list.addAll(
 			Bukkit.getOnlinePlayers().map { p ->
-				SpecialMention(name = p.name, coloring = TeamData.playersColor(p), includes = { it == p})
+				SpecialMention(name = p.name, coloring = TeamData.playersColor(p.uniqueId), includes = { it == p})
 			}
 		)
 
 		for (e in nickMap.entries.filter { Bukkit.getPlayer(it.key) != null }) {
 			list.addAll(e.value.map { nickname ->
 				val player = Bukkit.getPlayer(e.key)!!
-				SpecialMention(name = nickname, coloring = TeamData.playersColor(player), includes = { it == player})
+				SpecialMention(name = nickname, coloring = TeamData.playersColor(player.uniqueId), includes = { it == player})
 			})
 		}
 
@@ -116,7 +113,6 @@ class Chat : Listener {
 	}
 
 	private fun addMentions(event: AsyncPlayerChatEvent) {
-
 		fun findAll(message: String, name: String): MutableList<Int> {
 			val lowerMessage = message.toLowerCase()
 			val lowerName = name.toLowerCase()
@@ -141,11 +137,13 @@ class Chat : Listener {
 			return newMessage
 		}
 
-		fun formatted(player: Player, message: String): String {
-			return "<" + player.name + "> " + message
-		}
-
 		event.isCancelled = true
+
+		val sendersTeam = TeamData.playersTeam(event.player.uniqueId)
+		val playerPart = if (sendersTeam == null)
+			"<${event.player.name}>"
+		else
+			sendersTeam.colorPair.colorString("<${event.player.name}>")
 
 		for (p in Bukkit.getOnlinePlayers()) {
 			var message = event.message
@@ -165,7 +163,7 @@ class Chat : Listener {
 			}
 
 			if (mentioned) p.playSound(p.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 5f, 5f)
-			p.sendMessage(formatted(event.player, message))
+			p.sendMessage("$playerPart ${ChatColor.RESET}$message")
 		}
 	}
 
@@ -178,7 +176,7 @@ class Chat : Listener {
 		}
 
 		/* only modify chat behavior with players on teams */
-		val team = TeamData.playersTeam(event.player) ?: return
+		val team = TeamData.playersTeam(event.player.uniqueId) ?: return
 
 		fun firstIsMention(message: String): Boolean {
 			if (message.startsWith("@")) {
@@ -200,21 +198,13 @@ class Chat : Listener {
 			addMentions(event)
 
 		} else {
-			Util.log("${event.player.name} sent a message for team ${team.colorPair.getName()} || ${event.message}")
-
 			event.isCancelled = true
 
-			val component = "${team.colorPair.color0}<${event.player.displayName}> ${org.bukkit.ChatColor.RESET}${event.message}"
+			val component = "${team.colorPair.colorString("<${event.player.name}>")} ${team.colorPair.color0}${event.message}"
 
 			team.members.forEach { member ->
-				val onlinePlayer = member.player
-
-				if (onlinePlayer == null) {
-					Util.log("NULL")
-				} else {
-					Util.log("player")
-					member.player?.sendMessage(component)
-				}
+				val player = Bukkit.getPlayer(member)
+				player?.sendMessage(component)
 			}
 		}
 	}

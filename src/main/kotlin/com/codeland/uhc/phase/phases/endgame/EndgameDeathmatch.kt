@@ -22,7 +22,7 @@ class EndgameDeathmatch : Phase() {
 					}
 				}
 
-				val minSpreadDist = (uhc.startRadius * 3.1415926 / GameRunner.quickRemainingTeams().toDouble())
+				val minSpreadDist = uhc.startRadius
 				Bukkit.getServer().dispatchCommand(uhc.gameMaster!!, "spreadplayers 0 0 $minSpreadDist ${uhc.endRadius} true @a")
 			}
 		}

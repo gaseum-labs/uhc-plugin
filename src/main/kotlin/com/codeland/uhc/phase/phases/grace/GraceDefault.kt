@@ -1,5 +1,6 @@
 package com.codeland.uhc.phase.phases.grace
 
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
@@ -7,61 +8,39 @@ import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.boss.BossBar
+import org.bukkit.entity.Player
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.*
 
 open class GraceDefault : Phase() {
 	/* to be injected on phase creation */
 	lateinit var teleportLocations: ArrayList<Location>
+	lateinit var teleportGroups: Array<Array<UUID>>
 
 	override fun customStart() {
-		Bukkit.getServer().onlinePlayers.forEach { player ->
-			/* absolutely nuke the inventory */
-			player.inventory.clear()
-			player.itemOnCursor.amount = 0
-			player.setItemOnCursor(null)
-
-			/* clear crafting slots */
-			player.openInventory.topInventory.clear()
-			player.openInventory.bottomInventory.clear()
-
-			for (activePotionEffect in player.activePotionEffects)
-				player.removePotionEffect(activePotionEffect.type)
-
-			player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
-			player.health = 20.0
-			player.absorptionAmount = 0.0
-			player.exp = 0f
-			player.level = 0
-			player.foodLevel = 20
-			player.saturation = 5f
-			player.exhaustion = 0f
-			player.fireTicks = 0
-			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
-
-			/* remove all advancements */
-			Bukkit.getServer().advancementIterator().forEach { advancement ->
-				val progress = player.getAdvancementProgress(advancement)
-
-				progress.awardedCriteria.forEach { criteria ->
-					progress.revokeCriteria(criteria)
-				}
-			}
-
-			player.gameMode = if (TeamData.playersTeam(player) == null) GameMode.SPECTATOR else GameMode.SURVIVAL
-		}
-
 		/* set border in overworld */
-
 		val world = Bukkit.getWorlds()[0]
 
 		world.time = 0
 		world.worldBorder.setCenter(0.5, 0.5)
 		world.worldBorder.size = uhc.startRadius * 2 + 1
 
-		val teams = TeamData.teams
-		teams.forEachIndexed { i, team ->
-			team.members.forEach { member ->
-				member.player?.teleport(teleportLocations[i])
+		/* teleport and set players */
+		teleportGroups.forEachIndexed { i, teleportGroup ->
+			teleportGroup.forEach { uuid ->
+				GameRunner.uhc.setAlive(uuid, true)
+
+				GameRunner.teleportPlayer(uuid, teleportLocations[i])
+				GameRunner.playerAction(uuid, ::startPlayer)
+			}
+		}
+
+		/* non participants into spec */
+		Bukkit.getOnlinePlayers().forEach { player ->
+			if (!GameRunner.uhc.isParticipating(player.uniqueId)) {
+				player.gameMode = GameMode.SPECTATOR
+				player.teleport(Location(Bukkit.getWorlds()[0], 0.5, 100.0, 0.5))
 			}
 		}
 
@@ -70,6 +49,42 @@ open class GraceDefault : Phase() {
 		uhc.ledger = Ledger()
 
 		uhc.updateMobCaps()
+	}
+
+	fun startPlayer(player: Player) {
+		/* absolutely nuke the inventory */
+		player.inventory.clear()
+		player.itemOnCursor.amount = 0
+		player.setItemOnCursor(null)
+
+		/* clear crafting slots */
+		player.openInventory.topInventory.clear()
+		player.openInventory.bottomInventory.clear()
+
+		for (activePotionEffect in player.activePotionEffects)
+			player.removePotionEffect(activePotionEffect.type)
+
+		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
+		player.health = 20.0
+		player.absorptionAmount = 0.0
+		player.exp = 0f
+		player.level = 0
+		player.foodLevel = 20
+		player.saturation = 5f
+		player.exhaustion = 0f
+		player.fireTicks = 0
+		player.setStatistic(Statistic.TIME_SINCE_REST, 0)
+
+		/* remove all advancements */
+		Bukkit.getServer().advancementIterator().forEach { advancement ->
+			val progress = player.getAdvancementProgress(advancement)
+
+			progress.awardedCriteria.forEach { criteria ->
+				progress.revokeCriteria(criteria)
+			}
+		}
+
+		player.gameMode = GameMode.SURVIVAL
 	}
 
 	override fun customEnd() {}
@@ -94,15 +109,18 @@ open class GraceDefault : Phase() {
 			return null
 		}
 
-		fun spreadPlayers(world: World, numTeams: Int, spreadRadius: Double): ArrayList<Location> {
-			val ret = ArrayList<Location>(numTeams)
+		/**
+		 * @return an empty arraylist if not all spaces could be filled
+		 */
+		fun spreadPlayers(world: World, numSpaces: Int, spreadRadius: Double): ArrayList<Location> {
+			val ret = ArrayList<Location>(numSpaces)
 
 			var angle = Math.random() * 2 * Math.PI
 
-			val angleAdvance = 2 * Math.PI / numTeams
+			val angleAdvance = 2 * Math.PI / numSpaces
 			val angleDeviation = angleAdvance / 4
 
-			for (i in 0 until numTeams) {
+			for (i in 0 until numSpaces) {
 				val location = findLocation(world, angle, angleDeviation, spreadRadius) ?: return ArrayList()
 				ret.add(location)
 

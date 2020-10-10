@@ -42,6 +42,21 @@ import org.bukkit.potion.PotionEffectType
 
 class EventListener : Listener {
 	@EventHandler
+	fun onPlayerJoin(event: PlayerJoinEvent) {
+		val player = event.player
+
+		NameManager.updateName(event.player)
+		Phase.setPlayerBarDimension(event.player)
+
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			(GameRunner.uhc.currentPhase as WaitingDefault?)?.onPlayerJoin(event.player)
+
+		} else if (!GameRunner.uhc.isParticipating(player.uniqueId) || !GameRunner.uhc.isAlive(player.uniqueId)) {
+			event.player.gameMode = GameMode.SPECTATOR
+		}
+	}
+
+	@EventHandler
 	fun onPlayerHurt(event: EntityDamageEvent) {
 		if (GameRunner.uhc.isGameGoing()) {
 			if (GameRunner.uhc.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
@@ -63,22 +78,6 @@ class EventListener : Listener {
 					event.isCancelled = false
 				}
 			}
-		}
-	}
-
-	@EventHandler
-	fun onPlayerJoin(event: PlayerJoinEvent) {
-		NameManager.updateName(event.player)
-
-		Phase.dimensionOne(event.player)
-
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			(GameRunner.uhc.currentPhase as WaitingDefault?)?.onPlayerJoin(event.player)
-		} else {
-			if (TeamData.playersTeam(event.player) == null)
-				event.player.gameMode = GameMode.SPECTATOR
-
-			return
 		}
 	}
 
@@ -117,14 +116,13 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
-		if (!GameRunner.uhc.isGameGoing()) {
-			if (LobbyPvp.getPvpData(event.entity).inPvp) {
-				event.drops.clear()
-			}
+		val player = event.entity
+
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			if (LobbyPvp.getPvpData(player).inPvp) event.drops.clear()
+
 			return
 		}
-
-		val player = event.entity
 
 		if (GameRunner.uhc.isEnabled(QuirkType.HALF_ZATOICHI)) {
 			val killer = player.killer
@@ -139,19 +137,22 @@ class EventListener : Listener {
 			val wasPest = Pests.isPest(player)
 
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-				if (!wasPest && event.entity.gameMode != GameMode.SPECTATOR)
+				if (!wasPest && GameRunner.uhc.isAlive(player.uniqueId))
 					Pests.makePest(player)
 			} else {
 				player.gameMode = GameMode.SPECTATOR
 			}
 
-			if (!wasPest) GameRunner.playerDeath(player, Pests.isPest(player))
+			if (GameRunner.uhc.isAlive(player.uniqueId) && !wasPest)
+				GameRunner.playerDeath(player)
+
+			if (Pests.isPest(player))
+				TeamData.removeFromTeam(player.uniqueId)
 		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) {
 			event.drops.removeAll { itemStack ->
-				itemStack.type == Material.BLACK_STAINED_GLASS_PANE
-						&& itemStack.itemMeta.displayName == "Unusable Slot"
+				itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.displayName == "Unusable Slot"
 			}
 		}
 	}
@@ -224,7 +225,7 @@ class EventListener : Listener {
 
 		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
 		if (summoner.enabled && summoner.commander.value) {
-			val team = TeamData.playersTeam(player)
+			val team = TeamData.playersTeam(player.uniqueId)
 
 			if (team != null && Summoner.isCommandedBy(event.entity, team))
 				event.isCancelled = true

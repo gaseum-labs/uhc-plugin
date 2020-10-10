@@ -11,13 +11,12 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 class ShareCoordsCommand : BaseCommand() {
-
     @CommandAlias("sharecoords")
     @Description("shares your coordinates with your teammates")
     fun shareCoords(sender : CommandSender) {
         sender as Player
 
-        val team = TeamData.playersTeam(sender)
+        val team = TeamData.playersTeam(sender.uniqueId)
 
         if (team == null) {
             GameRunner.sendGameMessage(sender, "You must be on a team to use this command")
@@ -29,8 +28,9 @@ class ShareCoordsCommand : BaseCommand() {
                     "${l.blockY}, " +
                     "${l.blockZ}"
 
-            team.members.forEach { member ->
-                member.player?.sendMessage(message)
+            team.members.forEach { uuid ->
+                val player = Bukkit.getPlayer(uuid)
+                player?.sendMessage(message)
             }
         }
     }

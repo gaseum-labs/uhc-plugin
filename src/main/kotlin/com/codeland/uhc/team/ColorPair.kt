@@ -2,6 +2,8 @@ package com.codeland.uhc.team
 
 import com.codeland.uhc.util.Util
 import org.bukkit.ChatColor
+import org.bukkit.Color
+import kotlin.math.ceil
 
 class ColorPair {
 	constructor(color0: ChatColor, color1: ChatColor?) {
@@ -24,9 +26,9 @@ class ColorPair {
 	 *
 	 * @return a new string that is colored
 	 */
-	fun colorString(string: String): String {
+	fun colorStringAlternating(string: String): String {
 		return if (color1 == null) {
-			"${color0}$string"
+			"$color0$string"
 		} else {
 			val byteArray = CharArray(string.length * 3)
 
@@ -43,13 +45,31 @@ class ColorPair {
 	/**
 	 * colors a string based on this colorPair
 	 * single colored pairs will just make the string one color
+	 * double colored pairs will set color halves of the string
+	 *
+	 * @return a new string that is colored
+	 */
+	fun colorString(string: String): String {
+		return if (color1 == null) {
+			"$color0$string"
+		} else {
+			val half = ceil(string.length / 2.0).toInt()
+
+			"$color0${string.substring(0, half)}$color1${string.substring(half)}"
+		}
+	}
+
+	/**
+	 * colors a string based on this colorPair
+	 * also adds a modifier for each color
+	 * single colored pairs will just make the string one color
 	 * double colored pairs will alternate colors for each character in the string
 	 *
 	 * @return a new string that is colored
 	 */
-	fun colorStringModified(string: String, modifier: ChatColor): String {
+	fun colorStringModifiedAlternating(string: String, modifier: ChatColor): String {
 		return if (color1 == null) {
-			"${color0}${modifier}$string"
+			"$color0$modifier$string"
 		} else {
 			val byteArray = CharArray(string.length * 5)
 
@@ -65,6 +85,24 @@ class ColorPair {
 		}
 	}
 
+	/**
+	 * colors a string based on this colorPair
+	 * also adds a modifier for each color
+	 * single colored pairs will just make the string one color
+	 * double colored pairs will set color halves of the string
+	 *
+	 * @return a new string that is colored
+	 */
+	fun colorStringModified(string: String, modifier: ChatColor): String {
+		return if (color1 == null) {
+			"$color0$modifier$string"
+		} else {
+			val half = ceil(string.length / 2.0).toInt()
+
+			"$color0$modifier${string.substring(0, half)}$color1$modifier${string.substring(half)}"
+		}
+	}
+
 	fun getName(): String {
 		return "${Util.colorPrettyNames[color0.ordinal]}${if (color1 == null) "" else " ${Util.colorPrettyNames[color1.ordinal]}"}"
 	}
@@ -73,5 +111,9 @@ class ColorPair {
 		if (other !is ColorPair) return false
 
 		return (color0 == other.color0 || color0 == other.color1) && (color1 == other.color0 || color1 == other.color1)
+	}
+
+	companion object {
+		val DEFAULT = ColorPair(ChatColor.WHITE)
 	}
 }

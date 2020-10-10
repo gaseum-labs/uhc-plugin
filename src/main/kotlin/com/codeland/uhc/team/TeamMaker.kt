@@ -38,17 +38,29 @@ object TeamMaker {
 		if (size > TeamData.teamColors.size - TeamData.teams.size)
 			return null
 
-		return Array(size) {
+		val colorArray = Array(size) { ColorPair.DEFAULT }
+
+		fun colorArrayContains(size: Int, colorPair: ColorPair): Boolean {
+			for (i in size - 1 downTo 0)
+				if (colorArray[i] == colorPair)
+					return true
+
+			return false
+		}
+
+		for (i in colorArray.indices) {
 			var index = (Math.random() * TeamData.MAX_TEAMS).toInt()
 
 			var colorPair = TeamData.colorPairFromIndex(index) ?: return null
-			while (TeamData.teamExists(colorPair)) {
+			while (TeamData.teamExists(colorPair) || colorArrayContains(i, colorPair)) {
 				index = (index + 1) % TeamData.MAX_TEAMS
 				colorPair = TeamData.colorPairFromIndex(index) ?: return null
 			}
 
-			colorPair
+			colorArray[i] = colorPair
 		}
+
+		return colorArray
 	}
 
 	/* ranked */
