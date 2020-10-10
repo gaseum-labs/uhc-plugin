@@ -11,10 +11,15 @@ import org.bukkit.scoreboard.Team
 object NameManager {
 	fun updateName(player: Player) {
 		val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
+
+		playerData.setSkull(player)
+
 		while (playerData.actionsQueue.isNotEmpty()) {
 			Util.log("PERFORMING ACTION FOR ${player.name}")
 			playerData.actionsQueue.remove()(player)
 		}
+
+		playerData.replaceZombieWithPlayer(player)
 
 		val team = TeamData.playersTeam(player.uniqueId)
 		val scoreboard = Bukkit.getScoreboardManager().mainScoreboard

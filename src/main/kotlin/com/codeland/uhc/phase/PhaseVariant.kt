@@ -18,11 +18,6 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 		"If you happen to die you get a second chance"
 	)),
 
-	GRACE_UNFORGIVING(PhaseType.GRACE, ::GraceDefault, "Unforgiving", Material.WITHER_ROSE, listOf(
-		"You may regenerate health and are free from combat to get you started",
-		"If you die all your items go away"
-	)),
-
 	GRACE_HARSH(PhaseType.GRACE, ::GraceDefault, "Harsh", Material.FEATHER, listOf(
 		"You may regenerate health and are free from combat to get you started",
 		"But make sure you don't die because you don't have a second chance"

@@ -12,7 +12,6 @@ import com.codeland.uhc.world.WorldGenFile
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.Location
-import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
@@ -85,32 +84,32 @@ object GameRunner {
 		return RemainingTeamsReturn(remaining, if (remaining == 1) lastAlive else null, teamAlive, individualAlive)
 	}
 
-	fun playerDeath(deadPlayer: Player) {
-		uhc.setAlive(deadPlayer.uniqueId, false)
+	fun playerDeath(deadUUID: UUID, killer: Player?) {
+		uhc.setAlive(deadUUID, false)
 
-		val deadPlayerTeam = TeamData.playersTeam(deadPlayer.uniqueId)
-		var (remainingTeams, lastRemaining, teamIsAlive, individualIsAlive) = remainingTeams(deadPlayerTeam, deadPlayer.uniqueId)
+		val deadPlayerTeam = TeamData.playersTeam(deadUUID)
+		var (remainingTeams, lastRemaining, teamIsAlive, individualIsAlive) = remainingTeams(deadPlayerTeam, deadUUID)
 
-		val killer = deadPlayer.killer
 		val killerTeam = if (killer == null) null else TeamData.playersTeam(killer.uniqueId)
 
 		var killerName = if (killer == null) {
 			null
 
 		} else when {
-			killer === deadPlayer -> "self"
+			killer.uniqueId === deadUUID -> "self"
 			deadPlayerTeam === killerTeam -> "teammate"
 			else -> killer.name
 		}
 
 		/* add to ledger */
-		uhc.ledger.addEntry(deadPlayer.name, uhc.elapsedTime, killerName)
+		val deadPlayerName = Bukkit.getOfflinePlayer(deadUUID).name ?: "NULL"
+		uhc.ledger.addEntry(deadPlayerName, uhc.elapsedTime, killerName)
 
 		val message1 = "$remainingTeams teams remain"
 
 		/* broadcast elimination message for an individual */
 		if (deadPlayerTeam == null && !individualIsAlive) {
-			val message0 = "${ChatColor.GOLD}${ChatColor.BOLD}${deadPlayer.name} has been Eliminated!"
+			val message0 = "${ChatColor.GOLD}${ChatColor.BOLD}${deadPlayerName} has been Eliminated!"
 
 			Bukkit.getServer().onlinePlayers.forEach { player ->
 				sendGameMessage(player, message0)
@@ -166,10 +165,30 @@ object GameRunner {
 	fun teleportPlayer(uuid: UUID, location: Location) {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
-		if (onlinePlayer == null) uhc.getPlayerData(uuid).actionsQueue.add { futurePlayer ->
-			futurePlayer.teleport(location)
+		if (onlinePlayer == null) {
+			val playerData = uhc.getPlayerData(uuid)
+			val offlineZombie = playerData.offlineZombie
+
+			if (offlineZombie == null)
+				playerData.offlineZombie = playerData.createDefaultZombie(uuid, location)
+			else
+				offlineZombie.teleport(location)
+
+		} else {
+			onlinePlayer.teleport(location)
 		}
-		else onlinePlayer.teleport(location)
+	}
+
+	fun getPlayerLocation(uuid: UUID): Location? {
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+
+		return if (onlinePlayer == null) {
+			val playerData = uhc.getPlayerData(uuid)
+			playerData.offlineZombie?.location
+
+		} else {
+			onlinePlayer.location
+		}
 	}
 
 	fun broadcast(message: String) {

@@ -2,6 +2,7 @@ package com.codeland.uhc.phase.phases.grace
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
@@ -40,7 +41,7 @@ open class GraceDefault : Phase() {
 		Bukkit.getOnlinePlayers().forEach { player ->
 			if (!GameRunner.uhc.isParticipating(player.uniqueId)) {
 				player.gameMode = GameMode.SPECTATOR
-				player.teleport(Location(Bukkit.getWorlds()[0], 0.5, 100.0, 0.5))
+				player.teleport(GameRunner.uhc.spectatorSpawnLocation())
 			}
 		}
 

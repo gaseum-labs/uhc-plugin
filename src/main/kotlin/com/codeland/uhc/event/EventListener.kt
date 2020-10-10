@@ -4,6 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.*
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
@@ -25,6 +26,7 @@ import org.bukkit.*
 import org.bukkit.entity.Arrow
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
+import org.bukkit.entity.Zombie
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
@@ -52,6 +54,20 @@ class EventListener : Listener {
 
 		} else if (!GameRunner.uhc.isParticipating(player.uniqueId) || !GameRunner.uhc.isAlive(player.uniqueId)) {
 			event.player.gameMode = GameMode.SPECTATOR
+		}
+	}
+
+	@EventHandler
+	fun onLogOut(event: PlayerQuitEvent) {
+		Util.log("${event.player.name} quitting")
+
+		if (GameRunner.uhc.isGameGoing()) {
+			val player = event.player
+
+			val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
+			playerData.offlineZombie = playerData.createZombie(player)
+
+			Util.log("created zombie named: ${playerData.offlineZombie?.customName}")
 		}
 	}
 
@@ -128,11 +144,8 @@ class EventListener : Listener {
 			if (killer != null) HalfZatoichi.onKill(killer)
 		}
 
-		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_UNFORGIVING))
-			event.drops.clear()
-
 		/* normal respawns in grace */
-		if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING) || GameRunner.uhc.isVariant(PhaseVariant.GRACE_UNFORGIVING))) {
+		if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
 			val wasPest = Pests.isPest(player)
 
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
@@ -143,7 +156,7 @@ class EventListener : Listener {
 			}
 
 			if (GameRunner.uhc.isAlive(player.uniqueId) && !wasPest)
-				GameRunner.playerDeath(player)
+				GameRunner.playerDeath(player.uniqueId, player.killer)
 
 			if (Pests.isPest(player))
 				TeamData.removeFromTeam(player.uniqueId)
@@ -190,16 +203,12 @@ class EventListener : Listener {
 				LobbyPvp.disablePvp(event.player, LobbyPvp.getPvpData(event.player))
 			}
 
-
 		/* grace respawning */
-		if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING) || GameRunner.uhc.isVariant(PhaseVariant.GRACE_UNFORGIVING)) {
+		if (GameRunner.uhc.isAlive(event.player.uniqueId)) {
 			spreadRespawn(event)
 
 		/* pest respawning */
-		} else {
-			if (!GameRunner.uhc.isEnabled(QuirkType.PESTS))
-				return
-
+		} else if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
 			var player = event.player
 
 			/* player is set to pest on death */
@@ -210,28 +219,39 @@ class EventListener : Listener {
 			spreadRespawn(event)
 
 			Pests.givePestSetup(player)
+
+		/* players respawning as spectator */
+		} else {
+			event.respawnLocation = GameRunner.uhc.spectatorSpawnLocation()
 		}
 	}
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
-		val player = event.target
-		if (player !is Player) return
+		/* offline zombie targeting */
+		val target = event.target ?: return
+
+		if (PlayerData.isZombie(target) && (event.entity.type == EntityType.IRON_GOLEM || event.entity.type == EntityType.SNOWMAN)) {
+			event.isCancelled = true
+		}
+
+		/* player targeting */
+		if (target !is Player) return
 
 		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-			if (Math.random() < 0.20) WetSponge.addSponge(player)
+			if (Math.random() < 0.20) WetSponge.addSponge(target)
 		}
 
 		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
 		if (summoner.enabled && summoner.commander.value) {
-			val team = TeamData.playersTeam(player.uniqueId)
+			val team = TeamData.playersTeam(target.uniqueId)
 
 			if (team != null && Summoner.isCommandedBy(event.entity, team))
 				event.isCancelled = true
 		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-			if (Pests.isPest(player))
+			if (Pests.isPest(target))
 				event.isCancelled = true
 		}
 	}
@@ -309,6 +329,49 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
+		/* offline zombie killed */
+		val (inventory, experience, uuid) = PlayerData.getZombieData(event.entity)
+		if (experience != -1) {
+			event.drops.clear()
+
+			inventory.forEach { drop ->
+				event.drops.add(drop)
+			}
+
+			val droppedExperience = experience.coerceAtMost(100)
+			event.droppedExp = droppedExperience
+
+			val playerData = GameRunner.uhc.getPlayerData(uuid)
+			playerData.offlineZombie = null
+
+			/* player is allowed to respawn */
+			if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
+				val world = Bukkit.getWorlds()[0]
+
+				GameRunner.teleportPlayer(
+					uuid,
+					GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+						?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
+				)
+
+			/* player is eliminated */
+			} else {
+				GameRunner.playerDeath(uuid, event.entity.killer)
+
+				/* reset player for when they rejoin */
+				GameRunner.playerAction(uuid) { player ->
+					player.health = 20.0
+					player.inventory.clear()
+					player.fireTicks = -1
+					player.totalExperience = 0
+					player.activePotionEffects.clear()
+					player.teleport(GameRunner.uhc.spectatorSpawnLocation())
+				}
+			}
+
+			return
+		}
+
 		if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
 		} else {
@@ -354,14 +417,10 @@ class EventListener : Listener {
 				event.isCancelled = !(LobbyPvp.pvpMap[attacker]?.inPvp ?: false) || !(LobbyPvp.pvpMap[defender]?.inPvp ?: false)
 			}
 
-			if (
-				GameRunner.uhc.isPhase(PhaseType.GRACE) ||
-				GameRunner.uhc.isPhase(PhaseType.POSTGAME)
-			) {
+			if (GameRunner.uhc.isPhase(PhaseType.GRACE)) {
 				event.isCancelled = true
 				return
 			}
-
 
 			/* pests cannot attack each other */
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(attacker) && Pests.isPest(defender))
@@ -371,6 +430,10 @@ class EventListener : Listener {
 				if (HalfZatoichi.isHalfZatoichi(attacker.inventory.itemInMainHand) && HalfZatoichi.isHalfZatoichi(defender.inventory.itemInMainHand)) {
 					event.damage = 1000000000.0
 				}
+			}
+		} else if (attacker is Player && defender is Zombie) {
+			if (PlayerData.isZombie(defender) && GameRunner.uhc.isPhase(PhaseType.GRACE)) {
+				event.isCancelled = true
 			}
 		}
 	}

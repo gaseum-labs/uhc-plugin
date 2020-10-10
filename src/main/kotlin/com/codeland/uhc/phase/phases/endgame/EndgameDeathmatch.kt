@@ -8,7 +8,6 @@ import org.bukkit.World
 import org.bukkit.boss.BossBar
 
 class EndgameDeathmatch : Phase() {
-
 	override fun customStart() {
 		EndgameNone.closeNether()
 

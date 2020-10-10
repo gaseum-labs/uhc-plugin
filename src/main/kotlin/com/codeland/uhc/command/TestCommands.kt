@@ -7,6 +7,7 @@ import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.ubt.PartialUBT
 import com.codeland.uhc.command.ubt.UBT
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.quirks.LowGravity
 import com.codeland.uhc.team.TeamData
@@ -95,6 +96,18 @@ class TestCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		GameRunner.sendGameMessage(sender, "${player.name} is participating: ${GameRunner.uhc.isParticipating(player.uniqueId)}")
+	}
+
+	@CommandAlias("test zombie")
+	fun testZombie(sender: CommandSender, player: OfflinePlayer) {
+		if (Commands.opGuard(sender)) return
+
+		val onlinePlayer = player.player ?: return Commands.errorMessage(sender, "${player.name} is offline!")
+
+		val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
+		playerData.createZombie(onlinePlayer)
+
+		GameRunner.sendGameMessage(sender, "Created a zombie for ${player.name}")
 	}
 
 	@CommandAlias("test gbs")

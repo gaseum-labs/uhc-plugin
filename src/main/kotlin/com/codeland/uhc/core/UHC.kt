@@ -12,6 +12,7 @@ import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
+import org.bukkit.Location
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import java.util.*
@@ -112,6 +113,17 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		} else {
 			playerData
 		}
+	}
+
+	fun spectatorSpawnLocation(): Location {
+		for ((uuid, playerData) in playerDataList) {
+			if (playerData.alive) {
+				return GameRunner.getPlayerLocation(uuid)?.clone()?.add(0.0, 2.0, 0.0)
+					?: Location(Bukkit.getWorlds()[0], 0.5, 100.0, 0.5)
+			}
+		}
+
+		return Location(Bukkit.getWorlds()[0], 0.5, 100.0, 0.5)
 	}
 
 	/* state setters */
@@ -258,6 +270,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 			gameMaster = commandSender
 
+			PlayerData.startZombieBorderTask()
+
 			startPhase(PhaseType.GRACE) { phase ->
 				(phase as GraceDefault).teleportGroups = teleportGroups
 				phase.teleportLocations = teleportLocations
@@ -276,6 +290,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	 * starts the postgame phase
 	 */
 	fun endUHC(winners: ArrayList<UUID>) {
+		PlayerData.endZombieBorderTask()
+
 		startPhase(PhaseType.POSTGAME) { phase ->
 			(phase as PostgameDefault).winners = winners
 		}

@@ -6,7 +6,7 @@ import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 
 class BrownMushroomFix : BlockFix("Brown mushroom block", arrayOf(
-	Range("Mushroom", "mushroomCount", "mushroomIndex", 50) { mushroomBlock -> ItemStack(Material.BROWN_MUSHROOM) }
+	Range("Mushroom", "mushroomCount", "mushroomIndex", 25) { mushroomBlock -> ItemStack(Material.BROWN_MUSHROOM) }
 )) {
 	override fun reject(uhc: UHC, drops: List<Item>): Boolean {
 		return !uhc.mushroomBlockNerf ||

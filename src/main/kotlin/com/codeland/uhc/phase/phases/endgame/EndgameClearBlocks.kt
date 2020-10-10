@@ -1,15 +1,13 @@
 package com.codeland.uhc.phase.phases.endgame
 
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
+import org.bukkit.*
 import org.bukkit.ChatColor.BOLD
 import org.bukkit.ChatColor.WHITE
-import org.bukkit.Material
-import org.bukkit.World
 import org.bukkit.boss.BossBar
 import kotlin.math.ceil
 import kotlin.math.max
@@ -37,7 +35,7 @@ class EndgameClearBlocks : Phase() {
 
 	override fun perSecond(remainingSeconds: Int) {
 		val world = Bukkit.getWorlds()[0]
-		val extrema = ceil(uhc.endRadius).toInt()
+		val extrema = ceil(uhc.endRadius).toInt() + 6
 
 		if (!finished) {
 			--topBoundary
@@ -57,6 +55,16 @@ class EndgameClearBlocks : Phase() {
 
 				topBoundary = center + allowedHeight
 				botBoundary = center
+
+				/* teleport all zombies to the surface */
+				uhc.playerDataList.forEach { (uuid, playerData) ->
+					val zombie = playerData.offlineZombie
+
+					if (zombie != null) {
+						val location = zombie.location
+						GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.x, center + 1.0, location.z))
+					}
+				}
 			}
 		}
 
