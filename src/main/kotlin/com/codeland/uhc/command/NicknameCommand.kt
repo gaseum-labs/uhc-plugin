@@ -65,7 +65,7 @@ class NicknameCommand : BaseCommand() {
     @Description("list your current nicknames")
     fun list(sender: CommandSender) {
         val player = if (sender is Player) sender else return
-        val coloring: Coloring = { Chat.underline(TeamData.playersColor(player)(it)) }
+        val coloring: Coloring = { Chat.underline(TeamData.playersColor(player.uniqueId)(it)) }
         if (Chat.getNicks(player).size == 0) {
             GameRunner.sendGameMessage(player, "You have no nicknames. Run ${ChatColor.UNDERLINE}/nickname add${ChatColor.GOLD}${ChatColor.BOLD} to add one!")
         } else {

@@ -6,10 +6,7 @@ import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.Chat
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.team.ColorPair
-import com.codeland.uhc.team.NameManager
-import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.team.*
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -20,61 +17,56 @@ import org.bukkit.entity.Player
 
 @CommandAlias("uhc")
 class ParticipantCommands : BaseCommand() {
-
-	fun phaseString(phaseType: PhaseType): String {
-		val variant = GameRunner.uhc.getVariant(phaseType)
-
-		val ret = "${phaseType.prettyName} variant : ${variant.prettyName}"
-
-		val time = GameRunner.uhc.getTime(phaseType)
-
-		return if (time == 0)
-			ret
-		else
-			"$ret | $time seconds"
-	}
-
-	@CommandAlias("setup")
-	@Description("get the current setup")
-	fun getCurrentSetup(sender: CommandSender) {
-		sender as Player
-		val uhc = GameRunner.uhc
-
-		GameRunner.sendGameMessage(sender, "Starting radius : ${uhc.startRadius.toInt()} blocks")
-		GameRunner.sendGameMessage(sender, "Ending radius : ${uhc.endRadius.toInt()} blocks")
-		GameRunner.sendGameMessage(sender, "Spawn cap coefficient : ${uhc.mobCapCoefficient}")
-		GameRunner.sendGameMessage(sender, "Team Kill Bounty : ${uhc.killReward}")
-
-		GameRunner.sendGameMessage(sender, "----------------PHASES----------------")
-
-		GameRunner.sendGameMessage(sender, phaseString(PhaseType.WAITING))
-		GameRunner.sendGameMessage(sender, phaseString(PhaseType.GRACE))
-		GameRunner.sendGameMessage(sender, phaseString(PhaseType.SHRINK))
-		GameRunner.sendGameMessage(sender, phaseString(PhaseType.ENDGAME))
-		GameRunner.sendGameMessage(sender, phaseString(PhaseType.POSTGAME))
-	}
-
 	@CommandAlias("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
 		GameRunner.uhc.gui.inventory.open(sender as Player)
 	}
 
-	@CommandAlias("spectate")
-	@Description("start spectating")
-	fun startSpecting(sender: CommandSender) {
+	@CommandAlias("optOut")
+	@Description("opt out from participating")
+	fun optOutCommand(sender: CommandSender) {
 		sender as Player
 
-		if (sender.gameMode != GameMode.SPECTATOR && GameRunner.uhc.isGameGoing()) {
-			sender.gameMode = GameMode.SPECTATOR
-			GameRunner.playerDeath(sender, true)
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			Commands.errorMessage(sender, "The game has already started!")
+
+		} else if (GameRunner.uhc.isOptingOut(sender.uniqueId)) {
+			Commands.errorMessage(sender, "You have already opted out!")
+
+		} else {
+			GameRunner.uhc.setOptOut(sender.uniqueId, true)
+			GameRunner.uhc.setParticipating(sender.uniqueId, false)
+
+			val team = TeamData.playersTeam(sender.uniqueId)
+			if (team != null) TeamData.removeFromTeam(team, sender.uniqueId)
+
+			GameRunner.sendGameMessage(sender, "You have opted out of participating")
+		}
+	}
+
+	@CommandAlias("optIn")
+	@Description("opt back into participating")
+	fun optInCommand(sender: CommandSender) {
+		sender as Player
+
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			Commands.errorMessage(sender, "The game has already started!")
+
+		} else if (!GameRunner.uhc.isOptingOut(sender.uniqueId)) {
+			Commands.errorMessage(sender, "You already aren't opting out!")
+
+		} else {
+			GameRunner.uhc.setOptOut(sender.uniqueId, false)
+
+			GameRunner.sendGameMessage(sender, "You have opted back into participating")
 		}
 	}
 
 	@CommandAlias("name")
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
-		val team = TeamData.playersTeam(sender as Player)
+		val team = TeamData.playersTeam((sender as Player).uniqueId)
 			?: return Commands.errorMessage(sender, "You are not on a team!")
 
 		var realNewName = newName
@@ -85,8 +77,9 @@ class ParticipantCommands : BaseCommand() {
 		team.displayName = realNewName
 
 		/* broadcast change to all teammates */
-		team.members.forEach { member ->
-			member.player?.sendMessage("Your team name has been changed to \"${team.colorPair.colorString(realNewName)}\"")
+		team.members.forEach { uuid ->
+			val player = Bukkit.getPlayer(uuid)
+			player?.sendMessage("Your team name has been changed to \"${team.colorPair.colorString(realNewName)}\"")
 		}
 	}
 
@@ -102,8 +95,19 @@ class ParticipantCommands : BaseCommand() {
 		changeTeamColor(sender, color0, color1)
 	}
 
+	@CommandAlias("color random")
+	@Description("change your team color")
+	fun teamColor(sender: CommandSender) {
+		val colors = TeamMaker.getColorList(1)
+
+		if (colors == null)
+			Commands.errorMessage(sender, "Could not make you a new random color!")
+		else
+			changeTeamColor(sender, colors[0].color0, colors[0].color1)
+	}
+
 	private fun changeTeamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor?) {
-		val team = TeamData.playersTeam(sender as Player)
+		val team = TeamData.playersTeam((sender as Player).uniqueId)
 			?: return Commands.errorMessage(sender, "You are not on a team!")
 
 		fun colorError(color: ChatColor) {
@@ -128,8 +132,8 @@ class ParticipantCommands : BaseCommand() {
 		val message = "Your team color has been changed to ${colorPair.colorString(colorPair.getName())}"
 
 		/* broadcast change to all teammates */
-		team.members.forEach { member ->
-			val player = member.player
+		team.members.forEach { uuid ->
+			val player = Bukkit.getPlayer(uuid)
 
 			if (player != null) {
 				GameRunner.sendGameMessage(player, message)

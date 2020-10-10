@@ -93,19 +93,19 @@ class Chat : Listener {
 
 		for (c in 0 until TeamData.teamColors.size * TeamData.teamColors.size) {
 			val colorPair = TeamData.colorPairPermutation(c) ?: continue
-			list += SpecialMention(colorPair.getName().replace(" ", "").toLowerCase(), { p -> TeamData.playersTeam(p)?.colorPair == colorPair}, coloring = colorPair::colorString)
+			list += SpecialMention(colorPair.getName().replace(" ", "").toLowerCase(), { p -> TeamData.playersTeam(p.uniqueId)?.colorPair == colorPair}, coloring = colorPair::colorString)
 		}
 
 		list.addAll(
 			Bukkit.getOnlinePlayers().map { p ->
-				SpecialMention(name = p.name, coloring = TeamData.playersColor(p), includes = { it == p})
+				SpecialMention(name = p.name, coloring = TeamData.playersColor(p.uniqueId), includes = { it == p})
 			}
 		)
 
 		for (e in nickMap.entries.filter { Bukkit.getPlayer(it.key) != null }) {
 			list.addAll(e.value.map { nickname ->
 				val player = Bukkit.getPlayer(e.key)!!
-				SpecialMention(name = nickname, coloring = TeamData.playersColor(player), includes = { it == player})
+				SpecialMention(name = nickname, coloring = TeamData.playersColor(player.uniqueId), includes = { it == player})
 			})
 		}
 
@@ -139,7 +139,7 @@ class Chat : Listener {
 
 		event.isCancelled = true
 
-		val sendersTeam = TeamData.playersTeam(event.player)
+		val sendersTeam = TeamData.playersTeam(event.player.uniqueId)
 		val playerPart = if (sendersTeam == null)
 			"<${event.player.name}>"
 		else
@@ -176,7 +176,7 @@ class Chat : Listener {
 		}
 
 		/* only modify chat behavior with players on teams */
-		val team = TeamData.playersTeam(event.player) ?: return
+		val team = TeamData.playersTeam(event.player.uniqueId) ?: return
 
 		fun firstIsMention(message: String): Boolean {
 			if (message.startsWith("@")) {
@@ -203,7 +203,8 @@ class Chat : Listener {
 			val component = "${team.colorPair.colorString("<${event.player.name}>")} ${team.colorPair.color0}${event.message}"
 
 			team.members.forEach { member ->
-				member.player?.sendMessage(component)
+				val player = Bukkit.getPlayer(member)
+				player?.sendMessage(component)
 			}
 		}
 	}

@@ -24,18 +24,20 @@ class EndgameGlowingTopTwo : Phase() {
 
 	override fun perSecond(second: Int) {
 		val sortedTeams = TeamData.teams.sortedByDescending { team ->
-			team.members.fold(0.0) { health, member ->
-				val player = member.player
-				if (player != null) player.health + player.absorptionAmount else 0.0
+			team.members.fold(0.0) { accum, uuid ->
+				val player = Bukkit.getPlayer(uuid)
+				if (player != null) accum + player.health + player.absorptionAmount else accum
 			}
 		}
 
 		sortedTeams.forEachIndexed { i, team ->
-			if (i < 2) team.members.forEach { member ->
-				member.player?.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 0, false, false, false))
+			if (i < 2) team.members.forEach { uuid ->
+				val player = Bukkit.getPlayer(uuid)
+				player?.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 0, false, false, false))
 			}
-			else team.members.forEach { member ->
-				member.player?.removePotionEffect(PotionEffectType.GLOWING)
+			else team.members.forEach { uuid ->
+				val player = Bukkit.getPlayer(uuid)
+				player?.removePotionEffect(PotionEffectType.GLOWING)
 			}
 		}
 	}

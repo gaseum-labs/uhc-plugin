@@ -78,7 +78,7 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		val location = block.location.add(event.blockFace.direction).toCenterLocation()
 		val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)
 
-		val team = TeamData.playersTeam(event.player)
+		val team = TeamData.playersTeam(event.player.uniqueId)
 		if (team != null) {
 			setCommandedBy(entity, team)
 

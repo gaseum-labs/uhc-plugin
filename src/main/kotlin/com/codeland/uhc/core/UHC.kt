@@ -7,10 +7,15 @@ import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
+import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
+import java.util.*
+import kotlin.collections.ArrayList
 
 class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var gameMaster = null as CommandSender?
@@ -69,6 +74,45 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	}
 
 	val gui = Gui(this)
+
+	val playerDataList = HashMap<UUID, PlayerData>()
+
+	/* access operations for player data list */
+	fun isAlive(uuid: UUID): Boolean {
+		return getPlayerData(uuid).alive
+	}
+
+	fun isParticipating(uuid: UUID): Boolean {
+		return getPlayerData(uuid).participating
+	}
+
+	fun isOptingOut(uuid: UUID): Boolean {
+		return getPlayerData(uuid).optingOut
+	}
+
+	fun setAlive(uuid: UUID, alive: Boolean) {
+		getPlayerData(uuid).alive = alive
+	}
+
+	fun setParticipating(uuid: UUID, participating: Boolean) {
+		getPlayerData(uuid).participating = participating
+	}
+
+	fun setOptOut(uuid: UUID, optOut: Boolean) {
+		getPlayerData(uuid).optingOut = optOut
+	}
+
+	fun getPlayerData(uuid: UUID): PlayerData {
+		val playerData = playerDataList[uuid]
+
+		return if (playerData == null) {
+			val ret = PlayerData(false, false, false)
+			playerDataList[uuid] = ret
+			ret
+		} else {
+			playerData
+		}
+	}
 
 	/* state setters */
 
@@ -183,22 +227,42 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	 * @return a string if the game couldn't start
 	 */
 	fun startUHC(commandSender : CommandSender): String? {
-		if (isGameGoing())
-			return "Game has already started!"
+		if (isGameGoing()) return "Game has already started!"
 
 		val numTeams = TeamData.teams.size
-		if (numTeams == 0) return "No one is playing!"
+		val individuals = ArrayList<UUID>()
 
-		gameMaster = commandSender
+		playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.participating && !TeamData.isOnTeam(uuid)) individuals.add(uuid)
+		}
+
+		if (numTeams + individuals.size == 0) return "No one is playing!"
 
 		val teleportLocations = GraceDefault.spreadPlayers(
-			Bukkit.getWorlds()[0], numTeams, startRadius - 5
+			Bukkit.getWorlds()[0], numTeams + individuals.size, startRadius - 5
 		)
 
 		if (teleportLocations.isNotEmpty()) {
-			startPhase(PhaseType.GRACE) { phase ->
-				(phase as GraceDefault).teleportLocations = teleportLocations
+			/* compile teams and individuals into who will teleport to which location */
+			val teleportGroups = Array(numTeams + individuals.size) { i ->
+				if (i < numTeams) {
+					val team = TeamData.teams[i]
+
+					Array(team.members.size) { j ->
+						team.members[j]
+					}
+				} else {
+					arrayOf(individuals[i - numTeams])
+				}
 			}
+
+			gameMaster = commandSender
+
+			startPhase(PhaseType.GRACE) { phase ->
+				(phase as GraceDefault).teleportGroups = teleportGroups
+				phase.teleportLocations = teleportLocations
+			}
+
 		} else {
 			return "Not enough valid spaces to teleport in this world!"
 		}
@@ -211,9 +275,9 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	 *
 	 * starts the postgame phase
 	 */
-	fun endUHC(winner: Team?) {
+	fun endUHC(winners: ArrayList<UUID>) {
 		startPhase(PhaseType.POSTGAME) { phase ->
-			(phase as PostgameDefault).winningTeam = winner
+			(phase as PostgameDefault).winners = winners
 		}
 	}
 
@@ -274,8 +338,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		var inverseAlong = 1 - (((radius - startRadius) / (endRadius - startRadius)))
 
 		/* range for mobcaps is from [0.25 - 1] */
-		inverseAlong *= 0.75
-		inverseAlong += 0.25
+		inverseAlong *= 0.80
+		inverseAlong += 0.20
 
 		world.     monsterSpawnLimit = (70 * inverseAlong * mobCapCoefficient).toInt() + 1
 		world.      animalSpawnLimit = (10 * inverseAlong * mobCapCoefficient).toInt() + 1

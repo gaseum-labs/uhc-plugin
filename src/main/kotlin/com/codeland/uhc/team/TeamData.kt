@@ -9,6 +9,7 @@ import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.reflect.StructureModifier
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor.*
 import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
@@ -64,34 +65,31 @@ object TeamData {
 		return teams.any { team -> team.colorPair == colorPair }
 	}
 
-	fun playersTeam(player: OfflinePlayer): Team? {
+	fun playersTeam(playerUuid: UUID): Team? {
 		for (team in teams)
-			for (member in team.members)
-				if (member.uniqueId == player.uniqueId) return team
+			for (teamUUID in team.members)
+				if (playerUuid == teamUUID) return team
 
 		return null
 	}
 
-	fun refreshPlayer(player: Player) {
-		for (team in teams) {
-			for (i in team.members.indices) {
-				if (team.members[i].uniqueId == player.uniqueId) {
-					team.members[i] = player
-					return
-				}
-			}
-		}
+	fun isOnTeam(playerUuid: UUID): Boolean {
+		for (team in teams)
+			for (teamUUID in team.members)
+				if (playerUuid == teamUUID) return true
+
+		return false
 	}
 
-	fun playersColor(player: OfflinePlayer): Coloring {
-		val team = playersTeam(player) ?: return Chat.solid(BLUE)
+	fun playersColor(uuid: UUID): Coloring {
+		val team = playersTeam(uuid) ?: return Chat.solid(BLUE)
 		return team.colorPair::colorString
 	}
 
-	fun addToTeam(colorPair: ColorPair, player: OfflinePlayer): Team {
+	fun addToTeam(colorPair: ColorPair, uuid: UUID): Team {
 		/* remove player from old team if they are on one */
-		val oldTeam = playersTeam(player)
-		if (oldTeam != null) removeFromTeam(oldTeam, player)
+		val oldTeam = playersTeam(uuid)
+		if (oldTeam != null) removeFromTeam(oldTeam, uuid)
 
 		/* find if the new team exists */
 		var newTeam = teams.find { team -> team.colorPair == colorPair }
@@ -102,41 +100,39 @@ object TeamData {
 			teams.add(newTeam)
 		}
 
-		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(newTeam, player.uniqueId) {}
+		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(newTeam, uuid) {}
 
-		newTeam.members.add(player)
+		newTeam.members.add(uuid)
 
-		val onlinePlayer = player.player
-		if (onlinePlayer != null)
-			NameManager.updateName(onlinePlayer)
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
 
 		return newTeam
 	}
 
-	fun addToTeam(team: Team, player: OfflinePlayer, destroyTeam: Boolean = true): Team {
+	fun addToTeam(team: Team, uuid: UUID, destroyTeam: Boolean = true): Team {
 		/* remove player from old team if they are on one */
-		val oldTeam = playersTeam(player)
-		if (oldTeam != null) removeFromTeam(oldTeam, player, destroyTeam)
+		val oldTeam = playersTeam(uuid)
+		if (oldTeam != null) removeFromTeam(oldTeam, uuid, destroyTeam)
 
-		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, player.uniqueId) {}
+		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, uuid) {}
 
-		team.members.add(player)
+		team.members.add(uuid)
 
-		val onlinePlayer = player.player
-		if (onlinePlayer != null)
-			NameManager.updateName(onlinePlayer)
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
 
 		return team
 	}
 
-	fun removeFromTeam(player: OfflinePlayer, destroyTeam: Boolean = true) {
-		removeFromTeam(playersTeam(player), player, destroyTeam)
+	fun removeFromTeam(player: UUID, destroyTeam: Boolean = true): Boolean {
+		return removeFromTeam(playersTeam(player), player, destroyTeam)
 	}
 
-	fun removeFromTeam(oldTeam: Team?, player: OfflinePlayer, destroyTeam: Boolean = true): Boolean {
+	fun removeFromTeam(oldTeam: Team?, uuid: UUID, destroyTeam: Boolean = true): Boolean {
 		oldTeam ?: return false
 
-		oldTeam.members.removeIf { offlinePlayer -> offlinePlayer.uniqueId == player.uniqueId }
+		oldTeam.members.removeIf { memberUuid -> memberUuid == uuid }
 
 		/* remove the team if no one is left on it */
 		if (destroyTeam && oldTeam.members.isEmpty()) {
@@ -144,15 +140,21 @@ object TeamData {
 			teams.removeIf { team -> team === oldTeam }
 		}
 
-		val onlinePlayer = player.player
-		if (onlinePlayer != null)
-			NameManager.updateName(onlinePlayer)
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
 
 		return true
 	}
 
 	fun removeAllTeams() {
 		while (teams.isNotEmpty()) {
+			removeFromTeam(teams[0], teams[0].members[0])
+		}
+	}
+
+	fun removeAllTeams(onRemove: (UUID) -> Unit) {
+		while (teams.isNotEmpty()) {
+			onRemove(teams[0].members[0])
 			removeFromTeam(teams[0], teams[0].members[0])
 		}
 	}

@@ -1,16 +1,22 @@
 package com.codeland.uhc.team
 
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.GameMode
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.Team
 
 object NameManager {
 	fun updateName(player: Player) {
-		TeamData.refreshPlayer(player)
+		val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
+		while (playerData.actionsQueue.isNotEmpty()) {
+			Util.log("PERFORMING ACTION FOR ${player.name}")
+			playerData.actionsQueue.remove()(player)
+		}
 
-		val team = TeamData.playersTeam(player)
+		val team = TeamData.playersTeam(player.uniqueId)
 		val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
 		val fakeTeam = scoreboard.getTeam(player.name)
 

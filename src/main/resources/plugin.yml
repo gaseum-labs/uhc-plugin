@@ -1,21 +1,11 @@
 name: UHCPlugin
 version: 0.1.0
 authors:
-  - Rewind
   - Balduvian
   - Varas
   - Sumdumdude
+  - Rewind
 load: STARTUP
 depend: [ProtocolLib]
 main: com.codeland.uhc.UHCPlugin
 api-version: 1.16
-permissions:
-  gamemaster:
-    description: Game Masters have all UHC management permissions
-    default: false
-commands:
-  setup:
-    description: Setup the UHC round
-    permission: gamemaster
-    permission-message: You are not a Game Master
-    usage: /uhc <command> [start radius|end radius|shrink time|grace time]
