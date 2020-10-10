@@ -9,8 +9,9 @@ import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenFile
-import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -189,6 +190,10 @@ object GameRunner {
 		} else {
 			onlinePlayer.location
 		}
+	}
+
+	fun coloredInGameMessage(string: String, color: ChatColor): String {
+		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
 	}
 
 	fun broadcast(message: String) {

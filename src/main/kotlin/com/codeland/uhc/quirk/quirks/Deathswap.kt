@@ -8,6 +8,7 @@ import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
@@ -66,9 +67,9 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
     override fun onPhaseSwitch(phase: PhaseVariant) {
         if (phase.type == PhaseType.GRACE) {
             updateSwapVars()
-            taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
+            taskId = SchedulerUtil.everyTick {
                 if (!GameRunner.uhc.isGameGoing())
-                    return@scheduleSyncRepeatingTask
+                    return@everyTick
                 if (timeLeft() < 0) {
                     sendAll("${ChatColor.GOLD}Swapped!")
                     swap()
@@ -95,7 +96,7 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
                     }
                     immunityEndAnnouncement = true
                 }
-            }, 1, 1)
+            }
         }
     }
     private fun sendAll(message: String) {

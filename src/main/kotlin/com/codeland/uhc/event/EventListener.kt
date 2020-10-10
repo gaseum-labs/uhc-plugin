@@ -20,6 +20,7 @@ import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.NetherFix
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
@@ -477,12 +478,11 @@ class EventListener : Listener {
 				event.isCancelled = true
 
 			} else {
-				Bukkit.getScheduler().runTaskLater(UHCPlugin.plugin, {
+				SchedulerUtil.nextTick {
 					block.type = oldBlockType
 					block.blockData = oldData
 					Unsheltered.setBroken(block, true)
-
-				} as () -> Unit, 0)
+				}
 			}
 		}
 
@@ -535,19 +535,14 @@ class EventListener : Listener {
 			/* replace these blocks */
 			if (Util.binarySearch(material, Creative.blocks)) {
 
-				var oldItemStack = event.itemInHand.clone()
+				val inHand: ItemStack = event.itemInHand.clone()
 
-				val inHand: ItemStack = if (event.hand === EquipmentSlot.HAND)
-					event.player.inventory.itemInMainHand.clone()
-				else
-					event.player.inventory.itemInOffHand.clone()
-
-				Bukkit.getScheduler().runTaskLater(UHCPlugin.plugin, {
+				SchedulerUtil.nextTick {
 					if (event.hand === EquipmentSlot.HAND)
 						event.player.inventory.setItemInMainHand(inHand)
 					else
 						event.player.inventory.setItemInOffHand(inHand)
-				} as () -> Unit, 0)
+				}
 			}
 
 		} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED)) {

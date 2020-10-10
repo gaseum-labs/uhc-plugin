@@ -14,6 +14,10 @@ object Commands {
         player.sendMessage("${ChatColor.RED}${ChatColor.BOLD}$text")
     }
 
+    fun coloredInError(string: String, color: ChatColor): String {
+        return "$color${ChatColor.BOLD}$string${ChatColor.RED}${ChatColor.BOLD}"
+    }
+
     /**
      * returns if the sender cannot use this command
      * you should return from original function if true
