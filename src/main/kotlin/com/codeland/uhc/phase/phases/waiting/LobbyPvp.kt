@@ -8,6 +8,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import java.util.*
 
 object LobbyPvp {
     class PvpData(
@@ -16,7 +17,7 @@ object LobbyPvp {
             var gameMode: GameMode,
             var inventoryContents: Array<out ItemStack>
     )
-    val pvpMap = mutableMapOf<Player, PvpData>()
+    val pvpMap = mutableMapOf<UUID, PvpData>()
     val PVP_BLOCK = Material.LAPIS_BLOCK
     val REGEN_BLOCK = Material.EMERALD_BLOCK
 
@@ -37,8 +38,8 @@ object LobbyPvp {
     )
 
     fun getPvpData(player: Player): PvpData {
-        if (pvpMap[player] == null) pvpMap[player] = PvpData(gameMode = player.gameMode, inventoryContents = player.inventory.contents)
-        return pvpMap[player]!!
+        if (pvpMap[player.uniqueId] == null) pvpMap[player.uniqueId] = PvpData(gameMode = player.gameMode, inventoryContents = player.inventory.contents)
+        return pvpMap[player.uniqueId]!!
     }
 
     fun enablePvp(player: Player, pvpData: PvpData) {

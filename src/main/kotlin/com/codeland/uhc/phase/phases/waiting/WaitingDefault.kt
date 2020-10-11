@@ -105,6 +105,11 @@ class WaitingDefault : Phase() {
 		player.teleport(Location(Bukkit.getWorlds()[0], center + 0.5, Util.topBlockY(Bukkit.getWorlds()[0], center, center) + 1.0, center + 0.5))
 		player.gameMode = GameMode.ADVENTURE
 
+		val pvpData = LobbyPvp.getPvpData(player)
+
+		if (pvpData.inPvp)
+			LobbyPvp.disablePvp(player, pvpData)
+
 		Pests.makeNotPest(player)
 
 		/* get them on the health scoreboard */
