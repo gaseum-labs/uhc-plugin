@@ -1,16 +1,12 @@
 package com.codeland.uhc.dropFix
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.quirk.quirks.ModifiedDrops.Companion.onDrop
-import com.codeland.uhc.util.Util
-import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
-import java.util.logging.Level
 
 class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>, val naturalDeath: Array<DropEntry>) {
 	val metaIndexName = "Dfix_${entityType.name}_I"
@@ -88,8 +84,8 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>
 		drops.clear()
 
 		getDrops(player).forEach { entry ->
-			val stack = entry.onDrop(looting, entity)
-			if (stack != null && stack.amount > 0) drops.add(stack)
+			val stacks = entry.onDrop(looting, entity)
+			stacks.forEach { stack -> if (stack != null && stack.amount > 0) drops.add(stack) }
 		}
 
 		return true
@@ -101,8 +97,8 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>
 		drops.clear()
 
 		naturalDeath.forEach { entry ->
-			val stack = entry.onDrop(0, entity)
-			if (stack != null && stack.amount > 0) drops.add(stack)
+			val stacks = entry.onDrop(0, entity)
+			stacks.forEach { stack -> if (stack != null && stack.amount > 0) drops.add(stack) }
 		}
 
 		return true

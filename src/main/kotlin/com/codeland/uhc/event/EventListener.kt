@@ -66,9 +66,11 @@ class EventListener : Listener {
 			val player = event.player
 
 			val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
-			playerData.offlineZombie = playerData.createZombie(player)
 
-			Util.log("created zombie named: ${playerData.offlineZombie?.customName}")
+			if (playerData.participating && playerData.alive) {
+				playerData.offlineZombie = playerData.createZombie(player)
+				Util.log("created zombie named: ${playerData.offlineZombie?.customName}")
+			}
 		}
 	}
 
@@ -377,6 +379,7 @@ class EventListener : Listener {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
 		} else {
 			val killer = event.entity.killer
+
 			DropFixType.values().any { dropFix ->
 				if (killer == null) dropFix.dropFix.onNaturalDeath(event.entity, event.drops)
 				else dropFix.dropFix.onKillEntity(killer, event.entity, event.drops)

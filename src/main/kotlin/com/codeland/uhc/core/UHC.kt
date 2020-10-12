@@ -331,7 +331,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		var numChunks = 0
 		val borderRadius = world.worldBorder.size / 2
 
-		val divisor = (Math.PI * 128.0 * 128.0) / (16.0 * 16.0)
+		val divisor = 289.0
 
 		Bukkit.getWorlds()[0].loadedChunks.forEach { chunk ->
 			val nearPlayer = GameRunner.uhc.playerDataList.any { (uuid, playerData) ->
@@ -350,10 +350,10 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			}
 		}
 
-		world.     monsterSpawnLimit = (70 * numChunks / divisor).roundToInt().coerceAtLeast(1)
-		world.      animalSpawnLimit = (10 * numChunks / divisor).roundToInt().coerceAtLeast(1)
-		world.     ambientSpawnLimit = (15 * numChunks / divisor).roundToInt().coerceAtLeast(1)
-		world. waterAnimalSpawnLimit = ( 5 * numChunks / divisor).roundToInt().coerceAtLeast(1)
-		world.waterAmbientSpawnLimit = (20 * numChunks / divisor).roundToInt().coerceAtLeast(1)
+		world.     monsterSpawnLimit = (70 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
+		world.      animalSpawnLimit = (10 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
+		world.     ambientSpawnLimit = (15 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
+		world. waterAnimalSpawnLimit = ( 5 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
+		world.waterAmbientSpawnLimit = (20 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
 	}
 }

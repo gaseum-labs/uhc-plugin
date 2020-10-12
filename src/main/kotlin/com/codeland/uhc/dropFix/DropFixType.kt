@@ -1,8 +1,11 @@
 package com.codeland.uhc.dropFix
 
+import com.codeland.uhc.dropFix.DropEntry.Companion.entity
 import com.codeland.uhc.dropFix.DropEntry.Companion.loot
+import com.codeland.uhc.dropFix.DropEntry.Companion.lootEntity
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootMulti
+import com.codeland.uhc.dropFix.DropEntry.Companion.noBaby
 import com.codeland.uhc.dropFix.DropEntry.Companion.onFire
 import com.codeland.uhc.dropFix.DropEntry.Companion.saddle
 import org.bukkit.Material
@@ -25,40 +28,38 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	SKELETON(DropFix(EntityType.SKELETON, arrayOf(
-		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem)),
-		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem)),
 		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem))
 	), arrayOf(
 		DropEntry.item(BONE)
 	))),
 
 	COW(DropFix(EntityType.COW, arrayOf(
-		arrayOf(loot(LEATHER, ::lootItem), DropEntry.lootEntity(onFire(BEEF, COOKED_BEEF), lootMulti(1))),
-		arrayOf(loot(LEATHER, ::lootItem), DropEntry.lootEntity(onFire(BEEF, COOKED_BEEF), lootMulti(2))),
-		arrayOf(loot(LEATHER, ::lootItem), DropEntry.lootEntity(onFire(BEEF, COOKED_BEEF), lootMulti(3)))
+		arrayOf(lootEntity(noBaby { LEATHER }, ::lootItem), lootEntity(noBaby(onFire(BEEF, COOKED_BEEF)), lootMulti(1))),
+		arrayOf(lootEntity(noBaby { LEATHER }, ::lootItem), lootEntity(noBaby(onFire(BEEF, COOKED_BEEF)), lootMulti(2))),
+		arrayOf(lootEntity(noBaby { LEATHER }, ::lootItem), lootEntity(noBaby(onFire(BEEF, COOKED_BEEF)), lootMulti(3)))
 	), arrayOf(
 		DropEntry.item(BEEF)
 	))),
 
 	HORSE(DropFix(EntityType.HORSE, arrayOf(
-		arrayOf(DropEntry.entity(::saddle), loot(LEATHER, ::lootItem))
+		arrayOf(DropEntry.horseInventory(), lootEntity(noBaby { LEATHER }, ::lootItem))
 	), arrayOf(
 		DropEntry.nothing()
 	))),
 
 	LLAMA(DropFix(EntityType.LLAMA, arrayOf(
-		arrayOf(loot(LEATHER, ::lootItem))
+		arrayOf(lootEntity(noBaby { LEATHER }, ::lootItem))
 	), arrayOf(
 		DropEntry.nothing()
 	))),
 
 	CHICKEN(DropFix(EntityType.CHICKEN, arrayOf(
-		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, lootMulti(-2))),
-		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, lootMulti(-1))),
-		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, lootMulti( 0))),
-		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, ::lootItem)),
-		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, ::lootItem)),
-		arrayOf(DropEntry.lootEntity(onFire(Material.CHICKEN, COOKED_CHICKEN), ::lootItem), loot(FEATHER, ::lootItem))
+		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(-2))),
+		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(-1))),
+		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(0))),
+		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, ::lootItem)),
+		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, ::lootItem)),
+		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, ::lootItem))
 	), arrayOf(
 		DropEntry.item(Material.CHICKEN)
 	))),
@@ -81,12 +82,12 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	STRIDER(DropFix(EntityType.STRIDER, arrayOf(
-		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(1))),
-		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(2))),
-		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(2))),
-		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(3))),
-		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(3))),
-		arrayOf(DropEntry.entity(::saddle), loot(STRING, lootMulti(4)))
+		arrayOf(entity(::saddle), loot(STRING, lootMulti(1))),
+		arrayOf(entity(::saddle), loot(STRING, lootMulti(2))),
+		arrayOf(entity(::saddle), loot(STRING, lootMulti(2))),
+		arrayOf(entity(::saddle), loot(STRING, lootMulti(3))),
+		arrayOf(entity(::saddle), loot(STRING, lootMulti(3))),
+		arrayOf(entity(::saddle), loot(STRING, lootMulti(4)))
 	), arrayOf(
 		DropEntry.item(STRING)
 	))),
