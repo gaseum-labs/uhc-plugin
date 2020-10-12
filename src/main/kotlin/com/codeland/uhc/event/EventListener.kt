@@ -415,7 +415,7 @@ class EventListener : Listener {
 		} else if (attacker is Player && defender is Player) {
 			/* protected no pvp phases */
 			if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-				event.isCancelled = !(LobbyPvp.pvpMap[attacker]?.inPvp ?: false) || !(LobbyPvp.pvpMap[defender]?.inPvp ?: false)
+				event.isCancelled = !LobbyPvp.getPvpData(attacker).inPvp || !LobbyPvp.getPvpData(defender).inPvp
 			}
 
 			if (GameRunner.uhc.isPhase(PhaseType.GRACE)) {
