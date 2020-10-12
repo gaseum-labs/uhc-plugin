@@ -48,8 +48,6 @@ open class GraceDefault : Phase() {
 		/* reset the ledger */
 		uhc.elapsedTime = 0
 		uhc.ledger = Ledger()
-
-		uhc.updateMobCaps()
 	}
 
 	fun startPlayer(player: Player) {
@@ -90,7 +88,10 @@ open class GraceDefault : Phase() {
 
 	override fun customEnd() {}
 	override fun onTick(currentTick: Int) {}
-	override fun perSecond(remainingSeconds: Int) {}
+
+	override fun perSecond(remainingSeconds: Int) {
+		uhc.updateMobCaps()
+	}
 
 	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
 		bossBar.setTitle("${ChatColor.RESET}Grace period ends in ${phaseType.chatColor}${ChatColor.BOLD}${Util.timeString(remainingSeconds)}")

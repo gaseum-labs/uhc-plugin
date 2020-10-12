@@ -12,7 +12,7 @@ import org.bukkit.boss.BossBar
 
 class ShrinkDefault : Phase() {
 	override fun perSecond(remainingSeconds: Int) {
-		GameRunner.uhc.updateMobCaps()
+		uhc.updateMobCaps()
 	}
 
 	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {

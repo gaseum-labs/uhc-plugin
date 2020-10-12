@@ -82,6 +82,13 @@ class TestCommands : BaseCommand() {
 				GameRunner.sendGameMessage(sender, team.colorPair.colorString(player.name ?: "NULL"))
 			}
 		}
+
+		GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.participating && !TeamData.isOnTeam(uuid)) {
+				val player = Bukkit.getOfflinePlayer(uuid)
+				GameRunner.sendGameMessage(sender, player.name ?: "NULL")
+			}
+		}
 	}
 
 	@CommandAlias("test alive")

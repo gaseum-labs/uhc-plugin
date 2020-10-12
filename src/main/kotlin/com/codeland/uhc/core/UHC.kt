@@ -15,8 +15,12 @@ import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
+import java.lang.Math.pow
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.abs
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var gameMaster = null as CommandSender?
@@ -324,43 +328,32 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	fun updateMobCaps() {
 		val world = Bukkit.getWorlds()[0]
 
-		/* mobCap = constant × chunks ÷ 289                           */
-		/* https://minecraft.gamepedia.com/Spawn#Java_Edition_mob_cap */
+		var numChunks = 0
+		val borderRadius = world.worldBorder.size / 2
 
-		/*
-		var total = 0.0
-		var inBorder = 0.0
+		val divisor = (Math.PI * 128.0 * 128.0) / (16.0 * 16.0)
 
-		for (chunk in world.loadedChunks) {
-			++total
+		Bukkit.getWorlds()[0].loadedChunks.forEach { chunk ->
+			val nearPlayer = GameRunner.uhc.playerDataList.any { (uuid, playerData) ->
+				if (!playerData.participating || !playerData.alive) return@any false
 
-			val width = min(world.worldBorder.size, chunk.x * 16.0 + 16.0) - max(-world.worldBorder.size, chunk.x * 16.0)
-			val height = min(world.worldBorder.size, chunk.z * 16.0 + 16.0) - max(-world.worldBorder.size, chunk.z * 16.0)
+				val position = GameRunner.getPlayerLocation(uuid) ?: return@any false
 
-			if (width < 0 || height < 0) continue
+				sqrt(pow(chunk.x * 16.0 + 8.0 - position.x, 2.0) + pow(chunk.z * 16.0 + 8.0 - position.z, 2.0)) < 128.0
+			}
 
-			inBorder += width * height / 256.0
+			val inX = abs(chunk.x * 16 + 0.5) < borderRadius || abs(chunk.x * 16 + 15.5) < borderRadius
+			val inZ = abs(chunk.z * 16 + 0.5) < borderRadius || abs(chunk.z * 16 + 15.5) < borderRadius
+
+			if (nearPlayer && inX && inZ) {
+				++numChunks
+			}
 		}
 
-		val coeff = inBorder / total
-
-		world.    monsterSpawnLimit = (70 * coeff * mobCapCoefficient).toInt() + 1
-		world.     animalSpawnLimit = (10 * coeff * mobCapCoefficient).toInt() + 1
-		world.    ambientSpawnLimit = (15 * coeff * mobCapCoefficient).toInt() + 1
-		world.waterAnimalSpawnLimit = ( 5 * coeff * mobCapCoefficient).toInt() + 1
-		 */
-
-		val radius = world.worldBorder.size / 2
-		var inverseAlong = 1 - (((radius - startRadius) / (endRadius - startRadius)))
-
-		/* range for mobcaps is from [0.25 - 1] */
-		inverseAlong *= 0.80
-		inverseAlong += 0.20
-
-		world.     monsterSpawnLimit = (70 * inverseAlong * mobCapCoefficient).toInt() + 1
-		world.      animalSpawnLimit = (10 * inverseAlong * mobCapCoefficient).toInt() + 1
-		world.     ambientSpawnLimit = (15 * inverseAlong * mobCapCoefficient).toInt() + 1
-		world. waterAnimalSpawnLimit = ( 5 * inverseAlong * mobCapCoefficient).toInt() + 1
-		world.waterAmbientSpawnLimit = (20 * inverseAlong * mobCapCoefficient).toInt() + 1
+		world.     monsterSpawnLimit = (70 * numChunks / divisor).roundToInt().coerceAtLeast(1)
+		world.      animalSpawnLimit = (10 * numChunks / divisor).roundToInt().coerceAtLeast(1)
+		world.     ambientSpawnLimit = (15 * numChunks / divisor).roundToInt().coerceAtLeast(1)
+		world. waterAnimalSpawnLimit = ( 5 * numChunks / divisor).roundToInt().coerceAtLeast(1)
+		world.waterAmbientSpawnLimit = (20 * numChunks / divisor).roundToInt().coerceAtLeast(1)
 	}
 }

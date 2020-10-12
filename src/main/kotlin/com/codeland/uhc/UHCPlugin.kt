@@ -33,8 +33,8 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(TestCommands())
 		commandManager.registerCommand(ParticipantCommands())
 		commandManager.registerCommand(ShareCoordsCommand())
-
 		commandManager.registerCommand(NicknameCommand())
+
 		Chat.loadFile()
 
 		/* register all events */

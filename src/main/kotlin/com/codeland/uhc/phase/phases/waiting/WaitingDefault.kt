@@ -58,6 +58,7 @@ class WaitingDefault : Phase() {
 		world.setStorm(false)
 		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false)
 		world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
 		world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0)
 		world.time = 6000
 		world.difficulty = Difficulty.NORMAL
