@@ -9,6 +9,7 @@ import com.codeland.uhc.command.ubt.UBT
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
@@ -36,6 +37,30 @@ class TestCommands : BaseCommand() {
 	@Description("change the gravity constant")
 	fun testGravity(sender: CommandSender, gravity: Double) {
 		LowGravity.gravity = gravity
+	}
+
+	@CommandAlias("test deathswap average")
+	@Description("change the average swap time")
+	fun testDsAverage(sender: CommandSender, average: Int) {
+		Deathswap.average = average
+	}
+
+	@CommandAlias("test deathswap warning")
+	@Description("change the length of pre-swap warnings")
+	fun testDsWarnings(sender: CommandSender, warning: Int) {
+		Deathswap.WARNING = warning * 1000
+	}
+
+	@CommandAlias("test deathswap immunity")
+	@Description("change the length of the post-swap immunity period")
+	fun testDsImmunity(sender: CommandSender, immunity: Int) {
+		Deathswap.IMMUNITY = immunity * 1000
+	}
+
+	@CommandAlias("test deathswap swap")
+	@Description("swap all players")
+	fun testDsSwap(sender: CommandSender) {
+		Deathswap.swap()
 	}
 
 	@CommandAlias("test insomnia")

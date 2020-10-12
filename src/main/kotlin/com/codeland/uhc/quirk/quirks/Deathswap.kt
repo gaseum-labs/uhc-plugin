@@ -18,15 +18,15 @@ import java.util.concurrent.ThreadLocalRandom
 class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
     companion object {
 
-        const val WARNING = 10000
-        const val IMMUNITY = 10000
+        var WARNING = 10000
+        var IMMUNITY = 10000
 
         var taskId = 0
         var lastSwap = 0L
         var swapTime = 0L
         val random = Random()
         // average # of seconds between swaps
-        val average = 60
+        var average = 60
         var lastAnnounced = WARNING / 1000L - 1
 
         var immunityEndAnnouncement = true
