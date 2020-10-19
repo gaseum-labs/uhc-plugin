@@ -41,6 +41,7 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import kotlin.math.min
 
 class EventListener : Listener {
 	@EventHandler
@@ -148,7 +149,34 @@ class EventListener : Listener {
 		}
 
 		/* normal respawns in grace */
-		if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
+		if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)){
+			val killer = player.killer
+			if(killer != null){
+				event.keepInventory = true
+
+				Betrayal.getPlayerData(player).swaps++
+				Betrayal.getPlayerData(killer).kills++
+
+				val team = TeamData.playersTeam(killer.uniqueId)
+				if (team != null) TeamData.addToTeam(team, player.uniqueId)
+
+				if(TeamData.teams.size == 1) {
+					GameRunner.uhc.endUHC(TeamData.teams[0].members)
+					var scores = Betrayal.calculateScores(TeamData.teams[0].members)
+					for (i in 0..min(2, TeamData.teams[0].members.size)) {
+						Bukkit.getOnlinePlayers().forEach { dude ->
+							var rankingPlayer = Bukkit.getPlayer(scores[i].first)
+							if (rankingPlayer != null) GameRunner.sendGameMessage(dude,
+									"${i + 1}: ${rankingPlayer.name} " +
+											"Kills: ${Betrayal.getPlayerData(rankingPlayer).kills} " +
+											"Swaps: ${Betrayal.getPlayerData(rankingPlayer).swaps} ")
+						}
+					}
+				}
+			} else {
+				event.keepInventory = false
+			}
+		} else if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
 			val wasPest = Pests.isPest(player)
 
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
@@ -207,7 +235,13 @@ class EventListener : Listener {
 			}
 
 		/* grace respawning */
-		if (GameRunner.uhc.isAlive(event.player.uniqueId)) {
+		if(GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)) {
+			val team = TeamData.playersTeam(event.player.uniqueId)
+			if(team != null) {
+				val randy = Bukkit.getPlayer(team.members[Util.randRange(0, team.members.lastIndex)])
+				if (randy != null) event.player.teleport(randy)
+			}
+		} else if(GameRunner.uhc.isAlive(event.player.uniqueId)) {
 			spreadRespawn(event)
 
 		/* pest respawning */
