@@ -1,107 +1,106 @@
 package com.codeland.uhc.quirk.quirks
 
-import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
+import org.bukkit.Location
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.collections.ArrayList
+import kotlin.math.ceil
 
 class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
     companion object {
-
-        var WARNING = 10000
-        var IMMUNITY = 10000
+        var WARNING = 10 * 20
+        var IMMUNITY = 10 * 20
 
         var taskId = 0
-        var lastSwap = 0L
-        var swapTime = 0L
+        var swapTime = 0
+
         val random = Random()
-        // average # of seconds between swaps
-        var average = 60
-        var lastAnnounced = WARNING / 1000L - 1
 
-        var immunityEndAnnouncement = true
-        var hasSwappedOnce = false
+        fun doSwaps() {
+            val teleportList = ArrayList<Location>()
 
-
-        fun swap() {
-            val playerList = Bukkit.getOnlinePlayers()
-            if (playerList.isEmpty()) return
-            val newList = playerList.toList().shuffled()
-            val tempLocation = newList[0].location
-
-            newList.subList(0, newList.size - 1).forEachIndexed { index, player ->
-                player.teleport(newList[index + 1])
+            GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+                if (playerData.participating && playerData.alive) {
+                    teleportList.add(GameRunner.getPlayerLocation(uuid) ?: GameRunner.uhc.spectatorSpawnLocation())
+                }
             }
-            newList.last().teleport(tempLocation)
-            updateSwapVars()
-            immunityEndAnnouncement = false
-            hasSwappedOnce = true
+
+            GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+                if (playerData.participating && playerData.alive) {
+                    GameRunner.teleportPlayer(uuid, teleportList.removeAt(Util.randRange(0, teleportList.lastIndex)))
+                }
+            }
         }
 
-        fun updateSwapVars() {
-            lastSwap = System.currentTimeMillis()
-            swapTime = ThreadLocalRandom.current().nextLong(average * 1000L * 2 + WARNING + 1000)
+        fun resetTimer() {
+            swapTime = ((ThreadLocalRandom.current().nextInt() % (60 * 20)) + IMMUNITY)
         }
-
-        fun timeLeft() = swapTime - (System.currentTimeMillis() - lastSwap)
-        fun elapsed() = System.currentTimeMillis() - lastSwap
     }
 
     override fun onEnable() {
+
     }
 
     override fun onDisable() {
         Bukkit.getScheduler().cancelTask(taskId)
     }
 
+    private fun sendImmunity(percent: Float) {
+        val message = StringBuilder("${ChatColor.GOLD}Immune ${ChatColor.GRAY}- ")
+
+        for (i in 0 until (10 * percent).toInt())
+            message.append(ChatColor.GOLD.toString() + "▮")
+
+        for (i in 0 until 10 - (10 * percent).toInt())
+            message.append(ChatColor.GRAY.toString() + "▮")
+
+        sendAll(message.toString(), false)
+    }
+
     override fun onPhaseSwitch(phase: PhaseVariant) {
         if (phase.type == PhaseType.GRACE) {
-            updateSwapVars()
+            resetTimer()
+
             taskId = SchedulerUtil.everyTick {
-                if (!GameRunner.uhc.isGameGoing())
-                    return@everyTick
-                if (timeLeft() < 0) {
-                    sendAll("${ChatColor.GOLD}Swapped!")
-                    swap()
-                    lastAnnounced = WARNING / 1000L - 1
-                } else if (timeLeft() / 1000L == lastAnnounced) {
-                    sendAll("${ChatColor.GOLD}Swapping in ${ChatColor.BLUE}${timeLeft()/1000 + 1}${ChatColor.GOLD}...")
-                    lastAnnounced--
-                }
-                if (elapsed() < IMMUNITY && hasSwappedOnce) {
-                    val bars = StringBuilder()
-                    val immunityLeft = (IMMUNITY - elapsed())
-                    val percent = (immunityLeft/IMMUNITY.toDouble())
-                    for (i in 0 until (10 * percent).toInt())
-                        bars.append(ChatColor.GOLD.toString() + "▮")
-                    for (i in 0 until 10 - (10 * percent).toInt())
-                        bars.append(ChatColor.GRAY.toString() + "▮")
-                    for (player in Bukkit.getOnlinePlayers().filter {it.gameMode == GameMode.SURVIVAL}) {
-                        player.sendActionBar("${ChatColor.GOLD}Immune ${ChatColor.GRAY}- $bars")
+                --swapTime
+
+                when {
+                    swapTime <= 0 -> {
+                        resetTimer()
+                        sendAll("${ChatColor.GOLD}You are no longer immune.", false)
                     }
-                } else if (!immunityEndAnnouncement) {
-                    for (player in Bukkit.getOnlinePlayers().filter {it.gameMode == GameMode.SURVIVAL}) {
-                        player.sendActionBar("${ChatColor.GOLD}Immune ${ChatColor.GRAY}- ▮▮▮▮▮▮▮▮▮▮")
-                        player.sendMessage("${ChatColor.GOLD}You are no longer immune.")
+                    swapTime < IMMUNITY -> {
+                        sendImmunity(swapTime / IMMUNITY.toFloat())
                     }
-                    immunityEndAnnouncement = true
+                    swapTime == IMMUNITY -> {
+                        doSwaps()
+                        sendAll("${ChatColor.GOLD}Swapped!", true)
+                    }
+                    swapTime < IMMUNITY + WARNING -> {
+                        sendAll("${ChatColor.GOLD}Swapping in ${ChatColor.BLUE}${ceil(swapTime / 20.0)}${ChatColor.GOLD}...", true)
+                    }
                 }
             }
+        } else if (phase.type == PhaseType.POSTGAME) {
+            Bukkit.getScheduler().cancelTask(taskId)
         }
     }
-    private fun sendAll(message: String) {
-        for (player in Bukkit.getOnlinePlayers()) {
-            player.sendMessage(message)
+
+    private fun sendAll(message: String, allowSpecs: Boolean) {
+        GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+            if ((playerData.participating && playerData.alive) || allowSpecs)
+                Bukkit.getPlayer(uuid)?.sendActionBar(message)
         }
     }
 }

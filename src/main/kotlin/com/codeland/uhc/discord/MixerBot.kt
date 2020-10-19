@@ -245,6 +245,7 @@ class MixerBot(
 		val category = voiceCategory ?: return accept(null)
 
 		category.voiceChannels.find { channel ->
+			Util.log("\"${channel.name}\"")
 			if (channel.name == team.colorPair.getName()) { accept(channel); true } else false
 		} ?: category.createVoiceChannel(team.colorPair.getName()).queue { created -> accept(created) }
 	}

@@ -85,7 +85,7 @@ class EventListener : Listener {
 				if (player is Player) WetSponge.addSponge(player)
 				
 			}
-			if (event.entity is Player && GameRunner.uhc.isEnabled(QuirkType.DEATHSWAP) && Deathswap.elapsed() < Deathswap.IMMUNITY) {
+			if (event.entity is Player && GameRunner.uhc.isEnabled(QuirkType.DEATHSWAP) && Deathswap.swapTime < Deathswap.IMMUNITY) {
 				event.isCancelled = true
 			}
 		} else {
@@ -201,13 +201,13 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING))
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			if (LobbyPvp.getPvpData(event.player).inPvp) {
 				LobbyPvp.disablePvp(event.player, LobbyPvp.getPvpData(event.player))
 			}
 
 		/* grace respawning */
-		if (GameRunner.uhc.isAlive(event.player.uniqueId)) {
+		} else if (GameRunner.uhc.isAlive(event.player.uniqueId)) {
 			spreadRespawn(event)
 
 		/* pest respawning */

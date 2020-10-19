@@ -16,6 +16,8 @@ import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.LockSupport
 import javax.naming.Name
 import kotlin.collections.ArrayList
 
@@ -125,37 +127,51 @@ object TeamData {
 		return team
 	}
 
-	fun removeFromTeam(player: UUID, destroyTeam: Boolean = true): Boolean {
-		return removeFromTeam(playersTeam(player), player, destroyTeam)
+	fun removeFromTeam(player: UUID, destroyTeam: Boolean, onComplete: (Boolean) -> Unit) {
+		removeFromTeam(playersTeam(player), player, destroyTeam, onComplete)
 	}
 
-	fun removeFromTeam(oldTeam: Team?, uuid: UUID, destroyTeam: Boolean = true): Boolean {
-		oldTeam ?: return false
+	fun removeFromTeam(oldTeam: Team?, uuid: UUID, destroyTeam: Boolean, onComplete: (Boolean) -> Unit) {
+		if (oldTeam == null) {
+			onComplete(false)
 
-		oldTeam.members.removeIf { memberUuid -> memberUuid == uuid }
+		} else {
+			oldTeam.members.removeIf { memberUuid -> memberUuid == uuid }
 
-		/* remove the team if no one is left on it */
-		if (destroyTeam && oldTeam.members.isEmpty()) {
-			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeam(oldTeam) {}
-			teams.removeIf { team -> team === oldTeam }
+			val onlinePlayer = Bukkit.getPlayer(uuid)
+			if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
+
+			/* remove the team if no one is left on it */
+			if (destroyTeam && oldTeam.members.isEmpty()) {
+				teams.removeIf { team -> team === oldTeam }
+
+				if (GameRunner.uhc.usingBot)
+					GameRunner.bot?.destroyTeam(oldTeam) { onComplete(true) }
+				else
+					onComplete(true)
+			}
 		}
-
-		val onlinePlayer = Bukkit.getPlayer(uuid)
-		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
-
-		return true
 	}
 
-	fun removeAllTeams() {
+	fun removeAllTeams(onComplete: () -> Unit) {
 		while (teams.isNotEmpty()) {
-			removeFromTeam(teams[0], teams[0].members[0])
+			removeFromTeam(teams[0], teams[0].members[0], true) {
+				synchronized(this) {
+					if (teams.isEmpty()) onComplete
+				}
+			}
 		}
 	}
 
-	fun removeAllTeams(onRemove: (UUID) -> Unit) {
+	fun removeAllTeams(onRemove: (UUID) -> Unit, onComplete: (Boolean) -> Unit) {
 		while (teams.isNotEmpty()) {
 			onRemove(teams[0].members[0])
-			removeFromTeam(teams[0], teams[0].members[0])
+
+			removeFromTeam(teams[0], teams[0].members[0], true) {
+				synchronized(this) {
+					if (teams.isEmpty()) onComplete
+				}
+			}
 		}
 	}
 }
