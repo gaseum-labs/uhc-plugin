@@ -14,6 +14,7 @@ import org.bukkit.ChatColor
 import org.bukkit.GameMode
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import kotlin.coroutines.CoroutineContext
 
 @CommandAlias("uhc")
 class ParticipantCommands : BaseCommand() {
@@ -39,7 +40,7 @@ class ParticipantCommands : BaseCommand() {
 			GameRunner.uhc.setParticipating(sender.uniqueId, false)
 
 			val team = TeamData.playersTeam(sender.uniqueId)
-			if (team != null) TeamData.removeFromTeam(team, sender.uniqueId)
+			if (team != null) TeamData.removeFromTeam(team, sender.uniqueId, true) {}
 
 			GameRunner.sendGameMessage(sender, "You have opted out of participating")
 		}

@@ -151,9 +151,10 @@ class AdminCommands : BaseCommand() {
 		if (GameRunner.uhc.isOptingOut(player.uniqueId)) return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
 
 		val joinTeam = TeamData.playersTeam(teammate.uniqueId) ?: return Commands.errorMessage(sender, "${teammate.name} has no team to join!")
-		TeamData.addToTeam(joinTeam, player.uniqueId)
 
-		lateTeamTeleport(sender, player, teammate.location, joinTeam)
+		TeamData.addToTeam(joinTeam, player.uniqueId, true) {
+			lateTeamTeleport(sender, player, teammate.location, joinTeam)
+		}
 	}
 
 	@CommandAlias("addLate")
@@ -171,9 +172,10 @@ class AdminCommands : BaseCommand() {
 			?: return Commands.errorMessage(sender, "No suitible teleport location found!")
 
 		var teamColorPairs = TeamMaker.getColorList(1) ?: return Commands.errorMessage(sender, "There are already the maximum amount of teams (${TeamData.MAX_TEAMS})")
-		val joinTeam = TeamData.addToTeam(teamColorPairs[0], player.uniqueId)
 
-		lateTeamTeleport(sender, player, teleportLocation, joinTeam)
+		TeamData.addToTeam(teamColorPairs[0], player.uniqueId, true) { joinTeam ->
+			lateTeamTeleport(sender, player, teleportLocation, joinTeam)
+		}
 	}
 
 	private fun lateTeamTeleport(sender: CommandSender, player: Player, location: Location, team: Team) {

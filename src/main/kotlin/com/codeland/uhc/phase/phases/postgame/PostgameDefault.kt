@@ -79,7 +79,7 @@ class PostgameDefault : Phase() {
             world.worldBorder.size = world.worldBorder.size
         }
 
-        TeamData.removeAllTeams()
+        TeamData.removeAllTeams {}
     }
 
     override fun customEnd() {}

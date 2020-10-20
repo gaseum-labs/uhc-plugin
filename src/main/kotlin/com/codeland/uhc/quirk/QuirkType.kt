@@ -1,8 +1,11 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.quirks.*
 import org.bukkit.Material
+import java.util.*
 
 enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Quirk, var defaultEnabled: Boolean, var representation: Material, var description: Array<String>) {
     HALF_ZATOICHI("Half Zatoichi", ::HalfZatoichi, false, Material.IRON_SWORD, arrayOf(
@@ -69,6 +72,11 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	DEATHSWAP("Deathswap", ::Deathswap, false, Material.MAGENTA_GLAZED_TERRACOTTA, arrayOf(
 		"Players switch places with each other",
 		"at randomly chosen intervals"
+	)),
+
+	BETRAYAL("Betrayal", ::Betrayal, false, Material.BONE, arrayOf(
+			"Two teams fight head to head",
+			"Players swap teams when killed"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
@@ -92,14 +100,32 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
         incompatibilities.contains(other)
     }
 
-    companion object {
-        init {
-            CREATIVE.setIncompatible(UNSHELTERED)
-			//SHARED_INVENTORY.setIncompatible(HOTBAR) // could this be compatible?
-		}
-    }
-
 	fun createQuirk(uhc: UHC): Quirk {
 		return create(uhc, this)
 	}
+
+    companion object {
+        init {
+            CREATIVE.setIncompatible(UNSHELTERED)
+			PESTS.setIncompatible(BETRAYAL)
+		}
+
+		fun <DataType> getData(uuid: UUID, type: QuirkType): DataType {
+			return getData(GameRunner.uhc.getPlayerData(uuid), type)
+		}
+
+		fun <DataType> getData(playerData: PlayerData, type: QuirkType): DataType {
+			val quirkData = playerData.quirkData
+			val value = quirkData[type]
+
+			return if (value == null) {
+				val newValue = GameRunner.uhc.getQuirk(type).defaultData()
+				quirkData[type] = newValue
+				newValue as DataType
+
+			} else {
+				value as DataType
+			}
+		}
+    }
 }

@@ -1,5 +1,6 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiInventory
 import com.codeland.uhc.gui.GuiItem
@@ -9,6 +10,8 @@ import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import java.util.*
+import kotlin.collections.ArrayList
 
 abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 	/* default value will be set upon init */
@@ -58,6 +61,8 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 			property.value = property.defaultValue
 		}
 	}
+
+	open fun defaultData(): Any = 0
 
 	abstract fun onEnable()
 	abstract fun onDisable()

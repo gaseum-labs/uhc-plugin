@@ -12,6 +12,8 @@ import com.codeland.uhc.util.Util
 import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
+import java.util.*
+import kotlin.collections.ArrayList
 
 @CommandAlias("uhca")
 class TeamCommands : BaseCommand() {
@@ -20,11 +22,11 @@ class TeamCommands : BaseCommand() {
 	fun clearTeams(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		TeamData.removeAllTeams { player ->
+		TeamData.removeAllTeams( { player ->
 			GameRunner.uhc.setParticipating(player, false)
+		}) {
+			GameRunner.sendGameMessage(sender, "Cleared all teams")
 		}
-
-		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
 
 	@CommandAlias("team add")
@@ -59,10 +61,10 @@ class TeamCommands : BaseCommand() {
 		if (GameRunner.uhc.isOptingOut(player.uniqueId))
 			return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
 
-		val team = TeamData.addToTeam(colorPair, player.uniqueId)
-		GameRunner.uhc.setParticipating(player.uniqueId, true)
-
-		GameRunner.sendGameMessage(sender, "${ChatColor.RESET}Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
+		TeamData.addToTeam(colorPair, player.uniqueId, true) { team ->
+			GameRunner.uhc.setParticipating(player.uniqueId, true)
+			GameRunner.sendGameMessage(sender, "Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
+		}
 	}
 
 	@CommandAlias("team remove")
@@ -73,10 +75,10 @@ class TeamCommands : BaseCommand() {
 		val team = TeamData.playersTeam(player.uniqueId)
 			?: return Commands.errorMessage(sender, "${player.name} is not on a team!")
 
-		TeamData.removeFromTeam(team, player.uniqueId)
-		GameRunner.uhc.setParticipating(player.uniqueId, false)
-
-		GameRunner.sendGameMessage(sender, "Removed ${player.name} from ${team.colorPair.colorString(team.displayName)}")
+		TeamData.removeFromTeam(team, player.uniqueId, true) {
+			GameRunner.uhc.setParticipating(player.uniqueId, false)
+			GameRunner.sendGameMessage(sender, "Removed ${player.name} from ${team.colorPair.colorString(team.displayName)}")
+		}
 	}
 
 	@CommandAlias("team random")
@@ -85,11 +87,11 @@ class TeamCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		val onlinePlayers = sender.server.onlinePlayers
-		val playerArray = ArrayList<OfflinePlayer>(onlinePlayers.size)
+		val playerArray = ArrayList<UUID>(onlinePlayers.size)
 
 		onlinePlayers.forEach { player ->
 			if (TeamData.playersTeam(player.uniqueId) == null && !GameRunner.uhc.isOptingOut(player.uniqueId))
-				playerArray.add(player)
+				playerArray.add(player.uniqueId)
 		}
 
 		val teams = TeamMaker.getTeamsRandom(playerArray, teamSize)
@@ -98,12 +100,12 @@ class TeamCommands : BaseCommand() {
 		val teamColorPairs = TeamMaker.getColorList(numPreMadeTeams)
 			?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!")
 
-		teams.forEachIndexed { index, players ->
-			players.forEach { player ->
-				if (player != null) {
-					TeamData.addToTeam(teamColorPairs[index], player.uniqueId)
-					GameRunner.uhc.setParticipating(player.uniqueId, true)
-				}
+		teams.forEachIndexed { index, uuids ->
+			uuids.forEach { uuid ->
+				if (uuid != null)
+					TeamData.addToTeam(teamColorPairs[index], uuid, true) {
+						GameRunner.uhc.setParticipating(uuid, true)
+					}
 			}
 		}
 
@@ -116,8 +118,8 @@ class TeamCommands : BaseCommand() {
 		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
 		val team2 = TeamData.playersTeam(player2.uniqueId) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
 
-		TeamData.addToTeam(team2, player1.uniqueId, false)
-		TeamData.addToTeam(team1, player2.uniqueId, false)
+		TeamData.addToTeam(team2, player1.uniqueId, false) {}
+		TeamData.addToTeam(team1, player2.uniqueId, false) {}
 
 		GameRunner.sendGameMessage(sender, "${team2.colorPair.colorString(player1.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}and ${team1.colorPair.colorString(player2.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
 	}

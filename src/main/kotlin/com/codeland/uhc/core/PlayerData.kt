@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -11,12 +12,15 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.max
 
 class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: Boolean) {
-	lateinit var skull: ItemStack
+	var quirkData = HashMap<QuirkType, Any>()
+
+	var skull = ItemStack(Material.PLAYER_HEAD)
 
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 

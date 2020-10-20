@@ -1,6 +1,5 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.*
@@ -18,6 +17,7 @@ import com.codeland.uhc.phase.phases.waiting.LobbyPvp
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
+import com.codeland.uhc.quirk.quirks.Betrayal.BetrayalData
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
@@ -147,8 +147,18 @@ class EventListener : Listener {
 			if (killer != null) HalfZatoichi.onKill(killer)
 		}
 
-		/* normal respawns in grace */
-		if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
+		if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)){
+			val killer = player.killer
+
+			/* don't drop if you were killed and team swapped */
+			if(killer != null) {
+				event.keepInventory = true
+				event.drops.clear()
+
+				Betrayal.onPlayerDeath(player.uniqueId, killer.uniqueId)
+			}
+		/* regular deaths */
+		} else if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
 			val wasPest = Pests.isPest(player)
 
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
@@ -162,9 +172,10 @@ class EventListener : Listener {
 				GameRunner.playerDeath(player.uniqueId, player.killer)
 
 			if (Pests.isPest(player))
-				TeamData.removeFromTeam(player.uniqueId)
+				TeamData.removeFromTeam(player.uniqueId, true) {}
 		}
 
+		/* prevent glass from dropping in hotbar chc */
 		if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) {
 			event.drops.removeAll { itemStack ->
 				itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.displayName == "Unusable Slot"
@@ -201,31 +212,34 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			if (LobbyPvp.getPvpData(event.player).inPvp) {
-				LobbyPvp.disablePvp(event.player, LobbyPvp.getPvpData(event.player))
+		when {
+			GameRunner.uhc.isPhase(PhaseType.WAITING) -> {
+				/* waiting pvp respawning */
+				if (LobbyPvp.getPvpData(event.player).inPvp) {
+					LobbyPvp.disablePvp(event.player, LobbyPvp.getPvpData(event.player))
+				}
 			}
+			GameRunner.uhc.isAlive(event.player.uniqueId) -> {
+				/* grace respawning */
+				spreadRespawn(event)
+			}
+			GameRunner.uhc.isEnabled(QuirkType.PESTS) -> {
+				/* pest respawning */
+				var player = event.player
 
-		/* grace respawning */
-		} else if (GameRunner.uhc.isAlive(event.player.uniqueId)) {
-			spreadRespawn(event)
+				/* player is set to pest on death */
+				if (!Pests.isPest(player))
+					return
 
-		/* pest respawning */
-		} else if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-			var player = event.player
+				/* spread player */
+				spreadRespawn(event)
 
-			/* player is set to pest on death */
-			if (!Pests.isPest(player))
-				return
-
-			/* spread player */
-			spreadRespawn(event)
-
-			Pests.givePestSetup(player)
-
-		/* players respawning as spectator */
-		} else {
-			event.respawnLocation = GameRunner.uhc.spectatorSpawnLocation()
+				Pests.givePestSetup(player)
+			}
+			else -> {
+				/* players respawning as spectator */
+				event.respawnLocation = GameRunner.uhc.spectatorSpawnLocation()
+			}
 		}
 	}
 
@@ -335,40 +349,47 @@ class EventListener : Listener {
 		/* offline zombie killed */
 		val (inventory, experience, uuid) = PlayerData.getZombieData(event.entity)
 		if (experience != -1) {
-			event.drops.clear()
-
-			inventory.forEach { drop ->
-				event.drops.add(drop)
-			}
-
-			val droppedExperience = experience.coerceAtMost(100)
-			event.droppedExp = droppedExperience
-
 			val playerData = GameRunner.uhc.getPlayerData(uuid)
 			playerData.offlineZombie = null
 
+			event.drops.clear()
+
+			val killer = event.entity.killer
+
+			if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL) && killer != null) {
+				Betrayal.onPlayerDeath(uuid, killer.uniqueId)
+
 			/* player is allowed to respawn */
-			if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
-				val world = Bukkit.getWorlds()[0]
-
-				GameRunner.teleportPlayer(
-					uuid,
-					GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
-						?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
-				)
-
-			/* player is eliminated */
 			} else {
-				GameRunner.playerDeath(uuid, event.entity.killer)
+				inventory.forEach { drop ->
+					event.drops.add(drop)
+				}
 
-				/* reset player for when they rejoin */
-				GameRunner.playerAction(uuid) { player ->
-					player.health = 20.0
-					player.inventory.clear()
-					player.fireTicks = -1
-					player.totalExperience = 0
-					player.activePotionEffects.clear()
-					player.teleport(GameRunner.uhc.spectatorSpawnLocation())
+				val droppedExperience = experience.coerceAtMost(100)
+				event.droppedExp = droppedExperience
+
+				if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
+					val world = Bukkit.getWorlds()[0]
+
+					GameRunner.teleportPlayer(
+						uuid,
+						GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+							?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
+					)
+
+					/* player is eliminated */
+				} else {
+					GameRunner.playerDeath(uuid, event.entity.killer)
+
+					/* reset player for when they rejoin */
+					GameRunner.playerAction(uuid) { player ->
+						player.health = 20.0
+						player.inventory.clear()
+						player.fireTicks = -1
+						player.totalExperience = 0
+						player.activePotionEffects.clear()
+						player.teleport(GameRunner.uhc.spectatorSpawnLocation())
+					}
 				}
 			}
 

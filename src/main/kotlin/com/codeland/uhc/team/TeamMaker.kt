@@ -10,7 +10,7 @@ import kotlin.math.abs
 import kotlin.math.ceil
 
 object TeamMaker {
-	fun getTeamsRandom(players: ArrayList<OfflinePlayer>, teamSize: Int): Array<Array<OfflinePlayer?>> {
+	fun getTeamsRandom(players: ArrayList<UUID>, teamSize: Int): Array<Array<UUID?>> {
 		val used = Array(players.size) { false }
 
 		val numTeams = ceil(players.size / teamSize.toDouble()).toInt()

@@ -88,11 +88,7 @@ object TeamData {
 		return team.colorPair::colorString
 	}
 
-	fun addToTeam(colorPair: ColorPair, uuid: UUID): Team {
-		/* remove player from old team if they are on one */
-		val oldTeam = playersTeam(uuid)
-		if (oldTeam != null) removeFromTeam(oldTeam, uuid)
-
+	fun addToTeam(colorPair: ColorPair, uuid: UUID, destroyTeam: Boolean, onComplete: (Team) -> Unit) {
 		/* find if the new team exists */
 		var newTeam = teams.find { team -> team.colorPair == colorPair }
 
@@ -102,29 +98,31 @@ object TeamData {
 			teams.add(newTeam)
 		}
 
-		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(newTeam, uuid) {}
-
-		newTeam.members.add(uuid)
-
-		val onlinePlayer = Bukkit.getPlayer(uuid)
-		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
-
-		return newTeam
+		addToTeam(newTeam, uuid, destroyTeam, onComplete)
 	}
 
-	fun addToTeam(team: Team, uuid: UUID, destroyTeam: Boolean = true): Team {
+	fun addToTeam(team: Team, uuid: UUID, destroyTeam: Boolean, onComplete: (Team) -> Unit) {
+		/* final branch */
+		fun internalAdd(o: Boolean = true) {
+			team.members.add(uuid)
+
+			val onlinePlayer = Bukkit.getPlayer(uuid)
+			if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
+
+			onComplete(team)
+		}
+
+		/* second layer of checks */
+		fun botAdd(o: Boolean = true) {
+			if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, uuid, ::internalAdd) ?: internalAdd()
+			else internalAdd()
+		}
+
 		/* remove player from old team if they are on one */
 		val oldTeam = playersTeam(uuid)
-		if (oldTeam != null) removeFromTeam(oldTeam, uuid, destroyTeam)
 
-		if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, uuid) {}
-
-		team.members.add(uuid)
-
-		val onlinePlayer = Bukkit.getPlayer(uuid)
-		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
-
-		return team
+		if (oldTeam != null) removeFromTeam(oldTeam, uuid, destroyTeam, ::botAdd)
+		else botAdd()
 	}
 
 	fun removeFromTeam(player: UUID, destroyTeam: Boolean, onComplete: (Boolean) -> Unit) {
