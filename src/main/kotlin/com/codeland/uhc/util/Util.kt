@@ -1,8 +1,8 @@
 package com.codeland.uhc.util
 
 import com.destroystokyo.paper.utils.PaperPluginLogger
+import org.bukkit.Bukkit
 import org.bukkit.World
-import java.awt.geom.Arc2D
 import java.util.logging.Level
 import kotlin.math.pow
 
@@ -167,4 +167,14 @@ object Util {
 		"Italic",
 		"Reset"
 	)
+
+	val environmentPrettyNames = arrayOf(
+		"Overworld",
+		"Nether",
+		"End"
+	)
+
+	fun worldFromEnvironment(environment: World.Environment): World {
+		return Bukkit.getWorlds().find { world -> world.environment == environment } ?: Bukkit.getWorlds()[0]
+	}
 }

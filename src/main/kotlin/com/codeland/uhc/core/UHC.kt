@@ -14,6 +14,7 @@ import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
+import org.bukkit.World
 import org.bukkit.command.CommandSender
 import java.lang.Math.pow
 import java.util.*
@@ -56,6 +57,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var preset: Preset? = defaultPreset
 
 	var currentPhase = null as Phase?
+
+	var defaultEnvironment = World.Environment.NORMAL
 
 	var appleFix = true
 	var mushroomBlockNerf = true
@@ -255,7 +258,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		if (numTeams + individuals.size == 0) return "No one is playing!"
 
 		val teleportLocations = GraceDefault.spreadPlayers(
-			Bukkit.getWorlds()[0], numTeams + individuals.size, startRadius - 5
+			Util.worldFromEnvironment(defaultEnvironment), numTeams + individuals.size, startRadius - 5,
+			if (defaultEnvironment == World.Environment.NETHER) GraceDefault.Companion::findYMid else GraceDefault.Companion::findYTop
 		)
 
 		if (teleportLocations.isNotEmpty()) {

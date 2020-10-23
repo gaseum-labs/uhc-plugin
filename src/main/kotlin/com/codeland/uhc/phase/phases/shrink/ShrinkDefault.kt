@@ -16,21 +16,18 @@ class ShrinkDefault : Phase() {
 	}
 
 	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		if (world.environment == World.Environment.NETHER)
-			bossBar.setTitle("${RESET}Nether closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}")
-		else
+		if (world.environment == uhc.defaultEnvironment)
 			bossBar.setTitle("${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${uhc.endRadius.toInt()} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}")
+		else
+			bossBar.setTitle("${RESET}Dimension closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}")
 	}
 
 	override fun customStart() {
-		for (player in Bukkit.getServer().onlinePlayers) {
-			GameRunner.sendGameMessage(player, "Grace period has ended!")
-		}
-
-		val world = Bukkit.getServer().worlds[0]
+		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
 		world.worldBorder.setSize(uhc.endRadius * 2 + 1, length.toLong())
 
-		for (player in Bukkit.getServer().onlinePlayers) {
+		Bukkit.getOnlinePlayers().forEach { player ->
+			GameRunner.sendGameMessage(player, "Grace period has ended!")
 			GameRunner.sendGameMessage(player, "The border is now shrinking")
 		}
 	}

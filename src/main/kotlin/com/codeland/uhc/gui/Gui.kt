@@ -9,6 +9,7 @@ import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
+import org.bukkit.World
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
@@ -25,7 +26,7 @@ class Gui(val uhc: UHC) {
 	val appleFixToggle: AppleFixToggle
 	val mushroomBlockNerfToggle: MushroomBlockNerfToggle
 	val botToggle: BotToggle
-
+	val defaultEnvironmentCycler: DefaultEnvironmentCycler
 	val resetButton: GuiItem
 	val cancelButton: GuiItem
 
@@ -47,6 +48,7 @@ class Gui(val uhc: UHC) {
 		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 2))
 		mushroomBlockNerfToggle = inventory.addItem(MushroomBlockNerfToggle(uhc, GuiInventory.WIDTH * 3 + 3))
 		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 4))
+		defaultEnvironmentCycler = inventory.addItem(DefaultEnvironmentCycler(uhc, GuiInventory.WIDTH * 3 + 5))
 
 		resetButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
@@ -80,6 +82,9 @@ class Gui(val uhc: UHC) {
 
 				uhc.mushroomBlockNerf = true
 				mushroomBlockNerfToggle.updateDisplay()
+
+				uhc.defaultEnvironment = World.Environment.NORMAL
+				defaultEnvironmentCycler.updateDisplay()
 			}
 			override fun getStack(): ItemStack {
 				val stack = ItemStack(Material.MUSIC_DISC_WAIT)

@@ -204,8 +204,7 @@ class EventListener : Listener {
 		}
 	}
 
-	private fun spreadRespawn(event: PlayerRespawnEvent) {
-		val world = Bukkit.getWorlds()[0]
+	private fun spreadRespawn(event: PlayerRespawnEvent, world: World) {
 		val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 		if (location != null) event.respawnLocation = location
 	}
@@ -221,7 +220,7 @@ class EventListener : Listener {
 			}
 			GameRunner.uhc.isAlive(event.player.uniqueId) -> {
 				/* grace respawning */
-				spreadRespawn(event)
+				spreadRespawn(event, Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment))
 			}
 			GameRunner.uhc.isEnabled(QuirkType.PESTS) -> {
 				/* pest respawning */
@@ -232,7 +231,7 @@ class EventListener : Listener {
 					return
 
 				/* spread player */
-				spreadRespawn(event)
+				spreadRespawn(event, Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment))
 
 				Pests.givePestSetup(player)
 			}
@@ -369,7 +368,7 @@ class EventListener : Listener {
 				event.droppedExp = droppedExperience
 
 				if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
-					val world = Bukkit.getWorlds()[0]
+					val world = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
 
 					GameRunner.teleportPlayer(
 						uuid,

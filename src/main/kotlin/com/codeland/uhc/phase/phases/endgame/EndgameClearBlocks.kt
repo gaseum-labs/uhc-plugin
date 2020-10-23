@@ -35,7 +35,7 @@ class EndgameClearBlocks : Phase() {
 	override fun onTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
-		val world = Bukkit.getWorlds()[0]
+		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
 		val extrema = ceil(uhc.endRadius).toInt() + 6
 
 		if (!finished) {

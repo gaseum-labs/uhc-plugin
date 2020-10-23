@@ -29,8 +29,8 @@ class EndgameNone : Phase() {
 		fun closeNether() {
 			SchedulerUtil.nextTick {
 				Bukkit.getOnlinePlayers().forEach { player ->
-					if (player.world.environment == World.Environment.NETHER) {
-						Commands.errorMessage(player, "The Nether has closed!")
+					if (player.world.environment != GameRunner.uhc.defaultEnvironment) {
+						Commands.errorMessage(player, "Failed to return to home dimension!")
 						player.damage(100000000000.0)
 					}
 				}
