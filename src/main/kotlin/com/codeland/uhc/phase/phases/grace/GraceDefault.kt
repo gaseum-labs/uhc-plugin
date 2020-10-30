@@ -26,7 +26,7 @@ open class GraceDefault : Phase() {
 
 			if (world.environment == uhc.defaultEnvironment) {
 				world.worldBorder.setCenter(0.5, 0.5)
-				world.worldBorder.size = uhc.startRadius * 2 + 1
+				world.worldBorder.size = uhc.startRadius * 2 + 1.0
 			} else {
 				world.worldBorder.reset()
 			}

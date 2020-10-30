@@ -139,11 +139,11 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		updatePreset(preset, preset.startRadius, preset.endRadius, preset.graceTime, preset.shrinkTime)
 	}
 
-	fun updatePreset(startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int) {
+	fun updatePreset(startRadius: Int, endRadius: Int, graceTime: Int, shrinkTime: Int) {
 		updatePreset(null, startRadius, endRadius, graceTime, shrinkTime)
 	}
 
-	private fun updatePreset(preset: Preset?, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int) {
+	private fun updatePreset(preset: Preset?, startRadius: Int, endRadius: Int, graceTime: Int, shrinkTime: Int) {
 		this.preset = preset
 
 		this.startRadius = startRadius
@@ -163,12 +163,12 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		phaseTimes[phaseType.ordinal] = time
 	}
 
-	fun updateStartRadius(startRadius: Double) {
+	fun updateStartRadius(startRadius: Int) {
 		this.preset = null
 		this.startRadius = startRadius
 	}
 
-	fun updateEndRadius(endRadius: Double) {
+	fun updateEndRadius(endRadius: Int) {
 		this.preset = null
 		this.endRadius = endRadius
 	}
@@ -258,7 +258,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		if (numTeams + individuals.size == 0) return "No one is playing!"
 
 		val teleportLocations = GraceDefault.spreadPlayers(
-			Util.worldFromEnvironment(defaultEnvironment), numTeams + individuals.size, startRadius - 5,
+			Util.worldFromEnvironment(defaultEnvironment), numTeams + individuals.size, startRadius - 5.0,
 			if (defaultEnvironment == World.Environment.NETHER) GraceDefault.Companion::findYMid else GraceDefault.Companion::findYTop
 		)
 

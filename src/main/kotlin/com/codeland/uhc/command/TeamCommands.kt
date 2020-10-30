@@ -13,6 +13,7 @@ import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import java.util.*
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 
 @CommandAlias("uhca")
@@ -100,12 +101,17 @@ class TeamCommands : BaseCommand() {
 		val teamColorPairs = TeamMaker.getColorList(numPreMadeTeams)
 			?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!")
 
+		val lock = ReentrantLock()
+
 		teams.forEachIndexed { index, uuids ->
 			uuids.forEach { uuid ->
-				if (uuid != null)
+				if (uuid != null) {
+					lock.lock()
 					TeamData.addToTeam(teamColorPairs[index], uuid, true) {
 						GameRunner.uhc.setParticipating(uuid, true)
+						lock.unlock()
 					}
+				}
 			}
 		}
 

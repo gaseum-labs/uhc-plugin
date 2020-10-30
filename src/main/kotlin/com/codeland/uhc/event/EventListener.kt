@@ -199,8 +199,13 @@ class EventListener : Listener {
 		} else {
 			val world = event.location.world
 
-			if (world.environment == World.Environment.NETHER && GameRunner.netherWorldFix)
-				event.isCancelled = NetherFix.replaceSpawn(event.entity)
+			event.isCancelled =
+				(world.environment == World.Environment.NETHER && GameRunner.netherWorldFix && NetherFix.replaceSpawn(event.entity)) ||
+				GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN) && Halloween.replaceSpawn(event.entity)
+
+			if (!event.isCancelled && GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN)) {
+				Halloween.onEntitySpawn(event.entity)
+			}
 		}
 	}
 
@@ -397,6 +402,7 @@ class EventListener : Listener {
 
 		if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) {
 			ModifiedDrops.onDrop(event.entityType, event.drops)
+
 		} else {
 			val killer = event.entity.killer
 
@@ -411,6 +417,11 @@ class EventListener : Listener {
 			val spawnEgg = summoner.getSpawnEgg(event.entityType)
 
 			if (spawnEgg != null) event.drops.add(ItemStack(spawnEgg))
+		}
+
+		if (GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN)) {
+			Halloween.addDrops(event.entity, event.drops)
+			Halloween.onEntityDeath(event.entity)
 		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {

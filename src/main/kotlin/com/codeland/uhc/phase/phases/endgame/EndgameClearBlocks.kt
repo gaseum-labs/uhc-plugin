@@ -36,7 +36,7 @@ class EndgameClearBlocks : Phase() {
 
 	override fun perSecond(remainingSeconds: Int) {
 		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
-		val extrema = ceil(uhc.endRadius).toInt() + 6
+		val extrema = uhc.endRadius + 6
 
 		if (!finished) {
 			--topBoundary

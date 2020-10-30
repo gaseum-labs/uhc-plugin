@@ -244,9 +244,19 @@ class MixerBot(
 	fun getTeamChannel(team: Team, accept: (VoiceChannel?) -> Unit) {
 		val category = voiceCategory ?: return accept(null)
 
+		Util.log("BEGIN FIND")
+		Util.log("FINDING: |${team.colorPair.getName()}|")
+
 		category.voiceChannels.find { channel ->
-			Util.log("\"${channel.name}\"")
-			if (channel.name == team.colorPair.getName()) { accept(channel); true } else false
+			Util.log("|${channel.name}|")
+			Util.log("|${team.colorPair.getName()}|")
+
+			if (channel.name == team.colorPair.getName()) {
+				accept(channel)
+				true
+			} else {
+				false
+			}
 		} ?: category.createVoiceChannel(team.colorPair.getName()).queue { created -> accept(created) }
 	}
 

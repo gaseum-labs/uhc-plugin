@@ -13,7 +13,7 @@ enum class KillReward(val prettyName: String, val representation: Material, val 
 	STRENGTH("Strength", Material.BLAZE_POWDER, listOf("Kill a team to have your team get strength for 5 minutes")),
 	NONE("None", Material.NETHER_WART, listOf("No reward for killing a team"));
 
-	fun applyReward(players: Array<Player?>) {
+	fun applyReward(players: ArrayList<Player?>) {
 		when (this) {
 			REGENERATION -> players.forEach { member ->
 				member?.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 200, 0, false, true, true))

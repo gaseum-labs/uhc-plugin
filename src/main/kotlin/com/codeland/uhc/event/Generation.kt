@@ -55,22 +55,27 @@ class Generation : Listener {
 				OreFix.removeOres(chunk)
 				OreFix.reduceLava(chunk)
 
-				OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
-				OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
-				OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
-				OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
+				OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
 			}
 
 			if (GameRunner.mushroomWorldFix && world.environment == World.Environment.NORMAL) {
 				StewFix.removeOxeye(chunk)
 
-				StewFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
-				StewFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
+				StewFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				StewFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
 			}
 
 			if (GameRunner.melonWorldFix && world.environment == World.Environment.NORMAL) {
-				MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius.toInt())
+				MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
 			}
+
+			HalloweenWorld.lanternPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+			HalloweenWorld.cobwebPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+			HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+			HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
 
 			//diamondPictureChunk(chunk)
 		}

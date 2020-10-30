@@ -495,7 +495,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			val phaseTime = uhc.getTime(PhaseType.SHRINK)
 			val remainingSeconds = uhc.currentPhase?.remainingSeconds ?: return Location(world, 0.0, 0.0, 0.0)
 
-			val xz = findDropXZ(lastLocation.blockX, lastLocation.blockZ, uhc.startRadius, uhc.endRadius, remainingSeconds, timeUntil, phaseTime, buffer)
+			val xz = findDropXZ(lastLocation.blockX, lastLocation.blockZ, uhc.startRadius.toDouble(), uhc.endRadius.toDouble(), remainingSeconds, timeUntil, phaseTime, buffer)
 
 			return makeLocation(xz.x, xz.z)
 		}

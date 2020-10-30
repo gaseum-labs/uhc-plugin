@@ -88,7 +88,7 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("startRadius")
 	@Description("set the starting radius")
-	fun setStartRadius(sender: CommandSender, radius: Double) {
+	fun setStartRadius(sender: CommandSender, radius: Int) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
@@ -98,7 +98,7 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("endRadius")
 	@Description("set the final radius")
-	fun setEndRadius(sender: CommandSender, radius: Double) {
+	fun setEndRadius(sender: CommandSender, radius: Int) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
@@ -108,7 +108,7 @@ class AdminCommands : BaseCommand() {
 
 	@CommandAlias("preset")
 	@Description("set all details of the UHC")
-	fun modifyAll(sender: CommandSender, startRadius: Double, endRadius: Double, graceTime: Int, shrinkTime: Int) {
+	fun modifyAll(sender: CommandSender, startRadius: Int, endRadius: Int, graceTime: Int, shrinkTime: Int) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 

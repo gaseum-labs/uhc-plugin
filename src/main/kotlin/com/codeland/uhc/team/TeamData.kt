@@ -114,15 +114,19 @@ object TeamData {
 
 		/* second layer of checks */
 		fun botAdd(o: Boolean = true) {
-			if (GameRunner.uhc.usingBot) GameRunner.bot?.addPlayerToTeam(team, uuid, ::internalAdd) ?: internalAdd()
-			else internalAdd()
+			if (GameRunner.uhc.usingBot)
+				GameRunner.bot?.addPlayerToTeam(team, uuid, ::internalAdd) ?: internalAdd()
+			else
+				internalAdd()
 		}
 
 		/* remove player from old team if they are on one */
 		val oldTeam = playersTeam(uuid)
 
-		if (oldTeam != null) removeFromTeam(oldTeam, uuid, destroyTeam, ::botAdd)
-		else botAdd()
+		if (oldTeam != null)
+			removeFromTeam(oldTeam, uuid, destroyTeam, ::botAdd)
+		else
+			botAdd()
 	}
 
 	fun removeFromTeam(player: UUID, destroyTeam: Boolean, onComplete: (Boolean) -> Unit) {

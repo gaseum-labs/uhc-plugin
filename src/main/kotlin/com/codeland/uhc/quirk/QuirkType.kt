@@ -75,8 +75,13 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	)),
 
 	BETRAYAL("Betrayal", ::Betrayal, false, Material.BONE, arrayOf(
-			"Two teams fight head to head",
-			"Players swap teams when killed"
+		"Players swap teams when killed",
+		"Game ends when everyone is on one team"
+	)),
+
+	HALLOWEEN("Halloween", ::Halloween, false, Material.PUMPKIN, arrayOf(
+		"Pumpkins Everywhere!",
+		"Witches?!"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()

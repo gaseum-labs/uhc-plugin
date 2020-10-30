@@ -85,6 +85,17 @@ object GameRunner {
 		return RemainingTeamsReturn(remaining, if (remaining == 1) lastAlive else null, teamAlive, individualAlive)
 	}
 
+	/**
+	 * takes in a group of players uuids, filters out which ones are alive
+	 */
+	private fun constructAliveList(group: ArrayList<UUID>): ArrayList<UUID> {
+		return group.filter { uuid ->
+			val data = uhc.playerDataList[uuid]
+
+			data != null && data.participating && data.alive
+		} as ArrayList<UUID>
+	}
+
 	fun playerDeath(deadUUID: UUID, killer: Player?) {
 		uhc.setAlive(deadUUID, false)
 
@@ -129,17 +140,22 @@ object GameRunner {
 
 		/* uhc ending point (stops kill reward) */
 		if (remainingTeams <= 1)
-			return uhc.endUHC(lastRemaining ?: ArrayList())
+			return uhc.endUHC(
+				if (lastRemaining != null)
+					constructAliveList(lastRemaining)
+				else
+					ArrayList()
+			)
 
 		/* kill reward awarding for a team */
 		if (killerTeam != null) {
-			if (!teamIsAlive) uhc.killReward.applyReward(Array(killerTeam.members.size) { i ->
-				Bukkit.getPlayer(killerTeam.members[i])
-			})
+			if (!teamIsAlive) uhc.killReward.applyReward(constructAliveList(killerTeam.members).map { uuid ->
+				Bukkit.getPlayer(uuid)
+			} as ArrayList<Player?>)
 
 		/* kill reward awarding for an individual killer */
 		} else if (killer != null) {
-			if (!teamIsAlive) uhc.killReward.applyReward(arrayOf(killer))
+			if (!teamIsAlive) uhc.killReward.applyReward(arrayListOf(killer))
 		}
 	}
 

@@ -24,7 +24,7 @@ class ShrinkDefault : Phase() {
 
 	override fun customStart() {
 		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
-		world.worldBorder.setSize(uhc.endRadius * 2 + 1, length.toLong())
+		world.worldBorder.setSize(uhc.endRadius * 2 + 1.0, length.toLong())
 
 		Bukkit.getOnlinePlayers().forEach { player ->
 			GameRunner.sendGameMessage(player, "Grace period has ended!")
