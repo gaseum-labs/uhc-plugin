@@ -4,6 +4,7 @@ import com.codeland.uhc.discord.command.GeneralCommand
 import com.codeland.uhc.discord.command.LinkCommand
 import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.command.SummaryCommand
+import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
@@ -15,12 +16,10 @@ import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-import org.bukkit.Bukkit
 import java.io.*
 import java.lang.Exception
 import java.net.URL
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class MixerBot(
@@ -102,6 +101,53 @@ class MixerBot(
 		}
 	}
 
+	class SummaryEntry(val place: String, val name: String, val killedBy: String)
+
+	override fun onPrivateMessageReceived(event: PrivateMessageReceivedEvent) {
+		val fromUserID: Long = event.author.idLong
+		if (fromUserID == 244188985138741249L || fromUserID == 258485243038662657L) { //from varas or balduvian
+			if (event.message.contentRaw == "die") {
+				clearTeamVCs()
+				close()
+			} else if (event.message.contentRaw == "kill teams") {
+				clearTeamVCs()
+			}
+		}
+	}
+
+	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
+		val message = event.message
+		val content = message.contentRaw
+		val member = event.member ?: return
+
+		commands.any { command ->
+			if (command.isCommand(content)) {
+				if (command.requiresAdmin && !member.permissions.contains(Permission.ADMINISTRATOR))
+					MixerCommand.errorMessage(event, "You must be an administrator to use this command!")
+				else
+					command.onCommand(content, event, this)
+
+				true
+			} else {
+				false
+			}
+		}
+	}
+
+	override fun onReady(event: ReadyEvent) {
+		try {
+			guild = if (guildID == NO_ID) null else bot.getGuildById(guildID)
+			voiceCategory = if (voiceCategoryID == NO_ID) null else bot.getCategoryById(voiceCategoryID)
+			voiceChannel = if (voiceChannelID == NO_ID) null else bot.getVoiceChannelById(voiceChannelID)
+		} catch (ex: Exception) {
+			guild = null
+			voiceCategory = null
+			voiceChannel = null
+		}
+
+		clearTeamVCs()
+	}
+
 	/* disk data reading writing */
 
 	fun saveDiscordData() {
@@ -148,82 +194,78 @@ class MixerBot(
 		val writer = FileWriter(File(linkDataPath), false).close()
 	}
 
-	/* utility */
+	/*=******************************/
+	/*         TEAM UTILITY         */
+	/*=******************************/
 
-	fun destroyTeam(team: Team, accept: (Boolean) -> Unit) {
-		getTeamChannel(team) { channel ->
-			channel ?: return@getTeamChannel accept(false)
+	/**
+	 * @return whether or not the team channel could be destroyed
+	 */
+	fun destroyTeamChannel(team: Team): Boolean {
+		val generalChannel = voiceChannel ?: return false
+		val guild = guild ?: return false
 
-			val generalChannel = voiceChannel ?: return@getTeamChannel accept(false)
-			val guild = guild ?: return@getTeamChannel accept(false)
+		val teamChannel = getTeamChannel(team.colorPair) ?: return false
 
-			if (channel.members.size == 0) {
-				channel.delete().queue { accept(true) }
-			} else {
-				var hasAccepted = false
-
-				val numMoves = channel.members.size
-				var moveCount = 0
-
-				val onCompleteMove = {
-					++moveCount
-
-					if (moveCount == numMoves) channel.delete().queue { accept(true) }
-				}
-
-				channel.members.forEach { member ->
-					guild.moveVoiceMember(member, generalChannel).queue({ onCompleteMove() }, {
-						if (!hasAccepted) {
-							hasAccepted = true
-							accept(false)
-						}
-					})
-				}
-			}
+		teamChannel.members.forEach { member ->
+			try {
+				guild.moveVoiceMember(member, generalChannel).complete()
+			} catch (ex: IllegalStateException) {}
 		}
+
+		teamChannel.delete().complete()
+
+		return true
 	}
 
-	fun addPlayerToTeam(team: Team, uniqueID: UUID, accept: (Boolean) -> Unit) {
-		val guild = guild ?: return accept(false)
+	/**
+	 * @return whether or not the player could be added to the team channel
+	 */
+	fun addToTeamChannel(team: Team, uniqueID: UUID): Boolean {
+		val guild = guild ?: return false
 
 		val userIndex = getMinecraftUserIndex(uniqueID)
-		if (userIndex == -1) return accept(false)
-
+		if (userIndex == -1) return false
 		val member = guild.getMemberById(discordIDs[userIndex])
 
-		if (member?.voiceState?.inVoiceChannel() == true) {
-			getTeamChannel(team) { teamChannel ->
-				teamChannel ?: return@getTeamChannel
+		return if (member?.voiceState?.inVoiceChannel() == true) {
+			val teamChannel = getTeamChannel(team.colorPair)
 
-				guild.moveVoiceMember(member, teamChannel).queue { accept(true) }
-			}
+			try {
+				guild.moveVoiceMember(member, teamChannel).complete()
+			} catch (ex: IllegalStateException) {}
+
+			true
 
 		} else {
-			accept(false)
+			false
 		}
 	}
 
-	fun renameTeam(team: Team, newName: String, accept: (Boolean) -> Unit) {
-		getTeamChannel(team) { channel ->
-			channel ?: return@getTeamChannel accept(false)
+	fun updateTeamChannel(oldColor: ColorPair, newColor: ColorPair): Boolean {
+		val channel = getTeamChannel(oldColor) ?: return false
 
-			channel.manager.setName(newName).queue { accept(true) }
-		}
+		channel.manager.setName(newColor.getName()).complete()
+
+		return true
 	}
 
-	fun moveToGeneral(uniqueID: UUID, accept: (Boolean) -> Unit) {
-		val general = voiceChannel ?: return accept(false)
-		val guild = guild ?: return accept(false)
+	fun moveToGeneral(uniqueID: UUID): Boolean {
+		val general = voiceChannel ?: return false
+		val guild = guild ?: return false
 
 		val userIndex = getMinecraftUserIndex(uniqueID)
-		if (userIndex == -1) return accept(false)
+		if (userIndex == -1) return false
 
 		val member = guild.getMemberById(discordIDs[userIndex])
 
-		if (member?.voiceState?.inVoiceChannel() == true)
-			guild.moveVoiceMember(member, general).queue { accept(true) }
-		else
-			accept(false)
+		return if (member?.voiceState?.inVoiceChannel() == true) {
+			guild.moveVoiceMember(member, general).complete()
+			true
+
+		} else {
+			false
+		}
 	}
 
 	fun isLinked(uuid: UUID): Boolean {
@@ -240,88 +282,30 @@ class MixerBot(
 	 *
 	 * asynchronous function
 	 * get channel from callback
+	 *
+	 * @return a voice channel corresponding to a team's color
 	 */
-	fun getTeamChannel(team: Team, accept: (VoiceChannel?) -> Unit) {
-		val category = voiceCategory ?: return accept(null)
+	private fun getTeamChannel(colorPair: ColorPair): VoiceChannel? {
+		val category = voiceCategory ?: return null
+		val teamChannelName = colorPair.getName()
 
-		Util.log("BEGIN FIND")
-		Util.log("FINDING: |${team.colorPair.getName()}|")
-
-		category.voiceChannels.find { channel ->
-			Util.log("|${channel.name}|")
-			Util.log("|${team.colorPair.getName()}|")
-
-			if (channel.name == team.colorPair.getName()) {
-				accept(channel)
-				true
-			} else {
-				false
-			}
-		} ?: category.createVoiceChannel(team.colorPair.getName()).queue { created -> accept(created) }
+		return category.voiceChannels.find { channel ->
+			channel.name == teamChannelName
+		} ?: category.createVoiceChannel(teamChannelName).complete()
 	}
 
 	fun clearTeamVCs() {
 		val category = voiceCategory ?: return
 		val generalChannel = voiceChannel ?: return
 
-		val channels: List<VoiceChannel> = category.voiceChannels
+		val channels = category.voiceChannels
 
 		channels.forEach { channel ->
-			if (channel != generalChannel) channel.delete().queue()
+			if (channel != generalChannel) channel.delete().complete()
 		}
 	}
 
-	fun updateRankings(players: ArrayList<ScoredPlayer>) {
-		val msg = StringBuilder()
-		msg.append("> ").append(1).append(". ").append(players[0].username).append("\n")
-		msg.append("> score: ").append(players[0].score).append("\n")
-		msg.append("> games played: ").append(players[0].gameCount)
-		for (i in 1 until players.size) {
-			msg.append("\n\n")
-			msg.append("> ").append(i + 1).append(". ").append(players[i].username).append("\n")
-			msg.append("> score: ").append(players[i].score).append("\n")
-			msg.append("> games played: ").append(players[i].gameCount)
-		}
-		val pc: TextChannel? = bot.getTextChannelById(704143873823342613L)
-		if (pc == null) {
-			println("channel ID is null")
-		} else {
-			pc.editMessageById(704144607876874340L, msg.toString()).complete()
-		}
-	}
-
-	override fun onPrivateMessageReceived(event: PrivateMessageReceivedEvent) {
-		val fromUserID: Long = event.author.idLong
-		if (fromUserID == 244188985138741249L || fromUserID == 258485243038662657L) { //from varas or balduvian
-			if (event.message.contentRaw == "die") {
-				clearTeamVCs()
-				close()
-			} else if (event.message.contentRaw == "kill teams") {
-				clearTeamVCs()
-			}
-		}
-	}
-
-	class SummaryEntry(val place: String, val name: String, val killedBy: String)
-
-	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
-		val message = event.message
-		val content = message.contentRaw
-		val member = event.member ?: return
-
-		commands.any { command ->
-			if (command.isCommand(content)) {
-				if (command.requiresAdmin && !member.permissions.contains(Permission.ADMINISTRATOR))
-					MixerCommand.errorMessage(event, "You must be an administrator to use this command!")
-				else
-					command.onCommand(content, event, this)
-
-				true
-			} else {
-				false
-			}
-		}
-	}
+	/* random utility */
 
 	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: ArrayList<SummaryEntry>, losers: ArrayList<SummaryEntry>) {
 		val embed = EmbedBuilder()
@@ -335,22 +319,8 @@ class MixerBot(
 		channel.sendMessage(embed).queue()
 	}
 
-	override fun onReady(event: ReadyEvent) {
-		try {
-			guild = if (guildID == NO_ID) null else bot.getGuildById(guildID)
-			voiceCategory = if (voiceCategoryID == NO_ID) null else bot.getCategoryById(voiceCategoryID)
-			voiceChannel = if (voiceChannelID == NO_ID) null else bot.getVoiceChannelById(voiceChannelID)
-		} catch (ex: Exception) {
-			guild = null
-			voiceCategory = null
-			voiceChannel = null
-		}
-
-		clearTeamVCs()
-	}
-
 	private fun close() {
-		bot.shutdownNow()
+		bot.shutdown()
 	}
 
 	fun getDiscordUserIndex(discordID: String): Int {
@@ -360,11 +330,11 @@ class MixerBot(
 		return -1
 	}
 
-	fun uuidString(uuid: UUID): String {
+	private fun uuidString(uuid: UUID): String {
 		return "${String.format("%016x", uuid.mostSignificantBits)}${String.format("%016x", uuid.leastSignificantBits)}"
 	}
 
-	fun getMinecraftUserIndex(uuid: UUID): Int {
+	private fun getMinecraftUserIndex(uuid: UUID): Int {
 		val uuidString = uuidString(uuid)
 
 		for (i in discordIDs.indices)

@@ -113,10 +113,7 @@ class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: 
 	}
 
 	fun replaceZombieWithPlayer(player: Player) {
-		Util.log("REMOVING ZOMBIEE")
 		val zombie = offlineZombie ?: return
-
-		Util.log("zombie was not null")
 
 		val (inventory, experience) = getZombieData(zombie)
 
@@ -135,8 +132,6 @@ class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: 
 		/* no more offline zombie */
 		zombie.remove()
 		offlineZombie = null
-
-		Util.log("offline zombie is now ${offlineZombie}")
 	}
 
 	companion object {

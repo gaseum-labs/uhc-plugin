@@ -22,6 +22,7 @@ import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.NetherFix
+import com.destroystokyo.paper.event.entity.CreeperIgniteEvent
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.entity.Arrow
@@ -172,7 +173,7 @@ class EventListener : Listener {
 				GameRunner.playerDeath(player.uniqueId, player.killer)
 
 			if (Pests.isPest(player))
-				TeamData.removeFromTeam(player.uniqueId, true) {}
+				TeamData.removeFromTeam(player.uniqueId, true)
 		}
 
 		/* prevent glass from dropping in hotbar chc */
@@ -594,5 +595,23 @@ class EventListener : Listener {
 			if (event.clickedInventory?.type == InventoryType.PLAYER && event.slot in 9..35) {
 				event.isCancelled = true
 			}
+	}
+
+	@EventHandler
+	fun onPickUpItem(event: EntityPickupItemEvent) {
+		if (
+			GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN) &&
+			event.entityType == EntityType.PLAYER &&
+			event.item.itemStack.type == Material.DIAMOND &&
+			GameRunner.uhc.isGameGoing() &&
+			event.entity.name != "balduvian"
+		) {
+			val halloween = GameRunner.uhc.getQuirk(QuirkType.HALLOWEEN) as Halloween
+
+			if (!halloween.hasGottenDiamonds) {
+				Halloween.jumpScare(event.entity as Player)
+				halloween.hasGottenDiamonds = true
+			}
+		}
 	}
 }

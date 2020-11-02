@@ -1,24 +1,13 @@
 package com.codeland.uhc.team
 
-import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.Chat
 import com.codeland.uhc.event.Coloring
 import com.codeland.uhc.util.Util
-import com.comphenix.protocol.PacketType
-import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.events.PacketContainer
-import com.comphenix.protocol.reflect.StructureModifier
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor.*
 import org.bukkit.ChatColor
-import org.bukkit.OfflinePlayer
-import org.bukkit.entity.Player
-import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.LockSupport
-import javax.naming.Name
 import kotlin.collections.ArrayList
 
 object TeamData {
@@ -88,7 +77,7 @@ object TeamData {
 		return team.colorPair::colorString
 	}
 
-	fun addToTeam(colorPair: ColorPair, uuid: UUID, destroyTeam: Boolean, onComplete: (Team) -> Unit) {
+	fun addToTeam(colorPair: ColorPair, uuid: UUID, destroyTeam: Boolean): Team {
 		/* find if the new team exists */
 		var newTeam = teams.find { team -> team.colorPair == colorPair }
 
@@ -98,82 +87,54 @@ object TeamData {
 			teams.add(newTeam)
 		}
 
-		addToTeam(newTeam, uuid, destroyTeam, onComplete)
+		return addToTeam(newTeam, uuid, destroyTeam)
 	}
 
-	fun addToTeam(team: Team, uuid: UUID, destroyTeam: Boolean, onComplete: (Team) -> Unit) {
-		/* final branch */
-		fun internalAdd(o: Boolean = true) {
-			team.members.add(uuid)
-
-			val onlinePlayer = Bukkit.getPlayer(uuid)
-			if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
-
-			onComplete(team)
-		}
-
-		/* second layer of checks */
-		fun botAdd(o: Boolean = true) {
-			if (GameRunner.uhc.usingBot)
-				GameRunner.bot?.addPlayerToTeam(team, uuid, ::internalAdd) ?: internalAdd()
-			else
-				internalAdd()
-		}
-
+	fun addToTeam(team: Team, uuid: UUID, destroyTeam: Boolean): Team {
 		/* remove player from old team if they are on one */
 		val oldTeam = playersTeam(uuid)
+		if (oldTeam == team) return team
+		if (oldTeam != null) removeFromTeam(oldTeam, uuid, destroyTeam)
 
-		if (oldTeam != null)
-			removeFromTeam(oldTeam, uuid, destroyTeam, ::botAdd)
-		else
-			botAdd()
+		/* actually add to team internally */
+		team.members.add(uuid)
+
+		/* update player's display name */
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
+
+		/* move player's vc */
+		if (GameRunner.uhc.usingBot) GameRunner.bot?.addToTeamChannel(team, uuid)
+
+		return team
 	}
 
-	fun removeFromTeam(player: UUID, destroyTeam: Boolean, onComplete: (Boolean) -> Unit) {
-		removeFromTeam(playersTeam(player), player, destroyTeam, onComplete)
+	fun removeFromTeam(player: UUID, destroyTeam: Boolean) {
+		removeFromTeam(playersTeam(player), player, destroyTeam)
 	}
 
-	fun removeFromTeam(oldTeam: Team?, uuid: UUID, destroyTeam: Boolean, onComplete: (Boolean) -> Unit) {
-		if (oldTeam == null) {
-			onComplete(false)
+	fun removeFromTeam(oldTeam: Team?, uuid: UUID, destroyTeam: Boolean): Boolean {
+		if (oldTeam == null) return false
 
-		} else {
-			oldTeam.members.removeIf { memberUuid -> memberUuid == uuid }
+		oldTeam.members.removeIf { memberUuid -> memberUuid == uuid }
 
-			val onlinePlayer = Bukkit.getPlayer(uuid)
-			if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
 
-			/* remove the team if no one is left on it */
-			if (destroyTeam && oldTeam.members.isEmpty()) {
-				teams.removeIf { team -> team === oldTeam }
+		/* remove the team if no one is left on it */
+		if (destroyTeam && oldTeam.members.isEmpty()) {
+			teams.removeIf { team -> team === oldTeam }
 
-				if (GameRunner.uhc.usingBot)
-					GameRunner.bot?.destroyTeam(oldTeam) { onComplete(true) }
-				else
-					onComplete(true)
-			}
+			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeamChannel(oldTeam)
 		}
+
+		return true
 	}
 
-	fun removeAllTeams(onComplete: () -> Unit) {
-		while (teams.isNotEmpty()) {
-			removeFromTeam(teams[0], teams[0].members[0], true) {
-				synchronized(this) {
-					if (teams.isEmpty()) onComplete
-				}
-			}
-		}
-	}
-
-	fun removeAllTeams(onRemove: (UUID) -> Unit, onComplete: (Boolean) -> Unit) {
+	fun removeAllTeams(onRemove: (UUID) -> Unit) {
 		while (teams.isNotEmpty()) {
 			onRemove(teams[0].members[0])
-
-			removeFromTeam(teams[0], teams[0].members[0], true) {
-				synchronized(this) {
-					if (teams.isEmpty()) onComplete
-				}
-			}
+			removeFromTeam(teams[0], teams[0].members[0], true)
 		}
 	}
 }

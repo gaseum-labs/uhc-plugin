@@ -32,6 +32,7 @@ object GameRunner {
 	val mushroomWorldFix: Boolean
 	val oreWorldFix: Boolean
 	val melonWorldFix: Boolean
+	val halloweenGeneration: Boolean
 
 	init {
 		val worldGenInfo = WorldGenFile.getSettings()
@@ -40,11 +41,13 @@ object GameRunner {
 		mushroomWorldFix = worldGenInfo.mushroomFix
 		oreWorldFix = worldGenInfo.oreFix
 		melonWorldFix = worldGenInfo.melonFix
+		halloweenGeneration = worldGenInfo.halloween
 
 		Util.log("${ChatColor.GOLD}Nether World Fix: ${ChatColor.RED}$netherWorldFix")
 		Util.log("${ChatColor.GOLD}Mushroom World Fix: ${ChatColor.RED}$mushroomWorldFix")
 		Util.log("${ChatColor.GOLD}Ore World Fix: ${ChatColor.RED}$oreWorldFix")
 		Util.log("${ChatColor.GOLD}Melon World Fix: ${ChatColor.RED}$melonWorldFix")
+		Util.log("${ChatColor.GOLD}Halloween Generation: ${ChatColor.RED}$halloweenGeneration")
 	}
 
 	fun teamIsAlive(team: Team): Boolean {

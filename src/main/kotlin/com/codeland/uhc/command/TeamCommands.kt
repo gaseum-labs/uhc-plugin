@@ -23,11 +23,11 @@ class TeamCommands : BaseCommand() {
 	fun clearTeams(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		TeamData.removeAllTeams( { player ->
+		TeamData.removeAllTeams { player ->
 			GameRunner.uhc.setParticipating(player, false)
-		}) {
-			GameRunner.sendGameMessage(sender, "Cleared all teams")
 		}
+
+		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
 
 	@CommandAlias("team add")
@@ -62,10 +62,10 @@ class TeamCommands : BaseCommand() {
 		if (GameRunner.uhc.isOptingOut(player.uniqueId))
 			return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
 
-		TeamData.addToTeam(colorPair, player.uniqueId, true) { team ->
-			GameRunner.uhc.setParticipating(player.uniqueId, true)
-			GameRunner.sendGameMessage(sender, "Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
-		}
+		val team = TeamData.addToTeam(colorPair, player.uniqueId, true)
+
+		GameRunner.uhc.setParticipating(player.uniqueId, true)
+		GameRunner.sendGameMessage(sender, "Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
 	}
 
 	@CommandAlias("team remove")
@@ -76,10 +76,10 @@ class TeamCommands : BaseCommand() {
 		val team = TeamData.playersTeam(player.uniqueId)
 			?: return Commands.errorMessage(sender, "${player.name} is not on a team!")
 
-		TeamData.removeFromTeam(team, player.uniqueId, true) {
-			GameRunner.uhc.setParticipating(player.uniqueId, false)
-			GameRunner.sendGameMessage(sender, "Removed ${player.name} from ${team.colorPair.colorString(team.displayName)}")
-		}
+		TeamData.removeFromTeam(team, player.uniqueId, true)
+
+		GameRunner.uhc.setParticipating(player.uniqueId, false)
+		GameRunner.sendGameMessage(sender, "Removed ${player.name} from ${team.colorPair.colorString(team.displayName)}")
 	}
 
 	@CommandAlias("team random")
@@ -101,16 +101,12 @@ class TeamCommands : BaseCommand() {
 		val teamColorPairs = TeamMaker.getColorList(numPreMadeTeams)
 			?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!")
 
-		val lock = ReentrantLock()
 
 		teams.forEachIndexed { index, uuids ->
 			uuids.forEach { uuid ->
 				if (uuid != null) {
-					lock.lock()
-					TeamData.addToTeam(teamColorPairs[index], uuid, true) {
-						GameRunner.uhc.setParticipating(uuid, true)
-						lock.unlock()
-					}
+					TeamData.addToTeam(teamColorPairs[index], uuid, true)
+					GameRunner.uhc.setParticipating(uuid, true)
 				}
 			}
 		}
@@ -124,8 +120,8 @@ class TeamCommands : BaseCommand() {
 		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
 		val team2 = TeamData.playersTeam(player2.uniqueId) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
 
-		TeamData.addToTeam(team2, player1.uniqueId, false) {}
-		TeamData.addToTeam(team1, player2.uniqueId, false) {}
+		TeamData.addToTeam(team2, player1.uniqueId, false)
+		TeamData.addToTeam(team1, player2.uniqueId, false)
 
 		GameRunner.sendGameMessage(sender, "${team2.colorPair.colorString(player1.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}and ${team1.colorPair.colorString(player2.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
 	}

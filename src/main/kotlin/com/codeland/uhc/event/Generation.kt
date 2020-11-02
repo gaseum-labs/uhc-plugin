@@ -72,10 +72,17 @@ class Generation : Listener {
 				MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
 			}
 
-			HalloweenWorld.lanternPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-			HalloweenWorld.cobwebPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-			HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-			HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+			if (GameRunner.halloweenGeneration) {
+				if (world.environment == World.Environment.NORMAL) {
+					HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+					HalloweenWorld.deadBushPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				}
+
+				HalloweenWorld.lanternPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				HalloweenWorld.cobwebPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				HalloweenWorld.bannerPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+			}
 
 			//diamondPictureChunk(chunk)
 		}

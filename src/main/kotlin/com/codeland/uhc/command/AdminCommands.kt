@@ -152,9 +152,7 @@ class AdminCommands : BaseCommand() {
 
 		val joinTeam = TeamData.playersTeam(teammate.uniqueId) ?: return Commands.errorMessage(sender, "${teammate.name} has no team to join!")
 
-		TeamData.addToTeam(joinTeam, player.uniqueId, true) {
-			lateTeamTeleport(sender, player, teammate.location, joinTeam)
-		}
+		lateTeamTeleport(sender, player, teammate.location, TeamData.addToTeam(joinTeam, player.uniqueId, true))
 	}
 
 	@CommandAlias("addLate")
@@ -173,9 +171,7 @@ class AdminCommands : BaseCommand() {
 
 		var teamColorPairs = TeamMaker.getColorList(1) ?: return Commands.errorMessage(sender, "There are already the maximum amount of teams (${TeamData.MAX_TEAMS})")
 
-		TeamData.addToTeam(teamColorPairs[0], player.uniqueId, true) { joinTeam ->
-			lateTeamTeleport(sender, player, teleportLocation, joinTeam)
-		}
+		lateTeamTeleport(sender, player, teleportLocation, TeamData.addToTeam(teamColorPairs[0], player.uniqueId, true))
 	}
 
 	private fun lateTeamTeleport(sender: CommandSender, player: Player, location: Location, team: Team) {

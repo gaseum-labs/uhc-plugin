@@ -2,17 +2,11 @@ package com.codeland.uhc.world.chunkPlacer.impl
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
-import org.bukkit.Axis
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.World
-import org.bukkit.block.Biome
-import org.bukkit.block.BlockFace
-import org.bukkit.block.data.Orientable
-import org.bukkit.block.data.type.Lantern
-import java.lang.Math.pow
-import java.lang.Math.sqrt
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class BricksPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqueSeed) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
@@ -25,18 +19,32 @@ class BricksPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, unique
 		return true
 	}
 
+	private val replaceable = arrayOf(
+		Material.STONE,
+		Material.DIRT,
+		Material.ANDESITE,
+		Material.GRANITE,
+		Material.DIORITE,
+		Material.GRASS_BLOCK,
+		Material.NETHERRACK,
+		Material.WARPED_NYLIUM,
+		Material.CRIMSON_NYLIUM
+	)
+
+	init { replaceable.sort() }
+
 	override fun place(chunk: Chunk) {
 		randomPosition(chunk, 8, 99) { block, x, y, z ->
 			val world = chunk.world
-			val maxDistance = sqrt(pow(5.0, 2.0) * 3)
+			val maxDistance = sqrt(5.0.pow(2.0) * 3)
 
-			if (block.type == Material.STONE) {
+			if (Util.binarySearch(block.type, replaceable)) {
 				for (i in -5..5) {
 					for (j in -5..5) {
 						for (k in -5..5) {
 							val placeBlock = world.getBlockAt(chunk.x * 16 + i + x, j + y, chunk.z * 16 + k + z)
 
-							if (placeBlock.type == Material.STONE) {
+							if (Util.binarySearch(placeBlock.type, replaceable)) {
 								val distance = sqrt((i * i) + (j * j) + (k * k.toDouble()))
 								val chance = (maxDistance - distance) / maxDistance
 

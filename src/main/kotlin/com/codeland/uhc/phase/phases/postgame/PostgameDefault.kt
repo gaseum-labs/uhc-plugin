@@ -79,7 +79,9 @@ class PostgameDefault : Phase() {
             world.worldBorder.size = world.worldBorder.size
         }
 
-        TeamData.removeAllTeams {}
+        TeamData.removeAllTeams { player ->
+            GameRunner.uhc.setParticipating(player, false)
+        }
     }
 
     override fun customEnd() {}

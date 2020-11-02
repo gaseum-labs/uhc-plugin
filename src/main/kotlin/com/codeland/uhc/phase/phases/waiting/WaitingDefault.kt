@@ -63,7 +63,9 @@ class WaitingDefault : Phase() {
 		world.time = 6000
 		world.difficulty = Difficulty.NORMAL
 
-		TeamData.removeAllTeams {}
+		TeamData.removeAllTeams { player ->
+			uhc.setParticipating(player, false)
+		}
 
 		Bukkit.getServer().onlinePlayers.forEach { player ->
 			player.inventory.clear()

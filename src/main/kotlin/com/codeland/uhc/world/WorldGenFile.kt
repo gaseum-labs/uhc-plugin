@@ -5,7 +5,7 @@ import java.io.FileReader
 import java.io.FileWriter
 
 object WorldGenFile {
-	class WorldGenInfo(var netherFix: Boolean, var mushroomFix: Boolean, var oreFix: Boolean, var melonFix: Boolean)
+	class WorldGenInfo(var netherFix: Boolean, var mushroomFix: Boolean, var oreFix: Boolean, var melonFix: Boolean, var halloween: Boolean)
 
 	val filename = "uhc.properties"
 
@@ -13,7 +13,8 @@ object WorldGenFile {
 		"nether-fix",
 		"mushroom-fix",
 		"ore-fix",
-		"melon-fix"
+		"melon-fix",
+		"halloween"
 	)
 
 	fun getSettings(): WorldGenInfo {
@@ -22,7 +23,13 @@ object WorldGenFile {
 		return if (file.exists()) {
 			val reader = FileReader(file)
 
-			val values = Array(properties.size) { true }
+			val values = arrayOf(
+				true,
+				true,
+				true,
+				true,
+				false
+			)
 
 			reader.forEachLine { line ->
 				if (!line.startsWith("#")) {
@@ -39,10 +46,11 @@ object WorldGenFile {
 				}
 			}
 
-			WorldGenInfo(values[0], values[1], values[2], values[3])
+			WorldGenInfo(values[0], values[1], values[2], values[3], values[4])
+
 		} else {
 			createDefaultFile()
-			WorldGenInfo(true, true, true, true)
+			WorldGenInfo(true, true, true, true, false)
 		}
 	}
 

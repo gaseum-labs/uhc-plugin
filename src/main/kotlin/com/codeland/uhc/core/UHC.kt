@@ -7,13 +7,10 @@ import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.postgame.PostgameDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.quirk.quirks.Pests
-import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.Location
-import org.bukkit.OfflinePlayer
 import org.bukkit.World
 import org.bukkit.command.CommandSender
 import java.lang.Math.pow
@@ -73,10 +70,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			false
 
 		} else {
-			if (!using) TeamData.teams.forEach { team ->
-				bot.destroyTeam(team) {}
-			}
-
+			bot.clearTeamVCs()
 			using
 		}
 	}

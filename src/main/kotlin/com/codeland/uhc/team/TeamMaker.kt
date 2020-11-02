@@ -1,11 +1,13 @@
 package com.codeland.uhc.team
 
+import com.codeland.uhc.core.GameRunner
 import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -31,6 +33,40 @@ object TeamMaker {
 		}
 	}
 
+	private fun createColorTally(): Array<Int> {
+		val ret = Array(ChatColor.values().size) { 0 }
+
+		TeamData.teams.forEach { team ->
+			++ret[team.colorPair.color0.ordinal]
+
+			val color1 = team.colorPair.color1
+			if (color1 != null) ++ret[color1.ordinal]
+		}
+
+		return ret
+	}
+
+	private fun iterateTeamColors(colorArray: Array<Int>, onColor: (Int, Int) -> Unit) {
+		for (teamColor in TeamData.teamColors) {
+			onColor(teamColor.ordinal, colorArray[teamColor.ordinal])
+		}
+	}
+
+	private fun selectNextColor(tally: Array<Int>): ChatColor {
+		var minAmount = 9999
+		var minColor = 0
+
+		iterateTeamColors(tally) { ordinal, count ->
+			if (count < minAmount) {
+				minAmount = count
+				minColor = ordinal
+			}
+		}
+
+		++tally[minColor]
+		return ChatColor.values()[minColor]
+	}
+
 	/**
 	 * will return null if color list could not be created
 	 */
@@ -38,8 +74,17 @@ object TeamMaker {
 		if (size > TeamData.teamColors.size - TeamData.teams.size)
 			return null
 
-		val colorArray = Array(size) { ColorPair.DEFAULT }
+		val tally = createColorTally()
 
+		return Array(size) { i ->
+			if (Math.random() < 0.5) {
+				ColorPair(selectNextColor(tally))
+			} else {
+				ColorPair(selectNextColor(tally), selectNextColor(tally))
+			}
+		}
+
+        /*
 		fun colorArrayContains(size: Int, colorPair: ColorPair): Boolean {
 			for (i in size - 1 downTo 0)
 				if (colorArray[i] == colorPair)
@@ -59,8 +104,8 @@ object TeamMaker {
 
 			colorArray[i] = colorPair
 		}
-
-		return colorArray
+		*/
+		//return colorArray
 	}
 
 	/* ranked */

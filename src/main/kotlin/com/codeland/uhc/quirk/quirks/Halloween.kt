@@ -1,31 +1,24 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.gui.GuiItem.Companion.enabledName
-import com.codeland.uhc.quirk.BoolProperty
-import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.util.Util
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Material
+import com.codeland.uhc.util.SchedulerUtil
+import org.bukkit.*
 import org.bukkit.Material.*
 import org.bukkit.entity.*
 import org.bukkit.entity.EntityType.*
-import org.bukkit.event.block.Action
 import org.bukkit.event.entity.CreatureSpawnEvent
-import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
 class Halloween(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
-	override fun onEnable() {}
+	var hasGottenDiamonds = false
+
+	override fun onEnable() {
+		hasGottenDiamonds = false
+	}
 
 	override fun onDisable() {
 
@@ -70,6 +63,37 @@ class Halloween(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				}
 			} else {
 				false
+			}
+		}
+
+		fun jumpScare(player: Player) {
+			val creeperLocation = player.location.clone()
+			val direction = creeperLocation.direction
+			direction.y = 0.0
+			creeperLocation.add(direction.multiply(0.5))
+			creeperLocation.direction = direction.multiply(-1)
+
+			val creeper = player.world.spawnEntity(creeperLocation, CREEPER)
+			creeper as Creeper
+			creeper.isIgnited = true
+			creeper.maxFuseTicks = 200
+
+			Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin, {
+				creeper.remove()
+			}, 20)
+
+			player.playSound(player.location, Sound.ENTITY_GHAST_SCREAM, 2.0f, 1.0f)
+			player.playSound(player.location, Sound.ENTITY_GHAST_HURT, 2.0f, 1.0f)
+			player.playSound(player.location, Sound.ENTITY_GHAST_DEATH, 2.0f, 1.0f)
+			player.playSound(player.location, Sound.ENTITY_GHAST_SHOOT, 2.0f, 1.0f)
+			player.playSound(player.location, Sound.ENTITY_GHAST_WARN, 2.0f, 1.0f)
+
+			SchedulerUtil.nextTick {
+				player.playSound(player.location, Sound.ENTITY_GHAST_SCREAM, 2.0f, 1.0f)
+				player.playSound(player.location, Sound.ENTITY_GHAST_HURT, 2.0f, 1.0f)
+				player.playSound(player.location, Sound.ENTITY_GHAST_DEATH, 2.0f, 1.0f)
+				player.playSound(player.location, Sound.ENTITY_GHAST_SHOOT, 2.0f, 1.0f)
+				player.playSound(player.location, Sound.ENTITY_GHAST_WARN, 2.0f, 1.0f)
 			}
 		}
 	}

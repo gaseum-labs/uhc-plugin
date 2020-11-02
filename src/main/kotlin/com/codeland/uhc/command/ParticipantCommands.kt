@@ -40,7 +40,7 @@ class ParticipantCommands : BaseCommand() {
 			GameRunner.uhc.setParticipating(sender.uniqueId, false)
 
 			val team = TeamData.playersTeam(sender.uniqueId)
-			if (team != null) TeamData.removeFromTeam(team, sender.uniqueId, true) {}
+			if (team != null) TeamData.removeFromTeam(team, sender.uniqueId, true)
 
 			GameRunner.sendGameMessage(sender, "You have opted out of participating")
 		}

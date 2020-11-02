@@ -74,6 +74,8 @@ class PumpkinPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqu
 			}
 			block.blockData = data
 		}
+
+		world.getBlockAt(x, y - 1, z).setType(Material.DIRT, false)
 	}
 
 	fun findPumpkinY(world: World, x: Int, z: Int): Int {
@@ -90,9 +92,5 @@ class PumpkinPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqu
 		}
 
 		return -1
-	}
-
-	fun isAir(block: Block): Boolean {
-		return block.type == Material.AIR || block.type == Material.CAVE_AIR
 	}
 }

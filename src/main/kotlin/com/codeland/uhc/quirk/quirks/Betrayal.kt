@@ -72,29 +72,29 @@ class Betrayal(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				if (killerTeam != null) {
 					val memberLocation = GameRunner.getPlayerLocation(killerTeam.members[Util.randRange(0, killerTeam.members.lastIndex)])
 
-					TeamData.addToTeam(killerTeam, playerUUID, true) {
-						SchedulerUtil.nextTick {
-							if (memberLocation != null) GameRunner.teleportPlayer(playerUUID, memberLocation)
-						}
+					TeamData.addToTeam(killerTeam, playerUUID, true)
 
-						if (TeamData.teams.size == 1) {
-							val winningTeam = TeamData.teams[0]
+					SchedulerUtil.nextTick {
+						if (memberLocation != null) GameRunner.teleportPlayer(playerUUID, memberLocation)
+					}
 
-							var scores = Betrayal.calculateScores(TeamData.teams[0].members)
+					if (TeamData.teams.size == 1) {
+						val winningTeam = TeamData.teams[0]
 
-							for (i in 0..winningTeam.members.lastIndex) {
-								Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
-									val player = Bukkit.getOfflinePlayer(scores[i].first)
-									val betrayalData = QuirkType.getData<BetrayalData>(scores[i].first, QuirkType.BETRAYAL)
+						var scores = calculateScores(TeamData.teams[0].members)
 
-									GameRunner.sendGameMessage(onlinePlayer,
-										"${i + 1}: ${player.name} Kills: ${betrayalData.kills} Swaps: ${betrayalData.swaps}"
-									)
-								}
+						for (i in 0..winningTeam.members.lastIndex) {
+							Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
+								val player = Bukkit.getOfflinePlayer(scores[i].first)
+								val betrayalData = QuirkType.getData<BetrayalData>(scores[i].first, QuirkType.BETRAYAL)
+
+								GameRunner.sendGameMessage(onlinePlayer,
+									"${i + 1}: ${player.name} Kills: ${betrayalData.kills} Swaps: ${betrayalData.swaps}"
+								)
 							}
-
-							GameRunner.uhc.endUHC(winningTeam.members)
 						}
+
+						GameRunner.uhc.endUHC(winningTeam.members)
 					}
 				}
 			}
