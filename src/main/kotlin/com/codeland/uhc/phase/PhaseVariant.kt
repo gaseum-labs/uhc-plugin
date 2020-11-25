@@ -33,7 +33,12 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 
 	ENDGAME_CLEAR_BLOCKS(PhaseType.ENDGAME, ::EndgameClearBlocks, "Clear blocks", Material.DIRT, listOf(
 		"The ground above and below falls away",
-		"Until your only battleground is on y = 60"
+		"Until your only battleground is on a single y level"
+	)),
+
+	ENDGAME_NATURAL_TERRAIN(PhaseType.ENDGAME, ::EndgameNaturalTerrain, "Natural Terrain", Material.GRASS_BLOCK, listOf(
+		"Underground disappears, as well as the sky",
+		"Players are forced to fight on the surface"
 	)),
 
 	ENDGAME_DEATHMATCH(PhaseType.ENDGAME, ::EndgameDeathmatch, "Deathmatch", Material.BONE, listOf(

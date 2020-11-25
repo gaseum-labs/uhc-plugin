@@ -32,20 +32,6 @@ class Generation : Listener {
 				}
 			}
 
-			/* mushroom fix */
-			for (x in 0..15) {
-				for (z in 0..15) {
-					for (y in 63..121) {
-						val block = chunk.getBlock(x, y, z)
-						if (block.type == Material.BROWN_MUSHROOM || block.type == Material.RED_MUSHROOM) {
-							if (block.lightLevel > 12) {
-								block.setType(Material.AIR, false)
-							}
-						}
-					}
-				}
-			}
-
 			if (GameRunner.netherWorldFix && world.environment == World.Environment.NETHER) {
 				NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt(), -1)
 			}

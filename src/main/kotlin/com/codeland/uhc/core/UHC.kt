@@ -324,34 +324,17 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	}
 
 	fun updateMobCaps() {
-		val world = Bukkit.getWorlds()[0]
+		val world = Util.worldFromEnvironment(defaultEnvironment)
 
-		var numChunks = 0
 		val borderRadius = world.worldBorder.size / 2
 
-		val divisor = 289.0
+		var spawnModifier = borderRadius / 128.0
+		if (spawnModifier > 1.0) spawnModifier = 1.0
 
-		Bukkit.getWorlds()[0].loadedChunks.forEach { chunk ->
-			val nearPlayer = GameRunner.uhc.playerDataList.any { (uuid, playerData) ->
-				if (!playerData.participating || !playerData.alive) return@any false
-
-				val position = GameRunner.getPlayerLocation(uuid) ?: return@any false
-
-				sqrt(pow(chunk.x * 16.0 + 8.0 - position.x, 2.0) + pow(chunk.z * 16.0 + 8.0 - position.z, 2.0)) < 128.0
-			}
-
-			val inX = abs(chunk.x * 16 + 0.5) < borderRadius || abs(chunk.x * 16 + 15.5) < borderRadius
-			val inZ = abs(chunk.z * 16 + 0.5) < borderRadius || abs(chunk.z * 16 + 15.5) < borderRadius
-
-			if (nearPlayer && inX && inZ) {
-				++numChunks
-			}
-		}
-
-		world.     monsterSpawnLimit = (70 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
-		world.      animalSpawnLimit = (10 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
-		world.     ambientSpawnLimit = (15 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
-		world. waterAnimalSpawnLimit = ( 5 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
-		world.waterAmbientSpawnLimit = (20 * mobCapCoefficient * (numChunks / divisor)).roundToInt().coerceAtLeast(1)
+		world.     monsterSpawnLimit = (70 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.      animalSpawnLimit = (10 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.     ambientSpawnLimit = (15 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world. waterAnimalSpawnLimit = ( 5 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.waterAmbientSpawnLimit = (20 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
 	}
 }

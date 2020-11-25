@@ -17,12 +17,10 @@ import com.codeland.uhc.phase.phases.waiting.LobbyPvp
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
 import com.codeland.uhc.quirk.quirks.*
-import com.codeland.uhc.quirk.quirks.Betrayal.BetrayalData
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.NetherFix
-import com.destroystokyo.paper.event.entity.CreeperIgniteEvent
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.entity.Arrow
@@ -33,6 +31,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
+import org.bukkit.event.inventory.BrewEvent
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
@@ -40,8 +39,11 @@ import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.PotionMeta
+import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.bukkit.potion.PotionType
 
 class EventListener : Listener {
 	@EventHandler
@@ -327,6 +329,17 @@ class EventListener : Listener {
 		}
 	}
 
+	/**
+	 * used by onHealthRegen
+	 *
+	 * prevents the saturation loss that usually comes with
+	 * natural regeneration, as well as preventing the regeneration
+	 */
+	private fun preventRegen(event: EntityRegainHealthEvent) {
+		event.isCancelled = true
+		(event.entity as Player).saturation = 5.0f
+	}
+
 	@EventHandler
 	fun onHealthRegen(event: EntityRegainHealthEvent) {
 		/* no regeneration in UHC */
@@ -335,17 +348,11 @@ class EventListener : Listener {
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
 		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
-			if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-				event.isCancelled = LobbyPvp.getPvpData(player).inPvp
-			}
-			if (!(GameRunner.uhc.isPhase(PhaseType.GRACE))) {
-				/* pests can regenerate */
-				if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-					event.isCancelled = !Pests.isPest(player)
-				} else {
-					event.isCancelled = true
-				}
-			}
+			if (
+				(GameRunner.uhc.isPhase(PhaseType.WAITING) && LobbyPvp.getPvpData(player).inPvp) ||
+				(!GameRunner.uhc.isPhase(PhaseType.GRACE) && (!GameRunner.uhc.isEnabled(QuirkType.PESTS) || !Pests.isPest(player)))
+			)
+				preventRegen(event)
 		}
 	}
 
@@ -429,6 +436,47 @@ class EventListener : Listener {
 			if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
 				event.drops.forEach { drop ->
 					drop.amount = drop.amount * 3
+				}
+			}
+		}
+	}
+
+	/**
+	 * brewfix
+	 *
+	 * prevents strength II from being brewed,
+	 * also transmutes all regen potions into instant health potions
+	 */
+	@EventHandler
+	fun onBrew(event: BrewEvent) {
+		fun containsStrength(contents: Array<ItemStack>) = contents.any { itemStack ->
+			if (itemStack == null || !(itemStack.type == Material.POTION || itemStack.type == Material.SPLASH_POTION || itemStack.type == Material.LINGERING_POTION)) return@any false
+			val meta = itemStack.itemMeta as PotionMeta
+
+			meta.basePotionData.type == PotionType.STRENGTH
+		}
+
+		if (event.contents.ingredient?.type == Material.GLOWSTONE_DUST && containsStrength(event.contents.contents)) {
+			/* eject glowstone from the brewing stand */
+			val ingredient = event.contents.ingredient?.clone()
+			if (ingredient != null) event.block.world.dropItem(event.block.location.toCenterLocation(), ingredient)
+			event.contents.ingredient = null
+
+			/* prevent potions from being brewed */
+			event.isCancelled = true
+
+		} else if (event.contents.ingredient?.type == Material.GHAST_TEAR) {
+			event.isCancelled = true
+			event.contents.ingredient = null
+
+			event.contents.contents.forEach { itemStack ->
+				if (itemStack != null && (itemStack.type == Material.POTION || itemStack.type == Material.SPLASH_POTION || itemStack.type == Material.LINGERING_POTION)) {
+					val meta = itemStack.itemMeta as PotionMeta
+
+					if (meta.basePotionData.type == PotionType.AWKWARD) {
+						meta.basePotionData = PotionData(PotionType.INSTANT_HEAL)
+						itemStack.itemMeta = meta
+					}
 				}
 			}
 		}
@@ -529,30 +577,39 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
-		val world = event.block.world
+		/* this behavior is only modified in applefix */
+		if (!GameRunner.uhc.appleFix) return
 
-		if (!GameRunner.uhc.appleFix)
-			return
-
-		/* drop apple for the nearest player */
-		Bukkit.getOnlinePlayers().any { player ->
-			if (
-				world == player.world &&
-				player.location.distance(event.block.location.toCenterLocation()) < 16
-			) {
-				BlockFixType.LEAVES_FIX.blockFix.onBreakBlock(event.block.type, player) { drop ->
-					player.world.dropItem(event.block.location.toCenterLocation(), drop)
-				}
-
-				true
-			}
-
-			false
-		}
-
-		/* prevent drops */
+		/* prevent default drops */
 		event.isCancelled = true
 		event.block.type = Material.AIR
+
+		val leavesLocation = event.block.location.toCenterLocation()
+
+		var nearestPlayer = null as Player?
+		var nearestDistance = Double.MAX_VALUE
+
+		/* find the nearest player to the decaying leaves */
+		Bukkit.getOnlinePlayers().forEach { player ->
+			val playerLocation = player.location
+
+			if (leavesLocation.world == playerLocation.world) {
+				val distance = playerLocation.distance(leavesLocation)
+				if (distance < nearestDistance) {
+					nearestDistance = distance
+					nearestPlayer = player
+				}
+			}
+		}
+
+		val dropPlayer = nearestPlayer
+
+		/* apply applefix to this leaves block for the nearest player */
+		if (dropPlayer != null) {
+			BlockFixType.LEAVES_FIX.blockFix.onBreakBlock(event.block.type, dropPlayer) { drop ->
+				leavesLocation.world.dropItem(event.block.location.toCenterLocation(), drop)
+			}
+		}
 	}
 
 	@EventHandler

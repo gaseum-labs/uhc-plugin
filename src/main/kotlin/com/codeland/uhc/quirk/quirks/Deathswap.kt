@@ -10,7 +10,6 @@ import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.GameMode
 import org.bukkit.Location
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
@@ -18,89 +17,103 @@ import kotlin.collections.ArrayList
 import kotlin.math.ceil
 
 class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
-    companion object {
-        var WARNING = 10 * 20
-        var IMMUNITY = 10 * 20
+	companion object {
+		var WARNING = 10 * 20
+		var IMMUNITY = 10 * 20
 
-        var taskId = 0
-        var swapTime = 0
+		var taskId = 0
+		var swapTime = 0
 
-        val random = Random()
+		val random = Random()
 
-        fun doSwaps() {
-            val teleportList = ArrayList<Location>()
+		const val MIN_TIME = 120
+		const val MAX_TIME = 300
 
-            GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
-                if (playerData.participating && playerData.alive) {
-                    teleportList.add(GameRunner.getPlayerLocation(uuid) ?: GameRunner.uhc.spectatorSpawnLocation())
-                }
-            }
+		fun doSwaps() {
+			val used = ArrayList<Boolean>()
+			val players = ArrayList<UUID>()
+			val locations = ArrayList<Location>()
 
-            GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
-                if (playerData.participating && playerData.alive) {
-                    GameRunner.teleportPlayer(uuid, teleportList.removeAt(Util.randRange(0, teleportList.lastIndex)))
-                }
-            }
-        }
+			GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+				if (playerData.participating && playerData.alive) {
+					used.add(false)
+					players.add(uuid)
+					locations.add(GameRunner.getPlayerLocation(uuid) ?: GameRunner.uhc.spectatorSpawnLocation())
+				}
+			}
 
-        fun resetTimer() {
-            swapTime = ((ThreadLocalRandom.current().nextInt() % (60 * 20)) + IMMUNITY)
-        }
-    }
+			if (players.size > 1) {
+				players.forEachIndexed { i, uuid ->
+					var index = Util.randRange(0, locations.lastIndex)
 
-    override fun onEnable() {
+					while (used[index] || index == i) index = (index + 1) % used.size
 
-    }
+					used[index] = true
+					GameRunner.teleportPlayer(uuid, locations[index])
+				}
+			}
+		}
 
-    override fun onDisable() {
-        Bukkit.getScheduler().cancelTask(taskId)
-    }
+		fun resetTimer() {
+			swapTime = ((ThreadLocalRandom.current().nextInt() % (MAX_TIME - MIN_TIME + 1) + MIN_TIME) * 20 + IMMUNITY)
+		}
 
-    private fun sendImmunity(percent: Float) {
-        val message = StringBuilder("${ChatColor.GOLD}Immune ${ChatColor.GRAY}- ")
+		private fun runTask() {
+			--swapTime
 
-        for (i in 0 until (10 * percent).toInt())
-            message.append(ChatColor.GOLD.toString() + "▮")
+			when {
+				swapTime <= 0 -> {
+					resetTimer()
+					sendAll("${ChatColor.GOLD}You are no longer immune.", false)
+				}
+				swapTime < IMMUNITY -> {
+					sendAll(generateImmunity(swapTime / IMMUNITY.toFloat()), false)
+				}
+				swapTime < IMMUNITY + WARNING -> {
+					sendAll("${ChatColor.GOLD}Swapping in ${ChatColor.BLUE}${ceil((swapTime - IMMUNITY) / 20.0).toInt()}...", true)
+				}
+				else -> {
+					sendAll("${ChatColor.GOLD}(debug) Swapping in ${ChatColor.BLUE}${ceil((swapTime - IMMUNITY) / 20.0).toInt()}...", true)
+				}
+			}
+		}
 
-        for (i in 0 until 10 - (10 * percent).toInt())
-            message.append(ChatColor.GRAY.toString() + "▮")
+		private fun sendAll(message: String, allowSpecs: Boolean) {
+			GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+				if ((playerData.participating && playerData.alive) || allowSpecs)
+					Bukkit.getPlayer(uuid)?.sendActionBar(message)
+			}
+		}
 
-        sendAll(message.toString(), false)
-    }
+		private fun generateImmunity(percent: Float): String {
+			val message = StringBuilder("${ChatColor.GOLD}Immune ${ChatColor.GRAY}- ")
 
-    override fun onPhaseSwitch(phase: PhaseVariant) {
-        if (phase.type == PhaseType.GRACE) {
-            resetTimer()
+			for (i in 0 until ceil(10 * percent).toInt())
+				message.append(ChatColor.GOLD.toString() + "▮")
 
-            taskId = SchedulerUtil.everyTick {
-                --swapTime
+			for (i in 0 until 10 - ceil(10 * percent).toInt())
+				message.append(ChatColor.GRAY.toString() + "▮")
 
-                when {
-                    swapTime <= 0 -> {
-                        resetTimer()
-                        sendAll("${ChatColor.GOLD}You are no longer immune.", false)
-                    }
-                    swapTime < IMMUNITY -> {
-                        sendImmunity(swapTime / IMMUNITY.toFloat())
-                    }
-                    swapTime == IMMUNITY -> {
-                        doSwaps()
-                        sendAll("${ChatColor.GOLD}Swapped!", true)
-                    }
-                    swapTime < IMMUNITY + WARNING -> {
-                        sendAll("${ChatColor.GOLD}Swapping in ${ChatColor.BLUE}${ceil(swapTime / 20.0)}${ChatColor.GOLD}...", true)
-                    }
-                }
-            }
-        } else if (phase.type == PhaseType.POSTGAME) {
-            Bukkit.getScheduler().cancelTask(taskId)
-        }
-    }
+			return message.toString()
+		}
+	}
 
-    private fun sendAll(message: String, allowSpecs: Boolean) {
-        GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
-            if ((playerData.participating && playerData.alive) || allowSpecs)
-                Bukkit.getPlayer(uuid)?.sendActionBar(message)
-        }
-    }
+	override fun onEnable() {
+		if (GameRunner.uhc.isGameGoing()) taskId = SchedulerUtil.everyTick(::runTask)
+	}
+
+	override fun onDisable() {
+		Bukkit.getScheduler().cancelTask(taskId)
+	}
+
+	override fun onPhaseSwitch(phase: PhaseVariant) {
+		if (phase.type == PhaseType.GRACE) {
+			resetTimer()
+
+			taskId = SchedulerUtil.everyTick(::runTask)
+
+		} else if (phase.type == PhaseType.WAITING || phase.type == PhaseType.POSTGAME) {
+			Bukkit.getScheduler().cancelTask(taskId)
+		}
+	}
 }

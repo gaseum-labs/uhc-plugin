@@ -13,7 +13,7 @@ import org.bukkit.boss.BossBar
 import kotlin.math.ceil
 import kotlin.math.max
 
-class EndgameClearBlocks : Phase() {
+class EndgameNaturalTerrain : Phase() {
 	val allowedHeight = 3
 
 	var topBoundary = 0
@@ -22,6 +22,8 @@ class EndgameClearBlocks : Phase() {
 
 	var finished = false
 
+	var heightArray = Array((uhc.endRadius * 2 + 1) * (uhc.endRadius * 2 + 1)) { 0 }
+
 	override fun customStart() {
 		EndgameNone.closeNether()
 
@@ -29,6 +31,15 @@ class EndgameClearBlocks : Phase() {
 
 		topBoundary = 255
 		botBoundary = center - (255 - center)
+
+		/* fill height array */
+		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
+
+		for (x in -uhc.endRadius..uhc.endRadius) {
+			for (z in -uhc.endRadius..uhc.endRadius) {
+				val heightArrayIndex = x + uhc.endRadius
+			}
+		}
 	}
 
 	override fun customEnd() {}
