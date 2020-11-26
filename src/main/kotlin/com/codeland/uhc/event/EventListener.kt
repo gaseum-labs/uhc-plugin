@@ -212,38 +212,31 @@ class EventListener : Listener {
 		}
 	}
 
-	private fun spreadRespawn(event: PlayerRespawnEvent, world: World) {
-		val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
-		if (location != null) event.respawnLocation = location
-	}
-
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
-		when {
-			GameRunner.uhc.isPhase(PhaseType.WAITING) -> {
-				/* waiting pvp respawning */
-				if (LobbyPvp.getPvpData(event.player).inPvp) {
-					LobbyPvp.disablePvp(event.player, LobbyPvp.getPvpData(event.player))
+		val player = event.player
+		val uuid = player.uniqueId
+
+		/* waiting pvp respawning */
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			if (LobbyPvp.getPvpData(player).inPvp)
+				LobbyPvp.disablePvp(player, LobbyPvp.getPvpData(player))
+
+		/* respawning when the game is going */
+		} else {
+			/* conditions to respawn in game */
+			if (GameRunner.uhc.isAlive(uuid) || (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(player))) {
+				val world = player.world
+				val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+				if (location != null) event.respawnLocation = location
+
+				/* custom quirk behavior when players start */
+				GameRunner.uhc.quirks.forEach { quirk ->
+					quirk.onStart(event.player.uniqueId)
 				}
-			}
-			GameRunner.uhc.isAlive(event.player.uniqueId) -> {
-				/* grace respawning */
-				spreadRespawn(event, Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment))
-			}
-			GameRunner.uhc.isEnabled(QuirkType.PESTS) -> {
-				/* pest respawning */
-				var player = event.player
 
-				/* player is set to pest on death */
-				if (!Pests.isPest(player))
-					return
-
-				/* spread player */
-				spreadRespawn(event, Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment))
-
-				Pests.givePestSetup(player)
-			}
-			else -> {
+			/* otherwise this is a spectator */
+			} else {
 				/* players respawning as spectator */
 				event.respawnLocation = GameRunner.uhc.spectatorSpawnLocation()
 			}

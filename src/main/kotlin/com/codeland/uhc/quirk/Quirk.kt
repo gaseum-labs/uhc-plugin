@@ -62,10 +62,10 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 		}
 	}
 
-	open fun defaultData(): Any = 0
-
 	abstract fun onEnable()
 	abstract fun onDisable()
 
+	open fun defaultData(): Any = 0
+	open fun onStart(uuid: UUID) {}
 	open fun onPhaseSwitch(phase: PhaseVariant) {}
 }

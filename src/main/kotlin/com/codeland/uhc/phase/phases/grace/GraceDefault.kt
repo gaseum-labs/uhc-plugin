@@ -39,6 +39,9 @@ open class GraceDefault : Phase() {
 
 				GameRunner.teleportPlayer(uuid, teleportLocations[i])
 				GameRunner.playerAction(uuid, ::startPlayer)
+				GameRunner.uhc.quirks.forEach { quirk ->
+					if (quirk.enabled) quirk.onStart(uuid)
+				}
 			}
 		}
 
@@ -55,7 +58,7 @@ open class GraceDefault : Phase() {
 		uhc.ledger = Ledger()
 	}
 
-	fun startPlayer(player: Player) {
+	private fun startPlayer(player: Player) {
 		/* absolutely nuke the inventory */
 		player.inventory.clear()
 		player.itemOnCursor.amount = 0

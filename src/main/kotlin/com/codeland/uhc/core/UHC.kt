@@ -31,7 +31,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		defaultVariants[index]
 	}
 
-	private var quirks = Array(QuirkType.values().size) { index ->
+	var quirks = Array(QuirkType.values().size) { index ->
 		QuirkType.values()[index].createQuirk(this)
 	}
 
@@ -221,6 +221,12 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	fun isGameGoing(): Boolean {
 		return currentPhase?.phaseType?.gameGoing ?: false
+	}
+
+	fun allCurrentPlayers(action: (uuid: UUID) -> Unit) {
+		playerDataList.forEach { (uuid, data) ->
+			if (data.alive && data.participating) action(uuid)
+		}
 	}
 
 	/* game flow modifiers */

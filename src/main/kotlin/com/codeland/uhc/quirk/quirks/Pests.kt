@@ -19,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.inventory.meta.LeatherArmorMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
+import java.util.*
 
 class Pests(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
     override fun onEnable() {}
@@ -35,6 +36,26 @@ class Pests(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
         /* now nobody is a pest */
         Bukkit.getOnlinePlayers().forEach { player ->
             makeNotPest(player)
+        }
+    }
+
+    override fun onStart(uuid: UUID) {
+        GameRunner.playerAction(uuid) { player ->
+            /* give pest setup */
+            if (isPest(player)) {
+                player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
+
+                /* give pest a bunch of crap */
+                player.inventory.helmet = genPestArmor(Material.LEATHER_HELMET)
+                player.inventory.chestplate = genPestArmor(Material.LEATHER_CHESTPLATE)
+                player.inventory.leggings = genPestArmor(Material.LEATHER_LEGGINGS)
+                player.inventory.boots = genPestArmor(Material.LEATHER_BOOTS)
+
+                player.inventory.setItem(0, genPestTool(Material.WOODEN_SWORD))
+                player.inventory.setItem(1, genPestTool(Material.WOODEN_PICKAXE))
+                player.inventory.setItem(2, genPestTool(Material.WOODEN_AXE))
+                player.inventory.setItem(3, genPestTool(Material.WOODEN_SHOVEL))
+            }
         }
     }
 
@@ -63,21 +84,6 @@ class Pests(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
         fun makePest(player: Player) {
             player.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin as Plugin, true))
-        }
-
-        fun givePestSetup(player: Player) {
-            player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
-
-            /* give pest a bunch of crap */
-            player.inventory.helmet = genPestArmor(Material.LEATHER_HELMET)
-            player.inventory.chestplate = genPestArmor(Material.LEATHER_CHESTPLATE)
-            player.inventory.leggings = genPestArmor(Material.LEATHER_LEGGINGS)
-            player.inventory.boots = genPestArmor(Material.LEATHER_BOOTS)
-
-            player.inventory.setItem(0, genPestTool(Material.WOODEN_SWORD))
-            player.inventory.setItem(1, genPestTool(Material.WOODEN_PICKAXE))
-            player.inventory.setItem(2, genPestTool(Material.WOODEN_AXE))
-            player.inventory.setItem(3, genPestTool(Material.WOODEN_SHOVEL))
         }
 
         fun makeNotPest(player: Player) {

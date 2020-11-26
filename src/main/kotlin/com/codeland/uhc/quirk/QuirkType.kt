@@ -82,6 +82,10 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	HALLOWEEN("Halloween", ::Halloween, false, Material.PUMPKIN, arrayOf(
 		"Pumpkins Everywhere!",
 		"Witches?!"
+	)),
+
+	FLYING("Flying", ::Flying, false, Material.FIREWORK_ROCKET, arrayOf(
+		"Start with an elytra and rockets"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
