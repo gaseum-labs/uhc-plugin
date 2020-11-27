@@ -51,8 +51,14 @@ class DropEntry(val onDrop: (looting: Int, entity: Entity) -> Array<ItemStack?>)
 
 		fun onFire(unCooked: Material, cooked: Material): (Entity) -> Material? {
 			return { entity ->
-				Util.log("firetick: ${entity.fireTicks}")
 				if (entity.fireTicks == -1) unCooked else cooked
+			}
+		}
+
+		fun isBig(material: Material): (Entity) -> Material? {
+			return { entity ->
+				entity as MagmaCube
+				if (entity.size == 2) material else null
 			}
 		}
 

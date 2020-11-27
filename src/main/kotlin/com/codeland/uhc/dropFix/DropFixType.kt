@@ -1,6 +1,7 @@
 package com.codeland.uhc.dropFix
 
 import com.codeland.uhc.dropFix.DropEntry.Companion.entity
+import com.codeland.uhc.dropFix.DropEntry.Companion.isBig
 import com.codeland.uhc.dropFix.DropEntry.Companion.loot
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootEntity
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
@@ -65,12 +66,13 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	ENDERMAN(DropFix(EntityType.ENDERMAN, arrayOf(
-		arrayOf(loot(ENDER_PEARL, lootMulti(-2))),
-		arrayOf(loot(ENDER_PEARL, lootMulti(-1))),
-		arrayOf(loot(ENDER_PEARL, lootMulti(0))),
-		arrayOf(loot(ENDER_PEARL, lootMulti(1))),
-		arrayOf(loot(ENDER_PEARL, lootMulti(1))),
-		arrayOf(loot(ENDER_PEARL, lootMulti(1)))
+		arrayOf(loot(ENDER_PEARL, ::lootItem))
+	), arrayOf(
+		DropEntry.nothing()
+	))),
+
+	MAGMA_CUBE(DropFix(EntityType.MAGMA_CUBE, arrayOf(
+		arrayOf(lootEntity(isBig(MAGMA_CREAM), ::lootItem))
 	), arrayOf(
 		DropEntry.nothing()
 	))),

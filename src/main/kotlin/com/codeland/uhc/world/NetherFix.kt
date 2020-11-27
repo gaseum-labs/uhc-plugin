@@ -1,5 +1,6 @@
 package com.codeland.uhc.world;
 
+import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.impl.WartPlacer
 import org.bukkit.block.Biome
 import org.bukkit.entity.Entity
@@ -17,15 +18,16 @@ object NetherFix {
 
 		val chance = if (world.getBiome(location.blockX, location.blockY, location.blockZ) == Biome.BASALT_DELTAS) 0.085 else 0.05
 
-		if (entity is LivingEntity && (entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL) && Math.random() < chance) {
+		return if (entity is LivingEntity && (entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL) && Math.random() < chance) {
 			world.spawnEntity(location, EntityType.BLAZE)
+			true
 
-			return true
-		} else if (entity is MagmaCube && entity.size > 2) {
-			entity.size = 2
-			return false
+		} else if (entity is MagmaCube  && entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL) {
+			entity.size = Util.randRange(0, 1)
+			false
+
+		} else {
+			false
 		}
-
-		return false
 	}
 }
