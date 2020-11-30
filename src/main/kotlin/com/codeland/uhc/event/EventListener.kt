@@ -235,7 +235,7 @@ class EventListener : Listener {
 
 				/* custom quirk behavior when players start */
 				GameRunner.uhc.quirks.forEach { quirk ->
-					quirk.onStart(event.player.uniqueId)
+					if (quirk.enabled) quirk.onStart(event.player.uniqueId)
 				}
 
 			/* otherwise this is a spectator */
@@ -309,6 +309,7 @@ class EventListener : Listener {
 			GuiOpener.isItem(stack) -> true
 			AntiSoftlock.isItem(stack) -> true
 			ParkourCheckpoint.isItem(stack) -> true
+			PlayerCompass.isCompass(stack) -> true
 			else -> false
 		}
 	}

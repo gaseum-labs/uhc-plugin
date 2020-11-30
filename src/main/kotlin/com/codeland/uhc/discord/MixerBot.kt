@@ -103,18 +103,6 @@ class MixerBot(
 
 	class SummaryEntry(val place: String, val name: String, val killedBy: String)
 
-	override fun onPrivateMessageReceived(event: PrivateMessageReceivedEvent) {
-		val fromUserID: Long = event.author.idLong
-		if (fromUserID == 244188985138741249L || fromUserID == 258485243038662657L) { //from varas or balduvian
-			if (event.message.contentRaw == "die") {
-				clearTeamVCs()
-				close()
-			} else if (event.message.contentRaw == "kill teams") {
-				clearTeamVCs()
-			}
-		}
-	}
-
 	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
 		val message = event.message
 		val content = message.contentRaw
@@ -301,7 +289,13 @@ class MixerBot(
 		val channels = category.voiceChannels
 
 		channels.forEach { channel ->
-			if (channel != generalChannel) channel.delete().complete()
+			if (channel != generalChannel) {
+				channel.members.forEach { vcer ->
+					guild?.moveVoiceMember(vcer, generalChannel)?.complete()
+				}
+
+				channel.delete().complete()
+			}
 		}
 	}
 

@@ -3,11 +3,14 @@ package com.codeland.uhc.quirk.quirks
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.ItemUtil
+import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -27,6 +30,14 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			uhc.allCurrentPlayers { uuid ->
 				GameRunner.playerAction(uuid) { player -> player.inventory.addItem(compass.clone()) }
 			}
+
+			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
+		}
+	}
+
+	override fun onPhaseSwitch(phase: PhaseVariant) {
+		if (phase.type == PhaseType.GRACE) {
+			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
 		}
 	}
 
@@ -42,8 +53,6 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		GameRunner.playerAction(uuid) { player ->
 			player.inventory.addItem(createCompass())
 		}
-
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
 	}
 
 	companion object {
@@ -51,15 +60,14 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			return itemStack != null &&
 				itemStack.type == Material.COMPASS &&
 				itemStack.itemMeta.hasLore() &&
-				itemStack.itemMeta.hasDisplayName() &&
-				itemStack.enchantments.size == 1
+				itemStack.itemMeta.hasDisplayName()
 		}
 
 		fun createCompass(): ItemStack {
 			val compass = ItemStack(Material.COMPASS)
 			val meta = compass.itemMeta
 			meta.setDisplayName("${ChatColor.RESET}${ChatColor.GOLD}Player Compass")
-			meta.lore = listOf("From Player Compasses CHC")
+			meta.lore = listOf("From Player Compasses CHC", "${ChatColor.BLACK}${UUID.randomUUID()}")
 			meta.addEnchant(ItemUtil.FakeEnchantment(), 0, true)
 			compass.itemMeta = meta
 
