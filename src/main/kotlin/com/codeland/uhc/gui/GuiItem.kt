@@ -4,6 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.event.Chat
+import com.codeland.uhc.util.ItemUtil
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -42,20 +43,9 @@ abstract class GuiItem(val uhc: UHC, val index: Int, val opOnly: Boolean) {
 			return stack
 		}
 
-		class FakeEnchantment : Enchantment(NamespacedKey(UHCPlugin.plugin, "fakeEnchantment")) {
-			override fun getName() = ""
-			override fun getMaxLevel() = 0
-			override fun getStartLevel() = 0
-			override fun getItemTarget() = EnchantmentTarget.ARMOR
-			override fun isTreasure() = false
-			override fun isCursed() = false
-			override fun conflictsWith(other: Enchantment) = false
-			override fun canEnchantItem(item: ItemStack) = true
-		}
-
 		fun setEnchanted(stack: ItemStack): ItemStack {
 			val meta = stack.itemMeta
-			meta.addEnchant(FakeEnchantment(), 0, true)
+			meta.addEnchant(ItemUtil.FakeEnchantment(), 0, true)
 			stack.itemMeta = meta
 
 			return stack

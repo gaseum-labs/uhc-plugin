@@ -86,6 +86,10 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 
 	FLYING("Flying", ::Flying, false, Material.FIREWORK_ROCKET, arrayOf(
 		"Start with an elytra and rockets"
+	)),
+
+	PLAYER_COMPASS("Player Compasses", ::PlayerCompass, false, Material.COMPASS, arrayOf(
+		"Track down players with a special compass"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()

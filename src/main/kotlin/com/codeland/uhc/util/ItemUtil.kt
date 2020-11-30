@@ -1,10 +1,13 @@
 package com.codeland.uhc.util
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.util.Util.randFromArray
 import org.bukkit.Color
 import org.bukkit.FireworkEffect
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
+import org.bukkit.enchantments.EnchantmentTarget
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.*
 import org.bukkit.potion.PotionData
@@ -333,5 +336,16 @@ object ItemUtil {
 
 		armor.itemMeta = meta
 		return armor
+	}
+
+	class FakeEnchantment : Enchantment(NamespacedKey(UHCPlugin.plugin, "fakeEnchantment")) {
+		override fun getName() = ""
+		override fun getMaxLevel() = 0
+		override fun getStartLevel() = 0
+		override fun getItemTarget() = EnchantmentTarget.ARMOR
+		override fun isTreasure() = false
+		override fun isCursed() = false
+		override fun conflictsWith(other: Enchantment) = false
+		override fun canEnchantItem(item: ItemStack) = true
 	}
 }

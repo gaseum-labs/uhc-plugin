@@ -178,12 +178,15 @@ class EventListener : Listener {
 				TeamData.removeFromTeam(player.uniqueId, true)
 		}
 
-		/* prevent glass from dropping in hotbar chc */
+		/* remove chc specific items from drops */
+
 		if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) {
 			event.drops.removeAll { itemStack ->
 				itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.displayName == "Unusable Slot"
 			}
 		}
+
+		if (GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS)) PlayerCompass.filterDrops(event.drops)
 	}
 
 	@EventHandler
