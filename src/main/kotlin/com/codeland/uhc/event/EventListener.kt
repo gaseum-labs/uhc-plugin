@@ -326,30 +326,37 @@ class EventListener : Listener {
 		}
 	}
 
-	/**
-	 * used by onHealthRegen
-	 *
-	 * prevents the saturation loss that usually comes with
-	 * natural regeneration, as well as preventing the regeneration
-	 */
-	private fun preventRegen(event: EntityRegainHealthEvent) {
-		event.isCancelled = true
-		(event.entity as Player).saturation = 5.0f
+	fun shouldHealthCancelled(player: Player): Boolean {
+		return (GameRunner.uhc.isPhase(PhaseType.WAITING) && LobbyPvp.getPvpData(player).inPvp) ||
+			(!GameRunner.uhc.isPhase(PhaseType.GRACE) && (!GameRunner.uhc.isEnabled(QuirkType.PESTS) || !Pests.isPest(player)))
 	}
 
 	@EventHandler
 	fun onHealthRegen(event: EntityRegainHealthEvent) {
 		/* no regeneration in UHC */
 		var player = event.entity
-
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
 		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
-			if (
-				(GameRunner.uhc.isPhase(PhaseType.WAITING) && LobbyPvp.getPvpData(player).inPvp) ||
-				(!GameRunner.uhc.isPhase(PhaseType.GRACE) && (!GameRunner.uhc.isEnabled(QuirkType.PESTS) || !Pests.isPest(player)))
-			)
-				preventRegen(event)
+			if (shouldHealthCancelled(player)) {
+				Util.log("sat0: ${player.saturation}")
+
+				event.isCancelled = true
+			}
+		}
+	}
+
+	@EventHandler
+	fun onFoodLevelChange(event: FoodLevelChangeEvent) {
+		val player = event.entity as Player
+
+		Util.log("sat1: ${player.saturation}")
+
+		if (shouldHealthCancelled(player)) {
+			val over = (event.foodLevel - 17).coerceAtLeast(0)
+
+			if (event.foodLevel > 17) event.foodLevel = 17
+			player.saturation += over
 		}
 	}
 

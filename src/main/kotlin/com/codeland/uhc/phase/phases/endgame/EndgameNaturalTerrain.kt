@@ -2,42 +2,90 @@ package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
-import org.bukkit.*
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor.BOLD
-import org.bukkit.ChatColor.WHITE
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.World
 import org.bukkit.boss.BossBar
-import kotlin.math.ceil
 import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.round
 
 class EndgameNaturalTerrain : Phase() {
-	val allowedHeight = 3
+	val SEARCH_MIN = 60
+	val SEARCH_MAX = 100
 
 	var topBoundary = 0
 	var botBoundary = 0
-	var center = 0
+
+	var area_min = 0
+	var area_max = 0
 
 	var finished = false
-
-	var heightArray = Array((uhc.endRadius * 2 + 1) * (uhc.endRadius * 2 + 1)) { 0 }
 
 	override fun customStart() {
 		EndgameNone.closeNether()
 
-		center = Util.randRange(50, 60)
+		val heightList = ArrayList<Int>((uhc.endRadius * 2 + 1) * (uhc.endRadius * 2 + 1))
 
-		topBoundary = 255
-		botBoundary = center - (255 - center)
-
-		/* fill height array */
+		/* find heights of all positions within endgame */
 		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
 
 		for (x in -uhc.endRadius..uhc.endRadius) {
 			for (z in -uhc.endRadius..uhc.endRadius) {
-				val heightArrayIndex = x + uhc.endRadius
+				var solidCount = 0
+				var topLevel = 0
+				var foundLevel = false
+
+				for (y in SEARCH_MAX downTo 0) {
+					val solid = !world.getBlockAt(x, y, z).isPassable
+
+					if (solidCount == 0) {
+						if (solid) {
+							topLevel = y
+							solidCount = 1
+						}
+					} else {
+						if (solid) {
+							++solidCount
+							if (solidCount == 6) {
+								foundLevel = true
+								break
+							}
+						} else {
+							solidCount = 0
+						}
+					}
+				}
+
+				if (foundLevel) heightList.add(topLevel)
+			}
+		}
+
+		heightList.sort()
+
+		/* not enough data for a good zone */
+		if (heightList.size < 32) {
+			area_min = 61
+			area_max = 63
+		} else {
+			area_min = heightList[round(heightList.size * 0.10).toInt().coerceAtMost(heightList.lastIndex)]
+			area_max = heightList[round(heightList.size * 0.80).toInt().coerceAtMost(heightList.lastIndex)]
+		}
+
+		topBoundary = 255
+		botBoundary = area_min - (topBoundary - area_max)
+	}
+
+	fun fillStoneLayer(world: World, layer: Int) {
+		for (x in -uhc.endRadius..uhc.endRadius) {
+			for (z in -uhc.endRadius..uhc.endRadius) {
+				val block = world.getBlockAt(x, layer, z)
+				if (block.isPassable || block.type == Material.SAND || block.type == Material.GRAVEL) block.setType(Material.STONE, false)
 			}
 		}
 	}
@@ -53,31 +101,7 @@ class EndgameNaturalTerrain : Phase() {
 			--topBoundary
 			++botBoundary
 
-			if (topBoundary - botBoundary == 4) {
-				/* fill in stone layer so no cave fall throughs */
-				for (x in -extrema..extrema)
-					for (z in -extrema..extrema) {
-						val block = world.getBlockAt(x, center, z)
-						if (block.isPassable) block.setType(Material.STONE, false)
-					}
-			}
-
-			if (topBoundary < center) {
-				finished = true
-
-				topBoundary = center + allowedHeight
-				botBoundary = center
-
-				/* teleport all zombies to the surface */
-				uhc.playerDataList.forEach { (uuid, playerData) ->
-					val zombie = playerData.offlineZombie
-
-					if (zombie != null) {
-						val location = zombie.location
-						GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.x, center + 1.0, location.z))
-					}
-				}
-			}
+			if (topBoundary - area_max == 4) fillStoneLayer(world, area_min)
 		}
 
 		for (y in 0..255)
@@ -85,11 +109,31 @@ class EndgameNaturalTerrain : Phase() {
 				for (x in -extrema..extrema)
 					for (z in -extrema..extrema)
 						world.getBlockAt(x, y, z).setType(Material.AIR, false)
+
+		if (!finished && topBoundary == area_max) {
+			finished = true
+
+			topBoundary += 3
+
+			/* teleport all zombies to the surface */
+			uhc.playerDataList.forEach { (uuid, playerData) ->
+				val zombie = playerData.offlineZombie
+
+				if (zombie != null) {
+					val location = zombie.location
+					GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.x, Util.topBlockY(world, location.blockX, location.blockZ).toDouble(), location.z))
+				}
+			}
+		}
 	}
 
 	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		bossBar.setTitle("$GOLD${BOLD}Endgame ${RESET}Min: $GOLD${BOLD}${max(botBoundary, 0)} ${RESET}Center: $GOLD${BOLD}${center} ${RESET}Max: $GOLD${BOLD}${max(topBoundary, center + allowedHeight)}")
-		bossBar.progress = (topBoundary - center) / (255.0 - center)
+		if (finished) {
+			bossBar.setTitle("$GOLD${BOLD}Endgame $GOLD${BOLD}${botBoundary} - $topBoundary")
+		} else {
+			bossBar.setTitle("$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${max(botBoundary, 0)} - $topBoundary ${RESET}Final: $GOLD${BOLD}${area_min} - $area_max")
+			bossBar.progress = (topBoundary - area_max).toDouble() / (255 - area_max)
+		}
 	}
 
 	override fun endPhrase() = ""

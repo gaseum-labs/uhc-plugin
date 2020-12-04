@@ -59,7 +59,7 @@ class UHCPlugin : JavaPlugin() {
 			PhaseVariant.WAITING_DEFAULT,
 			PhaseVariant.GRACE_FORGIVING,
 			PhaseVariant.SHRINK_DEFAULT,
-			PhaseVariant.ENDGAME_CLEAR_BLOCKS,
+			PhaseVariant.ENDGAME_NATURAL_TERRAIN,
 			PhaseVariant.POSTGAME_DEFAULT
 		))
 
