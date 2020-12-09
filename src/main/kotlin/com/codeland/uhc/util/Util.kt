@@ -3,7 +3,9 @@ package com.codeland.uhc.util
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import org.bukkit.Bukkit
 import org.bukkit.World
+import java.lang.Math.floor
 import java.util.logging.Level
+import kotlin.math.floor
 import kotlin.math.pow
 
 object Util {
@@ -176,5 +178,22 @@ object Util {
 
 	fun worldFromEnvironment(environment: World.Environment): World {
 		return Bukkit.getWorlds().find { world -> world.environment == environment } ?: Bukkit.getWorlds()[0]
+	}
+
+	fun bilinearWrap(array: Array<Float>, width: Int, height: Int, x: Float, y: Float): Float {
+		val minX = x.toInt() % width
+		val maxX = (minX + 1) % width
+
+		val coefX = x - minX
+
+		val minY = y.toInt() % height
+		val maxY = (minY + 1) % height
+
+		val coefY = y - minY
+
+		return (array[minY * width + minX] *      coefY  *      coefX ) +
+			   (array[minY * width + maxX] *      coefY  * (1 - coefX)) +
+			   (array[maxY * width + minX] * (1 - coefY) *      coefX ) +
+			   (array[maxY * width + maxX] * (1 - coefY) * (1 - coefX))
 	}
 }

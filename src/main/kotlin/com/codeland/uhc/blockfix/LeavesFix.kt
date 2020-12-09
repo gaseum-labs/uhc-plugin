@@ -18,10 +18,6 @@ class LeavesFix : BlockFix("Leaves", arrayOf(
 		leavesInfo.sortBy { info -> info.leaves }
 	}
 
-	fun isLeaves(material: Material): Boolean {
-		return binarySearch(material, leavesInfo) { leafInfo -> leafInfo.leaves }
-	}
-
 	override fun isBlock(material: Material): Boolean {
 		return isLeaves(material)
 	}
@@ -36,6 +32,10 @@ class LeavesFix : BlockFix("Leaves", arrayOf(
 
 	companion object {
 		class LeafInfo(var leaves: Material, var sapling: Material)
+
+		fun isLeaves(material: Material): Boolean {
+			return binarySearch(material, leavesInfo) { leafInfo -> leafInfo.leaves }
+		}
 
 		val leavesInfo = arrayOf(
 			LeafInfo(Material.OAK_LEAVES, Material.OAK_SAPLING),

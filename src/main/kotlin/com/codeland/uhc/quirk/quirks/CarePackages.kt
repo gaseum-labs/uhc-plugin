@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.blockfix.LeavesFix
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
@@ -34,6 +35,8 @@ import com.codeland.uhc.util.ToolTier.WOOD
 import com.codeland.uhc.util.ToolTier.getTieredTool
 import org.bukkit.ChatColor.*
 import org.bukkit.*
+import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.block.Chest
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
@@ -42,10 +45,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionType
 import java.lang.Integer.min
 import java.util.*
-import kotlin.math.PI
-import kotlin.math.ceil
-import kotlin.math.cos
-import kotlin.math.sin
+import kotlin.math.*
 
 class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	val NUM_DROPS = 3
@@ -451,6 +451,117 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			}
 		}
 
+		fun generateSpire(world: World, x: Int, z: Int, maxRadius: Int, height: Int, ore: Material, treasure: Material) {
+			var baseY = 63
+
+			for (y in 255 downTo 0) {
+				val block = world.getBlockAt(x, y, z)
+
+				if (!block.isPassable && !LeavesFix.isLeaves(block.type)) {
+					baseY = y
+					break
+				}
+			}
+
+			fun fillBlock(block: Block) {
+				val random = Math.random()
+
+				block.setType(when {
+					random < 1 / 16.0 -> ore
+					random < 1 / 5.0 -> Material.ANDESITE
+					else -> Material.STONE
+				}, false)
+			}
+
+			fun isSpireBlock(block: Block, ore: Material): Boolean {
+				return block.type == Material.STONE || block.type == Material.ANDESITE || block.type == ore
+			}
+
+			val magnitudeField = Array(9) {
+				((Math.random() * 0.75f) + 0.5f).toFloat()
+			}
+
+			fun fillCircle(radius: Int, y: Int, magnitudeHeight: Float, allowHangers: Boolean, onBlock: (Block) -> Unit) {
+				var boundingSize = radius * 2 + 1
+
+				for (i in 0 until boundingSize * boundingSize) {
+					val offX = (i % boundingSize) - radius
+					val offZ = ((i / boundingSize) % boundingSize) - radius
+
+					val angle = (atan2(offZ.toDouble(), offX.toDouble()) + PI).toFloat()
+
+					val blockRadius = radius * Util.bilinearWrap(magnitudeField, 3, 3, angle / (PI.toFloat() * 2.0f), magnitudeHeight)
+
+					if (sqrt(offX.toDouble().pow(2) + offZ.toDouble().pow(2)) < blockRadius) {
+						val block = world.getBlockAt(x + offX, y, z + offZ)
+
+						if (allowHangers || isSpireBlock(block.getRelative(BlockFace.DOWN), ore)) onBlock(block)
+					}
+				}
+			}
+
+			for (y in baseY - 1 downTo 0) {
+				var allFilled = true
+
+				fillCircle(maxRadius, y, 0.0f, true) { block ->
+					if (block.isPassable) {
+						fillBlock(block)
+						allFilled = false
+					} else if (Math.random() < 0.5) {
+						fillBlock(block)
+					}
+				}
+
+				if (allFilled) break
+			}
+
+			for (y in 0 until height) {
+				val along = y / (height - 1).toFloat()
+				val usingRadius = round(Util.interp(1.0f, maxRadius.toFloat(), 1 - along)).toInt()
+
+				fillCircle(usingRadius, baseY + y, along, y == 0) { block ->
+					fillBlock(block)
+				}
+			}
+
+			world.getBlockAt(x, baseY + height, z).setType(treasure, false)
+		}
+
+		fun spirePlacement(world: World, x: Int, z: Int, placeRadius: Int, placeSize: Int, numSpires: Int) {
+			val boundingBox = round((placeRadius * 2 + 1.0) / placeSize).toInt()
+
+			val gridSize = boundingBox * boundingBox
+			val placementGrid = Array(gridSize) { false }
+
+			val num = numSpires.coerceAtMost(gridSize)
+
+			for (i in 0 until num) {
+				var index = (Math.random() * gridSize).toInt()
+
+				while (placementGrid[index]) index = (index + 1) % gridSize
+
+				placementGrid[index] = true
+			}
+
+			val minSize = Math.round(placeSize * 0.75).toInt().coerceAtLeast(1)
+			val maxSize = Math.round(placeSize * 1.25).toInt()
+
+			for (i in 0 until gridSize) {
+				if (placementGrid[i]) {
+					val sx = (i % boundingBox) * placeSize + Util.randRange(-placeSize / 2, placeSize / 2) + x
+					val sz = ((i / boundingBox) % boundingBox) * placeSize + Util.randRange(-placeSize / 2, placeSize / 2) + z
+
+					Util.log("SPIRE AT ${sx} ${sz}")//DEBUG
+
+					if (Math.random() < 0.5) {
+						generateSpire(world, sx, sz, Util.randRange(minSize, maxSize), Util.randRange(7, 16), Material.IRON_ORE, Material.IRON_BLOCK)
+					} else {
+						generateSpire(world, sx, sz, Util.randRange(minSize, maxSize), Util.randRange(7, 16), Material.GOLD_ORE, Material.GOLD_BLOCK)
+					}
+				}
+			}
+		}
+
 		fun generateDrop(tier: Int, location: Location) {
 			var world = location.world
 
@@ -465,6 +576,8 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 					break
 				}
 			}
+
+			spirePlacement(world, x, z, 30, 5, 4)
 
 			var block = world.getBlockAt(x, y, z)
 			block.breakNaturally()
