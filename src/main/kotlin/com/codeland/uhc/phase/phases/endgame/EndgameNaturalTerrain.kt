@@ -81,11 +81,12 @@ class EndgameNaturalTerrain : Phase() {
 		botBoundary = area_min - (topBoundary - area_max)
 	}
 
-	fun fillStoneLayer(world: World, layer: Int) {
-		for (x in -uhc.endRadius..uhc.endRadius) {
-			for (z in -uhc.endRadius..uhc.endRadius) {
-				val block = world.getBlockAt(x, layer, z)
-				if (block.isPassable || block.type == Material.SAND || block.type == Material.GRAVEL) block.setType(Material.STONE, false)
+	fun fillBedrockLayer(world: World, layer: Int) {
+		val extrema = uhc.endRadius + 6
+
+		for (x in -extrema..extrema) {
+			for (z in -extrema..extrema) {
+				world.getBlockAt(x, layer, z).setType(Material.BEDROCK, false)
 			}
 		}
 	}
@@ -101,14 +102,26 @@ class EndgameNaturalTerrain : Phase() {
 			--topBoundary
 			++botBoundary
 
-			if (topBoundary - area_max == 4) fillStoneLayer(world, area_min)
+			/* teleport players up so they don't fall out the world */
+			uhc.allCurrentPlayers { uuid ->
+				val location = GameRunner.getPlayerLocation(uuid)
+
+				if (location != null && location.y < botBoundary) {
+					location.y = botBoundary.toDouble()
+					GameRunner.teleportPlayer(uuid, location)
+				}
+			}
+
+			if (botBoundary > 0) fillBedrockLayer(world, botBoundary - 1)
 		}
 
 		for (y in 0..255)
-			if (y < botBoundary || y > topBoundary)
+			if (y < botBoundary - 1 || y > topBoundary)
 				for (x in -extrema..extrema)
 					for (z in -extrema..extrema)
 						world.getBlockAt(x, y, z).setType(Material.AIR, false)
+
+
 
 		if (!finished && topBoundary == area_max) {
 			finished = true

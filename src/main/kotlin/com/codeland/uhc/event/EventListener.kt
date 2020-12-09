@@ -12,7 +12,10 @@ import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.phase.phases.endgame.EndgameClearBlocks
+import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.phase.phases.postgame.PostgameDefault
 import com.codeland.uhc.phase.phases.waiting.LobbyPvp
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.*
@@ -339,8 +342,6 @@ class EventListener : Listener {
 		/* make sure it only applies to regeneration due to hunger */
 		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
 			if (shouldHealthCancelled(player)) {
-				Util.log("sat0: ${player.saturation}")
-
 				event.isCancelled = true
 			}
 		}
@@ -349,8 +350,6 @@ class EventListener : Listener {
 	@EventHandler
 	fun onFoodLevelChange(event: FoodLevelChangeEvent) {
 		val player = event.entity as Player
-
-		Util.log("sat1: ${player.saturation}")
 
 		if (shouldHealthCancelled(player)) {
 			val over = (event.foodLevel - 17).coerceAtLeast(0)
@@ -618,34 +617,41 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-			if (event.block.type == Material.WET_SPONGE) {
-				event.isCancelled = true
-				WetSponge.addSponge(event.player)
-			}
-		}
+		val phase = GameRunner.uhc.currentPhase as? EndgameNaturalTerrain
+		if (phase != null && event.blockPlaced.y > phase.topBoundary) {
+			event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${phase.topBoundary}")
+			event.isCancelled = true
 
-		if (GameRunner.uhc.isEnabled(QuirkType.CREATIVE)) {
-			var material = event.itemInHand.type
-
-			/* replace these blocks */
-			if (Util.binarySearch(material, Creative.blocks)) {
-
-				val inHand: ItemStack = event.itemInHand.clone()
-
-				SchedulerUtil.nextTick {
-					if (event.hand === EquipmentSlot.HAND)
-						event.player.inventory.setItemInMainHand(inHand)
-					else
-						event.player.inventory.setItemInOffHand(inHand)
+		} else {
+			if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
+				if (event.block.type == Material.WET_SPONGE) {
+					event.isCancelled = true
+					WetSponge.addSponge(event.player)
 				}
 			}
 
-		} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED)) {
-			var block = event.block
+			if (GameRunner.uhc.isEnabled(QuirkType.CREATIVE)) {
+				var material = event.itemInHand.type
 
-			if (!Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
-				event.isCancelled = true
+				/* replace these blocks */
+				if (Util.binarySearch(material, Creative.blocks)) {
+
+					val inHand: ItemStack = event.itemInHand.clone()
+
+					SchedulerUtil.nextTick {
+						if (event.hand === EquipmentSlot.HAND)
+							event.player.inventory.setItemInMainHand(inHand)
+						else
+							event.player.inventory.setItemInOffHand(inHand)
+					}
+				}
+
+			} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED)) {
+				var block = event.block
+
+				if (!Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
+					event.isCancelled = true
+				}
 			}
 		}
 	}

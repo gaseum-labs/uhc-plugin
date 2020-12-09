@@ -15,318 +15,278 @@ import com.codeland.uhc.quirk.BoolProperty
 import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.util.ItemUtil.namedItem
 import com.codeland.uhc.util.ItemUtil.randomDye
 import com.codeland.uhc.util.ItemUtil.randomDyeArmor
 import com.codeland.uhc.util.ItemUtil.randomMusicDisc
 import com.codeland.uhc.util.ItemUtil.randomTippedArrow
+import com.codeland.uhc.util.ScoreboardDisplay
 import com.codeland.uhc.util.ToolTier.ARMOR_SET
-import com.codeland.uhc.util.ToolTier.BOW_SET
-import com.codeland.uhc.util.ToolTier.DIAMOND
-import com.codeland.uhc.util.ToolTier.IRON
 import com.codeland.uhc.util.ToolTier.LEATHER
 import com.codeland.uhc.util.ToolTier.ONLY_TOOL_SET
 import com.codeland.uhc.util.ToolTier.SHELL
 import com.codeland.uhc.util.ToolTier.TIER_1
-import com.codeland.uhc.util.ToolTier.TIER_2
 import com.codeland.uhc.util.ToolTier.TIER_3
 import com.codeland.uhc.util.ToolTier.TIER_ELYTRA
 import com.codeland.uhc.util.ToolTier.TIER_HELMET
 import com.codeland.uhc.util.ToolTier.TIER_SHIELD
 import com.codeland.uhc.util.ToolTier.WEAPON_SET
 import com.codeland.uhc.util.ToolTier.WOOD
-import com.codeland.uhc.util.ToolTier.getTieredBook
 import com.codeland.uhc.util.ToolTier.getTieredTool
 import org.bukkit.ChatColor.*
 import org.bukkit.*
 import org.bukkit.block.Chest
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
-import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.SuspiciousStewMeta
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
-import org.bukkit.scoreboard.*
 import java.lang.Integer.min
+import java.util.*
+import kotlin.math.PI
 import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.sin
 
 class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
-	val OBJECTIVE_NAME = "carePackageDrop"
-
-	override fun onEnable() {
-		var scoreboard = Bukkit.getScoreboardManager().mainScoreboard
-		scoreboard.getObjective(OBJECTIVE_NAME)?.unregister()
-
-		objective = scoreboard.registerNewObjective(OBJECTIVE_NAME, "dummy", "Next Care Package Drop")
-		objective?.displaySlot = DisplaySlot.SIDEBAR
-	}
-
-	override fun onDisable() {
-		Bukkit.getScheduler().cancelTask(taskID)
-		taskID = -1
-
-		objective?.unregister()
-	}
-
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.SHRINK) onStart()
-		else if (phase.type == PhaseType.WAITING) onEnd()
-	}
-
-	fun onStart() {
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::runnable, 0, 20)
-		objective?.displaySlot = DisplaySlot.SIDEBAR
-
-		previousLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
-		nextLocation = Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0)
-
-		if (!fastMode.value) dropTimes = generateDropTimes(GameRunner.uhc.getTime(PhaseType.SHRINK))
-
-		reset()
-	}
-
-	fun onEnd() {
-		Bukkit.getScheduler().cancelTask(taskID)
-		taskID = -1
-
-		objective?.displaySlot = null
-	}
-
-	fun isGoing(): Boolean {
-		return taskID != -1
-	}
+	val NUM_DROPS = 3
 
 	var taskID = -1
-	var objective = null as Objective?
 
-	var scoreTime = null as Score?
-	var scorePosition = null as Score?
-
-	val FAST_TIME = 5
-
-	var fastMode = BoolProperty(false)
-	private set
-
-	val NUM_ITEMS = 16
-	val NUM_DROPS = 6
+	var scoreboardDisplay: ScoreboardDisplay? = null
 
 	var running = false
 
 	var timer = 0
 
-	lateinit var previousLocation: Location
-	lateinit var nextLocation: Location
+	lateinit var dropLocations: Array<Location>
 	lateinit var dropTimes: Array<Int>
+
 	var dropIndex = 0
 
-	init {
-		inventory.addItem(BoolToggle(uhc, 13, fastMode, {
-			GuiItem.setName(ItemStack(Material.ENDER_CHEST), "${ChatColor.DARK_PURPLE}${ChatColor.MAGIC}%|f ${ChatColor.WHITE}${ChatColor.BOLD}Chaotic ${ChatColor.DARK_PURPLE}${ChatColor.MAGIC}f|%")
-		}, {
-			GuiItem.setName(ItemStack(Material.CHEST), "${ChatColor.BOLD}Normal")
-		}))
+	/*
+	 * example scoreboard:
+	 * -------------------------
+	 * Care Packages
+	 *
+	 * Drop 1:
+	 * (45, 70, -329)
+	 * Dropped
+	 *
+	 * Drop 2:
+	 * (102, 64, 92)
+	 * 2 minutes 1 second
+	 *
+	 * Drop 3:
+	 * (-78, 103, -28)
+	 * Awaiting
+	 */
+
+	override fun onEnable() {
+		if (uhc.currentPhase?.phaseType == PhaseType.GRACE || uhc.currentPhase?.phaseType == PhaseType.SHRINK) onStart()
 	}
 
-	private fun getTier(): Int {
-		return if (fastMode.value) {
-			val phase = GameRunner.uhc.currentPhase
-
-			if (phase == null) 0
-			else ((1 - (phase.remainingSeconds.toDouble() / (phase.length + 1))) * NUM_DROPS).toInt() / 2
-		} else {
-			dropIndex / 2
-		}
-	}
-
-	private fun setScore(objective: Objective?, score: Score?, value: String, index: Int): Score? {
-		/* trick kotlin in allowing us to return */
-		if (objective == null) return null
-
-		/* remove the previous score if applicable */
-		if (score != null) {
-			val scoreboard = objective.scoreboard
-			scoreboard?.resetScores(score.entry)
-		}
-
-		val ret = objective.getScore(value)
-		ret.score = index
-
-		return ret
-	}
-
-	private fun shutOff() {
-		running = false
+	override fun onDisable() {
 		onEnd()
 	}
 
-	private fun reset() {
-		/* don't keep doing this outside of shrinking */ // -2 so that the last two care packages are not dropped
-		if (!GameRunner.uhc.isPhase(PhaseType.SHRINK) || (!fastMode.value && dropIndex == dropTimes.size - 2))
-			return shutOff()
-
-		timer = if (fastMode.value) FAST_TIME else dropTimes[dropIndex]
-
-		nextLocation = findDropSpot(Bukkit.getWorlds()[0], previousLocation, timer, 16)
-		previousLocation = nextLocation
-
-		Bukkit.getOnlinePlayers().forEach { player ->
-			player.compassTarget = nextLocation
-		}
-
-		val color = dropTextColor(getTier())
-		val coordinateString = "at ($color${BOLD}${nextLocation.blockX}${RESET}, $color${BOLD}${nextLocation.blockY}${RESET}, $color${BOLD}${nextLocation.blockZ}${RESET})"
-
-		scoreTime = setScore(objective, scoreTime, "in $color${BOLD}${Util.timeString(timer)}", 1)
-		scorePosition = setScore(objective, scorePosition, coordinateString, 0)
+	override fun onPhaseSwitch(phase: PhaseVariant) {
+		if (phase.type == PhaseType.GRACE) onStart()
+		else if (phase.type == PhaseType.WAITING) onEnd()
 	}
 
-	private fun generateDropTimes(shrinkTime: Int): Array<Int> {
-		val alongs = Array(NUM_DROPS) { i -> (i + 1.0f) / NUM_DROPS }
-		val range = (1.0f / NUM_DROPS) / 4
+	private fun onStart() {
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::perSecond, 20, 20)
 
-		/* add randomness to every time except the last which has to be 1 */
-		for (i in 0 until alongs.lastIndex)
-			alongs[i] += Util.randRange(-range, range)
+		scoreboardDisplay = ScoreboardDisplay("Care Packages", NUM_DROPS * 4)
+		scoreboardDisplay?.show()
 
-		return Array(NUM_DROPS) { i ->
-			((if (i == 0) alongs[i] else (alongs[i] - alongs[i - 1])) * shrinkTime).toInt()
+		if (generateDrops()) prepareDrop(0) else onEnd()
+	}
+
+	private fun onEnd() {
+		Bukkit.getScheduler().cancelTask(taskID)
+		taskID = -1
+
+		running = false
+
+		scoreboardDisplay?.destroy()
+		scoreboardDisplay = null
+	}
+
+	private fun generateDrops(): Boolean {
+		fun findLocations(findCurrentRadius: (Int) -> Double) {
+			val initialAngle = Math.random() * PI * 2
+			val angleAdance = PI * 2 / NUM_DROPS
+
+			dropLocations = Array(NUM_DROPS) { i ->
+				val currentRadius = findCurrentRadius(i)
+
+				val x = cos(initialAngle + angleAdance * i) * currentRadius / 2
+				val z = sin(initialAngle + angleAdance * i) * currentRadius / 2
+
+				Location(Util.worldFromEnvironment(uhc.defaultEnvironment), x, 0.0, z)
+			}
+		}
+
+		/* find drop times */
+		if (uhc.isPhase(PhaseType.GRACE)) {
+			val remaining = uhc.currentPhase?.remainingSeconds ?: 0
+
+			/* distribute drops over shrinking phase so that if there were another, */
+			/* it would fall exactly at the end of shrinking phase */
+
+			val dropPeriod = uhc.getTime(PhaseType.SHRINK) * (NUM_DROPS / (NUM_DROPS + 1.0))
+			val dropInterval = (dropPeriod / NUM_DROPS).toInt()
+
+			/* all drops are equally spaced by dropInterval */
+			dropTimes = Array(NUM_DROPS) { dropInterval }
+
+			/* the first drop has to wait for the end of grace period */
+			dropTimes[0] += remaining
+
+			findLocations { i ->
+				uhc.startRadius * (1 - ((dropInterval * i).toDouble() / uhc.getTime(PhaseType.SHRINK)))
+			}
+
+		} else if (uhc.isPhase(PhaseType.SHRINK)) {
+			val elapsed = uhc.getTime(PhaseType.SHRINK) - (uhc.currentPhase?.remainingSeconds ?: 0)
+
+			val cutOff = uhc.getTime(PhaseType.SHRINK) * (NUM_DROPS / (NUM_DROPS + 1.0)).toInt()
+
+			val available = (cutOff - elapsed)
+			val dropInterval = (available / NUM_DROPS)
+
+			/* there must be at least 1 second left for each care package to drop */
+			if (available <= NUM_DROPS) dropTimes = Array(NUM_DROPS) { available / NUM_DROPS }
+			else return false
+
+			findLocations { i ->
+				uhc.startRadius * (1 - ((elapsed + dropInterval * i).toDouble() / uhc.getTime(PhaseType.SHRINK)))
+			}
+		}
+
+		return true
+	}
+
+	private fun prepareDrop(index: Int) {
+		dropIndex = index
+		timer = dropTimes[dropIndex]
+	}
+
+	private fun updateScoreboard() {
+		val scoreboard = scoreboardDisplay ?: return
+
+		for (i in 0 until NUM_DROPS) {
+			val location = dropLocations[i]
+			val color = dropTextColor(i)
+
+			scoreboard.setLine(i * 4 + 1, "${color}Drop ${i + 1}")
+			scoreboard.setLine(i * 4 + 2, "${color}(${location.blockX}, ${location.blockZ})")
+			scoreboard.setLine(i * 4 + 3, if (i < dropIndex)
+				"${color}Dropped"
+			else if(i == dropIndex)
+				"${color}${Util.timeString(timer)}"
+			else
+				"${color}Awaiting"
+			)
 		}
 	}
 
-	private fun runnable() {
-		if (timer == 0) {
-			generateDrop(getTier(), if (fastMode.value) NUM_ITEMS / 2 else NUM_ITEMS, nextLocation.toBlockLocation(), fastMode.value)
+	private fun perSecond() {
+		if (dropIndex < NUM_DROPS) {
+			--timer
 
-			++dropIndex
+			if (timer == 0) {
+				generateDrop(dropIndex, dropLocations[dropIndex])
+				prepareDrop(dropIndex + 1)
+			}
 
-			reset()
+			updateScoreboard()
+		}
+	}
+
+	fun forceDrop(): Boolean {
+		return if (dropIndex < NUM_DROPS) {
+			generateDrop(dropIndex, dropLocations[dropIndex])
+			prepareDrop(dropIndex + 1)
+
+			updateScoreboard()
+
+			true
+
 		} else {
-			scoreTime = setScore(objective, scoreTime, "in ${dropTextColor(getTier())}${BOLD}${Util.timeString(timer)}", 1)
+			false
 		}
-
-		--timer
 	}
 
 	companion object {
-		fun stewPart(): ItemStack {
-			val rand = Math.random()
-
-			return when {
-				rand < 0.2 -> ItemStack(Material.BOWL, Util.randRange(4, 16))
-				rand < 0.4 -> {
-					val stew = ItemStack(Material.SUSPICIOUS_STEW)
-
-					val meta = stew.itemMeta as SuspiciousStewMeta
-					meta.addCustomEffect(PotionEffect(PotionEffectType.REGENERATION, 8, 0), true)
-					stew.itemMeta = meta
-
-					stew
-				}
-				rand < 0.6 -> ItemStack(Material.RED_MUSHROOM, Util.randRange(4, 16))
-				rand < 0.8 -> ItemStack(Material.BROWN_MUSHROOM, Util.randRange(4, 16))
-				else -> ItemStack(Material.OXEYE_DAISY, Util.randRange(4, 16))
-			}
-		}
-
-		fun regenerationStew(): ItemStack {
-			val stew = ItemStack(Material.SUSPICIOUS_STEW)
-
-			val meta = stew.itemMeta as SuspiciousStewMeta
-			meta.addCustomEffect(PotionEffect(PotionEffectType.REGENERATION, 8 * 20, 0), true)
-			stew.itemMeta = meta
-
-			return stew
-		}
-
-		fun bucket(): ItemStack {
-			return when {
-				Math.random() < 0.5 -> ItemStack(Material.LAVA_BUCKET)
-				else -> ItemStack(Material.WATER_BUCKET)
-			}
-		}
-
-		val brewingIngredients = arrayOf(
-			Material.GLISTERING_MELON_SLICE,
-			Material.SPIDER_EYE,
-			Material.GHAST_TEAR,
-			Material.MAGMA_CREAM,
-			Material.FERMENTED_SPIDER_EYE,
-			Material.GLOWSTONE_DUST
-		)
-
-		fun anyThrow(): Material {
-			return if (Math.random() < 0.75)
-				Material.SPLASH_POTION
-			else
-				Material.LINGERING_POTION
-		}
-
 		class LootEntry(var makeStack: () -> ItemStack)
 
-		const val ENCHANT_CHANCE = 0.25
+		private const val ENCHANT_CHANCE = 0.25
 
-		val fillerEntries = arrayOf(
+		val chestEntries = arrayOf(
 			arrayOf(
-				LootEntry { getTieredTool(WEAPON_SET, IRON, TIER_1, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_1, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(ONLY_TOOL_SET, IRON, TIER_2, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredBook(TIER_1, 2, ENCHANT_CHANCE) },
-				LootEntry { bucket() },
-				LootEntry { ItemStack(Material.APPLE, Util.randRange(1, 2)) },
-				LootEntry { ItemStack(Material.RED_MUSHROOM, 2) },
-				LootEntry { ItemStack(Material.BROWN_MUSHROOM, 2) },
-				LootEntry { ItemStack(Material.OXEYE_DAISY, 2) },
-				LootEntry { ItemStack(Material.STRING, Util.randRange(4, 8)) },
-				LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(Material.GUNPOWDER, Util.randRange(6, 12)) },
-				LootEntry { ItemStack(Material.FEATHER, Util.randRange(6, 12)) },
-				LootEntry { ItemStack(Material.LEATHER, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(Material.FLINT, Util.randRange(8, 16)) },
-				LootEntry { ItemStack(Material.BONE, Util.randRange(8, 16)) },
-				LootEntry { ItemStack(Material.COOKED_PORKCHOP, Util.randRange(8,  16)) },
-				LootEntry { ItemStack(Material.SUGAR_CANE, Util.randRange(8, 16)) },
-				LootEntry { ItemStack(Material.COAL, Util.randRange(10,  20)) },
-				LootEntry { ItemStack(Material.STONE, Util.randRange(32, 64)) }
+				LootEntry { CarePackageUtil.randomBucket() },
+				LootEntry { CarePackageUtil.randomBucket() },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBrewingIngredient() },
+				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
+				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
+				LootEntry { CarePackageUtil.randomEnchantedBook(true) },
+				LootEntry { CarePackageUtil.randomPotion() },
+				LootEntry { CarePackageUtil.flamingLazerSword() }
 			),
 			arrayOf(
-				LootEntry { getTieredTool(WEAPON_SET, IRON, TIER_2, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(ARMOR_SET, IRON, TIER_2, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(ONLY_TOOL_SET, DIAMOND, TIER_3, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(BOW_SET, TIER_2, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredBook(TIER_2, 2, ENCHANT_CHANCE) },
-				LootEntry { regenerationStew() },
-				LootEntry { ItemStack(Material.APPLE, Util.randRange(1, 2)) },
-				LootEntry { ItemStack(Material.DIAMOND, Util.randRange(3,  6)) },
-				LootEntry { ItemStack(Material.LEATHER, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(Material.STRING, Util.randRange(6, 12)) },
-				LootEntry { ItemStack(Material.ARROW, Util.randRange(6, 12)) },
-				LootEntry { ItemStack(Material.GOLD_INGOT, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(6, 12)) },
-				LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(8,  16)) },
-				LootEntry { ItemStack(Material.COOKED_PORKCHOP, Util.randRange(8,  16)) },
-				LootEntry { ItemStack(Material.LAPIS_LAZULI, Util.randRange(10, 20)) },
-				LootEntry { ItemStack(Material.PAPER, Util.randRange(10, 20)) },
-				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(10, 20)) }
+				LootEntry { CarePackageUtil.randomBucket() },
+				LootEntry { CarePackageUtil.randomBucket() },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(true) },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBrewingIngredient() },
+				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
+				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
+				LootEntry { CarePackageUtil.randomEnchantedBook(true) },
+				LootEntry { CarePackageUtil.randomPotion() },
+				LootEntry { CarePackageUtil.flamingLazerSword() }
 			),
 			arrayOf(
-				LootEntry { getTieredTool(WEAPON_SET, if (Math.random() < 0.75) DIAMOND else IRON, TIER_3, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(ARMOR_SET, if (Math.random() < 0.75) DIAMOND else IRON, TIER_3, 2, ENCHANT_CHANCE) },
-				LootEntry { getTieredTool(BOW_SET, TIER_3, 1, ENCHANT_CHANCE) },
-				LootEntry { getTieredBook(TIER_3, 2, ENCHANT_CHANCE) },
-				LootEntry { ItemStack(Material.GOLDEN_APPLE, 1) },
-				LootEntry { ItemStack(Material.DIAMOND, Util.randRange(3,  6)) },
-				LootEntry { ItemStack(Material.BOOK, Util.randRange(4,  8)) },
-				LootEntry { ItemStack(Material.OBSIDIAN, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(Material.LEATHER, Util.randRange(6,  12)) },
-				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, Util.randRange(6, 12)) },
-				LootEntry { ItemStack(Material.GOLD_INGOT, Util.randRange(8,  16)) },
-				LootEntry { ItemStack(Material.ARROW, Util.randRange(8, 16)) },
-				LootEntry { ItemStack(Material.IRON_INGOT, Util.randRange(10,  20)) },
-				LootEntry { ItemStack(Material.LAPIS_LAZULI, Util.randRange(12, 24)) },
-				LootEntry { ItemUtil.randomFireworkStar(Util.randRange(12, 24)) }
+				LootEntry { CarePackageUtil.randomBucket() },
+				LootEntry { CarePackageUtil.randomBucket() },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(true) },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomStewPart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBottlePart() },
+				LootEntry { CarePackageUtil.randomBrewingIngredient() },
+				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
+				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
+				LootEntry { CarePackageUtil.randomEnchantedBook(true) },
+				LootEntry { CarePackageUtil.randomPotion() },
+				LootEntry { CarePackageUtil.flamingLazerSword() }
 			)
 		)
 
@@ -349,7 +309,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			LootEntry { ItemStack(Material.PANDA_SPAWN_EGG, Util.randRange(9, 27)) },
 			LootEntry { Summoner.randomPassiveEgg(Util.randRange(9, 27)) },
 			LootEntry { Summoner.randomAggroEgg(Util.randRange(4, 10)) },
-			LootEntry { regenerationStew() },
+			LootEntry { CarePackageUtil.regenerationStew() },
 			LootEntry { ItemStack(Material.SPECTRAL_ARROW, Util.randRange(7, 16)) },
 			LootEntry { ItemUtil.randomShulker(Util.randRange(1, 3)) },
 			LootEntry { ItemUtil.randomRocket(Util.randRange(17, 33)) },
@@ -366,16 +326,17 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			LootEntry { HalfZatoichi.createZatoichi() },
 			LootEntry { Pests.genPestTool(randFromArray(Pests.pestToolList)) },
 			LootEntry { GuiOpener.create() },
-			LootEntry { ItemUtil.randomPotion(false, anyThrow()) },
+			LootEntry { ItemUtil.randomPotion(false, Material.LINGERING_POTION) },
+			LootEntry { ItemUtil.randomPotion(false, Material.SPLASH_POTION) },
 			LootEntry { ItemUtil.randomPotion(true, Material.POTION) },
 			LootEntry { ItemStack(Material.IRON_NUGGET, 64) },
 			LootEntry { ItemStack(Material.GOLD_NUGGET, 64) },
 			LootEntry { ItemStack(Material.IRON_BLOCK, Util.randRange(1, 2)) },
 			LootEntry { ItemStack(Material.GOLD_BLOCK, Util.randRange(1, 2)) },
-			LootEntry { bucket() }
+			LootEntry { CarePackageUtil.randomBucket() }
 		)
 
-		fun generateLoot(tier: Int, amount: Int, inventory: Inventory, wacky: Boolean) {
+		fun generateLoot(tier: Int, inventory: Inventory) {
 			val addItem = { item: ItemStack ->
 				var space = Util.randRange(0, inventory.size - 1)
 
@@ -385,27 +346,8 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				inventory.setItem(space, item)
 			}
 
-			val tierEntries = fillerEntries[tier]
-			val numEntries = tierEntries.size + if (wacky) wackyEntries.size else 0
-
-			/* how many times we fill all the pigeon holes */
-			val cycles = ceil(numEntries / amount.toDouble()).toInt()
-
-			for (c in 0 until cycles) {
-				val alreadyUsed = Array(numEntries) { false }
-
-				for (i in c * numEntries until min((c + 1) * numEntries, amount)) {
-					var index = (Math.random() * numEntries).toInt()
-
-					while (alreadyUsed[index])
-						index = (index + 1) % numEntries
-
-					alreadyUsed[index] = true
-
-					addItem((if (index < tierEntries.size)
-						tierEntries[index] else wackyEntries[index - tierEntries.size]
-					).makeStack())
-				}
+			chestEntries[tier].forEach { entry ->
+				addItem(entry.makeStack())
 			}
 		}
 
@@ -509,20 +451,31 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			}
 		}
 
-		fun generateDrop(tier: Int, amount: Int, location: Location, wacky: Boolean) {
-			var world = Bukkit.getWorlds()[0]
+		fun generateDrop(tier: Int, location: Location) {
+			var world = location.world
 
-			var block = world.getBlockAt(location)
+			val chunk = world.getChunkAt(location)
+			val x = location.blockX
+			val z = location.blockZ
+			var y = 0
+
+			for (dy in 255 downTo 0) {
+				if (!chunk.getBlock(Util.mod(x, 16), dy, Util.mod(z, 16)).isPassable) {
+					y = dy + 1
+					break
+				}
+			}
+
+			var block = world.getBlockAt(x, y, z)
 			block.breakNaturally()
 			block.type = Material.CHEST
 
 			var chest = block.getState(false) as Chest
 			chest.customName = "${dropTextColor(tier)}${BOLD}Care Package"
 
-			generateLoot(tier, amount, chest.blockInventory, wacky)
+			generateLoot(tier, chest.blockInventory)
 
-			world.getChunkAt(location)
-			var firework = world.spawnEntity(location.add(0.5, 0.5, 0.5), EntityType.FIREWORK) as Firework
+			var firework = world.spawnEntity(Location(world, x + 0.5, y + 0.5, z + 0.5), EntityType.FIREWORK) as Firework
 
 			/* add effect to the firework */
 			var meta = firework.fireworkMeta
@@ -533,7 +486,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 			/* announce in chat so positions are saved */
 			Bukkit.getOnlinePlayers().forEach { player ->
-				player.sendMessage("${dropTextColor(tier)}${BOLD}Care Package Dropped at (${location.blockX}, ${location.blockY}, ${location.blockZ})")
+				player.sendMessage("${dropTextColor(tier)}${BOLD}Care Package Dropped at (${x}, ${y}, ${z})")
 			}
 		}
 	}

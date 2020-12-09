@@ -8,6 +8,9 @@ import com.codeland.uhc.command.ubt.PartialUBT
 import com.codeland.uhc.command.ubt.UBT
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.quirk.quirks.CarePackageUtil
+import com.codeland.uhc.quirk.quirks.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
 import com.codeland.uhc.team.TeamData
@@ -133,6 +136,19 @@ class TestCommands : BaseCommand() {
 		playerData.createZombie(onlinePlayer)
 
 		GameRunner.sendGameMessage(sender, "Created a zombie for ${player.name}")
+	}
+
+	@CommandAlias("test drop")
+	fun testDrop(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		val carePackages = GameRunner.uhc.getQuirk(QuirkType.CARE_PACKAGES) as CarePackages
+
+		if (!carePackages.enabled) return Commands.errorMessage(sender, "Care packages is not going!")
+
+		val result = carePackages.forceDrop()
+
+		if (!result) return Commands.errorMessage(sender, "All care packages have been dropped!")
 	}
 
 	@CommandAlias("test gbs")
