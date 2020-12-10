@@ -15,10 +15,6 @@ import kotlin.collections.ArrayList
 import kotlin.math.*
 
 open class GraceDefault : Phase() {
-	/* to be injected on phase creation */
-	lateinit var teleportLocations: ArrayList<Location>
-	lateinit var teleportGroups: Array<Array<UUID>>
-
 	override fun customStart() {
 		/* set border in overworld */
 		Bukkit.getWorlds().forEach { world ->
@@ -31,6 +27,9 @@ open class GraceDefault : Phase() {
 				world.worldBorder.reset()
 			}
 		}
+
+		val teleportGroups = uhc.teleportGroups ?: return
+		val teleportLocations = uhc.teleportLocations ?: return
 
 		/* teleport and set players */
 		teleportGroups.forEachIndexed { i, teleportGroup ->
@@ -95,14 +94,19 @@ open class GraceDefault : Phase() {
 	}
 
 	override fun customEnd() {}
-	override fun onTick(currentTick: Int) {}
+
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
+		return barLengthRemaining(remainingSeconds, currentTick)
+	}
+
+	override fun perTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
 		uhc.updateMobCaps()
 	}
 
-	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		bossBar.setTitle("${ChatColor.RESET}Grace period ends in ${phaseType.chatColor}${ChatColor.BOLD}${Util.timeString(remainingSeconds)}")
+	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
+		return "${ChatColor.RESET}Grace period ends in ${phaseType.chatColor}${ChatColor.BOLD}${Util.timeString(remainingSeconds)}"
 	}
 
 	override fun endPhrase(): String {

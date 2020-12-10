@@ -5,6 +5,7 @@ import com.codeland.uhc.phase.*
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.postgame.PostgameDefault
+import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
@@ -62,6 +63,9 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	var usingBot = GameRunner.bot != null
 	private set
+
+	var teleportGroups: Array<Array<UUID>>? = null
+	var teleportLocations: ArrayList<Location>? = null
 
 	fun updateUsingBot(using: Boolean) {
 		val bot = GameRunner.bot
@@ -257,14 +261,14 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 		if (numTeams + individuals.size == 0) return "No one is playing!"
 
-		val teleportLocations = GraceDefault.spreadPlayers(
+		teleportLocations = GraceDefault.spreadPlayers(
 			Util.worldFromEnvironment(defaultEnvironment), numTeams + individuals.size, startRadius - 5.0,
 			if (defaultEnvironment == World.Environment.NETHER) GraceDefault.Companion::findYMid else GraceDefault.Companion::findYTop
 		)
 
-		if (teleportLocations.isNotEmpty()) {
+		if (teleportLocations?.isNotEmpty() == true) {
 			/* compile teams and individuals into who will teleport to which location */
-			val teleportGroups = Array(numTeams + individuals.size) { i ->
+			teleportGroups = Array(numTeams + individuals.size) { i ->
 				if (i < numTeams) {
 					val team = TeamData.teams[i]
 
@@ -280,10 +284,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 			PlayerData.startZombieBorderTask()
 
-			startPhase(PhaseType.GRACE) { phase ->
-				(phase as GraceDefault).teleportGroups = teleportGroups
-				phase.teleportLocations = teleportLocations
-			}
+			val waiting = GameRunner.uhc.currentPhase as WaitingDefault
+			waiting.updateLength(4)
 
 		} else {
 			return "Not enough valid spaces to teleport in this world!"

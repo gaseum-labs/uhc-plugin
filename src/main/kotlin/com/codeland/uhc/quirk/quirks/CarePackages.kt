@@ -4,7 +4,6 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.LeavesFix
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.ItemUtil
@@ -12,10 +11,9 @@ import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
 import com.codeland.uhc.gui.item.GuiOpener
 import com.codeland.uhc.phase.PhaseVariant
-import com.codeland.uhc.quirk.BoolProperty
-import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.quirk.quirks.CarePackageUtil.pickOne
 import com.codeland.uhc.util.ItemUtil.randomDye
 import com.codeland.uhc.util.ItemUtil.randomDyeArmor
 import com.codeland.uhc.util.ItemUtil.randomMusicDisc
@@ -43,8 +41,6 @@ import org.bukkit.entity.Firework
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionType
-import java.lang.Integer.min
-import java.util.*
 import kotlin.math.*
 
 class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
@@ -170,7 +166,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	private fun prepareDrop(index: Int) {
 		dropIndex = index
-		timer = dropTimes[dropIndex]
+		timer = if (dropIndex < NUM_DROPS) dropTimes[dropIndex] else 0
 	}
 
 	private fun updateScoreboard() {
@@ -178,7 +174,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 		for (i in 0 until NUM_DROPS) {
 			val location = dropLocations[i]
-			val color = dropTextColor(i)
+			val color = if (i == dropIndex) "${dropTextColor(i)}${BOLD}" else "${WHITE}"
 
 			scoreboard.setLine(i * 4 + 1, "${color}Drop ${i + 1}")
 			scoreboard.setLine(i * 4 + 2, "${color}(${location.blockX}, ${location.blockZ})")
@@ -231,7 +227,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				LootEntry { CarePackageUtil.randomArmor(false) },
 				LootEntry { CarePackageUtil.randomArmor(false) },
 				LootEntry { CarePackageUtil.randomArmor(false) },
-				LootEntry { CarePackageUtil.randomArmor(false) },
+				LootEntry { CarePackageUtil.randomArmor(true) },
 				LootEntry { CarePackageUtil.randomStewPart() },
 				LootEntry { CarePackageUtil.randomStewPart() },
 				LootEntry { CarePackageUtil.randomStewPart() },
@@ -244,7 +240,39 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
 				LootEntry { CarePackageUtil.randomEnchantedBook(true) },
 				LootEntry { CarePackageUtil.randomPotion() },
-				LootEntry { CarePackageUtil.flamingLazerSword() }
+				LootEntry { CarePackageUtil.flamingLazerSword() },
+				LootEntry { CarePackageUtil.superSwaggyPants() },
+				LootEntry { ItemStack(Material.BLAZE_ROD) },
+				LootEntry { ItemStack(Material.BLAZE_ROD) },
+				LootEntry { ItemStack(Material.BLAZE_ROD) },
+				LootEntry { ItemStack(Material.BLAZE_ROD) },
+				LootEntry { ItemStack(Material.NETHER_WART, pickOne(1, 2)) },
+				LootEntry { ItemStack(Material.NETHER_WART, pickOne(1, 2)) },
+				LootEntry { ItemStack(Material.NETHER_WART, pickOne(1, 2)) },
+				LootEntry { ItemStack(Material.NETHER_WART, pickOne(1, 2)) },
+				LootEntry { ItemStack(Material.REDSTONE, pickOne(2, 4)) },
+				LootEntry { ItemStack(Material.REDSTONE, pickOne(2, 4)) },
+				LootEntry { ItemStack(Material.REDSTONE, pickOne(2, 4)) },
+				LootEntry { ItemStack(Material.GUNPOWDER, pickOne(2, 4)) },
+				LootEntry { ItemStack(Material.GUNPOWDER, pickOne(2, 4)) },
+				LootEntry { ItemStack(Material.GUNPOWDER, pickOne(2, 4)) },
+				LootEntry { CarePackageUtil.glowstone() },
+				LootEntry { CarePackageUtil.glowstone() },
+				LootEntry { CarePackageUtil.glowstone() },
+				LootEntry { CarePackageUtil.glowstone() },
+				LootEntry { ItemStack(Material.ENDER_PEARL, pickOne(2, 4)) },
+				LootEntry { ItemStack(Material.STONE, pickOne(16, 32, 48)) },
+				LootEntry { ItemStack(Material.STONE, pickOne(16, 32, 48)) },
+				LootEntry { ItemStack(Material.TORCH, pickOne(16, 32)) },
+				LootEntry { ItemStack(Material.TORCH, pickOne(16, 32)) },
+				LootEntry { ItemStack(Material.OBSIDIAN, pickOne(3, 4, 10)) },
+				LootEntry { ItemStack(Material.OBSIDIAN, pickOne(3, 4, 10)) },
+				LootEntry { ItemStack(Material.OBSIDIAN, pickOne(3, 4, 10)) },
+				LootEntry { ItemStack(Material.OBSIDIAN, pickOne(3, 4, 10)) },
+				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
+				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
+				LootEntry { ItemStack(Material.EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
+				LootEntry { CarePackageUtil.randomBoat() }
 			),
 			arrayOf(
 				LootEntry { CarePackageUtil.randomBucket() },
@@ -288,6 +316,20 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				LootEntry { CarePackageUtil.randomPotion() },
 				LootEntry { CarePackageUtil.flamingLazerSword() }
 			)
+		)
+
+		data class SpireData(val ore: Material, val block: Material)
+
+		val SPIRE_COAL = SpireData(Material.COAL_ORE, Material.COAL_BLOCK)
+		val SPIRE_IRON = SpireData(Material.IRON_ORE, Material.IRON_BLOCK)
+		val SPIRE_LAPIS = SpireData(Material.LAPIS_ORE, Material.LAPIS_BLOCK)
+		val SPIRE_GOLD = SpireData(Material.GOLD_ORE, Material.GOLD_BLOCK)
+		val SPIRE_DIAMOND = SpireData(Material.DIAMOND_ORE, Material.DIAMOND_ORE)
+
+		val spireAmounts = arrayOf(
+			arrayOf(SPIRE_COAL, SPIRE_COAL, SPIRE_IRON, SPIRE_IRON),
+			arrayOf(SPIRE_IRON, SPIRE_IRON, SPIRE_GOLD, SPIRE_LAPIS),
+			arrayOf(SPIRE_IRON, SPIRE_GOLD, SPIRE_LAPIS, SPIRE_DIAMOND)
 		)
 
 		val wackyEntries = arrayOf(
@@ -336,8 +378,8 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			LootEntry { CarePackageUtil.randomBucket() }
 		)
 
-		fun generateLoot(tier: Int, inventory: Inventory) {
-			val addItem = { item: ItemStack ->
+		fun generateLoot(tier: Int, inventories: ArrayList<Inventory>) {
+			fun addItem(inventory: Inventory, item: ItemStack) {
 				var space = Util.randRange(0, inventory.size - 1)
 
 				while (inventory.getItem(space) != null)
@@ -346,8 +388,15 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				inventory.setItem(space, item)
 			}
 
-			chestEntries[tier].forEach { entry ->
-				addItem(entry.makeStack())
+			val usingEntries = chestEntries[tier].toMutableList() as ArrayList<LootEntry>
+			usingEntries.shuffle()
+
+			val perChest = usingEntries.size / inventories.size
+
+			for (i in usingEntries.indices) {
+				val inventoryIndex = (i / perChest).coerceAtMost(inventories.lastIndex)
+
+				addItem(inventories[inventoryIndex], usingEntries[i].makeStack())
 			}
 		}
 
@@ -451,7 +500,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			}
 		}
 
-		fun generateSpire(world: World, x: Int, z: Int, maxRadius: Int, height: Int, ore: Material, treasure: Material) {
+		fun generateSpire(world: World, x: Int, z: Int, maxRadius: Float, height: Int, spireData: SpireData) {
 			var baseY = 63
 
 			for (y in 255 downTo 0) {
@@ -463,30 +512,29 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				}
 			}
 
+			val magnitudeField = Array(9) { (Math.random() * 0.2 + 0.9).toFloat() }
+
 			fun fillBlock(block: Block) {
 				val random = Math.random()
 
 				block.setType(when {
-					random < 1 / 16.0 -> ore
+					random < 1 / 16.0 -> spireData.ore
 					random < 1 / 5.0 -> Material.ANDESITE
 					else -> Material.STONE
 				}, false)
 			}
 
-			fun isSpireBlock(block: Block, ore: Material): Boolean {
-				return block.type == Material.STONE || block.type == Material.ANDESITE || block.type == ore
+			fun isSpireBlock(block: Block): Boolean {
+				return block.type == Material.STONE || block.type == Material.ANDESITE || block.type == spireData.ore
 			}
 
-			val magnitudeField = Array(9) {
-				((Math.random() * 0.75f) + 0.5f).toFloat()
-			}
-
-			fun fillCircle(radius: Int, y: Int, magnitudeHeight: Float, allowHangers: Boolean, onBlock: (Block) -> Unit) {
-				var boundingSize = radius * 2 + 1
+			fun fillCircle(radius: Float, y: Int, magnitudeHeight: Float, allowHangers: Boolean, onBlock: (Block) -> Unit) {
+				val intRadius = ceil(radius).toInt()
+				val boundingSize = intRadius * 2 + 1
 
 				for (i in 0 until boundingSize * boundingSize) {
-					val offX = (i % boundingSize) - radius
-					val offZ = ((i / boundingSize) % boundingSize) - radius
+					val offX = (i % boundingSize) - intRadius
+					val offZ = ((i / boundingSize) % boundingSize) - intRadius
 
 					val angle = (atan2(offZ.toDouble(), offX.toDouble()) + PI).toFloat()
 
@@ -495,7 +543,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 					if (sqrt(offX.toDouble().pow(2) + offZ.toDouble().pow(2)) < blockRadius) {
 						val block = world.getBlockAt(x + offX, y, z + offZ)
 
-						if (allowHangers || isSpireBlock(block.getRelative(BlockFace.DOWN), ore)) onBlock(block)
+						if (allowHangers || isSpireBlock(block.getRelative(BlockFace.DOWN))) onBlock(block)
 					}
 				}
 			}
@@ -504,12 +552,8 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				var allFilled = true
 
 				fillCircle(maxRadius, y, 0.0f, true) { block ->
-					if (block.isPassable) {
-						fillBlock(block)
-						allFilled = false
-					} else if (Math.random() < 0.5) {
-						fillBlock(block)
-					}
+					if (block.isPassable) allFilled = false
+					fillBlock(block)
 				}
 
 				if (allFilled) break
@@ -517,57 +561,40 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 			for (y in 0 until height) {
 				val along = y / (height - 1).toFloat()
-				val usingRadius = round(Util.interp(1.0f, maxRadius.toFloat(), 1 - along)).toInt()
+				val usingRadius = Util.interp(1.0f, maxRadius, 1 - along)
 
 				fillCircle(usingRadius, baseY + y, along, y == 0) { block ->
 					fillBlock(block)
 				}
 			}
 
-			world.getBlockAt(x, baseY + height, z).setType(treasure, false)
+			world.getBlockAt(x, baseY + height, z).setType(spireData.block, false)
 		}
 
-		fun spirePlacement(world: World, x: Int, z: Int, placeRadius: Int, placeSize: Int, numSpires: Int) {
-			val boundingBox = round((placeRadius * 2 + 1.0) / placeSize).toInt()
+		fun circlePlacement(centerX: Int, centerZ: Int, minRadius: Float, maxRadius: Float, numPlaces: Int, onPlace: (Int, Int, Int) -> Unit) {
+			val initialAngle = Math.random() * PI * 2
+			val angleIncrement = PI * 2 / numPlaces
+			val angleDeviance = angleIncrement / 4
 
-			val gridSize = boundingBox * boundingBox
-			val placementGrid = Array(gridSize) { false }
+			for (i in 0 until numPlaces) {
+				val angle = initialAngle + i * angleIncrement + (Math.random() * angleDeviance * 2) - angleDeviance
+				val radius = (Math.random() * (maxRadius - minRadius)) + minRadius
 
-			val num = numSpires.coerceAtMost(gridSize)
+				val x = (centerX + cos(angle) * radius).toInt()
+				val z = (centerZ + sin(angle) * radius).toInt()
 
-			for (i in 0 until num) {
-				var index = (Math.random() * gridSize).toInt()
-
-				while (placementGrid[index]) index = (index + 1) % gridSize
-
-				placementGrid[index] = true
-			}
-
-			val minSize = Math.round(placeSize * 0.75).toInt().coerceAtLeast(1)
-			val maxSize = Math.round(placeSize * 1.25).toInt()
-
-			for (i in 0 until gridSize) {
-				if (placementGrid[i]) {
-					val sx = (i % boundingBox) * placeSize + Util.randRange(-placeSize / 2, placeSize / 2) + x
-					val sz = ((i / boundingBox) % boundingBox) * placeSize + Util.randRange(-placeSize / 2, placeSize / 2) + z
-
-					Util.log("SPIRE AT ${sx} ${sz}")//DEBUG
-
-					if (Math.random() < 0.5) {
-						generateSpire(world, sx, sz, Util.randRange(minSize, maxSize), Util.randRange(7, 16), Material.IRON_ORE, Material.IRON_BLOCK)
-					} else {
-						generateSpire(world, sx, sz, Util.randRange(minSize, maxSize), Util.randRange(7, 16), Material.GOLD_ORE, Material.GOLD_BLOCK)
-					}
-				}
+				onPlace(i, x, z)
 			}
 		}
 
-		fun generateDrop(tier: Int, location: Location) {
-			var world = location.world
+		fun spirePlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, spireList: Array<SpireData>) {
+			circlePlacement(centerX, centerZ, placeRadius * 0.5f, placeRadius.toFloat(), spireList.size) { i, x, z ->
+				generateSpire(world, x, z, 5f, 14, spireList[i])
+			}
+		}
 
-			val chunk = world.getChunkAt(location)
-			val x = location.blockX
-			val z = location.blockZ
+		fun generateChest(world: World, x: Int, z: Int, tier: Int): Inventory {
+			val chunk = world.getChunkAt(world.getBlockAt(x, 0, z))
 			var y = 0
 
 			for (dy in 255 downTo 0) {
@@ -577,8 +604,6 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				}
 			}
 
-			spirePlacement(world, x, z, 30, 5, 4)
-
 			var block = world.getBlockAt(x, y, z)
 			block.breakNaturally()
 			block.type = Material.CHEST
@@ -586,20 +611,107 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			var chest = block.getState(false) as Chest
 			chest.customName = "${dropTextColor(tier)}${BOLD}Care Package"
 
-			generateLoot(tier, chest.blockInventory)
-
-			var firework = world.spawnEntity(Location(world, x + 0.5, y + 0.5, z + 0.5), EntityType.FIREWORK) as Firework
+			var firework = world.spawnEntity(Location(world, x + 0.5, y + 1.0, z + 0.5), EntityType.FIREWORK) as Firework
 
 			/* add effect to the firework */
 			var meta = firework.fireworkMeta
 			meta.addEffect(ItemUtil.fireworkEffect(FireworkEffect.Type.BALL_LARGE, 3))
+			meta.power = 2
 			firework.fireworkMeta = meta
 
-			firework.detonate()
+			return chest.blockInventory
+		}
 
-			/* announce in chat so positions are saved */
+		fun chestPlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, ringChests: Int, tier: Int): ArrayList<Inventory> {
+			val inventoryList = ArrayList<Inventory>()
+
+			circlePlacement(centerX, centerZ, placeRadius * 0.4f, placeRadius * 0.6f, ringChests) { _, x, z ->
+				inventoryList.add(generateChest(world, x, z, tier))
+			}
+
+			inventoryList.add(generateChest(world, centerX, centerZ, tier))
+
+			return inventoryList
+		}
+
+		fun placeSugarcane(world: World, x: Int, z: Int, height: Int): Boolean {
+			fun placable(block: Block): Boolean {
+				return block.type == Material.GRASS_BLOCK ||
+					block.type == Material.STONE ||
+					block.type == Material.DIRT ||
+					block.type == Material.SAND ||
+					block.type == Material.RED_SAND ||
+					block.type == Material.PODZOL
+			}
+
+			val directions = arrayOf(BlockFace.WEST, BlockFace.EAST, BlockFace.NORTH, BlockFace.SOUTH)
+
+			for (y in 255 downTo 0) {
+				val block = world.getBlockAt(x, y, z)
+
+				if (block.type == Material.SUGAR_CANE || block.type == Material.WATER || block.type == Material.LAVA) return false
+
+				if (!block.isPassable) {
+					if (placable(block)) {
+						return if (
+							!block.getRelative(BlockFace.WEST).isPassable &&
+							!block.getRelative(BlockFace.EAST).isPassable &&
+							!block.getRelative(BlockFace.NORTH).isPassable &&
+							!block.getRelative(BlockFace.SOUTH).isPassable
+						) {
+							val placeDirection = randFromArray(directions)
+
+							var baseBlock = block.getRelative(placeDirection)
+
+							block.setType(Material.WATER, false)
+							baseBlock.setType(Material.SAND, false)
+
+							for (i in 0 until height) {
+								baseBlock = baseBlock.getRelative(BlockFace.UP)
+								baseBlock.setType(Material.SUGAR_CANE, false)
+							}
+
+							true
+
+						} else {
+							false
+						}
+					} else {
+						return false
+					}
+				}
+			}
+
+			return false
+		}
+
+		fun sugarcanePlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, numSugarcane: Int) {
+			for (i in 0 until numSugarcane) {
+				val height = Util.randRange(1, 4)
+
+				for (attempt in 0 until 10) {
+					val x = Util.randRange(centerX - placeRadius, centerX + placeRadius)
+					val z = Util.randRange(centerZ - placeRadius, centerZ + placeRadius)
+
+					if (placeSugarcane(world, x, z, height)) break
+				}
+			}
+		}
+
+		fun generateDrop(tier: Int, location: Location) {
+			var world = location.world
+
+			val radius = 30
+
+			val x = location.blockX
+			val z = location.blockZ
+
+			spirePlacement(world, x, z, radius, spireAmounts[tier])
+			sugarcanePlacement(world, x, z, radius, 9)
+			generateLoot(tier, chestPlacement(world, x, z, radius, 5, tier))
+
 			Bukkit.getOnlinePlayers().forEach { player ->
-				player.sendMessage("${dropTextColor(tier)}${BOLD}Care Package Dropped at (${x}, ${y}, ${z})")
+				player.sendMessage("${dropTextColor(tier)}${BOLD}Drop at (${x}, ${z})")
 			}
 		}
 	}

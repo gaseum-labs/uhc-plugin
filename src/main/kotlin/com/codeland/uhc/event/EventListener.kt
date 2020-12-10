@@ -9,6 +9,7 @@ import com.codeland.uhc.gui.item.AntiSoftlock
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.item.GuiOpener
 import com.codeland.uhc.gui.item.ParkourCheckpoint
+import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.Phase
@@ -54,7 +55,7 @@ class EventListener : Listener {
 		val player = event.player
 
 		NameManager.updateName(event.player)
-		Phase.setPlayerBarDimension(event.player)
+		DimensionBar.setPlayerBarDimension(event.player)
 
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			(GameRunner.uhc.currentPhase as WaitingDefault?)?.onPlayerJoin(event.player)

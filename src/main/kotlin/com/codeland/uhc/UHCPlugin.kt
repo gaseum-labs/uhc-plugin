@@ -8,6 +8,7 @@ import com.codeland.uhc.core.Preset
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
+import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.phase.Phase
@@ -68,7 +69,7 @@ class UHCPlugin : JavaPlugin() {
 		server.scheduler.scheduleSyncDelayedTask(this) {
 			GameRunner.registerHearts()
 
-			Phase.createBossBars(Bukkit.getWorlds())
+			DimensionBar.createBossBars(Bukkit.getWorlds())
 
 			GameRunner.uhc.updateDisplays()
 			GameRunner.uhc.startWaiting()

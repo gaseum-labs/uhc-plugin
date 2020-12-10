@@ -14,11 +14,16 @@ class EndgameNone : Phase() {
 	}
 
 	override fun customEnd() {}
-	override fun onTick(currentTick: Int) {}
+
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
+		return 1.0
+	}
+
+	override fun perTick(currentTick: Int) {}
 	override fun perSecond(remainingSeconds: Int) {}
 
-	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		barStatic(bossBar)
+	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
+		return barStatic()
 	}
 
 	override fun endPhrase(): String {

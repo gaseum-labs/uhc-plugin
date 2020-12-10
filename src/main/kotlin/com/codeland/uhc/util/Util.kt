@@ -181,12 +181,12 @@ object Util {
 	}
 
 	fun bilinearWrap(array: Array<Float>, width: Int, height: Int, x: Float, y: Float): Float {
-		val minX = x.toInt() % width
+		val minX = (x * width).toInt() % width
 		val maxX = (minX + 1) % width
 
 		val coefX = x - minX
 
-		val minY = y.toInt() % height
+		val minY = (y * height).toInt() % height
 		val maxY = (minY + 1) % height
 
 		val coefY = y - minY
@@ -195,5 +195,14 @@ object Util {
 			   (array[minY * width + maxX] *      coefY  * (1 - coefX)) +
 			   (array[maxY * width + minX] * (1 - coefY) *      coefX ) +
 			   (array[maxY * width + maxX] * (1 - coefY) * (1 - coefX))
+	}
+
+	fun <T>pickTwo(array: Array<T>): Pair<T, T> {
+		var index0 = (Math.random() * array.size).toInt()
+		val index1 = (Math.random() * array.size).toInt()
+
+		if (index0 == index1) index0 = (index0 + 1) % array.size
+
+		return Pair(array[index0], array[index1])
 	}
 }

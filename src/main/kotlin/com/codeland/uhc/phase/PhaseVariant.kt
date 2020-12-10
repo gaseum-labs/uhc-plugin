@@ -41,22 +41,9 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 		"Players are forced to fight on the surface"
 	)),
 
-	ENDGAME_DEATHMATCH(PhaseType.ENDGAME, ::EndgameDeathmatch, "Deathmatch", Material.BONE, listOf(
-		"Players are teleported to a platform in the sky",
-		"There is nothing to do but fight"
-	)),
-
-	ENDGAME_POISON(PhaseType.ENDGAME, ::EndgamePoison, "Poision", Material.WITHER_SKELETON_SKULL, listOf(
-		"Health will be continuously taken away until everyone dies"
-	)),
-
-	ENDGAME_GLOWING_ALL(PhaseType.ENDGAME, ::EndgameGlowingAll, "Glowing all", Material.GLOWSTONE_DUST, listOf(
+	ENDGAME_GLOWING(PhaseType.ENDGAME, ::EndgameGlowingAll, "Glowing", Material.GLOWSTONE_DUST, listOf(
 		"Glowing is applied to everyone",
 		"Now you cannot hide"
-	)),
-
-	ENDGAME_GLOWING_TOP_TWO(PhaseType.ENDGAME, ::EndgameGlowingTopTwo, "Glowing Top Wwo", Material.SPECTRAL_ARROW, listOf(
-		"The two teams with the most health will always be glowing"
 	)),
 
 	POSTGAME_DEFAULT(PhaseType.POSTGAME, ::PostgameDefault, "Default", Material.FILLED_MAP, listOf(

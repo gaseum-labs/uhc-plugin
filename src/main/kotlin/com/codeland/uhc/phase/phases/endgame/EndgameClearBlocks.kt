@@ -32,7 +32,12 @@ class EndgameClearBlocks : Phase() {
 	}
 
 	override fun customEnd() {}
-	override fun onTick(currentTick: Int) {}
+
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
+		return (topBoundary - center) / (255.0 - center)
+	}
+
+	override fun perTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
 		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
@@ -76,9 +81,8 @@ class EndgameClearBlocks : Phase() {
 						world.getBlockAt(x, y, z).setType(Material.AIR, false)
 	}
 
-	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		bossBar.setTitle("$GOLD${BOLD}Endgame ${RESET}Min: $GOLD${BOLD}${max(botBoundary, 0)} ${RESET}Center: $GOLD${BOLD}${center} ${RESET}Max: $GOLD${BOLD}${max(topBoundary, center + allowedHeight)}")
-		bossBar.progress = (topBoundary - center) / (255.0 - center)
+	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
+		return "$GOLD${BOLD}Endgame ${RESET}Min: $GOLD${BOLD}${max(botBoundary, 0)} ${RESET}Center: $GOLD${BOLD}${center} ${RESET}Max: $GOLD${BOLD}${max(topBoundary, center + allowedHeight)}"
 	}
 
 	override fun endPhrase() = ""

@@ -92,7 +92,22 @@ class EndgameNaturalTerrain : Phase() {
 	}
 
 	override fun customEnd() {}
-	override fun onTick(currentTick: Int) {}
+
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
+		return if (finished)
+			1.0
+		else
+			(topBoundary - area_max).toDouble() / (255 - area_max)
+	}
+
+	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
+		return if (finished)
+			"$GOLD${BOLD}Endgame $GOLD${BOLD}${botBoundary} - $topBoundary"
+		else
+			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${max(botBoundary, 0)} - $topBoundary ${RESET}Final: $GOLD${BOLD}${area_min} - $area_max"
+	}
+
+	override fun perTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
 		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
@@ -137,15 +152,6 @@ class EndgameNaturalTerrain : Phase() {
 					GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.x, Util.topBlockY(world, location.blockX, location.blockZ).toDouble(), location.z))
 				}
 			}
-		}
-	}
-
-	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		if (finished) {
-			bossBar.setTitle("$GOLD${BOLD}Endgame $GOLD${BOLD}${botBoundary} - $topBoundary")
-		} else {
-			bossBar.setTitle("$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${max(botBoundary, 0)} - $topBoundary ${RESET}Final: $GOLD${BOLD}${area_min} - $area_max")
-			bossBar.progress = (topBoundary - area_max).toDouble() / (255 - area_max)
 		}
 	}
 

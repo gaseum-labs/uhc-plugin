@@ -20,7 +20,6 @@ class WaitingDefault : Phase() {
 	var center = 0
 	val radius = 30
 
-
 	override fun customStart() {
 		val world = Bukkit.getWorlds()[0]
 
@@ -81,7 +80,15 @@ class WaitingDefault : Phase() {
 		LobbyPvp.pvpMap.clear()
 	}
 
-	override fun onTick(currentTick: Int) {
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
+		return 1.0
+	}
+
+	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
+		return barStatic()
+	}
+
+	override fun perTick(currentTick: Int) {
 		if (currentTick % 3 == 0) {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				ParkourCheckpoint.updateCheckpoint(player)
@@ -94,11 +101,7 @@ class WaitingDefault : Phase() {
 
 	override fun perSecond(remainingSeconds: Int) {}
 
-	override fun updateBarPerSecond(bossBar: BossBar, world: World, remainingSeconds: Int) {
-		barStatic(bossBar)
-	}
-
-	override fun endPhrase() = ""
+	override fun endPhrase() = "Game starts in"
 
 	fun onPlayerJoin(player: Player) {
 		player.exp = 0.0F
