@@ -29,10 +29,8 @@ class Flying(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	}
 
 	override fun onDisable() {
-		if (uhc.isGameGoing()) {
-			GameRunner.uhc.allCurrentPlayers { uuid ->
-				GameRunner.playerAction(uuid) { player -> revokeItems(player) }
-			}
+		GameRunner.uhc.allCurrentPlayers { uuid ->
+			GameRunner.playerAction(uuid) { player -> revokeItems(player) }
 		}
 	}
 

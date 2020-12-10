@@ -37,11 +37,11 @@ object GameRunner {
 	init {
 		val worldGenInfo = WorldGenFile.getSettings()
 
-		netherWorldFix = worldGenInfo.netherFix
-		mushroomWorldFix = worldGenInfo.mushroomFix
-		oreWorldFix = worldGenInfo.oreFix
-		melonWorldFix = worldGenInfo.melonFix
-		halloweenGeneration = worldGenInfo.halloween
+		netherWorldFix = worldGenInfo[0]
+		mushroomWorldFix = worldGenInfo[1]
+		oreWorldFix = worldGenInfo[2]
+		melonWorldFix = worldGenInfo[3]
+		halloweenGeneration = worldGenInfo[4]
 
 		Util.log("${ChatColor.GOLD}Nether World Fix: ${ChatColor.RED}$netherWorldFix")
 		Util.log("${ChatColor.GOLD}Mushroom World Fix: ${ChatColor.RED}$mushroomWorldFix")

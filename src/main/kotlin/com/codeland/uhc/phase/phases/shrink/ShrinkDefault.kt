@@ -23,6 +23,8 @@ class ShrinkDefault : Phase() {
 		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
 		world.worldBorder.setSize(uhc.endRadius * 2 + 1.0, length.toLong())
 
+		world.worldBorder.damageBuffer = 0.0
+
 		Bukkit.getOnlinePlayers().forEach { player ->
 			GameRunner.sendGameMessage(player, "Grace period has ended!")
 			GameRunner.sendGameMessage(player, "The border is now shrinking")

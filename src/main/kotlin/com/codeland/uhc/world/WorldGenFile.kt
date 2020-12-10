@@ -5,36 +5,30 @@ import java.io.FileReader
 import java.io.FileWriter
 
 object WorldGenFile {
-	class WorldGenInfo(var netherFix: Boolean, var mushroomFix: Boolean, var oreFix: Boolean, var melonFix: Boolean, var halloween: Boolean)
-
 	val filename = "uhc.properties"
 
+	data class WorldGenProperty(val name: String, val defaultEnabled: Boolean)
+
 	val properties = arrayOf(
-		"nether-fix",
-		"mushroom-fix",
-		"ore-fix",
-		"melon-fix",
-		"halloween"
+		WorldGenProperty("nether-fix", true),
+		WorldGenProperty("mushroom-fix", true),
+		WorldGenProperty("ore-fix", true),
+		WorldGenProperty("melon-fix", true),
+		WorldGenProperty("halloween", false)
 	)
 
-	fun getSettings(): WorldGenInfo {
+	fun getSettings(): Array<Boolean> {
 		val file = File(filename)
 
 		return if (file.exists()) {
 			val reader = FileReader(file)
 
-			val values = arrayOf(
-				true,
-				true,
-				true,
-				true,
-				false
-			)
+			val values = Array(properties.size) { false }
 
 			reader.forEachLine { line ->
 				if (!line.startsWith("#")) {
 					for (i in properties.indices) {
-						if (line.startsWith(properties[i])) {
+						if (line.startsWith(properties[i].name)) {
 							val equalsIndex = line.indexOf('=')
 
 							if (equalsIndex != -1 && equalsIndex != line.lastIndex)
@@ -46,11 +40,12 @@ object WorldGenFile {
 				}
 			}
 
-			WorldGenInfo(values[0], values[1], values[2], values[3], values[4])
+			values
 
 		} else {
 			createDefaultFile()
-			WorldGenInfo(true, true, true, true, false)
+
+			Array(properties.size) { i -> properties[i].defaultEnabled }
 		}
 	}
 
@@ -60,7 +55,7 @@ object WorldGenFile {
 		writer.write("#UHC World Generator Settings\n#Regenerate the world for changes to take effect\n")
 
 		properties.forEach { property ->
-			writer.write("$property=true\n")
+			writer.write("${property.name}=${property.defaultEnabled}\n")
 		}
 
 		writer.close()

@@ -8,12 +8,6 @@ import org.bukkit.Material
 import java.util.*
 
 enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Quirk, var defaultEnabled: Boolean, var representation: Material, var description: Array<String>) {
-    HALF_ZATOICHI("Half Zatoichi", ::HalfZatoichi, false, Material.IRON_SWORD, arrayOf(
-        "Everyone gets a special sword",
-        "You are honor bound to kill",
-        "Only wield if a battle is unavoidable"
-    )),
-
     ABUNDANCE("Abundance", ::Abundance, false, Material.BLUE_ORCHID, arrayOf(
         "All block and mobs drop extra loot",
         "Similar to if everything had fortune and looting"

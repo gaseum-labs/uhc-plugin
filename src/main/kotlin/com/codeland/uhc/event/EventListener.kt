@@ -27,10 +27,7 @@ import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.NetherFix
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
-import org.bukkit.entity.Arrow
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Player
-import org.bukkit.entity.Zombie
+import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
@@ -67,8 +64,6 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onLogOut(event: PlayerQuitEvent) {
-		Util.log("${event.player.name} quitting")
-
 		if (GameRunner.uhc.isGameGoing()) {
 			val player = event.player
 
@@ -76,7 +71,6 @@ class EventListener : Listener {
 
 			if (playerData.participating && playerData.alive) {
 				playerData.offlineZombie = playerData.createZombie(player)
-				Util.log("created zombie named: ${playerData.offlineZombie?.customName}")
 			}
 		}
 	}
@@ -133,13 +127,6 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onHunger(event: FoodLevelChangeEvent) {
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			event.isCancelled = true
-		}
-	}
-
-	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		val player = event.entity
 
@@ -147,11 +134,6 @@ class EventListener : Listener {
 			if (LobbyPvp.getPvpData(player).inPvp) event.drops.clear()
 
 			return
-		}
-
-		if (GameRunner.uhc.isEnabled(QuirkType.HALF_ZATOICHI)) {
-			val killer = player.killer
-			if (killer != null) HalfZatoichi.onKill(killer)
 		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)){
@@ -233,7 +215,7 @@ class EventListener : Listener {
 		} else {
 			/* conditions to respawn in game */
 			if (GameRunner.uhc.isAlive(uuid) || (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(player))) {
-				val world = player.world
+				val world = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
 				val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 				if (location != null) event.respawnLocation = location
 
@@ -309,7 +291,6 @@ class EventListener : Listener {
 		}
 
 		event.isCancelled = when {
-			HalfZatoichi.isHalfZatoichi(stack) -> true
 			GuiOpener.isItem(stack) -> true
 			AntiSoftlock.isItem(stack) -> true
 			ParkourCheckpoint.isItem(stack) -> true
@@ -339,6 +320,7 @@ class EventListener : Listener {
 	fun onHealthRegen(event: EntityRegainHealthEvent) {
 		/* no regeneration in UHC */
 		var player = event.entity
+
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
 		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
@@ -352,7 +334,11 @@ class EventListener : Listener {
 	fun onFoodLevelChange(event: FoodLevelChangeEvent) {
 		val player = event.entity as Player
 
-		if (shouldHealthCancelled(player)) {
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING) && !LobbyPvp.getPvpData(player).inPvp) {
+			event.foodLevel = 20
+			event.isCancelled = true
+
+		} else if (shouldHealthCancelled(player)) {
 			val over = (event.foodLevel - 17).coerceAtLeast(0)
 
 			if (event.foodLevel > 17) event.foodLevel = 17
@@ -491,7 +477,7 @@ class EventListener : Listener {
 		var attacker = event.damager
 		var defender = event.entity
 
-		if (attacker is Arrow && defender is Player) {
+		if (attacker is Projectile && defender is Player) {
 			if (
 				GameRunner.uhc.isPhase(PhaseType.GRACE) &&
 				attacker.shooter is Player
@@ -514,11 +500,6 @@ class EventListener : Listener {
 			if (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(attacker) && Pests.isPest(defender))
 				event.isCancelled = true
 
-			if (GameRunner.uhc.isEnabled(QuirkType.HALF_ZATOICHI)) {
-				if (HalfZatoichi.isHalfZatoichi(attacker.inventory.itemInMainHand) && HalfZatoichi.isHalfZatoichi(defender.inventory.itemInMainHand)) {
-					event.damage = 1000000000.0
-				}
-			}
 		} else if (attacker is Player && defender is Zombie) {
 			if (PlayerData.isZombie(defender) && GameRunner.uhc.isPhase(PhaseType.GRACE)) {
 				event.isCancelled = true

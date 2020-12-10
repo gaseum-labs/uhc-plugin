@@ -365,7 +365,6 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			LootEntry { getTieredTool(TIER_HELMET, SHELL, Util.randRange(TIER_1, TIER_3), 1, ENCHANT_CHANCE) },
 			LootEntry { ItemStack(randFromArray(Creative.blocks), 64) },
 			LootEntry { ItemStack(Material.WET_SPONGE, Util.randRange(1, 5)) },
-			LootEntry { HalfZatoichi.createZatoichi() },
 			LootEntry { Pests.genPestTool(randFromArray(Pests.pestToolList)) },
 			LootEntry { GuiOpener.create() },
 			LootEntry { ItemUtil.randomPotion(false, Material.LINGERING_POTION) },
