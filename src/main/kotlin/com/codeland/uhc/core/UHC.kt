@@ -58,8 +58,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	var defaultEnvironment = World.Environment.NORMAL
 
-	var appleFix = true
-	var mushroomBlockNerf = true
+	var naturalRegeneration = false
 
 	var usingBot = GameRunner.bot != null
 	private set

@@ -1,5 +1,6 @@
 package com.codeland.uhc
 
+import co.aikar.commands.BukkitCommandManager
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.*
 import com.codeland.uhc.team.TeamMaker
@@ -12,7 +13,6 @@ import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.team.TeamListener
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
@@ -26,9 +26,9 @@ class UHCPlugin : JavaPlugin() {
 		lateinit var plugin: JavaPlugin
 	}
 
-	private val commandManager: PaperCommandManager by lazy { PaperCommandManager(this) }
-
 	override fun onEnable() {
+		val commandManager = PaperCommandManager(this)
+
 		commandManager.registerCommand(AdminCommands())
 		commandManager.registerCommand(TeamCommands())
 		commandManager.registerCommand(TestCommands())
@@ -44,7 +44,6 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(EventListener(), this)
 		server.pluginManager.registerEvents(Generation(), this)
 		server.pluginManager.registerEvents(Portal(), this)
-		TeamListener.teamListen()
 
 		VariantList.create()
 
@@ -75,9 +74,8 @@ class UHCPlugin : JavaPlugin() {
 			GameRunner.uhc.startWaiting()
 		}
 	}
-
+	
 	override fun onDisable() {
-		commandManager.unregisterCommands()
 		Chat.saveFile()
 	}
 }

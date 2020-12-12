@@ -6,6 +6,5 @@ authors:
   - Sumdumdude
   - Rewind
 load: STARTUP
-depend: [ProtocolLib]
 main: com.codeland.uhc.UHCPlugin
 api-version: 1.16

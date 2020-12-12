@@ -5,17 +5,25 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Util
 import org.bukkit.ChatColor
 import org.bukkit.Material
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
 abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
-	class Range(var prettyName: String, var countMeta: String, var indexMeta: String, var range: Int, var getDrop: (Material) -> ItemStack)
+	data class Range(
+		val prettyName: String,
+		val countMeta: String,
+		val indexMeta: String,
+		val range: Int,
+		val getDrop: (Material) -> ItemStack,
+		val offDrop: (Material) -> ItemStack? = { null }
+	)
 
-	abstract fun isBlock(block: Material): Boolean
-	abstract fun reject(uhc: UHC, drops: List<Item>): Boolean
-	abstract fun allowTool(item: ItemStack): Boolean
+	abstract fun isBlock(material: Material): Boolean
+	abstract fun reject(uhc: UHC, tool: ItemStack, drops: List<Item>): Boolean
+	abstract fun allowTool(tool: ItemStack): Boolean
 
 	fun getInfoString(player: Player, onString: (output: String) -> Unit) {
 		onString("${ChatColor.GOLD}<$prettyName Ranges>")
@@ -73,11 +81,13 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 		return index
 	}
 
-	fun onBreakBlock(uhc: UHC, block: Material, drops: MutableList<Item>, player: Player, onItem: (ItemStack) -> Unit): Boolean {
-		if (isBlock(block) && !reject(uhc, drops)) {
+	fun onBreakBlock(uhc: UHC, material: Material, drops: MutableList<Item>, player: Player, onItem: (ItemStack?) -> Unit): Boolean {
+		val tool = player.inventory.itemInMainHand
+
+		if (isBlock(material) && !reject(uhc, tool, drops)) {
 			drops.clear()
 
-			if (allowTool(player.inventory.itemInMainHand)) onBreakBlock(block, player, onItem)
+			if (allowTool(player.inventory.itemInMainHand)) onBreakBlock(material, player, onItem)
 
 			return true
 		}
@@ -85,17 +95,22 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 		return false
 	}
 
-	fun onBreakBlock(block: Material, player: Player, onItem: (ItemStack) -> Unit) {
+	fun onBreakBlock(material: Material, player: Player, onItem: (ItemStack?) -> Unit) {
 		ranges.forEach { range ->
 			var count = increaseCount(player, range)
 
-			if (count == getIndex(player, range))
-				onItem(range.getDrop(block))
+			onItem(if (count == getIndex(player, range)) range.getDrop(material) else range.offDrop(material))
 
 			if (count == range.range) {
 				resetIndex(player, range)
 				resetCount(player, range)
 			}
+		}
+	}
+
+	companion object {
+		fun isSilkTouch(tool: ItemStack): Boolean {
+			return tool.hasItemMeta() && tool.itemMeta.enchants.containsKey(Enchantment.SILK_TOUCH)
 		}
 	}
 }

@@ -27,16 +27,16 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 		"The border begins to force you to the center"
 	)),
 
-	ENDGAME_NONE(PhaseType.ENDGAME, ::EndgameNone, "None", Material.STONE_SWORD, listOf(
+	ENDGAME_NONE(PhaseType.ENDGAME, ::EndgameNone, "None", Material.STRUCTURE_VOID, listOf(
 		"Fight to the death without intervention"
 	)),
 
-	ENDGAME_CLEAR_BLOCKS(PhaseType.ENDGAME, ::EndgameClearBlocks, "Clear blocks", Material.DIRT, listOf(
+	ENDGAME_CLEAR_BLOCKS(PhaseType.ENDGAME, ::EndgameClearBlocks, "Clear blocks", Material.STONE_SHOVEL, listOf(
 		"The ground above and below falls away",
 		"Until your only battleground is on a single y level"
 	)),
 
-	ENDGAME_NATURAL_TERRAIN(PhaseType.ENDGAME, ::EndgameNaturalTerrain, "Natural Terrain", Material.GRASS_BLOCK, listOf(
+	ENDGAME_NATURAL_TERRAIN(PhaseType.ENDGAME, ::EndgameNaturalTerrain, "Natural Terrain", Material.OAK_SAPLING, listOf(
 		"Underground disappears, as well as the sky",
 		"Players are forced to fight on the surface"
 	)),

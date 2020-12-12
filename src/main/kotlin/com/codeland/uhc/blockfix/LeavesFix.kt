@@ -4,15 +4,16 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.Util.binarySearch
 import org.bukkit.Material
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 
 class LeavesFix : BlockFix("Leaves", arrayOf(
-	Range("apple", "appleCount", "appleIndex", 200) { leaves -> ItemStack(Material.APPLE) },
-	Range("stick", "stickCount", "stickIndex", 50) { leaves -> ItemStack(Material.STICK, Util.randRange(1, 2)) },
-	Range("sapling", "saplingCount", "saplingIndex", 20) { leaves ->
+	Range("apple", "appleCount", "appleIndex", 200, { leaves -> ItemStack(Material.APPLE) }),
+	Range("stick", "stickCount", "stickIndex", 50, { leaves -> ItemStack(Material.STICK, Util.randRange(1, 2)) }),
+	Range("sapling", "saplingCount", "saplingIndex", 20, { leaves ->
 		ItemStack(Util.binaryFind(leaves, leavesInfo) { info -> info.leaves }?.sapling ?: Material.OAK_SAPLING)
-	}
+	})
 )) {
 	init {
 		leavesInfo.sortBy { info -> info.leaves }
@@ -22,11 +23,11 @@ class LeavesFix : BlockFix("Leaves", arrayOf(
 		return isLeaves(material)
 	}
 
-	override fun reject(uhc: UHC, drops: List<Item>): Boolean {
-		return !uhc.appleFix || (drops.isNotEmpty() && isLeaves(drops[0].itemStack.type))
+	override fun reject(uhc: UHC, tool: ItemStack, drops: List<Item>): Boolean {
+		return tool.type == Material.SHEARS || isSilkTouch(tool)
 	}
 
-	override fun allowTool(item: ItemStack): Boolean {
+	override fun allowTool(tool: ItemStack): Boolean {
 		return true
 	}
 

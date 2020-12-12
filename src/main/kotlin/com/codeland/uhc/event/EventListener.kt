@@ -299,21 +299,9 @@ class EventListener : Listener {
 		}
 	}
 
-	@EventHandler
-	fun onBlockBreaking(event: BlockDamageEvent) {
-		if (
-			GameRunner.uhc.mushroomBlockNerf && (
-				event.block.type == Material.RED_MUSHROOM_BLOCK ||
-				event.block.type == Material.BROWN_MUSHROOM_BLOCK
-			)
-		) {
-			event.player.addPotionEffect(PotionEffect(PotionEffectType.SLOW_DIGGING, 20, 2, true, false, false))
-		}
-	}
-
 	fun shouldHealthCancelled(player: Player): Boolean {
 		return (GameRunner.uhc.isPhase(PhaseType.WAITING) && LobbyPvp.getPvpData(player).inPvp) ||
-			(!GameRunner.uhc.isPhase(PhaseType.GRACE) && (!GameRunner.uhc.isEnabled(QuirkType.PESTS) || !Pests.isPest(player)))
+			(!GameRunner.uhc.naturalRegeneration && (!GameRunner.uhc.isPhase(PhaseType.GRACE) && (!GameRunner.uhc.isEnabled(QuirkType.PESTS) || !Pests.isPest(player))))
 	}
 
 	@EventHandler
@@ -520,7 +508,7 @@ class EventListener : Listener {
 		if (event.player.gameMode != GameMode.CREATIVE &&
 			BlockFixType.values().any { blockFixType ->
 				blockFixType.blockFix.onBreakBlock(GameRunner.uhc, type, drops, player) { drop ->
-					player.world.dropItem(blockMiddle, drop)
+					if (drop != null) player.world.dropItem(blockMiddle, drop)
 				}
 			}
 		) else if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
@@ -562,9 +550,6 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
-		/* this behavior is only modified in applefix */
-		if (!GameRunner.uhc.appleFix) return
-
 		/* prevent default drops */
 		event.isCancelled = true
 		event.block.type = Material.AIR
@@ -592,7 +577,7 @@ class EventListener : Listener {
 		/* apply applefix to this leaves block for the nearest player */
 		if (dropPlayer != null) {
 			BlockFixType.LEAVES_FIX.blockFix.onBreakBlock(event.block.type, dropPlayer) { drop ->
-				leavesLocation.world.dropItem(event.block.location.toCenterLocation(), drop)
+				if (drop != null) leavesLocation.world.dropItem(event.block.location.toCenterLocation(), drop)
 			}
 		}
 	}

@@ -23,10 +23,10 @@ class Gui(val uhc: UHC) {
 
 	val presetCycler: PresetCycler
 	val killRewardCycler: KillRewardCycler
-	val appleFixToggle: AppleFixToggle
-	val mushroomBlockNerfToggle: MushroomBlockNerfToggle
 	val botToggle: BotToggle
 	val defaultEnvironmentCycler: DefaultEnvironmentCycler
+	val naturalRegenerationToggle: NaturalRegenerationToggle
+
 	val resetButton: GuiItem
 	val cancelButton: GuiItem
 
@@ -45,10 +45,9 @@ class Gui(val uhc: UHC) {
 
 		presetCycler = inventory.addItem(PresetCycler(uhc, GuiInventory.WIDTH * 3))
 		killRewardCycler = inventory.addItem(KillRewardCycler(uhc, GuiInventory.WIDTH * 3 + 1))
-		appleFixToggle = inventory.addItem(AppleFixToggle(uhc, GuiInventory.WIDTH * 3 + 2))
-		mushroomBlockNerfToggle = inventory.addItem(MushroomBlockNerfToggle(uhc, GuiInventory.WIDTH * 3 + 3))
-		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 4))
-		defaultEnvironmentCycler = inventory.addItem(DefaultEnvironmentCycler(uhc, GuiInventory.WIDTH * 3 + 5))
+		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 2))
+		defaultEnvironmentCycler = inventory.addItem(DefaultEnvironmentCycler(uhc, GuiInventory.WIDTH * 3 + 3))
+		naturalRegenerationToggle = inventory.addItem(NaturalRegenerationToggle(uhc, GuiInventory.WIDTH * 3 + 4))
 
 		resetButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
@@ -77,14 +76,11 @@ class Gui(val uhc: UHC) {
 				uhc.updateUsingBot(true)
 				botToggle.updateDisplay()
 
-				uhc.appleFix = true
-				appleFixToggle.updateDisplay()
-
-				uhc.mushroomBlockNerf = true
-				mushroomBlockNerfToggle.updateDisplay()
-
 				uhc.defaultEnvironment = World.Environment.NORMAL
 				defaultEnvironmentCycler.updateDisplay()
+
+				uhc.naturalRegeneration = false
+				naturalRegenerationToggle.updateDisplay()
 			}
 			override fun getStack(): ItemStack {
 				val stack = ItemStack(Material.MUSIC_DISC_WAIT)
