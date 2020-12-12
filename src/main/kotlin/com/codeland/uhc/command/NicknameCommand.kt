@@ -3,6 +3,7 @@ package com.codeland.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
+import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.Chat
 import com.codeland.uhc.event.Coloring
@@ -16,7 +17,6 @@ import org.bukkit.entity.Player
 
 @CommandAlias("nick")
 class NicknameCommand : BaseCommand() {
-
     private fun validNickname(nickname: String): Boolean {
         val allowedCharacters = ('a'..'z').toList() + ('0'..'9').toList() + '_'
         return nickname.toLowerCase().all {
@@ -28,7 +28,7 @@ class NicknameCommand : BaseCommand() {
         return Chat.nickMap.values.any { it.any { it.equals(nickname, ignoreCase = true) } }
     }
 
-    @CommandAlias("add")
+    @Subcommand("add")
     @Description("add a nickname that can be used in mentions")
     fun add(sender: CommandSender, target: String, nickname: String) {
         val player = if (sender is Player) sender else return
@@ -44,7 +44,7 @@ class NicknameCommand : BaseCommand() {
         }
     }
 
-    @CommandAlias("remove")
+    @Subcommand("remove")
     @Description("remove a previously added nickname")
     fun remove(sender: CommandSender, target: String, nickname: String) {
         val player = if (sender is Player) sender else return
@@ -61,7 +61,7 @@ class NicknameCommand : BaseCommand() {
         }
     }
 
-    @CommandAlias("list")
+    @Subcommand("list")
     @Description("list the nicknames of a player")
     fun list(sender: CommandSender, target: String) {
         val player = if (sender is Player) sender else return

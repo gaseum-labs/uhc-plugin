@@ -3,6 +3,7 @@ package com.codeland.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
+import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
@@ -17,8 +18,9 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 
 @CommandAlias("uhca")
+@Subcommand("team")
 class TeamCommands : BaseCommand() {
-	@CommandAlias("team clear")
+	@Subcommand("clear")
 	@Description("remove all current teams")
 	fun clearTeams(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -30,7 +32,7 @@ class TeamCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
 
-	@CommandAlias("team add")
+	@Subcommand("add")
 	@Description("add a player to a team")
 	fun addPlayerToTeamCommand(sender: CommandSender, color: ChatColor, player: OfflinePlayer) {
 		if (!Team.isValidColor(color)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color.ordinal]} is not a valid color")
@@ -38,8 +40,8 @@ class TeamCommands : BaseCommand() {
 		internalAddPlayerToTeam(sender, ColorPair(color), player)
 	}
 
-	@CommandAlias("team add")
-	@Description("add a player to a team")
+	@Subcommand("add")
+	@Description("add a player to a team with two colors")
 	fun addPlayerToTeamCommand(sender: CommandSender, color0: ChatColor, color1: ChatColor, player: OfflinePlayer) {
 		if (!Team.isValidColor(color0)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color0.ordinal]} is not a valid color")
 		if (!Team.isValidColor(color1)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color1.ordinal]} is not a valid color")
@@ -47,8 +49,8 @@ class TeamCommands : BaseCommand() {
 		internalAddPlayerToTeam(sender, ColorPair(color0, color1), player)
 	}
 
-	@CommandAlias("team join")
-	@Description("add a player to a team")
+	@Subcommand("join")
+	@Description("add a player to another player's team")
 	fun addPlayerToTeamCommand(sender: CommandSender, teamPlayer: OfflinePlayer, player: OfflinePlayer) {
 		val team = TeamData.playersTeam(teamPlayer.uniqueId)
 			?: return Commands.errorMessage(sender, "${teamPlayer.name} is not on a team!")
@@ -68,7 +70,7 @@ class TeamCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
 	}
 
-	@CommandAlias("team remove")
+	@Subcommand("remove")
 	@Description("remove a player from a team")
 	fun removePlayerFromTeamCommand(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
@@ -82,7 +84,7 @@ class TeamCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Removed ${player.name} from ${team.colorPair.colorString(team.displayName)}")
 	}
 
-	@CommandAlias("team random")
+	@Subcommand("random")
 	@Description("create random teams")
 	fun randomTeams(sender : CommandSender, teamSize : Int) {
 		if (Commands.opGuard(sender)) return
@@ -114,7 +116,7 @@ class TeamCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Created ${teams.size} teams with a team size of ${teamSize}!")
 	}
 
-	@CommandAlias("team swap")
+	@Subcommand("swap")
 	@Description("swap the teams of two players")
 	fun swapTeams(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
 		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")

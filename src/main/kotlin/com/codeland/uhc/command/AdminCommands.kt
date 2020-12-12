@@ -3,6 +3,7 @@ package com.codeland.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
+import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.ubt.PartialUBT
 import com.codeland.uhc.command.ubt.UBT
@@ -26,7 +27,7 @@ import org.bukkit.potion.PotionEffectType
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
-	@CommandAlias("start")
+	@Subcommand("start")
 	@Description("start the UHC")
 	fun startGame(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -37,7 +38,7 @@ class AdminCommands : BaseCommand() {
 		if (errMessage != null) Commands.errorMessage(sender, errMessage)
 	}
 
-	@CommandAlias("startAll")
+	@Subcommand("startAll")
 	@Description("start the UHC with no teams")
 	fun startGameAll(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -53,7 +54,7 @@ class AdminCommands : BaseCommand() {
 		if (errMessage != null) Commands.errorMessage(sender, errMessage)
 	}
 
-	@CommandAlias("reset")
+	@Subcommand("reset")
 	@Description("reset things to the waiting stage")
 	fun testReset(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -62,7 +63,7 @@ class AdminCommands : BaseCommand() {
 	}
 
 
-	@CommandAlias("mobCoefficient")
+	@Subcommand("mobCoefficient")
 	@Description("change the mob spawn cap coefficient")
 	fun modifyMobCapCoefficient(sender : CommandSender, coefficient : Double) {
 		if (Commands.opGuard(sender)) return
@@ -70,7 +71,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.mobCapCoefficient = coefficient
 	}
 
-	@CommandAlias("setLength")
+	@Subcommand("setLength")
 	@Description("set the length of a phase")
 	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Int) {
 		if (Commands.opGuard(sender)) return
@@ -86,7 +87,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
-	@CommandAlias("startRadius")
+	@Subcommand("startRadius")
 	@Description("set the starting radius")
 	fun setStartRadius(sender: CommandSender, radius: Int) {
 		if (Commands.opGuard(sender)) return
@@ -96,7 +97,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
-	@CommandAlias("endRadius")
+	@Subcommand("endRadius")
 	@Description("set the final radius")
 	fun setEndRadius(sender: CommandSender, radius: Int) {
 		if (Commands.opGuard(sender)) return
@@ -106,7 +107,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
-	@CommandAlias("preset")
+	@Subcommand("preset")
 	@Description("set all details of the UHC")
 	fun modifyAll(sender: CommandSender, startRadius: Int, endRadius: Int, graceTime: Int, shrinkTime: Int) {
 		if (Commands.opGuard(sender)) return
@@ -116,7 +117,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
-	@CommandAlias("preset")
+	@Subcommand("preset")
 	@Description("set all details of the UHC")
 	fun modifyAll(sender: CommandSender, preset: Preset) {
 		if (Commands.opGuard(sender)) return
@@ -126,7 +127,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
-	@CommandAlias("participate")
+	@Subcommand("participate")
 	@Description("adds a player to the game without adding them to a team")
 	fun participateCommand(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
@@ -139,7 +140,7 @@ class AdminCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "${player.name} is now participating")
 	}
 
-	@CommandAlias("addLate")
+	@Subcommand("addLate")
 	@Description("adds a player to the game after it has already started")
 	fun addLate(sender: CommandSender, playerName: String, teammateName: String) {
 		if (Commands.opGuard(sender)) return
@@ -155,7 +156,7 @@ class AdminCommands : BaseCommand() {
 		lateTeamTeleport(sender, player, teammate.location, TeamData.addToTeam(joinTeam, player.uniqueId, true))
 	}
 
-	@CommandAlias("addLate")
+	@Subcommand("addLate")
 	@Description("adds a player to the game after it has already started")
 	fun addLate(sender: CommandSender, playerName: String) {
 		if (Commands.opGuard(sender)) return

@@ -15,6 +15,7 @@ import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.plugin.java.JavaPlugin
 
 class UHCPlugin : JavaPlugin() {
@@ -29,12 +30,12 @@ class UHCPlugin : JavaPlugin() {
 	override fun onEnable() {
 		val commandManager = PaperCommandManager(this)
 
-		commandManager.registerCommand(AdminCommands())
-		commandManager.registerCommand(TeamCommands())
-		commandManager.registerCommand(TestCommands())
-		commandManager.registerCommand(ParticipantCommands())
-		commandManager.registerCommand(ShareCoordsCommand())
-		commandManager.registerCommand(NicknameCommand())
+		commandManager.registerCommand(AdminCommands(), true)
+		commandManager.registerCommand(TeamCommands(), true)
+		commandManager.registerCommand(TestCommands(), true)
+		commandManager.registerCommand(ParticipantCommands(), true)
+		commandManager.registerCommand(ShareCoordsCommand(), true)
+		commandManager.registerCommand(NicknameCommand(), true)
 
 		Chat.loadFile()
 
@@ -51,7 +52,7 @@ class UHCPlugin : JavaPlugin() {
 			MixerBot.createMixerBot("./discordData.txt", "./linkData.txt")
 		} catch (ex: Exception) {
 			Util.log(ex.message ?: "unknown error")
-			Util.log("BOT INIT FAILED | STARTING IN NO-BOT MODE")
+			Util.log("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
 			null
 		}
 

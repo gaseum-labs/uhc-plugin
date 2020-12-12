@@ -3,6 +3,7 @@ package com.codeland.uhc.command;
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
+import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.Chat
 import com.codeland.uhc.phase.PhaseType
@@ -18,13 +19,13 @@ import kotlin.coroutines.CoroutineContext
 
 @CommandAlias("uhc")
 class ParticipantCommands : BaseCommand() {
-	@CommandAlias("gui")
+	@Subcommand("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
 		GameRunner.uhc.gui.inventory.open(sender as Player)
 	}
 
-	@CommandAlias("optOut")
+	@Subcommand("optOut")
 	@Description("opt out from participating")
 	fun optOutCommand(sender: CommandSender) {
 		sender as Player
@@ -46,7 +47,7 @@ class ParticipantCommands : BaseCommand() {
 		}
 	}
 
-	@CommandAlias("optIn")
+	@Subcommand("optIn")
 	@Description("opt back into participating")
 	fun optInCommand(sender: CommandSender) {
 		sender as Player
@@ -64,7 +65,7 @@ class ParticipantCommands : BaseCommand() {
 		}
 	}
 
-	@CommandAlias("name")
+	@Subcommand("name")
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
 		val team = TeamData.playersTeam((sender as Player).uniqueId)
@@ -84,19 +85,19 @@ class ParticipantCommands : BaseCommand() {
 		}
 	}
 
-	@CommandAlias("color")
+	@Subcommand("color")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender, color0: ChatColor) {
 		changeTeamColor(sender, color0, null)
 	}
 
-	@CommandAlias("color")
+	@Subcommand("color")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor) {
 		changeTeamColor(sender, color0, color1)
 	}
 
-	@CommandAlias("color random")
+	@Subcommand("color random")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender) {
 		val colors = TeamMaker.getColorList(1)
@@ -141,17 +142,5 @@ class ParticipantCommands : BaseCommand() {
 				NameManager.updateName(player)
 			}
 		}
-	}
-
-	@CommandAlias("mobcaps")
-	@Description("query the current spawn limit coefficient")
-	fun getMobCaps(sender: CommandSender) {
-		sender as Player
-
-		GameRunner.sendGameMessage(sender, "Monster spawn limit: ${sender.world.monsterSpawnLimit}")
-		GameRunner.sendGameMessage(sender, "Animal spawn limit: ${sender.world.animalSpawnLimit}")
-		GameRunner.sendGameMessage(sender, "Ambient spawn limit: ${sender.world.ambientSpawnLimit}")
-		GameRunner.sendGameMessage(sender, "Water animal spawn limit: ${sender.world.waterAnimalSpawnLimit}")
-		GameRunner.sendGameMessage(sender, "Water ambient spawn limit: ${sender.world.waterAmbientSpawnLimit}")
 	}
 }

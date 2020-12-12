@@ -3,6 +3,7 @@ package com.codeland.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
+import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.ubt.PartialUBT
 import com.codeland.uhc.command.ubt.UBT
@@ -22,9 +23,9 @@ import org.bukkit.Statistic
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
-@CommandAlias("uhca test")
+@CommandAlias("uhct")
 class TestCommands : BaseCommand() {
-	@CommandAlias("test next")
+	@Subcommand("next")
 	@Description("Manually go to the next round")
 	fun testNext(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -35,31 +36,31 @@ class TestCommands : BaseCommand() {
 			GameRunner.uhc.startNextPhase()
 	}
 
-	@CommandAlias("test gravity")
+	@Subcommand("gravity")
 	@Description("change the gravity constant")
 	fun testGravity(sender: CommandSender, gravity: Double) {
 		LowGravity.gravity = gravity
 	}
 
-	@CommandAlias("test deathswap warning")
+	@Subcommand("deathswap warning")
 	@Description("change the length of pre-swap warnings")
 	fun testDsWarnings(sender: CommandSender, warning: Int) {
 
 	}
 
-	@CommandAlias("test deathswap immunity")
+	@Subcommand("deathswap immunity")
 	@Description("change the length of the post-swap immunity period")
 	fun testDsImmunity(sender: CommandSender, immunity: Int) {
 
 	}
 
-	@CommandAlias("test deathswap swap")
+	@Subcommand("deathswap swap")
 	@Description("swap all players")
 	fun testDsSwap(sender: CommandSender) {
 		Deathswap.doSwaps()
 	}
 
-	@CommandAlias("test insomnia")
+	@Subcommand("insomnia")
 	@Description("get the insomnia of the sender")
 	fun testExhaustion(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -68,7 +69,7 @@ class TestCommands : BaseCommand() {
 		sender.sendMessage("${sender.name}'s insomnia: ${sender.getStatistic(Statistic.TIME_SINCE_REST)}")
 	}
 
-	@CommandAlias("test blockFix")
+	@Subcommand("blockFix")
 	@Description("gets when the next apple will drop for you")
 	fun testBlockFix(sender: CommandSender, blockFixType: BlockFixType) {
 		if (Commands.opGuard(sender)) return
@@ -79,7 +80,7 @@ class TestCommands : BaseCommand() {
 		}
 	}
 
-	@CommandAlias("test elapsed")
+	@Subcommand("elapsed")
 	@Description("gets how long this UHC has been going for")
 	fun testElapsed(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -89,7 +90,7 @@ class TestCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Elapsed time: ${GameRunner.uhc.elapsedTime}")
 	}
 
-	@CommandAlias("test teams")
+	@Subcommand("teams")
 	@Description("gives an overview of teams")
 	fun testTeams(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -112,21 +113,24 @@ class TestCommands : BaseCommand() {
 		}
 	}
 
-	@CommandAlias("test alive")
+	@Subcommand("alive")
+	@Description("is this player alive?")
 	fun testAlive(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
 		GameRunner.sendGameMessage(sender, "${player.name} is alive: ${GameRunner.uhc.isAlive(player.uniqueId)}")
 	}
 
-	@CommandAlias("test participating")
+	@Subcommand("participating")
+	@Description("is this player participating?")
 	fun testParticipating(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
 		GameRunner.sendGameMessage(sender, "${player.name} is participating: ${GameRunner.uhc.isParticipating(player.uniqueId)}")
 	}
 
-	@CommandAlias("test zombie")
+	@Subcommand("zombie")
+	@Description("creates an afk zombie for a player, even if they are online")
 	fun testZombie(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
@@ -138,7 +142,8 @@ class TestCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Created a zombie for ${player.name}")
 	}
 
-	@CommandAlias("test drop")
+	@Subcommand("drop")
+	@Description("drops the current care package immediately")
 	fun testDrop(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
@@ -151,7 +156,19 @@ class TestCommands : BaseCommand() {
 		if (!result) return Commands.errorMessage(sender, "All care packages have been dropped!")
 	}
 
-	@CommandAlias("test gbs")
+	@Subcommand("mobcaps")
+	@Description("query the current spawn limit coefficient")
+	fun getMobCaps(sender: CommandSender) {
+		sender as Player
+
+		GameRunner.sendGameMessage(sender, "Monster spawn limit: ${sender.world.monsterSpawnLimit}")
+		GameRunner.sendGameMessage(sender, "Animal spawn limit: ${sender.world.animalSpawnLimit}")
+		GameRunner.sendGameMessage(sender, "Ambient spawn limit: ${sender.world.ambientSpawnLimit}")
+		GameRunner.sendGameMessage(sender, "Water animal spawn limit: ${sender.world.waterAnimalSpawnLimit}")
+		GameRunner.sendGameMessage(sender, "Water ambient spawn limit: ${sender.world.waterAmbientSpawnLimit}")
+	}
+
+	@Subcommand("gbs")
 	fun gbs(sender: CommandSender, location: Location) {
 		val originalString = location.world.getBlockAt(location).blockData.getAsString(true)
 
@@ -162,24 +179,24 @@ class TestCommands : BaseCommand() {
 		Util.log(nbtString)
 	}
 
-	@CommandAlias("test sbs")
+	@Subcommand("test sbs")
 	fun sbs(sender: CommandSender, location: Location, blockData: String) {
 		location.world.getBlockAt(location).setBlockData(Bukkit.createBlockData(blockData), false)
 	}
 
-	@CommandAlias("test ubt corner0")
+	@Subcommand("ubt corner0")
 	fun ubtCorner0(sender: CommandSender, x: Int, y: Int, z: Int) {
 		val partialUBT = PartialUBT.getPlayersPartialUBT(sender as Player)
 		partialUBT.setCorner0(x, y, z)
 	}
 
-	@CommandAlias("test ubt corner1")
+	@Subcommand("ubt corner1")
 	fun ubtCorner1(sender: CommandSender, x: Int, y: Int, z: Int) {
 		val partialUBT = PartialUBT.getPlayersPartialUBT(sender as Player)
 		partialUBT.setCorner1(x, y, z)
 	}
 
-	@CommandAlias("test ubt save")
+	@Subcommand("ubt save")
 	fun ubtCorner(sender: CommandSender) {
 		sender as Player
 		val world = sender.world

@@ -576,7 +576,7 @@ class EventListener : Listener {
 
 		/* apply applefix to this leaves block for the nearest player */
 		if (dropPlayer != null) {
-			BlockFixType.LEAVES_FIX.blockFix.onBreakBlock(event.block.type, dropPlayer) { drop ->
+			BlockFixType.LEAVES.blockFix.onBreakBlock(event.block.type, dropPlayer) { drop ->
 				if (drop != null) leavesLocation.world.dropItem(event.block.location.toCenterLocation(), drop)
 			}
 		}
