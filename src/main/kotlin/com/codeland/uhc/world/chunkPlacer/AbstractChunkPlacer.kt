@@ -11,7 +11,7 @@ import kotlin.math.sin
 abstract class AbstractChunkPlacer(val size: Int, val uniqueSeed: Int) {
 	abstract fun place(chunk: Chunk)
 
-	abstract fun onGenerate(chunk: Chunk, seed: Int, radius: Int)
+	abstract fun onGenerate(chunk: Chunk, seed: Int)
 
 	companion object {
 		fun shouldGenerate(chunkX: Int, chunkZ: Int, seed0: Int, seed1: Int, size: Int): Boolean {
@@ -52,15 +52,6 @@ abstract class AbstractChunkPlacer(val size: Int, val uniqueSeed: Int) {
 
 				if (placeBlock(chunk.getBlock(x, y, z), x, y, z)) return
 			}
-		}
-
-		fun chunkInRadius(chunk: Chunk, radius: Int): Boolean {
-			if (radius == -1) return true
-
-			val left = floor(-radius / 16.0).toInt()
-			val right = ceil(radius / 16.0).toInt()
-
-			return chunk.x >= left && chunk.z >= left && chunk.x <= right && chunk.z <= right
 		}
 
 		/* math helpers */

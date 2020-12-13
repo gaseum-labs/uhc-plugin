@@ -5,12 +5,22 @@ import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
+import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ShapedRecipe
+import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.scoreboard.Team
 
 object NameManager {
+	private val recipeKeys = ArrayList<NamespacedKey>(1000)
+
 	fun updateName(player: Player) {
-		val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
+		val (playerData, firstTime) = GameRunner.uhc.initialPlayerData(player.uniqueId)
+		if (firstTime) {
+			recipeKeys.forEach { recipeKey ->
+				player.discoverRecipe(recipeKey)
+			}
+		}
 
 		playerData.setSkull(player)
 
@@ -62,6 +72,16 @@ object NameManager {
 		} else {
 			team.prefix = "${colorPair.color0}■ "
 			team.suffix = " ${colorPair.color1 ?: colorPair.color0}■"
+		}
+	}
+
+	fun initRecipes() {
+		Bukkit.recipeIterator().forEach { recipe ->
+			if (recipe is ShapelessRecipe) {
+				recipeKeys.add(recipe.key)
+			} else if (recipe is ShapedRecipe) {
+				recipeKeys.add(recipe.key)
+			}
 		}
 	}
 }

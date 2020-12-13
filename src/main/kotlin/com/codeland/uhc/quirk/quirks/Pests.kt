@@ -114,29 +114,27 @@ class Pests(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
         }
 
         val banList = {
-            val arr = arrayOf<Material>(
-                    Material.IRON_PICKAXE,
-                    Material.IRON_AXE,
-                    Material.IRON_HOE,
-                    Material.IRON_SHOVEL,
-                    Material.IRON_SWORD,
-                    Material.IRON_HELMET,
-                    Material.IRON_CHESTPLATE,
-                    Material.IRON_LEGGINGS,
-                    Material.IRON_BOOTS,
-                    Material.BOW,
-                    Material.CROSSBOW,
-                    Material.SHIELD,
-                    Material.BUCKET,
-                    Material.DIAMOND_PICKAXE,
-                    Material.DIAMOND_AXE,
-                    Material.DIAMOND_HOE,
-                    Material.DIAMOND_SHOVEL,
-                    Material.DIAMOND_SWORD,
-                    Material.DIAMOND_HELMET,
-                    Material.DIAMOND_CHESTPLATE,
-                    Material.DIAMOND_LEGGINGS,
-                    Material.DIAMOND_BOOTS
+            val arr = arrayOf(
+                Material.IRON_PICKAXE,
+                Material.IRON_AXE,
+                Material.IRON_HOE,
+                Material.IRON_SHOVEL,
+                Material.IRON_SWORD,
+                Material.IRON_HELMET,
+                Material.IRON_CHESTPLATE,
+                Material.IRON_LEGGINGS,
+                Material.IRON_BOOTS,
+                Material.BOW,
+                Material.CROSSBOW,
+                Material.DIAMOND_PICKAXE,
+                Material.DIAMOND_AXE,
+                Material.DIAMOND_HOE,
+                Material.DIAMOND_SHOVEL,
+                Material.DIAMOND_SWORD,
+                Material.DIAMOND_HELMET,
+                Material.DIAMOND_CHESTPLATE,
+                Material.DIAMOND_LEGGINGS,
+                Material.DIAMOND_BOOTS
             )
 
             arr.sort()

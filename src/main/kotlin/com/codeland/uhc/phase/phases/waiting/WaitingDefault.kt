@@ -1,9 +1,8 @@
 package com.codeland.uhc.phase.phases.waiting
 
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.gui.item.AntiSoftlock
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.gui.item.GuiOpener
 import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.quirk.quirks.Pests
@@ -11,20 +10,10 @@ import com.codeland.uhc.team.TeamData
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.block.Biome
-import org.bukkit.boss.BossBar
 import org.bukkit.entity.Player
-import org.bukkit.inventory.Inventory
-import org.bukkit.inventory.ItemStack
 
 class WaitingDefault : Phase() {
-	var center = 0
-	val radius = 30
-
-	override fun customStart() {
-		val world = Bukkit.getWorlds()[0]
-
-		center = 10000
-
+	companion object {
 		val oceans = arrayOf(
 			Biome.OCEAN,
 			Biome.DEEP_OCEAN,
@@ -37,22 +26,58 @@ class WaitingDefault : Phase() {
 			Biome.WARM_OCEAN
 		)
 
-		var tries = 0
-		while (
-			(
-				oceans.contains(world.getBiome(center + radius, 60, center + radius)) ||
-				oceans.contains(world.getBiome(center + radius, 60, center - radius)) ||
-				oceans.contains(world.getBiome(center - radius, 60, center + radius)) ||
-				oceans.contains(world.getBiome(center - radius, 60, center - radius))
-			) && tries < 1000
-		) {
-			center += 16
-			++tries
+		fun validLobbySpot(world: World, x: Int, z: Int, radius: Int): Boolean {
+			val halfRadius = radius / 2
+
+			return Util.topLiquidSolidY(world, x, z).first == -1 &&
+				Util.topLiquidSolidY(world, x + halfRadius, z + halfRadius).first == -1 &&
+				Util.topLiquidSolidY(world, x - halfRadius, z + halfRadius).first == -1 &&
+				Util.topLiquidSolidY(world, x + halfRadius, z - halfRadius).first == -1 &&
+				Util.topLiquidSolidY(world, x - halfRadius, z - halfRadius).first == -1
 		}
 
-		world.setSpawnLocation(center, 70, center)
-		world.worldBorder.setCenter(center + 0.5, center + 0.5)
-		world.worldBorder.size = radius * 2.0 + 1
+		fun teleportPlayerCenter(uhc: UHC, player: Player) {
+			player.teleport(Location(Bukkit.getWorlds()[0], uhc.lobbyX + 0.5, Util.topBlockYTop(Bukkit.getWorlds()[0], 254, uhc.lobbyX, uhc.lobbyZ) + 1.0, uhc.lobbyZ + 0.5))
+		}
+	}
+
+	override fun customStart() {
+		val world = Bukkit.getWorlds()[0]
+		
+		fun findSpot(signX: Int, signZ: Int): Pair<Int, Int> {
+			var x: Int
+			var z: Int
+			var tries = 0
+
+			do {
+				x = Util.randRange(10000, 100000) * signX
+				z = Util.randRange(10000, 100000) * signZ
+				++tries
+			} while (!validLobbySpot(world, x, z, uhc.lobbyRadius) && tries < 100)
+
+			return Pair(x, z)
+		}
+
+		if (uhc.lobbyX == -1) {
+			val (x, z) = findSpot(1, 1)
+			uhc.lobbyX = x
+			uhc.lobbyZ = z
+
+			LobbyPvp.createArena(world, x, z, uhc.lobbyRadius)
+		}
+
+		if (uhc.lobbyPvpX == -1) {
+			val (x, z) = findSpot(-1, -1)
+			uhc.lobbyPvpX = x
+			uhc.lobbyPvpZ = z
+
+			LobbyPvp.createArena(world, x, z, uhc.lobbyRadius)
+		}
+
+		world.setSpawnLocation(uhc.lobbyX, Util.topBlockYTop(world, 254, uhc.lobbyX, uhc.lobbyZ) + 1, uhc.lobbyZ)
+
+		world.worldBorder.reset()
+
 		world.isThundering = false
 		world.setStorm(false)
 		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false)
@@ -93,9 +118,6 @@ class WaitingDefault : Phase() {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				ParkourCheckpoint.updateCheckpoint(player)
 			}
-			Bukkit.getOnlinePlayers().forEach { player ->
-				LobbyPvp.updatePvp(player)
-			}
 		}
 	}
 
@@ -108,13 +130,8 @@ class WaitingDefault : Phase() {
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
 		player.health = 20.0
 		player.foodLevel = 20
-		player.teleport(Location(Bukkit.getWorlds()[0], center + 0.5, Util.topBlockY(Bukkit.getWorlds()[0], center, center) + 1.0, center + 0.5))
-		player.gameMode = GameMode.ADVENTURE
-
-		val pvpData = LobbyPvp.getPvpData(player)
-
-		if (pvpData.inPvp)
-			LobbyPvp.disablePvp(player, pvpData)
+		teleportPlayerCenter(uhc, player)
+		player.gameMode = GameMode.CREATIVE
 
 		Pests.makeNotPest(player)
 
@@ -123,8 +140,8 @@ class WaitingDefault : Phase() {
 
 		val inventory = player.inventory
 
-		if (!GuiOpener.hasItem(inventory)) inventory.addItem(GuiOpener.create())
-		if (!AntiSoftlock.hasItem(inventory)) inventory.addItem(AntiSoftlock.create())
-		if (!ParkourCheckpoint.hasItem(inventory)) inventory.addItem(ParkourCheckpoint.create())
+		CommandItemType.giveItem(CommandItemType.GUI_OPENER, inventory)
+		CommandItemType.giveItem(CommandItemType.JOIN_PVP, inventory)
+		CommandItemType.giveItem(CommandItemType.PARKOUR_CHECKPOINT, inventory)
 	}
 }

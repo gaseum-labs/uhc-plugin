@@ -366,7 +366,6 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			LootEntry { ItemStack(randFromArray(Creative.blocks), 64) },
 			LootEntry { ItemStack(Material.WET_SPONGE, Util.randRange(1, 5)) },
 			LootEntry { Pests.genPestTool(randFromArray(Pests.pestToolList)) },
-			LootEntry { GuiOpener.create() },
 			LootEntry { ItemUtil.randomPotion(false, Material.LINGERING_POTION) },
 			LootEntry { ItemUtil.randomPotion(false, Material.SPLASH_POTION) },
 			LootEntry { ItemUtil.randomPotion(true, Material.POTION) },

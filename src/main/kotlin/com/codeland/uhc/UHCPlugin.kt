@@ -13,6 +13,7 @@ import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -73,6 +74,8 @@ class UHCPlugin : JavaPlugin() {
 
 			GameRunner.uhc.updateDisplays()
 			GameRunner.uhc.startWaiting()
+
+			NameManager.initRecipes()
 		}
 	}
 	

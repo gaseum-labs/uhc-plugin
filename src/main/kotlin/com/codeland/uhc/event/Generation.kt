@@ -33,7 +33,7 @@ class Generation : Listener {
 			}
 
 			if (GameRunner.netherWorldFix && world.environment == World.Environment.NETHER) {
-				NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt(), -1)
+				NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
 			if (GameRunner.oreWorldFix && world.environment == World.Environment.NORMAL) {
@@ -41,33 +41,33 @@ class Generation : Listener {
 				OreFix.removeOres(chunk)
 				OreFix.reduceLava(chunk)
 
-				OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-				OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-				OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-				OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt())
+				OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt())
+				OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt())
+				OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
 			if (GameRunner.mushroomWorldFix && world.environment == World.Environment.NORMAL) {
 				StewFix.removeOxeye(chunk)
 
-				StewFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-				StewFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				StewFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt())
+				StewFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
 			if (GameRunner.melonWorldFix && world.environment == World.Environment.NORMAL) {
-				MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
 			if (GameRunner.halloweenGeneration) {
 				if (world.environment == World.Environment.NORMAL) {
-					HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-					HalloweenWorld.deadBushPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+					HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt())
+					HalloweenWorld.deadBushPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				HalloweenWorld.lanternPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-				HalloweenWorld.cobwebPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-				HalloweenWorld.bannerPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
-				HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt(), GameRunner.uhc.startRadius)
+				HalloweenWorld.lanternPlacer.onGenerate(chunk, world.seed.toInt())
+				HalloweenWorld.cobwebPlacer.onGenerate(chunk, world.seed.toInt())
+				HalloweenWorld.bannerPlacer.onGenerate(chunk, world.seed.toInt())
+				HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
 			//diamondPictureChunk(chunk)

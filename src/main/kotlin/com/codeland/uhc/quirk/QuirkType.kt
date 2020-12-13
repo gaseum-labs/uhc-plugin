@@ -24,10 +24,6 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 		"But they are weak and have no access to advanced tools"
 	)),
 
-	WET_SPONGE("Wet Sponge (don't question it)", ::WetSponge, false, Material.WET_SPONGE, arrayOf(
-		"Gain an infinite amount of wet sponge that you must turn into dry sponge"
-	)),
-
 	MODIFIED_DROPS("Modified Drops", ::ModifiedDrops, false, Material.ROTTEN_FLESH, arrayOf(
 		"Hostile mobs drop exceptional loot"
 	)),
@@ -74,7 +70,7 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	)),
 
 	HALLOWEEN("Halloween", ::Halloween, false, Material.PUMPKIN, arrayOf(
-		"Pumpkins Everywhere!",
+		"Mobs drop candy",
 		"Witches?!"
 	)),
 

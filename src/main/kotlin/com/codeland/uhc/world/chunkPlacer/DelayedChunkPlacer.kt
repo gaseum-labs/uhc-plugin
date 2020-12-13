@@ -15,9 +15,8 @@ abstract class DelayedChunkPlacer(size: Int, uniqueSeed: Int) : AbstractChunkPla
 
 	abstract fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean
 
-	override fun onGenerate(chunk: Chunk, seed: Int, radius: Int) {
+	override fun onGenerate(chunk: Chunk, seed: Int) {
 		if (
-			chunkInRadius(chunk, radius) &&
 			shouldGenerate(chunk.x, chunk.z, seed, uniqueSeed, size)
 		) {
 			chunkList.add(chunk)
@@ -25,6 +24,7 @@ abstract class DelayedChunkPlacer(size: Int, uniqueSeed: Int) : AbstractChunkPla
 
 		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
 			var safeChunks = 0
+
 			val removeChunks = Array(chunkList.size) { i ->
 				val checkChunk = chunkList[i]
 
@@ -38,6 +38,7 @@ abstract class DelayedChunkPlacer(size: Int, uniqueSeed: Int) : AbstractChunkPla
 			}
 
 			val newChunkList = ArrayList<Chunk>(safeChunks)
+
 			removeChunks.forEachIndexed { i, removed ->
 				if (!removed) newChunkList.add(chunkList[i])
 			}

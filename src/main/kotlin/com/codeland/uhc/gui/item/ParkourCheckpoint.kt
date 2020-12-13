@@ -1,7 +1,11 @@
 package com.codeland.uhc.gui.item
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.phase.PhaseType
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.Material
@@ -10,10 +14,10 @@ import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
-object ParkourCheckpoint {
+class ParkourCheckpoint : CommandItem() {
 	val MATERIAL = Material.GOLD_NUGGET
 
-	fun create(): ItemStack {
+	override fun create(): ItemStack {
 		val stack = ItemStack(MATERIAL)
 		val meta = stack.itemMeta
 
@@ -24,49 +28,56 @@ object ParkourCheckpoint {
 		return stack
 	}
 
-	fun isItem(stack: ItemStack): Boolean {
+	override fun isItem(stack: ItemStack): Boolean {
 		return stack.type == MATERIAL && stack.itemMeta.hasLore() && stack.itemMeta.hasDisplayName()
 	}
 
-	fun hasItem(inventory: Inventory): Boolean {
-		return inventory.contents.any { stack ->
-			if (stack == null) return@any false
+	override fun onUse(uhc: UHC, player: Player) {
+		if (!uhc.isPhase(PhaseType.WAITING)) return
 
-			isItem(stack)
+		val location = getPlayerCheckpoint(player)?.toBlockLocation()
+			?: return Commands.errorMessage(player, "Reach a gold block to get a checkpoint!")
+
+		val block = Bukkit.getWorlds()[0].getBlockAt(location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation())
+		if (block.type != CHECKPOINT)
+			return Commands.errorMessage(player, "Checkpoint has been removed!")
+
+		player.teleport(location.add(0.5, 0.0, 0.5))
+	}
+
+	companion object {
+		val META_TAG = "uhc_checkpoint"
+		val CHECKPOINT = Material.GOLD_BLOCK
+
+		fun setPlayerCheckpoint(player: Player, location: Location) {
+			player.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin, location))
 		}
-	}
 
-	val META_TAG = "uhc_checkpoint"
-	val CHECKPOINT = Material.GOLD_BLOCK
+		fun getPlayerCheckpoint(player: Player): Location? {
+			val list = player.getMetadata(META_TAG)
 
-	fun setPlayerCheckpoint(player: Player, location: Location) {
-		player.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin, location))
-	}
+			if (list.isEmpty()) return null
 
-	fun getPlayerCheckpoint(player: Player): Location? {
-		val list = player.getMetadata(META_TAG)
+			return list[0].value() as Location
+		}
 
-		if (list.isEmpty()) return null
+		fun updateCheckpoint(player: Player) {
+			val underLocation = player.location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation()
 
-		return list[0].value() as Location
-	}
+			if (player.world.getBlockAt(underLocation).type == CHECKPOINT) {
+				val oldLocation = getPlayerCheckpoint(player)?.toBlockLocation()
+				val newLocation = underLocation.add(0.0, 1.0, 0.0).toBlockLocation()
 
-	fun updateCheckpoint(player: Player) {
-		val underLocation = player.location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation()
-
-		if (player.world.getBlockAt(underLocation).type == CHECKPOINT) {
-			val oldLocation = getPlayerCheckpoint(player)?.toBlockLocation()
-			val newLocation = underLocation.add(0.0, 1.0, 0.0).toBlockLocation()
-
-			if (oldLocation == null ||
-				(
-					newLocation.x.toInt() != oldLocation.x.toInt() ||
-					newLocation.y.toInt() != oldLocation.y.toInt() ||
-					newLocation.z.toInt() != oldLocation.z.toInt()
-				)
-			) {
-				setPlayerCheckpoint(player, newLocation)
-				GameRunner.sendGameMessage(player, "New Checkpoint!")
+				if (oldLocation == null ||
+					(
+						newLocation.x.toInt() != oldLocation.x.toInt() ||
+							newLocation.y.toInt() != oldLocation.y.toInt() ||
+							newLocation.z.toInt() != oldLocation.z.toInt()
+						)
+				) {
+					setPlayerCheckpoint(player, newLocation)
+					GameRunner.sendGameMessage(player, "New Checkpoint!")
+				}
 			}
 		}
 	}

@@ -31,6 +31,17 @@ object Util {
 		return 0
 	}
 
+	fun topBlockYTop(world: World, top: Int, x: Int, z: Int): Int {
+		for (y in top downTo 0) {
+			var block = world.getBlockAt(x, y, z)
+
+			if (!block.isPassable)
+				return y
+		}
+
+		return 0
+	}
+
 	fun topLiquidSolidY(world: World, x: Int, z: Int): Pair<Int, Int> {
 		for (y in 255 downTo 0) {
 			var block = world.getBlockAt(x, y, z)

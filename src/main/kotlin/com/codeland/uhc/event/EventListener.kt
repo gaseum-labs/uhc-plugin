@@ -1,50 +1,43 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.blockfix.BlockFixType
-import com.codeland.uhc.command.Commands
-import com.codeland.uhc.core.*
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.dropFix.DropFixType
-import com.codeland.uhc.gui.item.AntiSoftlock
-import com.codeland.uhc.util.Util
-import com.codeland.uhc.gui.item.GuiOpener
-import com.codeland.uhc.gui.item.ParkourCheckpoint
+import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
-import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.phase.phases.endgame.EndgameClearBlocks
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.phase.phases.grace.GraceDefault
-import com.codeland.uhc.phase.phases.postgame.PostgameDefault
 import com.codeland.uhc.phase.phases.waiting.LobbyPvp
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
-import com.codeland.uhc.quirk.*
+import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.NetherFix
+import com.destroystokyo.paper.event.player.PlayerRecipeBookClickEvent
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
-import org.bukkit.entity.*
+import org.bukkit.entity.EntityType
+import org.bukkit.entity.Player
+import org.bukkit.entity.Projectile
+import org.bukkit.entity.Zombie
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
-import org.bukkit.event.inventory.BrewEvent
-import org.bukkit.event.inventory.CraftItemEvent
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryType
+import org.bukkit.event.inventory.*
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.inventory.EquipmentSlot
-import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.*
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
+
 
 class EventListener : Listener {
 	@EventHandler
@@ -64,9 +57,14 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onLogOut(event: PlayerQuitEvent) {
-		if (GameRunner.uhc.isGameGoing()) {
-			val player = event.player
+		val player = event.player
 
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			val pvpData = LobbyPvp.getPvpData(player)
+
+			if (pvpData.inPvp) LobbyPvp.disablePvp(player)
+
+		} else if (GameRunner.uhc.isGameGoing()) {
 			val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
 
 			if (playerData.participating && playerData.alive) {
@@ -80,13 +78,7 @@ class EventListener : Listener {
 		if (GameRunner.uhc.isGameGoing()) {
 			if (GameRunner.uhc.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
 				event.isCancelled = true
-
-			} else if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-				val player = event.entity
-				if (player is Player) WetSponge.addSponge(player)
-				
-			}
-			if (event.entity is Player && GameRunner.uhc.isEnabled(QuirkType.DEATHSWAP) && Deathswap.swapTime < Deathswap.IMMUNITY) {
+			} else if (event.entity is Player && GameRunner.uhc.isEnabled(QuirkType.DEATHSWAP) && Deathswap.swapTime < Deathswap.IMMUNITY) {
 				event.isCancelled = true
 			}
 		} else {
@@ -105,24 +97,17 @@ class EventListener : Listener {
 		val stack = event.item ?: return
 
 		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
-		if (summoner.enabled && summoner.onSummon(event)) event.isCancelled = true
+		if (summoner.enabled && summoner.onSummon(event)) {
+			event.isCancelled = true
 
-		if (GuiOpener.isItem(stack)) {
-			GameRunner.uhc.gui.inventory.open(event.player)
-		} else if (AntiSoftlock.isItem(stack)) {
-			val world = Bukkit.getWorlds()[0]
-			val center = (GameRunner.uhc.currentPhase as WaitingDefault?)?.center ?: 10000
+		} else if (GameRunner.uhc.isPhase(PhaseType.WAITING) && (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK)) {
+			CommandItemType.commandItemList.any { commandItem ->
+				if (commandItem.isItem(stack)) {
+					commandItem.onUse(GameRunner.uhc, event.player)
+					true
 
-			event.player.teleport(Location(world, center + 0.5, Util.topBlockY(world, center, center) + 1.0, center + 0.5))
-		} else if (ParkourCheckpoint.isItem(stack)) {
-			val location = ParkourCheckpoint.getPlayerCheckpoint(event.player)?.toBlockLocation()
-				?: return Commands.errorMessage(event.player, "Reach a gold block to get a checkpoint!")
-
-			val block = Bukkit.getWorlds()[0].getBlockAt(location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation())
-			if (block.type != ParkourCheckpoint.CHECKPOINT)
-				return Commands.errorMessage(event.player, "Checkpoint has been removed!")
-
-			event.player.teleport(location.add(0.5, 0.0, 0.5))
+				} else false
+			}
 		}
 	}
 
@@ -208,8 +193,7 @@ class EventListener : Listener {
 
 		/* waiting pvp respawning */
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			if (LobbyPvp.getPvpData(player).inPvp)
-				LobbyPvp.disablePvp(player, LobbyPvp.getPvpData(player))
+			if (LobbyPvp.getPvpData(player).inPvp) LobbyPvp.disablePvp(player)
 
 		/* respawning when the game is going */
 		} else {
@@ -244,10 +228,6 @@ class EventListener : Listener {
 		/* player targeting */
 		if (target !is Player) return
 
-		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-			if (Math.random() < 0.20) WetSponge.addSponge(target)
-		}
-
 		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
 		if (summoner.enabled && summoner.commander.value) {
 			val team = TeamData.playersTeam(target.uniqueId)
@@ -264,13 +244,6 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-			if (Math.random() < 0.1) {
-				var player = event.whoClicked as Player
-				WetSponge.addSponge(player)
-			}
-		}
-
 		/* prevent pest crafting */
 
 		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
@@ -286,17 +259,11 @@ class EventListener : Listener {
 	fun onPlayerDropItem(event: PlayerDropItemEvent) {
 		val stack = event.itemDrop.itemStack
 
-		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-			WetSponge.addSponge(event.player)
-		}
-
-		event.isCancelled = when {
-			GuiOpener.isItem(stack) -> true
-			AntiSoftlock.isItem(stack) -> true
-			ParkourCheckpoint.isItem(stack) -> true
-			PlayerCompass.isCompass(stack) -> true
-			else -> false
-		}
+		event.isCancelled =
+			(GameRunner.uhc.isPhase(PhaseType.WAITING) && CommandItemType.commandItemList.any { commandItem ->
+				commandItem.isItem(stack)
+			}) ||
+			(GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS) && PlayerCompass.isCompass(stack))
 	}
 
 	fun shouldHealthCancelled(player: Player): Boolean {
@@ -520,9 +487,21 @@ class EventListener : Listener {
 	fun onBreakBlock(event: BlockBreakEvent) {
 		var block = event.block
 		var player = event.player
-		var baseItem = event.player.inventory.itemInMainHand;
+		var baseItem = event.player.inventory.itemInMainHand
 
-		if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			val x = GameRunner.uhc.lobbyX
+			val z = GameRunner.uhc.lobbyZ
+			val radius = GameRunner.uhc.lobbyRadius + 1
+
+			if (((block.x == x + radius || block.x == x - radius) &&
+					(block.z > z - radius) && (block.z < z + radius)) ||
+				((block.z == z + radius || block.z == z - radius) &&
+					(block.x > x - radius) && (block.x < x + radius)) ||
+				(block.y == 255 && block.x <= x + radius && block.z <= z + radius && block.x >= x - radius && block.z >= z - radius)
+			) event.isCancelled = true
+
+		} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 			var broken = block.state.getMetadata("broken")
 
 			var oldBlockType = block.type
@@ -540,11 +519,6 @@ class EventListener : Listener {
 					Unsheltered.setBroken(block, true)
 				}
 			}
-		}
-
-		if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-			if (Math.random() < 0.01)
-				WetSponge.addSponge(player)
 		}
 	}
 
@@ -590,13 +564,6 @@ class EventListener : Listener {
 			event.isCancelled = true
 
 		} else {
-			if (GameRunner.uhc.isEnabled(QuirkType.WET_SPONGE)) {
-				if (event.block.type == Material.WET_SPONGE) {
-					event.isCancelled = true
-					WetSponge.addSponge(event.player)
-				}
-			}
-
 			if (GameRunner.uhc.isEnabled(QuirkType.CREATIVE)) {
 				var material = event.itemInHand.type
 
