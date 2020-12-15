@@ -10,6 +10,10 @@ import org.bukkit.ChatColor.BOLD
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.World
+import org.bukkit.block.BlastFurnace
+import org.bukkit.block.Container
+import org.bukkit.block.TileState
+import org.bukkit.block.data.BlockData
 import org.bukkit.boss.BossBar
 import kotlin.math.max
 import kotlin.math.min
@@ -82,11 +86,18 @@ class EndgameNaturalTerrain : Phase() {
 	}
 
 	fun fillBedrockLayer(world: World, layer: Int) {
-		val extrema = uhc.endRadius + 6
+		val extrema = uhc.endRadius
 
 		for (x in -extrema..extrema) {
 			for (z in -extrema..extrema) {
-				world.getBlockAt(x, layer, z).setType(Material.BEDROCK, false)
+				val block = world.getBlockAt(x, layer, z)
+				val state = block.getState(false)
+
+				if (state is TileState) {
+					block.breakNaturally()
+				} else {
+					block.setType(Material.BEDROCK, false)
+				}
 			}
 		}
 	}
@@ -111,7 +122,7 @@ class EndgameNaturalTerrain : Phase() {
 
 	override fun perSecond(remainingSeconds: Int) {
 		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
-		val extrema = uhc.endRadius + 6
+		val extrema = uhc.endRadius
 
 		if (!finished) {
 			--topBoundary

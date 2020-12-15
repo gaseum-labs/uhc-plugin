@@ -19,7 +19,6 @@ import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.NetherFix
-import com.destroystokyo.paper.event.player.PlayerRecipeBookClickEvent
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.entity.EntityType
@@ -37,7 +36,6 @@ import org.bukkit.inventory.*
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
-
 
 class EventListener : Listener {
 	@EventHandler
@@ -112,16 +110,22 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
+	fun onDropItem(event: ItemSpawnEvent) {
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+			event.entity.ticksLived = 5000
+		}
+	}
+
+	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		val player = event.entity
 
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			if (LobbyPvp.getPvpData(player).inPvp) event.drops.clear()
+			LobbyPvp.allInPvp { pvpPlayer, pvpData ->
+				if (pvpData.inPvp) pvpPlayer.sendMessage(event.deathMessage ?: "${player.name} fucking died")
+			}
 
-			return
-		}
-
-		if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)){
+		} else if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)) {
 			val killer = player.killer
 
 			/* don't drop if you were killed and team swapped */
@@ -489,6 +493,7 @@ class EventListener : Listener {
 		var player = event.player
 		var baseItem = event.player.inventory.itemInMainHand
 
+		/* prevent breaking the border in creative lobby */
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			val x = GameRunner.uhc.lobbyX
 			val z = GameRunner.uhc.lobbyZ
@@ -498,7 +503,7 @@ class EventListener : Listener {
 					(block.z > z - radius) && (block.z < z + radius)) ||
 				((block.z == z + radius || block.z == z - radius) &&
 					(block.x > x - radius) && (block.x < x + radius)) ||
-				(block.y == 255 && block.x <= x + radius && block.z <= z + radius && block.x >= x - radius && block.z >= z - radius)
+				((block.y == 255 || block.y == 0) && block.x <= x + radius && block.z <= z + radius && block.x >= x - radius && block.z >= z - radius)
 			) event.isCancelled = true
 
 		} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
@@ -558,8 +563,13 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
-		val phase = GameRunner.uhc.currentPhase as? EndgameNaturalTerrain
-		if (phase != null && event.blockPlaced.y > phase.topBoundary) {
+		val phase = GameRunner.uhc.currentPhase
+
+		if (phase is WaitingDefault && LobbyPvp.getPvpData(event.player).inPvp && event.blockPlaced.y > GameRunner.uhc.lobbyPvpHeight) {
+			event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${GameRunner.uhc.lobbyPvpHeight}")
+			event.isCancelled = true
+
+		} else if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.topBoundary) {
 			event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${phase.topBoundary}")
 			event.isCancelled = true
 

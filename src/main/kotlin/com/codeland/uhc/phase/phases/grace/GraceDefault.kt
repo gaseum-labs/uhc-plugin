@@ -69,7 +69,6 @@ open class GraceDefault : Phase() {
 
 		for (activePotionEffect in player.activePotionEffects)
 			player.removePotionEffect(activePotionEffect.type)
-
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
 		player.health = 20.0
 		player.absorptionAmount = 0.0
@@ -78,7 +77,8 @@ open class GraceDefault : Phase() {
 		player.foodLevel = 20
 		player.saturation = 5f
 		player.exhaustion = 0f
-		player.fireTicks = 0
+		player.fireTicks = -1
+		player.fallDistance = 0f
 		player.setStatistic(Statistic.TIME_SINCE_REST, 0)
 
 		/* remove all advancements */

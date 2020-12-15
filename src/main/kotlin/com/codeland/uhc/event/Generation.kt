@@ -25,13 +25,6 @@ class Generation : Listener {
 			val world = event.world
 			val chunk = event.chunk
 
-			/* prevent animal spawns in the waiting area */
-			if (GameRunner.uhc.isPhase(PhaseType.WAITING) && world.environment == World.Environment.NORMAL && (abs(chunk.x) > 10 || abs(chunk.z) > 10)) {
-				chunk.entities.forEach { entity ->
-					if (entity !is Player) entity.remove()
-				}
-			}
-
 			if (GameRunner.netherWorldFix && world.environment == World.Environment.NETHER) {
 				NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt())
 			}

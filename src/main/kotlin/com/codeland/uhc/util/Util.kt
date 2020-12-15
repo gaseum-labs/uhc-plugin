@@ -216,4 +216,10 @@ object Util {
 
 		return Pair(array[index0], array[index1])
 	}
+
+	fun <T>swap(array: Array<T>, index0: Int, index1: Int) {
+		val temp = array[index0]
+		array[index0] = array[index1]
+		array[index1] = temp
+	}
 }

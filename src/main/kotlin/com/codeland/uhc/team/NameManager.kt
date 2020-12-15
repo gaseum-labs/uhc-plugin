@@ -1,10 +1,11 @@
 package com.codeland.uhc.team
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.phases.waiting.LobbyPvp
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.GameMode
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ShapedRecipe
@@ -33,37 +34,38 @@ object NameManager {
 
 		val team = TeamData.playersTeam(player.uniqueId)
 		val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
-		val fakeTeam = scoreboard.getTeam(player.name)
+		val fakeTeam = scoreboard.getTeam(player.name) ?: makeFakeTeam(player.name)
 
-		if (team == null) {
+		if (GameRunner.uhc.isPhase(PhaseType.WAITING) && LobbyPvp.getPvpData(player).inPvp) {
 			player.setPlayerListName(null)
+			updatePvp(fakeTeam)
 
-			if (fakeTeam == null)
-				makeFakeTeam(player.name, ColorPair(ChatColor.WHITE))
-			else
-				updateTeam(fakeTeam, player.name, ColorPair(ChatColor.WHITE))
+		} else if (team == null) {
+			player.setPlayerListName(null)
+			updateTeam(fakeTeam, ColorPair(ChatColor.WHITE))
 
 		} else {
 			player.setPlayerListName(team.colorPair.colorString(player.name))
-
-			if (fakeTeam == null)
-				makeFakeTeam(player.name, team.colorPair)
-			else
-				updateTeam(fakeTeam, player.name, team.colorPair)
+			updateTeam(fakeTeam, team.colorPair)
 		}
 	}
 
-	fun makeFakeTeam(name: String, colorPair: ColorPair): Team {
+	fun makeFakeTeam(name: String): Team {
 		val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
 		val team = scoreboard.registerNewTeam(name)
 		team.addEntry(name)
 
-		updateTeam(team, name, colorPair)
-
 		return team
 	}
 
-	fun updateTeam(team: Team, name: String, colorPair: ColorPair) {
+	fun updatePvp(team: Team) {
+		team.color = ChatColor.RED
+
+		team.prefix = ""
+		team.suffix = "${ChatColor.DARK_RED}${ChatColor.BOLD} PVP"
+	}
+
+	fun updateTeam(team: Team, colorPair: ColorPair) {
 		team.color = colorPair.color0
 
 		if (colorPair.color0 == ChatColor.WHITE) {

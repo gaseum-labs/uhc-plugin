@@ -6,6 +6,7 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.quirk.quirks.Pests
+import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
@@ -72,20 +73,23 @@ class WaitingDefault : Phase() {
 			uhc.lobbyPvpZ = z
 
 			LobbyPvp.createArena(world, x, z, uhc.lobbyRadius)
+			LobbyPvp.determineHeight(uhc, world, x, z, uhc.lobbyRadius)
 		}
 
 		world.setSpawnLocation(uhc.lobbyX, Util.topBlockYTop(world, 254, uhc.lobbyX, uhc.lobbyZ) + 1, uhc.lobbyZ)
-
 		world.worldBorder.reset()
 
-		world.isThundering = false
-		world.setStorm(false)
-		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false)
-		world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
-		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
-		world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0)
-		world.time = 6000
-		world.difficulty = Difficulty.NORMAL
+		Bukkit.getWorlds().forEach { otherWorld ->
+			otherWorld.isThundering = false
+			otherWorld.setStorm(false)
+			otherWorld.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false)
+			otherWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+			otherWorld.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
+			otherWorld.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
+			otherWorld.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
+			otherWorld.time = 6000
+			otherWorld.difficulty = Difficulty.NORMAL
+		}
 
 		TeamData.removeAllTeams { player ->
 			uhc.setParticipating(player, false)
@@ -100,9 +104,14 @@ class WaitingDefault : Phase() {
 	override fun customEnd() {
 		Bukkit.getWorlds().forEach { world ->
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true)
-			world.setGameRule(GameRule.RANDOM_TICK_SPEED, 3)
+			world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, true)
+			world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, true)
 		}
-		LobbyPvp.pvpMap.clear()
+
+		LobbyPvp.allInPvp { player, pvpData ->
+			pvpData.inPvp = false
+			NameManager.updateName(player)
+		}
 	}
 
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
@@ -114,11 +123,11 @@ class WaitingDefault : Phase() {
 	}
 
 	override fun perTick(currentTick: Int) {
-		if (currentTick % 3 == 0) {
-			Bukkit.getOnlinePlayers().forEach { player ->
-				ParkourCheckpoint.updateCheckpoint(player)
-			}
+		Bukkit.getOnlinePlayers().forEach { player ->
+			ParkourCheckpoint.updateCheckpoint(player)
 		}
+
+		LobbyPvp.onTick()
 	}
 
 	override fun perSecond(remainingSeconds: Int) {}
@@ -130,6 +139,7 @@ class WaitingDefault : Phase() {
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
 		player.health = 20.0
 		player.foodLevel = 20
+		player.fallDistance = 0f
 		teleportPlayerCenter(uhc, player)
 		player.gameMode = GameMode.CREATIVE
 
