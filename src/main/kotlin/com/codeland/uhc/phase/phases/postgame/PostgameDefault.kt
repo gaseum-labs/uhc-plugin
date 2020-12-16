@@ -1,5 +1,6 @@
 package com.codeland.uhc.phase.phases.postgame
 
+import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.Team
@@ -78,6 +79,8 @@ class PostgameDefault : Phase() {
         TeamData.removeAllTeams { player ->
             GameRunner.uhc.setParticipating(player, false)
         }
+
+        if (uhc.customSpawning) CustomSpawning.endTask()
     }
 
     override fun customEnd() {}

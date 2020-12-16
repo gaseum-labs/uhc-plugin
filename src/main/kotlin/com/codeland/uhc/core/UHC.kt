@@ -73,6 +73,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var lobbyPvpZ: Int = -1
 	var lobbyPvpHeight: Int = -1
 
+	var customSpawning: Boolean = true
+
 	fun updateUsingBot(using: Boolean) {
 		val bot = GameRunner.bot
 

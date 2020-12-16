@@ -1,5 +1,6 @@
 package com.codeland.uhc.phase.phases.grace
 
+import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
 import com.codeland.uhc.core.UHC
@@ -91,6 +92,14 @@ open class GraceDefault : Phase() {
 		}
 
 		player.gameMode = GameMode.SURVIVAL
+
+		if (uhc.customSpawning) {
+			CustomSpawning.startTask()
+
+			Bukkit.getWorlds().forEach { world ->
+				world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
+			}
+		}
 	}
 
 	override fun customEnd() {}

@@ -22,6 +22,9 @@ class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: 
 
 	var skull = ItemStack(Material.PLAYER_HEAD)
 
+	var spawnIndex = 0
+	var spawnCycle = 0
+
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
 	var offlineZombie: Zombie? = null

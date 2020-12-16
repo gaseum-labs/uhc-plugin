@@ -1,23 +1,27 @@
 package com.codeland.uhc.dropFix
 
 import com.codeland.uhc.dropFix.DropEntry.Companion.entity
-import com.codeland.uhc.dropFix.DropEntry.Companion.isBig
+import com.codeland.uhc.dropFix.DropEntry.Companion.hasTrident
+import com.codeland.uhc.dropFix.DropEntry.Companion.isSize
+import com.codeland.uhc.dropFix.DropEntry.Companion.item
 import com.codeland.uhc.dropFix.DropEntry.Companion.loot
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootEntity
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootMulti
 import com.codeland.uhc.dropFix.DropEntry.Companion.noBaby
 import com.codeland.uhc.dropFix.DropEntry.Companion.onFire
+import com.codeland.uhc.dropFix.DropEntry.Companion.potion
 import com.codeland.uhc.dropFix.DropEntry.Companion.saddle
 import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.entity.EntityType
+import org.bukkit.potion.PotionType
 
 enum class DropFixType(val dropFix: DropFix) {
 	BLAZE(DropFix(EntityType.BLAZE, arrayOf(
 		arrayOf(loot(BLAZE_ROD, ::lootItem))
 	), arrayOf(
-		DropEntry.item(BLAZE_POWDER)
+		item(BLAZE_POWDER)
 	))),
 
 	SPIDER(DropFix(EntityType.SPIDER, arrayOf(
@@ -31,7 +35,7 @@ enum class DropFixType(val dropFix: DropFix) {
 	SKELETON(DropFix(EntityType.SKELETON, arrayOf(
 		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem))
 	), arrayOf(
-		DropEntry.item(BONE)
+		item(BONE)
 	))),
 
 	COW(DropFix(EntityType.COW, arrayOf(
@@ -39,7 +43,7 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(lootEntity(noBaby { LEATHER }, ::lootItem), lootEntity(noBaby(onFire(BEEF, COOKED_BEEF)), lootMulti(2))),
 		arrayOf(lootEntity(noBaby { LEATHER }, ::lootItem), lootEntity(noBaby(onFire(BEEF, COOKED_BEEF)), lootMulti(3)))
 	), arrayOf(
-		DropEntry.item(BEEF)
+		item(BEEF)
 	))),
 
 	HORSE(DropFix(EntityType.HORSE, arrayOf(
@@ -62,7 +66,7 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, ::lootItem)),
 		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, ::lootItem))
 	), arrayOf(
-		DropEntry.item(Material.CHICKEN)
+		item(Material.CHICKEN)
 	))),
 
 	ENDERMAN(DropFix(EntityType.ENDERMAN, arrayOf(
@@ -72,7 +76,8 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	MAGMA_CUBE(DropFix(EntityType.MAGMA_CUBE, arrayOf(
-		arrayOf(lootEntity(isBig(MAGMA_CREAM), ::lootItem))
+		arrayOf(lootEntity(isSize(MAGMA_CREAM, 2), ::lootItem)),
+		arrayOf(lootEntity(isSize(MAGMA_CREAM, 2), ::lootItem), lootEntity(isSize(MAGMA_CREAM, 1), ::lootItem))
 	), arrayOf(
 		DropEntry.nothing()
 	))),
@@ -80,23 +85,35 @@ enum class DropFixType(val dropFix: DropFix) {
 	GHAST(DropFix(EntityType.GHAST, arrayOf(
 		arrayOf(loot(GUNPOWDER, ::lootItem), loot(GHAST_TEAR, ::lootItem))
 	), arrayOf(
-		DropEntry.item(GUNPOWDER)
+		item(GUNPOWDER)
 	))),
 
 	STRIDER(DropFix(EntityType.STRIDER, arrayOf(
-		arrayOf(entity(::saddle), loot(STRING, lootMulti(1))),
-		arrayOf(entity(::saddle), loot(STRING, lootMulti(2))),
-		arrayOf(entity(::saddle), loot(STRING, lootMulti(2))),
 		arrayOf(entity(::saddle), loot(STRING, lootMulti(3))),
-		arrayOf(entity(::saddle), loot(STRING, lootMulti(3))),
-		arrayOf(entity(::saddle), loot(STRING, lootMulti(4)))
 	), arrayOf(
-		DropEntry.item(STRING)
+		item(STRING)
 	))),
 
 	CREEPER(DropFix(EntityType.CREEPER, arrayOf(
 		arrayOf(loot(GUNPOWDER, ::lootItem))
 	), arrayOf(
-		DropEntry.item(GUNPOWDER)
+		item(GUNPOWDER)
+	))),
+
+	DROWNED(DropFix(EntityType.DROWNED, arrayOf(
+		arrayOf(entity(hasTrident()), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti(-1))),
+		arrayOf(entity(hasTrident()), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti( 0))),
+		arrayOf(entity(hasTrident()), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti( 1)))
+	), arrayOf(
+		item(ROTTEN_FLESH)
+	))),
+
+	WITCH(DropFix(EntityType.WITCH, arrayOf(
+		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.INSTANT_HEAL)),
+		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.FIRE_RESISTANCE)),
+		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.SPEED)),
+		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.WATER_BREATHING)),
+	), arrayOf(
+		item(STICK)
 	)));
 }

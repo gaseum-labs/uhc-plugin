@@ -21,10 +21,7 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.NetherFix
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Player
-import org.bukkit.entity.Projectile
-import org.bukkit.entity.Zombie
+import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
@@ -171,11 +168,15 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+		if (!GameRunner.uhc.isGameGoing()) {
 			event.isCancelled = (
-				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL ||
-				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.BEEHIVE
+				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL
 			) && event.entityType.isAlive
+
+		} else if (GameRunner.uhc.customSpawning) {
+			event.isCancelled = (
+				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL
+			) && event.entity is Monster
 
 		} else {
 			val world = event.location.world
