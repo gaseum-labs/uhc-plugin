@@ -13,15 +13,8 @@ import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.scoreboard.Team
 
 object NameManager {
-	private val recipeKeys = ArrayList<NamespacedKey>(1000)
-
 	fun updateName(player: Player) {
 		val (playerData, firstTime) = GameRunner.uhc.initialPlayerData(player.uniqueId)
-		if (firstTime) {
-			recipeKeys.forEach { recipeKey ->
-				player.discoverRecipe(recipeKey)
-			}
-		}
 
 		playerData.setSkull(player)
 
@@ -74,16 +67,6 @@ object NameManager {
 		} else {
 			team.prefix = "${colorPair.color0}■ "
 			team.suffix = " ${colorPair.color1 ?: colorPair.color0}■"
-		}
-	}
-
-	fun initRecipes() {
-		Bukkit.recipeIterator().forEach { recipe ->
-			if (recipe is ShapelessRecipe) {
-				recipeKeys.add(recipe.key)
-			} else if (recipe is ShapedRecipe) {
-				recipeKeys.add(recipe.key)
-			}
 		}
 	}
 }

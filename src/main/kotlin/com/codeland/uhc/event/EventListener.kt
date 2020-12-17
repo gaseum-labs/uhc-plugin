@@ -477,10 +477,14 @@ class EventListener : Listener {
 		var drops = event.items
 		var blockMiddle = block.location.toCenterLocation()
 
-		if (event.player.gameMode != GameMode.CREATIVE &&
+		if (type == Material.NETHER_WART && GameRunner.uhc.isGameGoing() && block.world.environment == World.Environment.NETHER) {
+			drops.clear()
+			block.world.dropItem(blockMiddle, ItemStack(Material.NETHER_WART))
+
+		} else if (event.player.gameMode != GameMode.CREATIVE &&
 			BlockFixType.values().any { blockFixType ->
 				blockFixType.blockFix.onBreakBlock(GameRunner.uhc, type, drops, player) { drop ->
-					if (drop != null) player.world.dropItem(blockMiddle, drop)
+					if (drop != null) block.world.dropItem(blockMiddle, drop)
 				}
 			}
 		) else if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {

@@ -5,8 +5,10 @@ import org.bukkit.Bukkit
 import org.bukkit.World
 import java.lang.Math.floor
 import java.util.logging.Level
+import kotlin.math.acos
 import kotlin.math.floor
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 object Util {
 	fun log(message: String) {
@@ -221,5 +223,15 @@ object Util {
 		val temp = array[index0]
 		array[index0] = array[index1]
 		array[index1] = temp
+	}
+
+	/* the area of the intersection of two circles with the same radius at a given distance of centers */
+	fun circleIntersection(r: Double, d: Double): Double {
+		if (d > r * 2) return 0.0
+		return 2 * (r * r * acos(d / (2 * r))) - 0.5 * sqrt((-d + 2 * r) * d * d * (d + 2 * r))
+	}
+
+	fun levelIntersection(r: Double, d: Double): Double {
+		return 2 * r - d
 	}
 }

@@ -168,6 +168,12 @@ class TestCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Water ambient spawn limit: ${sender.world.waterAmbientSpawnLimit}")
 	}
 
+	@Subcommand("mobcap")
+	@Description("test a player's individual mobcap")
+	fun testMobCap(sender: CommandSender, player: Player) {
+		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${GameRunner.uhc.getPlayerData(player.uniqueId).mobcap}")
+	}
+
 	@Subcommand("gbs")
 	fun gbs(sender: CommandSender, location: Location) {
 		val originalString = location.world.getBlockAt(location).blockData.getAsString(true)

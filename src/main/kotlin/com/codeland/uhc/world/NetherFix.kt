@@ -10,7 +10,7 @@ import org.bukkit.entity.MagmaCube
 import org.bukkit.event.entity.CreatureSpawnEvent
 
 object NetherFix {
-	val wartPlacer = WartPlacer(4, 993907)
+	val wartPlacer = WartPlacer(3, 993907)
 
 	fun replaceSpawn(entity: Entity): Boolean {
 		val location = entity.location

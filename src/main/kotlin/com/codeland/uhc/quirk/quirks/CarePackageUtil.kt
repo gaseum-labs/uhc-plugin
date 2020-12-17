@@ -16,11 +16,21 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 
 object CarePackageUtil {
-	private data class ItemPossibilities(val materials: Array<Material>, val amounts: Array<Array<Int>>)
+	data class ItemPossibilities(val materials: Array<Material>, val amounts: Array<Array<Int>>)
 
-	private fun randomItem(possibilities: ItemPossibilities): ItemStack {
+	fun randomItem(possibilities: ItemPossibilities): ItemStack {
 		val materialIndex = Util.randRange(0, possibilities.materials.lastIndex)
 		return ItemStack(possibilities.materials[materialIndex], Util.randFromArray(possibilities.amounts[materialIndex]))
+	}
+
+	fun randomItem(items: Array<Material>, vararg amounts: Array<Int>): ItemStack {
+		val index = (Math.random() * items.size).toInt()
+
+		return ItemStack(items[index], Util.randFromArray(amounts[index]))
+	}
+
+	fun randomItem(material: Material, vararg amounts: Int): ItemStack {
+		return ItemStack(material, amounts[(Math.random() * amounts.size).toInt()])
 	}
 
 	private val bottlePossibilities = ItemPossibilities(arrayOf(SAND, GLASS, GLASS_BOTTLE), arrayOf(arrayOf(6, 9), arrayOf(3, 6, 9), arrayOf(3, 6)))
@@ -37,7 +47,7 @@ object CarePackageUtil {
 
 	private val ingredientPossibilities = arrayOf(
 		ItemPossibilities(arrayOf(GLISTERING_MELON_SLICE, GHAST_TEAR), arrayOf(arrayOf(1, 2), arrayOf(2))),
-		ItemPossibilities(arrayOf(SPIDER_EYE, BROWN_MUSHROOM, FERMENTED_SPIDER_EYE), arrayOf(arrayOf(1, 2), arrayOf(2), arrayOf(1, 2))),
+		ItemPossibilities(arrayOf(SPIDER_EYE, FERMENTED_SPIDER_EYE), arrayOf(arrayOf(1, 2), arrayOf(2), arrayOf(1, 2))),
 		ItemPossibilities(arrayOf(MAGMA_CREAM), arrayOf(arrayOf(2))),
 		ItemPossibilities(arrayOf(BLAZE_POWDER), arrayOf(arrayOf(1)))
 	)
@@ -160,6 +170,26 @@ object CarePackageUtil {
 
 	fun randomAxe(diamond: Boolean, twoEnchants: Boolean): ItemStack {
 		return enchantedTool(if (diamond) DIAMOND_AXE else IRON_AXE, axeEnchants, twoEnchants)
+	}
+
+	fun powerBow(power: Int): ItemStack {
+		val bow = ItemStack(BOW)
+
+		val meta = bow.itemMeta
+		meta.addEnchant(Enchantment.ARROW_DAMAGE, power, true)
+		bow.itemMeta = meta
+
+		return bow
+	}
+
+	fun piercingCrossbow(): ItemStack {
+		val crossbow = ItemStack(CROSSBOW)
+
+		val meta = crossbow.itemMeta
+		meta.addEnchant(Enchantment.PIERCING, 1, true)
+		crossbow.itemMeta = meta
+
+		return crossbow
 	}
 
 	private fun enchantedTool(tool: Material, enchantList: Array<EnchantData?>, twoEnchants: Boolean): ItemStack {

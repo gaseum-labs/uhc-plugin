@@ -75,8 +75,6 @@ class UHCPlugin : JavaPlugin() {
 
 			GameRunner.uhc.updateDisplays()
 			GameRunner.uhc.startWaiting()
-
-			NameManager.initRecipes()
 		}
 	}
 	

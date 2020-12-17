@@ -173,14 +173,12 @@ object CustomSpawning {
 		SpawnInfo(::piglinAllowSpawn,        ::onPiglinSpawn),
 	)
 
-	fun spawnForPlayer(player: Player) {
-		val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
-
+	fun spawnForPlayer(player: Player, playerList: ArrayList<Player>, playerData: PlayerData) {
 		val world = player.world
 		val infoList = if (world.environment == World.Environment.NETHER) netherSpawnInfoList else overworldSpawnInfoList
 		if (playerData.spawnIndex > infoList.lastIndex) playerData.spawnIndex = 0
 
-		if (spawnMob(player, playerData.spawnCycle, infoList[playerData.spawnIndex])) {
+		if (spawnMob(player, playerList, playerData.spawnCycle, infoList[playerData.spawnIndex])) {
 			++playerData.spawnIndex
 
 			if (playerData.spawnIndex == infoList.size) {
@@ -190,13 +188,25 @@ object CustomSpawning {
 		}
 	}
 
-	const val MIN_RADIUS = 24
+	const val MIN_RADIUS = 30
 	const val MAX_RADIUS = 86
 	const val VERTICAL_RADIUS = 10
 
-	const val PER_PLAYER = 30
+	const val PER_PLAYER = 25
 
-	fun spawnMob(player: Player, spawnCycle: Int, spawnInfo: SpawnInfo): Boolean {
+	fun anotherPlayerInRange(player: Player, playerList: ArrayList<Player>, blockX: Int, blockZ: Int): Boolean {
+		for (otherPlayer in playerList) {
+			if (player != otherPlayer && player.world == otherPlayer.world) {
+				val otherLocation = otherPlayer.location
+
+				if (sqrt((blockX - otherLocation.x).pow(2) + (blockZ - otherLocation.z).pow(2)) < MIN_RADIUS) return true
+			}
+		}
+
+		return false
+	}
+
+	fun spawnMob(player: Player, playerList: ArrayList<Player>, spawnCycle: Int, spawnInfo: SpawnInfo): Boolean {
 		val angle = Math.random() * 2 * PI
 
 		val radius = Util.randRange(MIN_RADIUS, MAX_RADIUS)
@@ -210,27 +220,29 @@ object CustomSpawning {
 			val blockX = (cos(angle) * radius + player.location.x).toInt()
 			val blockZ = (sin(angle) * radius + player.location.z).toInt()
 
-			val minY = (player.location.y - VERTICAL_RADIUS).toInt().coerceAtLeast(0).coerceAtMost(255)
-			val maxY = (player.location.y + VERTICAL_RADIUS).toInt().coerceAtMost(255).coerceAtLeast(0)
+			if (!anotherPlayerInRange(player, playerList, blockX, blockZ)) {
+				val minY = (player.location.y - VERTICAL_RADIUS).toInt().coerceAtLeast(0).coerceAtMost(255)
+				val maxY = (player.location.y + VERTICAL_RADIUS).toInt().coerceAtMost(255).coerceAtLeast(0)
 
-			val distance = maxY - minY
-			val offsetY = (Math.random() * distance).toInt()
+				val distance = maxY - minY
+				val offsetY = (Math.random() * distance).toInt()
 
-			val world = player.world
+				val world = player.world
 
-			for (i in 0 until distance) {
-				val y = (i + offsetY) % (distance) + minY
-				val block = world.getBlockAt(blockX, y, blockZ)
+				for (i in 0 until distance) {
+					val y = (i + offsetY) % (distance) + minY
+					val block = world.getBlockAt(blockX, y, blockZ)
 
-				val entityType = spawnInfo.allowSpawn(block, spawnCycle)
+					val entityType = spawnInfo.allowSpawn(block, spawnCycle)
 
-				if (entityType != null) {
-					val entity = world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType)
-					Util.log("spawned ${entityType.name} at ${entity.location.x} ${entity.location.y} ${entity.location.z} for ${player.name}")
-					spawnInfo.onSpawn(entity, spawnCycle)
-					makePlayerMob(entity, player)
+					if (entityType != null) {
+						val entity = world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType)
+						Util.log("spawned ${entityType.name} at ${entity.location.x} ${entity.location.y} ${entity.location.z} for ${player.name}")
+						spawnInfo.onSpawn(entity, spawnCycle)
+						makePlayerMob(entity, player)
 
-					return true
+						return true
+					}
 				}
 			}
 		}
@@ -256,21 +268,70 @@ object CustomSpawning {
 
 	fun startTask() {
 		spawnTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
+			/* list of online players to collect from first pass */
+			val playerList = ArrayList<Player>()
+			val dataList = ArrayList<PlayerData>()
+
+			/* collect all online players */
 			GameRunner.uhc.allCurrentPlayers { uuid ->
 				val player = Bukkit.getPlayer(uuid)
 
 				if (player != null) {
-					val entities = player.world.entities
+					val data = GameRunner.uhc.getPlayerData(uuid)
 
-					var count = 0
-					player.world.entities.forEach { entity ->
-						if (isPlayerMob(entity, player)) ++count
-					}
-
-					if (count < PER_PLAYER) spawnForPlayer(player)
+					playerList.add(player)
+					dataList.add(data)
 				}
 			}
-		}, 0, 5)
+
+			/* calculate caps for all players relative to each other */
+			for (i in playerList.indices) {
+				val player = playerList[i]
+				val data = dataList[i]
+
+				val totalArea = VERTICAL_RADIUS * 2 * PI * MAX_RADIUS * MAX_RADIUS
+				data.mobcap = PER_PLAYER.toDouble()
+
+				for (j in 0 until i) {
+					val otherPlayer = playerList[j]
+					val otherData = dataList[j]
+
+					val location1 = player.location
+					val location2 = otherPlayer.location
+
+					if (location1.world == location2.world) {
+						val horzDistance = sqrt((location1.x - location2.x).pow(2) + (location1.z - location2.z).pow(2))
+						val vertDistance = abs(location1.y - location2.y)
+
+						val intersection = Util.circleIntersection(MAX_RADIUS.toDouble(), horzDistance) * Util.levelIntersection(VERTICAL_RADIUS.toDouble(), vertDistance)
+						val percentIntersected = intersection / totalArea
+
+						data.mobcap -= PER_PLAYER * percentIntersected / 2
+						otherData.mobcap -= PER_PLAYER * percentIntersected / 2
+					}
+				}
+			}
+
+			/* once we have the caps spawn the mobs */
+			for (i in playerList.indices) {
+				val player = playerList[i]
+				val data = dataList[i]
+
+				/* lessen mobcap in nether */
+				if (player.world.environment == World.Environment.NETHER) data.mobcap *= 0.75
+				if (player.world.getBlockAt(player.location).biome == Biome.SOUL_SAND_VALLEY) data.mobcap *= 0.5
+
+				var playerMobCount = 0
+
+				player.world.entities.forEach { entity ->
+					if (isPlayerMob(entity, player)) ++playerMobCount
+				}
+
+				if (playerMobCount < data.mobcap) {
+					spawnForPlayer(player, playerList, data)
+				}
+			}
+		}, 0, 20)
 	}
 
 	fun endTask() {

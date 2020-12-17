@@ -21,7 +21,7 @@ class WartPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, unique
 
 					val data = block.blockData
 					if (data is Ageable) {
-						data.age = Util.randRange(0, data.maximumAge)
+						data.age =  data.maximumAge
 						block.blockData = data
 					}
 
