@@ -168,26 +168,15 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
-		if (!GameRunner.uhc.isGameGoing()) {
-			event.isCancelled = (
-				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL
-			) && event.entityType.isAlive
-
-		} else if (GameRunner.uhc.customSpawning) {
+		if (GameRunner.uhc.isGameGoing()) {
 			event.isCancelled = (
 				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL
 			) && event.entity is Monster
 
 		} else {
-			val world = event.location.world
-
-			event.isCancelled =
-				(world.environment == World.Environment.NETHER && GameRunner.netherWorldFix && NetherFix.replaceSpawn(event.entity)) ||
-				GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN) && Halloween.replaceSpawn(event.entity)
-
-			if (!event.isCancelled && GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN)) {
-				Halloween.onEntitySpawn(event.entity)
-			}
+			event.isCancelled = (
+				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL
+			) && event.entityType.isAlive
 		}
 	}
 
@@ -535,6 +524,8 @@ class EventListener : Listener {
 	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
 		/* prevent default drops */
+		val leavesType = event.block.type
+
 		event.isCancelled = true
 		event.block.type = Material.AIR
 
@@ -560,7 +551,7 @@ class EventListener : Listener {
 
 		/* apply applefix to this leaves block for the nearest player */
 		if (dropPlayer != null) {
-			BlockFixType.LEAVES.blockFix.onBreakBlock(event.block.type, dropPlayer) { drop ->
+			BlockFixType.LEAVES.blockFix.onBreakBlock(leavesType, dropPlayer) { drop ->
 				if (drop != null) leavesLocation.world.dropItem(event.block.location.toCenterLocation(), drop)
 			}
 		}

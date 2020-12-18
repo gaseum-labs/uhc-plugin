@@ -3,16 +3,12 @@ package com.codeland.uhc.phase.phases.postgame
 import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
-import org.bukkit.GameMode
-import org.bukkit.OfflinePlayer
 import org.bukkit.World
-import org.bukkit.boss.BossBar
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -80,7 +76,7 @@ class PostgameDefault : Phase() {
             GameRunner.uhc.setParticipating(player, false)
         }
 
-        if (uhc.customSpawning) CustomSpawning.endTask()
+        CustomSpawning.stopSpawning()
     }
 
     override fun customEnd() {}

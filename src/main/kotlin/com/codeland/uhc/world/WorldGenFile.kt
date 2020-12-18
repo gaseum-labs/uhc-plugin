@@ -14,7 +14,8 @@ object WorldGenFile {
 		WorldGenProperty("mushroom-fix", true),
 		WorldGenProperty("ore-fix", true),
 		WorldGenProperty("melon-fix", true),
-		WorldGenProperty("halloween", false)
+		WorldGenProperty("halloween", false),
+		WorldGenProperty("chunk-swap", false)
 	)
 
 	fun getSettings(): Array<Boolean> {

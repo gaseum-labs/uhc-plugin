@@ -15,6 +15,8 @@ import org.bukkit.block.Container
 import org.bukkit.block.TileState
 import org.bukkit.block.data.BlockData
 import org.bukkit.boss.BossBar
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
@@ -28,6 +30,9 @@ class EndgameNaturalTerrain : Phase() {
 
 	var area_min = 0
 	var area_max = 0
+
+	var GLOWING_TIME = 15
+	var glowingTimer = 0
 
 	var finished = false
 
@@ -74,11 +79,22 @@ class EndgameNaturalTerrain : Phase() {
 
 		/* not enough data for a good zone */
 		if (heightList.size < 32) {
-			area_min = 61
-			area_max = 63
+			area_min = 58
+			area_max = 66
 		} else {
 			area_min = heightList[round(heightList.size * 0.10).toInt().coerceAtMost(heightList.lastIndex)]
 			area_max = heightList[round(heightList.size * 0.80).toInt().coerceAtMost(heightList.lastIndex)]
+
+			val distance = area_max - area_min + 1
+
+			if (distance < 9) {
+				val addedDistance = 9 - distance
+				val topAdded = addedDistance / 2
+				val bottomAdded = addedDistance - topAdded
+
+				area_max += topAdded
+				area_min -= bottomAdded
+			}
 		}
 
 		topBoundary = 255
@@ -148,7 +164,6 @@ class EndgameNaturalTerrain : Phase() {
 						world.getBlockAt(x, y, z).setType(Material.AIR, false)
 
 
-
 		if (!finished && topBoundary == area_max) {
 			finished = true
 
@@ -161,6 +176,17 @@ class EndgameNaturalTerrain : Phase() {
 				if (zombie != null) {
 					val location = zombie.location
 					GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.x, Util.topBlockY(world, location.blockX, location.blockZ).toDouble(), location.z))
+				}
+			}
+		}
+
+		if (finished) {
+			++glowingTimer
+			if (glowingTimer == GLOWING_TIME) {
+				glowingTimer = 0
+
+				uhc.allCurrentPlayers { uuid ->
+					GameRunner.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
 				}
 			}
 		}

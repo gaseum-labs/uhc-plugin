@@ -3,15 +3,11 @@ package com.codeland.uhc.phase.phases.grace
 import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
-import org.bukkit.boss.BossBar
 import org.bukkit.entity.Player
-import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.*
 
@@ -93,13 +89,7 @@ open class GraceDefault : Phase() {
 
 		player.gameMode = GameMode.SURVIVAL
 
-		if (uhc.customSpawning) {
-			CustomSpawning.startTask()
-
-			Bukkit.getWorlds().forEach { world ->
-				world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
-			}
-		}
+		CustomSpawning.startSpawning()
 	}
 
 	override fun customEnd() {}

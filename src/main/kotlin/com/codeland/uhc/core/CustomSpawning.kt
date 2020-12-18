@@ -8,6 +8,9 @@ import org.bukkit.World
 import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.block.data.Waterlogged
+import org.bukkit.block.data.type.Slab
+import org.bukkit.block.data.type.Stairs
 import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
@@ -17,22 +20,21 @@ import kotlin.math.*
 object CustomSpawning {
 	class SpawnInfo(val allowSpawn: (Block, Int) -> EntityType?, val onSpawn: (Entity, Int) -> Unit)
 
-	fun spawnSpace(block: Block, xBox: Int, yHeight: Int, zBox: Int): Boolean {
-		val xRadius = (xBox - 1) / 2
-		val zRadius = (zBox - 1) / 2
+	fun isWater(block: Block): Boolean {
+		return block.type == Material.WATER ||
+			block.type == Material.KELP ||
+			block.type == Material.SEAGRASS ||
+			block.type == Material.TALL_SEAGRASS ||
+			((block.blockData as? Waterlogged)?.isWaterlogged == true)
 
-		/* standing on a solid block */
-		if (block.getRelative(BlockFace.DOWN).isPassable) return false
+	}
 
-		/* in a radius around check if all empty */
-		for (x in -xRadius..xRadius)
-			for (z in -zRadius..zRadius)
-				for (y in 0 until yHeight) {
-					val block = block.world.getBlockAt(block.x + x, block.y + y, block.z + z)
-					if (!block.isPassable || block.isLiquid) return false
-				}
+	fun spawnObstacle(block: Block): Boolean {
+		return !block.isPassable || block.type == Material.LAVA
+	}
 
-		return true
+	fun spawnFloor(block: Block): Boolean {
+		return !block.isPassable
 	}
 
 	fun regularAllowSpawn(block: Block, lightLevel: Int): Boolean {
@@ -41,13 +43,31 @@ object CustomSpawning {
 		return spawnSpace(block, 1, 2, 1)
 	}
 
+	fun spawnSpace(block: Block, xBox: Int, yHeight: Int, zBox: Int): Boolean {
+		val xRadius = (xBox - 1) / 2
+		val zRadius = (zBox - 1) / 2
+
+		/* standing on a solid block */
+		if (!spawnFloor(block.getRelative(BlockFace.DOWN))) return false
+
+		/* in a radius around check if all empty */
+		for (x in -xRadius..xRadius)
+			for (z in -zRadius..zRadius)
+				for (y in 0 until yHeight) {
+					val block = block.world.getBlockAt(block.x + x, block.y + y, block.z + z)
+					if (spawnObstacle(block) || isWater(block)) return false
+				}
+
+		return true
+	}
+
 	fun zombieAllowSpawn(block: Block, spawnCycle: Int): EntityType? {
 		if (block.lightLevel > 7) return null
-		if (!block.isPassable || !block.getRelative(BlockFace.UP).isPassable) return null
-		if (block.getRelative(BlockFace.DOWN).isPassable) return null
+		if (!spawnFloor(block.getRelative(BlockFace.DOWN))) return null
+		if (spawnObstacle(block) || spawnObstacle(block.getRelative(BlockFace.UP))) return null
 
 		return if (block.biome == Biome.DESERT || block.biome == Biome.DESERT_HILLS || block.biome == Biome.DESERT_LAKES) EntityType.HUSK
-		else if (block.type == Material.WATER && block.getRelative(BlockFace.UP).type == Material.WATER) EntityType.DROWNED
+		else if (isWater(block) && isWater(block.getRelative(BlockFace.UP))) EntityType.DROWNED
 		else EntityType.ZOMBIE
 	}
 
@@ -266,7 +286,7 @@ object CustomSpawning {
 
 	var spawnTaskID = -1
 
-	fun startTask() {
+	fun startSpawning() {
 		spawnTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
 			/* list of online players to collect from first pass */
 			val playerList = ArrayList<Player>()
@@ -334,7 +354,7 @@ object CustomSpawning {
 		}, 0, 20)
 	}
 
-	fun endTask() {
+	fun stopSpawning() {
 		Bukkit.getScheduler().cancelTask(spawnTaskID)
 		spawnTaskID = -1
 	}

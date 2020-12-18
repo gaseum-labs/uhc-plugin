@@ -11,10 +11,10 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenFile
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.RenderType
 import java.util.*
@@ -33,6 +33,7 @@ object GameRunner {
 	val oreWorldFix: Boolean
 	val melonWorldFix: Boolean
 	val halloweenGeneration: Boolean
+	val chunkSwapping: Boolean
 
 	init {
 		val worldGenInfo = WorldGenFile.getSettings()
@@ -42,12 +43,14 @@ object GameRunner {
 		oreWorldFix = worldGenInfo[2]
 		melonWorldFix = worldGenInfo[3]
 		halloweenGeneration = worldGenInfo[4]
+		chunkSwapping = worldGenInfo[5]
 
 		Util.log("${ChatColor.GOLD}Nether World Fix: ${ChatColor.RED}$netherWorldFix")
 		Util.log("${ChatColor.GOLD}Mushroom World Fix: ${ChatColor.RED}$mushroomWorldFix")
 		Util.log("${ChatColor.GOLD}Ore World Fix: ${ChatColor.RED}$oreWorldFix")
 		Util.log("${ChatColor.GOLD}Melon World Fix: ${ChatColor.RED}$melonWorldFix")
 		Util.log("${ChatColor.GOLD}Halloween Generation: ${ChatColor.RED}$halloweenGeneration")
+		Util.log("${ChatColor.GOLD}Chunk Swapping: ${ChatColor.RED}$chunkSwapping")
 	}
 
 	fun teamIsAlive(team: Team): Boolean {
@@ -187,15 +190,23 @@ object GameRunner {
 
 		if (onlinePlayer == null) {
 			val playerData = uhc.getPlayerData(uuid)
-			val offlineZombie = playerData.offlineZombie
 
-			if (offlineZombie == null)
-				playerData.offlineZombie = playerData.createDefaultZombie(uuid, location)
-			else
-				offlineZombie.teleport(location)
+			playerData.offlineZombie?.teleport(location)
 
 		} else {
 			onlinePlayer.teleport(location)
+		}
+	}
+
+	fun potionEffectPlayer(uuid: UUID, effect: PotionEffect) {
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+
+		if (onlinePlayer == null) {
+			val playerData = uhc.getPlayerData(uuid)
+			playerData.offlineZombie?.addPotionEffect(effect)
+
+		} else {
+			onlinePlayer.addPotionEffect(effect)
 		}
 	}
 

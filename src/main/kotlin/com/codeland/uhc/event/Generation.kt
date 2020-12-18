@@ -63,6 +63,10 @@ class Generation : Listener {
 				HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
+			if (GameRunner.chunkSwapping) {
+				ChunkSwap.chunkSwapper.onGenerate(chunk, world.seed.toInt())
+			}
+
 			//diamondPictureChunk(chunk)
 		}
 	}

@@ -1,5 +1,8 @@
 package com.codeland.uhc.phase.phases.waiting
 
+import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.CustomSpawning
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.util.Util
@@ -83,10 +86,13 @@ class WaitingDefault : Phase() {
 			otherWorld.isThundering = false
 			otherWorld.setStorm(false)
 			otherWorld.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false)
-			otherWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
 			otherWorld.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
+			otherWorld.setGameRule(GameRule.DO_MOB_SPAWNING, false)
+
+			otherWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
 			otherWorld.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
 			otherWorld.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
+
 			otherWorld.time = 6000
 			otherWorld.difficulty = Difficulty.NORMAL
 		}
@@ -99,6 +105,8 @@ class WaitingDefault : Phase() {
 			player.inventory.clear()
 			onPlayerJoin(player)
 		}
+
+		CustomSpawning.stopSpawning()
 	}
 
 	override fun customEnd() {
@@ -130,7 +138,46 @@ class WaitingDefault : Phase() {
 		LobbyPvp.onTick()
 	}
 
-	override fun perSecond(remainingSeconds: Int) {}
+	override fun perSecond(remainingSeconds: Int) {
+		val numSlides = 4
+		val perSlide = 6
+
+		fun slideN(n: Int): Boolean {
+			return remainingSeconds % (numSlides * perSlide) < perSlide * (n + 1)
+		}
+
+		Bukkit.getOnlinePlayers().forEach { player ->
+			val pvpData = LobbyPvp.getPvpData(player)
+
+			if (!pvpData.inPvp) {
+				when {
+					slideN(0) -> {
+						if (uhc.usingBot) {
+							val linked = GameRunner.bot?.isLinked(player.uniqueId)
+
+							if (linked != null) player.sendActionBar(if (linked) "${ChatColor.GOLD}Link status: ${ChatColor.GREEN}${ChatColor.BOLD}Linked"
+							else "${ChatColor.RED}${ChatColor.BOLD}You are not linked! ${ChatColor.GOLD}Use the ${ChatColor.WHITE}${ChatColor.BOLD}\"%link [your minecraft username]\" ${ChatColor.GOLD}command in discord")
+
+						} else {
+							player.sendActionBar("${ChatColor.GOLD}This UHC is running in no-bot mode")
+						}
+					}
+					slideN(1) -> {
+						val team = TeamData.playersTeam(player.uniqueId)
+
+						if (team == null) player.sendActionBar("${ChatColor.GOLD}You are not on a team")
+						else player.sendActionBar("${ChatColor.GOLD}Team name: ${team.colorPair.colorStringModified(team.displayName, ChatColor.BOLD)}")
+					}
+					slideN(2) -> {
+						player.sendActionBar("${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc color [color] ${ChatColor.GOLD}to set your team's color")
+					}
+					else -> {
+						player.sendActionBar("${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc name [name] ${ChatColor.GOLD}to set your team's name")
+					}
+				}
+			}
+		}
+	}
 
 	override fun endPhrase() = "Game starts in"
 
