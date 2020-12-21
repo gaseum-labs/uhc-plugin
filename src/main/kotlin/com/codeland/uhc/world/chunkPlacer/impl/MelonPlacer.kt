@@ -28,8 +28,10 @@ class MelonPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqu
 
 	val allowedBiomes = arrayOf(
 		Biome.FOREST,
+		Biome.WOODED_HILLS,
 		Biome.FLOWER_FOREST,
 		Biome.BIRCH_FOREST,
+		Biome.BIRCH_FOREST_HILLS,
 		Biome.TALL_BIRCH_FOREST,
 		Biome.DARK_FOREST,
 		Biome.DARK_FOREST_HILLS,
@@ -40,4 +42,8 @@ class MelonPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqu
 		Biome.MUSHROOM_FIELDS,
 		Biome.MUSHROOM_FIELD_SHORE
 	)
+
+	init {
+		allowedBiomes.sort()
+	}
 }

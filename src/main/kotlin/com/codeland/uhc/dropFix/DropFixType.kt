@@ -59,12 +59,8 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	CHICKEN(DropFix(EntityType.CHICKEN, arrayOf(
-		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(-2))),
-		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(-1))),
 		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(0))),
-		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, ::lootItem)),
-		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, ::lootItem)),
-		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, ::lootItem))
+		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(1))),
 	), arrayOf(
 		item(Material.CHICKEN)
 	))),
@@ -76,8 +72,8 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	MAGMA_CUBE(DropFix(EntityType.MAGMA_CUBE, arrayOf(
-		arrayOf(lootEntity(isSize(MAGMA_CREAM, 2), ::lootItem)),
-		arrayOf(lootEntity(isSize(MAGMA_CREAM, 2), ::lootItem), lootEntity(isSize(MAGMA_CREAM, 1), ::lootItem))
+		arrayOf(DropEntry.nothing()),
+		arrayOf(lootEntity(isSize(MAGMA_CREAM, 1), ::lootItem))
 	), arrayOf(
 		DropEntry.nothing()
 	))),

@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -74,16 +75,22 @@ object CustomSpawning {
 	fun creeperAllowSpawn(block: Block, spawnCycle: Int): EntityType? {
 		if (!regularAllowSpawn(block, 7)) return null
 
-		return if (onCycle(spawnCycle, 20)) EntityType.WITCH else EntityType.CREEPER
+		return if (onCycle(spawnCycle, 41)) EntityType.WITCH else EntityType.CREEPER
 	}
 
 	fun skeletonAllowSpawn(block: Block, spawnCycle: Int): EntityType? {
 		if (block.lightLevel > 7) return null
 
-		return if (onCycle(spawnCycle, 10))
+		return if (onCycle(spawnCycle, 10)) {
 			if (spawnSpace(block, 1, 3, 1)) EntityType.ENDERMAN else null
-		else
-			if (spawnSpace(block, 1, 2, 1)) EntityType.SKELETON else null
+
+		} else if (spawnSpace(block, 1, 2, 1)) {
+			if (block.biome == Biome.SNOWY_TUNDRA || block.biome == Biome.SNOWY_MOUNTAINS || block.biome == Biome.ICE_SPIKES || block.biome == Biome.FROZEN_RIVER) EntityType.STRAY
+			else EntityType.SKELETON
+
+		} else {
+			null
+		}
 	}
 
 	fun spiderAllowSpawn(block: Block, spawnCycle: Int): EntityType? {
@@ -132,12 +139,11 @@ object CustomSpawning {
 	}
 
 	fun netherSpecialSpawn(block: Block, spawnCycle: Int): EntityType? {
-		return if (spawnCycle % 3 == 0) {
-			blazeAllowSpawn(block, spawnCycle)
-
-		} else when (spawnCycle % 6) {
+		return when (spawnCycle % 6) {
+			0 -> blazeAllowSpawn(block, spawnCycle)
 			1 -> ghastAllowSpawn(block, spawnCycle)
 			2 -> magmaCubeAllowSpawn(block, spawnCycle)
+			3 -> blazeAllowSpawn(block, spawnCycle)
 			4 -> zombiePiglinAllowSpawn(block, spawnCycle)
 			else -> endermanAllowSpawn(block, spawnCycle)
 		}
@@ -208,7 +214,7 @@ object CustomSpawning {
 		}
 	}
 
-	const val MIN_RADIUS = 30
+	const val MIN_RADIUS = 32
 	const val MAX_RADIUS = 86
 	const val VERTICAL_RADIUS = 10
 
@@ -338,8 +344,9 @@ object CustomSpawning {
 				val data = dataList[i]
 
 				/* lessen mobcap in nether */
-				if (player.world.environment == World.Environment.NETHER) data.mobcap *= 0.75
+				//if (player.world.environment == World.Environment.NETHER) data.mobcap *= 0.75
 				if (player.world.getBlockAt(player.location).biome == Biome.SOUL_SAND_VALLEY) data.mobcap *= 0.5
+				if (GameRunner.uhc.isPhase(PhaseType.ENDGAME)) data.mobcap *= 0.5
 
 				var playerMobCount = 0
 
