@@ -263,7 +263,7 @@ object CustomSpawning {
 
 					if (entityType != null) {
 						val entity = world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType)
-						Util.log("spawned ${entityType.name} at ${entity.location.x} ${entity.location.y} ${entity.location.z} for ${player.name}")
+
 						spawnInfo.onSpawn(entity, spawnCycle)
 						makePlayerMob(entity, player)
 

@@ -91,7 +91,12 @@ class DropEntry(val onDrop: (looting: Int, entity: Entity) -> Array<ItemStack?>)
 
 		fun hasTrident(): (Entity) -> Material? {
 			return { entity ->
-				if ((entity as Drowned).equipment?.itemInMainHand?.type == Material.TRIDENT) Material.TRIDENT else null
+				entity as Drowned
+
+				if (
+					entity.equipment?.itemInMainHand?.type == Material.TRIDENT ||
+					entity.equipment?.itemInOffHand?.type == Material.TRIDENT
+				) Material.TRIDENT else null
 			}
 		}
 	}

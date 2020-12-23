@@ -18,7 +18,7 @@ class MineralPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqu
 		return true
 	}
 
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		fun doChunkLayer(y: Int, chance: Float) {
 			for (x in 0..15) {
 				for (z in 0..15) {

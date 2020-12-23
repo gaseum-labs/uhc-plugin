@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.chunkPlacer.impl
+package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
@@ -12,7 +12,6 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.banner.Pattern
 import org.bukkit.block.banner.PatternType
 import org.bukkit.block.data.Directional
-import org.bukkit.block.data.Rotatable
 
 class BannerPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqueSeed) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
@@ -25,7 +24,7 @@ class BannerPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, unique
 		return true
 	}
 
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 20, 80) { block, x, y, z ->
 			fun tryBanner(facing: BlockFace): Boolean {
 				return if (Util.binarySearch(block.getRelative(facing).type, validBlocks)) {

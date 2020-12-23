@@ -2,20 +2,19 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
-import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.world.*
+import com.codeland.uhc.world.MushroomOxeyeFix
+import com.codeland.uhc.world.chunkPlacer.impl.OxeyePlacer
+import com.codeland.uhc.world.chunkPlacer.impl.SugarCanePlacer
 import org.bukkit.Bukkit
 import org.bukkit.Chunk
-import org.bukkit.Material
 import org.bukkit.World
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.world.ChunkPopulateEvent
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
-import kotlin.math.abs
 import kotlin.math.ceil
 
 class Generation : Listener {
@@ -41,14 +40,26 @@ class Generation : Listener {
 			}
 
 			if (GameRunner.mushroomWorldFix && world.environment == World.Environment.NORMAL) {
-				StewFix.removeOxeye(chunk)
+				OxeyePlacer.removeOxeye(chunk)
+				MushroomOxeyeFix.oxeyePlacer.onGenerate(chunk, world.seed.toInt())
 
-				StewFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt())
-				StewFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt())
+				MushroomOxeyeFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt())
+				MushroomOxeyeFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
 			if (GameRunner.melonWorldFix && world.environment == World.Environment.NORMAL) {
 				MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt())
+			}
+
+			if (GameRunner.sugarCaneWorldFix && world.environment == World.Environment.NORMAL) {
+				SugarCanePlacer.removeSugarCane(chunk)
+				SugarCaneFix.deepSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
+				SugarCaneFix.lowSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
+				SugarCaneFix.highSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
+			}
+
+			if (GameRunner.dungeonWorldFix && world.environment == World.Environment.NORMAL) {
+				DungeonFix.dungeonChestReplacer.onGenerate(chunk, world.seed.toInt())
 			}
 
 			if (GameRunner.halloweenGeneration) {

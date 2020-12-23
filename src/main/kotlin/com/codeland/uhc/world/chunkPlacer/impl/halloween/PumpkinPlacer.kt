@@ -1,20 +1,12 @@
-package com.codeland.uhc.world.chunkPlacer.impl
+package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
-import org.bukkit.Axis
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.World
-import org.bukkit.block.Biome
-import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
-import org.bukkit.block.data.Orientable
-import org.bukkit.block.data.Rotatable
-import org.bukkit.block.data.type.Lantern
-import org.bukkit.material.Pumpkin
 
 class PumpkinPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqueSeed) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
@@ -27,7 +19,7 @@ class PumpkinPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqu
 		return true
 	}
 
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		var offset = Util.randRange(0, 16 * 16 - 1)
 
 		for (i in 0 until 16 * 16) {

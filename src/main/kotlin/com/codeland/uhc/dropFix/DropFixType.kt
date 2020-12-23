@@ -9,6 +9,7 @@ import com.codeland.uhc.dropFix.DropEntry.Companion.lootEntity
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootMulti
 import com.codeland.uhc.dropFix.DropEntry.Companion.noBaby
+import com.codeland.uhc.dropFix.DropEntry.Companion.nothing
 import com.codeland.uhc.dropFix.DropEntry.Companion.onFire
 import com.codeland.uhc.dropFix.DropEntry.Companion.potion
 import com.codeland.uhc.dropFix.DropEntry.Companion.saddle
@@ -29,7 +30,7 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(loot(STRING, ::lootItem), loot(SPIDER_EYE, lootMulti( 0))),
 		arrayOf(loot(STRING, ::lootItem), loot(SPIDER_EYE, lootMulti( 1)))
 	), arrayOf(
-		DropEntry.nothing()
+		nothing()
 	))),
 
 	SKELETON(DropFix(EntityType.SKELETON, arrayOf(
@@ -49,13 +50,13 @@ enum class DropFixType(val dropFix: DropFix) {
 	HORSE(DropFix(EntityType.HORSE, arrayOf(
 		arrayOf(DropEntry.horseInventory(), lootEntity(noBaby { LEATHER }, ::lootItem))
 	), arrayOf(
-		DropEntry.nothing()
+		nothing()
 	))),
 
 	LLAMA(DropFix(EntityType.LLAMA, arrayOf(
 		arrayOf(lootEntity(noBaby { LEATHER }, ::lootItem))
 	), arrayOf(
-		DropEntry.nothing()
+		nothing()
 	))),
 
 	CHICKEN(DropFix(EntityType.CHICKEN, arrayOf(
@@ -68,14 +69,14 @@ enum class DropFixType(val dropFix: DropFix) {
 	ENDERMAN(DropFix(EntityType.ENDERMAN, arrayOf(
 		arrayOf(loot(ENDER_PEARL, ::lootItem))
 	), arrayOf(
-		DropEntry.nothing()
+		nothing()
 	))),
 
 	MAGMA_CUBE(DropFix(EntityType.MAGMA_CUBE, arrayOf(
 		arrayOf(DropEntry.nothing()),
 		arrayOf(lootEntity(isSize(MAGMA_CREAM, 1), ::lootItem))
 	), arrayOf(
-		DropEntry.nothing()
+		nothing()
 	))),
 
 	GHAST(DropFix(EntityType.GHAST, arrayOf(
@@ -93,7 +94,7 @@ enum class DropFixType(val dropFix: DropFix) {
 	CREEPER(DropFix(EntityType.CREEPER, arrayOf(
 		arrayOf(loot(GUNPOWDER, ::lootItem))
 	), arrayOf(
-		item(GUNPOWDER)
+		nothing()
 	))),
 
 	DROWNED(DropFix(EntityType.DROWNED, arrayOf(

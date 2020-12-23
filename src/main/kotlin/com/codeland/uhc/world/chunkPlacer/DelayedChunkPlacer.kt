@@ -11,25 +11,22 @@ import org.bukkit.World
 import kotlin.system.exitProcess
 
 abstract class DelayedChunkPlacer(size: Int, uniqueSeed: Int) : AbstractChunkPlacer(size, uniqueSeed) {
-	private var chunkList = ArrayList<Chunk>()
+	private var chunkList = ArrayList<Pair<Chunk, Int>>()
 
 	abstract fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean
 
 	override fun onGenerate(chunk: Chunk, seed: Int) {
-		if (
-			shouldGenerate(chunk.x, chunk.z, seed, uniqueSeed, size)
-		) {
-			chunkList.add(chunk)
-		}
+		val chunkIndex = shouldGenerate(chunk.x, chunk.z, seed, uniqueSeed, size)
+		if (chunkIndex != -1) chunkList.add(Pair(chunk, chunkIndex))
 
 		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
 			var safeChunks = 0
 
 			val removeChunks = Array(chunkList.size) { i ->
-				val checkChunk = chunkList[i]
+				val checkChunk = chunkList[i].first
 
 				if (chunkReady(checkChunk.world, checkChunk.x, checkChunk.z)) {
-					place(checkChunk)
+					place(checkChunk, chunkList[i].second)
 					true
 				} else {
 					++safeChunks
@@ -37,7 +34,7 @@ abstract class DelayedChunkPlacer(size: Int, uniqueSeed: Int) : AbstractChunkPla
 				}
 			}
 
-			val newChunkList = ArrayList<Chunk>(safeChunks)
+			val newChunkList = ArrayList<Pair<Chunk, Int>>(safeChunks)
 
 			removeChunks.forEachIndexed { i, removed ->
 				if (!removed) newChunkList.add(chunkList[i])

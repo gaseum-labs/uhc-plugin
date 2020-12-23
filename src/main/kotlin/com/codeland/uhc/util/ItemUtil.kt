@@ -8,6 +8,7 @@ import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.EnchantmentTarget
+import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.*
 import org.bukkit.potion.PotionData
@@ -347,5 +348,13 @@ object ItemUtil {
 		override fun isCursed() = false
 		override fun conflictsWith(other: Enchantment) = false
 		override fun canEnchantItem(item: ItemStack) = true
+	}
+
+	fun randomAddInventory(inventory: Inventory, item: ItemStack) {
+		var space = (Math.random() * inventory.size).toInt()
+
+		while (inventory.getItem(space) != null) space = (space + 1) % inventory.size
+
+		inventory.setItem(space, item)
 	}
 }

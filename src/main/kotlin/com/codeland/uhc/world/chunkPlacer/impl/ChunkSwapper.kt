@@ -16,7 +16,7 @@ class ChunkSwapper(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, unique
 		return true
 	}
 
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		val offChunkX = (Math.random() * 2).toInt() * 2 - 1
 		val offChunkZ = (Math.random() * 2).toInt() * 2 - 1
 

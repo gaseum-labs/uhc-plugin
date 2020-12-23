@@ -17,7 +17,7 @@ class OrePlacer(size: Int, uniqueSeed: Int, private val low: Int, private val hi
 		return true
 	}
 
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, low, high) { block, _, _, _ ->
 			if (block.type == Material.STONE) {
 				if (

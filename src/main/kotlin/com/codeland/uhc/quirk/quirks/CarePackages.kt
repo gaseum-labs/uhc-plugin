@@ -415,15 +415,6 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		)
 
 		fun generateLoot(tier: Int, inventories: ArrayList<Inventory>) {
-			fun addItem(inventory: Inventory, item: ItemStack) {
-				var space = Util.randRange(0, inventory.size - 1)
-
-				while (inventory.getItem(space) != null)
-					space = (space + 1) % inventory.size
-
-				inventory.setItem(space, item)
-			}
-
 			val usingEntries = chestEntries[tier].toMutableList() as ArrayList<LootEntry>
 			usingEntries.shuffle()
 
@@ -432,7 +423,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			for (i in usingEntries.indices) {
 				val inventoryIndex = (i / perChest).coerceAtMost(inventories.lastIndex)
 
-				addItem(inventories[inventoryIndex], usingEntries[i].makeStack())
+				ItemUtil.randomAddInventory(inventories[inventoryIndex], usingEntries[i].makeStack())
 			}
 		}
 

@@ -9,13 +9,17 @@ import kotlin.math.floor
 import kotlin.math.sin
 
 abstract class AbstractChunkPlacer(val size: Int, val uniqueSeed: Int) {
-	abstract fun place(chunk: Chunk)
+	abstract fun place(chunk: Chunk, chunkIndex: Int)
 
 	abstract fun onGenerate(chunk: Chunk, seed: Int)
 
 	companion object {
-		fun shouldGenerate(chunkX: Int, chunkZ: Int, seed0: Int, seed1: Int, size: Int): Boolean {
-			if (size == 1) return true
+		/**
+		 * @return -1 if this chunk should not generate
+		 * if this chunk should generate, returns the index of the chunk within the range
+		 */
+		fun shouldGenerate(chunkX: Int, chunkZ: Int, seed0: Int, seed1: Int, size: Int): Int {
+			if (size == 1) return 0
 
 			val regionSeed = hashToInt(hash4(chunkX / size, chunkZ / size, seed0, seed1))
 
@@ -32,10 +36,10 @@ abstract class AbstractChunkPlacer(val size: Int, val uniqueSeed: Int) {
 				generates[spot] = true
 
 				/* region subchunk positions converted to 1d array index */
-				if (spot == Util.mod(chunkX, size) * size + Util.mod(chunkZ, size)) return true
+				if (spot == Util.mod(chunkX, size) * size + Util.mod(chunkZ, size)) return spot
 			}
 
-			return false
+			return -1
 		}
 
 		fun randomPosition(chunk: Chunk, low: Int, high: Int, placeBlock: (block: Block, x: Int, y: Int, z: Int) -> Boolean) {

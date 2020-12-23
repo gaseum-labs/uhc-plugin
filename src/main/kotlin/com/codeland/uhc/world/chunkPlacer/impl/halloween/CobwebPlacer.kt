@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.chunkPlacer.impl
+package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
@@ -23,7 +23,7 @@ class CobwebPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, unique
 		return true
 	}
 
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 10, 64) { block, x, y, z ->
 			if (
 				(block.type == Material.AIR || block.type == Material.CAVE_AIR) &&

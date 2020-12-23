@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.chunkPlacer.impl
+package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
@@ -10,7 +10,7 @@ import org.bukkit.block.data.Orientable
 import org.bukkit.block.data.type.Lantern
 
 class LanternPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqueSeed) {
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 20, 99) { block, x, y, z ->
 			val world = block.world
 

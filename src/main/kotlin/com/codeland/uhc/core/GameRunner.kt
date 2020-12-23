@@ -24,14 +24,12 @@ object GameRunner {
 	var bot: MixerBot? = null
 	lateinit var uhc: UHC
 
-	val leavesFix = LeavesFix()
-	val redMushroomFix = RedMushroomFix()
-	val brownMushroomFix = BrownMushroomFix()
-
 	val netherWorldFix: Boolean
 	val mushroomWorldFix: Boolean
 	val oreWorldFix: Boolean
 	val melonWorldFix: Boolean
+	val dungeonWorldFix: Boolean
+	val sugarCaneWorldFix: Boolean
 	val halloweenGeneration: Boolean
 	val chunkSwapping: Boolean
 
@@ -42,13 +40,17 @@ object GameRunner {
 		mushroomWorldFix = worldGenInfo[1]
 		oreWorldFix = worldGenInfo[2]
 		melonWorldFix = worldGenInfo[3]
-		halloweenGeneration = worldGenInfo[4]
-		chunkSwapping = worldGenInfo[5]
+		dungeonWorldFix = worldGenInfo[4]
+		sugarCaneWorldFix = worldGenInfo[5]
+		halloweenGeneration = worldGenInfo[6]
+		chunkSwapping = worldGenInfo[7]
 
 		Util.log("${ChatColor.GOLD}Nether World Fix: ${ChatColor.RED}$netherWorldFix")
 		Util.log("${ChatColor.GOLD}Mushroom World Fix: ${ChatColor.RED}$mushroomWorldFix")
 		Util.log("${ChatColor.GOLD}Ore World Fix: ${ChatColor.RED}$oreWorldFix")
 		Util.log("${ChatColor.GOLD}Melon World Fix: ${ChatColor.RED}$melonWorldFix")
+		Util.log("${ChatColor.GOLD}Dungeon World Fix: ${ChatColor.RED}$dungeonWorldFix")
+		Util.log("${ChatColor.GOLD}Sugar Cane World Fix: ${ChatColor.RED}$sugarCaneWorldFix")
 		Util.log("${ChatColor.GOLD}Halloween Generation: ${ChatColor.RED}$halloweenGeneration")
 		Util.log("${ChatColor.GOLD}Chunk Swapping: ${ChatColor.RED}$chunkSwapping")
 	}

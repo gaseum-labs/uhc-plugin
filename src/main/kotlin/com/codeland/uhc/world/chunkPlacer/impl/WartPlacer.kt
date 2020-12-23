@@ -10,7 +10,7 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Ageable
 
 class WartPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqueSeed) {
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 32, 99) { block, x, y, z ->
 			val world = block.world
 			val under = block.getRelative(BlockFace.DOWN)

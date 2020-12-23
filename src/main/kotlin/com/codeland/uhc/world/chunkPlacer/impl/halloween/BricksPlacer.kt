@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.chunkPlacer.impl
+package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
@@ -33,7 +33,7 @@ class BricksPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, unique
 
 	init { replaceable.sort() }
 
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 8, 99) { block, x, y, z ->
 			val world = chunk.world
 			val maxDistance = sqrt(5.0.pow(2.0) * 3)

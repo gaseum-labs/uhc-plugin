@@ -1,6 +1,6 @@
 package com.codeland.uhc.world
 
-import com.codeland.uhc.world.chunkPlacer.impl.*
+import com.codeland.uhc.world.chunkPlacer.impl.halloween.*
 
 object HalloweenWorld {
 	val deadBushPlacer = DeadBushPlacer(1, 3829)

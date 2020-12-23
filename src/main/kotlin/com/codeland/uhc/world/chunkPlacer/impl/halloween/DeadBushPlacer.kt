@@ -1,13 +1,12 @@
-package com.codeland.uhc.world.chunkPlacer.impl
+package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.block.Banner
 
 class DeadBushPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqueSeed) {
-	override fun place(chunk: Chunk) {
+	override fun place(chunk: Chunk, chunkIndex: Int) {
 		val numBushes = Util.randRange(0, 3)
 
 		for (i in 0 until numBushes) {
