@@ -7,6 +7,7 @@ import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.ubt.PartialUBT
 import com.codeland.uhc.command.ubt.UBT
+import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
@@ -171,7 +172,9 @@ class TestCommands : BaseCommand() {
 	@Subcommand("mobcap")
 	@Description("test a player's individual mobcap")
 	fun testMobCap(sender: CommandSender, player: Player) {
-		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${GameRunner.uhc.getPlayerData(player.uniqueId).mobcap}")
+		val playerMobs = CustomSpawning.calcPlayerMobs(player)
+
+		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${GameRunner.uhc.getPlayerData(player.uniqueId).mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
 	}
 
 	@Subcommand("gbs")

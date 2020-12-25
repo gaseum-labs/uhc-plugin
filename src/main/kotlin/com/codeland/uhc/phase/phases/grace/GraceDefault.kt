@@ -102,6 +102,7 @@ open class GraceDefault : Phase() {
 
 	override fun perSecond(remainingSeconds: Int) {
 		uhc.updateMobCaps()
+		uhc.containSpecs()
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {

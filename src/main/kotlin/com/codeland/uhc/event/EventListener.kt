@@ -45,7 +45,7 @@ class EventListener : Listener {
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			(GameRunner.uhc.currentPhase as WaitingDefault?)?.onPlayerJoin(event.player)
 
-		} else if (!GameRunner.uhc.isParticipating(player.uniqueId) || !GameRunner.uhc.isAlive(player.uniqueId)) {
+		} else if (GameRunner.uhc.isGameGoing() && (!GameRunner.uhc.isParticipating(player.uniqueId) || !GameRunner.uhc.isAlive(player.uniqueId))) {
 			event.player.gameMode = GameMode.SPECTATOR
 		}
 	}

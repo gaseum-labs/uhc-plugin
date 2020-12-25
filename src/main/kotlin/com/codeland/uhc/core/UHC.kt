@@ -11,6 +11,7 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.command.CommandSender
@@ -346,6 +347,29 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 		quirks.forEach { quirk ->
 			if (quirk.enabled) quirk.onPhaseSwitch(phaseVariants[phaseIndex])
+		}
+	}
+
+	fun containSpecs() {
+		Bukkit.getOnlinePlayers().forEach { player ->
+			if (player.gameMode == GameMode.SPECTATOR) {
+				val locX = player.location.blockX.toDouble()
+				val locZ = player.location.blockZ.toDouble()
+
+				val x = when {
+					locX > startRadius -> startRadius.toDouble()
+					locX < -startRadius -> -startRadius.toDouble()
+					else -> locX
+				}
+
+				val z = when {
+					locZ > startRadius -> startRadius.toDouble()
+					locZ < -startRadius -> -startRadius.toDouble()
+					else -> locZ
+				}
+
+				if (x != locX || z != locZ) player.teleport(player.location.set(x + 0.5, player.location.y, z + 0.5))
+			}
 		}
 	}
 

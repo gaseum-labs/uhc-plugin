@@ -190,6 +190,8 @@ class EndgameNaturalTerrain : Phase() {
 				}
 			}
 		}
+
+		uhc.containSpecs()
 	}
 
 	override fun endPhrase() = ""

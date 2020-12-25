@@ -21,7 +21,8 @@ object LobbyPvp {
 		var stillTime: Int = 0,
 		var lastPosition: Location,
 		var gameMode: GameMode,
-		var inventoryContents: Array<out ItemStack>
+		var inventoryContents: Array<out ItemStack>,
+		var loadingTip: Int
 	)
 
 	val pvpMap = mutableMapOf<UUID, PvpData>()
@@ -38,7 +39,7 @@ object LobbyPvp {
 	}
 
 	fun getPvpData(player: Player): PvpData {
-		if (pvpMap[player.uniqueId] == null) pvpMap[player.uniqueId] = PvpData(gameMode = player.gameMode, inventoryContents = player.inventory.contents, lastPosition = player.location)
+		if (pvpMap[player.uniqueId] == null) pvpMap[player.uniqueId] = PvpData(gameMode = player.gameMode, inventoryContents = player.inventory.contents, lastPosition = player.location, loadingTip = 0)
 		return pvpMap[player.uniqueId]!!
 	}
 

@@ -13,6 +13,8 @@ import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
+import org.bukkit.Material
+import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import kotlin.coroutines.CoroutineContext
@@ -106,6 +108,26 @@ class ParticipantCommands : BaseCommand() {
 			Commands.errorMessage(sender, "Could not make you a new random color!")
 		else
 			changeTeamColor(sender, colors[0].color0, colors[0].color1)
+	}
+
+	@Subcommand("Compass")
+	@Description("tell which direction a cave will be in based on the cave indicator block")
+	fun compassCommand(sender: CommandSender) {
+		sender as Player
+
+		val block = sender.getTargetBlock(5)
+
+		if (block == null) {
+			Commands.errorMessage(sender, "You are not looking at a block")
+		} else {
+			GameRunner.sendGameMessage(sender, when (block.type) {
+				Material.GRANITE -> "Granite indicates a cave to the north"
+				Material.DIORITE -> "Diorite indicates a cave to the east"
+				Material.ANDESITE -> "Andesite indicates a cave to the south"
+				Material.DIRT -> "Dirt indicates a cave to the west"
+				else -> "${ChatColor.RED}${ChatColor.BOLD}This block is not a cave indicator"
+			})
+		}
 	}
 
 	private fun changeTeamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor?) {

@@ -204,7 +204,7 @@ object CustomSpawning {
 		val infoList = if (world.environment == World.Environment.NETHER) netherSpawnInfoList else overworldSpawnInfoList
 		if (playerData.spawnIndex > infoList.lastIndex) playerData.spawnIndex = 0
 
-		if (spawnMob(player, playerList, playerData.spawnCycle, infoList[playerData.spawnIndex])) {
+		if (spawnMob(player, playerData, playerList, playerData.spawnCycle, infoList[playerData.spawnIndex])) {
 			++playerData.spawnIndex
 
 			if (playerData.spawnIndex == infoList.size) {
@@ -232,7 +232,7 @@ object CustomSpawning {
 		return false
 	}
 
-	fun spawnMob(player: Player, playerList: ArrayList<Player>, spawnCycle: Int, spawnInfo: SpawnInfo): Boolean {
+	fun spawnMob(player: Player, playerData: PlayerData, playerList: ArrayList<Player>, spawnCycle: Int, spawnInfo: SpawnInfo): Boolean {
 		val angle = Math.random() * 2 * PI
 
 		val radius = Util.randRange(MIN_RADIUS, MAX_RADIUS)
@@ -265,7 +265,7 @@ object CustomSpawning {
 						val entity = world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType)
 
 						spawnInfo.onSpawn(entity, spawnCycle)
-						makePlayerMob(entity, player)
+						makePlayerMob(entity, player, playerData)
 
 						return true
 					}
@@ -277,20 +277,45 @@ object CustomSpawning {
 	}
 
 	const val SPAWN_TAG = "_UHC_SPAWN"
+	data class SpawnTagData(val uuid: UUID, val fraction: Double)
 
-	fun makePlayerMob(entity: Entity, player: Player) {
-		entity.setMetadata(SPAWN_TAG, FixedMetadataValue(UHCPlugin.plugin, player.uniqueId))
+	fun makePlayerMob(entity: Entity, player: Player, data: PlayerData) {
+		entity.setMetadata(SPAWN_TAG, FixedMetadataValue(UHCPlugin.plugin, SpawnTagData(player.uniqueId, 1 / data.mobcap)))
 	}
 
-	fun isPlayerMob(entity: Entity, player: Player): Boolean {
-		if (entity !is Monster) return false
+	fun playerMobCount(entity: Entity, player: Player): Double {
+		if (entity !is Monster) return 0.0
 
 		val meta = entity.getMetadata(SPAWN_TAG)
 
-		return meta.isNotEmpty() && (meta[0].value() as UUID) == player.uniqueId
+		return if (meta.isNotEmpty()) {
+			val spawnTagData = meta[0].value() as SpawnTagData
+
+			if (spawnTagData.uuid == player.uniqueId) spawnTagData.fraction
+			else 0.0
+
+		} else {
+			0.0
+		}
 	}
 
 	var spawnTaskID = -1
+
+	fun calcPlayerMobs(player: Player): Pair<Int, Double> {
+		var playerMobCount = 0
+		var playerMobCapacity = 0.0
+
+		player.world.entities.forEach { entity ->
+			val capacity = playerMobCount(entity, player)
+
+			if (capacity != 0.0) {
+				++playerMobCount
+				playerMobCapacity += capacity
+			}
+		}
+
+		return Pair(playerMobCount, playerMobCapacity)
+	}
 
 	fun startSpawning() {
 		spawnTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
@@ -343,18 +368,12 @@ object CustomSpawning {
 				val player = playerList[i]
 				val data = dataList[i]
 
-				/* lessen mobcap in nether */
-				//if (player.world.environment == World.Environment.NETHER) data.mobcap *= 0.75
 				if (player.world.getBlockAt(player.location).biome == Biome.SOUL_SAND_VALLEY) data.mobcap *= 0.5
 				if (GameRunner.uhc.isPhase(PhaseType.ENDGAME)) data.mobcap *= 0.5
 
-				var playerMobCount = 0
+				var playerMobCapacity = calcPlayerMobs(player)
 
-				player.world.entities.forEach { entity ->
-					if (isPlayerMob(entity, player)) ++playerMobCount
-				}
-
-				if (playerMobCount < data.mobcap) {
+				if (playerMobCapacity.second < 1.0) {
 					spawnForPlayer(player, playerList, data)
 				}
 			}

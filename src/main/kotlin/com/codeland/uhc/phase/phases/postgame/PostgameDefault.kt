@@ -91,5 +91,7 @@ class PostgameDefault : Phase() {
 
     override fun perTick(currentTick: Int) {}
 
-    override fun perSecond(remainingSeconds: Int) {}
+    override fun perSecond(remainingSeconds: Int) {
+        uhc.containSpecs()
+    }
 }
