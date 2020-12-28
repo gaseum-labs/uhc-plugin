@@ -10,8 +10,6 @@ import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Waterlogged
-import org.bukkit.block.data.type.Slab
-import org.bukkit.block.data.type.Stairs
 import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
@@ -280,10 +278,10 @@ object CustomSpawning {
 	data class SpawnTagData(val uuid: UUID, val fraction: Double)
 
 	fun makePlayerMob(entity: Entity, player: Player, data: PlayerData) {
-		entity.setMetadata(SPAWN_TAG, FixedMetadataValue(UHCPlugin.plugin, SpawnTagData(player.uniqueId, 1 / data.mobcap)))
+		entity.setMetadata(SPAWN_TAG, FixedMetadataValue(UHCPlugin.plugin, SpawnTagData(player.uniqueId, (1 / data.mobcap).coerceAtLeast(0.0))))
 	}
 
-	fun playerMobCount(entity: Entity, player: Player): Double {
+	fun mobPercentage(entity: Entity, player: Player): Double {
 		if (entity !is Monster) return 0.0
 
 		val meta = entity.getMetadata(SPAWN_TAG)
@@ -291,7 +289,7 @@ object CustomSpawning {
 		return if (meta.isNotEmpty()) {
 			val spawnTagData = meta[0].value() as SpawnTagData
 
-			if (spawnTagData.uuid == player.uniqueId) spawnTagData.fraction
+			if (spawnTagData.uuid == player.uniqueId) spawnTagData.fraction.coerceAtLeast(0.0)
 			else 0.0
 
 		} else {
@@ -306,7 +304,7 @@ object CustomSpawning {
 		var playerMobCapacity = 0.0
 
 		player.world.entities.forEach { entity ->
-			val capacity = playerMobCount(entity, player)
+			val capacity = mobPercentage(entity, player)
 
 			if (capacity != 0.0) {
 				++playerMobCount
@@ -335,13 +333,17 @@ object CustomSpawning {
 				}
 			}
 
+			/* first reset all mobcaps */
+			for (i in playerList.indices) {
+				dataList[i].mobcap = PER_PLAYER.toDouble()
+			}
+
 			/* calculate caps for all players relative to each other */
 			for (i in playerList.indices) {
 				val player = playerList[i]
 				val data = dataList[i]
 
 				val totalArea = VERTICAL_RADIUS * 2 * PI * MAX_RADIUS * MAX_RADIUS
-				data.mobcap = PER_PLAYER.toDouble()
 
 				for (j in 0 until i) {
 					val otherPlayer = playerList[j]
@@ -356,9 +358,12 @@ object CustomSpawning {
 
 						val intersection = Util.circleIntersection(MAX_RADIUS.toDouble(), horzDistance) * Util.levelIntersection(VERTICAL_RADIUS.toDouble(), vertDistance)
 						val percentIntersected = intersection / totalArea
-
+						
 						data.mobcap -= PER_PLAYER * percentIntersected / 2
 						otherData.mobcap -= PER_PLAYER * percentIntersected / 2
+
+						if (data.mobcap < 1) data.mobcap = 1.0
+						if (otherData.mobcap < 1) otherData.mobcap = 1.0
 					}
 				}
 			}

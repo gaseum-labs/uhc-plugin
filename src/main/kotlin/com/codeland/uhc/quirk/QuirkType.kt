@@ -74,6 +74,10 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 		"Witches?!"
 	)),
 
+	CHRISTMAS("Christmas", ::Christmas, false, Material.COOKIE, arrayOf(
+		"It's snowing all the time!"
+	)),
+
 	FLYING("Flying", ::Flying, false, Material.FIREWORK_ROCKET, arrayOf(
 		"Start with an elytra and rockets"
 	)),

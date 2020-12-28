@@ -60,6 +60,22 @@ object Util {
 		return Pair(-1, -1)
 	}
 
+	fun topLiquidSolidYTop(world: World, top: Int, x: Int, z: Int): Pair<Int, Int> {
+		for (y in top downTo 0) {
+			var block = world.getBlockAt(x, y, z)
+
+			if (block.isLiquid) {
+				return Pair(y, -1)
+			}
+
+			if (!block.isPassable) {
+				return Pair(-1, y)
+			}
+		}
+
+		return Pair(-1, -1)
+	}
+
 	fun <T, E : Enum<E>> binaryFind(value: E, array: Array<T>, getValue: (T) -> E): T? {
 		var start = 0
 		var end = array.size
@@ -232,6 +248,6 @@ object Util {
 	}
 
 	fun levelIntersection(r: Double, d: Double): Double {
-		return 2 * r - d
+		return (2 * r - d).coerceAtLeast(0.0)
 	}
 }
