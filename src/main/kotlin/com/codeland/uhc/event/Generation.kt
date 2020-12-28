@@ -74,6 +74,10 @@ class Generation : Listener {
 				HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
+			if (GameRunner.christmasGeneration && world.environment == World.Environment.NORMAL) {
+				ChristmasWorld.snowPlacer.onGenerate(chunk, world.seed.toInt())
+			}
+
 			if (GameRunner.chunkSwapping) {
 				ChunkSwap.chunkSwapper.onGenerate(chunk, world.seed.toInt())
 			}

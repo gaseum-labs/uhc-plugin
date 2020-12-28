@@ -31,6 +31,7 @@ object GameRunner {
 	val dungeonWorldFix: Boolean
 	val sugarCaneWorldFix: Boolean
 	val halloweenGeneration: Boolean
+	val christmasGeneration: Boolean
 	val chunkSwapping: Boolean
 
 	init {
@@ -43,7 +44,8 @@ object GameRunner {
 		dungeonWorldFix = worldGenInfo[4]
 		sugarCaneWorldFix = worldGenInfo[5]
 		halloweenGeneration = worldGenInfo[6]
-		chunkSwapping = worldGenInfo[7]
+		christmasGeneration = worldGenInfo[7]
+		chunkSwapping = worldGenInfo[8]
 
 		Util.log("${ChatColor.GOLD}Nether World Fix: ${ChatColor.RED}$netherWorldFix")
 		Util.log("${ChatColor.GOLD}Mushroom World Fix: ${ChatColor.RED}$mushroomWorldFix")
@@ -52,6 +54,7 @@ object GameRunner {
 		Util.log("${ChatColor.GOLD}Dungeon World Fix: ${ChatColor.RED}$dungeonWorldFix")
 		Util.log("${ChatColor.GOLD}Sugar Cane World Fix: ${ChatColor.RED}$sugarCaneWorldFix")
 		Util.log("${ChatColor.GOLD}Halloween Generation: ${ChatColor.RED}$halloweenGeneration")
+		Util.log("${ChatColor.GOLD}Christmas Generation: ${ChatColor.RED}$christmasGeneration")
 		Util.log("${ChatColor.GOLD}Chunk Swapping: ${ChatColor.RED}$chunkSwapping")
 	}
 

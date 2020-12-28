@@ -1,11 +1,13 @@
 package com.codeland.uhc.phase.phases.waiting
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
+import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -216,26 +218,35 @@ object LobbyPvp {
 		}
 
 		var greatestDistance = 0.0
-		var teleportX = 0.0
-		var teleportZ = 0.0
+		var teleportX = 0
+		var teleportZ = 0
 
 		for (i in 0 until 100) {
-			var cumulativeDistance = 0.0
-			val thisTeleportX = Util.randRange(x - radius, x + radius).toDouble()
-			val thisTeleportZ = Util.randRange(z - radius, z + radius).toDouble()
+			var leastDistance = Double.MAX_VALUE
+
+			val thisTeleportX = Util.randRange(x - radius, x + radius)
+			val thisTeleportZ = Util.randRange(z - radius, z + radius)
 
 			currentlyInPvp.forEach { player ->
-				cumulativeDistance += sqrt((player.location.x - thisTeleportX).pow(2) + (player.location.z - thisTeleportZ).pow(2))
+				val distance = sqrt((player.location.x - thisTeleportX).pow(2) + (player.location.z - thisTeleportZ).pow(2))
+				if (distance < leastDistance) leastDistance = distance
 			}
 
-			if (cumulativeDistance > greatestDistance) {
-				greatestDistance = cumulativeDistance
+			if (leastDistance > greatestDistance) {
+				greatestDistance = leastDistance
 				teleportX = thisTeleportX
 				teleportZ = thisTeleportZ
 			}
 		}
 
-		player.teleport(Location(world, teleportX, Util.topBlockYTop(world, 254, teleportX.toInt(), teleportZ.toInt()) + 1.0, teleportZ))
+		val (liquidY, solidY) = Util.topLiquidSolidYTop(world, 254, teleportX, teleportZ)
+
+		if (liquidY == -1) {
+			player.teleport(Location(world, teleportX + 0.5, solidY + 1.0, teleportZ + 0.5))
+		} else {
+			world.getBlockAt(teleportX, liquidY, teleportZ).setType(Material.STONE, false)
+			player.teleport(Location(world, teleportX + 0.5, liquidY + 1.0, teleportZ + 0.5))
+		}
 	}
 
 	private val treeList = arrayOf(
@@ -260,28 +271,16 @@ object LobbyPvp {
 	}
 
 	fun createArena(world: World, x: Int, z: Int, radius: Int) {
-		fun fillBlock(offX: Int, y: Int, offZ: Int) {
-			val block = world.getBlockAt(x + offX, y, z + offZ)
-			block.setType(if (block.isPassable || isTree(block)) Material.BARRIER else Material.BEDROCK, false)
-		}
+		lobbyQueue.add(LobbyQueueData(world, x, z, radius))
 
-		for (y in 0..255) {
-			for (offset in -radius - 1..radius + 1) {
-				fillBlock( offset    , y, -radius - 1)
-				fillBlock( offset    , y,  radius + 1)
-			}
-
-			for (offset in -radius..radius) {
-				fillBlock(-radius - 1, y,  offset    )
-				fillBlock( radius + 1, y,  offset    )
-			}
+		if (lobbyCreationTaskID == -1) {
+			currentLobbyLayer = 0
+			lobbyCreationTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::lobbyTask, 0, 1)
 		}
+	}
 
-		for (xOff in -radius..radius) {
-			for (zOff in -radius..radius) {
-				world.getBlockAt(x + xOff, 255, z + zOff).setType(Material.BARRIER, false)
-			}
-		}
+	private fun stopCreateArena() {
+		Bukkit.getScheduler().cancelTask(lobbyCreationTaskID)
 	}
 
 	fun determineHeight(uhc: UHC, world: World, x: Int, z: Int, radius: Int) {
@@ -317,6 +316,58 @@ object LobbyPvp {
 
 			} else {
 				pvpData.stillTime = 0
+			}
+		}
+	}
+
+	var lobbyCreationTaskID = -1
+	var currentLobbyLayer = 0
+
+	class LobbyQueueData(val world: World, val x: Int, val z: Int, val radius: Int)
+
+	val lobbyQueue = LinkedList<LobbyQueueData>() as Queue<LobbyQueueData>
+
+	fun lobbyTask() {
+		val lobbyData = lobbyQueue.peek()
+
+		/* stop making lobbies when queue is empty */
+		if (lobbyData == null) {
+			stopCreateArena()
+
+		} else {
+			val world = lobbyData.world
+			val x = lobbyData.x
+			val z = lobbyData.z
+			val radius = lobbyData.radius
+
+			fun fillBlock(offX: Int, y: Int, offZ: Int) {
+				val block = world.getBlockAt(x + offX, y, z + offZ)
+				block.setType(if (block.isPassable || isTree(block)) Material.BARRIER else Material.BEDROCK, false)
+			}
+
+			/* final layer, put in ceiling and move onto next lobby */
+			if (currentLobbyLayer == 255) {
+				for (xOff in -radius..radius) {
+					for (zOff in -radius..radius) {
+						world.getBlockAt(x + xOff, 255, z + zOff).setType(Material.BARRIER, false)
+					}
+				}
+
+				currentLobbyLayer = 0
+				lobbyQueue.remove()
+
+			} else {
+				for (offset in -radius - 1..radius + 1) {
+					fillBlock( offset    , currentLobbyLayer, -radius - 1)
+					fillBlock( offset    , currentLobbyLayer,  radius + 1)
+				}
+
+				for (offset in -radius..radius) {
+					fillBlock(-radius - 1, currentLobbyLayer,  offset    )
+					fillBlock( radius + 1, currentLobbyLayer,  offset    )
+				}
+
+				++currentLobbyLayer
 			}
 		}
 	}
