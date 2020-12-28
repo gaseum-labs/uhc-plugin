@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import java.io.*
 import java.lang.Exception
-import java.net.URL
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -56,7 +55,7 @@ class MixerBot(
 	companion object {
 		const val NO_ID = "NONE"
 
-		fun createMixerBot(discordDataPath: String, linkDataPath: String): MixerBot {
+		fun createMixerBot(discordDataPath: String, linkDataPath: String, ip: String): MixerBot {
 			val discordDataFile = File(discordDataPath)
 
 			if (discordDataFile.exists()) {
@@ -74,12 +73,7 @@ class MixerBot(
 				if (token == null || anyLineFailed) writeDummyDiscordData(discordDataPath, token)
 				if (token == null) throw Exception("No token found in $discordDataPath")
 
-				val niceWebsite = URL("http://checkip.amazonaws.com")
-				val `in` = BufferedReader(InputStreamReader(niceWebsite.openStream()))
-				val ip = `in`.readLine().trim { it <= ' ' }
-
 				return MixerBot(discordDataPath, linkDataPath, token, guildID, categoryID, channelID, ip)
-
 			} else {
 				writeDummyDiscordData(discordDataPath)
 

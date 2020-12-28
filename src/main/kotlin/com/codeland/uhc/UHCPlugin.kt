@@ -15,6 +15,8 @@ import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.WebAddress
+import com.codeland.uhc.util.GoogleDDNSUpdater
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.plugin.java.JavaPlugin
@@ -50,8 +52,17 @@ class UHCPlugin : JavaPlugin() {
 
 		VariantList.create()
 
+		val address = WebAddress.getLocalAddress()
+
+		try {
+			Util.log(GoogleDDNSUpdater.updateDomain(address))
+		} catch (ex: Exception) {
+			Util.log("${ex}")
+			Util.log("${ChatColor.RED}DDNS FAILED | STARTING SERVER AT ${address}")
+		}
+
 		GameRunner.bot = try {
-			MixerBot.createMixerBot("./discordData.txt", "./linkData.txt")
+			MixerBot.createMixerBot("./discordData.txt", "./linkData.txt", address)
 		} catch (ex: Exception) {
 			Util.log(ex.message ?: "unknown error")
 			Util.log("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
