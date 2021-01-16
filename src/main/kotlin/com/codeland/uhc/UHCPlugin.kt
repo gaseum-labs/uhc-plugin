@@ -49,6 +49,7 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Generation(), this)
 		server.pluginManager.registerEvents(Portal(), this)
 		server.pluginManager.registerEvents(PvpListener(), this)
+		server.pluginManager.registerEvents(Brew(), this)
 
 		VariantList.create()
 

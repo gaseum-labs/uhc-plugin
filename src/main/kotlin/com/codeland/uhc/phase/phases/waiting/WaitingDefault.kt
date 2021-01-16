@@ -126,7 +126,9 @@ class WaitingDefault : Phase() {
 			"You only need to mine the logs touching the leaves for leaves to decay",
 			"Watch out for creepers falling on you in ravines",
 			"Leaves can be instantly mined with an iron hoe",
-			"You will be automatically moved into a voice call with your team"
+			"You will be automatically moved into a voice call with your team",
+			"Have a block in your offhand while strip mining in the nether",
+			"Poison can be brewed into instant damage with a fermented spider eye"
 		)
 	}
 

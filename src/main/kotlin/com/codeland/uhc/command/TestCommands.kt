@@ -11,7 +11,6 @@ import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.quirk.quirks.CarePackageUtil
 import com.codeland.uhc.quirk.quirks.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
