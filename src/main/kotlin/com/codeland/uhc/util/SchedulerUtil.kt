@@ -8,7 +8,7 @@ object SchedulerUtil {
     val plugin = UHCPlugin.plugin
 
     fun nextTick(runnable: () -> Unit) {
-        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable, 1)
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable)
     }
 
     fun everyTick(runnable: () -> Unit): Int {

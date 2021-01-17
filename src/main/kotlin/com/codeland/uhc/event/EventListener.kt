@@ -380,47 +380,6 @@ class EventListener : Listener {
 		}
 	}
 
-	/**
-	 * brewfix
-	 *
-	 * prevents strength II from being brewed,
-	 * also transmutes all regen potions into instant health potions
-	 */
-	@EventHandler
-	fun onBrew(event: BrewEvent) {
-		fun containsStrength(contents: Array<ItemStack>) = contents.any { itemStack ->
-			if (itemStack == null || !(itemStack.type == Material.POTION || itemStack.type == Material.SPLASH_POTION || itemStack.type == Material.LINGERING_POTION)) return@any false
-			val meta = itemStack.itemMeta as PotionMeta
-
-			meta.basePotionData.type == PotionType.STRENGTH
-		}
-
-		if (event.contents.ingredient?.type == Material.GLOWSTONE_DUST && containsStrength(event.contents.contents)) {
-			/* eject glowstone from the brewing stand */
-			val ingredient = event.contents.ingredient?.clone()
-			if (ingredient != null) event.block.world.dropItem(event.block.location.toCenterLocation(), ingredient)
-			event.contents.ingredient = null
-
-			/* prevent potions from being brewed */
-			event.isCancelled = true
-
-		} else if (event.contents.ingredient?.type == Material.GHAST_TEAR) {
-			event.isCancelled = true
-			event.contents.ingredient = null
-
-			event.contents.contents.forEach { itemStack ->
-				if (itemStack != null && (itemStack.type == Material.POTION || itemStack.type == Material.SPLASH_POTION || itemStack.type == Material.LINGERING_POTION)) {
-					val meta = itemStack.itemMeta as PotionMeta
-
-					if (meta.basePotionData.type == PotionType.AWKWARD) {
-						meta.basePotionData = PotionData(PotionType.INSTANT_HEAL)
-						itemStack.itemMeta = meta
-					}
-				}
-			}
-		}
-	}
-
 	@EventHandler
 	fun onEntityDamageEvent(event: EntityDamageByEntityEvent) {
 		var attacker = event.damager

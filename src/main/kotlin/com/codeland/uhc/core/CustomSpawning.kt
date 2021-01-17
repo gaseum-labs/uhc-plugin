@@ -358,7 +358,7 @@ object CustomSpawning {
 
 						val intersection = Util.circleIntersection(MAX_RADIUS.toDouble(), horzDistance) * Util.levelIntersection(VERTICAL_RADIUS.toDouble(), vertDistance)
 						val percentIntersected = intersection / totalArea
-						
+
 						data.mobcap -= PER_PLAYER * percentIntersected / 2
 						otherData.mobcap -= PER_PLAYER * percentIntersected / 2
 
