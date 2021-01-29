@@ -2,6 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -11,7 +12,10 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.BrewEvent
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.event.inventory.InventoryMoveItemEvent
 import org.bukkit.inventory.BrewerInventory
+import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
@@ -100,18 +104,19 @@ class Brew : Listener {
 	class PotionPath(
 		val ingredient: Material,
 		val affectedType: PotionType,
+		val createdType: PotionType,
 		val extend: Boolean,
 		val upgrade: Boolean,
 		val splash: Boolean,
 		val creator: (ItemStack) -> ItemStack
 	)
 
-	private fun baseCreatePath(ingredient: Material, affectedType: PotionType, modifiers: Int, creator: (ItemStack) -> ItemStack): PotionPath {
+	private fun baseCreatePath(ingredient: Material, affectedType: PotionType, createdType: PotionType, modifiers: Int, creator: (ItemStack) -> ItemStack): PotionPath {
 		val extend = modifiers.and(1) == 1
 		val upgrade = modifiers.shr(1).and(1) == 1
 		val splash = modifiers.shr(2).and(1) == 1
 
-		return PotionPath(ingredient, affectedType, extend, upgrade, splash, creator)
+		return PotionPath(ingredient, affectedType, createdType, extend, upgrade, splash, creator)
 	}
 
 	private fun finalModifiers(itemStack: ItemStack, modifiers: Int): Triple<Boolean, Boolean, Boolean> {
@@ -127,14 +132,14 @@ class Brew : Listener {
 	}
 
 	fun createCustomPath(ingredient: Material, affectedType: PotionType, info: PotionInfo, modifiers: Int = 0): PotionPath {
-		return baseCreatePath(ingredient, affectedType, modifiers) { itemStack ->
+		return baseCreatePath(ingredient, affectedType, info.type, modifiers) { itemStack ->
 			val (extended, upgraded, splashed) = finalModifiers(itemStack, modifiers)
 			createCustomPotion(info.type, if (splashed) Material.SPLASH_POTION else Material.POTION, info.name, when { extended -> info.extendedDuration; upgraded -> info.amplifiedDuration; else -> info.baseDuration }, if (upgraded) 1 else 0)
 		}
 	}
 
 	fun createDefaultPath(ingredient: Material, affectedType: PotionType, potionType: PotionType, modifiers: Int = 0): PotionPath {
-		return baseCreatePath(ingredient, affectedType, modifiers) { itemStack ->
+		return baseCreatePath(ingredient, affectedType, potionType, modifiers) { itemStack ->
 			val (extended, upgraded, splashed) = finalModifiers(itemStack, modifiers)
 			createDefaultPotion(PotionData(potionType, extended, upgraded), if (splashed) Material.SPLASH_POTION else Material.POTION)
 		}
@@ -175,11 +180,13 @@ class Brew : Listener {
 			if (time == 0) {
 				replaceItems(stand.inventory, customPotionPathList)
 
+				--stand.fuelLevel
+
 				cancelBrewTask(block)
 			}
 		}, 0, 1)
 
-		brewTaskMap.put(block, taskID)
+		brewTaskMap[block] = taskID
 	}
 
 	fun isBrewing(stand: BrewingStand): Boolean {
@@ -192,13 +199,12 @@ class Brew : Listener {
 		if (task != null) Bukkit.getScheduler().cancelTask(task)
 	}
 
-	@EventHandler
-	fun onInventory(event: InventoryClickEvent) {
-		val inventory = event.inventory as? BrewerInventory
-		val stand = inventory?.holder?.block?.getState(false) as BrewingStand?
+	private fun internalOnInventory(inventory: Inventory) {
+		if (inventory !is BrewerInventory) return
+		val stand = inventory.holder?.block?.getState(false) as BrewingStand?
 
-		/* if the player has the brewing inventory open */
-		if (inventory != null && stand != null) {
+		/* if the player has a brewing inventory open */
+		if (stand != null) {
 			/* before the event resolves, was there already an ingredient */
 			/* used to tell if the ingredient is just now being added or removed */
 			val oldIngredientType = inventory.ingredient?.type
@@ -211,7 +217,8 @@ class Brew : Listener {
 					cancelBrewTask(stand.block)
 
 					/* start brewing when a new ingredient is placed */
-					if (ingredient != null) {
+					/* and the stand is fueled */
+					if (ingredient != null && stand.fuelLevel > 0) {
 						if(customPotionPathList.any { potionPath ->
 							potionPath.ingredient == ingredient.type && containsAffected(inventory, potionPath)
 						}) registerBrewTask(stand)
@@ -219,6 +226,24 @@ class Brew : Listener {
 				}
 			}
 		}
+	}
+
+	/*
+	 * events fired whenever the player clicks in a brewing inventory
+	 * or whenever a hopper dispenses into a brewing inventory
+	 */
+
+	@EventHandler
+	fun onInventoryDrag(event: InventoryDragEvent) {
+		internalOnInventory(event.inventory)
+	}
+	@EventHandler
+	fun onInventoryClick(event: InventoryClickEvent) {
+		internalOnInventory(event.inventory)
+	}
+	@EventHandler
+	fun onHopper(event: InventoryMoveItemEvent) {
+		internalOnInventory(event.destination)
 	}
 
 	fun containsAffected(brewerInventory: BrewerInventory, potionPath: PotionPath): Boolean {
@@ -233,9 +258,11 @@ class Brew : Listener {
 		val upgraded = isUpgraded(itemStack)
 
 		return isType(itemStack, potionPath.affectedType) &&
-			(!potionPath.extend || (!extended && !upgraded && potionPath.affectedType.isExtendable)) &&
-			(!potionPath.upgrade || (!upgraded && !extended && potionPath.affectedType.isUpgradeable)) &&
-			(!potionPath.splash || !isSplash(itemStack))
+			(!potionPath.extend || (!extended && !upgraded)) &&
+			(!potionPath.upgrade || (!upgraded && !extended)) &&
+			(!potionPath.splash || !isSplash(itemStack)) &&
+			(!extended || potionPath.createdType.isExtendable) &&
+			(!upgraded || potionPath.createdType.isUpgradeable)
 	}
 
 	fun replaceItems(inventory: BrewerInventory, pathList: Array<PotionPath>): Boolean {
