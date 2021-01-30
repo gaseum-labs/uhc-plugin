@@ -32,21 +32,14 @@ class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	}
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE) {
-			Bukkit.getOnlinePlayers().forEach { player ->
-				resetEffects(player)
-			}
-
+		if (phase.type == PhaseType.GRACE)
 			giveEffects()
-		}
+
+		else if (phase.type == PhaseType.POSTGAME || phase.type == PhaseType.WAITING)
+			Bukkit.getScheduler().cancelTask(taskID)
 	}
 
 	override fun onDisable() {
-		Bukkit.getOnlinePlayers().forEach { player ->
-			for (activePotionEffect in player.activePotionEffects)
-				player.removePotionEffect(activePotionEffect.type)
-		}
-
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
@@ -71,86 +64,37 @@ class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			PotionEffectType.SLOW_FALLING
 		)
 
+		var usingEffects = emptyArray<PotionEffectType>()
+		var effectIndex = -1
+
 		fun giveEffects() {
-			Bukkit.getOnlinePlayers().forEach { player ->
-				if (player.gameMode != GameMode.SURVIVAL) return
-
-				val effectType = getNextEffect(player)
-
-				/* give effect with a slight time overlap */
-				val effect = PotionEffect(effectType, time * 20, 1, false, true)
-				player.addPotionEffect(effect)
-			}
-		}
-
-		/* meta tags for potioned players */
-
-		private const val LIST_TAG = "UHC_Q_POTION_LIST"
-		private const val INDEX_TAG = "UHC_Q_POTION_INDEX"
-
-		private fun createEffectsList(): Array<PotionEffectType> {
-			val ret = effects.copyOf()
-
-			/* shuffle array */
-			for (index in ret.indices) {
-				val swapIndex = (Math.random() * effects.size).toInt()
-
-				val temp = ret[index]
-				ret[index] = ret[swapIndex]
-				ret[swapIndex] = temp
+			if (effectIndex == -1) {
+				generateUsingEffects()
+				effectIndex = usingEffects.lastIndex
 			}
 
-			return ret
-		}
-
-		private fun increaseMetaIndex(player: Player, effectList: Array<PotionEffectType>): PotionEffectType {
-			val indexMeta = player.getMetadata(INDEX_TAG)
-
-			return if (indexMeta.size == 0) {
-				player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 1))
-
-				effectList[0]
-
-			} else {
-				val index = indexMeta[0].asInt()
-
-				if (index == effectList.size) {
-					val newEffectList = createEffectsList()
-					player.setMetadata(LIST_TAG, FixedMetadataValue(UHCPlugin.plugin, newEffectList))
-					player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 1))
-
-					newEffectList[0]
-
-				} else {
-					player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, index + 1))
-
-					effectList[index]
+			GameRunner.uhc.allCurrentPlayers { uuid ->
+				GameRunner.playerAction(uuid) { player ->
+					player.addPotionEffect(PotionEffect(usingEffects[effectIndex], 3600, 0, false, true, true))
 				}
 			}
+
+			--effectIndex
 		}
 
-		fun getNextEffect(player: Player): PotionEffectType {
-			val listMeta = player.getMetadata(LIST_TAG)
+		private fun generateUsingEffects() {
+			effectIndex = 0
 
-			/* first time getting effect, need to create meta */
-			if (listMeta.size == 0) {
-				val effectList = createEffectsList()
+			usingEffects = effects.copyOf()
 
-				player.setMetadata(LIST_TAG, FixedMetadataValue(UHCPlugin.plugin, effectList))
-				player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 1))
+			/* shuffle array */
+			for (index in usingEffects.indices) {
+				val swapIndex = (Math.random() * effects.size).toInt()
 
-				return effectList[0]
+				val temp = usingEffects[index]
+				usingEffects[index] = usingEffects[swapIndex]
+				usingEffects[swapIndex] = temp
 			}
-
-			val effectList = listMeta[0].value() as Array<PotionEffectType>
-			val indexMeta = player.getMetadata(INDEX_TAG)
-
-			return increaseMetaIndex(player, effectList)
-		}
-
-		fun resetEffects(player: Player) {
-			player.setMetadata(LIST_TAG, FixedMetadataValue(UHCPlugin.plugin, createEffectsList()))
-			player.setMetadata(INDEX_TAG, FixedMetadataValue(UHCPlugin.plugin, 0))
 		}
 	}
 }

@@ -59,6 +59,12 @@ enum class DropFixType(val dropFix: DropFix) {
 		nothing()
 	))),
 
+	MULE(DropFix(EntityType.MULE, arrayOf(
+		arrayOf(DropEntry.horseInventory(), lootEntity(noBaby { LEATHER }, ::lootItem))
+	), arrayOf(
+		nothing()
+	))),
+
 	CHICKEN(DropFix(EntityType.CHICKEN, arrayOf(
 		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(0))),
 		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(1))),
