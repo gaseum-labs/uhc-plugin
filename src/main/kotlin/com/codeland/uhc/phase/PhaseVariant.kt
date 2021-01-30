@@ -9,7 +9,7 @@ import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import org.bukkit.Material
 
 enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var prettyName: String, var representation: Material, var description: List<String>) {
-	WAITING_DEFAULT(PhaseType.WAITING, ::WaitingDefault, "Default", Material.CLOCK, listOf(
+	WAITING_DEFAULT(PhaseType.WAITING, ::WaitingDefault, "Default", Material.TARGET, listOf(
 		"Everyone waits for the UHC to start"
 	)),
 
