@@ -12,6 +12,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityShootBowEvent
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryEvent
 import org.bukkit.event.inventory.InventoryInteractEvent
 import org.bukkit.event.player.PlayerAdvancementDoneEvent
@@ -46,7 +47,7 @@ class PvpListener : Listener {
 	}
 
 	@EventHandler
-	fun onInventory(event: InventoryInteractEvent) {
+	fun onInventory(event: InventoryClickEvent) {
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			LobbyPvp.getPvpData(event.whoClicked as Player).stillTime = 0
 		}
