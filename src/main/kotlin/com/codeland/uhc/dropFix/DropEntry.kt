@@ -36,6 +36,18 @@ class DropEntry(val onDrop: (looting: Int, entity: Entity) -> Array<ItemStack?>)
 			return DropEntry { looting, _ -> arrayOf(ItemStack(material, lootAmount(looting))) }
 		}
 
+		fun slownessArrow(): DropEntry {
+			return DropEntry { looting, _ ->
+				val stack = ItemStack(Material.TIPPED_ARROW, looting + 1)
+
+				val meta = stack.itemMeta as PotionMeta
+				meta.basePotionData = PotionData(PotionType.SLOWNESS, false, false)
+				stack.itemMeta = meta
+
+				arrayOf(stack)
+			}
+		}
+
 		fun lootItem(looting: Int): Int {
 			return looting + 1
 		}
@@ -97,6 +109,34 @@ class DropEntry(val onDrop: (looting: Int, entity: Entity) -> Array<ItemStack?>)
 					entity.equipment?.itemInMainHand?.type == Material.TRIDENT ||
 					entity.equipment?.itemInOffHand?.type == Material.TRIDENT
 				) Material.TRIDENT else null
+			}
+		}
+
+		fun mobInventory(): DropEntry {
+			return DropEntry { _, entity -> (entity as LivingEntity)
+				val equipment = entity.equipment ?: return@DropEntry emptyArray()
+
+				arrayOf(
+					equipment.helmet?.clone(),
+					equipment.chestplate?.clone(),
+					equipment.leggings?.clone(),
+					equipment.boots?.clone(),
+					equipment.itemInMainHand?.clone(),
+					equipment.itemInOffHand?.clone(),
+				)
+			}
+		}
+
+		fun mobArmor(): DropEntry {
+			return DropEntry { _, entity -> (entity as LivingEntity)
+				val equipment = entity.equipment ?: return@DropEntry emptyArray()
+
+				arrayOf(
+					equipment.helmet?.clone(),
+					equipment.chestplate?.clone(),
+					equipment.leggings?.clone(),
+					equipment.boots?.clone()
+				)
 			}
 		}
 	}

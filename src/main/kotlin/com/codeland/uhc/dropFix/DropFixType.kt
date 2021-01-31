@@ -8,11 +8,14 @@ import com.codeland.uhc.dropFix.DropEntry.Companion.loot
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootEntity
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootMulti
+import com.codeland.uhc.dropFix.DropEntry.Companion.mobArmor
+import com.codeland.uhc.dropFix.DropEntry.Companion.mobInventory
 import com.codeland.uhc.dropFix.DropEntry.Companion.noBaby
 import com.codeland.uhc.dropFix.DropEntry.Companion.nothing
 import com.codeland.uhc.dropFix.DropEntry.Companion.onFire
 import com.codeland.uhc.dropFix.DropEntry.Companion.potion
 import com.codeland.uhc.dropFix.DropEntry.Companion.saddle
+import com.codeland.uhc.dropFix.DropEntry.Companion.slownessArrow
 import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.entity.EntityType
@@ -34,7 +37,7 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	SKELETON(DropFix(EntityType.SKELETON, arrayOf(
-		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem))
+		arrayOf(loot(BONE, ::lootItem), loot(ARROW, ::lootItem), mobArmor())
 	), arrayOf(
 		item(BONE)
 	))),
@@ -104,9 +107,9 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	DROWNED(DropFix(EntityType.DROWNED, arrayOf(
-		arrayOf(entity(hasTrident()), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti(-1))),
-		arrayOf(entity(hasTrident()), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti( 0))),
-		arrayOf(entity(hasTrident()), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti( 1)))
+		arrayOf(mobInventory(), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti(-1))),
+		arrayOf(mobInventory(), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti( 0))),
+		arrayOf(mobInventory(), loot(ROTTEN_FLESH, ::lootItem), loot(GOLD_INGOT, lootMulti( 1)))
 	), arrayOf(
 		item(ROTTEN_FLESH)
 	))),
@@ -118,5 +121,35 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.WATER_BREATHING)),
 	), arrayOf(
 		item(STICK)
+	))),
+
+	ZOMBIE(DropFix(EntityType.ZOMBIE, arrayOf(
+		arrayOf(loot(ROTTEN_FLESH, ::lootItem), mobInventory()),
+		arrayOf(loot(ROTTEN_FLESH, ::lootItem), mobInventory()),
+		arrayOf(loot(ROTTEN_FLESH, ::lootItem), mobInventory()),
+		arrayOf(loot(ROTTEN_FLESH, ::lootItem), mobInventory()),
+		arrayOf(loot(ROTTEN_FLESH, ::lootItem), mobInventory()),
+		arrayOf(loot(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT)),
+		arrayOf(loot(ROTTEN_FLESH, ::lootItem), mobInventory(), item(CARROT)),
+	), arrayOf(
+		item(ROTTEN_FLESH)
+	))),
+
+	STRAY(DropFix(EntityType.STRAY, arrayOf(
+		arrayOf(loot(BONE, ::lootItem), slownessArrow(), mobArmor())
+	), arrayOf(
+		item(BONE)
+	))),
+
+	HUSK(DropFix(EntityType.HUSK, arrayOf(
+		arrayOf(loot(ROTTEN_FLESH, ::lootItem), mobInventory())
+	), arrayOf(
+		item(ROTTEN_FLESH)
+	))),
+
+	PIGLIN(DropFix(EntityType.PIGLIN, arrayOf(
+		arrayOf(mobArmor())
+	), arrayOf(
+		nothing()
 	)));
 }

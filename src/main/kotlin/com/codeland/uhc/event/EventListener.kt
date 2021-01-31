@@ -297,8 +297,10 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
-		/* offline zombie killed */
+		/* test if offline zombie was killed */
 		val (inventory, experience, uuid) = PlayerData.getZombieData(event.entity)
+
+		/* offline zombie was killed */
 		if (experience != -1) {
 			val playerData = GameRunner.uhc.getPlayerData(uuid)
 			playerData.offlineZombie = null
@@ -322,8 +324,7 @@ class EventListener : Listener {
 				if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
 					val world = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
 
-					GameRunner.teleportPlayer(
-						uuid,
+					GameRunner.teleportPlayer(uuid,
 						GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 							?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 					)

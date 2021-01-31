@@ -75,8 +75,6 @@ class PostgameDefault : Phase() {
         TeamData.removeAllTeams { player ->
             GameRunner.uhc.setParticipating(player, false)
         }
-
-        CustomSpawning.stopSpawning()
     }
 
     override fun customEnd() {}

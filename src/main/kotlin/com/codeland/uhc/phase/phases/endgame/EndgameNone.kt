@@ -1,6 +1,7 @@
 package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.command.Commands
+import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.SchedulerUtil
@@ -44,6 +45,8 @@ class EndgameNone : Phase() {
 					playerData.offlineZombie?.damage(100000000000.0)
 				}
 			}
+
+			CustomSpawning.stopSpawning()
 		}
 	}
 }

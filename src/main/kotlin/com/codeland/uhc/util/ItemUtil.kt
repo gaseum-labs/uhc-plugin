@@ -42,7 +42,16 @@ object ItemUtil {
 	fun randomDamagedItem(type: Material): ItemStack {
 		val ret = ItemStack(type)
 		val damageable = ret.itemMeta as Damageable
-		damageable.damage = Util.randRange(0, type.maxDurability.toInt())
+		damageable.damage = Util.randRange(0, type.maxDurability - 1)
+		ret.itemMeta = damageable as ItemMeta
+
+		return ret
+	}
+
+	fun halfDamagedItem(type: Material): ItemStack {
+		val ret = ItemStack(type)
+		val damageable = ret.itemMeta as Damageable
+		damageable.damage = type.maxDurability / 2
 		ret.itemMeta = damageable as ItemMeta
 
 		return ret
