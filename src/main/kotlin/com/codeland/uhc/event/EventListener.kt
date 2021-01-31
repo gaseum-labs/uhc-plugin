@@ -32,6 +32,8 @@ import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.inventory.*
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 
 class EventListener : Listener {
@@ -177,6 +179,18 @@ class EventListener : Listener {
 			event.isCancelled = (
 				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL
 			) && event.entityType.isAlive
+		}
+
+		/* witch poison nerf */
+
+		val potion = event.entity as? ThrownPotion
+		if (potion != null) {
+			if (potion.shooter is Witch) {
+				/* if this is a posion potion replace with nerfed poison */
+				if ((potion.item.itemMeta as PotionMeta).basePotionData.type == PotionType.POISON) {
+					potion.item = Brew.createCustomPotion(PotionType.POISON, Material.SPLASH_POTION, "Poison", 150, 0)
+				}
+			}
 		}
 	}
 

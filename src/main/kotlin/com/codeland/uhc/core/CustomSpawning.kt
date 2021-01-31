@@ -75,7 +75,7 @@ object CustomSpawning {
 	fun creeperAllowSpawn(block: Block, spawnCycle: Int): EntityType? {
 		if (!regularAllowSpawn(block, 7)) return null
 
-		return if (onCycle(spawnCycle, 41)) EntityType.WITCH else EntityType.CREEPER
+		return if (onCycle(spawnCycle, 40)) EntityType.WITCH else EntityType.CREEPER
 	}
 
 	fun skeletonAllowSpawn(block: Block, spawnCycle: Int): EntityType? {

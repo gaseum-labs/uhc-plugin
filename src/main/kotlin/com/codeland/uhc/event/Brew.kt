@@ -24,20 +24,22 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 
 class Brew : Listener {
-	fun createCustomPotion(potionType: PotionType, material: Material, name: String, duration: Int, amplifier: Int): ItemStack {
-		val effectType = potionType.effectType ?: PotionEffectType.POISON
+	companion object {
+		fun createCustomPotion(potionType: PotionType, material: Material, name: String, duration: Int, amplifier: Int): ItemStack {
+			val effectType = potionType.effectType ?: PotionEffectType.POISON
 
-		val potion = ItemStack(material)
+			val potion = ItemStack(material)
 
-		val meta = potion.itemMeta as PotionMeta
+			val meta = potion.itemMeta as PotionMeta
 
-		meta.setDisplayName("${ChatColor.RESET}Potion of $name")
-		meta.color = effectType.color
-		meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)
+			meta.setDisplayName("${ChatColor.RESET}Potion of $name")
+			meta.color = effectType.color
+			meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)
 
-		potion.itemMeta = meta
+			potion.itemMeta = meta
 
-		return potion
+			return potion
+		}
 	}
 
 	fun createDefaultPotion(potionData: PotionData, material: Material): ItemStack {
