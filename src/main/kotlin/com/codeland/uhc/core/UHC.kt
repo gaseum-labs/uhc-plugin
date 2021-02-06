@@ -91,6 +91,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	val playerDataList = HashMap<UUID, PlayerData>()
 
 	/* access operations for player data list */
+
 	fun isAlive(uuid: UUID): Boolean {
 		return getPlayerData(uuid).alive
 	}
@@ -102,6 +103,13 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	fun isOptingOut(uuid: UUID): Boolean {
 		return getPlayerData(uuid).optingOut
 	}
+
+	fun isCurrent(uuid: UUID): Boolean {
+		val playerData = getPlayerData(uuid)
+		return playerData.participating && playerData.alive
+	}
+
+	/* setter operations for player data list */
 
 	fun setAlive(uuid: UUID, alive: Boolean) {
 		getPlayerData(uuid).alive = alive

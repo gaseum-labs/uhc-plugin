@@ -178,3 +178,6 @@ gradle-app.setting
 
 # server stuff
 server
+
+# local gradle tasks
+/user.gradle
