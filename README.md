@@ -1,6 +1,7 @@
-# uhc-plugin
+# ![UHC Enchanting Table Icon](uhc icon.png) UHC Plugin
 
 A Minecraft 1.16 UHC plugin built in Kotlin for PaperMC
+
 
 ## Features
 
