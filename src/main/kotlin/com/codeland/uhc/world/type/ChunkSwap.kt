@@ -1,4 +1,4 @@
-package com.codeland.uhc.world
+package com.codeland.uhc.world.type
 
 import com.codeland.uhc.world.chunkPlacer.impl.ChunkSwapper
 

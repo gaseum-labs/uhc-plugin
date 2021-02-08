@@ -2,10 +2,10 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
-import com.codeland.uhc.world.*
-import com.codeland.uhc.world.MushroomOxeyeFix
+import com.codeland.uhc.world.type.MushroomOxeyeFix
 import com.codeland.uhc.world.chunkPlacer.impl.OxeyePlacer
 import com.codeland.uhc.world.chunkPlacer.impl.SugarCanePlacer
+import com.codeland.uhc.world.type.*
 import org.bukkit.Bukkit
 import org.bukkit.Chunk
 import org.bukkit.World
@@ -62,6 +62,10 @@ class Generation : Listener {
 				DungeonFix.dungeonChestReplacer.onGenerate(chunk, world.seed.toInt())
 			}
 
+			if (GameRunner.waterWorld && world.environment == World.Environment.NORMAL) {
+				WaterWorld.waterPlacer.onGenerate(chunk, world.seed.toInt())
+			}
+
 			if (GameRunner.halloweenGeneration) {
 				if (world.environment == World.Environment.NORMAL) {
 					HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt())
@@ -81,31 +85,6 @@ class Generation : Listener {
 			if (GameRunner.chunkSwapping) {
 				ChunkSwap.chunkSwapper.onGenerate(chunk, world.seed.toInt())
 			}
-
-			//diamondPictureChunk(chunk)
-		}
-	}
-
-	val numChunks = ceil(1001 / 16.0).toInt()
-	val offset = numChunks / 2
-	val img = BufferedImage(numChunks, numChunks, BufferedImage.TYPE_INT_ARGB)
-
-	fun diamondPictureChunk(chunk: Chunk) {
-		val x = chunk.x + offset
-		val z = chunk.z + offset
-
-		if (x >= 0 && z >= 0 && x < numChunks && z < numChunks) {
-			var caveCount = 0
-
-			for (x in 0..15) for (z in 0..15) for (y in 11..15)
-				if (chunk.getBlock(x, y, x).isPassable) ++caveCount
-
-
-			var caveValue = caveCount / (16 * 16 * 2f)
-			if (caveValue > 1f) caveValue = 1f
-
-			img.setRGB(x, z, (caveValue * 0xff).toInt().shl(16).or(0xff000000.toInt()))
-			ImageIO.write(img, "png", File("diamondCaves.png"))
 		}
 	}
 }

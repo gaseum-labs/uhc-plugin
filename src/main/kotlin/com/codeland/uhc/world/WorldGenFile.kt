@@ -18,7 +18,8 @@ object WorldGenFile {
 		WorldGenProperty("sugar-cane-fix", true),
 		WorldGenProperty("halloween", false),
 		WorldGenProperty("christmas", false),
-		WorldGenProperty("chunk-swap", false)
+		WorldGenProperty("chunk-swap", false),
+		WorldGenProperty("water-world", false),
 	)
 
 	fun getSettings(): Array<Boolean> {

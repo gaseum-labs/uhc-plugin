@@ -33,6 +33,7 @@ object GameRunner {
 	val halloweenGeneration: Boolean
 	val christmasGeneration: Boolean
 	val chunkSwapping: Boolean
+	val waterWorld: Boolean
 
 	init {
 		val worldGenInfo = WorldGenFile.getSettings()
@@ -46,6 +47,7 @@ object GameRunner {
 		halloweenGeneration = worldGenInfo[6]
 		christmasGeneration = worldGenInfo[7]
 		chunkSwapping = worldGenInfo[8]
+		waterWorld = worldGenInfo[9]
 
 		Util.log("${ChatColor.GOLD}Nether World Fix: ${ChatColor.RED}$netherWorldFix")
 		Util.log("${ChatColor.GOLD}Mushroom World Fix: ${ChatColor.RED}$mushroomWorldFix")
@@ -56,6 +58,7 @@ object GameRunner {
 		Util.log("${ChatColor.GOLD}Halloween Generation: ${ChatColor.RED}$halloweenGeneration")
 		Util.log("${ChatColor.GOLD}Christmas Generation: ${ChatColor.RED}$christmasGeneration")
 		Util.log("${ChatColor.GOLD}Chunk Swapping: ${ChatColor.RED}$chunkSwapping")
+		Util.log("${ChatColor.GOLD}Water World: ${ChatColor.RED}$waterWorld")
 	}
 
 	fun teamIsAlive(team: Team): Boolean {

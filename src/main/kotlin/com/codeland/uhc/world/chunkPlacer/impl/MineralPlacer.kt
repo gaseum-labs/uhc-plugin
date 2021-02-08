@@ -1,7 +1,7 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.OreFix
+import com.codeland.uhc.world.type.OreFix
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material

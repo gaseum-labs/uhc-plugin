@@ -18,7 +18,6 @@ import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.NetherFix
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.entity.*
@@ -31,9 +30,6 @@ import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.inventory.*
 import org.bukkit.inventory.meta.PotionMeta
-import org.bukkit.potion.PotionData
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 
 class EventListener : Listener {
