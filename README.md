@@ -1,5 +1,6 @@
+<img src="uhc icon.png" alt="UHC Enchanting Table Icon" width="200"/> 
 <h1>
-    <img src="uhc icon.png" alt="UHC Enchanting Table Icon" width="200"/> UHC Plugin 
+    UHC Plugin 
 </h1>
 
 A Minecraft 1.16 UHC plugin built in Kotlin for PaperMC
