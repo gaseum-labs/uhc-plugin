@@ -157,12 +157,18 @@ object CustomSpawning {
 	}
 
 	fun netherSpecialSpawn(block: Block, spawnCycle: Int): EntityType? {
-		return when (spawnCycle % 6) {
+		return when (spawnCycle % 12) {
 			0 -> blazeAllowSpawn(block, spawnCycle)
 			1 -> ghastAllowSpawn(block, spawnCycle)
 			2 -> magmaCubeAllowSpawn(block, spawnCycle)
 			3 -> blazeAllowSpawn(block, spawnCycle)
 			4 -> zombiePiglinAllowSpawn(block, spawnCycle)
+			5 -> endermanAllowSpawn(block, spawnCycle)
+			6 -> blazeAllowSpawn(block, spawnCycle)
+			7 -> zombiePiglinAllowSpawn(block, spawnCycle)
+			8 -> magmaCubeAllowSpawn(block, spawnCycle)
+			9 -> zombiePiglinAllowSpawn(block, spawnCycle)
+			10 -> zombiePiglinAllowSpawn(block, spawnCycle)
 			else -> endermanAllowSpawn(block, spawnCycle)
 		}
 	}
