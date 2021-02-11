@@ -16,6 +16,7 @@ object WorldGenFile {
 		WorldGenProperty("melon-fix", true),
 		WorldGenProperty("dungeon-fix", true),
 		WorldGenProperty("sugar-cane-fix", true),
+		WorldGenProperty("nether-indicators", true),
 		WorldGenProperty("halloween", false),
 		WorldGenProperty("christmas", false),
 		WorldGenProperty("chunk-swap", false),

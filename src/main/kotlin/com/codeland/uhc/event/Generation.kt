@@ -28,6 +28,10 @@ class Generation : Listener {
 				NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt())
 			}
 
+			if (GameRunner.netherIndicators && world.environment == World.Environment.NORMAL) {
+				NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())
+			}
+
 			if (GameRunner.oreWorldFix && world.environment == World.Environment.NORMAL) {
 				OreFix.removeMinerals(chunk)
 				OreFix.removeOres(chunk)
