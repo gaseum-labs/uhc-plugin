@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.team.TeamData
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -22,9 +23,9 @@ class ShareCoordsCommand : BaseCommand() {
         if (!GameRunner.uhc.isGameGoing())
             return Commands.errorMessage(sender, "Game is not running")
 
-        /* sharecoords command can only be used when alive and playing */
-        if (!GameRunner.uhc.isCurrent(sender.uniqueId))
-            return Commands.errorMessage(sender, "You are no longer in the game")
+        /* sharecoords command can only be used when playing */
+        if (!PlayerData.isParticipating(sender.uniqueId))
+            return Commands.errorMessage(sender, "You are not participating in this game")
 
         val team = TeamData.playersTeam(sender.uniqueId)
         val location = sender.location

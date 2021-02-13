@@ -118,7 +118,7 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 		}
 
 		fun <DataType> getData(uuid: UUID, type: QuirkType): DataType {
-			return getData(GameRunner.uhc.getPlayerData(uuid), type)
+			return getData(PlayerData.getPlayerData(uuid), type)
 		}
 
 		fun <DataType> getData(playerData: PlayerData, type: QuirkType): DataType {

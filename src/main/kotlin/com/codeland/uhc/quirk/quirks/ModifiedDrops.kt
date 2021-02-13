@@ -29,18 +29,19 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 	}
 	companion object {
-		fun onDrop(type: EntityType, drops: MutableList<ItemStack>) {
+		fun onDrop(type: EntityType, drops: MutableList<ItemStack>): Boolean {
 			val rand = Math.random()
 			val third = 1 / 3.0
 			val twoThirds = 2 / 3.0
 
-			when (type) {
+			return when (type) {
 				EntityType.CREEPER -> {
 					drops.add(when {
 						rand < 0.25 -> ItemStack(Material.TNT, Util.randRange(1, 3))
 						rand < 0.5 -> ItemUtil.fireworkStar(Util.randRange(1, 3), Color.LIME)
 						else -> ItemStack(Material.GUNPOWDER, Util.randRange(2, 6))
 					})
+					true
 				}
 
 				EntityType.PHANTOM -> {
@@ -54,6 +55,7 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 						drops.add(elytra)
 					}
+					true
 				}
 
 				EntityType.ZOMBIE, EntityType.HUSK, EntityType.ZOMBIE_VILLAGER -> {
@@ -69,6 +71,7 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 						if (egg != null)
 							drops.add(ItemStack(egg))
 					}
+					true
 				}
 
 				EntityType.SKELETON, EntityType.STRAY -> {
@@ -102,6 +105,7 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 							drops.add(crossbow)
 						}
 					}
+					true
 				}
 
 				EntityType.SPIDER, EntityType.CAVE_SPIDER, EntityType.SILVERFISH -> {
@@ -112,6 +116,7 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 					if (Math.random() < 0.04)
 						drops.add(ItemUtil.randomEnchantedBook())
+					true
 				}
 
 				EntityType.DROWNED -> {
@@ -125,7 +130,10 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 					), 0.5)
 
 					drops.add(trident)
+					true
 				}
+
+				else -> false
 			}
 		}
 	}

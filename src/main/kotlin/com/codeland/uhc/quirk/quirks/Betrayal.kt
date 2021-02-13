@@ -2,6 +2,7 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
@@ -23,13 +24,12 @@ class Betrayal(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	class BetrayalData(var swaps : Int, var kills : Int)
 
 	override fun onEnable() {}
-
 	override fun onDisable() {}
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		/* reset data before a game */
 		if (phase.type == PhaseType.WAITING) {
-			GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
 				val data = QuirkType.getData<BetrayalData>(playerData, QuirkType.BETRAYAL)
 				data.kills = 0
 				data.swaps = 0

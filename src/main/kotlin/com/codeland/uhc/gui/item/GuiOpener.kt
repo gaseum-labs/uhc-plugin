@@ -1,11 +1,9 @@
 package com.codeland.uhc.gui.item
 
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 
 class GuiOpener : CommandItem() {

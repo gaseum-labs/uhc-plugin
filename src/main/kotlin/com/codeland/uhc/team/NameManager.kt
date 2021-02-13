@@ -1,27 +1,18 @@
 package com.codeland.uhc.team
 
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.waiting.LobbyPvp
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.core.PlayerData
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ShapedRecipe
-import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.scoreboard.Team
 
 object NameManager {
 	fun updateName(player: Player) {
-		val (playerData, firstTime) = GameRunner.uhc.initialPlayerData(player.uniqueId)
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		playerData.setSkull(player)
 
-		while (playerData.actionsQueue.isNotEmpty()) {
-			Util.log("PERFORMING ACTION FOR ${player.name}")
-			playerData.actionsQueue.remove()(player)
-		}
+		while (playerData.actionsQueue.isNotEmpty()) playerData.actionsQueue.remove()(player)
 
 		playerData.replaceZombieWithPlayer(player)
 
@@ -29,11 +20,7 @@ object NameManager {
 		val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
 		val fakeTeam = scoreboard.getTeam(player.name) ?: makeFakeTeam(player.name)
 
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING) && LobbyPvp.getPvpData(player).inPvp) {
-			player.setPlayerListName(null)
-			updatePvp(fakeTeam)
-
-		} else if (team == null) {
+		if (team == null) {
 			player.setPlayerListName(null)
 			updateTeam(fakeTeam, ColorPair(ChatColor.WHITE))
 
@@ -49,13 +36,6 @@ object NameManager {
 		team.addEntry(name)
 
 		return team
-	}
-
-	fun updatePvp(team: Team) {
-		team.color = ChatColor.RED
-
-		team.prefix = ""
-		team.suffix = "${ChatColor.DARK_RED}${ChatColor.BOLD} PVP"
 	}
 
 	fun updateTeam(team: Team, colorPair: ColorPair) {

@@ -65,7 +65,7 @@ object GameRunner {
 	}
 
 	fun teamIsAlive(team: Team): Boolean {
-		return team.members.any { member -> uhc.isAlive(member) }
+		return team.members.any { member -> PlayerData.isAlive(member) }
 	}
 
 	data class RemainingTeamsReturn(val remaining: Int, val lastAlive: ArrayList<UUID>?, val teamAlive: Boolean, val individualAlive: Boolean)
@@ -80,6 +80,7 @@ object GameRunner {
 		var teamAlive = false
 		var individualAlive = false
 
+		/* count up all teams */
 		TeamData.teams.forEach { team ->
 			if (teamIsAlive(team)) {
 				if (team == focusTeam) teamAlive = true
@@ -89,8 +90,9 @@ object GameRunner {
 			}
 		}
 
-		uhc.playerDataList.forEach { (uuid, playerData) ->
-			if (TeamData.playersTeam(uuid) == null && playerData.alive && playerData.participating) {
+		/* count up all players not on a team */
+		uhc.allCurrentPlayers { uuid ->
+			if (TeamData.playersTeam(uuid) == null) {
 				if (focusIndividual == uuid) individualAlive = true
 
 				++remaining
@@ -107,14 +109,15 @@ object GameRunner {
 	 */
 	private fun constructAliveList(group: ArrayList<UUID>): ArrayList<UUID> {
 		return group.filter { uuid ->
-			val data = uhc.playerDataList[uuid]
+			val data = PlayerData.playerDataList[uuid]
 
 			data != null && data.participating && data.alive
 		} as ArrayList<UUID>
 	}
 
 	fun playerDeath(deadUUID: UUID, killer: Player?) {
-		uhc.setAlive(deadUUID, false)
+		PlayerData.setAlive(deadUUID, false)
+		PlayerData.setParticipating(deadUUID, false)
 
 		val deadPlayerTeam = TeamData.playersTeam(deadUUID)
 		var (remainingTeams, lastRemaining, teamIsAlive, individualIsAlive) = remainingTeams(deadPlayerTeam, deadUUID)
@@ -192,7 +195,7 @@ object GameRunner {
 	fun playerAction(uuid: UUID, action: (Player) -> Unit) {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
-		if (onlinePlayer == null) uhc.getPlayerData(uuid).actionsQueue.add(action)
+		if (onlinePlayer == null) PlayerData.getPlayerData(uuid).actionsQueue.add(action)
 		else action(onlinePlayer)
 	}
 
@@ -200,7 +203,7 @@ object GameRunner {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
 		if (onlinePlayer == null) {
-			val playerData = uhc.getPlayerData(uuid)
+			val playerData = PlayerData.getPlayerData(uuid)
 
 			playerData.offlineZombie?.teleport(location)
 
@@ -213,7 +216,7 @@ object GameRunner {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
 		if (onlinePlayer == null) {
-			val playerData = uhc.getPlayerData(uuid)
+			val playerData = PlayerData.getPlayerData(uuid)
 			playerData.offlineZombie?.addPotionEffect(effect)
 
 		} else {
@@ -221,11 +224,23 @@ object GameRunner {
 		}
 	}
 
+	fun damagePlayer(uuid: UUID, damage: Double) {
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+
+		if (onlinePlayer == null) {
+			val playerData = PlayerData.getPlayerData(uuid)
+			playerData.offlineZombie?.damage(damage)
+
+		} else {
+			onlinePlayer.damage(damage)
+		}
+	}
+
 	fun getPlayerLocation(uuid: UUID): Location? {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
 		return if (onlinePlayer == null) {
-			val playerData = uhc.getPlayerData(uuid)
+			val playerData = PlayerData.getPlayerData(uuid)
 			playerData.offlineZombie?.location
 
 		} else {

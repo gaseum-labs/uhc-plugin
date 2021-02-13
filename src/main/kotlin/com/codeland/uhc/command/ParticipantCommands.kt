@@ -5,8 +5,10 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.event.Chat
 import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.phases.waiting.AbstractLobby
 import com.codeland.uhc.team.*
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.chat.TextComponent
@@ -31,16 +33,17 @@ class ParticipantCommands : BaseCommand() {
 	@Description("opt out from participating")
 	fun optOutCommand(sender: CommandSender) {
 		sender as Player
+		val playerData = PlayerData.getPlayerData(sender.uniqueId)
 
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			Commands.errorMessage(sender, "The game has already started!")
 
-		} else if (GameRunner.uhc.isOptingOut(sender.uniqueId)) {
+		} else if (playerData.optingOut) {
 			Commands.errorMessage(sender, "You have already opted out!")
 
 		} else {
-			GameRunner.uhc.setOptOut(sender.uniqueId, true)
-			GameRunner.uhc.setParticipating(sender.uniqueId, false)
+			playerData.optingOut = true
+			playerData.staged = false
 
 			val team = TeamData.playersTeam(sender.uniqueId)
 			if (team != null) TeamData.removeFromTeam(team, sender.uniqueId, true)
@@ -53,15 +56,16 @@ class ParticipantCommands : BaseCommand() {
 	@Description("opt back into participating")
 	fun optInCommand(sender: CommandSender) {
 		sender as Player
+		val playerData = PlayerData.getPlayerData(sender.uniqueId)
 
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			Commands.errorMessage(sender, "The game has already started!")
 
-		} else if (!GameRunner.uhc.isOptingOut(sender.uniqueId)) {
+		} else if (!playerData.optingOut) {
 			Commands.errorMessage(sender, "You already aren't opting out!")
 
 		} else {
-			GameRunner.uhc.setOptOut(sender.uniqueId, false)
+			playerData.optingOut = false
 
 			GameRunner.sendGameMessage(sender, "You have opted back into participating")
 		}
@@ -110,7 +114,7 @@ class ParticipantCommands : BaseCommand() {
 			changeTeamColor(sender, colors[0].color0, colors[0].color1)
 	}
 
-	@Subcommand("Compass")
+	@Subcommand("compass")
 	@Description("tell which direction a cave will be in based on the cave indicator block")
 	fun compassCommand(sender: CommandSender) {
 		sender as Player
@@ -128,6 +132,16 @@ class ParticipantCommands : BaseCommand() {
 				else -> "${ChatColor.RED}${ChatColor.BOLD}This block is not a cave indicator"
 			})
 		}
+	}
+
+	@Subcommand("lobby")
+	@Description("allows spectators to go back to lobby")
+	fun lobbyCommand(sender: CommandSender) {
+		sender as Player
+
+		if (PlayerData.isParticipating(sender.uniqueId)) return Commands.errorMessage(sender, "You're playing the game")
+
+		AbstractLobby.onSpawnLobby(sender)
 	}
 
 	private fun changeTeamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor?) {

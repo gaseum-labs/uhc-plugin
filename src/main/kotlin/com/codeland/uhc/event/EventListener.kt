@@ -10,8 +10,8 @@ import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.phase.phases.grace.GraceDefault
-import com.codeland.uhc.phase.phases.waiting.LobbyPvp
-import com.codeland.uhc.phase.phases.waiting.WaitingDefault
+import com.codeland.uhc.phase.phases.waiting.AbstractLobby
+import com.codeland.uhc.phase.phases.waiting.PvpData
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.team.NameManager
@@ -19,69 +19,72 @@ import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
-import org.bukkit.*
+import org.bukkit.Bukkit
+import org.bukkit.GameMode
+import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
-import org.bukkit.event.inventory.*
+import org.bukkit.event.inventory.CraftItemEvent
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.inventory.*
+import org.bukkit.inventory.EquipmentSlot
+import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionType
+import org.ietf.jgss.GSSManager
 
 class EventListener : Listener {
 	@EventHandler
 	fun onPlayerJoin(event: PlayerJoinEvent) {
 		val player = event.player
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		NameManager.updateName(event.player)
 		DimensionBar.setPlayerBarDimension(event.player)
 
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			(GameRunner.uhc.currentPhase as WaitingDefault?)?.onPlayerJoin(event.player)
-
-		} else if (GameRunner.uhc.isGameGoing() && (!GameRunner.uhc.isParticipating(player.uniqueId) || !GameRunner.uhc.isAlive(player.uniqueId))) {
-			event.player.gameMode = GameMode.SPECTATOR
+		/* lobby spawn */
+		if (!playerData.participating) {
+			AbstractLobby.onSpawnLobby(event.player)
 		}
 	}
 
 	@EventHandler
 	fun onLogOut(event: PlayerQuitEvent) {
 		val player = event.player
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			val pvpData = LobbyPvp.getPvpData(player)
+		if (playerData.lobbyPVP.inPvp) {
+			PvpData.disablePvp(player)
 
-			if (pvpData.inPvp) LobbyPvp.disablePvp(player)
-
-		} else if (GameRunner.uhc.isGameGoing()) {
-			val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
-
-			if (playerData.participating && playerData.alive) {
-				playerData.offlineZombie = playerData.createZombie(player)
-			}
+		} else if (playerData.participating) {
+			playerData.offlineZombie = playerData.createZombie(player)
 		}
 	}
 
 	@EventHandler
 	fun onPlayerHurt(event: EntityDamageEvent) {
-		if (GameRunner.uhc.isGameGoing()) {
+		val player = event.entity
+		if (player !is Player) return
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+
+		if (playerData.participating) {
+			/* stuff that happens during the game */
 			if (GameRunner.uhc.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
 				event.isCancelled = true
+
 			} else if (event.entity is Player && GameRunner.uhc.isEnabled(QuirkType.DEATHSWAP) && Deathswap.swapTime < Deathswap.IMMUNITY) {
 				event.isCancelled = true
 			}
-		} else {
-			if (!GameRunner.uhc.isGameGoing() && event.entityType == EntityType.PLAYER) {
-				event.isCancelled = true
-				val player = event.entity as Player
-				if (LobbyPvp.getPvpData(player).inPvp) {
-					event.isCancelled = false
-				}
-			}
+
+		/* prevent damage done to players not playing the game */
+		} else if (!playerData.lobbyPVP.inPvp) {
+			event.isCancelled = true
 		}
 	}
 
@@ -93,7 +96,7 @@ class EventListener : Listener {
 		if (summoner.enabled && summoner.onSummon(event)) {
 			event.isCancelled = true
 
-		} else if (GameRunner.uhc.isPhase(PhaseType.WAITING) && (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK)) {
+		} else if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
 			CommandItemType.commandItemList.any { commandItem ->
 				if (commandItem.isItem(stack)) {
 					commandItem.onUse(GameRunner.uhc, event.player)
@@ -106,6 +109,8 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onDropItem(event: ItemSpawnEvent) {
+		// TODO more sophisticated detection of items dropped in lobby pvp
+		// this ain't cut it chief
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			event.entity.ticksLived = 5000
 		}
@@ -114,49 +119,49 @@ class EventListener : Listener {
 	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		val player = event.entity
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			LobbyPvp.allInPvp { pvpPlayer, pvpData ->
+		/* dying in lobby pvp */
+		if (playerData.lobbyPVP.inPvp) {
+			PvpData.allInPvp { pvpPlayer, pvpData ->
 				if (pvpData.inPvp) pvpPlayer.sendMessage(event.deathMessage ?: "${player.name} fucking died")
 			}
 
-		} else if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)) {
-			val killer = player.killer
+		/* players dying in the game */
+		} else if (playerData.participating) {
+			/* dying in betrayal chc */
+			if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)) {
+				val killer = player.killer
 
-			/* don't drop if you were killed and team swapped */
-			if(killer != null) {
-				event.keepInventory = true
-				event.drops.clear()
+				/* don't drop if you were killed and team swapped */
+				if (killer != null) {
+					event.keepInventory = true
+					event.drops.clear()
 
-				Betrayal.onPlayerDeath(player.uniqueId, killer.uniqueId)
+					Betrayal.onPlayerDeath(player.uniqueId, killer.uniqueId)
+				}
+
+			/* regular deaths */
+			} else if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
+				val wasPest = Pests.isPest(player)
+
+				if (GameRunner.uhc.isEnabled(QuirkType.PESTS) && !wasPest) Pests.makePest(player)
+
+				if (playerData.alive) GameRunner.playerDeath(player.uniqueId, player.killer)
+
+				if (Pests.isPest(player)) TeamData.removeFromTeam(player.uniqueId, true)
 			}
-		/* regular deaths */
-		} else if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
-			val wasPest = Pests.isPest(player)
 
-			if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-				if (!wasPest && GameRunner.uhc.isAlive(player.uniqueId))
-					Pests.makePest(player)
-			} else {
-				player.gameMode = GameMode.SPECTATOR
+			/* remove chc specific items from drops */
+
+			if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) {
+				event.drops.removeAll { itemStack ->
+					itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.displayName == "Unusable Slot"
+				}
 			}
 
-			if (GameRunner.uhc.isAlive(player.uniqueId) && !wasPest)
-				GameRunner.playerDeath(player.uniqueId, player.killer)
-
-			if (Pests.isPest(player))
-				TeamData.removeFromTeam(player.uniqueId, true)
+			if (GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS)) PlayerCompass.filterDrops(event.drops)
 		}
-
-		/* remove chc specific items from drops */
-
-		if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) {
-			event.drops.removeAll { itemStack ->
-				itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.displayName == "Unusable Slot"
-			}
-		}
-
-		if (GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS)) PlayerCompass.filterDrops(event.drops)
 	}
 
 	@EventHandler
@@ -193,30 +198,27 @@ class EventListener : Listener {
 	@EventHandler
 	fun onPlayerRespawn(event: PlayerRespawnEvent) {
 		val player = event.player
-		val uuid = player.uniqueId
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		/* waiting pvp respawning */
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			if (LobbyPvp.getPvpData(player).inPvp) LobbyPvp.disablePvp(player)
+		if (playerData.lobbyPVP.inPvp) {
+			PvpData.disablePvp(player)
+			event.respawnLocation = AbstractLobby.lobbyLocation(GameRunner.uhc, player)
 
-		/* respawning when the game is going */
-		} else {
-			/* conditions to respawn in game */
-			if (GameRunner.uhc.isAlive(uuid) || (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(player))) {
-				val world = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
-				val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
-				if (location != null) event.respawnLocation = location
+		/* players respawning who are in the game */
+		} else if (playerData.participating) {
+			val world = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
+			val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+			if (location != null) event.respawnLocation = location
 
-				/* custom quirk behavior when players start */
-				GameRunner.uhc.quirks.forEach { quirk ->
-					if (quirk.enabled) quirk.onStart(event.player.uniqueId)
-				}
-
-			/* otherwise this is a spectator */
-			} else {
-				/* players respawning as spectator */
-				event.respawnLocation = GameRunner.uhc.spectatorSpawnLocation()
+			/* custom quirk behavior when players start */
+			GameRunner.uhc.quirks.forEach { quirk ->
+				if (quirk.enabled) quirk.onStart(event.player.uniqueId)
 			}
+
+		/* players respawning when they are eliminated */
+		} else {
+			event.respawnLocation = AbstractLobby.onSpawnLobby(player)
 		}
 	}
 
@@ -241,15 +243,13 @@ class EventListener : Listener {
 		}
 
 		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
-			if (Pests.isPest(target))
-				event.isCancelled = true
+			if (Pests.isPest(target)) event.isCancelled = true
 		}
 	}
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
 		/* prevent pest crafting */
-
 		if (GameRunner.uhc.isEnabled(QuirkType.PESTS)) {
 			val player = event.whoClicked
 
@@ -264,15 +264,20 @@ class EventListener : Listener {
 		val stack = event.itemDrop.itemStack
 
 		event.isCancelled =
-			(GameRunner.uhc.isPhase(PhaseType.WAITING) && CommandItemType.commandItemList.any { commandItem ->
-				commandItem.isItem(stack)
-			}) ||
+			CommandItemType.commandItemList.any { commandItem -> commandItem.isItem(stack) } ||
 			(GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS) && PlayerCompass.isCompass(stack))
 	}
 
 	fun shouldHealthCancelled(player: Player): Boolean {
-		return (GameRunner.uhc.isPhase(PhaseType.WAITING) && LobbyPvp.getPvpData(player).inPvp) ||
-			(!GameRunner.uhc.naturalRegeneration && (!GameRunner.uhc.isPhase(PhaseType.GRACE) && (!GameRunner.uhc.isEnabled(QuirkType.PESTS) || !Pests.isPest(player))))
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+
+		return !GameRunner.uhc.naturalRegeneration && (
+			playerData.lobbyPVP.inPvp || (
+				playerData.participating &&
+				!GameRunner.uhc.isPhase(PhaseType.GRACE) &&
+				(!GameRunner.uhc.isEnabled(QuirkType.PESTS) || !Pests.isPest(player))
+			)
+		)
 	}
 
 	@EventHandler
@@ -283,9 +288,7 @@ class EventListener : Listener {
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
 		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
-			if (shouldHealthCancelled(player)) {
-				event.isCancelled = true
-			}
+			event.isCancelled = shouldHealthCancelled(player)
 		}
 	}
 
@@ -293,99 +296,89 @@ class EventListener : Listener {
 	fun onFoodLevelChange(event: FoodLevelChangeEvent) {
 		val player = event.entity as Player
 
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING) && !LobbyPvp.getPvpData(player).inPvp) {
-			event.foodLevel = 20
-			event.isCancelled = true
-
-		} else if (shouldHealthCancelled(player)) {
+		/* in any combat situation (lobby pvp, nongrace periods) */
+		if (shouldHealthCancelled(player)) {
 			val over = (event.foodLevel - 17).coerceAtLeast(0)
 
 			if (event.foodLevel > 17) event.foodLevel = 17
 			player.saturation += over
+
+		/* when in lobby there is no hunger */
+		} else if (!PlayerData.isParticipating(player.uniqueId)) {
+			event.foodLevel = 20
+			event.isCancelled = true
 		}
+
+		/* players in grace will not have hunger affected at all */
 	}
 
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
+		val killer = event.entity.killer
+
 		/* test if offline zombie was killed */
 		val (inventory, experience, uuid) = PlayerData.getZombieData(event.entity)
 
 		/* offline zombie was killed */
 		if (experience != -1) {
-			val playerData = GameRunner.uhc.getPlayerData(uuid)
-			playerData.offlineZombie = null
+			val playerData = PlayerData.getPlayerData(uuid)
 
+			/* lose reference to old offline zombie */
+			playerData.offlineZombie = null
 			event.drops.clear()
 
-			val killer = event.entity.killer
-
+			/* betrayal */
 			if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL) && killer != null) {
 				Betrayal.onPlayerDeath(uuid, killer.uniqueId)
 
-			/* player is allowed to respawn */
 			} else {
-				inventory.forEach { drop ->
-					event.drops.add(drop)
-				}
-
+				/* drop they player's inventory and experience */
+				inventory.forEach { drop -> event.drops.add(drop) }
 				val droppedExperience = experience.coerceAtMost(100)
 				event.droppedExp = droppedExperience
 
+				/* player can respawn */
 				if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
 					val world = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
 
-					GameRunner.teleportPlayer(uuid,
+					/* create the player's new zombie somewhere */
+					playerData.offlineZombie = playerData.createDefaultZombie(
+						uuid,
 						GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
-							?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
+						?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 					)
 
-					/* player is eliminated */
+				/* player is eliminated */
 				} else {
-					GameRunner.playerDeath(uuid, event.entity.killer)
-
-					/* reset player for when they rejoin */
-					GameRunner.playerAction(uuid) { player ->
-						player.health = 20.0
-						player.inventory.clear()
-						player.fireTicks = -1
-						player.totalExperience = 0
-						player.activePotionEffects.clear()
-						player.teleport(GameRunner.uhc.spectatorSpawnLocation())
-					}
+					GameRunner.playerDeath(uuid, killer)
+					GameRunner.playerAction(uuid) { player -> AbstractLobby.onSpawnLobby(player) }
+				}
+			}
+		} else {
+			if (!GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS) || !ModifiedDrops.onDrop(event.entityType, event.drops)) {
+				DropFixType.values().any { dropFix ->
+					if (killer == null) dropFix.dropFix.onNaturalDeath(event.entity, event.drops)
+					else dropFix.dropFix.onKillEntity(killer, event.entity, event.drops)
 				}
 			}
 
-			return
-		}
+			val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
+			if (!Summoner.isCommanded(event.entity) && summoner.enabled) {
+				val spawnEgg = summoner.getSpawnEgg(event.entityType)
 
-		if (GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS)) {
-			ModifiedDrops.onDrop(event.entityType, event.drops)
-
-		} else {
-			val killer = event.entity.killer
-
-			DropFixType.values().any { dropFix ->
-				if (killer == null) dropFix.dropFix.onNaturalDeath(event.entity, event.drops)
-				else dropFix.dropFix.onKillEntity(killer, event.entity, event.drops)
+				if (spawnEgg != null) event.drops.add(ItemStack(spawnEgg))
 			}
-		}
 
-		val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
-		if (!Summoner.isCommanded(event.entity) && summoner.enabled) {
-			val spawnEgg = summoner.getSpawnEgg(event.entityType)
+			if (GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN)) {
+				Halloween.addDrops(event.entity, event.drops)
+				Halloween.onEntityDeath(event.entity)
+			}
 
-			if (spawnEgg != null) event.drops.add(ItemStack(spawnEgg))
-		}
-
-		if (GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN)) {
-			Halloween.addDrops(event.entity, event.drops)
-			Halloween.onEntityDeath(event.entity)
-		}
-
-		if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
-			if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
-				event.drops.forEach { drop ->
-					drop.amount = drop.amount * 3
+			if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
+				if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
+					event.drops.forEach { drop ->
+						drop.amount = drop.amount * 2
+					}
 				}
 			}
 		}
@@ -393,61 +386,74 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntityDamageEvent(event: EntityDamageByEntityEvent) {
-		var attacker = event.damager
-		var defender = event.entity
+		val attacker = event.damager
+		val defender = event.entity
+		val grace = GameRunner.uhc.isPhase(PhaseType.GRACE)
+		val pests = GameRunner.uhc.isEnabled(QuirkType.PESTS)
 
-		if (attacker is Projectile && defender is Player) {
-			if (
-				GameRunner.uhc.isPhase(PhaseType.GRACE) &&
-				attacker.shooter is Player
-			) {
-				event.isCancelled = true
+		fun isParticipatingPlayer(entity: Entity): Boolean {
+			return entity is Player && PlayerData.isParticipating(entity.uniqueId)
+		}
+
+		fun isShootingParticipatingPlayer(entity: Entity): Boolean {
+			if (entity !is Projectile) return false
+			val shooter = entity.shooter
+			return shooter is Player && PlayerData.isParticipating(shooter.uniqueId)
+		}
+
+		/* player attacking */
+		if (isParticipatingPlayer(attacker)) {
+			attacker as Player
+
+			/* another player */
+			if (isParticipatingPlayer(defender)) {
+				defender as Player
+
+				event.isCancelled = grace || (pests && Pests.isPest(attacker) && Pests.isPest(defender))
+
+			/* a player zombie */
+			} else if (PlayerData.isZombie(defender)) {
+				event.isCancelled = grace
 			}
+		/* player shooting */
+		} else if (isShootingParticipatingPlayer(attacker)) {
+			attacker as Projectile
 
-		} else if (attacker is Player && defender is Player) {
-			/* protected no pvp phases */
-			if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-				event.isCancelled = !LobbyPvp.getPvpData(attacker).inPvp || !LobbyPvp.getPvpData(defender).inPvp
-			}
+			/* another player */
+			if (isParticipatingPlayer(defender)) {
+				defender as Player
 
-			if (GameRunner.uhc.isPhase(PhaseType.GRACE)) {
-				event.isCancelled = true
-				return
-			}
+				event.isCancelled = grace || (pests && Pests.isPest(attacker.shooter as Player) && Pests.isPest(defender))
 
-			/* pests cannot attack each other */
-			if (GameRunner.uhc.isEnabled(QuirkType.PESTS) && Pests.isPest(attacker) && Pests.isPest(defender))
-				event.isCancelled = true
-
-		} else if (attacker is Player && defender is Zombie) {
-			if (PlayerData.isZombie(defender) && GameRunner.uhc.isPhase(PhaseType.GRACE)) {
-				event.isCancelled = true
+			/* a player zombie */
+			} else if (PlayerData.isZombie(defender)) {
+				event.isCancelled = grace
 			}
 		}
 	}
 
 	@EventHandler
 	fun onBlockDrop(event: BlockDropItemEvent) {
-		var blockState = event.blockState
-		var block = event.block
+		val blockState = event.blockState
+		val block = event.block
 		val type = blockState.type
 
-		var player = event.player
-		var drops = event.items
-		var blockMiddle = block.location.toCenterLocation()
+		val player = event.player
+		val drops = event.items
+		val blockMiddle = block.location.toCenterLocation()
 
-		if (type == Material.NETHER_WART && GameRunner.uhc.isGameGoing() && block.world.environment == World.Environment.NETHER) {
-			drops.clear()
-			block.world.dropItem(blockMiddle, ItemStack(Material.NETHER_WART))
+		/* creative mode does not cause blocks to drop */
+		if (event.player.gameMode != GameMode.CREATIVE) {
+			if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
+				Abundance.replaceDrops(player, block, blockState, drops)
 
-		} else if (event.player.gameMode != GameMode.CREATIVE &&
-			BlockFixType.values().any { blockFixType ->
-				blockFixType.blockFix.onBreakBlock(GameRunner.uhc, type, drops, player) { drop ->
-					if (drop != null) block.world.dropItem(blockMiddle, drop)
+			} else {
+				BlockFixType.values().any { blockFixType ->
+					blockFixType.blockFix.onBreakBlock(GameRunner.uhc, type, drops, player) { drop ->
+						if (drop != null) block.world.dropItem(blockMiddle, drop)
+					}
 				}
 			}
-		) else if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
-			Abundance.replaceDrops(player, block, blockState, drops)
 		}
 	}
 
@@ -458,23 +464,23 @@ class EventListener : Listener {
 		var baseItem = event.player.inventory.itemInMainHand
 
 		/* prevent breaking the border in creative lobby */
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			val x = GameRunner.uhc.lobbyX
-			val z = GameRunner.uhc.lobbyZ
-			val radius = GameRunner.uhc.lobbyRadius + 1
+		val x = GameRunner.uhc.lobbyX
+		val z = GameRunner.uhc.lobbyZ
+		val radius = GameRunner.uhc.lobbyRadius + 1
 
-			if (((block.x == x + radius || block.x == x - radius) &&
-					(block.z > z - radius) && (block.z < z + radius)) ||
-				((block.z == z + radius || block.z == z - radius) &&
-					(block.x > x - radius) && (block.x < x + radius)) ||
-				((block.y == 255 || block.y == 0) && block.x <= x + radius && block.z <= z + radius && block.x >= x - radius && block.z >= z - radius)
-			) event.isCancelled = true
+		if (((block.x == x + radius || block.x == x - radius) &&
+				(block.z > z - radius) && (block.z < z + radius)) ||
+			((block.z == z + radius || block.z == z - radius) &&
+				(block.x > x - radius) && (block.x < x + radius)) ||
+			((block.y == 255 || block.y == 0) && block.x <= x + radius && block.z <= z + radius && block.x >= x - radius && block.z >= z - radius)
+		) {
+			event.isCancelled = true
 
 		} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 			var broken = block.state.getMetadata("broken")
 
-			var oldBlockType = block.type
-			var oldData = block.blockData
+			val oldBlockType = block.type
+			val oldData = block.blockData
 
 			/* block has not been set as broken */
 			if (Unsheltered.isBroken(block)) {
@@ -502,17 +508,20 @@ class EventListener : Listener {
 		val leavesLocation = event.block.location.toCenterLocation()
 
 		var nearestPlayer = null as Player?
-		var nearestDistance = Double.MAX_VALUE
+		var nearestDistance = 16.0
 
-		/* find the nearest player to the decaying leaves */
+		/* find the nearest player within 16 blocks to the decaying leaves */
 		Bukkit.getOnlinePlayers().forEach { player ->
-			val playerLocation = player.location
+			if (PlayerData.isParticipating(player.uniqueId)) {
+				val playerLocation = player.location
 
-			if (leavesLocation.world == playerLocation.world) {
-				val distance = playerLocation.distance(leavesLocation)
-				if (distance < nearestDistance) {
-					nearestDistance = distance
-					nearestPlayer = player
+				if (leavesLocation.world == playerLocation.world) {
+					val distance = playerLocation.distance(leavesLocation)
+
+					if (distance < nearestDistance) {
+						nearestDistance = distance
+						nearestPlayer = player
+					}
 				}
 			}
 		}
@@ -520,27 +529,27 @@ class EventListener : Listener {
 		val dropPlayer = nearestPlayer
 
 		/* apply applefix to this leaves block for the nearest player */
-		if (dropPlayer != null) {
+		if (dropPlayer != null)
 			BlockFixType.LEAVES.blockFix.onBreakBlock(leavesType, dropPlayer) { drop ->
 				if (drop != null) leavesLocation.world.dropItem(event.block.location.toCenterLocation(), drop)
 			}
-		}
 	}
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
 		val phase = GameRunner.uhc.currentPhase
+		val player = event.player
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		if (phase is WaitingDefault && LobbyPvp.getPvpData(event.player).inPvp && event.blockPlaced.y > GameRunner.uhc.lobbyPvpHeight) {
-			event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${GameRunner.uhc.lobbyPvpHeight}")
-			event.isCancelled = true
+		/* things that affect players playing the game */
+		if (GameRunner.uhc.isGameGoing() && playerData.participating) {
+			/* trying to build above endgame top level */
+			if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.topBoundary) {
+				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${phase.topBoundary}")
+				event.isCancelled = true
 
-		} else if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.topBoundary) {
-			event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${phase.topBoundary}")
-			event.isCancelled = true
-
-		} else {
-			if (GameRunner.uhc.isEnabled(QuirkType.CREATIVE)) {
+			/* creative block replenishing */
+			} else if (GameRunner.uhc.isEnabled(QuirkType.CREATIVE)) {
 				var material = event.itemInHand.type
 
 				/* replace these blocks */
@@ -556,12 +565,21 @@ class EventListener : Listener {
 					}
 				}
 
+			/* unsheltered block place prevention */
 			} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED)) {
 				var block = event.block
 
 				if (!Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 					event.isCancelled = true
 				}
+			}
+		}
+
+		/* things that affect lobby pvp players */
+		else if (playerData.lobbyPVP.inPvp) {
+			if (event.blockPlaced.y > GameRunner.uhc.lobbyPvpHeight) {
+				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${GameRunner.uhc.lobbyPvpHeight}")
+				event.isCancelled = true
 			}
 		}
 	}

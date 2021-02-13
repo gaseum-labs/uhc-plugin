@@ -5,6 +5,8 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
@@ -24,10 +26,10 @@ class TeamCommands : BaseCommand() {
 	@Description("remove all current teams")
 	fun clearTeams(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return //TODO make team commands available to do during the game
 
-		TeamData.removeAllTeams { player ->
-			GameRunner.uhc.setParticipating(player, false)
-		}
+		/* unstage everyone and remove teams */
+		TeamData.removeAllTeams { uuid -> PlayerData.setStaged(uuid, false) }
 
 		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
@@ -60,13 +62,15 @@ class TeamCommands : BaseCommand() {
 
 	private fun internalAddPlayerToTeam(sender: CommandSender, colorPair: ColorPair, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		if (GameRunner.uhc.isOptingOut(player.uniqueId))
+		if (playerData.optingOut)
 			return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
 
+		/* stage player and add them to team */
 		val team = TeamData.addToTeam(colorPair, player.uniqueId, true)
+		playerData.staged = true
 
-		GameRunner.uhc.setParticipating(player.uniqueId, true)
 		GameRunner.sendGameMessage(sender, "Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
 	}
 
@@ -78,9 +82,10 @@ class TeamCommands : BaseCommand() {
 		val team = TeamData.playersTeam(player.uniqueId)
 			?: return Commands.errorMessage(sender, "${player.name} is not on a team!")
 
+		/* unstage and remove player from team */
 		TeamData.removeFromTeam(team, player.uniqueId, true)
+		PlayerData.setStaged(player.uniqueId, false)
 
-		GameRunner.uhc.setParticipating(player.uniqueId, false)
 		GameRunner.sendGameMessage(sender, "Removed ${player.name} from ${team.colorPair.colorString(team.displayName)}")
 	}
 
@@ -93,7 +98,7 @@ class TeamCommands : BaseCommand() {
 		val playerArray = ArrayList<UUID>(onlinePlayers.size)
 
 		onlinePlayers.forEach { player ->
-			if (TeamData.playersTeam(player.uniqueId) == null && !GameRunner.uhc.isOptingOut(player.uniqueId))
+			if (TeamData.playersTeam(player.uniqueId) == null && !PlayerData.isOptingOut(player.uniqueId))
 				playerArray.add(player.uniqueId)
 		}
 
@@ -108,7 +113,7 @@ class TeamCommands : BaseCommand() {
 			uuids.forEach { uuid ->
 				if (uuid != null) {
 					TeamData.addToTeam(teamColorPairs[index], uuid, true)
-					GameRunner.uhc.setParticipating(uuid, true)
+					PlayerData.setStaged(uuid, true)
 				}
 			}
 		}

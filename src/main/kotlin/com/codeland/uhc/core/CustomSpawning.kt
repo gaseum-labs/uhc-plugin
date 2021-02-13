@@ -345,8 +345,8 @@ object CustomSpawning {
 		return Pair(playerMobCount, playerMobCapacity)
 	}
 
-	fun startSpawning() {
-		spawnTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
+	fun spawnTick(currentTick: Int) {
+		if (currentTick % 20 == 0) {
 			/* list of online players to collect from first pass */
 			val playerList = ArrayList<Player>()
 			val dataList = ArrayList<PlayerData>()
@@ -356,7 +356,7 @@ object CustomSpawning {
 				val player = Bukkit.getPlayer(uuid)
 
 				if (player != null) {
-					val data = GameRunner.uhc.getPlayerData(uuid)
+					val data = PlayerData.getPlayerData(uuid)
 
 					playerList.add(player)
 					dataList.add(data)
@@ -386,7 +386,11 @@ object CustomSpawning {
 						val horzDistance = sqrt((location1.x - location2.x).pow(2) + (location1.z - location2.z).pow(2))
 						val vertDistance = abs(location1.y - location2.y)
 
-						val intersection = Util.circleIntersection(MAX_RADIUS.toDouble(), horzDistance) * Util.levelIntersection(VERTICAL_RADIUS.toDouble(), vertDistance)
+						val intersection =
+							Util.circleIntersection(MAX_RADIUS.toDouble(), horzDistance) * Util.levelIntersection(
+								VERTICAL_RADIUS.toDouble(),
+								vertDistance
+							)
 						val percentIntersected = intersection / totalArea
 
 						data.mobcap -= PER_PLAYER * percentIntersected / 2
@@ -412,12 +416,7 @@ object CustomSpawning {
 					spawnForPlayer(player, playerList, data)
 				}
 			}
-		}, 0, 20)
-	}
-
-	fun stopSpawning() {
-		Bukkit.getScheduler().cancelTask(spawnTaskID)
-		spawnTaskID = -1
+		}
 	}
 
 	fun onCycle(spawnCycle: Int, n: Int): Boolean {

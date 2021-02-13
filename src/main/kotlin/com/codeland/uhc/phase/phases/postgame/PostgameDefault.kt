@@ -17,65 +17,7 @@ class PostgameDefault : Phase() {
         return ""
     }
 
-    lateinit var winners: ArrayList<UUID>
-
-    override fun customStart() {
-        if (winners.isNotEmpty()) {
-            val winningTeam = TeamData.playersTeam(winners[0])
-
-            val topMessage: TextComponent
-            val bottomMessage: TextComponent
-
-            if (winningTeam == null) {
-                val winningPlayer = Bukkit.getPlayer(winners[0])
-
-                topMessage = TextComponent("${ChatColor.GOLD}${ChatColor.BOLD}${winningPlayer?.name} Has Won!")
-                bottomMessage = TextComponent()
-
-                uhc.ledger.addEntry(winningPlayer?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
-
-            } else {
-                topMessage = TextComponent(winningTeam.colorPair.colorString("${winningTeam.displayName} Has Won!"))
-
-                var playerString = ""
-                winners.forEach { winner ->
-                    val player = Bukkit.getPlayer(winner)
-
-                    playerString += "${player?.name} "
-                    uhc.ledger.addEntry(player?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
-                }
-                bottomMessage = TextComponent(winningTeam.colorPair.colorString(playerString.dropLast(1)))
-            }
-
-            val title = Title(topMessage, bottomMessage, 0, 200, 40)
-            Bukkit.getServer().onlinePlayers.forEach { player ->
-                player.sendTitle(title)
-            }
-
-            uhc.ledger.createTextFile()
-
-        } else {
-            val title = Title(TextComponent("${ChatColor.GOLD}${ChatColor.BOLD}No one wins?"), TextComponent(""), 0, 200, 40)
-
-            Bukkit.getServer().onlinePlayers.forEach { player ->
-                player.sendTitle(title)
-            }
-        }
-
-        /*set all non participating */
-        uhc.playerDataList.forEach { (uuid, playerData) ->
-            playerData.participating = false
-        }
-
-        /* stop all world borders */
-        Bukkit.getWorlds().forEach { world ->
-            world.worldBorder.size = world.worldBorder.size
-        }
-
-        TeamData.removeAllTeams { player ->
-            GameRunner.uhc.setParticipating(player, false)
-        }
-    }
+    override fun customStart() {}
 
     override fun customEnd() {}
 

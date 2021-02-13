@@ -3,6 +3,7 @@ package com.codeland.uhc.phase.phases.endgame
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.Bukkit
@@ -34,19 +35,15 @@ class EndgameNone : Phase() {
 	companion object {
 		fun closeNether() {
 			SchedulerUtil.nextTick {
-				Bukkit.getOnlinePlayers().forEach { player ->
-					if (player.world.environment != GameRunner.uhc.defaultEnvironment) {
-						Commands.errorMessage(player, "Failed to return to home dimension!")
-						player.damage(100000000000.0)
+				PlayerData.playerDataList.forEach { (uuid, playerData) ->
+					val location = GameRunner.getPlayerLocation(uuid)
+
+					if (location != null && location.world.environment != GameRunner.uhc.defaultEnvironment) {
+						GameRunner.playerAction(uuid) { player -> Commands.errorMessage(player, "Failed to return to home dimension!") }
+						GameRunner.damagePlayer(uuid, 100000000000.0)
 					}
 				}
-
-				GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
-					playerData.offlineZombie?.damage(100000000000.0)
-				}
 			}
-
-			CustomSpawning.stopSpawning()
 		}
 	}
 }

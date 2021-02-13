@@ -1,29 +1,31 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phase.*
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.phases.grace.GraceDefault
-import com.codeland.uhc.phase.phases.postgame.PostgameDefault
+import com.codeland.uhc.phase.phases.waiting.AbstractLobby
+import com.codeland.uhc.phase.phases.waiting.PvpData
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
+import com.destroystokyo.paper.Title
+import net.md_5.bungee.api.ChatColor
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.command.CommandSender
-import java.lang.Math.pow
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.math.abs
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
-	var gameMaster = null as CommandSender?
 	var ledger = Ledger()
 
 	var mobCapCoefficient = 1.0
@@ -88,68 +90,9 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	val gui = Gui(this)
 
-	val playerDataList = HashMap<UUID, PlayerData>()
-
-	/* access operations for player data list */
-
-	fun isAlive(uuid: UUID): Boolean {
-		return getPlayerData(uuid).alive
-	}
-
-	fun isParticipating(uuid: UUID): Boolean {
-		return getPlayerData(uuid).participating
-	}
-
-	fun isOptingOut(uuid: UUID): Boolean {
-		return getPlayerData(uuid).optingOut
-	}
-
-	fun isCurrent(uuid: UUID): Boolean {
-		val playerData = getPlayerData(uuid)
-		return playerData.participating && playerData.alive
-	}
-
-	/* setter operations for player data list */
-
-	fun setAlive(uuid: UUID, alive: Boolean) {
-		getPlayerData(uuid).alive = alive
-	}
-
-	fun setParticipating(uuid: UUID, participating: Boolean) {
-		getPlayerData(uuid).participating = participating
-	}
-
-	fun setOptOut(uuid: UUID, optOut: Boolean) {
-		getPlayerData(uuid).optingOut = optOut
-	}
-
-	fun initialPlayerData(uuid: UUID): Pair<PlayerData, Boolean> {
-		val playerData = playerDataList[uuid]
-
-		return if (playerData == null) {
-			val ret = PlayerData(false, false, false)
-			playerDataList[uuid] = ret
-			Pair(ret, true)
-		} else {
-			Pair(playerData, false)
-		}
-	}
-
-	fun getPlayerData(uuid: UUID): PlayerData {
-		val playerData = playerDataList[uuid]
-
-		return if (playerData == null) {
-			val ret = PlayerData(false, false, false)
-			playerDataList[uuid] = ret
-			ret
-		} else {
-			playerData
-		}
-	}
-
 	fun spectatorSpawnLocation(): Location {
-		for ((uuid, playerData) in playerDataList) {
-			if (playerData.alive) {
+		for ((uuid, playerData) in PlayerData.playerDataList) {
+			if (playerData.alive && playerData.participating) {
 				return GameRunner.getPlayerLocation(uuid)?.clone()?.add(0.0, 2.0, 0.0)
 					?: Location(Bukkit.getWorlds()[0], 0.5, 100.0, 0.5)
 			}
@@ -255,7 +198,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	}
 
 	fun allCurrentPlayers(action: (uuid: UUID) -> Unit) {
-		playerDataList.forEach { (uuid, data) ->
+		PlayerData.playerDataList.forEach { (uuid, data) ->
 			if (data.alive && data.participating) action(uuid)
 		}
 	}
@@ -269,6 +212,25 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	 */
 	fun startWaiting() {
 		startPhase(PhaseType.WAITING)
+
+		/* begin global ticking task */
+		/* holds a centralized list of all general continuous tasks throughout the game */
+		var currentTick = 0
+
+		SchedulerUtil.everyTick {
+			if (isGameGoing() && !isPhase(PhaseType.ENDGAME)) CustomSpawning.spawnTick(currentTick)
+
+			if (isGameGoing()) PlayerData.zombieBorderTick()
+
+			PvpData.onTick()
+
+			ParkourCheckpoint.lobbyParkourTick()
+
+			AbstractLobby.lobbyTipsTick(currentTick)
+
+			/* highly composite number */
+			currentTick = (currentTick + 1) % 294053760
+		}
 	}
 
 	/**
@@ -282,18 +244,23 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		val numTeams = TeamData.teams.size
 		val individuals = ArrayList<UUID>()
 
-		playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.participating && !TeamData.isOnTeam(uuid)) individuals.add(uuid)
+		/* compile a list of all individuals that will play */
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.staged && !TeamData.isOnTeam(uuid)) individuals.add(uuid)
 		}
 
 		if (numTeams + individuals.size == 0) return "No one is playing!"
 
+		/* get where players are teleporting */
 		teleportLocations = GraceDefault.spreadPlayers(
-			Util.worldFromEnvironment(defaultEnvironment), numTeams + individuals.size, startRadius - 5.0,
+			Util.worldFromEnvironment(defaultEnvironment),
+			numTeams + individuals.size,
+			startRadius - 5.0,
 			if (defaultEnvironment == World.Environment.NETHER) GraceDefault.Companion::findYMid else GraceDefault.Companion::findYTop
 		)
 
-		if (teleportLocations?.isNotEmpty() == true) {
+		/* if teleport locations are found! */
+		return if (teleportLocations?.isNotEmpty() == true) {
 			/* compile teams and individuals into who will teleport to which location */
 			teleportGroups = Array(numTeams + individuals.size) { i ->
 				if (i < numTeams) {
@@ -307,31 +274,82 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 				}
 			}
 
-			gameMaster = commandSender
-
-			PlayerData.startZombieBorderTask()
-
+			/* switch to grace in 4 seconds */
 			val waiting = GameRunner.uhc.currentPhase as WaitingDefault
 			waiting.updateLength(4)
 
-		} else {
-			return "Not enough valid spaces to teleport in this world!"
-		}
+			null
 
-		return null
+		} else {
+			"Not enough valid spaces to teleport in this world!"
+		}
 	}
 
 	/**
 	 * called any time during the uhc to end it
 	 *
-	 * starts the postgame phase
+	 * cleans up and summarizes the game
+	 *
+	 * sets the current phase to endgame
 	 */
 	fun endUHC(winners: ArrayList<UUID>) {
-		PlayerData.endZombieBorderTask()
+		/* if someone won */
+		if (winners.isNotEmpty()) {
+			val winningTeam = TeamData.playersTeam(winners[0])
 
-		startPhase(PhaseType.POSTGAME) { phase ->
-			(phase as PostgameDefault).winners = winners
+			val topMessage: TextComponent
+			val bottomMessage: TextComponent
+
+			if (winningTeam == null) {
+				val winningPlayer = Bukkit.getPlayer(winners[0])
+
+				topMessage = TextComponent("${ChatColor.GOLD}${ChatColor.BOLD}${winningPlayer?.name} Has Won!")
+				bottomMessage = TextComponent()
+
+				ledger.addEntry(winningPlayer?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
+
+			} else {
+				topMessage = TextComponent(winningTeam.colorPair.colorString("${winningTeam.displayName} Has Won!"))
+
+				var playerString = ""
+				winners.forEach { winner ->
+					val player = Bukkit.getPlayer(winner)
+
+					playerString += "${player?.name} "
+					ledger.addEntry(player?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
+				}
+
+				bottomMessage = TextComponent(winningTeam.colorPair.colorString(playerString.dropLast(1)))
+			}
+
+			val title = Title(topMessage, bottomMessage, 0, 200, 40)
+			Bukkit.getServer().onlinePlayers.forEach { player -> player.sendTitle(title) }
+
+			ledger.createTextFile()
+
+		/* no one won the game */
+		} else {
+			val title = Title(TextComponent("${ChatColor.GOLD}${ChatColor.BOLD}No one wins?"), TextComponent(""), 0, 200, 40)
+
+			Bukkit.getServer().onlinePlayers.forEach { player -> player.sendTitle(title) }
 		}
+
+		/* remove all teams */
+		TeamData.removeAllTeams {}
+
+		/* reset all player data states */
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			playerData.participating = false
+			playerData.alive = false
+		}
+
+		/* stop all world borders */
+		Bukkit.getWorlds().forEach { world ->
+			world.worldBorder.size = world.worldBorder.size
+		}
+
+		/* go to postgame immediately */
+		startPhase(PhaseType.POSTGAME)
 	}
 
 	/* starting phases */

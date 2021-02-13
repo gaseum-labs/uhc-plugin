@@ -9,6 +9,7 @@ import com.codeland.uhc.command.ubt.PartialUBT
 import com.codeland.uhc.command.ubt.UBT
 import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.CarePackages
@@ -105,28 +106,25 @@ class TestCommands : BaseCommand() {
 			}
 		}
 
-		GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.participating && !TeamData.isOnTeam(uuid)) {
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if ((playerData.participating || playerData.staged) && !TeamData.isOnTeam(uuid)) {
 				val player = Bukkit.getOfflinePlayer(uuid)
 				GameRunner.sendGameMessage(sender, player.name ?: "NULL")
 			}
 		}
 	}
 
-	@Subcommand("alive")
-	@Description("is this player alive?")
-	fun testAlive(sender: CommandSender, player: OfflinePlayer) {
-		if (Commands.opGuard(sender)) return
+	@Subcommand("playerData")
+	@Description("get this player's playerData")
+	fun testPlayerData(sender: CommandSender, player: OfflinePlayer) {
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		GameRunner.sendGameMessage(sender, "${player.name} is alive: ${GameRunner.uhc.isAlive(player.uniqueId)}")
-	}
-
-	@Subcommand("participating")
-	@Description("is this player participating?")
-	fun testParticipating(sender: CommandSender, player: OfflinePlayer) {
-		if (Commands.opGuard(sender)) return
-
-		GameRunner.sendGameMessage(sender, "${player.name} is participating: ${GameRunner.uhc.isParticipating(player.uniqueId)}")
+		GameRunner.sendGameMessage(sender, "PlayerData for ${player.name}:")
+		GameRunner.sendGameMessage(sender, "Staged: ${playerData.staged}")
+		GameRunner.sendGameMessage(sender, "Participating: ${playerData.participating}")
+		GameRunner.sendGameMessage(sender, "Alive: ${playerData.alive}")
+		GameRunner.sendGameMessage(sender, "Opting Out: ${playerData.optingOut}")
+		GameRunner.sendGameMessage(sender, "In Lobby PVP: ${playerData.lobbyPVP.inPvp}")
 	}
 
 	@Subcommand("zombie")
@@ -136,7 +134,7 @@ class TestCommands : BaseCommand() {
 
 		val onlinePlayer = player.player ?: return Commands.errorMessage(sender, "${player.name} is offline!")
 
-		val playerData = GameRunner.uhc.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 		playerData.createZombie(onlinePlayer)
 
 		GameRunner.sendGameMessage(sender, "Created a zombie for ${player.name}")
@@ -173,7 +171,7 @@ class TestCommands : BaseCommand() {
 	fun testMobCap(sender: CommandSender, player: Player) {
 		val playerMobs = CustomSpawning.calcPlayerMobs(player)
 
-		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${GameRunner.uhc.getPlayerData(player.uniqueId).mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
+		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
 	}
 
 	@Subcommand("gbs")
