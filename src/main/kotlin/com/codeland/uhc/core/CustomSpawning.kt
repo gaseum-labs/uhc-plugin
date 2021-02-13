@@ -106,10 +106,10 @@ object CustomSpawning {
 
 		zombie.isBaby = false
 		zombie.canPickupItems = false
+		zombie.equipment?.clear()
 
 		if (zombie is Drowned) {
 			if (onCycle(spawnCycle, 4)) zombie.equipment?.setItemInMainHand(ItemStack(Material.TRIDENT))
-			else zombie.equipment?.setItemInMainHand(null)
 
 		} else if (onCycle(spawnCycle, 5)) {
 			applyEquipment(zombie.equipment)
@@ -118,7 +118,6 @@ object CustomSpawning {
 
 	fun applyEquipment(equipment: EntityEquipment?) {
 		if (equipment == null) return
-		equipment.clear()
 
 		val random = Util.randRange(0, 4)
 		when (random) {
@@ -302,11 +301,24 @@ object CustomSpawning {
 		return false
 	}
 
+	fun playerOnSurface(player: Player): Boolean {
+		val world = player.location.world
+
+		if (world.environment != World.Environment.NORMAL) return false
+		if (!world.isDayTime) return false
+
+		return player.location.y > 57
+	}
+
 	const val SPAWN_TAG = "_UHC_SPAWN"
 	data class SpawnTagData(val uuid: UUID, val fraction: Double)
 
 	fun makePlayerMob(entity: Entity, player: Player, data: PlayerData) {
-		entity.setMetadata(SPAWN_TAG, FixedMetadataValue(UHCPlugin.plugin, SpawnTagData(player.uniqueId, (1 / data.mobcap).coerceAtLeast(0.0))))
+		var mobFraction = (1 / data.mobcap).coerceAtLeast(0.0)
+
+		if (entity.location.block.biome == Biome.SOUL_SAND_VALLEY || playerOnSurface(player)) mobFraction *= 2
+
+		entity.setMetadata(SPAWN_TAG, FixedMetadataValue(UHCPlugin.plugin, SpawnTagData(player.uniqueId, mobFraction)))
 	}
 
 	fun mobPercentage(entity: Entity, player: Player): Double {
@@ -406,9 +418,6 @@ object CustomSpawning {
 			for (i in playerList.indices) {
 				val player = playerList[i]
 				val data = dataList[i]
-
-				if (player.world.getBlockAt(player.location).biome == Biome.SOUL_SAND_VALLEY) data.mobcap *= 0.5
-				if (GameRunner.uhc.isPhase(PhaseType.ENDGAME)) data.mobcap *= 0.5
 
 				var playerMobCapacity = calcPlayerMobs(player)
 
