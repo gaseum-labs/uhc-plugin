@@ -1,14 +1,11 @@
 package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.command.Commands
-import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.SchedulerUtil
-import org.bukkit.Bukkit
 import org.bukkit.World
-import org.bukkit.boss.BossBar
 
 class EndgameNone : Phase() {
 	override fun customStart() {

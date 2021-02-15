@@ -1,5 +1,6 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.gui.Gui
 import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phase.*

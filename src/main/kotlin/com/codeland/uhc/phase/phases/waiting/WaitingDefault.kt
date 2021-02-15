@@ -1,19 +1,8 @@
 package com.codeland.uhc.phase.phases.waiting
 
-import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.CustomSpawning
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.gui.item.ParkourCheckpoint
 import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.quirk.quirks.Pests
-import com.codeland.uhc.team.NameManager
-import com.codeland.uhc.team.TeamData
 import org.bukkit.*
-import org.bukkit.attribute.Attribute
 import org.bukkit.block.Biome
 import org.bukkit.entity.Player
 

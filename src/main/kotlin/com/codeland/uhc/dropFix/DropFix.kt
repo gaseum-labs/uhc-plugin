@@ -67,12 +67,16 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>
 		return ret
 	}
 
-	fun onKillEntity(player: Player, entity: Entity, drops: MutableList<ItemStack>): Boolean {
+	fun onDeath(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
+		return if (killer == null) onNaturalDeath(entity, drops) else onKillEntity(entity, killer, drops)
+	}
+
+	fun onKillEntity(entity: Entity, killer: Player, drops: MutableList<ItemStack>): Boolean {
 		if (entity.type != entityType) return false
 
 		var looting = 0
 
-		player.inventory.itemInMainHand.enchantments.any { enchantment ->
+		killer.inventory.itemInMainHand.enchantments.any { enchantment ->
 			if (enchantment.key == Enchantment.LOOT_BONUS_MOBS) {
 				looting = enchantment.value
 				true
@@ -83,7 +87,7 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>
 
 		drops.clear()
 
-		getDrops(player).forEach { entry ->
+		getDrops(killer).forEach { entry ->
 			val stacks = entry.onDrop(looting, entity)
 			stacks.forEach { stack -> if (stack != null && stack.amount > 0) drops.add(stack) }
 		}

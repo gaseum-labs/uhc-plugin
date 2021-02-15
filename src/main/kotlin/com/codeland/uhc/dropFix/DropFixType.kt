@@ -16,6 +16,7 @@ import com.codeland.uhc.dropFix.DropEntry.Companion.onFire
 import com.codeland.uhc.dropFix.DropEntry.Companion.potion
 import com.codeland.uhc.dropFix.DropEntry.Companion.saddle
 import com.codeland.uhc.dropFix.DropEntry.Companion.slownessArrow
+import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.entity.EntityType

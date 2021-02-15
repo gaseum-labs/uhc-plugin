@@ -2,6 +2,8 @@ package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.customSpawning.SpawnInfo
+import com.codeland.uhc.dropFix.DropFix
 import com.codeland.uhc.gui.GuiInventory
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.phase.PhaseVariant
@@ -30,6 +32,9 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 	private val properties = ArrayList<BoolProperty>()
 
 	val inventory: GuiInventory = GuiInventory(4, type.prettyName)
+
+	val drops = customDrops()
+	val spawnInfos = customSpawnInfos()
 
 	init {
 		val backgroundItem = ItemUtil.namedItem(Material.BLACK_STAINED_GLASS_PANE, "${ChatColor.RESET}${ChatColor.BLACK}_")
@@ -68,4 +73,6 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 	open fun defaultData(): Any = 0
 	open fun onStart(uuid: UUID) {}
 	open fun onPhaseSwitch(phase: PhaseVariant) {}
+	open fun customDrops(): Array<DropFix>? = null
+	open fun customSpawnInfos(): Array<SpawnInfo>? = null
 }

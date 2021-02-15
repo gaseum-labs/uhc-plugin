@@ -356,10 +356,10 @@ class EventListener : Listener {
 			}
 		} else {
 			if (!GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS) || !ModifiedDrops.onDrop(event.entityType, event.drops)) {
-				DropFixType.values().any { dropFix ->
-					if (killer == null) dropFix.dropFix.onNaturalDeath(event.entity, event.drops)
-					else dropFix.dropFix.onKillEntity(killer, event.entity, event.drops)
-				}
+				GameRunner.uhc.quirks.any { quirk ->
+					quirk.enabled && quirk.drops != null && quirk.drops.any { dropFix -> dropFix.onDeath(event.entity, killer, event.drops) }
+				} ||
+				DropFixType.values().any { dropFixType -> dropFixType.dropFix.onDeath(event.entity, killer, event.drops) }
 			}
 
 			val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner

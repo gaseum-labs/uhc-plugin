@@ -7,7 +7,7 @@ import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.ubt.PartialUBT
 import com.codeland.uhc.command.ubt.UBT
-import com.codeland.uhc.core.CustomSpawning
+import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType

@@ -68,6 +68,7 @@ class Generation : Listener {
 
 			if (GameRunner.waterWorld && world.environment == World.Environment.NORMAL) {
 				WaterWorld.waterPlacer.onGenerate(chunk, world.seed.toInt())
+				WaterWorld.removeEntities(chunk)
 			}
 
 			if (GameRunner.halloweenGeneration) {
