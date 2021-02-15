@@ -5,7 +5,8 @@ enum class BlockFixType(private val createBlockFix: () -> BlockFix) {
 	BROWN_MUSHROOM(::BrownMushroomFix),
 	RED_MUSHROOM(::RedMushroomFix),
 	GRAVEL(::GravelFix),
-	MELON(::MelonFix);
+	MELON(::MelonFix),
+	NETHER_WART(::NetherWartFix);
 
 	val blockFix = createBlockFix()
 }

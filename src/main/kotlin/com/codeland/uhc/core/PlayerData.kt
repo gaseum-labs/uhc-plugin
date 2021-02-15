@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.phase.phases.waiting.PvpData
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
@@ -17,7 +18,13 @@ import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.max
 
-class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: Boolean) {
+class PlayerData(
+	var staged: Boolean,
+	var participating: Boolean,
+	var alive: Boolean,
+	var optingOut: Boolean,
+	var lobbyPVP: PvpData,
+) {
 	var quirkData = HashMap<QuirkType, Any>()
 
 	var skull = ItemStack(Material.PLAYER_HEAD)
@@ -25,6 +32,8 @@ class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: 
 	var spawnIndex = 0
 	var spawnCycle = 0
 	var mobcap = 0.0
+
+	var loadingTip = 0
 
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
@@ -41,8 +50,6 @@ class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: 
 		} else {
 			value.world.setChunkForceLoaded(value.chunk.x, value.chunk.z, true)
 			value.world.loadChunk(value.chunk)
-
-			Util.log("is chunk loaded?: ${value.chunk.isForceLoaded}")
 
 			value
 		}
@@ -139,9 +146,16 @@ class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: 
 	}
 
 	companion object {
-		val INVENTORY_TAG = "_UHC_Zombie_inv"
-		val XP_TAG = "_UHC_Zombie_xp"
-		val UUID_TAG = "_UHC_Zombie_uuid"
+		const val INVENTORY_TAG = "_UHC_Zombie_inv"
+		const val XP_TAG = "_UHC_Zombie_xp"
+		const val UUID_TAG = "_UHC_Zombie_uuid"
+
+		/* THE player data list */
+		val playerDataList = java.util.HashMap<UUID, PlayerData>()
+
+		fun defaultPlayerData(): PlayerData {
+			return PlayerData(false, false, false, false, PvpData.defaultPvpData())
+		}
 
 		/**
 		 * @return -1 experience if this is not a valid offline zombie
@@ -173,29 +187,78 @@ class PlayerData(var participating: Boolean, var alive: Boolean, var optingOut: 
 			return true
 		}
 
-		var zombieBorderTaskID = 0
+		fun zombieBorderTick() {
+			val borderWorld = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
+			val borderRadius = borderWorld.worldBorder.size / 2.0
 
-		fun startZombieBorderTask() {
-			Bukkit.getScheduler().cancelTask(zombieBorderTaskID)
-			zombieBorderTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
-				val borderRadius = Bukkit.getWorlds()[0].worldBorder.size / 2.0
+			playerDataList.forEach { (uuid, playerData) ->
+				val zombie = playerData.offlineZombie
 
-				GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
-					val zombie = playerData.offlineZombie
+				if (zombie != null && zombie.world === borderWorld) {
+					val x = abs(zombie.location.x)
+					val z = abs(zombie.location.z)
 
-					if (zombie != null && zombie.world === Bukkit.getWorlds()[0]) {
-						val x = abs(zombie.location.x)
-						val z = abs(zombie.location.z)
-
-						val dist = max(x - borderRadius, z - borderRadius) - 5.0
-						if (dist > 0) zombie.damage(dist)
-					}
+					val dist = max(x - borderRadius, z - borderRadius) - 5.0
+					if (dist > 0) zombie.damage(dist)
 				}
-			}, 0, 20)
+			}
 		}
 
-		fun endZombieBorderTask() {
-			Bukkit.getScheduler().cancelTask(zombieBorderTaskID)
+		/* access operations for player data list */
+
+		fun isStaged(uuid: UUID): Boolean {
+			return getPlayerData(uuid).staged
+		}
+
+		fun isParticipating(uuid: UUID): Boolean {
+			return getPlayerData(uuid).participating
+		}
+
+		fun isAlive(uuid: UUID): Boolean {
+			return getPlayerData(uuid).alive
+		}
+
+		fun isOptingOut(uuid: UUID): Boolean {
+			return getPlayerData(uuid).optingOut
+		}
+
+		fun getLobbyPvp(uuid: UUID): PvpData {
+			return getPlayerData(uuid).lobbyPVP
+		}
+
+		fun isCurrent(uuid: UUID): Boolean {
+			val playerData = getPlayerData(uuid)
+			return playerData.participating && playerData.alive
+		}
+
+		/* setter operations for player data list */
+
+		fun setStaged(uuid: UUID, staged: Boolean) {
+			getPlayerData(uuid).staged = staged
+		}
+
+		fun setAlive(uuid: UUID, alive: Boolean) {
+			getPlayerData(uuid).alive = alive
+		}
+
+		fun setParticipating(uuid: UUID, participating: Boolean) {
+			getPlayerData(uuid).participating = participating
+		}
+
+		fun setOptOut(uuid: UUID, optOut: Boolean) {
+			getPlayerData(uuid).optingOut = optOut
+		}
+
+		fun getPlayerData(uuid: UUID): PlayerData {
+			val playerData = playerDataList[uuid]
+
+			return if (playerData == null) {
+				val ret = defaultPlayerData()
+				playerDataList[uuid] = ret
+				ret
+			} else {
+				playerData
+			}
 		}
 	}
 }

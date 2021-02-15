@@ -1,6 +1,7 @@
 package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
@@ -63,7 +64,7 @@ class EndgameClearBlocks : Phase() {
 				botBoundary = center
 
 				/* teleport all zombies to the surface */
-				uhc.playerDataList.forEach { (uuid, playerData) ->
+				PlayerData.playerDataList.forEach { (uuid, playerData) ->
 					val zombie = playerData.offlineZombie
 
 					if (zombie != null) {

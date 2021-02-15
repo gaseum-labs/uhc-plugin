@@ -10,6 +10,7 @@ import com.codeland.uhc.command.ubt.UBT
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.core.KillReward
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.*
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.quirks.LowGravity
@@ -31,6 +32,7 @@ class AdminCommands : BaseCommand() {
 	@Description("start the UHC")
 	fun startGame(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) return Commands.errorMessage(sender, "Game has already started!")
 
 		GameRunner.sendGameMessage(sender, "Starting UHC...")
 
@@ -42,10 +44,11 @@ class AdminCommands : BaseCommand() {
 	@Description("start the UHC with no teams")
 	fun startGameAll(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) return Commands.errorMessage(sender, "Game has already started!")
 
-		/* first make everyone participate */
-		GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
-			if (!playerData.optingOut) playerData.participating = true
+		/* stage everyone */
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (!playerData.optingOut) playerData.staged = true
 		}
 
 		GameRunner.sendGameMessage(sender, "Starting UHC...")
@@ -127,17 +130,17 @@ class AdminCommands : BaseCommand() {
 		GameRunner.uhc.gui.presetCycler.updateDisplay()
 	}
 
-	@Subcommand("participate")
+	@Subcommand("stage")
 	@Description("adds a player to the game without adding them to a team")
 	fun participateCommand(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		if (GameRunner.uhc.isOptingOut(player.uniqueId))
-			return Commands.errorMessage(sender, "${player.name} has opted out of participating!")
+		if (playerData.optingOut) return Commands.errorMessage(sender, "${player.name} has opted out of participating!")
 
-		GameRunner.uhc.setParticipating(player.uniqueId, true)
+		playerData.staged = true
 
-		GameRunner.sendGameMessage(sender, "${player.name} is now participating")
+		GameRunner.sendGameMessage(sender, "${player.name} is staged for participating")
 	}
 
 	@Subcommand("addLate")
@@ -146,14 +149,15 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		val player = Bukkit.getPlayer(playerName) ?: return Commands.errorMessage(sender, "Can't find player $playerName")
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 		val teammate = Bukkit.getPlayer(teammateName) ?: return Commands.errorMessage(sender, "Can't find player $teammateName")
 
 		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
-		if (GameRunner.uhc.isOptingOut(player.uniqueId)) return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
+		if (playerData.optingOut) return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
 
 		val joinTeam = TeamData.playersTeam(teammate.uniqueId) ?: return Commands.errorMessage(sender, "${teammate.name} has no team to join!")
 
-		lateTeamTeleport(sender, player, teammate.location, TeamData.addToTeam(joinTeam, player.uniqueId, true))
+		lateTeamTeleport(sender, player, playerData, teammate.location, TeamData.addToTeam(joinTeam, player.uniqueId, true))
 	}
 
 	@Subcommand("addLate")
@@ -162,9 +166,10 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		val player = Bukkit.getPlayer(playerName) ?: return Commands.errorMessage(sender, "Can't find player ${playerName}")
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
-		if (GameRunner.uhc.isOptingOut(player.uniqueId)) return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
+		if (playerData.optingOut) return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
 
 		val world = Bukkit.getWorlds()[0]
 		val teleportLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
@@ -172,12 +177,12 @@ class AdminCommands : BaseCommand() {
 
 		var teamColorPairs = TeamMaker.getColorList(1) ?: return Commands.errorMessage(sender, "There are already the maximum amount of teams (${TeamData.MAX_TEAMS})")
 
-		lateTeamTeleport(sender, player, teleportLocation, TeamData.addToTeam(teamColorPairs[0], player.uniqueId, true))
+		lateTeamTeleport(sender, player, playerData, teleportLocation, TeamData.addToTeam(teamColorPairs[0], player.uniqueId, true))
 	}
 
-	private fun lateTeamTeleport(sender: CommandSender, player: Player, location: Location, team: Team) {
-		GameRunner.uhc.setAlive(player.uniqueId, true)
-		GameRunner.uhc.setParticipating(player.uniqueId, true)
+	private fun lateTeamTeleport(sender: CommandSender, player: Player, playerData: PlayerData, location: Location, team: Team) {
+		playerData.alive = true
+		playerData.participating = true
 
 		player.teleportAsync(location).thenAccept {
 			player.gameMode = GameMode.SURVIVAL

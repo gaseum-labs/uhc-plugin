@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
@@ -34,7 +35,7 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
 			val players = ArrayList<UUID>()
 			val locations = ArrayList<Location>()
 
-			GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
 				if (playerData.participating && playerData.alive) {
 					used.add(false)
 					players.add(uuid)
@@ -79,7 +80,7 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
 		}
 
 		private fun sendAll(message: String, allowSpecs: Boolean) {
-			GameRunner.uhc.playerDataList.forEach { (uuid, playerData) ->
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
 				if ((playerData.participating && playerData.alive) || allowSpecs)
 					Bukkit.getPlayer(uuid)?.sendActionBar(message)
 			}

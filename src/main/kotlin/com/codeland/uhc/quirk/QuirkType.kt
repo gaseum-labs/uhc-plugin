@@ -3,6 +3,7 @@ package com.codeland.uhc.quirk
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.quirk.quirks.*
 import org.bukkit.Material
 import java.util.*
@@ -84,6 +85,11 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 
 	PLAYER_COMPASS("Player Compasses", ::PlayerCompass, false, Material.COMPASS, arrayOf(
 		"Track down players with a special compass"
+	)),
+
+	UNDERWATER("Underwater", ::Underwater, false, Material.COD, arrayOf(
+		"Breath and mine fast underwater",
+		"Dolphins drop leather"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
@@ -108,7 +114,11 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
     }
 
 	fun createQuirk(uhc: UHC): Quirk {
-		return create(uhc, this)
+		/* quirk instance from quirk type */
+		val quirk = create(uhc, this)
+
+		/* give quirk instance to UHC */
+		return quirk
 	}
 
     companion object {
@@ -118,7 +128,7 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 		}
 
 		fun <DataType> getData(uuid: UUID, type: QuirkType): DataType {
-			return getData(GameRunner.uhc.getPlayerData(uuid), type)
+			return getData(PlayerData.getPlayerData(uuid), type)
 		}
 
 		fun <DataType> getData(playerData: PlayerData, type: QuirkType): DataType {

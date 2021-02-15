@@ -1,8 +1,8 @@
 package com.codeland.uhc.phase.phases.grace
 
-import com.codeland.uhc.core.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import org.bukkit.*
@@ -28,24 +28,18 @@ open class GraceDefault : Phase() {
 		val teleportGroups = uhc.teleportGroups ?: return
 		val teleportLocations = uhc.teleportLocations ?: return
 
-		/* teleport and set players */
+		/* teleport and set playerData to current */
 		teleportGroups.forEachIndexed { i, teleportGroup ->
 			teleportGroup.forEach { uuid ->
-				GameRunner.uhc.setAlive(uuid, true)
+				val playerData = PlayerData.getPlayerData(uuid)
+				playerData.staged = false
+				playerData.lobbyPVP.inPvp = false
+				playerData.alive = true
+				playerData.participating = true
 
 				GameRunner.teleportPlayer(uuid, teleportLocations[i])
 				GameRunner.playerAction(uuid, ::startPlayer)
-				GameRunner.uhc.quirks.forEach { quirk ->
-					if (quirk.enabled) quirk.onStart(uuid)
-				}
-			}
-		}
-
-		/* non participants into spec */
-		Bukkit.getOnlinePlayers().forEach { player ->
-			if (!GameRunner.uhc.isParticipating(player.uniqueId)) {
-				player.gameMode = GameMode.SPECTATOR
-				player.teleport(GameRunner.uhc.spectatorSpawnLocation())
+				GameRunner.uhc.quirks.forEach { quirk -> if (quirk.enabled) quirk.onStart(uuid) }
 			}
 		}
 
@@ -82,14 +76,10 @@ open class GraceDefault : Phase() {
 		Bukkit.getServer().advancementIterator().forEach { advancement ->
 			val progress = player.getAdvancementProgress(advancement)
 
-			progress.awardedCriteria.forEach { criteria ->
-				progress.revokeCriteria(criteria)
-			}
+			progress.awardedCriteria.forEach { criteria -> progress.revokeCriteria(criteria) }
 		}
 
 		player.gameMode = GameMode.SURVIVAL
-
-		CustomSpawning.startSpawning()
 	}
 
 	override fun customEnd() {}

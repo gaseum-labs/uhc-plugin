@@ -1,5 +1,6 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
@@ -27,7 +28,7 @@ class SugarCanePlacer(size: Int, uniqueSeed: Int, val lowBound: Int, val highBou
 			val down = block.getRelative(BlockFace.DOWN)
 
 			if (
-				(block.type == Material.AIR || block.type == Material.CAVE_AIR || block.type == Material.GRASS) &&
+				(block.type == Material.AIR || block.type == Material.CAVE_AIR || block.type == Material.GRASS || (block.type == Material.WATER && GameRunner.waterWorld)) &&
 				(
 					down.type == Material.GRASS_BLOCK ||
 					down.type == Material.DIRT ||

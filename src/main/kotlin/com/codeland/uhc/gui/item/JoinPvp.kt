@@ -1,16 +1,10 @@
 package com.codeland.uhc.gui.item
 
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phase.phases.waiting.LobbyPvp
-import com.codeland.uhc.phase.phases.waiting.WaitingDefault
-import com.codeland.uhc.util.Util
-import org.bukkit.Bukkit
+import com.codeland.uhc.phase.phases.waiting.PvpData
 import org.bukkit.ChatColor
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 
 class JoinPvp : CommandItem() {
@@ -32,6 +26,6 @@ class JoinPvp : CommandItem() {
 	}
 
 	override fun onUse(uhc: UHC, player: Player) {
-		LobbyPvp.enablePvp(player)
+		PvpData.enablePvp(player)
 	}
 }

@@ -2,6 +2,7 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
@@ -88,7 +89,7 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			val players = ArrayList<Player>()
 
 			/* grab all players that will have their compass updated */
-			GameRunner.uhc.playerDataList.forEach { (uuid, data) ->
+			PlayerData.playerDataList.forEach { (uuid, data) ->
 				val player = Bukkit.getPlayer(uuid)
 
 				/* only care about players that are currently online and playing */

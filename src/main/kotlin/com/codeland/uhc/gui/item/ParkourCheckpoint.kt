@@ -3,6 +3,7 @@ package com.codeland.uhc.gui.item
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import org.bukkit.Bukkit
@@ -33,8 +34,6 @@ class ParkourCheckpoint : CommandItem() {
 	}
 
 	override fun onUse(uhc: UHC, player: Player) {
-		if (!uhc.isPhase(PhaseType.WAITING)) return
-
 		val location = getPlayerCheckpoint(player)?.toBlockLocation()
 			?: return Commands.errorMessage(player, "Reach a gold block to get a checkpoint!")
 
@@ -61,22 +60,22 @@ class ParkourCheckpoint : CommandItem() {
 			return list[0].value() as Location
 		}
 
-		fun updateCheckpoint(player: Player) {
-			val underLocation = player.location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation()
+		fun lobbyParkourTick() {
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				val player = Bukkit.getPlayer(uuid)
 
-			if (player.world.getBlockAt(underLocation).type == CHECKPOINT) {
-				val oldLocation = getPlayerCheckpoint(player)?.toBlockLocation()
-				val newLocation = underLocation.add(0.0, 1.0, 0.0).toBlockLocation()
+				if (player != null && !playerData.participating) {
+					val underLocation = player.location.clone().subtract(0.0, 1.0, 0.0).toBlockLocation()
 
-				if (oldLocation == null ||
-					(
-						newLocation.x.toInt() != oldLocation.x.toInt() ||
-							newLocation.y.toInt() != oldLocation.y.toInt() ||
-							newLocation.z.toInt() != oldLocation.z.toInt()
-						)
-				) {
-					setPlayerCheckpoint(player, newLocation)
-					GameRunner.sendGameMessage(player, "New Checkpoint!")
+					if (player.world.getBlockAt(underLocation).type == CHECKPOINT) {
+						val oldLocation = getPlayerCheckpoint(player)?.toBlockLocation()
+						val newLocation = underLocation.add(0.0, 1.0, 0.0).toBlockLocation()
+
+						if (oldLocation == null || (newLocation.block !== oldLocation.block)) {
+							setPlayerCheckpoint(player, newLocation)
+							GameRunner.sendGameMessage(player, "New Checkpoint!")
+						}
+					}
 				}
 			}
 		}
