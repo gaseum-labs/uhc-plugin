@@ -22,7 +22,7 @@ idea {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "13"
+    kotlinOptions.jvmTarget = "11"
     kotlinOptions.javaParameters = true
     kotlinOptions {
         languageVersion = "1.4"
@@ -30,7 +30,7 @@ compileKotlin {
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "13"
+    kotlinOptions.jvmTarget = "11"
 }
 
 repositories {
