@@ -56,7 +56,7 @@ class Brew : Listener {
 
 	class PotionInfo(val type: PotionType, val name: String, val baseDuration: Int, val extendedDuration: Int, val amplifiedDuration: Int)
 
-	val POISON_INFO = PotionInfo(PotionType.POISON, "Poison", 150, 175, 72)
+	val POISON_INFO = PotionInfo(PotionType.POISON, "Poison", 150, 325, 144)
 	val REGEN_INFO = PotionInfo(PotionType.REGEN, "Regeneration", 250, 500, 225)
 	val STRENGTH_INFO = PotionInfo(PotionType.STRENGTH, "Strength", 1800, 3600, 600)
 

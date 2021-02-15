@@ -19,7 +19,12 @@ class PvpListener : Listener {
 		if (projectile != null) {
 			val player = projectile.shooter as? Player
 
-			if (player != null) PlayerData.getLobbyPvp(player.uniqueId).stillTime = 0
+			if (player != null) {
+				PlayerData.getLobbyPvp(player.uniqueId).stillTime = 0
+
+				projectile.location.direction = player.location.direction
+				projectile.velocity = player.location.direction.multiply(projectile.velocity.length())
+			}
 		}
 	}
 

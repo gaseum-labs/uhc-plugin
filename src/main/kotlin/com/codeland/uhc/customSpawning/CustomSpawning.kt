@@ -54,7 +54,10 @@ object CustomSpawning {
 			}
 
 			/* wrap spawn index */
-			if (playerData.spawnIndex >= overworldSpawnInfoList.size + supplementalList.size) playerData.spawnIndex = 0
+			if (playerData.spawnIndex >= overworldSpawnInfoList.size + supplementalList.size) {
+				playerData.spawnIndex = 0
+				++playerData.spawnCycle
+			}
 
 			if (playerData.spawnIndex >= overworldSpawnInfoList.size)
 				supplementalList[playerData.spawnIndex - overworldSpawnInfoList.size]
@@ -63,7 +66,10 @@ object CustomSpawning {
 
 		} else {
 			/* wrap spawn index */
-			if (playerData.spawnIndex >= netherSpawnInfoList.size) playerData.spawnIndex = 0
+			if (playerData.spawnIndex >= netherSpawnInfoList.size) {
+				playerData.spawnIndex = 0
+				++playerData.spawnCycle
+			}
 
 			netherSpawnInfoList[playerData.spawnIndex]
 		}
