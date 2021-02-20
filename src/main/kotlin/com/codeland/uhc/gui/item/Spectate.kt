@@ -34,6 +34,8 @@ class Spectate : CommandItem() {
 
 		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
 			player.gameMode = GameMode.SPECTATOR
+			player.setItemOnCursor(null)
+			player.inventory.clear()
 			player.teleport(GameRunner.uhc.spectatorSpawnLocation())
 
 		} else {

@@ -56,7 +56,6 @@ open class GraceDefault : Phase() {
 	private fun startPlayer(player: Player) {
 		/* absolutely nuke the inventory */
 		player.inventory.clear()
-		player.itemOnCursor.amount = 0
 		player.setItemOnCursor(null)
 
 		/* clear crafting slots */
