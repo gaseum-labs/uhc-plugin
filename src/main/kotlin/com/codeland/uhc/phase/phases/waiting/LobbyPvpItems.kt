@@ -10,61 +10,54 @@ import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
 
 object LobbyPvpItems {
-	class EnchantOption(val enchantment: Enchantment, val level: Int)
+	private class EnchantOption(val enchantment: Enchantment, val level: Int)
 
-	val armorEnchants1 = arrayOf(
+	private val armorEnchants1: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.PROTECTION_PROJECTILE, 1),
 		EnchantOption(Enchantment.PROTECTION_PROJECTILE, 2),
 		EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, 1),
 		EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, 2),
-		null
 	)
 
-	val armorEnchants2 = arrayOf(
+	private val armorEnchants2: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.THORNS, 1),
 		null,
 		null,
 		null
 	)
 
-	val diggingEnchants = arrayOf(
+	private val diggingEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.DIG_SPEED, 1),
 		EnchantOption(Enchantment.DIG_SPEED, 2),
-		null
 	)
 
-	val swordEnchants1 = arrayOf(
+	private val swordEnchants1: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.DAMAGE_ALL, 1),
 		EnchantOption(Enchantment.DAMAGE_ALL, 2),
-		null
 	)
 
-	val swordEnchants2 = arrayOf(
+	private val swordEnchants2: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.FIRE_ASPECT, 1),
 		EnchantOption(Enchantment.KNOCKBACK, 1),
 		null
 	)
 
-	val axeEnchants = arrayOf(
+	private val axeEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.DAMAGE_ALL, 1),
 		EnchantOption(Enchantment.DAMAGE_ALL, 2),
-		null
 	)
 
-	val bowEnchants = arrayOf(
+	private val bowEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.ARROW_DAMAGE, 1),
 		EnchantOption(Enchantment.ARROW_DAMAGE, 2),
-		null
 	)
 
-	val crossbowEnchants = arrayOf(
+	private val crossbowEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.PIERCING, 1),
-		EnchantOption(Enchantment.PIERCING, 1),
-		EnchantOption(Enchantment.PIERCING, 1),
-		null
+		EnchantOption(Enchantment.PIERCING, 2),
 	)
 
-	val noEnchants: Array<EnchantOption?> = arrayOf(
+	private val noEnchants: Array<EnchantOption?> = arrayOf(
 		null
 	)
 
@@ -125,11 +118,11 @@ object LobbyPvpItems {
 	}
 
 	fun genArrows(): ItemStack {
-		return ItemStack(Material.ARROW, Util.randRange(16, 32))
+		return ItemStack(Material.ARROW, 32)
 	}
 
 	fun genSpectralArrows(): ItemStack {
-		return ItemStack(Material.SPECTRAL_ARROW, Util.randRange(16, 32))
+		return ItemStack(Material.SPECTRAL_ARROW, 16)
 	}
 
 	class PotionOption(val potionType: PotionType, val splash: Boolean, val upgraded: Boolean)
@@ -170,11 +163,11 @@ object LobbyPvpItems {
 	)
 
 	fun genFood(): ItemStack {
-		return ItemStack(Util.randFromArray(foodOptions), Util.randRange(8, 16))
+		return ItemStack(Util.randFromArray(foodOptions), 4)
 	}
 
 	fun genGapples(): ItemStack {
-		return ItemStack(Material.GOLDEN_APPLE, Util.randRange(1, 2))
+		return ItemStack(Material.GOLDEN_APPLE, 2)
 	}
 
 	fun genShield(): ItemStack {
@@ -217,6 +210,6 @@ object LobbyPvpItems {
 	}
 
 	fun genObsidian(): ItemStack {
-		return ItemStack(Material.OBSIDIAN, Util.randRange(10, 16))
+		return ItemStack(Material.OBSIDIAN, 8)
 	}
 }

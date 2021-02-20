@@ -12,8 +12,6 @@ class EndgameNone : Phase() {
 		closeNether()
 	}
 
-	override fun customEnd() {}
-
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
 		return 1.0
 	}
@@ -32,10 +30,12 @@ class EndgameNone : Phase() {
 	companion object {
 		fun closeNether() {
 			SchedulerUtil.nextTick {
+				val defaultWorld = GameRunner.uhc.getDefaultWorld()
+
 				PlayerData.playerDataList.forEach { (uuid, playerData) ->
 					val location = GameRunner.getPlayerLocation(uuid)
 
-					if (location != null && location.world.environment != GameRunner.uhc.defaultEnvironment) {
+					if (location != null && location.world !== defaultWorld) {
 						GameRunner.playerAction(uuid) { player -> Commands.errorMessage(player, "Failed to return to home dimension!") }
 						GameRunner.damagePlayer(uuid, 100000000000.0)
 					}

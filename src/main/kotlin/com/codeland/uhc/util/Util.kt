@@ -199,15 +199,11 @@ object Util {
 		"Reset"
 	)
 
-	val environmentPrettyNames = arrayOf(
+	val worldPrettyNames = arrayOf(
 		"Overworld",
 		"Nether",
 		"End"
 	)
-
-	fun worldFromEnvironment(environment: World.Environment): World {
-		return Bukkit.getWorlds().find { world -> world.environment == environment } ?: Bukkit.getWorlds()[0]
-	}
 
 	fun bilinearWrap(array: Array<Float>, width: Int, height: Int, x: Float, y: Float): Float {
 		val minX = (x * width).toInt() % width

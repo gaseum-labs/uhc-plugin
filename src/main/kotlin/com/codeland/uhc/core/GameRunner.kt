@@ -6,6 +6,7 @@ import com.codeland.uhc.blockfix.LeavesFix
 import com.codeland.uhc.blockfix.RedMushroomFix
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenFile
@@ -177,6 +178,24 @@ object GameRunner {
 		} else if (killer != null) {
 			if (!teamIsAlive) uhc.killReward.applyReward(arrayListOf(killer))
 		}
+	}
+
+	fun respawnPlayer(player: Player?, uuid: UUID, playerData: PlayerData): Location? {
+		val world = uhc.getDefaultWorld()
+		val respawnLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+
+		/* an offline zombie died */
+		if (player == null)
+			playerData.offlineZombie = playerData.createDefaultZombie(
+				uuid, respawnLocation ?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
+			)
+
+		/* custom quirk behavior when players start */
+		uhc.quirks.forEach { quirk ->
+			if (quirk.enabled) quirk.onStart(uuid)
+		}
+
+		return respawnLocation
 	}
 
 	fun prettyPlayerName(player: Player): String {

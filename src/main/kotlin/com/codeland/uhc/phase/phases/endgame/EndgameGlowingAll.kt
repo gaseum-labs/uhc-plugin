@@ -16,8 +16,6 @@ class EndgameGlowingAll : Phase() {
 		}
 	}
 
-	override fun customEnd() {}
-
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
 		return 1.0
 	}

@@ -13,16 +13,21 @@ import kotlin.math.*
 
 open class GraceDefault : Phase() {
 	override fun customStart() {
-		/* set border in overworld */
-		Bukkit.getWorlds().forEach { world ->
-			world.time = 0
+		/* set border in each game dimension */
+		for (i in 0..2) {
+			val world = Bukkit.getWorlds()[i]
 
-			if (world.environment == uhc.defaultEnvironment) {
+			if (i == uhc.defaultWorldIndex) {
 				world.worldBorder.setCenter(0.5, 0.5)
 				world.worldBorder.size = uhc.startRadius * 2 + 1.0
+
 			} else {
 				world.worldBorder.reset()
 			}
+
+			world.time = 0
+			world.isThundering = false
+			world.setStorm(false)
 		}
 
 		val teleportGroups = uhc.teleportGroups ?: return
@@ -81,8 +86,6 @@ open class GraceDefault : Phase() {
 
 		player.gameMode = GameMode.SURVIVAL
 	}
-
-	override fun customEnd() {}
 
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
 		return barLengthRemaining(remainingSeconds, currentTick)

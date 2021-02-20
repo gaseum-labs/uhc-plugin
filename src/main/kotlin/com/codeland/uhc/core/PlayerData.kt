@@ -15,7 +15,6 @@ import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.math.abs
-import kotlin.math.exp
 import kotlin.math.max
 
 class PlayerData(
@@ -187,19 +186,21 @@ class PlayerData(
 			return true
 		}
 
-		fun zombieBorderTick() {
-			val borderWorld = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
-			val borderRadius = borderWorld.worldBorder.size / 2.0
+		fun zombieBorderTick(currentTick: Int) {
+			if (currentTick % 20 == 0) {
+				val borderWorld = GameRunner.uhc.getDefaultWorld()
+				val borderRadius = borderWorld.worldBorder.size / 2.0
 
-			playerDataList.forEach { (uuid, playerData) ->
-				val zombie = playerData.offlineZombie
+				playerDataList.forEach { (uuid, playerData) ->
+					val zombie = playerData.offlineZombie
 
-				if (zombie != null && zombie.world === borderWorld) {
-					val x = abs(zombie.location.x)
-					val z = abs(zombie.location.z)
+					if (zombie != null && zombie.world === borderWorld) {
+						val x = abs(zombie.location.x)
+						val z = abs(zombie.location.z)
 
-					val dist = max(x - borderRadius, z - borderRadius) - 5.0
-					if (dist > 0) zombie.damage(dist)
+						val dist = max(x - borderRadius, z - borderRadius)
+						if (dist > 0) zombie.damage(dist)
+					}
 				}
 			}
 		}

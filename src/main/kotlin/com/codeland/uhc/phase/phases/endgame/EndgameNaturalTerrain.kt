@@ -11,15 +11,10 @@ import org.bukkit.ChatColor.BOLD
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.World
-import org.bukkit.block.BlastFurnace
-import org.bukkit.block.Container
 import org.bukkit.block.TileState
-import org.bukkit.block.data.BlockData
-import org.bukkit.boss.BossBar
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.round
 
 class EndgameNaturalTerrain : Phase() {
@@ -43,7 +38,7 @@ class EndgameNaturalTerrain : Phase() {
 		val heightList = ArrayList<Int>((uhc.endRadius * 2 + 1) * (uhc.endRadius * 2 + 1))
 
 		/* find heights of all positions within endgame */
-		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
+		val world = uhc.getDefaultWorld()
 
 		for (x in -uhc.endRadius..uhc.endRadius) {
 			for (z in -uhc.endRadius..uhc.endRadius) {
@@ -119,8 +114,6 @@ class EndgameNaturalTerrain : Phase() {
 		}
 	}
 
-	override fun customEnd() {}
-
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
 		return if (finished)
 			1.0
@@ -138,7 +131,7 @@ class EndgameNaturalTerrain : Phase() {
 	override fun perTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
-		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
+		val world = uhc.getDefaultWorld()
 		val extrema = uhc.endRadius
 
 		if (!finished) {

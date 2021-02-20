@@ -15,15 +15,15 @@ class ShrinkDefault : Phase() {
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
-		return if (world.environment == uhc.defaultEnvironment)
+		return if (world === uhc.getDefaultWorld())
 			"${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${uhc.endRadius.toInt()} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"
 		else
 			"${RESET}Dimension closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"	}
 
 	override fun customStart() {
-		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
-		world.worldBorder.setSize(uhc.endRadius * 2 + 1.0, length.toLong())
+		val world = uhc.getDefaultWorld()
 
+		world.worldBorder.setSize(uhc.endRadius * 2 + 1.0, length.toLong())
 		world.worldBorder.damageBuffer = 0.0
 
 		Bukkit.getOnlinePlayers().forEach { player ->
@@ -31,8 +31,6 @@ class ShrinkDefault : Phase() {
 			GameRunner.sendGameMessage(player, "The border is now shrinking")
 		}
 	}
-
-	override fun customEnd() {}
 
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
 		return barLengthRemaining(remainingSeconds, currentTick)

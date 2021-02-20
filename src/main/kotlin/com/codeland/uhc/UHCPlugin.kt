@@ -7,6 +7,7 @@ import com.codeland.uhc.team.TeamMaker
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
 import com.codeland.uhc.phase.DimensionBar
@@ -81,6 +82,8 @@ class UHCPlugin : JavaPlugin() {
 		TeamMaker.readData()
 
 		server.scheduler.scheduleSyncDelayedTask(this) {
+			WorldManager.initWorlds()
+
 			GameRunner.registerHearts()
 
 			DimensionBar.createBossBars(Bukkit.getWorlds())

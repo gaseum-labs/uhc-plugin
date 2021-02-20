@@ -76,7 +76,7 @@ class Gui(val uhc: UHC) {
 				uhc.updateUsingBot(true)
 				botToggle.updateDisplay()
 
-				uhc.defaultEnvironment = World.Environment.NORMAL
+				uhc.defaultWorldIndex = 0
 				defaultEnvironmentCycler.updateDisplay()
 
 				uhc.naturalRegeneration = false

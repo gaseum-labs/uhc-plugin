@@ -3,15 +3,11 @@ package com.codeland.uhc.phase.phases.endgame
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
 import org.bukkit.*
 import org.bukkit.ChatColor.BOLD
-import org.bukkit.ChatColor.WHITE
-import org.bukkit.boss.BossBar
-import kotlin.math.ceil
 import kotlin.math.max
 
 class EndgameClearBlocks : Phase() {
@@ -32,8 +28,6 @@ class EndgameClearBlocks : Phase() {
 		botBoundary = center - (255 - center)
 	}
 
-	override fun customEnd() {}
-
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
 		return (topBoundary - center) / (255.0 - center)
 	}
@@ -41,7 +35,7 @@ class EndgameClearBlocks : Phase() {
 	override fun perTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
-		val world = Util.worldFromEnvironment(uhc.defaultEnvironment)
+		val world = uhc.getDefaultWorld()
 		val extrema = uhc.endRadius + 6
 
 		if (!finished) {

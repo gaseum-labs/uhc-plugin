@@ -105,8 +105,6 @@ abstract class Phase {
 
 	fun onEnd() {
 		Bukkit.getScheduler().cancelTask(taskID)
-
-		customEnd()
 	}
 
 	/* bar helper functions */
@@ -121,7 +119,6 @@ abstract class Phase {
 	/* abstract */
 
 	abstract fun customStart()
-	abstract fun customEnd()
 
 	abstract fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double
 	abstract fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String

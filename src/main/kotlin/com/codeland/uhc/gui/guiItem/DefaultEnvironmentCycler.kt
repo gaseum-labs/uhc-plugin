@@ -1,35 +1,30 @@
 package com.codeland.uhc.gui.guiItem
 
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.gui.GuiInventory
 import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
-import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
 class DefaultEnvironmentCycler(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
+	private val representations = arrayOf(
+		Material.GRASS_BLOCK,
+		Material.NETHERRACK,
+		Material.END_STONE
+	)
+
 	override fun onClick(player: Player, shift: Boolean) {
 		/* bad things happen if we allow this value */
 		/* to change during the game */
 		if (uhc.isGameGoing()) return
 
-		val values = World.Environment.values()
-
-		uhc.defaultEnvironment = values[(values.indexOf(uhc.defaultEnvironment) + 1) % values.size]
+		uhc.defaultWorldIndex = (uhc.defaultWorldIndex + 1) % 3
 	}
 
 	override fun getStack(): ItemStack {
-		val stack = setName(ItemStack(when (uhc.defaultEnvironment) {
-			World.Environment.NORMAL -> Material.GRASS_BLOCK
-			World.Environment.NETHER -> Material.NETHERRACK
-			else -> Material.END_STONE
-		}), stateName("Environment", Util.environmentPrettyNames[World.Environment.values().indexOf(uhc.defaultEnvironment)]))
+		val stack = setName(ItemStack(representations[uhc.defaultWorldIndex]), stateName("World", Util.worldPrettyNames[uhc.defaultWorldIndex]))
 		return setLore(stack, listOf("Which dimension the UHC starts in"))
 	}
 }

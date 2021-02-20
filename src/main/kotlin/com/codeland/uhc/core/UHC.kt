@@ -60,7 +60,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	var currentPhase = null as Phase?
 
-	var defaultEnvironment = World.Environment.NORMAL
+	var defaultWorldIndex = 0
 
 	var naturalRegeneration = false
 
@@ -71,11 +71,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var teleportLocations: ArrayList<Location>? = null
 
 	var lobbyRadius = 60
-	var lobbyX: Int = -1
-	var lobbyZ: Int = -1
-	var lobbyPvpX: Int = -1
-	var lobbyPvpZ: Int = -1
-	var lobbyPvpHeight: Int = -1
+	var lobbyPVPMin = -1
+	var lobbyPVPMax = -1
 
 	fun updateUsingBot(using: Boolean) {
 		val bot = GameRunner.bot
@@ -204,6 +201,10 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		}
 	}
 
+	fun getDefaultWorld(): World {
+		return Bukkit.getWorlds()[defaultWorldIndex]
+	}
+
 	/* game flow modifiers */
 
 	/**
@@ -221,7 +222,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		SchedulerUtil.everyTick {
 			if (isGameGoing() && !isPhase(PhaseType.ENDGAME)) CustomSpawning.spawnTick(currentTick)
 
-			if (isGameGoing()) PlayerData.zombieBorderTick()
+			if (isGameGoing()) PlayerData.zombieBorderTick(currentTick)
 
 			PvpData.onTick()
 
@@ -242,6 +243,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	fun startUHC(commandSender : CommandSender): String? {
 		if (isGameGoing()) return "Game has already started!"
 
+		val world = getDefaultWorld()
 		val numTeams = TeamData.teams.size
 		val individuals = ArrayList<UUID>()
 
@@ -254,10 +256,10 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 		/* get where players are teleporting */
 		teleportLocations = GraceDefault.spreadPlayers(
-			Util.worldFromEnvironment(defaultEnvironment),
+			world,
 			numTeams + individuals.size,
 			startRadius - 5.0,
-			if (defaultEnvironment == World.Environment.NETHER) GraceDefault.Companion::findYMid else GraceDefault.Companion::findYTop
+			if (world.environment == World.Environment.NETHER) GraceDefault.Companion::findYMid else GraceDefault.Companion::findYTop
 		)
 
 		/* if teleport locations are found! */
@@ -401,7 +403,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	}
 
 	fun updateMobCaps() {
-		val world = Util.worldFromEnvironment(defaultEnvironment)
+		val world = getDefaultWorld()
 
 		val borderRadius = world.worldBorder.size / 2
 

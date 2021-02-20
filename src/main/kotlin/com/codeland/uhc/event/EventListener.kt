@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.phase.DimensionBar
@@ -37,7 +38,6 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionType
-import org.ietf.jgss.GSSManager
 
 class EventListener : Listener {
 	@EventHandler
@@ -109,11 +109,8 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onDropItem(event: ItemSpawnEvent) {
-		// TODO more sophisticated detection of items dropped in lobby pvp
-		// this ain't cut it chief
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
-			event.entity.ticksLived = 5000
-		}
+		/* items despawn faster in PVP and Lobby */
+		if (WorldManager.isNonGameWorld(event.entity.world)) event.entity.ticksLived = 5000
 	}
 
 	@EventHandler
@@ -166,24 +163,12 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onWeather(event: WeatherChangeEvent) {
-		event.isCancelled = GameRunner.uhc.isPhase(PhaseType.WAITING) && event.toWeatherState()
+		event.isCancelled = WorldManager.isNonGameWorld(event.world)
 	}
 
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
-		if (GameRunner.uhc.isGameGoing()) {
-			event.isCancelled = (
-				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL
-			) && event.entity is Monster
-
-		} else {
-			event.isCancelled = (
-				event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL
-			) && event.entityType.isAlive
-		}
-
 		/* witch poison nerf */
-
 		val potion = event.entity as? ThrownPotion
 		if (potion != null) {
 			if (potion.shooter is Witch) {
@@ -207,14 +192,8 @@ class EventListener : Listener {
 
 		/* players respawning who are in the game */
 		} else if (playerData.participating) {
-			val world = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
-			val location = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
-			if (location != null) event.respawnLocation = location
-
-			/* custom quirk behavior when players start */
-			GameRunner.uhc.quirks.forEach { quirk ->
-				if (quirk.enabled) quirk.onStart(event.player.uniqueId)
-			}
+			val respawnLocation = GameRunner.respawnPlayer(player, player.uniqueId, playerData)
+			if (respawnLocation != null) event.respawnLocation = respawnLocation
 
 		/* players respawning when they are eliminated */
 		} else {
@@ -337,22 +316,11 @@ class EventListener : Listener {
 				val droppedExperience = experience.coerceAtMost(100)
 				event.droppedExp = droppedExperience
 
-				/* player can respawn */
-				if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING)) {
-					val world = Util.worldFromEnvironment(GameRunner.uhc.defaultEnvironment)
-
-					/* create the player's new zombie somewhere */
-					playerData.offlineZombie = playerData.createDefaultZombie(
-						uuid,
-						GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
-						?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
-					)
-
-				/* player is eliminated */
-				} else {
+				/* player can respawn only in grace forgiving */
+				if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))
+					GameRunner.respawnPlayer(null, uuid, playerData)
+				else
 					GameRunner.playerDeath(uuid, killer)
-					GameRunner.playerAction(uuid) { player -> AbstractLobby.onSpawnLobby(player) }
-				}
 			}
 		} else {
 			if (!GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS) || !ModifiedDrops.onDrop(event.entityType, event.drops)) {
@@ -464,8 +432,8 @@ class EventListener : Listener {
 		var baseItem = event.player.inventory.itemInMainHand
 
 		/* prevent breaking the border in creative lobby */
-		val x = GameRunner.uhc.lobbyX
-		val z = GameRunner.uhc.lobbyZ
+		/*val x = 0
+		val z = 0
 		val radius = GameRunner.uhc.lobbyRadius + 1
 
 		if (((block.x == x + radius || block.x == x - radius) &&
@@ -475,8 +443,8 @@ class EventListener : Listener {
 			((block.y == 255 || block.y == 0) && block.x <= x + radius && block.z <= z + radius && block.x >= x - radius && block.z >= z - radius)
 		) {
 			event.isCancelled = true
-
-		} else if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
+		*/
+		if (GameRunner.uhc.isEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 			var broken = block.state.getMetadata("broken")
 
 			val oldBlockType = block.type
@@ -494,6 +462,13 @@ class EventListener : Listener {
 					Unsheltered.setBroken(block, true)
 				}
 			}
+		}
+
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+
+		if (playerData.lobbyPVP.inPvp && event.block.y < GameRunner.uhc.lobbyPVPMin) {
+			event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Low limit for building is ${GameRunner.uhc.lobbyPVPMin}")
+			event.isCancelled = true
 		}
 	}
 
@@ -577,8 +552,12 @@ class EventListener : Listener {
 
 		/* things that affect lobby pvp players */
 		else if (playerData.lobbyPVP.inPvp) {
-			if (event.blockPlaced.y > GameRunner.uhc.lobbyPvpHeight) {
-				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${GameRunner.uhc.lobbyPvpHeight}")
+			if (event.blockPlaced.y > GameRunner.uhc.lobbyPVPMax) {
+				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${GameRunner.uhc.lobbyPVPMax}")
+				event.isCancelled = true
+
+			} else if (event.blockPlaced.y < GameRunner.uhc.lobbyPVPMin) {
+				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Low limit for building is ${GameRunner.uhc.lobbyPVPMin}")
 				event.isCancelled = true
 			}
 		}

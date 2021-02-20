@@ -4,6 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
@@ -17,7 +18,7 @@ import kotlin.math.sqrt
 class PvpData(
 	var inPvp: Boolean = false,
 	var stillTime: Int = 0,
-	var lastPosition: Location,
+	var lastLocation: Location,
 	var gameMode: GameMode,
 	var inventoryContents: Array<out ItemStack>,
 ) {
@@ -42,82 +43,38 @@ class PvpData(
 			arrayOf(
 				LobbyPvpItems::genAxe,
 				LobbyPvpItems::genSword,
-				LobbyPvpItems::genBow,
-				LobbyPvpItems::genCrossbow,
-				LobbyPvpItems::genWaterBucket,
-				LobbyPvpItems::genGapples,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genPotion,
-
-				LobbyPvpItems::genArrows,
-				LobbyPvpItems::genSpectralArrows,
-				LobbyPvpItems::genFood,
-				LobbyPvpItems::genPick,
-				LobbyPvpItems::genShovel,
-				LobbyPvpItems::genBlocks,
-				LobbyPvpItems::genBlocks,
-				LobbyPvpItems::genPotion
-			),
-			arrayOf(
-				LobbyPvpItems::genAxe,
-				LobbyPvpItems::genSword,
 				LobbyPvpItems::genLavaBucket,
-				LobbyPvpItems::genBlocks,
+				LobbyPvpItems::genBow,
 				LobbyPvpItems::genCrossbow,
-				LobbyPvpItems::genGapples,
-				LobbyPvpItems::genPick,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genPotion,
-
-				LobbyPvpItems::genBow,
-				LobbyPvpItems::genArrows,
-				LobbyPvpItems::genSpectralArrows,
-				LobbyPvpItems::genFood,
-				LobbyPvpItems::genPick,
-				LobbyPvpItems::genShovel,
-				LobbyPvpItems::genBlocks,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genWaterBucket
-			),
-			arrayOf(
-				LobbyPvpItems::genAxe,
-				LobbyPvpItems::genSword,
-				LobbyPvpItems::genBow,
-				LobbyPvpItems::genPick,
-				LobbyPvpItems::genBlocks,
 				LobbyPvpItems::genGapples,
 				LobbyPvpItems::genPotion,
 				LobbyPvpItems::genPotion,
 				LobbyPvpItems::genPotion,
 
-				LobbyPvpItems::genCrossbow,
-				LobbyPvpItems::genArrows,
 				LobbyPvpItems::genSpectralArrows,
+				LobbyPvpItems::genArrows,
 				LobbyPvpItems::genFood,
-				LobbyPvpItems::genShovel,
+				LobbyPvpItems::genPick,
 				LobbyPvpItems::genBlocks,
+				LobbyPvpItems::genBlocks,
+				LobbyPvpItems::genPotion,
 				LobbyPvpItems::genWaterBucket,
-				LobbyPvpItems::genLavaBucket,
-				LobbyPvpItems::genPotion
 			),
 			arrayOf(
 				LobbyPvpItems::genAxe,
 				LobbyPvpItems::genSword,
-				LobbyPvpItems::genBow,
 				LobbyPvpItems::genEndCrystal,
 				LobbyPvpItems::genObsidian,
+				LobbyPvpItems::genBow,
 				LobbyPvpItems::genGapples,
 				LobbyPvpItems::genPotion,
 				LobbyPvpItems::genPotion,
 				LobbyPvpItems::genPotion,
 
-				LobbyPvpItems::genArrows,
 				LobbyPvpItems::genSpectralArrows,
+				LobbyPvpItems::genArrows,
 				LobbyPvpItems::genFood,
 				LobbyPvpItems::genPick,
-				LobbyPvpItems::genShovel,
 				LobbyPvpItems::genBlocks,
 				LobbyPvpItems::genCrossbow,
 				LobbyPvpItems::genWaterBucket,
@@ -177,13 +134,7 @@ class PvpData(
 				GameRunner.sendGameMessage(sendPlayer, "${player.name} left pvp")
 			}
 
-			val pvpData = PlayerData.getLobbyPvp(player.uniqueId)
-			pvpData.inPvp = false
-
-			// restore
-			player.inventory.contents = pvpData.inventoryContents
-			player.gameMode = pvpData.gameMode
-
+			/* reset player stats */
 			for (activePotionEffect in player.activePotionEffects)
 				player.removePotionEffect(activePotionEffect.type)
 
@@ -200,20 +151,24 @@ class PvpData(
 			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
 
 			player.teleport(AbstractLobby.lobbyLocation(GameRunner.uhc, player))
+
+			/* restore previous state */
+			val pvpData = PlayerData.getLobbyPvp(player.uniqueId)
+			pvpData.inPvp = false
+
+			player.inventory.contents = pvpData.inventoryContents
+			player.gameMode = pvpData.gameMode
 		}
 
 		fun teleportPlayerIn(uhc: UHC, player: Player) {
-			val world = Bukkit.getWorlds()[0]
+			val world = WorldManager.getPVPWorld()
 
-			val x = uhc.lobbyPvpX
-			val z = uhc.lobbyPvpZ
+			val centerX = 0
+			val centerZ = 0
 			val radius = uhc.lobbyRadius - 5
 
 			val currentlyInPvp = ArrayList<Player>()
-
-			allInPvp { player, pvpData ->
-				currentlyInPvp.add(player)
-			}
+			allInPvp { player, pvpData -> currentlyInPvp.add(player) }
 
 			var greatestDistance = 0.0
 			var teleportX = 0
@@ -222,8 +177,8 @@ class PvpData(
 			for (i in 0 until 100) {
 				var leastDistance = Double.MAX_VALUE
 
-				val thisTeleportX = Util.randRange(x - radius, x + radius)
-				val thisTeleportZ = Util.randRange(z - radius, z + radius)
+				val thisTeleportX = Util.randRange(centerX - radius, centerX + radius)
+				val thisTeleportZ = Util.randRange(centerZ - radius, centerZ + radius)
 
 				currentlyInPvp.forEach { player ->
 					val distance =
@@ -247,6 +202,56 @@ class PvpData(
 				player.teleport(Location(world, teleportX + 0.5, liquidY + 1.0, teleportZ + 0.5))
 			}
 		}
+
+		fun determineHeight(uhc: UHC, world: World, x: Int, z: Int, radius: Int) {
+			var minHeight = 256
+			var maxHeight = -1
+
+			for (xOff in -radius..radius) {
+				for (zOff in -radius..radius) {
+					val height = Util.topBlockY(world, x + xOff, z + zOff)
+					if (height > maxHeight) maxHeight = height
+					if (height < minHeight) minHeight = height
+				}
+			}
+
+			uhc.lobbyPVPMin = minHeight
+			uhc.lobbyPVPMax = maxHeight + 3
+		}
+
+		fun onTick() {
+			allInPvp { player, pvpData ->
+				val newLocation = player.location
+				if (newLocation.world != pvpData.lastLocation.world) pvpData.lastLocation = newLocation
+
+				val distance = newLocation.distance(pvpData.lastLocation)
+				pvpData.lastLocation = newLocation
+
+				if (distance == 0.0 && !player.isSneaking) {
+					val stillTime = pvpData.stillTime + 1
+
+					if (stillTime == STILL_TIME) {
+						disablePvp(player)
+					} else if (stillTime % 20 == 0 && stillTime >= 10 * 20) {
+						player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Returning to Lobby in ${(STILL_TIME / 20) - (stillTime / 20)}...")
+					}
+
+					pvpData.stillTime = stillTime
+
+				} else {
+					pvpData.stillTime = 0
+				}
+			}
+		}
+
+		/* custom lobby walls currently unused */
+
+		var lobbyCreationTaskID = -1
+		var currentLobbyLayer = 0
+
+		class LobbyQueueData(val world: World, val x: Int, val z: Int, val radius: Int)
+
+		val lobbyQueue = LinkedList<LobbyQueueData>() as Queue<LobbyQueueData>
 
 		private val treeList = arrayOf(
 			Material.OAK_LOG,
@@ -284,50 +289,6 @@ class PvpData(
 		private fun stopCreateArena() {
 			Bukkit.getScheduler().cancelTask(lobbyCreationTaskID)
 		}
-
-		fun determineHeight(uhc: UHC, world: World, x: Int, z: Int, radius: Int) {
-			var maxHeight = 0
-
-			for (xOff in -radius..radius) {
-				for (zOff in -radius..radius) {
-					val height = Util.topBlockYTop(world, 254, x + xOff, z + zOff)
-					if (height > maxHeight)
-						maxHeight = height
-				}
-			}
-
-			uhc.lobbyPvpHeight = maxHeight + 3
-		}
-
-		fun onTick() {
-			allInPvp { player, pvpData ->
-				val newLocation = player.location
-				val distance = newLocation.distance(pvpData.lastPosition)
-				pvpData.lastPosition = newLocation
-
-				if (distance == 0.0 && !player.isSneaking) {
-					val stillTime = pvpData.stillTime + 1
-
-					if (stillTime == STILL_TIME) {
-						disablePvp(player)
-					} else if (stillTime % 20 == 0 && stillTime >= 10 * 20) {
-						player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Returning to Lobby in ${(STILL_TIME / 20) - (stillTime / 20)}...")
-					}
-
-					pvpData.stillTime = stillTime
-
-				} else {
-					pvpData.stillTime = 0
-				}
-			}
-		}
-
-		var lobbyCreationTaskID = -1
-		var currentLobbyLayer = 0
-
-		class LobbyQueueData(val world: World, val x: Int, val z: Int, val radius: Int)
-
-		val lobbyQueue = LinkedList<LobbyQueueData>() as Queue<LobbyQueueData>
 
 		fun lobbyTask() {
 			val lobbyData = lobbyQueue.peek()

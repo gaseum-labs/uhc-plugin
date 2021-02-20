@@ -9,15 +9,10 @@ import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
-import com.codeland.uhc.gui.item.GuiOpener
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.CarePackageUtil.pickOne
-import com.codeland.uhc.util.ItemUtil.randomDye
-import com.codeland.uhc.util.ItemUtil.randomDyeArmor
-import com.codeland.uhc.util.ItemUtil.randomMusicDisc
-import com.codeland.uhc.util.ItemUtil.randomTippedArrow
 import com.codeland.uhc.util.ScoreboardDisplay
 import org.bukkit.ChatColor.*
 import org.bukkit.*
@@ -108,7 +103,7 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				val x = cos(initialAngle + angleAdance * i) * currentRadius / 2
 				val z = sin(initialAngle + angleAdance * i) * currentRadius / 2
 
-				Location(Util.worldFromEnvironment(uhc.defaultEnvironment), x, 0.0, z)
+				Location(uhc.getDefaultWorld(), x, 0.0, z)
 			}
 		}
 
