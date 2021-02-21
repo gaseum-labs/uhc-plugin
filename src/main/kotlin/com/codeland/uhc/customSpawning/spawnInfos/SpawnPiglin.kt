@@ -15,6 +15,6 @@ class SpawnPiglin : SpawnInfo() {
 		entity as Piglin
 
 		entity.isBaby = false
-		entity.canPickupItems = false
+		entity.canPickupItems = true
 	}
 }

@@ -483,7 +483,7 @@ class EventListener : Listener {
 		val leavesLocation = event.block.location.toCenterLocation()
 
 		var nearestPlayer = null as Player?
-		var nearestDistance = 16.0
+		var nearestDistance = 32.0
 
 		/* find the nearest player within 16 blocks to the decaying leaves */
 		Bukkit.getOnlinePlayers().forEach { player ->
@@ -573,7 +573,11 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onPickUpItem(event: EntityPickupItemEvent) {
-		if (
+		/* prevent piglins from wearing their bartered boots */
+		if (event.entity is Piglin && event.item.itemStack.type != Material.GOLD_INGOT) {
+			event.isCancelled = true
+
+		} else if (
 			GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN) &&
 			event.entityType == EntityType.PLAYER &&
 			event.item.itemStack.type == Material.DIAMOND &&

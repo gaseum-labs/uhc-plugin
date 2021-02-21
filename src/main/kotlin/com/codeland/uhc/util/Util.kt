@@ -1,14 +1,12 @@
 package com.codeland.uhc.util
 
 import com.destroystokyo.paper.utils.PaperPluginLogger
-import org.bukkit.Bukkit
 import org.bukkit.World
-import java.lang.Math.floor
 import java.util.logging.Level
 import kotlin.math.acos
-import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 object Util {
 	fun log(message: String) {
@@ -245,5 +243,17 @@ object Util {
 
 	fun levelIntersection(r: Double, d: Double): Double {
 		return (2 * r - d).coerceAtLeast(0.0)
+	}
+
+	fun <T>shuffleArray(array: Array<T>) {
+		val random = Random((Math.random() * 7238201).toInt())
+
+		for (i in array.indices) {
+			val otherIndex = random.nextInt(0, array.size)
+
+			val temp = array[i]
+			array[i] = array[otherIndex]
+			array[otherIndex] = temp
+		}
 	}
 }
