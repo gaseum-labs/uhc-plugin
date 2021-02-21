@@ -24,6 +24,9 @@ class Generation : Listener {
 			val world = event.world
 			val chunk = event.chunk
 
+			/* do not attempt to change world generation in the lobby worlds */
+			if (WorldManager.isNonGameWorld(world)) return@scheduleSyncDelayedTask
+
 			if (GameRunner.netherWorldFix && world.environment == World.Environment.NETHER) {
 				NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt())
 			}

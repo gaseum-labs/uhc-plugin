@@ -19,9 +19,6 @@ abstract class AbstractChunkPlacer(val size: Int, val uniqueSeed: Int) {
 		 * if this chunk should generate, returns the index of the chunk within the range
 		 */
 		fun shouldGenerate(chunkX: Int, chunkZ: Int, seed0: Int, seed1: Int, size: Int): Int {
-			/* only make custom chunks within 1000 blocks of world origin */
-			if (abs(chunkX) > 62 || abs(chunkZ) > 62) return -1
-
 			if (size == 1) return 0
 
 			val regionSeed = hashToInt(hash4(chunkX / size, chunkZ / size, seed0, seed1))
