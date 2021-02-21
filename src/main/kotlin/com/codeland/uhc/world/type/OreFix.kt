@@ -108,7 +108,7 @@ object OreFix {
 	}
 
 	val mineralPlacer = MineralPlacer(1, 0)
-	val    goldPlacer = OrePlacer(3, 3247892, 5, 32, 5, 8, Material.GOLD_ORE)
-	val   lapisPlacer = OrePlacer(4,    9837, 5, 32, 3, 8, Material.LAPIS_ORE)
-	val diamondPlacer = OrePlacer(5,  572919, 5, 14, 3, 5, Material.DIAMOND_ORE)
+	val    goldPlacer = OrePlacer(3, 3247892, 5, 32, 5, Material.GOLD_ORE)
+	val   lapisPlacer = OrePlacer(4,    9837, 5, 32, 4, Material.LAPIS_ORE)
+	val diamondPlacer = OrePlacer(5,  572919, 5, 14, 3, Material.DIAMOND_ORE)
 }

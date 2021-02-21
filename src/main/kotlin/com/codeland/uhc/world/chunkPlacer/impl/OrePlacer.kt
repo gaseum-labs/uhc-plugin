@@ -9,7 +9,7 @@ import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 
-class OrePlacer(size: Int, uniqueSeed: Int, private val low: Int, private val high: Int, private val min: Int, private val max: Int, val type: Material) : DelayedChunkPlacer(size, uniqueSeed) {
+class OrePlacer(size: Int, uniqueSeed: Int, private val low: Int, private val high: Int, private val amount: Int, val type: Material) : DelayedChunkPlacer(size, uniqueSeed) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		for (x in -1..1) for (z in -1..1)
 			if (!world.isChunkGenerated(chunkX + x, chunkZ + z)) return false
@@ -28,8 +28,6 @@ class OrePlacer(size: Int, uniqueSeed: Int, private val low: Int, private val hi
 					isOpen(block.getRelative(BlockFace.NORTH).type) ||
 					isOpen(block.getRelative(BlockFace.SOUTH).type)
 				) {
-					val amount = (hash3(chunk.x, chunk.z, uniqueSeed) * (max - min)).toInt() + min
-
 					val veinBlocks = Array(amount) { block }
 
 					/* place the first ore in the vein */
@@ -65,13 +63,6 @@ class OrePlacer(size: Int, uniqueSeed: Int, private val low: Int, private val hi
 				false
 			}
 		}
-
-		//DEBUG
-		//for (x in 0..15) {
-		//	for (z in 0..15) {
-		//		if (Math.random() < 0.3) chunk.getBlock(x, 200, z).setType(type, false)
-		//	}
-		//}
 	}
 
 	/**

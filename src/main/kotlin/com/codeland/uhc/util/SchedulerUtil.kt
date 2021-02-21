@@ -12,6 +12,6 @@ object SchedulerUtil {
     }
 
     fun everyTick(runnable: () -> Unit): Int {
-        return Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, runnable, 1, 1)
+        return Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, runnable, 0, 1)
     }
 }

@@ -14,12 +14,12 @@ import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import java.io.*
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.String.*
 
 class MixerBot(
 	private val discordDataPath: String,
@@ -251,7 +251,7 @@ class MixerBot(
 	}
 
 	fun isLinked(uuid: UUID): Boolean {
-		val idString = uuidString(uuid)
+		val idString = uuidToString(uuid)
 
 		return minecraftIDs.any { id ->
 			id == idString
@@ -318,12 +318,12 @@ class MixerBot(
 		return -1
 	}
 
-	private fun uuidString(uuid: UUID): String {
-		return "${String.format("%016x", uuid.mostSignificantBits)}${String.format("%016x", uuid.leastSignificantBits)}"
+	fun uuidToString(uuid: UUID): String {
+		return "${String.Companion.format("%016x", uuid.mostSignificantBits)}${String.Companion.format("%016x", uuid.leastSignificantBits)}"
 	}
 
 	private fun getMinecraftUserIndex(uuid: UUID): Int {
-		val uuidString = uuidString(uuid)
+		val uuidString = uuidToString(uuid)
 
 		for (i in discordIDs.indices)
 			if (uuidString == minecraftIDs[i]) return i
