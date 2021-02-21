@@ -12,7 +12,7 @@ class WaitingDefault : Phase() {
 
 		primeLobbyWorld(lobbyWorld)
 		primeLobbyWorld(pvpWorld)
-		PvpData.determineHeight(uhc, pvpWorld, 0, 0, uhc.lobbyRadius)
+		if (!PvpData.isArenaPrepared(pvpWorld, uhc.lobbyRadius)) PvpData.prepareArena(pvpWorld, uhc.lobbyRadius, uhc)
 
 		Bukkit.getWorlds().forEach { world -> primeWorldRules(world) }
 

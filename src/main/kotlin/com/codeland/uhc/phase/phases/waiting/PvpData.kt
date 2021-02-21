@@ -5,6 +5,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.phase.phases.endgame.AbstractEndgame
 import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
@@ -203,22 +204,6 @@ class PvpData(
 			}
 		}
 
-		fun determineHeight(uhc: UHC, world: World, x: Int, z: Int, radius: Int) {
-			var minHeight = 256
-			var maxHeight = -1
-
-			for (xOff in -radius..radius) {
-				for (zOff in -radius..radius) {
-					val height = Util.topBlockY(world, x + xOff, z + zOff)
-					if (height > maxHeight) maxHeight = height
-					if (height < minHeight) minHeight = height
-				}
-			}
-
-			uhc.lobbyPVPMin = minHeight
-			uhc.lobbyPVPMax = maxHeight + 3
-		}
-
 		fun onTick() {
 			allInPvp { player, pvpData ->
 				val newLocation = player.location
@@ -242,6 +227,38 @@ class PvpData(
 					pvpData.stillTime = 0
 				}
 			}
+		}
+
+		/**
+		 * if the prepareArena process has already been done to this world
+		 *
+		 * it leaves a barrier as an indicator
+		 */
+		fun isArenaPrepared(world: World, radius: Int): Boolean {
+			return world.getBlockAt(-radius, 1, -radius).type === Material.BARRIER
+		}
+
+		/**
+		 * applies an endgame like effect to the pvp arena to limit players skybasing and hiding underground
+ 		 */
+		fun prepareArena(world: World, radius: Int, uhc: UHC) {
+			val (min, max) = AbstractEndgame.determineMinMax(world, radius, 100)
+
+			uhc.lobbyPVPMin = min
+			uhc.lobbyPVPMax = max + 3
+
+			for (x in -radius..radius) for (z in -radius..radius) {
+				for (y in max + 1..255) {
+					world.getBlockAt(x, y, z).setType(Material.AIR, false)
+				}
+
+				for (y in 0..min - 1) {
+					world.getBlockAt(x, y, z).setType(Material.BEDROCK, false)
+				}
+			}
+
+			/* mark prepared */
+			world.getBlockAt(-radius, 1, -radius).setType(Material.BARRIER, false)
 		}
 
 		/* custom lobby walls currently unused */

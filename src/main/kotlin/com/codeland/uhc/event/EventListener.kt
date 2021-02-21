@@ -10,7 +10,6 @@ import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
-import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.waiting.AbstractLobby
 import com.codeland.uhc.phase.phases.waiting.PvpData
 import com.codeland.uhc.quirk.QuirkType
@@ -22,7 +21,6 @@ import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
@@ -519,8 +517,8 @@ class EventListener : Listener {
 		/* things that affect players playing the game */
 		if (GameRunner.uhc.isGameGoing() && playerData.participating) {
 			/* trying to build above endgame top level */
-			if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.topBoundary) {
-				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${phase.topBoundary}")
+			if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.max) {
+				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${phase.max}")
 				event.isCancelled = true
 
 			/* creative block replenishing */
