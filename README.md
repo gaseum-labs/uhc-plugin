@@ -5,24 +5,26 @@
 
 A Minecraft 1.16 UHC plugin built in Kotlin for PaperMC
 
+## Purpose
+
+UHC Plugin implements the gamemode of Ultra Hardcore for a standalone, self-hosted Minecraft PaperMC server. It is not intended for use in server networks, though it could theoretically be adapted. The game is balanced around an expected number of players of 6 to 20.
 
 ## Features
 
-* Minecraft UHC in a randomly generated world
 * Configurable game length and border size
-* Configurable game phases
+* Competitive balance changes to vanilla Minecraft
 * Custom world generation options
 * Tons of "quirks," custom rules applied to the game
 * Discord integration allowing automatic voice call separation
-* Waiting area with lobby PVP
-* Vanilla-like experience
-* Custom nether spawning and game balance changes
-* Up to 91 teams
+* PVP Practice area for spectators
+* Customizable named and colored teams
+* Management features for ops
+* And much more (Features document coming soon)
 
 ## Tools
 
 * Kotlin 1.4
-* Java 13 or higher
+* Java 11 or higher
 * Intellij IDEA 2020.3.2 (or any version would probably work)
 * PaperMC 1.16 (latest version preferred) 
 
@@ -65,3 +67,13 @@ Plugin only works with PaperMC, not Spigot
 * `linkData.txt` - Created by the discord integration when players link
 * `ddns.properties` - Optional, API data for Google Domains 
 * `scores.txt` - Currently unused
+
+## Starting a game
+
+When players join the server, they will be placed in a lobby where they can build in creative or join the lobby PVP arena.
+
+Right clicking the item called `Open UHC Settings` will open up a menu where ops can change game settings like enabling quirks or setting the game length. 
+
+Once all players are in the server, an op can run the `/uhca team join [color] [player name]` to add players to teams. A quicker way is to run the `/uhca team random [team size]` command to automatically add all players to random teams of a certain size.
+
+An op can run the `/uhca start` command to start the game.
