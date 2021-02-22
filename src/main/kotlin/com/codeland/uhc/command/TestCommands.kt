@@ -11,6 +11,7 @@ import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.phases.waiting.PvpData
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
@@ -172,6 +173,22 @@ class TestCommands : BaseCommand() {
 		val playerMobs = CustomSpawning.calcPlayerMobs(player)
 
 		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
+	}
+
+	@Subcommand("killstreak")
+	@Description("test a player's individual mobcap")
+	fun testKillstreak(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		sender as Player
+		val pvpData = PlayerData.getLobbyPvp(sender.uniqueId)
+
+		if (pvpData.inPvp) {
+			PvpData.onKill(sender)
+			GameRunner.sendGameMessage(sender, "Killstreak increased to ${pvpData.killstreak}")
+		} else {
+			Commands.errorMessage(sender, "You are not in PVP!")
+		}
 	}
 
 	@Subcommand("gbs")

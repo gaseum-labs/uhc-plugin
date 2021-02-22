@@ -12,7 +12,7 @@ class WaitingDefault : Phase() {
 
 		primeLobbyWorld(lobbyWorld)
 		primeLobbyWorld(pvpWorld)
-		if (!PvpData.isArenaPrepared(pvpWorld, uhc.lobbyRadius)) PvpData.prepareArena(pvpWorld, uhc.lobbyRadius, uhc)
+		PvpData.prepareArena(pvpWorld, uhc.lobbyRadius, uhc)
 
 		Bukkit.getWorlds().forEach { world -> primeWorldRules(world) }
 
@@ -28,6 +28,7 @@ class WaitingDefault : Phase() {
 
 		world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
 		world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
+		world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
 		world.time = 6000
 		world.isThundering = false
 		world.setStorm(false)

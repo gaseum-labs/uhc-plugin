@@ -108,7 +108,7 @@ class Barter : Listener {
 	}
 
 	@EventHandler
-	fun onDropItemP(event: EntityDropItemEvent) {
+	fun onPiglinDropItem(event: EntityDropItemEvent) {
 		/* only called when piglins barter */
 		if (event.entity !is Piglin) return
 

@@ -7,9 +7,11 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.phase.phases.endgame.AbstractEndgame
 import com.codeland.uhc.util.Util
+import com.destroystokyo.paper.Title
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.block.Block
+import org.bukkit.block.Sign
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
@@ -17,15 +19,16 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 class PvpData(
-	var inPvp: Boolean = false,
-	var stillTime: Int = 0,
+	var inPvp: Boolean,
+	var stillTime: Int,
+	var killstreak: Int,
 	var lastLocation: Location,
-	var gameMode: GameMode,
-	var inventoryContents: Array<out ItemStack>,
+	var oldGamemode: GameMode,
+	var oldInventoryContents: Array<out ItemStack>,
 ) {
 	companion object {
 		fun defaultPvpData(): PvpData {
-			return PvpData(false, 0, Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0), GameMode.CREATIVE, emptyArray())
+			return PvpData(false, 0, 0, Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0), GameMode.CREATIVE, emptyArray())
 		}
 
 		val STILL_TIME = 15 * 20
@@ -41,76 +44,57 @@ class PvpData(
 		}
 
 		val itemsList = arrayOf(
-			arrayOf(
-				LobbyPvpItems::genAxe,
-				LobbyPvpItems::genSword,
-				LobbyPvpItems::genLavaBucket,
-				LobbyPvpItems::genBow,
-				LobbyPvpItems::genCrossbow,
-				LobbyPvpItems::genGapples,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genPotion,
+			/* hotbar */
+			LobbyPvpItems::genAxe,
+			LobbyPvpItems::genSword,
+			LobbyPvpItems::genLavaBucket,
+			LobbyPvpItems::genBow,
+			LobbyPvpItems::genCrossbow,
+			LobbyPvpItems::genGapples,
+			LobbyPvpItems::genPotion,
+			LobbyPvpItems::genPotion,
+			LobbyPvpItems::genPotion,
 
-				LobbyPvpItems::genSpectralArrows,
-				LobbyPvpItems::genArrows,
-				LobbyPvpItems::genFood,
-				LobbyPvpItems::genPick,
-				LobbyPvpItems::genBlocks,
-				LobbyPvpItems::genBlocks,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genWaterBucket,
-			),
-			arrayOf(
-				LobbyPvpItems::genAxe,
-				LobbyPvpItems::genSword,
-				LobbyPvpItems::genEndCrystal,
-				LobbyPvpItems::genObsidian,
-				LobbyPvpItems::genBow,
-				LobbyPvpItems::genGapples,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genPotion,
-				LobbyPvpItems::genPotion,
-
-				LobbyPvpItems::genSpectralArrows,
-				LobbyPvpItems::genArrows,
-				LobbyPvpItems::genFood,
-				LobbyPvpItems::genPick,
-				LobbyPvpItems::genBlocks,
-				LobbyPvpItems::genCrossbow,
-				LobbyPvpItems::genWaterBucket,
-				LobbyPvpItems::genLavaBucket
-			)
+			/* inventory */
+			LobbyPvpItems::genSpectralArrows,
+			LobbyPvpItems::genArrows,
+			LobbyPvpItems::genFood,
+			LobbyPvpItems::genPick,
+			LobbyPvpItems::genBlocks,
+			LobbyPvpItems::genBlocks,
+			LobbyPvpItems::genPotion,
+			LobbyPvpItems::genWaterBucket,
 		)
 
 		fun enablePvp(player: Player) {
 			val pvpData = PlayerData.getLobbyPvp(player.uniqueId)
 
+			/* save before pvp state */
+			pvpData.oldInventoryContents = player.inventory.contents.clone()
+			pvpData.oldGamemode = player.gameMode
+
+			/* enter into pvp */
 			pvpData.inPvp = true
 			pvpData.stillTime = 0
+			pvpData.killstreak = 0
 
-			// save
-			pvpData.inventoryContents = player.inventory.contents.clone()
-			pvpData.gameMode = player.gameMode
-
-			player.gameMode = GameMode.SURVIVAL
+			/* give items */
 			player.inventory.clear()
 
-			player.inventory.setArmorContents(
-				arrayOf(
-					LobbyPvpItems.genBoots(),
-					LobbyPvpItems.genLeggings(),
-					LobbyPvpItems.genChestplate(),
-					LobbyPvpItems.genHelmet()
-				)
-			)
+			player.inventory.setArmorContents(arrayOf(
+				LobbyPvpItems.genBoots(),
+				LobbyPvpItems.genLeggings(),
+				LobbyPvpItems.genChestplate(),
+				LobbyPvpItems.genHelmet()
+			))
+
 			player.inventory.setItemInOffHand(LobbyPvpItems.genShield())
 
-			Util.randFromArray(itemsList).forEach { gen -> player.inventory.addItem(gen()) }
+			itemsList.forEach { gen -> player.inventory.addItem(gen()) }
 
-			for (activePotionEffect in player.activePotionEffects)
-				player.removePotionEffect(activePotionEffect.type)
-
+			/* reset attributes */
+			for (activePotionEffect in player.activePotionEffects) player.removePotionEffect(activePotionEffect.type)
+			player.gameMode = GameMode.SURVIVAL
 			player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
 			player.health = 20.0
 			player.absorptionAmount = 0.0
@@ -157,8 +141,8 @@ class PvpData(
 			val pvpData = PlayerData.getLobbyPvp(player.uniqueId)
 			pvpData.inPvp = false
 
-			player.inventory.contents = pvpData.inventoryContents
-			player.gameMode = pvpData.gameMode
+			player.inventory.contents = pvpData.oldInventoryContents
+			player.gameMode = pvpData.oldGamemode
 		}
 
 		fun teleportPlayerIn(uhc: UHC, player: Player) {
@@ -204,6 +188,53 @@ class PvpData(
 			}
 		}
 
+		fun announceKillstreak(player: Player, killstreak: Int, message: String) {
+			player.sendTitle("${ChatColor.RED}Killstreak: ${ChatColor.DARK_RED}${killstreak}", "${ChatColor.RED}$message", 0, 20, 10)
+		}
+
+		fun giveKillstreakItem(player: Player, vararg itemStack: ItemStack) {
+			/* attempt to add the items to the inventory */
+			val couldNotAdd = player.inventory.addItem(*itemStack)
+
+			/* how many items to offset left by */
+			val addSize = couldNotAdd.size
+
+			/* replace the slots starting at 8 with the items that could not be added */
+			/* throw out existing items */
+			couldNotAdd.forEach { (index, killstreakItem) ->
+				val replaceIndex = 18 + index - addSize
+
+				val thrownItem = player.inventory.getItem(replaceIndex)
+				if (thrownItem != null) player.world.dropItem(player.location, thrownItem)
+
+				player.inventory.setItem(replaceIndex, killstreakItem)
+			}
+		}
+
+		fun onKill(killer: Player) {
+			val killerPvpData = PlayerData.getLobbyPvp(killer.uniqueId)
+
+			if (killerPvpData.inPvp) {
+				++killerPvpData.killstreak
+
+				when (killerPvpData.killstreak) {
+					1 -> {}
+					2 -> {
+						giveKillstreakItem(killer, ItemStack(Material.ANVIL))
+						announceKillstreak(killer, killerPvpData.killstreak, "Anvil Bonus")
+					}
+					3 -> {
+						giveKillstreakItem(killer, ItemStack(Material.END_CRYSTAL), ItemStack(Material.OBSIDIAN, 4))
+						announceKillstreak(killer, killerPvpData.killstreak, "End crystal kit")
+					}
+					else -> {
+						giveKillstreakItem(killer, LobbyPvpItems.genPotion())
+						announceKillstreak(killer, killerPvpData.killstreak, "Random potion")
+					}
+				}
+			}
+		}
+
 		fun onTick() {
 			allInPvp { player, pvpData ->
 				val newLocation = player.location
@@ -234,31 +265,50 @@ class PvpData(
 		 *
 		 * it leaves a barrier as an indicator
 		 */
-		fun isArenaPrepared(world: World, radius: Int): Boolean {
-			return world.getBlockAt(-radius, 1, -radius).type === Material.BARRIER
+		fun readArenaMarker(world: World, radius: Int): Pair<Int, Int>? {
+			val sign = world.getBlockAt(-radius, 1, -radius).getState(false) as? Sign ?: return null
+
+			val min = sign.getLine(0).toIntOrNull() ?: return null
+			val max = sign.getLine(0).toIntOrNull() ?: return null
+
+			return Pair(min, max)
 		}
 
 		/**
 		 * applies an endgame like effect to the pvp arena to limit players skybasing and hiding underground
  		 */
 		fun prepareArena(world: World, radius: Int, uhc: UHC) {
-			val (min, max) = AbstractEndgame.determineMinMax(world, radius, 100)
+			val arenaMarker = readArenaMarker(world, radius)
 
-			uhc.lobbyPVPMin = min
-			uhc.lobbyPVPMax = max + 3
+			/* arena has not yet been created */
+			if (arenaMarker == null) {
+				val (min, max) = AbstractEndgame.determineMinMax(world, radius, 100)
 
-			for (x in -radius..radius) for (z in -radius..radius) {
-				for (y in max + 1..255) {
-					world.getBlockAt(x, y, z).setType(Material.AIR, false)
+				uhc.lobbyPVPMin = min
+				uhc.lobbyPVPMax = max + 3
+
+				for (x in -radius..radius) for (z in -radius..radius) {
+					for (y in max + 1..255) {
+						world.getBlockAt(x, y, z).setType(Material.AIR, false)
+					}
+
+					for (y in 0..min - 1) {
+						world.getBlockAt(x, y, z).setType(Material.BEDROCK, false)
+					}
 				}
 
-				for (y in 0..min - 1) {
-					world.getBlockAt(x, y, z).setType(Material.BEDROCK, false)
-				}
+				/* mark prepared */
+				val signBlock = world.getBlockAt(-radius, 1, -radius)
+				signBlock.setType(Material.OAK_SIGN, false)
+				val sign = signBlock.getState(true) as Sign
+				sign.setLine(0, "${uhc.lobbyPVPMin}")
+				sign.setLine(1, "${uhc.lobbyPVPMax}")
+
+			/* arena has been created */
+			} else {
+				uhc.lobbyPVPMin = arenaMarker.first
+				uhc.lobbyPVPMax = arenaMarker.second
 			}
-
-			/* mark prepared */
-			world.getBlockAt(-radius, 1, -radius).setType(Material.BARRIER, false)
 		}
 
 		/* custom lobby walls currently unused */

@@ -118,9 +118,14 @@ class EventListener : Listener {
 
 		/* dying in lobby pvp */
 		if (playerData.lobbyPVP.inPvp) {
-			PvpData.allInPvp { pvpPlayer, pvpData ->
-				if (pvpData.inPvp) pvpPlayer.sendMessage(event.deathMessage ?: "${player.name} fucking died")
+			/* announce death to only lobby pvpers */
+			PvpData.allInPvp { pvpPlayer, _ ->
+				pvpPlayer.sendMessage(event.deathMessage ?: "${player.name} fucking died")
 			}
+
+			/* award killstreak */
+			val killer = player.killer ?: return
+			PvpData.onKill(killer)
 
 		/* players dying in the game */
 		} else if (playerData.participating) {
