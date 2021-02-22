@@ -1,6 +1,7 @@
 package com.codeland.uhc.event;
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -116,11 +117,15 @@ class Barter : Listener {
 		var nearestPlayer: Player? = null
 
 		event.entity.world.players.forEach { player ->
-			val distance = player.location.distance(event.entity.location)
+			val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-			if (distance < nearestDistance) {
-				nearestDistance = distance
-				nearestPlayer = player
+			if (playerData.participating) {
+				val distance = player.location.distance(event.entity.location)
+
+				if (distance < nearestDistance) {
+					nearestDistance = distance
+					nearestPlayer = player
+				}
 			}
 		}
 
