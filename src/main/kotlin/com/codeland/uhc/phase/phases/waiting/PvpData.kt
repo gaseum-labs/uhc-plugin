@@ -254,7 +254,7 @@ class PvpData(
 			pvpData.exiting = false
 		}
 
-		fun onTick() {
+		fun onTick(currentTick: Int) {
 			allInPvp { player, pvpData ->
 				val newLocation = player.location
 				if (newLocation.world != pvpData.lastLocation.world) pvpData.lastLocation = newLocation
@@ -286,6 +286,13 @@ class PvpData(
 				} else {
 					pvpData.stillTime = 0
 					pvpData.exiting = false
+				}
+
+				/* apply glowing to this player */
+				if (pvpData.killstreak > 0) {
+					val glowInterval = (30 - 5 * (pvpData.killstreak - 1)).coerceAtLeast(0)
+
+					if ((currentTick % 20) == 0 && (glowInterval == 0 || (currentTick / 20) % glowInterval == 0)) player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
 				}
 			}
 		}

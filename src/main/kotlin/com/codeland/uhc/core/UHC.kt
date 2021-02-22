@@ -217,7 +217,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 			if (isGameGoing()) PlayerData.zombieBorderTick(currentTick)
 
-			PvpData.onTick()
+			PvpData.onTick(currentTick)
 
 			ParkourCheckpoint.lobbyParkourTick()
 
