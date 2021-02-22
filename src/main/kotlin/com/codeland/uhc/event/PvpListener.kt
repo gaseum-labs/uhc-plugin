@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityShootBowEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -22,8 +23,9 @@ class PvpListener : Listener {
 			val player = projectile.shooter as? Player
 
 			if (player != null) {
-				PlayerData.getLobbyPvp(player.uniqueId).stillTime = 0
+				PvpData.resetStillTimer(player)
 
+				/* arrow spread reducer */
 				projectile.location.direction = player.location.direction
 				projectile.velocity = player.location.direction.multiply(projectile.velocity.length())
 			}
@@ -32,21 +34,22 @@ class PvpListener : Listener {
 
 	@EventHandler
 	fun onStartMining(event: BlockDamageEvent) {
-		PlayerData.getLobbyPvp(event.player.uniqueId).stillTime = 0
+		PvpData.resetStillTimer(event.player)
 	}
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
-		PlayerData.getLobbyPvp(event.player.uniqueId).stillTime = 0
+		PvpData.resetStillTimer(event.player)
 	}
 
 	@EventHandler
-	fun onInventory(event: InventoryClickEvent) {
-		PlayerData.getLobbyPvp(event.whoClicked.uniqueId).stillTime = 0
+	fun onDamage(event: EntityDamageEvent) {
+		val player = event.entity
+		if (player is Player) PvpData.resetStillTimer(player)
 	}
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		PlayerData.getLobbyPvp(event.player.uniqueId).stillTime = 0
+		PvpData.resetStillTimer(event.player)
 	}
 }

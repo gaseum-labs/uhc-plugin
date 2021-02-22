@@ -188,10 +188,9 @@ class EventListener : Listener {
 		val player = event.player
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		/* waiting pvp respawning */
+		/* pvp respawns back into pvp */
 		if (playerData.lobbyPVP.inPvp) {
-			PvpData.disablePvp(player)
-			event.respawnLocation = AbstractLobby.lobbyLocation(GameRunner.uhc, player)
+			event.respawnLocation = PvpData.enablePvp(player, false, false)
 
 		/* players respawning who are in the game */
 		} else if (playerData.participating) {

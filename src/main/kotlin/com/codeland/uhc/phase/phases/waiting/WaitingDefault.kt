@@ -10,11 +10,13 @@ class WaitingDefault : Phase() {
 		val lobbyWorld = Bukkit.getWorld(WorldManager.LOBBY_WORLD_NAME) ?: return
 		val pvpWorld = Bukkit.getWorld(WorldManager.PVP_WORLD_NAME) ?: return
 
+		/* set gamerules for all worlds */
+		Bukkit.getWorlds().forEach { world -> primeWorldRules(world) }
+
+		/* gamerules specifically for lobby worlds */
 		primeLobbyWorld(lobbyWorld)
 		primeLobbyWorld(pvpWorld)
 		PvpData.prepareArena(pvpWorld, uhc.lobbyRadius, uhc)
-
-		Bukkit.getWorlds().forEach { world -> primeWorldRules(world) }
 
 		Bukkit.getServer().onlinePlayers.forEach { player ->
 			player.inventory.clear()
@@ -29,6 +31,8 @@ class WaitingDefault : Phase() {
 		world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
 		world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
 		world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
+		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, false)
+
 		world.time = 6000
 		world.isThundering = false
 		world.setStorm(false)

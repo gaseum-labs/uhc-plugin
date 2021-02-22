@@ -7,19 +7,22 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.phase.phases.endgame.AbstractEndgame
 import com.codeland.uhc.util.Util
-import com.destroystokyo.paper.Title
+import net.md_5.bungee.api.ChatColor.*
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.block.Block
 import org.bukkit.block.Sign
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import java.util.*
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 class PvpData(
 	var inPvp: Boolean,
+	var exiting: Boolean,
 	var stillTime: Int,
 	var killstreak: Int,
 	var lastLocation: Location,
@@ -28,10 +31,10 @@ class PvpData(
 ) {
 	companion object {
 		fun defaultPvpData(): PvpData {
-			return PvpData(false, 0, 0, Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0), GameMode.CREATIVE, emptyArray())
+			return PvpData(false, false, 0, 0, Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0), GameMode.CREATIVE, emptyArray())
 		}
 
-		val STILL_TIME = 15 * 20
+		val STILL_TIME = 10 * 20
 
 		fun allInPvp(onPlayer: (Player, PvpData) -> Unit) {
 			PlayerData.playerDataList.forEach { (uuid, playerData) ->
@@ -66,15 +69,18 @@ class PvpData(
 			LobbyPvpItems::genWaterBucket,
 		)
 
-		fun enablePvp(player: Player) {
+		fun enablePvp(player: Player, save: Boolean, teleport: Boolean): Location {
 			val pvpData = PlayerData.getLobbyPvp(player.uniqueId)
 
 			/* save before pvp state */
-			pvpData.oldInventoryContents = player.inventory.contents.clone()
-			pvpData.oldGamemode = player.gameMode
+			if (save) {
+				pvpData.oldInventoryContents = player.inventory.contents.clone()
+				pvpData.oldGamemode = player.gameMode
+			}
 
 			/* enter into pvp */
 			pvpData.inPvp = true
+			pvpData.exiting = false
 			pvpData.stillTime = 0
 			pvpData.killstreak = 0
 
@@ -107,11 +113,17 @@ class PvpData(
 			player.fallDistance = 0f
 			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
 
-			teleportPlayerIn(GameRunner.uhc, player)
+			/* tell player how to exit */
+			player.sendActionBar("${GOLD}You have entered PVP. Use ${WHITE}${BOLD}/uhc lobby ${GOLD}to exit")
+
+			val location = pvpSpawnLocation(GameRunner.uhc, player)
+			if (teleport) player.teleport(location)
 
 			allInPvp { sendPlayer, pvpData ->
 				GameRunner.sendGameMessage(sendPlayer, "${player.name} entered pvp")
 			}
+
+			return location
 		}
 
 		fun disablePvp(player: Player) {
@@ -145,7 +157,7 @@ class PvpData(
 			player.gameMode = pvpData.oldGamemode
 		}
 
-		fun teleportPlayerIn(uhc: UHC, player: Player) {
+		fun pvpSpawnLocation(uhc: UHC, player: Player): Location {
 			val world = WorldManager.getPVPWorld()
 
 			val centerX = 0
@@ -153,7 +165,7 @@ class PvpData(
 			val radius = uhc.lobbyRadius - 5
 
 			val currentlyInPvp = ArrayList<Player>()
-			allInPvp { player, pvpData -> currentlyInPvp.add(player) }
+			allInPvp { otherPlayer, pvpData -> if (player !== otherPlayer) currentlyInPvp.add(otherPlayer) }
 
 			var greatestDistance = 0.0
 			var teleportX = 0
@@ -165,9 +177,9 @@ class PvpData(
 				val thisTeleportX = Util.randRange(centerX - radius, centerX + radius)
 				val thisTeleportZ = Util.randRange(centerZ - radius, centerZ + radius)
 
-				currentlyInPvp.forEach { player ->
+				currentlyInPvp.forEach { otherPlayer ->
 					val distance =
-						sqrt((player.location.x - thisTeleportX).pow(2) + (player.location.z - thisTeleportZ).pow(2))
+						sqrt((otherPlayer.location.x - thisTeleportX).pow(2) + (otherPlayer.location.z - thisTeleportZ).pow(2))
 					if (distance < leastDistance) leastDistance = distance
 				}
 
@@ -180,15 +192,16 @@ class PvpData(
 
 			val (liquidY, solidY) = Util.topLiquidSolidYTop(world, 254, teleportX, teleportZ)
 
-			if (liquidY == -1) {
-				player.teleport(Location(world, teleportX + 0.5, solidY + 1.0, teleportZ + 0.5))
+			return if (liquidY == -1) {
+				Location(world, teleportX + 0.5, solidY + 1.0, teleportZ + 0.5)
+
 			} else {
 				world.getBlockAt(teleportX, liquidY, teleportZ).setType(Material.STONE, false)
-				player.teleport(Location(world, teleportX + 0.5, liquidY + 1.0, teleportZ + 0.5))
+				Location(world, teleportX + 0.5, liquidY + 1.0, teleportZ + 0.5)
 			}
 		}
 
-		fun announceKillstreak(player: Player, killstreak: Int, message: String) {
+		fun tellKillstreak(player: Player, killstreak: Int, message: String) {
 			player.sendTitle("${ChatColor.RED}Killstreak: ${ChatColor.DARK_RED}${killstreak}", "${ChatColor.RED}$message", 0, 20, 10)
 		}
 
@@ -221,18 +234,24 @@ class PvpData(
 					1 -> {}
 					2 -> {
 						giveKillstreakItem(killer, ItemStack(Material.ANVIL))
-						announceKillstreak(killer, killerPvpData.killstreak, "Anvil Bonus")
+						tellKillstreak(killer, killerPvpData.killstreak, "Anvil Bonus")
 					}
 					3 -> {
 						giveKillstreakItem(killer, ItemStack(Material.END_CRYSTAL), ItemStack(Material.OBSIDIAN, 4))
-						announceKillstreak(killer, killerPvpData.killstreak, "End crystal kit")
+						tellKillstreak(killer, killerPvpData.killstreak, "End crystal kit")
 					}
 					else -> {
 						giveKillstreakItem(killer, LobbyPvpItems.genPotion())
-						announceKillstreak(killer, killerPvpData.killstreak, "Random potion")
+						tellKillstreak(killer, killerPvpData.killstreak, "Random potion")
 					}
 				}
 			}
+		}
+
+		fun resetStillTimer(player: Player) {
+			val pvpData = PlayerData.getLobbyPvp(player.uniqueId)
+			pvpData.stillTime = 0
+			pvpData.exiting = false
 		}
 
 		fun onTick() {
@@ -243,19 +262,30 @@ class PvpData(
 				val distance = newLocation.distance(pvpData.lastLocation)
 				pvpData.lastLocation = newLocation
 
+				/* only counts as standing still if you are not moving and not sneaking */
 				if (distance == 0.0 && !player.isSneaking) {
-					val stillTime = pvpData.stillTime + 1
+					++pvpData.stillTime
 
-					if (stillTime == STILL_TIME) {
-						disablePvp(player)
-					} else if (stillTime % 20 == 0 && stillTime >= 10 * 20) {
-						player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Returning to Lobby in ${(STILL_TIME / 20) - (stillTime / 20)}...")
+					if (pvpData.stillTime % 20 == 0) {
+						if (pvpData.stillTime >= STILL_TIME) {
+							if (pvpData.exiting) {
+								disablePvp(player)
+							} else {
+								player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 50, 1, false, false, false))
+								player.sendActionBar("${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}Regenerating...")
+							}
+						} else if (pvpData.stillTime >= 5 * 20 || pvpData.exiting) {
+							if (pvpData.exiting) {
+								player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Returning to lobby in ${(STILL_TIME / 20) - (pvpData.stillTime / 20)}...")
+							} else {
+								player.sendActionBar("${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}Regeneration in ${(STILL_TIME / 20) - (pvpData.stillTime / 20)}...")
+							}
+						}
 					}
-
-					pvpData.stillTime = stillTime
-
+				/* reset still timer when moved/sneaked */
 				} else {
 					pvpData.stillTime = 0
+					pvpData.exiting = false
 				}
 			}
 		}

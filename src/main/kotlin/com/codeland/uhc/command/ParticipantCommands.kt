@@ -138,10 +138,20 @@ class ParticipantCommands : BaseCommand() {
 	@Description("allows spectators to go back to lobby")
 	fun lobbyCommand(sender: CommandSender) {
 		sender as Player
+		val playerData = PlayerData.getPlayerData(sender.uniqueId)
 
-		if (PlayerData.isParticipating(sender.uniqueId)) return Commands.errorMessage(sender, "You're playing the game")
+		/* only non players can use this command */
+		if (playerData.participating) return Commands.errorMessage(sender, "You're playing the game")
 
-		AbstractLobby.onSpawnLobby(sender)
+		/* lobby pvpers have to wait */
+		if (playerData.lobbyPVP.inPvp) {
+			playerData.lobbyPVP.exiting = true
+			GameRunner.sendGameMessage(sender, "Stand still to return to lobby")
+
+		/* specs immediately go to lobby */
+		} else {
+			AbstractLobby.onSpawnLobby(sender)
+		}
 	}
 
 	private fun changeTeamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor?) {

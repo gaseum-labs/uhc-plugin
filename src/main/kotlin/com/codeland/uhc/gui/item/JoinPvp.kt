@@ -26,6 +26,6 @@ class JoinPvp : CommandItem() {
 	}
 
 	override fun onUse(uhc: UHC, player: Player) {
-		PvpData.enablePvp(player)
+		PvpData.enablePvp(player, true, true)
 	}
 }
