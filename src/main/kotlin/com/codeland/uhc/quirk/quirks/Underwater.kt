@@ -28,7 +28,9 @@ import java.util.*
 class Underwater(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {
 		if (GameRunner.uhc.isGameGoing()) {
-			GameRunner.uhc.allCurrentPlayers { uuid -> onStart(uuid) }
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				if (playerData.participating) onStart(uuid)
+			}
 		}
 	}
 

@@ -1,6 +1,7 @@
 package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.Phase
 import org.bukkit.Bukkit
 import org.bukkit.World
@@ -27,10 +28,8 @@ class EndgameGlowingAll : Phase() {
 	override fun perTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
-		uhc.allCurrentPlayers { uuid ->
-			GameRunner.playerAction(uuid) { player ->
-				player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 1, false, false, false))
-			}
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.alive) GameRunner.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, Int.MAX_VALUE, 1, false, false, false))
 		}
 	}
 

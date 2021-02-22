@@ -190,15 +190,17 @@ object CustomSpawning {
 			val playerList = ArrayList<Player>()
 			val dataList = ArrayList<PlayerData>()
 
-			/* collect all online players */
-			GameRunner.uhc.allCurrentPlayers { uuid ->
-				val player = Bukkit.getPlayer(uuid)
+			/* collect all players to spawn mobs around */
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				if (playerData.participating) {
+					val player = Bukkit.getPlayer(uuid)
 
-				if (player != null) {
-					val data = PlayerData.getPlayerData(uuid)
+					if (player != null) {
+						val data = PlayerData.getPlayerData(uuid)
 
-					playerList.add(player)
-					dataList.add(data)
+						playerList.add(player)
+						dataList.add(data)
+					}
 				}
 			}
 

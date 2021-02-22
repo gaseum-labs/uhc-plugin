@@ -28,8 +28,8 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		if (uhc.isGameGoing()) {
 			val compass = createCompass()
 
-			uhc.allCurrentPlayers { uuid ->
-				GameRunner.playerAction(uuid) { player -> player.inventory.addItem(compass.clone()) }
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				if (playerData.participating) GameRunner.playerAction(uuid) { player -> player.inventory.addItem(compass.clone()) }
 			}
 
 			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
@@ -43,8 +43,8 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	}
 
 	override fun onDisable() {
-		uhc.allCurrentPlayers { uuid ->
-			GameRunner.playerAction(uuid) { player -> revokeCompass(player) }
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.participating) GameRunner.playerAction(uuid) { player -> revokeCompass(player) }
 		}
 
 		Bukkit.getScheduler().cancelTask(taskID)

@@ -92,8 +92,8 @@ object GameRunner {
 		}
 
 		/* count up all players not on a team */
-		uhc.allCurrentPlayers { uuid ->
-			if (TeamData.playersTeam(uuid) == null) {
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.alive && TeamData.playersTeam(uuid) == null) {
 				if (focusIndividual == uuid) individualAlive = true
 
 				++remaining

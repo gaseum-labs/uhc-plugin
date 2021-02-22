@@ -23,10 +23,11 @@ class EndgameNaturalTerrain : Phase() {
 	var finalMin = 0
 	var finalMax = 0
 
-	var GLOWING_TIME = 15
-	var glowingTimer = 0
+	val GLOWING_TIME = 15 * 20
+	val CLEAR_TIME = 3 * 60 * 20
 
 	var finished = false
+	var timer = 0
 
 	override fun customStart() {
 		EndgameNone.closeNether()
@@ -39,6 +40,8 @@ class EndgameNaturalTerrain : Phase() {
 
 		this.max = 255
 		this.min = finalMin - (this.max - finalMax)
+
+		timer = 0
 	}
 
 	fun fillBedrockLayer(world: World, layer: Int) {
@@ -72,61 +75,77 @@ class EndgameNaturalTerrain : Phase() {
 			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${max(min, 0)} - $max ${RESET}Final: $GOLD${BOLD}${finalMin} - $finalMax"
 	}
 
-	override fun perTick(currentTick: Int) {}
-
-	override fun perSecond(remainingSeconds: Int) {
+	override fun perTick(currentTick: Int) {
 		val world = uhc.getDefaultWorld()
 		val extrema = uhc.endRadius
-
-		if (!finished) {
-			--max
-			++min
-
-			/* teleport players up so they don't fall out the world */
-			uhc.allCurrentPlayers { uuid ->
-				val location = GameRunner.getPlayerLocation(uuid)
-
-				if (location != null && location.y < min) {
-					location.y = min.toDouble()
-					GameRunner.teleportPlayer(uuid, location)
-				}
-			}
-
-			if (min > 0) fillBedrockLayer(world, min - 1)
-		}
-
-		/* clear all blocks above the top level */
-		for (y in max + 1..255) for (x in -extrema..extrema) for (z in -extrema..extrema) {
-			world.getBlockAt(x, y, z).setType(Material.AIR, false)
-		}
-
-		if (!finished && max == finalMax) {
-			finished = true
-
-			max += 3
-
-			/* teleport all zombies to the surface */
-			PlayerData.playerDataList.forEach { (uuid, playerData) ->
-				val zombie = playerData.offlineZombie
-
-				if (zombie != null) {
-					val location = zombie.location
-					GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.x, Util.topBlockY(world, location.blockX, location.blockZ).toDouble(), location.z))
-				}
-			}
-		}
+		++timer
 
 		if (finished) {
-			++glowingTimer
-			if (glowingTimer == GLOWING_TIME) {
-				glowingTimer = 0
+			if (timer == GLOWING_TIME) {
+				timer = 0
 
-				uhc.allCurrentPlayers { uuid ->
-					GameRunner.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
+				PlayerData.playerDataList.forEach { (uuid, playerData) ->
+					/* glow all nonpest players every 15 seconds for 2 seconds */
+					if (playerData.alive) GameRunner.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
+				}
+			}
+
+		} else {
+			val along = timer / CLEAR_TIME.toDouble()
+
+			val newMin = (finalMin * along).toInt()
+			val newMax = ((255 - finalMax) * (1 - along) + finalMax).toInt()
+
+			if (newMin != min) {
+				min = newMin
+
+				/* teleport players up so they don't fall out the world */
+				PlayerData.playerDataList.forEach { (uuid, playerData) ->
+					if (playerData.participating) {
+						val location = GameRunner.getPlayerLocation(uuid)
+
+						if (location != null && location.y < min) {
+							location.y = min.toDouble()
+							GameRunner.teleportPlayer(uuid, location)
+						}
+					}
+				}
+
+				/* fill in with bedrock from below */
+				if (min > 0) fillBedrockLayer(world, min - 1)
+			}
+
+			if (newMax != max) {
+				max = newMax
+
+				/* clear all blocks above the top level */
+				for (y in max + 1..255) for (x in -extrema..extrema) for (z in -extrema..extrema) {
+					world.getBlockAt(x, y, z).setType(Material.AIR, false)
+				}
+			}
+
+			/* finish */
+			if (timer == CLEAR_TIME) {
+				timer = 0
+				finished = true
+
+				/* add 3 blocks to build above the cleared top */
+				max += 3
+
+				/* teleport all sky zombies to the surface */
+				PlayerData.playerDataList.forEach { (uuid, playerData) ->
+					val zombie = playerData.offlineZombie
+
+					if (zombie != null && zombie.location.y > max - 3) {
+						val location = zombie.location
+						GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.blockX + 0.5, Util.topBlockY(world, location.blockX, location.blockZ).toDouble(), location.blockZ + 0.5))
+					}
 				}
 			}
 		}
+	}
 
+	override fun perSecond(remainingSeconds: Int) {
 		uhc.containSpecs()
 	}
 

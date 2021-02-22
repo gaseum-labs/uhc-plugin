@@ -2,6 +2,7 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
@@ -73,8 +74,8 @@ class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				effectIndex = usingEffects.lastIndex
 			}
 
-			GameRunner.uhc.allCurrentPlayers { uuid ->
-				GameRunner.playerAction(uuid) { player ->
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				if (playerData.participating) GameRunner.playerAction(uuid) { player ->
 					player.addPotionEffect(PotionEffect(usingEffects[effectIndex], 3600, 0, false, true, true))
 				}
 			}

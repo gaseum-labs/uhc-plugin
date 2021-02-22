@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.quirk.Quirk
@@ -22,15 +23,15 @@ class Flying(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	override fun onEnable() {
 		if (uhc.isGameGoing()) {
-			GameRunner.uhc.allCurrentPlayers { uuid ->
-				GameRunner.playerAction(uuid) { player -> giveItems(player, numRockets) }
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				if (playerData.alive) GameRunner.playerAction(uuid) { player -> giveItems(player, numRockets) }
 			}
 		}
 	}
 
 	override fun onDisable() {
-		GameRunner.uhc.allCurrentPlayers { uuid ->
-			GameRunner.playerAction(uuid) { player -> revokeItems(player) }
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.participating) GameRunner.playerAction(uuid) { player -> revokeItems(player) }
 		}
 	}
 

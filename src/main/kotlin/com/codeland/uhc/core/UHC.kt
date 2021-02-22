@@ -40,7 +40,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		QuirkType.values()[index].createQuirk(this)
 	}
 
-	/* set by init */
 	private var phaseTimes = arrayOf(
 		0,
 		defaultPreset.graceTime,
@@ -193,12 +192,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 	fun isGameGoing(): Boolean {
 		return currentPhase?.phaseType?.gameGoing ?: false
-	}
-
-	fun allCurrentPlayers(action: (uuid: UUID) -> Unit) {
-		PlayerData.playerDataList.forEach { (uuid, data) ->
-			if (data.alive && data.participating) action(uuid)
-		}
 	}
 
 	fun getDefaultWorld(): World {
