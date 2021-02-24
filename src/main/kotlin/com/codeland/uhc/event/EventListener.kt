@@ -123,6 +123,9 @@ class EventListener : Listener {
 				pvpPlayer.sendMessage(event.deathMessage ?: "${player.name} fucking died")
 			}
 
+			/* filter killstreak items */
+			PvpData.filterDrops(event.drops)
+
 			/* award killstreak */
 			val killer = player.killer ?: return
 			PvpData.onKill(killer)
@@ -201,6 +204,8 @@ class EventListener : Listener {
 		} else {
 			event.respawnLocation = AbstractLobby.onSpawnLobby(player)
 		}
+
+		Util.log("PLAYER XP2: ${player.level}")
 	}
 
 	@EventHandler

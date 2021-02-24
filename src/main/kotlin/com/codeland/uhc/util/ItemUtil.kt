@@ -18,16 +18,18 @@ import org.bukkit.potion.PotionType
 
 object ItemUtil {
 	fun randomEnchantedBook(): ItemStack {
-		val ret = ItemStack(Material.ENCHANTED_BOOK)
-
-		val meta = ret.itemMeta as EnchantmentStorageMeta
-
 		val enchant = Enchantment.values()[Util.randRange(0, Enchantment.values().size - 1)]
-		meta.addStoredEnchant(enchant, Util.randRange(1, enchant.maxLevel), true)
+		return enchantedBook(enchant, Util.randRange(1, enchant.maxLevel))
+	}
 
-		ret.itemMeta = meta
+	fun enchantedBook(enchant: Enchantment, level: Int): ItemStack {
+		val book = ItemStack(Material.ENCHANTED_BOOK)
 
-		return ret
+		val meta = book.itemMeta as EnchantmentStorageMeta
+		meta.addStoredEnchant(enchant, level, true)
+		book.itemMeta = meta
+
+		return book
 	}
 
 	fun fireworkStar(amount: Int, color: Color): ItemStack {

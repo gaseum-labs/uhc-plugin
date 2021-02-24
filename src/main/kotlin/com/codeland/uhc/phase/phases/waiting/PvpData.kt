@@ -6,6 +6,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.phase.phases.endgame.AbstractEndgame
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.*
 import org.bukkit.*
@@ -25,13 +26,15 @@ class PvpData(
 	var exiting: Boolean,
 	var stillTime: Int,
 	var killstreak: Int,
+	var killstreakListIndex: Int,
+	var killstreakList: Array<Int>,
 	var lastLocation: Location,
 	var oldGamemode: GameMode,
 	var oldInventoryContents: Array<out ItemStack>,
 ) {
 	companion object {
 		fun defaultPvpData(): PvpData {
-			return PvpData(false, false, 0, 0, Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0), GameMode.CREATIVE, emptyArray())
+			return PvpData(false, false, 0, 0, 0, genKillstreakList(), Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0), GameMode.CREATIVE, emptyArray())
 		}
 
 		val STILL_TIME = 10 * 20
@@ -54,18 +57,15 @@ class PvpData(
 			LobbyPvpItems::genBow,
 			LobbyPvpItems::genCrossbow,
 			LobbyPvpItems::genGapples,
-			LobbyPvpItems::genPotion,
-			LobbyPvpItems::genPotion,
-			LobbyPvpItems::genPotion,
+			LobbyPvpItems::genStrengthPotion,
+			LobbyPvpItems::genRegenPotion,
+			LobbyPvpItems::genPoisonPotion,
 
 			/* inventory */
-			LobbyPvpItems::genSpectralArrows,
 			LobbyPvpItems::genArrows,
-			LobbyPvpItems::genFood,
 			LobbyPvpItems::genPick,
 			LobbyPvpItems::genBlocks,
-			LobbyPvpItems::genBlocks,
-			LobbyPvpItems::genPotion,
+			LobbyPvpItems::genAnvil,
 			LobbyPvpItems::genWaterBucket,
 		)
 
@@ -83,6 +83,8 @@ class PvpData(
 			pvpData.exiting = false
 			pvpData.stillTime = 0
 			pvpData.killstreak = 0
+			pvpData.killstreakListIndex = 0
+			Util.shuffleArray(pvpData.killstreakList)
 
 			/* give items */
 			player.inventory.clear()
@@ -104,8 +106,6 @@ class PvpData(
 			player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
 			player.health = 20.0
 			player.absorptionAmount = 0.0
-			player.exp = Math.random().toFloat()
-			player.level = 4
 			player.foodLevel = 17
 			player.saturation = 5f
 			player.exhaustion = 0f
@@ -121,6 +121,12 @@ class PvpData(
 
 			allInPvp { sendPlayer, pvpData ->
 				GameRunner.sendGameMessage(sendPlayer, "${player.name} entered pvp")
+			}
+
+			/* for some reason XP cannot get set immediately on respawn */
+			SchedulerUtil.nextTick {
+				player.exp = 0.0f
+				player.level = 5
 			}
 
 			return location
@@ -201,13 +207,51 @@ class PvpData(
 			}
 		}
 
-		fun tellKillstreak(player: Player, killstreak: Int, message: String) {
-			player.sendTitle("${ChatColor.RED}Killstreak: ${ChatColor.DARK_RED}${killstreak}", "${ChatColor.RED}$message", 0, 20, 10)
+		data class KillstreakKit(val name: String, val items: Array<() -> ItemStack>)
+
+		/* killstreaks */
+		val killstreakKits = arrayOf(
+			KillstreakKit("Enchanted Books", arrayOf(
+				LobbyPvpItems::genEnchantedBook, LobbyPvpItems::genEnchantedBook
+			)),
+			KillstreakKit("End Crystal Kit", arrayOf(
+				{ ItemStack(Material.END_CRYSTAL) }, { ItemStack(Material.OBSIDIAN, 6) }
+			)),
+			KillstreakKit("Good Potions", arrayOf(
+				LobbyPvpItems::genInstantHealthPotion, LobbyPvpItems::genSpeedPotion
+			)),
+			KillstreakKit("Offensive Potions", arrayOf(
+				LobbyPvpItems::genWeaknessPotion, LobbyPvpItems::genInstantDamagePotion
+			)),
+			KillstreakKit("Spectral Arrows", arrayOf(
+				LobbyPvpItems::genSpectralArrows, LobbyPvpItems::genBow
+			)),
+		)
+
+		fun genKillstreakList(): Array<Int> {
+			val indexList = Array(killstreakKits.size) { i -> i }
+			Util.shuffleArray(indexList)
+			return indexList
 		}
 
-		fun giveKillstreakItem(player: Player, vararg itemStack: ItemStack) {
+		fun getNextKillstreak(pvpData: PvpData): KillstreakKit {
+			val kit = killstreakKits[pvpData.killstreakListIndex]
+
+			if (++pvpData.killstreakListIndex == killstreakKits.size) {
+				pvpData.killstreakListIndex = 0
+				Util.shuffleArray(pvpData.killstreakList)
+			}
+
+			return kit
+		}
+
+		fun tellKillstreak(player: Player, killstreak: Int, message: String) {
+			player.sendTitle("${ChatColor.RED}Killstreak: ${ChatColor.DARK_RED}${killstreak}", "${ChatColor.RED}$message", 0, 40, 10)
+		}
+
+		fun giveKillstreakItem(player: Player, makeItems: Array<() -> ItemStack>) {
 			/* attempt to add the items to the inventory */
-			val couldNotAdd = player.inventory.addItem(*itemStack)
+			val couldNotAdd = player.inventory.addItem(*Array(makeItems.size) { i -> makeItems[i]() })
 
 			/* how many items to offset left by */
 			val addSize = couldNotAdd.size
@@ -230,21 +274,9 @@ class PvpData(
 			if (killerPvpData.inPvp) {
 				++killerPvpData.killstreak
 
-				when (killerPvpData.killstreak) {
-					1 -> {}
-					2 -> {
-						giveKillstreakItem(killer, ItemStack(Material.ANVIL))
-						tellKillstreak(killer, killerPvpData.killstreak, "Anvil Bonus")
-					}
-					3 -> {
-						giveKillstreakItem(killer, ItemStack(Material.END_CRYSTAL), ItemStack(Material.OBSIDIAN, 4))
-						tellKillstreak(killer, killerPvpData.killstreak, "End crystal kit")
-					}
-					else -> {
-						giveKillstreakItem(killer, LobbyPvpItems.genPotion())
-						tellKillstreak(killer, killerPvpData.killstreak, "Random potion")
-					}
-				}
+				val kit = getNextKillstreak(killerPvpData)
+				giveKillstreakItem(killer, kit.items)
+				tellKillstreak(killer, killerPvpData.killstreak, kit.name)
 			}
 		}
 
@@ -263,7 +295,8 @@ class PvpData(
 				pvpData.lastLocation = newLocation
 
 				/* only counts as standing still if you are not moving and not sneaking */
-				if (distance == 0.0 && !player.isSneaking) {
+				/* also check if not dead and on the respawn menu */
+				if (distance == 0.0 && !player.isSneaking && player.health > 0) {
 					++pvpData.stillTime
 
 					if (pvpData.stillTime % 20 == 0) {
@@ -294,6 +327,20 @@ class PvpData(
 
 					if ((currentTick % 20) == 0 && (glowInterval == 0 || (currentTick / 20) % glowInterval == 0)) player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
 				}
+			}
+		}
+
+		/**
+		 * prevent killstreak items from dropping
+		 */
+		fun filterDrops(drops: MutableList<ItemStack>) {
+			drops.removeIf { drop ->
+				drop.type == Material.END_CRYSTAL ||
+				drop.type == Material.OBSIDIAN ||
+				drop.type == Material.SPECTRAL_ARROW ||
+				drop.type == Material.POTION ||
+				drop.type == Material.SPLASH_POTION ||
+				drop.type == Material.ENCHANTED_BOOK
 			}
 		}
 

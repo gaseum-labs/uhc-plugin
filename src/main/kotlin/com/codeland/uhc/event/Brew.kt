@@ -40,25 +40,39 @@ class Brew : Listener {
 
 			return potion
 		}
+
+		fun externalCreatePotion(material: Material, info: PotionInfo, extended: Boolean, amplified: Boolean): ItemStack {
+			val effectType = info.type.effectType ?: PotionEffectType.POISON
+
+			val potion = ItemStack(material)
+
+			val meta = potion.itemMeta as PotionMeta
+
+			meta.setDisplayName("${ChatColor.RESET}Potion of ${info.name}")
+			meta.color = effectType.color
+			meta.addCustomEffect(PotionEffect(effectType, if (extended) info.extendedDuration else info.amplifiedDuration, if (amplified) 1 else 0), true)
+
+			potion.itemMeta = meta
+
+			return potion
+		}
+
+		fun createDefaultPotion(material: Material, potionData: PotionData): ItemStack {
+			val potion = ItemStack(material)
+
+			val meta = potion.itemMeta as PotionMeta
+			meta.basePotionData = potionData
+			potion.itemMeta = meta
+
+			return potion
+		}
+
+		class PotionInfo(val type: PotionType, val name: String, val baseDuration: Int, val extendedDuration: Int, val amplifiedDuration: Int)
+
+		val POISON_INFO = PotionInfo(PotionType.POISON, "Poison", 150, 325, 144)
+		val REGEN_INFO = PotionInfo(PotionType.REGEN, "Regeneration", 250, 500, 225)
+		val STRENGTH_INFO = PotionInfo(PotionType.STRENGTH, "Strength", 1800, 3600, 600)
 	}
-
-	fun createDefaultPotion(potionData: PotionData, material: Material): ItemStack {
-		val potion = ItemStack(material)
-
-		val meta = potion.itemMeta as PotionMeta
-
-		meta.basePotionData = potionData
-
-		potion.itemMeta = meta
-
-		return potion
-	}
-
-	class PotionInfo(val type: PotionType, val name: String, val baseDuration: Int, val extendedDuration: Int, val amplifiedDuration: Int)
-
-	val POISON_INFO = PotionInfo(PotionType.POISON, "Poison", 150, 325, 144)
-	val REGEN_INFO = PotionInfo(PotionType.REGEN, "Regeneration", 250, 500, 225)
-	val STRENGTH_INFO = PotionInfo(PotionType.STRENGTH, "Strength", 1800, 3600, 600)
 
 	val potionInfoList = arrayOf(POISON_INFO, REGEN_INFO, STRENGTH_INFO)
 
@@ -143,7 +157,7 @@ class Brew : Listener {
 	fun createDefaultPath(ingredient: Material, affectedType: PotionType, potionType: PotionType, modifiers: Int = 0): PotionPath {
 		return baseCreatePath(ingredient, affectedType, potionType, modifiers) { itemStack ->
 			val (extended, upgraded, splashed) = finalModifiers(itemStack, modifiers)
-			createDefaultPotion(PotionData(potionType, extended, upgraded), if (splashed) Material.SPLASH_POTION else Material.POTION)
+			createDefaultPotion(if (splashed) Material.SPLASH_POTION else Material.POTION, PotionData(potionType, extended, upgraded))
 		}
 	}
 

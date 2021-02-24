@@ -1,5 +1,7 @@
 package com.codeland.uhc.phase.phases.waiting
 
+import com.codeland.uhc.event.Brew
+import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
@@ -12,56 +14,36 @@ import org.bukkit.potion.PotionType
 object LobbyPvpItems {
 	private class EnchantOption(val enchantment: Enchantment, val level: Int)
 
-	private val armorEnchants1: Array<EnchantOption?> = arrayOf(
+	private val armorEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.PROTECTION_PROJECTILE, 1),
-		EnchantOption(Enchantment.PROTECTION_PROJECTILE, 2),
 		EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, 1),
-		EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, 2),
-	)
-
-	private val armorEnchants2: Array<EnchantOption?> = arrayOf(
-		EnchantOption(Enchantment.THORNS, 1),
-		null,
-		null,
-		null
 	)
 
 	private val diggingEnchants: Array<EnchantOption?> = arrayOf(
-		EnchantOption(Enchantment.DIG_SPEED, 1),
 		EnchantOption(Enchantment.DIG_SPEED, 2),
 	)
 
-	private val swordEnchants1: Array<EnchantOption?> = arrayOf(
+	private val swordEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.DAMAGE_ALL, 1),
-		EnchantOption(Enchantment.DAMAGE_ALL, 2),
-	)
-
-	private val swordEnchants2: Array<EnchantOption?> = arrayOf(
-		EnchantOption(Enchantment.FIRE_ASPECT, 1),
-		EnchantOption(Enchantment.KNOCKBACK, 1),
-		null
 	)
 
 	private val axeEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.DAMAGE_ALL, 1),
-		EnchantOption(Enchantment.DAMAGE_ALL, 2),
 	)
 
 	private val bowEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.ARROW_DAMAGE, 1),
-		EnchantOption(Enchantment.ARROW_DAMAGE, 2),
 	)
 
 	private val crossbowEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.PIERCING, 1),
-		EnchantOption(Enchantment.PIERCING, 2),
 	)
 
 	private val noEnchants: Array<EnchantOption?> = arrayOf(
 		null
 	)
 
-	private fun genTool(diamond: Material, iron: Material, chance: Double, enchants1: Array<EnchantOption?>, enchants2: Array<EnchantOption?>): ItemStack {
+	private fun genTool(diamond: Material, iron: Material, chance: Double, enchants1: Array<EnchantOption?>): ItemStack {
 		val itemStack = ItemStack(if (Math.random() < chance) diamond else iron)
 
 		val meta = itemStack.itemMeta
@@ -69,52 +51,49 @@ object LobbyPvpItems {
 		val enchant1 = Util.randFromArray(enchants1)
 		if (enchant1 != null) meta.addEnchant(enchant1.enchantment, enchant1.level, true)
 
-		val enchant2 = Util.randFromArray(enchants2)
-		if (enchant2 != null) meta.addEnchant(enchant2.enchantment, enchant2.level, true)
-
 		itemStack.itemMeta = meta
 
 		return itemStack
 	}
 
 	fun genHelmet(): ItemStack {
-		return genTool(Material.DIAMOND_HELMET, Material.IRON_HELMET, 0.25, armorEnchants1, armorEnchants2)
+		return genTool(Material.DIAMOND_HELMET, Material.IRON_HELMET, 0.25, armorEnchants)
 	}
 
 	fun genChestplate(): ItemStack {
-		return genTool(Material.DIAMOND_CHESTPLATE, Material.IRON_CHESTPLATE, 0.25, armorEnchants1, armorEnchants2)
+		return genTool(Material.DIAMOND_CHESTPLATE, Material.IRON_CHESTPLATE, 0.25, armorEnchants)
 	}
 
 	fun genLeggings(): ItemStack {
-		return genTool(Material.DIAMOND_LEGGINGS, Material.IRON_LEGGINGS, 0.25, armorEnchants1, armorEnchants2)
+		return genTool(Material.DIAMOND_LEGGINGS, Material.IRON_LEGGINGS, 0.25, armorEnchants)
 	}
 
 	fun genBoots(): ItemStack {
-		return genTool(Material.DIAMOND_BOOTS, Material.IRON_BOOTS, 0.25, armorEnchants1, armorEnchants2)
+		return genTool(Material.DIAMOND_BOOTS, Material.IRON_BOOTS, 0.25, armorEnchants)
 	}
 
 	fun genPick(): ItemStack {
-		return genTool(Material.DIAMOND_PICKAXE, Material.IRON_PICKAXE, 0.5, diggingEnchants, noEnchants)
+		return genTool(Material.DIAMOND_PICKAXE, Material.IRON_PICKAXE, 0.5, diggingEnchants)
 	}
 
 	fun genShovel(): ItemStack {
-		return genTool(Material.DIAMOND_SHOVEL, Material.IRON_SHOVEL, 0.5, diggingEnchants, noEnchants)
+		return genTool(Material.DIAMOND_SHOVEL, Material.IRON_SHOVEL, 0.5, diggingEnchants)
 	}
 
 	fun genSword(): ItemStack {
-		return genTool(Material.DIAMOND_SWORD, Material.IRON_SWORD, 0.5, swordEnchants1, swordEnchants2)
+		return genTool(Material.DIAMOND_SWORD, Material.IRON_SWORD, 0.5, swordEnchants)
 	}
 
 	fun genAxe(): ItemStack {
-		return genTool(Material.DIAMOND_AXE, Material.IRON_AXE, 0.5, axeEnchants, diggingEnchants)
+		return genTool(Material.DIAMOND_AXE, Material.IRON_AXE, 0.5, axeEnchants)
 	}
 
 	fun genBow(): ItemStack {
-		return genTool(Material.BOW, Material.BOW, 0.5, bowEnchants, noEnchants)
+		return genTool(Material.BOW, Material.BOW, 0.5, bowEnchants)
 	}
 
 	fun genCrossbow(): ItemStack {
-		return genTool(Material.CROSSBOW, Material.CROSSBOW, 0.5, crossbowEnchants, noEnchants)
+		return genTool(Material.CROSSBOW, Material.CROSSBOW, 0.5, crossbowEnchants)
 	}
 
 	fun genArrows(): ItemStack {
@@ -122,29 +101,53 @@ object LobbyPvpItems {
 	}
 
 	fun genSpectralArrows(): ItemStack {
-		return ItemStack(Material.SPECTRAL_ARROW, 16)
+		return ItemStack(Material.SPECTRAL_ARROW, 32)
 	}
 
-	class PotionOption(val potionType: PotionType, val splash: Boolean, val upgraded: Boolean)
+	fun genPoisonPotion(): ItemStack {
+		val extended = Math.random() < 0.5
+		return Brew.externalCreatePotion(Material.SPLASH_POTION, Brew.POISON_INFO, extended, !extended)
+	}
 
-	val potionOptions = arrayOf(
-		PotionOption(PotionType.STRENGTH, false, false),
-		PotionOption(PotionType.INSTANT_HEAL, true, true),
-		PotionOption(PotionType.POISON, true, true),
-		PotionOption(PotionType.INSTANT_DAMAGE, true, true),
-		PotionOption(PotionType.SPEED, false, true)
+	fun genStrengthPotion(): ItemStack {
+		return Brew.externalCreatePotion(Material.POTION, Brew.STRENGTH_INFO, true, false)
+	}
+
+	fun genRegenPotion(): ItemStack {
+		val extended = Math.random() < 0.5
+		return Brew.externalCreatePotion(Material.SPLASH_POTION, Brew.REGEN_INFO,  extended, !extended)
+	}
+
+	fun genInstantHealthPotion(): ItemStack {
+		return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.INSTANT_HEAL, false, true))
+	}
+
+	fun genInstantDamagePotion(): ItemStack {
+		return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.INSTANT_DAMAGE, false, true))
+	}
+
+	fun genWeaknessPotion(): ItemStack {
+		return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.WEAKNESS, true, false))
+	}
+
+	fun genSpeedPotion(): ItemStack {
+		return Brew.createDefaultPotion(Material.POTION, PotionData(PotionType.SPEED, false, true))
+	}
+
+	val bookEnchants = arrayOf(
+		Pair(Enchantment.FIRE_ASPECT, 1),
+		Pair(Enchantment.KNOCKBACK, 1),
+		Pair(Enchantment.THORNS, 1),
+		Pair(Enchantment.DIG_SPEED, 2),
 	)
 
-	fun genPotion(): ItemStack {
-		val potionOption = Util.randFromArray(potionOptions)
+	fun genEnchantedBook(): ItemStack {
+		val bookEnchant = Util.randFromArray(bookEnchants)
+		return ItemUtil.enchantedBook(bookEnchant.first, bookEnchant.second)
+	}
 
-		val itemStack = ItemStack(if (potionOption.splash) Material.SPLASH_POTION else Material.POTION)
-
-		val meta = itemStack.itemMeta as PotionMeta
-		meta.basePotionData = PotionData(potionOption.potionType, !potionOption.upgraded, potionOption.upgraded)
-		itemStack.itemMeta = meta
-
-		return itemStack
+	fun genAnvil(): ItemStack {
+		return ItemStack(Material.ANVIL)
 	}
 
 	val blockOptions = arrayOf(
@@ -154,7 +157,7 @@ object LobbyPvpItems {
 	)
 
 	fun genBlocks(): ItemStack {
-		return ItemStack(Util.randFromArray(blockOptions), Util.randRange(56, 64))
+		return ItemStack(Util.randFromArray(blockOptions), 64)
 	}
 
 	val foodOptions = arrayOf(
