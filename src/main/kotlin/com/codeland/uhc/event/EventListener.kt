@@ -14,6 +14,7 @@ import com.codeland.uhc.phase.phases.waiting.AbstractLobby
 import com.codeland.uhc.phase.phases.waiting.PvpData
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
+import com.codeland.uhc.team.HideManager
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
@@ -50,6 +51,9 @@ class EventListener : Listener {
 		if (!playerData.participating) {
 			AbstractLobby.onSpawnLobby(event.player)
 		}
+
+		/* manage who to see */
+		HideManager.updateAllForPlayer(player)
 	}
 
 	@EventHandler
@@ -112,6 +116,11 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
+	fun onWorld(event: PlayerChangedWorldEvent) {
+		HideManager.updatePlayerForAll(event.player)
+	}
+
+	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		val player = event.entity
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
@@ -123,8 +132,8 @@ class EventListener : Listener {
 				pvpPlayer.sendMessage(event.deathMessage ?: "${player.name} fucking died")
 			}
 
-			/* filter killstreak items */
-			PvpData.filterDrops(event.drops)
+			/* lobby pvp players do not drop items */
+			event.drops.clear()
 
 			/* award killstreak */
 			val killer = player.killer ?: return

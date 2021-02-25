@@ -13,11 +13,14 @@ import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.block.Block
 import org.bukkit.block.Sign
+import org.bukkit.entity.Item
 import org.bukkit.entity.Player
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -62,6 +65,7 @@ class PvpData(
 			LobbyPvpItems::genPoisonPotion,
 
 			/* inventory */
+			LobbyPvpItems::genFood,
 			LobbyPvpItems::genArrows,
 			LobbyPvpItems::genPick,
 			LobbyPvpItems::genBlocks,
@@ -210,6 +214,50 @@ class PvpData(
 		data class KillstreakKit(val name: String, val items: Array<() -> ItemStack>)
 
 		/* killstreaks */
+
+		fun isUpgradable(itemStack: ItemStack?): Boolean {
+			if (itemStack == null) return false
+
+			return when (itemStack.type) {
+				Material.IRON_SWORD -> true
+				Material.IRON_AXE -> true
+				Material.IRON_BOOTS -> true
+				Material.IRON_LEGGINGS -> true
+				Material.IRON_CHESTPLATE -> true
+				Material.IRON_HELMET -> true
+				else -> false
+			}
+		}
+
+		fun upgradeItem(itemStack: ItemStack) {
+			itemStack.type = when (itemStack.type) {
+				Material.IRON_SWORD -> Material.DIAMOND_SWORD
+				Material.IRON_AXE -> Material.DIAMOND_AXE
+				Material.IRON_BOOTS -> Material.DIAMOND_BOOTS
+				Material.IRON_LEGGINGS -> Material.DIAMOND_LEGGINGS
+				Material.IRON_CHESTPLATE -> Material.DIAMOND_CHESTPLATE
+				Material.IRON_HELMET -> Material.DIAMOND_HELMET
+				else -> Material.CACTUS
+			}
+		}
+
+		fun upgradeDiamond(player: Player) {
+			val potentialUpgrades = ArrayList<ItemStack>()
+
+			for (i in 0..8) {
+				val stack = player.inventory.getItem(i)
+				if (isUpgradable(stack)) potentialUpgrades.add(stack!!)
+			}
+
+			for (i in 36..39) {
+				val stack = player.inventory.getItem(i)
+				if (isUpgradable(stack)) potentialUpgrades.add(stack!!)
+			}
+
+			if (potentialUpgrades.size > 0)
+				upgradeItem(potentialUpgrades[(Math.random() * potentialUpgrades.size).toInt()])
+		}
+
 		val killstreakKits = arrayOf(
 			KillstreakKit("Enchanted Books", arrayOf(
 				LobbyPvpItems::genEnchantedBook, LobbyPvpItems::genEnchantedBook
@@ -274,6 +322,10 @@ class PvpData(
 			if (killerPvpData.inPvp) {
 				++killerPvpData.killstreak
 
+				upgradeDiamond(killer)
+				giveKillstreakItem(killer, arrayOf(LobbyPvpItems::genResupplyArrows))
+				giveKillstreakItem(killer, arrayOf(LobbyPvpItems::genResupplyGapples))
+
 				val kit = getNextKillstreak(killerPvpData)
 				giveKillstreakItem(killer, kit.items)
 				tellKillstreak(killer, killerPvpData.killstreak, kit.name)
@@ -305,6 +357,7 @@ class PvpData(
 								disablePvp(player)
 							} else {
 								player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 50, 1, false, false, false))
+								player.addPotionEffect(PotionEffect(PotionEffectType.SATURATION, 50, 1, false, false, false))
 								player.sendActionBar("${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}Regenerating...")
 							}
 						} else if (pvpData.stillTime >= 5 * 20 || pvpData.exiting) {
@@ -327,20 +380,6 @@ class PvpData(
 
 					if ((currentTick % 20) == 0 && (glowInterval == 0 || (currentTick / 20) % glowInterval == 0)) player.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
 				}
-			}
-		}
-
-		/**
-		 * prevent killstreak items from dropping
-		 */
-		fun filterDrops(drops: MutableList<ItemStack>) {
-			drops.removeIf { drop ->
-				drop.type == Material.END_CRYSTAL ||
-				drop.type == Material.OBSIDIAN ||
-				drop.type == Material.SPECTRAL_ARROW ||
-				drop.type == Material.POTION ||
-				drop.type == Material.SPLASH_POTION ||
-				drop.type == Material.ENCHANTED_BOOK
 			}
 		}
 

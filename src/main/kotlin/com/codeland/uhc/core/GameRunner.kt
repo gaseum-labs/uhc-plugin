@@ -7,6 +7,7 @@ import com.codeland.uhc.blockfix.RedMushroomFix
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.team.HideManager
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenFile

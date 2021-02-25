@@ -4,27 +4,24 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
-import com.codeland.uhc.blockfix.BlockFixType
-import com.codeland.uhc.command.ubt.PartialUBT
-import com.codeland.uhc.command.ubt.UBT
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.Preset
-import com.codeland.uhc.core.KillReward
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.phase.*
+import com.codeland.uhc.core.Preset
+import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.grace.GraceDefault
-import com.codeland.uhc.quirk.quirks.LowGravity
-import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.team.TeamMaker
-import com.codeland.uhc.util.Util
-import org.bukkit.*
-import org.bukkit.block.data.BlockData
+import com.codeland.uhc.util.SchedulerUtil
+import org.bukkit.Bukkit
+import org.bukkit.GameMode
+import org.bukkit.Location
+import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import kotlin.math.ceil
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -178,6 +175,16 @@ class AdminCommands : BaseCommand() {
 		var teamColorPairs = TeamMaker.getColorList(1) ?: return Commands.errorMessage(sender, "There are already the maximum amount of teams (${TeamData.MAX_TEAMS})")
 
 		lateTeamTeleport(sender, player, playerData, teleportLocation, TeamData.addToTeam(teamColorPairs[0], player.uniqueId, true))
+	}
+
+	@Subcommand("pregen")
+	@Description("Generates all chunks in the playable area")
+	fun pregen(sender: CommandSender) {
+		if (PreGenner.taskID == -1) {
+			PreGenner.pregen(sender as Player)
+		} else {
+			Commands.errorMessage(sender, "Pregen has already started!")
+		}
 	}
 
 	private fun lateTeamTeleport(sender: CommandSender, player: Player, playerData: PlayerData, location: Location, team: Team) {

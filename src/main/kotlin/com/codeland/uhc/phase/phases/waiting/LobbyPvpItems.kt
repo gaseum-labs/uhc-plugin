@@ -43,13 +43,14 @@ object LobbyPvpItems {
 		null
 	)
 
-	private fun genTool(diamond: Material, iron: Material, chance: Double, enchants1: Array<EnchantOption?>): ItemStack {
-		val itemStack = ItemStack(if (Math.random() < chance) diamond else iron)
+	private fun genTool(material: Material, enchants1: Array<EnchantOption?>): ItemStack {
+		val itemStack = ItemStack(material)
 
 		val meta = itemStack.itemMeta
 
 		val enchant1 = Util.randFromArray(enchants1)
 		if (enchant1 != null) meta.addEnchant(enchant1.enchantment, enchant1.level, true)
+		meta.isUnbreakable = true
 
 		itemStack.itemMeta = meta
 
@@ -57,47 +58,47 @@ object LobbyPvpItems {
 	}
 
 	fun genHelmet(): ItemStack {
-		return genTool(Material.DIAMOND_HELMET, Material.IRON_HELMET, 0.25, armorEnchants)
+		return genTool(Material.IRON_HELMET, armorEnchants)
 	}
 
 	fun genChestplate(): ItemStack {
-		return genTool(Material.DIAMOND_CHESTPLATE, Material.IRON_CHESTPLATE, 0.25, armorEnchants)
+		return genTool(Material.IRON_CHESTPLATE, armorEnchants)
 	}
 
 	fun genLeggings(): ItemStack {
-		return genTool(Material.DIAMOND_LEGGINGS, Material.IRON_LEGGINGS, 0.25, armorEnchants)
+		return genTool(Material.IRON_LEGGINGS, armorEnchants)
 	}
 
 	fun genBoots(): ItemStack {
-		return genTool(Material.DIAMOND_BOOTS, Material.IRON_BOOTS, 0.25, armorEnchants)
+		return genTool(Material.IRON_BOOTS, armorEnchants)
 	}
 
 	fun genPick(): ItemStack {
-		return genTool(Material.DIAMOND_PICKAXE, Material.IRON_PICKAXE, 0.5, diggingEnchants)
-	}
-
-	fun genShovel(): ItemStack {
-		return genTool(Material.DIAMOND_SHOVEL, Material.IRON_SHOVEL, 0.5, diggingEnchants)
+		return genTool(Material.DIAMOND_PICKAXE, diggingEnchants)
 	}
 
 	fun genSword(): ItemStack {
-		return genTool(Material.DIAMOND_SWORD, Material.IRON_SWORD, 0.5, swordEnchants)
+		return genTool(Material.IRON_SWORD, swordEnchants)
 	}
 
 	fun genAxe(): ItemStack {
-		return genTool(Material.DIAMOND_AXE, Material.IRON_AXE, 0.5, axeEnchants)
+		return genTool(Material.IRON_AXE, axeEnchants)
 	}
 
 	fun genBow(): ItemStack {
-		return genTool(Material.BOW, Material.BOW, 0.5, bowEnchants)
+		return genTool(Material.BOW, bowEnchants)
 	}
 
 	fun genCrossbow(): ItemStack {
-		return genTool(Material.CROSSBOW, Material.CROSSBOW, 0.5, crossbowEnchants)
+		return genTool(Material.CROSSBOW, crossbowEnchants)
 	}
 
 	fun genArrows(): ItemStack {
 		return ItemStack(Material.ARROW, 32)
+	}
+
+	fun genResupplyArrows(): ItemStack {
+		return ItemStack(Material.ARROW, 8)
 	}
 
 	fun genSpectralArrows(): ItemStack {
@@ -150,14 +151,8 @@ object LobbyPvpItems {
 		return ItemStack(Material.ANVIL)
 	}
 
-	val blockOptions = arrayOf(
-		Material.COBBLESTONE,
-		Material.ANDESITE,
-		Material.OAK_PLANKS
-	)
-
 	fun genBlocks(): ItemStack {
-		return ItemStack(Util.randFromArray(blockOptions), 64)
+		return ItemStack(Material.OAK_PLANKS, 64)
 	}
 
 	val foodOptions = arrayOf(
@@ -173,8 +168,12 @@ object LobbyPvpItems {
 		return ItemStack(Material.GOLDEN_APPLE, 2)
 	}
 
+	fun genResupplyGapples(): ItemStack {
+		return ItemStack(Material.GOLDEN_APPLE, 1)
+	}
+
 	fun genShield(): ItemStack {
-		return ItemStack(Material.SHIELD)
+		return genTool(Material.SHIELD, noEnchants)
 	}
 
 	class MaterialsOption(val material: Material, val min: Int, val max: Int)
