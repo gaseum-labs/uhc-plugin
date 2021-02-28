@@ -52,8 +52,10 @@ class EventListener : Listener {
 			AbstractLobby.onSpawnLobby(event.player)
 		}
 
-		/* manage who to see */
+		/* update who the player sees */
 		HideManager.updateAllForPlayer(player)
+		/* update who sees the player */
+		HideManager.updatePlayerForAll(player)
 	}
 
 	@EventHandler
@@ -117,7 +119,11 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onWorld(event: PlayerChangedWorldEvent) {
+		/* hide this player for everyone else not in the player's new world */
 		HideManager.updatePlayerForAll(event.player)
+
+		/* hide other players not in the player's new world to the player */
+		HideManager.updateAllForPlayer(event.player)
 	}
 
 	@EventHandler
