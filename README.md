@@ -54,8 +54,6 @@ Now you can run the configuration to build the jar
 
 Navigate to the directory of the project and run `gradle build`
 
-After building, the jar will be avaliable in `/build/libs/`, called `uhc-plugin-all.jar`
-
 ## Setting up the Server
 
 Copy the built jar in `/build/libs` named `UHC Plugin-all.jar` into the `plugins` directory for your paper server
