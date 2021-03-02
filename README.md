@@ -34,6 +34,8 @@ Clone the repo: `git clone https://github.com/Codeland473/uhc-plugin`
 
 Create the file `user.gradle` in the project directory
 
+### In IntelliJ
+
 Open the project directory in Intellij IDEA
 
 Click `Add Configuration..` then `+ (Add New Configuration)`
@@ -47,6 +49,12 @@ In the `Tasks` field type `shadowJar`
 Click Apply
 
 Now you can run the configuration to build the jar
+
+### In the command line
+
+Navigate to the directory of the project and run `gradle build`
+
+After building, the jar will be avaliable in `/build/libs/`, called `uhc-plugin-all.jar`
 
 ## Setting up the Server
 
