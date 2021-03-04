@@ -30,7 +30,7 @@ class Betrayal(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		/* reset data before a game */
 		if (phase.type == PhaseType.WAITING) {
 			PlayerData.playerDataList.forEach { (uuid, playerData) ->
-				val data = QuirkType.getData<BetrayalData>(playerData, QuirkType.BETRAYAL)
+				val data = PlayerData.getQuirkData<BetrayalData>(playerData, QuirkType.BETRAYAL)
 				data.kills = 0
 				data.swaps = 0
 			}
@@ -46,7 +46,7 @@ class Betrayal(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			val scoreList = ArrayList<Pair<UUID, Int>>()
 
 			team.forEach { uuid ->
-				val data = QuirkType.getData<BetrayalData>(uuid, QuirkType.BETRAYAL)
+				val data = PlayerData.getQuirkData<BetrayalData>(uuid, QuirkType.BETRAYAL)
 				val score = data.kills - data.swaps
 
 				scoreList.add(Pair(uuid, score))
@@ -61,12 +61,12 @@ class Betrayal(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			val playerTeam = TeamData.playersTeam(killerUUID)
 
 			if (killerTeam == playerTeam) {
-				--QuirkType.getData<BetrayalData>(killerUUID, QuirkType.BETRAYAL).kills
+				--PlayerData.getQuirkData<BetrayalData>(killerUUID, QuirkType.BETRAYAL).kills
 
 			} else {
 				/* change scores of player and killer */
-				++QuirkType.getData<BetrayalData>(playerUUID, QuirkType.BETRAYAL).swaps
-				++QuirkType.getData<BetrayalData>(killerUUID, QuirkType.BETRAYAL).kills
+				++PlayerData.getQuirkData<BetrayalData>(playerUUID, QuirkType.BETRAYAL).swaps
+				++PlayerData.getQuirkData<BetrayalData>(killerUUID, QuirkType.BETRAYAL).kills
 
 
 				if (killerTeam != null) {
@@ -86,7 +86,7 @@ class Betrayal(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 						for (i in 0..winningTeam.members.lastIndex) {
 							Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
 								val player = Bukkit.getOfflinePlayer(scores[i].first)
-								val betrayalData = QuirkType.getData<BetrayalData>(scores[i].first, QuirkType.BETRAYAL)
+								val betrayalData = PlayerData.getQuirkData<BetrayalData>(scores[i].first, QuirkType.BETRAYAL)
 
 								GameRunner.sendGameMessage(onlinePlayer,
 									"${i + 1}: ${player.name} Kills: ${betrayalData.kills} Swaps: ${betrayalData.swaps}"

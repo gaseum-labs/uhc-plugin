@@ -21,8 +21,29 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 	set(value) {
 		/* enable / disable functions come first */
 		if (value) {
+			/* start all players if the game is already going */
+			if (uhc.isGameGoing()) {
+				PlayerData.playerDataList.forEach { (uuid, playerData) ->
+					if (playerData.participating) {
+						/* mark that they have been applied */
+						PlayerData.getQuirkDataHolder(playerData, type).applied = true
+						onStart(uuid)
+					}
+				}
+			}
+
 			onEnable()
+
 		} else {
+			/* revoke applied status from all players who were applied by this quirk */
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				val quirkDataHolder = PlayerData.getQuirkDataHolder(playerData, type)
+				if (quirkDataHolder.applied) {
+					onEnd(uuid)
+					quirkDataHolder.applied = false
+				}
+			}
+
 			onDisable()
 		}
 
@@ -70,8 +91,10 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 	abstract fun onEnable()
 	abstract fun onDisable()
 
-	open fun defaultData(): Any = 0
 	open fun onStart(uuid: UUID) {}
+	open fun onEnd(uuid: UUID) {}
+
+	open fun defaultData(): Any = 0
 	open fun onPhaseSwitch(phase: PhaseVariant) {}
 	open fun customDrops(): Array<DropFix>? = null
 	open fun customSpawnInfos(): Array<SpawnInfo>? = null

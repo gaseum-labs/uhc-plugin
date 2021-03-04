@@ -32,6 +32,12 @@ object AbstractLobby {
 		/* get them on the health scoreboard */
 		player.damage(0.05)
 
+		/* reset applied status for all active quirks */
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		GameRunner.uhc.quirks.forEach { quirk ->
+			if (quirk.enabled) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
+		}
+
 		Pests.makeNotPest(player)
 
 		val location = lobbyLocation(GameRunner.uhc, player)

@@ -171,13 +171,7 @@ class EventListener : Listener {
 			}
 
 			/* remove chc specific items from drops */
-
-			if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) {
-				event.drops.removeAll { itemStack ->
-					itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.displayName == "Unusable Slot"
-				}
-			}
-
+			if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) Hotbar.filterDrops(event.drops)
 			if (GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS)) PlayerCompass.filterDrops(event.drops)
 		}
 	}
@@ -219,8 +213,6 @@ class EventListener : Listener {
 		} else {
 			event.respawnLocation = AbstractLobby.onSpawnLobby(player)
 		}
-
-		Util.log("PLAYER XP2: ${player.level}")
 	}
 
 	@EventHandler

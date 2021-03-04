@@ -14,6 +14,7 @@ import org.bukkit.entity.Player
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import java.util.*
 
 class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {

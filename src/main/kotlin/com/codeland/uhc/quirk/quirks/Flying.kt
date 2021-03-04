@@ -21,22 +21,16 @@ import java.util.*
 class Flying(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	var numRockets: Int = DEFAULT_ROCKETS
 
-	override fun onEnable() {
-		if (uhc.isGameGoing()) {
-			PlayerData.playerDataList.forEach { (uuid, playerData) ->
-				if (playerData.alive) GameRunner.playerAction(uuid) { player -> giveItems(player, numRockets) }
-			}
-		}
-	}
+	override fun onEnable() {}
 
-	override fun onDisable() {
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.participating) GameRunner.playerAction(uuid) { player -> revokeItems(player) }
-		}
-	}
+	override fun onDisable() {}
 
 	override fun onStart(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player -> giveItems(player, numRockets) }
+	}
+
+	override fun onEnd(uuid: UUID) {
+		GameRunner.playerAction(uuid) { player -> revokeItems(player) }
 	}
 
 	init {

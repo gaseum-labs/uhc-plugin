@@ -26,22 +26,16 @@ import org.bukkit.potion.PotionEffectType
 import java.util.*
 
 class Underwater(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
-	override fun onEnable() {
-		if (GameRunner.uhc.isGameGoing()) {
-			PlayerData.playerDataList.forEach { (uuid, playerData) ->
-				if (playerData.participating) onStart(uuid)
-			}
-		}
-	}
+	override fun onEnable() {}
 
-	override fun onDisable() {
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			GameRunner.playerAction(uuid, ::removeEffects)
-		}
-	}
+	override fun onDisable() {}
 
 	override fun onStart(uuid: UUID) {
 		GameRunner.playerAction(uuid, ::giveEffects)
+	}
+
+	override fun onEnd(uuid: UUID) {
+		GameRunner.playerAction(uuid, ::removeEffects)
 	}
 
 	override fun customDrops(): Array<DropFix>? {

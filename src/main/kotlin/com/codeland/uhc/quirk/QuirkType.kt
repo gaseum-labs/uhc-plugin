@@ -3,7 +3,6 @@ package com.codeland.uhc.quirk
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.quirk.quirks.*
 import org.bukkit.Material
 import java.util.*
@@ -125,24 +124,6 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
         init {
             CREATIVE.setIncompatible(UNSHELTERED)
 			PESTS.setIncompatible(BETRAYAL)
-		}
-
-		fun <DataType> getData(uuid: UUID, type: QuirkType): DataType {
-			return getData(PlayerData.getPlayerData(uuid), type)
-		}
-
-		fun <DataType> getData(playerData: PlayerData, type: QuirkType): DataType {
-			val quirkData = playerData.quirkData
-			val value = quirkData[type]
-
-			return if (value == null) {
-				val newValue = GameRunner.uhc.getQuirk(type).defaultData()
-				quirkData[type] = newValue
-				newValue as DataType
-
-			} else {
-				value as DataType
-			}
 		}
     }
 }

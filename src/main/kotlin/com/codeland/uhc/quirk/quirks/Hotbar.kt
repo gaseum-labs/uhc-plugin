@@ -1,35 +1,54 @@
 package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.event.Chat
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
+import java.util.*
 
 class Hotbar(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
-    override fun onEnable() {
+    override fun onEnable() {}
+
+    override fun onDisable() {}
+
+    override fun onStart(uuid: UUID) {
+        GameRunner.playerAction(uuid) { player ->
+            for (slot in 9 until 36)
+                player.inventory.setItem(slot, createUnusableSlot())
+        }
     }
 
-    override fun onDisable() {
+    override fun onEnd(uuid: UUID) {
+        Util.log("ENDING FOR: ${uuid}")
+        GameRunner.playerAction(uuid) { player ->
+            for (slot in 9 until 36)
+                player.inventory.setItem(slot, null)
+        }
     }
 
-    override fun onPhaseSwitch(phase: PhaseVariant) {
-        if (phase.type == PhaseType.GRACE) {
-            for (player in Bukkit.getOnlinePlayers()) {
-                val inv = player.inventory
-                for (slot in 9 until 36) {
-                    val item = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
-                    item.itemMeta = {
-                        val meta = item.itemMeta
-                        meta.setDisplayName("Unusable Slot")
-                        meta
-                    }()
-                    inv.setItem(slot, item)
-                }
+    companion object {
+        fun createUnusableSlot(): ItemStack {
+            val itemStack = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
+
+            val meta = itemStack.itemMeta
+            meta.setDisplayName("${ChatColor.RESET}${ChatColor.DARK_PURPLE}${ChatColor.BOLD}Unusable Slot")
+            itemStack.itemMeta = meta
+
+            return itemStack
+        }
+
+        fun filterDrops(drops: MutableList<ItemStack>) {
+            drops.removeAll { itemStack ->
+                itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.hasDisplayName()
             }
         }
     }

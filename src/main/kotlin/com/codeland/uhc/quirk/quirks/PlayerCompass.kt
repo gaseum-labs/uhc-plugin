@@ -26,12 +26,6 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	override fun onEnable() {
 		if (uhc.isGameGoing()) {
-			val compass = createCompass()
-
-			PlayerData.playerDataList.forEach { (uuid, playerData) ->
-				if (playerData.participating) GameRunner.playerAction(uuid) { player -> player.inventory.addItem(compass.clone()) }
-			}
-
 			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
 		}
 	}
@@ -39,21 +33,21 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) {
 			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
+		} else if (phase.type == PhaseType.POSTGAME || phase.type == PhaseType.WAITING) {
+			Bukkit.getScheduler().cancelTask(taskID)
 		}
 	}
 
 	override fun onDisable() {
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.participating) GameRunner.playerAction(uuid) { player -> revokeCompass(player) }
-		}
-
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
 	override fun onStart(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player ->
-			player.inventory.addItem(createCompass())
-		}
+		GameRunner.playerAction(uuid) { player -> player.inventory.addItem(createCompass()) }
+	}
+
+	override fun onEnd(uuid: UUID) {
+		GameRunner.playerAction(uuid) { player -> revokeCompass(player) }
 	}
 
 	companion object {

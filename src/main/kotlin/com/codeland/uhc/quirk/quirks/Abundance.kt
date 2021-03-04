@@ -13,13 +13,9 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
 class Abundance(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
-	override fun onEnable() {
-		/* ya nothing needs to be done */
-	}
+	override fun onEnable() {}
 
-	override fun onDisable() {
-
-	}
+	override fun onDisable() {}
 
 	companion object {
 		private fun makeFortuneTool(itemInHand: ItemStack): ItemStack {

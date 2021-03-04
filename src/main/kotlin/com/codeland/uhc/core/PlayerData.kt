@@ -3,7 +3,6 @@ package com.codeland.uhc.core
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.phase.phases.waiting.PvpData
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -24,7 +23,8 @@ class PlayerData(
 	var optingOut: Boolean,
 	var lobbyPVP: PvpData,
 ) {
-	var quirkData = HashMap<QuirkType, Any>()
+	class QuirkDataHolder(var applied: Boolean, var data: Any)
+	var quirkDataList = HashMap<QuirkType, QuirkDataHolder>()
 
 	var skull = ItemStack(Material.PLAYER_HEAD)
 
@@ -260,6 +260,35 @@ class PlayerData(
 			} else {
 				playerData
 			}
+		}
+
+		/* quirkData getters */
+
+		fun getQuirkDataHolder(uuid: UUID, type: QuirkType): QuirkDataHolder {
+			return getQuirkDataHolder(getPlayerData(uuid), type)
+		}
+
+		fun getQuirkDataHolder(playerData: PlayerData, type: QuirkType): QuirkDataHolder {
+			val quirkDataList = playerData.quirkDataList
+			val value = quirkDataList[type]
+
+			return if (value == null) {
+				val defaultDataHolder = QuirkDataHolder(false, GameRunner.uhc.getQuirk(type).defaultData())
+				quirkDataList[type] = defaultDataHolder
+
+				defaultDataHolder
+
+			} else {
+				value
+			}
+		}
+
+		fun <DataType> getQuirkData(uuid: UUID, type: QuirkType): DataType {
+			return getQuirkDataHolder(uuid, type).data as DataType
+		}
+
+		fun <DataType> getQuirkData(playerData: PlayerData, type: QuirkType): DataType {
+			return getQuirkDataHolder(playerData, type).data as DataType
 		}
 	}
 }
