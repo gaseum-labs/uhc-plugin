@@ -89,6 +89,10 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	UNDERWATER("Underwater", ::Underwater, false, Material.COD, arrayOf(
 		"Breath and mine fast underwater",
 		"Dolphins drop leather"
+	)),
+
+	INFINITE_INVENTORY("Infinite Inventory", ::InfiniteInventory, false, Material.CHEST, arrayOf(
+			"Your inventory is unbounded in size"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()

@@ -583,6 +583,16 @@ class EventListener : Listener {
 			if (event.clickedInventory?.type == InventoryType.PLAYER && event.slot in 9..35) {
 				event.isCancelled = true
 			}
+		if (GameRunner.uhc.isEnabled(QuirkType.INFINITE_INVENTORY) && event.clickedInventory?.type == InventoryType.PLAYER) {
+			val player = event.whoClicked as Player
+			if (event.slot == InfiniteInventory.BACK_BUTTON) {
+				InfiniteInventory.prevPage(player)
+				event.isCancelled = true
+			} else if (event.slot == InfiniteInventory.FORWARD_BUTTON) {
+				InfiniteInventory.nextPage(player)
+				event.isCancelled = true
+			}
+		}
 	}
 
 	@EventHandler
