@@ -219,7 +219,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 			PvpData.onTick(currentTick)
 
-			ParkourCheckpoint.lobbyParkourTick()
+			//ParkourCheckpoint.lobbyParkourTick() //DISABLED FOR NOW
 
 			AbstractLobby.lobbyTipsTick(currentTick)
 

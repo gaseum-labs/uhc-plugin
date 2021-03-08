@@ -1,18 +1,12 @@
 package com.codeland.uhc.quirk
 
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.quirks.*
+import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
+import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
 import org.bukkit.Material
-import java.util.*
 
 enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Quirk, var defaultEnabled: Boolean, var representation: Material, var description: Array<String>) {
-    ABUNDANCE("Abundance", ::Abundance, false, Material.BLUE_ORCHID, arrayOf(
-        "All block and mobs drop extra loot",
-        "Similar to if everything had fortune and looting"
-    )),
-
     UNSHELTERED("Unsheltered", ::Unsheltered, false, Material.SHULKER_SHELL, arrayOf(
 		"Terrain cannot be modified",
 		"You cannot place or mine blocks",
@@ -57,6 +51,11 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
 	CARE_PACKAGES("Care Packages", ::CarePackages, false, Material.CHEST_MINECART, arrayOf(
 		"Chests periodically drop containing good loot",
 		"go there and you should expect a fight"
+	)),
+
+	CHAOTIC_CARE_PACKAGES("Chaotic Care Packages", ::ChaoticCarePackages, false, Material.TIPPED_ARROW, arrayOf(
+		"Chests drop every 5 seconds",
+		"Wacky loot is inside"
 	)),
 
 	DEATHSWAP("Deathswap", ::Deathswap, false, Material.MAGENTA_GLAZED_TERRACOTTA, arrayOf(
