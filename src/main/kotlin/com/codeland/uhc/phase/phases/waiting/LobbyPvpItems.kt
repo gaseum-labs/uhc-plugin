@@ -137,9 +137,9 @@ object LobbyPvpItems {
 
 	val bookEnchants = arrayOf(
 		Pair(Enchantment.FIRE_ASPECT, 1),
-		Pair(Enchantment.KNOCKBACK, 1),
+		Pair(Enchantment.ARROW_DAMAGE, 1),
 		Pair(Enchantment.THORNS, 1),
-		Pair(Enchantment.DIG_SPEED, 2),
+		Pair(Enchantment.DAMAGE_ALL, 1),
 	)
 
 	fun genEnchantedBook(): ItemStack {

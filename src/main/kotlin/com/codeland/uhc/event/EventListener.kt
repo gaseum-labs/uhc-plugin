@@ -356,14 +356,6 @@ class EventListener : Listener {
 				Halloween.addDrops(event.entity, event.drops)
 				Halloween.onEntityDeath(event.entity)
 			}
-
-			if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
-				if (event.entity.killer != null && event.entityType != EntityType.PLAYER) {
-					event.drops.forEach { drop ->
-						drop.amount = drop.amount * 2
-					}
-				}
-			}
 		}
 	}
 
@@ -427,14 +419,9 @@ class EventListener : Listener {
 
 		/* creative mode does not cause blocks to drop */
 		if (event.player.gameMode != GameMode.CREATIVE) {
-			if (GameRunner.uhc.isEnabled(QuirkType.ABUNDANCE)) {
-				Abundance.replaceDrops(player, block, blockState, drops)
-
-			} else {
-				BlockFixType.values().any { blockFixType ->
-					blockFixType.blockFix.onBreakBlock(GameRunner.uhc, type, drops, player) { drop ->
-						if (drop != null) block.world.dropItem(blockMiddle, drop)
-					}
+			BlockFixType.values().any { blockFixType ->
+				blockFixType.blockFix.onBreakBlock(GameRunner.uhc, type, drops, player) { drop ->
+					if (drop != null) block.world.dropItem(blockMiddle, drop)
 				}
 			}
 		}

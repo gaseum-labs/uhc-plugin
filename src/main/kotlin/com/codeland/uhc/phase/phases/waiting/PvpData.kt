@@ -59,8 +59,8 @@ class PvpData(
 			LobbyPvpItems::genLavaBucket,
 			LobbyPvpItems::genBow,
 			LobbyPvpItems::genCrossbow,
+			LobbyPvpItems::genWaterBucket,
 			LobbyPvpItems::genGapples,
-			LobbyPvpItems::genStrengthPotion,
 			LobbyPvpItems::genRegenPotion,
 			LobbyPvpItems::genPoisonPotion,
 
@@ -70,7 +70,6 @@ class PvpData(
 			LobbyPvpItems::genPick,
 			LobbyPvpItems::genBlocks,
 			LobbyPvpItems::genAnvil,
-			LobbyPvpItems::genWaterBucket,
 		)
 
 		fun enablePvp(player: Player, save: Boolean, teleport: Boolean): Location {
@@ -270,10 +269,7 @@ class PvpData(
 			)),
 			KillstreakKit("Offensive Potions", arrayOf(
 				LobbyPvpItems::genWeaknessPotion, LobbyPvpItems::genInstantDamagePotion
-			)),
-			KillstreakKit("Spectral Arrows", arrayOf(
-				LobbyPvpItems::genSpectralArrows, LobbyPvpItems::genBow
-			)),
+			))
 		)
 
 		fun genKillstreakList(): Array<Int> {

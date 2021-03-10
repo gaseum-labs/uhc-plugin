@@ -1,7 +1,6 @@
-package com.codeland.uhc.quirk.quirks
+package com.codeland.uhc.quirk.quirks.carePackages
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.blockfix.LeavesFix
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Util
@@ -12,19 +11,22 @@ import com.codeland.uhc.util.Util.randFromArray
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.quirk.quirks.CarePackageUtil.pickOne
+import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_COAL
+import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_DIAMOND
+import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_GOLD
+import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_IRON
+import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_LAPIS
+import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.pickOne
 import com.codeland.uhc.util.ScoreboardDisplay
 import org.bukkit.ChatColor.*
 import org.bukkit.*
 import org.bukkit.Material.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import org.bukkit.block.Chest
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Firework
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import kotlin.math.*
+import kotlin.random.Random
 
 class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	val NUM_DROPS = 3
@@ -203,6 +205,8 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 		private const val ENCHANT_CHANCE = 0.25
 
+		val random = Random(324235235L)
+
 		val chestEntries = arrayOf(
 			arrayOf(
 				LootEntry { ItemStack(WATER_BUCKET) },
@@ -259,9 +263,9 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				LootEntry { CarePackageUtil.randomItem(APPLE, 2, 4) },
 				LootEntry { CarePackageUtil.randomItem(STRING, 2, 3) },
 				LootEntry { CarePackageUtil.randomItem(STRING, 2, 3) },
-				LootEntry { CarePackageUtil.randomAxe(false, false) },
-				LootEntry { CarePackageUtil.randomSword(false, false) },
-				LootEntry { CarePackageUtil.randomPick(false, false) },
+				LootEntry { CarePackageUtil.randomAxe(false) },
+				LootEntry { CarePackageUtil.randomSword(false) },
+				LootEntry { CarePackageUtil.randomPick(false) },
 			),
 			arrayOf(
 				LootEntry { ItemStack(WATER_BUCKET) },
@@ -322,14 +326,14 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				LootEntry { CarePackageUtil.randomItem(GOLDEN_APPLE, 1, 2) },
 				LootEntry { CarePackageUtil.randomItem(GOLDEN_APPLE, 1, 2) },
 				LootEntry { CarePackageUtil.randomItem(STRING, 2, 3) },
-				LootEntry { CarePackageUtil.randomAxe(false, true) },
-				LootEntry { CarePackageUtil.randomAxe(true, false) },
-				LootEntry { CarePackageUtil.randomSword(false, true) },
-				LootEntry { CarePackageUtil.randomSword(true, false) },
-				LootEntry { CarePackageUtil.randomPick(false, true) },
-				LootEntry { CarePackageUtil.randomPick(true, false) },
-				LootEntry { CarePackageUtil.randomPotion() },
-				LootEntry { CarePackageUtil.randomPotion() },
+				LootEntry { CarePackageUtil.randomAxe(false) },
+				LootEntry { CarePackageUtil.randomAxe(true) },
+				LootEntry { CarePackageUtil.randomSword(false) },
+				LootEntry { CarePackageUtil.randomSword(true) },
+				LootEntry { CarePackageUtil.randomPick(false) },
+				LootEntry { CarePackageUtil.randomPick(true) },
+				LootEntry { CarePackageUtil.randomPotion(random) },
+				LootEntry { CarePackageUtil.randomPotion(random) },
 			),
 			arrayOf(
 				LootEntry { ItemStack(LAVA_BUCKET) },
@@ -383,25 +387,17 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				LootEntry { CarePackageUtil.piercingCrossbow() },
 				LootEntry { CarePackageUtil.randomItem(GOLDEN_APPLE, 1, 2) },
 				LootEntry { CarePackageUtil.randomItem(GOLDEN_APPLE, 1, 2) },
-				LootEntry { CarePackageUtil.randomAxe(true, true) },
-				LootEntry { CarePackageUtil.randomAxe(true, false) },
-				LootEntry { CarePackageUtil.randomSword(true, true) },
-				LootEntry { CarePackageUtil.randomSword(true, false) },
-				LootEntry { CarePackageUtil.randomPick(true, true) },
-				LootEntry { CarePackageUtil.randomPick(true, false) },
-				LootEntry { CarePackageUtil.randomPotion() },
-				LootEntry { CarePackageUtil.randomPotion() },
-				LootEntry { CarePackageUtil.randomPotion() },
+				LootEntry { CarePackageUtil.randomAxe(true) },
+				LootEntry { CarePackageUtil.randomAxe(true) },
+				LootEntry { CarePackageUtil.randomSword(true) },
+				LootEntry { CarePackageUtil.randomSword(true) },
+				LootEntry { CarePackageUtil.randomPick(true) },
+				LootEntry { CarePackageUtil.randomPick(true) },
+				LootEntry { CarePackageUtil.randomPotion(random) },
+				LootEntry { CarePackageUtil.randomPotion(random) },
+				LootEntry { CarePackageUtil.randomPotion(random) },
 			)
 		)
-
-		data class SpireData(val ore: Material, val block: Material)
-
-		val SPIRE_COAL = SpireData(COAL_ORE, COAL_BLOCK)
-		val SPIRE_IRON = SpireData(IRON_ORE, IRON_BLOCK)
-		val SPIRE_LAPIS = SpireData(LAPIS_ORE, LAPIS_BLOCK)
-		val SPIRE_GOLD = SpireData(GOLD_ORE, GOLD_BLOCK)
-		val SPIRE_DIAMOND = SpireData(DIAMOND_ORE, DIAMOND_ORE)
 
 		val spireAmounts = arrayOf(
 			arrayOf(SPIRE_COAL, SPIRE_COAL, SPIRE_IRON, SPIRE_IRON),
@@ -522,77 +518,6 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			}
 		}
 
-		fun generateSpire(world: World, x: Int, z: Int, maxRadius: Float, height: Int, spireData: SpireData) {
-			var baseY = 63
-
-			for (y in 255 downTo 0) {
-				val block = world.getBlockAt(x, y, z)
-
-				if (!block.isPassable && !LeavesFix.isLeaves(block.type)) {
-					baseY = y
-					break
-				}
-			}
-
-			val magnitudeField = Array(9) { (Math.random() * 0.2 + 0.9).toFloat() }
-
-			fun fillBlock(block: Block) {
-				val random = Math.random()
-
-				block.setType(when {
-					random < 1 / 16.0 -> spireData.ore
-					random < 1 / 5.0 -> ANDESITE
-					else -> STONE
-				}, false)
-			}
-
-			fun isSpireBlock(block: Block): Boolean {
-				return block.type == STONE || block.type == ANDESITE || block.type == spireData.ore
-			}
-
-			fun fillCircle(radius: Float, y: Int, magnitudeHeight: Float, allowHangers: Boolean, onBlock: (Block) -> Unit) {
-				val intRadius = ceil(radius).toInt()
-				val boundingSize = intRadius * 2 + 1
-
-				for (i in 0 until boundingSize * boundingSize) {
-					val offX = (i % boundingSize) - intRadius
-					val offZ = ((i / boundingSize) % boundingSize) - intRadius
-
-					val angle = (atan2(offZ.toDouble(), offX.toDouble()) + PI).toFloat()
-
-					val blockRadius = radius * Util.bilinearWrap(magnitudeField, 3, 3, angle / (PI.toFloat() * 2.0f), magnitudeHeight)
-
-					if (sqrt(offX.toDouble().pow(2) + offZ.toDouble().pow(2)) < blockRadius) {
-						val block = world.getBlockAt(x + offX, y, z + offZ)
-
-						if (allowHangers || isSpireBlock(block.getRelative(BlockFace.DOWN))) onBlock(block)
-					}
-				}
-			}
-
-			for (y in baseY - 1 downTo 0) {
-				var allFilled = true
-
-				fillCircle(maxRadius, y, 0.0f, true) { block ->
-					if (block.isPassable) allFilled = false
-					fillBlock(block)
-				}
-
-				if (allFilled) break
-			}
-
-			for (y in 0 until height) {
-				val along = y / (height - 1).toFloat()
-				val usingRadius = Util.interp(1.0f, maxRadius, 1 - along)
-
-				fillCircle(usingRadius, baseY + y, along, y == 0) { block ->
-					fillBlock(block)
-				}
-			}
-
-			world.getBlockAt(x, baseY + height, z).setType(spireData.block, false)
-		}
-
 		fun circlePlacement(centerX: Int, centerZ: Int, minRadius: Float, maxRadius: Float, numPlaces: Int, onPlace: (Int, Int, Int) -> Unit) {
 			val initialAngle = Math.random() * PI * 2
 			val angleIncrement = PI * 2 / numPlaces
@@ -609,49 +534,20 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			}
 		}
 
-		fun spirePlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, spireList: Array<SpireData>) {
+		fun spirePlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, spireList: Array<CarePackageUtil.SpireData>) {
 			circlePlacement(centerX, centerZ, placeRadius * 0.5f, placeRadius.toFloat(), spireList.size) { i, x, z ->
-				generateSpire(world, x, z, 5f, 14, spireList[i])
+				CarePackageUtil.generateSpire(world, CarePackageUtil.dropBlock(world, x, z), 5f, 14, spireList[i])
 			}
-		}
-
-		fun generateChest(world: World, x: Int, z: Int, tier: Int): Inventory {
-			val chunk = world.getChunkAt(world.getBlockAt(x, 0, z))
-			var y = 0
-
-			for (dy in 255 downTo 0) {
-				if (!chunk.getBlock(Util.mod(x, 16), dy, Util.mod(z, 16)).isPassable) {
-					y = dy + 1
-					break
-				}
-			}
-
-			var block = world.getBlockAt(x, y, z)
-			block.breakNaturally()
-			block.type = CHEST
-
-			var chest = block.getState(false) as Chest
-			chest.customName = "${dropTextColor(tier)}${BOLD}Care Package"
-
-			var firework = world.spawnEntity(Location(world, x + 0.5, y + 1.0, z + 0.5), EntityType.FIREWORK) as Firework
-
-			/* add effect to the firework */
-			var meta = firework.fireworkMeta
-			meta.addEffect(ItemUtil.fireworkEffect(FireworkEffect.Type.BALL_LARGE, 3))
-			meta.power = 2
-			firework.fireworkMeta = meta
-
-			return chest.blockInventory
 		}
 
 		fun chestPlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, ringChests: Int, tier: Int): ArrayList<Inventory> {
 			val inventoryList = ArrayList<Inventory>()
 
 			circlePlacement(centerX, centerZ, placeRadius * 0.4f, placeRadius * 0.6f, ringChests) { _, x, z ->
-				inventoryList.add(generateChest(world, x, z, tier))
+				inventoryList.add(CarePackageUtil.generateChest(world,  CarePackageUtil.dropBlock(world, x, z), dropTextColor(tier)))
 			}
 
-			inventoryList.add(generateChest(world, centerX, centerZ, tier))
+			inventoryList.add(CarePackageUtil.generateChest(world, CarePackageUtil.dropBlock(world, centerX, centerZ), dropTextColor(tier)))
 
 			return inventoryList
 		}
