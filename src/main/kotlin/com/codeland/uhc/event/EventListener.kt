@@ -173,6 +173,7 @@ class EventListener : Listener {
 			/* remove chc specific items from drops */
 			if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) Hotbar.filterDrops(event.drops)
 			if (GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS)) PlayerCompass.filterDrops(event.drops)
+			if (GameRunner.uhc.isEnabled(QuirkType.INFINITE_INVENTORY)) InfiniteInventory.modifyDrops(event.drops, event.entity)
 		}
 	}
 

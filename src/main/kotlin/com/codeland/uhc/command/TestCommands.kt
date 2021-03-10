@@ -18,12 +18,12 @@ import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
-import org.bukkit.Bukkit
-import org.bukkit.Location
-import org.bukkit.OfflinePlayer
-import org.bukkit.Statistic
+import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
+import java.util.*
+import kotlin.collections.HashMap
 
 @CommandAlias("uhct")
 class TestCommands : BaseCommand() {
@@ -36,6 +36,19 @@ class TestCommands : BaseCommand() {
 			Commands.errorMessage(sender, "In waiting phase, use /start instead")
 		else
 			GameRunner.uhc.startNextPhase()
+	}
+
+	@Subcommand("fill")
+	@Description("fill your inventory with random items")
+	fun testFill(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+		sender as Player
+
+		val random = Random()
+
+		for (i in 0 until 500) {
+			sender.inventory.addItem(ItemStack(Material.values()[random.nextInt(Material.values().size)], random.nextInt(64) + 1))
+		}
 	}
 
 	@Subcommand("gravity")

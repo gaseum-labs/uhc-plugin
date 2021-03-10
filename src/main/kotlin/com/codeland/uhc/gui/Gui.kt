@@ -16,7 +16,7 @@ import org.bukkit.inventory.ItemStack
 class Gui(val uhc: UHC) {
 	val listener = GuiListener()
 
-	var inventory = GuiInventory(4, "UHC Setup")
+	var inventory = GuiInventory(5, "UHC Setup")
 
 	val quirkToggles: Array<QuirkToggle>
 	val variantCylers: Array<VariantCycler>
@@ -40,14 +40,14 @@ class Gui(val uhc: UHC) {
 		}
 
 		variantCylers = Array(PhaseType.values().size) { i ->
-			inventory.addItem(VariantCycler(uhc, i + (GuiInventory.WIDTH * 2), PhaseType.values()[i]))
+			inventory.addItem(VariantCycler(uhc, i + (GuiInventory.WIDTH * 3), PhaseType.values()[i]))
 		}
 
-		presetCycler = inventory.addItem(PresetCycler(uhc, GuiInventory.WIDTH * 3))
-		killRewardCycler = inventory.addItem(KillRewardCycler(uhc, GuiInventory.WIDTH * 3 + 1))
-		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 3 + 2))
-		defaultEnvironmentCycler = inventory.addItem(DefaultEnvironmentCycler(uhc, GuiInventory.WIDTH * 3 + 3))
-		naturalRegenerationToggle = inventory.addItem(NaturalRegenerationToggle(uhc, GuiInventory.WIDTH * 3 + 4))
+		presetCycler = inventory.addItem(PresetCycler(uhc, GuiInventory.WIDTH * 4))
+		killRewardCycler = inventory.addItem(KillRewardCycler(uhc, GuiInventory.WIDTH * 4 + 1))
+		botToggle = inventory.addItem(BotToggle(uhc, GuiInventory.WIDTH * 4 + 2))
+		defaultEnvironmentCycler = inventory.addItem(DefaultEnvironmentCycler(uhc, GuiInventory.WIDTH * 4 + 3))
+		naturalRegenerationToggle = inventory.addItem(NaturalRegenerationToggle(uhc, GuiInventory.WIDTH * 4 + 4))
 
 		resetButton = inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 2, true) {
 			override fun onClick(player: Player, shift: Boolean) {
