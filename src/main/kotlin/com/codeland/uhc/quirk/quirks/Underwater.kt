@@ -21,6 +21,7 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
@@ -37,6 +38,9 @@ class Underwater(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnd(uuid: UUID) {
 		GameRunner.playerAction(uuid, ::removeEffects)
 	}
+
+	override val representation: ItemStack
+		get() = ItemStack(Material.COD)
 
 	override fun customDrops(): Array<DropFix>? {
 		return arrayOf(

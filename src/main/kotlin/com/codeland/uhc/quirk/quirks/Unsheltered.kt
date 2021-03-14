@@ -6,12 +6,16 @@ import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material
 import org.bukkit.block.Block
+import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
 class Unsheltered(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}
+
+	override val representation: ItemStack
+		get() = ItemStack(Material.SHULKER_SHELL)
 
 	companion object {
 		const val TAG_NAME = "unsheltered broken"

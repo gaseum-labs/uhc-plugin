@@ -15,10 +15,12 @@ import org.bukkit.inventory.ItemStack
 import java.util.*
 
 class Hotbar(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
-
     override fun onEnable() {}
 
     override fun onDisable() {}
+
+    override val representation: ItemStack
+        get() = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
 
     override fun onStart(uuid: UUID) {
         GameRunner.playerAction(uuid) { player ->

@@ -38,6 +38,9 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 	}
 
+	override val representation: ItemStack
+		get() = ItemStack(Material.MULE_SPAWN_EGG)
+
 	var allowAggro = addProperty(BoolProperty(true))
 	var allowPassive = addProperty(BoolProperty(true))
 	var commander = addProperty(BoolProperty(true))

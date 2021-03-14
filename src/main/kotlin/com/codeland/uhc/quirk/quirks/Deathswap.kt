@@ -12,12 +12,36 @@ import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.inventory.ItemStack
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayList
 import kotlin.math.ceil
 
-class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
+class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+	override fun onEnable() {
+		if (GameRunner.uhc.isGameGoing()) taskId = SchedulerUtil.everyTick(::runTask)
+	}
+
+	override fun onDisable() {
+		Bukkit.getScheduler().cancelTask(taskId)
+	}
+
+	override val representation: ItemStack
+		get() = ItemStack(Material.MAGENTA_GLAZED_TERRACOTTA)
+
+	override fun onPhaseSwitch(phase: PhaseVariant) {
+		if (phase.type == PhaseType.GRACE) {
+			resetTimer()
+
+			taskId = SchedulerUtil.everyTick(::runTask)
+
+		} else if (phase.type == PhaseType.WAITING || phase.type == PhaseType.POSTGAME) {
+			Bukkit.getScheduler().cancelTask(taskId)
+		}
+	}
+
 	companion object {
 		var WARNING = 10 * 20
 		var IMMUNITY = 10 * 20
@@ -96,25 +120,6 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type){
 				message.append(ChatColor.GRAY.toString() + "▮")
 
 			return message.toString()
-		}
-	}
-
-	override fun onEnable() {
-		if (GameRunner.uhc.isGameGoing()) taskId = SchedulerUtil.everyTick(::runTask)
-	}
-
-	override fun onDisable() {
-		Bukkit.getScheduler().cancelTask(taskId)
-	}
-
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE) {
-			resetTimer()
-
-			taskId = SchedulerUtil.everyTick(::runTask)
-
-		} else if (phase.type == PhaseType.WAITING || phase.type == PhaseType.POSTGAME) {
-			Bukkit.getScheduler().cancelTask(taskId)
 		}
 	}
 }

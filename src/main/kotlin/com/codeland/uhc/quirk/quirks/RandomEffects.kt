@@ -4,16 +4,21 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.event.Brew
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
+import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.bukkit.potion.PotionType
 import java.util.*
 
 class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
@@ -44,6 +49,9 @@ class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onDisable() {
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
+
+	override val representation: ItemStack
+		get() = Brew.createDefaultPotion(Material.POTION, PotionData(PotionType.WATER))
 
 	var taskID = 0
 

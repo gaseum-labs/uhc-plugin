@@ -26,6 +26,9 @@ class Betrayal(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {}
 	override fun onDisable() {}
 
+	override val representation: ItemStack
+		get() = ItemStack(Material.BONE)
+
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		/* reset data before a game */
 		if (phase.type == PhaseType.WAITING) {

@@ -17,7 +17,7 @@ import kotlin.collections.ArrayList
 
 abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 	/* default value will be set upon init */
-	var enabled = type.defaultEnabled
+	var enabled = false
 	set(value) {
 		/* enable / disable functions come first */
 		if (value) {
@@ -90,6 +90,8 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 
 	abstract fun onEnable()
 	abstract fun onDisable()
+
+	abstract val representation: ItemStack
 
 	open fun onStart(uuid: UUID) {}
 	open fun onEnd(uuid: UUID) {}

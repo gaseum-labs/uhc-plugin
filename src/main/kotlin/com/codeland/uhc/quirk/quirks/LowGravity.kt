@@ -9,11 +9,11 @@ import org.bukkit.Bukkit.getWorlds
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.entity.*
+import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 
 
 class LowGravity(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
-
     companion object {
         var taskId: Int = 0
         var gravity: Double = 0.5
@@ -58,4 +58,7 @@ class LowGravity(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
     override fun onDisable() {
         Bukkit.getScheduler().cancelTask(taskId)
     }
+
+    override val representation: ItemStack
+        get() = ItemStack(Material.CHORUS_FRUIT)
 }

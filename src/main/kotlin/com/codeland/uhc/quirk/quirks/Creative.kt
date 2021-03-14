@@ -4,11 +4,15 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material.*
+import org.bukkit.inventory.ItemStack
 
 class Creative(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}
+
+	override val representation: ItemStack
+		get() = ItemStack(SCAFFOLDING)
 
 	companion object {
 		val blocks = arrayOf(

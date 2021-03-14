@@ -63,7 +63,7 @@ class Gui(val uhc: UHC) {
 				}
 
 				QuirkType.values().forEach { quirkType ->
-					uhc.updateQuirk(quirkType, quirkType.defaultEnabled)
+					uhc.updateQuirk(quirkType, false)
 					quirkToggles[quirkType.ordinal].updateDisplay()
 
 					val quirk = uhc.getQuirk(quirkType)

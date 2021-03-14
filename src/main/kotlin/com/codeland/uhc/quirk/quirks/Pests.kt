@@ -39,6 +39,9 @@ class Pests(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
         }
     }
 
+    override val representation: ItemStack
+        get() = ItemStack(Material.LEATHER_CHESTPLATE)
+
     override fun onStart(uuid: UUID) {
         GameRunner.playerAction(uuid) { player ->
             /* give pest setup */

@@ -16,7 +16,7 @@ class QuirkToggle(uhc: UHC, index: Int, var type: QuirkType) : GuiItem(uhc, inde
     }
 
     override fun getStack(): ItemStack {
-        val stack = setName(ItemStack(type.representation), enabledName(type.prettyName, uhc.isEnabled(type)))
+        val stack = setName(uhc.getQuirk(type).representation, enabledName(type.prettyName, uhc.isEnabled(type)))
         if (uhc.isEnabled(type)) setEnchanted(stack)
 
         setLore(stack, type.description.asList())

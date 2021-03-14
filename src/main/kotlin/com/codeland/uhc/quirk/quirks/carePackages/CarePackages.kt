@@ -70,6 +70,9 @@ class CarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		onEnd()
 	}
 
+	override val representation: ItemStack
+		get() = ItemStack(CHEST_MINECART)
+
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) onStart()
 		else if (phase.type == PhaseType.WAITING) onEnd()

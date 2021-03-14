@@ -4,93 +4,97 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
-import org.bukkit.Material
+import com.codeland.uhc.quirk.quirks.Pumpkin
 
-enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Quirk, var defaultEnabled: Boolean, var representation: Material, var description: Array<String>) {
-    UNSHELTERED("Unsheltered", ::Unsheltered, false, Material.SHULKER_SHELL, arrayOf(
+enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Quirk, val description: Array<String>) {
+	UNSHELTERED("Unsheltered", ::Unsheltered, arrayOf(
 		"Terrain cannot be modified",
 		"You cannot place or mine blocks",
 		"But you still get the block loot"
     )),
 
-    PESTS("Pests", ::Pests, false, Material.LEATHER_CHESTPLATE, arrayOf(
+    PESTS("Pests", ::Pests, arrayOf(
 		"Dead players come back to exact their revenge",
 		"But they are weak and have no access to advanced tools"
 	)),
 
-	MODIFIED_DROPS("Modified Drops", ::ModifiedDrops, false, Material.ROTTEN_FLESH, arrayOf(
+	MODIFIED_DROPS("Modified Drops", ::ModifiedDrops, arrayOf(
 		"Hostile mobs drop exceptional loot"
 	)),
 
-    CREATIVE("Creative", ::Creative, false, Material.STONE, arrayOf(
+    CREATIVE("Creative", ::Creative, arrayOf(
 		"you may place tough to get blocks without them emptying from your inventory"
 	)),
 
-	SUMMONER("Summoner", ::Summoner, false, Material.MULE_SPAWN_EGG, arrayOf(
+	SUMMONER("Summoner", ::Summoner, arrayOf(
 		"Mobs drop their spawn eggs when killed"
 	)),
 
-	RANDOM_EFFECTS("Random Effects", ::RandomEffects, false, Material.POTION, arrayOf(
+	RANDOM_EFFECTS("Random Effects", ::RandomEffects, arrayOf(
 		"Every 3 minutes,",
 		"Everyone gets a random potion effect"
 	)),
 
-	SHARED_INVENTORY("Shared Inventory", ::SharedInventory, false, Material.KNOWLEDGE_BOOK, arrayOf(
+	SHARED_INVENTORY("Shared Inventory", ::SharedInventory, arrayOf(
 		"Everyone has one combined inventory"
 	)),
 
-	LOW_GRAVITY("Low Gravity", ::LowGravity, false, Material.END_STONE, arrayOf(
+	LOW_GRAVITY("Low Gravity", ::LowGravity, arrayOf(
 		"Gravity is much lower than usual"
 	)),
 
-	HOTBAR("Limited Inventory", ::Hotbar, false, Material.OBSIDIAN, arrayOf(
+	HOTBAR("Limited Inventory", ::Hotbar, arrayOf(
 		"All players are limited to only",
 		"their hotbar to store items"
   	)),
 
-	CARE_PACKAGES("Care Packages", ::CarePackages, false, Material.CHEST_MINECART, arrayOf(
+	CARE_PACKAGES("Care Packages", ::CarePackages, arrayOf(
 		"Chests periodically drop containing good loot",
 		"go there and you should expect a fight"
 	)),
 
-	CHAOTIC_CARE_PACKAGES("Chaotic Care Packages", ::ChaoticCarePackages, false, Material.TIPPED_ARROW, arrayOf(
+	CHAOTIC_CARE_PACKAGES("Chaotic Care Packages", ::ChaoticCarePackages, arrayOf(
 		"Chests drop every 5 seconds",
 		"Wacky loot is inside"
 	)),
 
-	DEATHSWAP("Deathswap", ::Deathswap, false, Material.MAGENTA_GLAZED_TERRACOTTA, arrayOf(
+	DEATHSWAP("Deathswap", ::Deathswap, arrayOf(
 		"Players switch places with each other",
 		"at randomly chosen intervals"
 	)),
 
-	BETRAYAL("Betrayal", ::Betrayal, false, Material.BONE, arrayOf(
+	BETRAYAL("Betrayal", ::Betrayal, arrayOf(
 		"Players swap teams when killed",
 		"Game ends when everyone is on one team"
 	)),
 
-	HALLOWEEN("Halloween", ::Halloween, false, Material.PUMPKIN, arrayOf(
+	HALLOWEEN("Halloween", ::Halloween, arrayOf(
 		"Mobs drop candy",
 		"Witches?!"
 	)),
 
-	CHRISTMAS("Christmas", ::Christmas, false, Material.COOKIE, arrayOf(
+	PUMPKIN("Pumpkin", ::Pumpkin, arrayOf(
+		"You are forced to have a pumpkin on your head"
+	)),
+
+	CHRISTMAS("Christmas", ::Christmas, arrayOf(
 		"It's snowing all the time!"
 	)),
 
-	FLYING("Flying", ::Flying, false, Material.FIREWORK_ROCKET, arrayOf(
+	FLYING("Flying", ::Flying, arrayOf(
 		"Start with an elytra and rockets"
 	)),
 
-	PLAYER_COMPASS("Player Compasses", ::PlayerCompass, false, Material.COMPASS, arrayOf(
+	PLAYER_COMPASS("Player Compasses", ::PlayerCompass, arrayOf(
 		"Track down players with a special compass"
 	)),
 
-	UNDERWATER("Underwater", ::Underwater, false, Material.COD, arrayOf(
+	UNDERWATER("Underwater", ::Underwater, arrayOf(
 		"Breath and mine fast underwater",
 		"Dolphins drop leather"
 	)),
 
-	INFINITE_INVENTORY("Infinite Inventory", ::InfiniteInventory, false, Material.CHEST, arrayOf(
+	INFINITE_INVENTORY("Infinite Inventory", ::InfiniteInventory, arrayOf(
 			"Your inventory is unbounded in size"
 	));
 
@@ -127,6 +131,8 @@ enum class QuirkType(var prettyName: String, var create: (UHC, QuirkType) -> Qui
         init {
             CREATIVE.setIncompatible(UNSHELTERED)
 			PESTS.setIncompatible(BETRAYAL)
+	        CARE_PACKAGES.setIncompatible(CHAOTIC_CARE_PACKAGES)
+	        INFINITE_INVENTORY.setIncompatible(HOTBAR)
 		}
     }
 }

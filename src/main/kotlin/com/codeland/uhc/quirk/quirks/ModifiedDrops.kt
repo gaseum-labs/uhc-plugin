@@ -21,6 +21,9 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	override fun onDisable() {}
 
+	override val representation: ItemStack
+		get() = ItemStack(Material.STRING)
+
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) {
 			Bukkit.getServer().onlinePlayers.forEach { player ->
@@ -28,6 +31,7 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			}
 		}
 	}
+
 	companion object {
 		fun onDrop(type: EntityType, drops: MutableList<ItemStack>): Boolean {
 			val rand = Math.random()

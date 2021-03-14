@@ -7,6 +7,8 @@ import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.GameRule
+import org.bukkit.Material
+import org.bukkit.inventory.ItemStack
 
 class Christmas(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	fun setSnowing() {
@@ -32,6 +34,9 @@ class Christmas(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onDisable() {
 		revokeSnowing()
 	}
+
+	override val representation: ItemStack
+		get() = ItemStack(Material.SNOWBALL)
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) setSnowing()

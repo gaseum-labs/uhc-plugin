@@ -30,16 +30,19 @@ class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 	}
 
+	override fun onDisable() {
+		Bukkit.getScheduler().cancelTask(taskID)
+	}
+
+	override val representation: ItemStack
+		get() = ItemStack(Material.COMPASS)
+
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) {
 			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
 		} else if (phase.type == PhaseType.POSTGAME || phase.type == PhaseType.WAITING) {
 			Bukkit.getScheduler().cancelTask(taskID)
 		}
-	}
-
-	override fun onDisable() {
-		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
 	override fun onStart(uuid: UUID) {

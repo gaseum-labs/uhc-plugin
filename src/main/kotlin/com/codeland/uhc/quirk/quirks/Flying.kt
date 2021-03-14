@@ -33,6 +33,9 @@ class Flying(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		GameRunner.playerAction(uuid) { player -> revokeItems(player) }
 	}
 
+	override val representation: ItemStack
+		get() = ItemStack(Material.FIREWORK_ROCKET)
+
 	init {
 		val rocketItem = object : GuiItem(uhc, 13, true) {
 			override fun onClick(player: Player, shift: Boolean) {

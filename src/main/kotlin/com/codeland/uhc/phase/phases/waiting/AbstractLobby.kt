@@ -45,7 +45,7 @@ object AbstractLobby {
 
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
 		CommandItemType.giveItem(CommandItemType.JOIN_PVP, player.inventory)
-		CommandItemType.giveItem(CommandItemType.PARKOUR_CHECKPOINT, player.inventory)
+		//CommandItemType.giveItem(CommandItemType.PARKOUR_CHECKPOINT, player.inventory)
 		CommandItemType.giveItem(CommandItemType.SPECTATE, player.inventory)
 
 		return location

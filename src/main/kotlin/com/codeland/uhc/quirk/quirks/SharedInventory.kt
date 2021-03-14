@@ -5,6 +5,7 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
+import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
 class SharedInventory(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
@@ -48,4 +49,7 @@ class SharedInventory(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
     override fun onDisable() {
         Bukkit.getScheduler().cancelTask(taskId)
     }
+
+    override val representation: ItemStack
+        get() = ItemStack(Material.KNOWLEDGE_BOOK)
 }

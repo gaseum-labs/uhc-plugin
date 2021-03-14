@@ -24,6 +24,9 @@ class Halloween(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	}
 
+	override val representation: ItemStack
+		get() = ItemStack(PUMPKIN_PIE)
+
 	companion object {
 		fun onEntitySpawn(entity: Entity) {
 			if (entity as? LivingEntity != null) {

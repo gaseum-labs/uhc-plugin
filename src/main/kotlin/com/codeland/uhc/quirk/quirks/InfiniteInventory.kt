@@ -187,4 +187,7 @@ class InfiniteInventory(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
         Bukkit.getScheduler().cancelTask(storeTask)
         storedMap.clear()
     }
+
+    override val representation: ItemStack
+        get() = ItemStack(Material.FEATHER)
 }

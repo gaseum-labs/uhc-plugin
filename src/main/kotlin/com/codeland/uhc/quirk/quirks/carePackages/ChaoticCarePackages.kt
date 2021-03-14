@@ -25,6 +25,9 @@ import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.PotionMeta
+import org.bukkit.potion.PotionData
+import org.bukkit.potion.PotionType
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -37,6 +40,17 @@ class ChaoticCarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onDisable() {
 		stopDropping()
 	}
+
+	override val representation: ItemStack
+		get() {
+			val itemStack = ItemStack(TIPPED_ARROW)
+
+			val meta = itemStack.itemMeta as PotionMeta
+			meta.basePotionData = PotionData(PotionType.INSTANT_HEAL)
+			itemStack.itemMeta = meta
+
+			return itemStack
+		}
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		when (phase.type) {
