@@ -2,6 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.Util
 import org.bukkit.*
@@ -140,6 +141,11 @@ class Portal : Listener {
 	@EventHandler
 	fun onPlayerPortal(event: PlayerPortalEvent) {
 		val player = event.player
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+
+		/* lobby pvpers can't escape through the never */
+		if (playerData.lobbyPVP.inPvp)
+			event.isCancelled = true
 
 		/* prevent peeking the center during waiting */
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
