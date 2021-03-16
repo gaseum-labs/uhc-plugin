@@ -16,7 +16,8 @@ class WaitingDefault : Phase() {
 		/* gamerules specifically for lobby worlds */
 		primeLobbyWorld(lobbyWorld)
 		primeLobbyWorld(pvpWorld)
-		PvpData.prepareArena(pvpWorld, uhc.lobbyRadius, uhc)
+
+		PvpArena.prepareArena(pvpWorld, uhc.lobbyRadius, uhc)
 
 		Bukkit.getServer().onlinePlayers.forEach { player ->
 			player.inventory.clear()
