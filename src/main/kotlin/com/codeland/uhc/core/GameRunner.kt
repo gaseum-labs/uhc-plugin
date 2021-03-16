@@ -286,6 +286,8 @@ object GameRunner {
 		val objective = scoreboard.getObjective("hp")
 			?: scoreboard.registerNewObjective("hp", "health", "hp", RenderType.HEARTS)
 
+		objective.renderType = RenderType.HEARTS
+		objective.displayName = "hp"
 		objective.displaySlot = DisplaySlot.PLAYER_LIST
 	}
 }
