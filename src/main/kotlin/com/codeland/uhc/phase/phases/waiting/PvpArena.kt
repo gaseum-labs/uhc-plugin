@@ -2,12 +2,9 @@ package com.codeland.uhc.phase.phases.waiting
 
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.phases.endgame.AbstractEndgame
-import com.codeland.uhc.util.Util
-import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Chest
-import org.bukkit.block.Sign
 
 object PvpArena {
 	/**
@@ -24,7 +21,7 @@ object PvpArena {
 
 		val min = strParts[0].toIntOrNull() ?: return null
 		val max = strParts[1].toIntOrNull() ?: return null
-		
+
 		return Pair(min, max)
 	}
 

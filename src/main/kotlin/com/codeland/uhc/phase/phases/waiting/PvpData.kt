@@ -279,7 +279,7 @@ class PvpData(
 		}
 
 		fun getNextKillstreak(pvpData: PvpData): KillstreakKit {
-			val kit = killstreakKits[pvpData.killstreakListIndex]
+			val kit = killstreakKits[pvpData.killstreakList[pvpData.killstreakListIndex]]
 
 			if (++pvpData.killstreakListIndex == killstreakKits.size) {
 				pvpData.killstreakListIndex = 0
