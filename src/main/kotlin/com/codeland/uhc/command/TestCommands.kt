@@ -5,8 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
-import com.codeland.uhc.command.ubt.PartialUBT
-import com.codeland.uhc.command.ubt.UBT
+import com.codeland.uhc.command.Commands.errorMessage
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
@@ -16,6 +15,8 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
+import com.codeland.uhc.quirk.quirks.classes.Classes
+import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.*
@@ -33,7 +34,7 @@ class TestCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		if (GameRunner.uhc.isPhase(PhaseType.WAITING))
-			Commands.errorMessage(sender, "In waiting phase, use /start instead")
+			errorMessage(sender, "In waiting phase, use /start instead")
 		else
 			GameRunner.uhc.startNextPhase()
 	}
@@ -146,7 +147,7 @@ class TestCommands : BaseCommand() {
 	fun testZombie(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
-		val onlinePlayer = player.player ?: return Commands.errorMessage(sender, "${player.name} is offline!")
+		val onlinePlayer = player.player ?: return errorMessage(sender, "${player.name} is offline!")
 
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 		playerData.createZombie(onlinePlayer)
@@ -161,11 +162,11 @@ class TestCommands : BaseCommand() {
 
 		val carePackages = GameRunner.uhc.getQuirk(QuirkType.CARE_PACKAGES) as CarePackages
 
-		if (!carePackages.enabled) return Commands.errorMessage(sender, "Care packages is not going!")
+		if (!carePackages.enabled) return errorMessage(sender, "Care packages is not going!")
 
 		val result = carePackages.forceDrop()
 
-		if (!result) return Commands.errorMessage(sender, "All care packages have been dropped!")
+		if (!result) return errorMessage(sender, "All care packages have been dropped!")
 	}
 
 	@Subcommand("mobcaps")
@@ -200,88 +201,7 @@ class TestCommands : BaseCommand() {
 			PvpData.onKill(sender)
 			GameRunner.sendGameMessage(sender, "Killstreak increased to ${pvpData.killstreak}")
 		} else {
-			Commands.errorMessage(sender, "You are not in PVP!")
+			errorMessage(sender, "You are not in PVP!")
 		}
-	}
-
-	@Subcommand("gbs")
-	fun gbs(sender: CommandSender, location: Location) {
-		val originalString = location.world.getBlockAt(location).blockData.getAsString(true)
-
-		val string = UBT.NBTStringToString(originalString.substring(originalString.indexOf('[')))
-		Util.log(string)
-
-		val nbtString = UBT.stringToNBTString(string)
-		Util.log(nbtString)
-	}
-
-	@Subcommand("test sbs")
-	fun sbs(sender: CommandSender, location: Location, blockData: String) {
-		location.world.getBlockAt(location).setBlockData(Bukkit.createBlockData(blockData), false)
-	}
-
-	@Subcommand("ubt corner0")
-	fun ubtCorner0(sender: CommandSender, x: Int, y: Int, z: Int) {
-		val partialUBT = PartialUBT.getPlayersPartialUBT(sender as Player)
-		partialUBT.setCorner0(x, y, z)
-	}
-
-	@Subcommand("ubt corner1")
-	fun ubtCorner1(sender: CommandSender, x: Int, y: Int, z: Int) {
-		val partialUBT = PartialUBT.getPlayersPartialUBT(sender as Player)
-		partialUBT.setCorner1(x, y, z)
-	}
-
-	@Subcommand("ubt save")
-	fun ubtCorner(sender: CommandSender) {
-		sender as Player
-		val world = sender.world
-
-		val partialUBT = PartialUBT.getPlayersPartialUBT(sender)
-
-		var headerStr = "${partialUBT.width()};${partialUBT.height()};${partialUBT.depth()};"
-		var dataStr = ""
-
-		val blockMap = HashMap<String, Short>()
-		var numBlocks = 0
-
-		for (x in partialUBT.corner0X..partialUBT.corner1X) {
-			for (y in partialUBT.corner0Y..partialUBT.corner1Y) {
-				for (z in partialUBT.corner0Z..partialUBT.corner1Z) {
-					val block = world.getBlockAt(x, y, z)
-
-					val materialName = block.type.key.key
-					var id = blockMap.get(materialName)
-
-					if (id == null) {
-						id = numBlocks.toShort()
-						blockMap.set(materialName, id)
-						++numBlocks
-					}
-
-					var blockString = block.blockData.asString.substringAfter(':')
-					val bracketIndex = blockString.indexOf('[')
-
-					blockString = if (bracketIndex == -1) {
-						id.toString()
-					} else {
-						id.toString() + blockString.substring(bracketIndex)
-					}
-
-					dataStr += "$blockString;"
-				}
-			}
-		}
-
-		headerStr += "$numBlocks;"
-
-		val numberIter = blockMap.values.iterator()
-		val materialIter = blockMap.keys.iterator()
-
-		for (i in 0 until numBlocks) {
-			headerStr += "${numberIter.next()}-${materialIter.next()};"
-		}
-
-		Util.log(headerStr + dataStr)
 	}
 }

@@ -40,7 +40,7 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(ParticipantCommands(), true)
 		commandManager.registerCommand(ShareCoordsCommand(), true)
 		commandManager.registerCommand(NicknameCommand(), true)
-
+		
 		Chat.loadFile()
 
 		/* register all events */

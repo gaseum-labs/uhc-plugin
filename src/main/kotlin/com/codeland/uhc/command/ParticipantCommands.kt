@@ -6,20 +6,18 @@ import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.event.Chat
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.waiting.AbstractLobby
+import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.quirk.quirks.classes.Classes
+import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.*
 import com.codeland.uhc.util.Util
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.GameMode
 import org.bukkit.Material
-import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import kotlin.coroutines.CoroutineContext
 
 @CommandAlias("uhc")
 class ParticipantCommands : BaseCommand() {
@@ -188,5 +186,25 @@ class ParticipantCommands : BaseCommand() {
 				NameManager.updateName(player)
 			}
 		}
+	}
+
+	@Subcommand("class")
+	@Description("set your class for classes quirk")
+	fun classCommand(sender: CommandSender, quirkClass: QuirkClass) {
+		sender as Player
+
+		if (!GameRunner.uhc.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
+
+		val playerData = PlayerData.getPlayerData(sender.uniqueId)
+		if (!playerData.participating) return Commands.errorMessage(sender, "You are not playing")
+
+		if (!GameRunner.uhc.isPhase(PhaseType.GRACE))
+			return Commands.errorMessage(sender, "You can't change your class right now")
+
+		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "You must pick a class")
+
+		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = quirkClass
+
+		Classes.giveClassHead(sender, playerData)
 	}
 }

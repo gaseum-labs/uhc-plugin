@@ -5,6 +5,7 @@ import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
 import com.codeland.uhc.quirk.quirks.Pumpkin
+import com.codeland.uhc.quirk.quirks.classes.Classes
 
 enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Quirk, val description: Array<String>) {
 	UNSHELTERED("Unsheltered", ::Unsheltered, arrayOf(
@@ -96,6 +97,11 @@ enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Qui
 
 	INFINITE_INVENTORY("Infinite Inventory", ::InfiniteInventory, arrayOf(
 			"Your inventory is unbounded in size"
+	)),
+
+	CLASSES("Classes", ::Classes, arrayOf(
+		"Pick a class as the game begins",
+		"Get cool abilities"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
