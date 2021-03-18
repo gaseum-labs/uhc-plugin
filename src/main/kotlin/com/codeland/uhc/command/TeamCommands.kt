@@ -7,7 +7,6 @@ import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
@@ -17,7 +16,6 @@ import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import java.util.*
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 
 @CommandAlias("uhca")

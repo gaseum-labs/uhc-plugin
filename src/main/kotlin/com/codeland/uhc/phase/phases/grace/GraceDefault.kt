@@ -11,7 +11,7 @@ import org.bukkit.entity.Player
 import kotlin.collections.ArrayList
 import kotlin.math.*
 
-open class GraceDefault : Phase() {
+class GraceDefault : Phase() {
 	override fun customStart() {
 		/* set border in each game dimension */
 		for (i in 0..2) {
@@ -53,39 +53,6 @@ open class GraceDefault : Phase() {
 		uhc.ledger = Ledger()
 	}
 
-	private fun startPlayer(player: Player) {
-		/* absolutely nuke the inventory */
-		player.inventory.clear()
-		player.setItemOnCursor(null)
-
-		/* clear crafting slots */
-		player.openInventory.topInventory.clear()
-		player.openInventory.bottomInventory.clear()
-
-		for (activePotionEffect in player.activePotionEffects)
-			player.removePotionEffect(activePotionEffect.type)
-		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
-		player.health = 20.0
-		player.absorptionAmount = 0.0
-		player.exp = 0f
-		player.level = 0
-		player.foodLevel = 20
-		player.saturation = 5f
-		player.exhaustion = 0f
-		player.fireTicks = -1
-		player.fallDistance = 0f
-		player.setStatistic(Statistic.TIME_SINCE_REST, 0)
-
-		/* remove all advancements */
-		Bukkit.getServer().advancementIterator().forEach { advancement ->
-			val progress = player.getAdvancementProgress(advancement)
-
-			progress.awardedCriteria.forEach { criteria -> progress.revokeCriteria(criteria) }
-		}
-
-		player.gameMode = GameMode.SURVIVAL
-	}
-
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
 		return barLengthRemaining(remainingSeconds, currentTick)
 	}
@@ -106,6 +73,39 @@ open class GraceDefault : Phase() {
 	}
 
 	companion object {
+		fun startPlayer(player: Player) {
+			/* absolutely nuke the inventory */
+			player.inventory.clear()
+			player.setItemOnCursor(null)
+
+			/* clear crafting slots */
+			player.openInventory.topInventory.clear()
+			player.openInventory.bottomInventory.clear()
+
+			for (activePotionEffect in player.activePotionEffects)
+				player.removePotionEffect(activePotionEffect.type)
+			player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
+			player.health = 20.0
+			player.absorptionAmount = 0.0
+			player.exp = 0f
+			player.level = 0
+			player.foodLevel = 20
+			player.saturation = 5f
+			player.exhaustion = 0f
+			player.fireTicks = -1
+			player.fallDistance = 0f
+			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
+
+			/* remove all advancements */
+			Bukkit.getServer().advancementIterator().forEach { advancement ->
+				val progress = player.getAdvancementProgress(advancement)
+
+				progress.awardedCriteria.forEach { criteria -> progress.revokeCriteria(criteria) }
+			}
+
+			player.gameMode = GameMode.SURVIVAL
+		}
+
 		fun spreadSinglePlayer(world: World, spreadRadius: Double): Location? {
 			for (i in 0 until 16) {
 				val location = findLocation(world, Math.random() * 2 * Math.PI, Math.PI * 0.9, spreadRadius, if (world.environment == World.Environment.NETHER) ::findYMid else ::findYTop)
