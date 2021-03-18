@@ -34,13 +34,15 @@ class UHCPlugin : JavaPlugin() {
 	override fun onEnable() {
 		val commandManager = PaperCommandManager(this)
 
+		Commands.registerCompletions(commandManager)
+
 		commandManager.registerCommand(AdminCommands(), true)
 		commandManager.registerCommand(TeamCommands(), true)
 		commandManager.registerCommand(TestCommands(), true)
 		commandManager.registerCommand(ParticipantCommands(), true)
 		commandManager.registerCommand(ShareCoordsCommand(), true)
 		commandManager.registerCommand(NicknameCommand(), true)
-		
+
 		Chat.loadFile()
 
 		/* register all events */

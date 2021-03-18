@@ -2,6 +2,7 @@ package com.codeland.uhc.command;
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
+import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
@@ -89,12 +90,14 @@ class ParticipantCommands : BaseCommand() {
 		}
 	}
 
+	@CommandCompletion("@chatcolors")
 	@Subcommand("color")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender, color0: ChatColor) {
 		changeTeamColor(sender, color0, null)
 	}
 
+	@CommandCompletion("@chatcolors @chatcolors")
 	@Subcommand("color")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor) {
@@ -188,6 +191,7 @@ class ParticipantCommands : BaseCommand() {
 		}
 	}
 
+	@CommandCompletion("@quirkclass")
 	@Subcommand("class")
 	@Description("set your class for classes quirk")
 	fun classCommand(sender: CommandSender, quirkClass: QuirkClass) {
