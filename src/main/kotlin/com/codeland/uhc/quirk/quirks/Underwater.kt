@@ -75,9 +75,7 @@ class Underwater(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	companion object {
 		fun giveEffects(player: Player) {
-			SchedulerUtil.nextTick {
-				player.addPotionEffect(PotionEffect(PotionEffectType.CONDUIT_POWER, Int.MAX_VALUE / 2, 10, false, false, true))
-			}
+			player.addPotionEffect(PotionEffect(PotionEffectType.CONDUIT_POWER, Int.MAX_VALUE / 2, 10, false, false, true))
 		}
 
 		fun removeEffects(player: Player) {

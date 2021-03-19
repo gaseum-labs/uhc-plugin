@@ -9,6 +9,7 @@ import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.team.HideManager
 import com.codeland.uhc.team.Team
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenFile
 import org.bukkit.Bukkit
@@ -192,8 +193,10 @@ object GameRunner {
 			)
 
 		/* custom quirk behavior when players start */
-		uhc.quirks.forEach { quirk ->
-			if (quirk.enabled) quirk.onStart(uuid)
+		SchedulerUtil.nextTick {
+			uhc.quirks.forEach { quirk ->
+				if (quirk.enabled) quirk.onStart(uuid)
+			}
 		}
 
 		return respawnLocation
