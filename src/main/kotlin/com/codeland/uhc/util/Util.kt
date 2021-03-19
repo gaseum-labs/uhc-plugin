@@ -13,6 +13,10 @@ object Util {
 		PaperPluginLogger.getGlobal().log(Level.INFO, message)
 	}
 
+	fun debug(message: String) {
+		PaperPluginLogger.getGlobal().log(Level.INFO, message)
+	}
+
 	/**
 	 * positive mod
 	 */

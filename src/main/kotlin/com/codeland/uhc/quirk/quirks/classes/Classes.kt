@@ -22,23 +22,15 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		timerId = SchedulerUtil.everyTick(::everyTick)
 	}
 
-	override fun onDisable() {}
+	override fun onDisable() {
+		Bukkit.getScheduler().cancelTask(timerId)
+	}
 
 	override fun onStart(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->
-			val playerData = PlayerData.getPlayerData(uuid)
+			val quirkClass = getClass(uuid)
 
-			// give them a random class if they didn't pick one
-
-			if (getClass(player) == QuirkClass.NO_CLASS) {
-				setClass(player, QuirkClass.values().takeLast(QuirkClass.values().size - 1).random())
-			} else if (getClass(player) == QuirkClass.LAVACASTER) {
-				player.addPotionEffect(PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1, false, /* no particles */ false, true))
-			} else if (getClass(player) == QuirkClass.DIVER) {
-				player.addPotionEffect(PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 1, false, /* no particles */ false, true))
-			}
-
-			giveClassHead(player, playerData)
+			if (quirkClass != QuirkClass.NO_CLASS) startAsClass(player, quirkClass)
 		}
 	}
 
@@ -57,15 +49,19 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	}
 
 	private fun everyTick() {
-		outer@ for (o in obsidianifiedLava) {
-			for (player in Bukkit.getOnlinePlayers().filter {PlayerData.getPlayerData(it.uniqueId).alive}) {
-				if (getClass(player) == QuirkClass.LAVACASTER
-						&& abs(player.location.x - o.block.x) <= 4
-						&& abs(player.location.y - o.block.y) <= 4
-						&& abs(player.location.z - o.block.z) <= 3) continue@outer
-			}
-			// there aren't any lavacasters nearby
-			o.block.type = if (o.flowing) Material.AIR else Material.LAVA
+		obsidianifiedLava.removeIf { ol ->
+			ol.block.type != Material.OBSIDIAN ||
+
+			(Bukkit.getOnlinePlayers().none { player ->
+				val playerData = PlayerData.getPlayerData(player.uniqueId)
+
+				playerData.participating
+					&& getClass(playerData) == QuirkClass.LAVACASTER
+					&& abs(player.location.x - ol.block.x) <= 4
+					&& abs(player.location.y - ol.block.y) <= 4
+					&& abs(player.location.z - ol.block.z) <= 3
+
+			} && run { ol.block.setType(if (ol.flowing) Material.AIR else Material.LAVA, false); true })
 		}
 	}
 
@@ -74,34 +70,35 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	companion object {
 		var obsidianifiedLava: MutableList<ObsidianifiedLava> = mutableListOf()
 
-		fun setClass(uuid: UUID, quirkClass: QuirkClass) {
-			PlayerData.getQuirkDataHolder(PlayerData.getPlayerData(uuid), QuirkType.CLASSES).data = quirkClass
+		fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
+			PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = quirkClass
 		}
 
-		fun setClass(player: Player, quirkClass: QuirkClass) {
-			setClass(player.uniqueId, quirkClass)
+		fun setClass(uuid: UUID, quirkClass: QuirkClass) {
+			setClass(PlayerData.getPlayerData(uuid), quirkClass)
+		}
+
+		fun startAsClass(player: Player, quirkClass: QuirkClass) {
+			giveClassHead(player, quirkClass)
+			quirkClass.onStart(player)
+		}
+
+		fun getClass(playerData: PlayerData): QuirkClass {
+			return PlayerData.getQuirkData(playerData, QuirkType.CLASSES)
 		}
 
 		fun getClass(uuid: UUID): QuirkClass {
-			return PlayerData.getQuirkDataHolder(PlayerData.getPlayerData(uuid), QuirkType.CLASSES).data as QuirkClass
+			return getClass(PlayerData.getPlayerData(uuid))
 		}
 
-		fun getClass(player: Player): QuirkClass {
-			return getClass(player.uniqueId)
-		}
+		fun giveClassHead(player: Player, quirkClass: QuirkClass) {
+			val headItem = ItemStack(quirkClass.headBlock)
 
-		fun giveClassHead(player: Player, playerData: PlayerData) {
-			val quirkClass = PlayerData.getQuirkData<QuirkClass>(playerData, QuirkType.CLASSES)
+			val meta = headItem.itemMeta
+			meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
+			headItem.itemMeta = meta
 
-			if (quirkClass != QuirkClass.NO_CLASS) {
-				val headItem = ItemStack(quirkClass.headBlock)
-
-				val meta = headItem.itemMeta
-				meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
-				headItem.itemMeta = meta
-
-				player.inventory.helmet = headItem
-			}
+			player.inventory.helmet = headItem
 		}
 
 		fun removeHead(player: Player) {

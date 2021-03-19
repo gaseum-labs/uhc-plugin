@@ -27,23 +27,27 @@ class ClassesEvents : Listener {
 
     @EventHandler
     fun playerMove(event: PlayerMoveEvent) {
-        if (Classes.getClass(event.player) == QuirkClass.LAVACASTER) {
-            for (dx in -4..4) for (dy in -3..-1) for (dz in -4..4) {
-                val block = event.player.location.block.getRelative(dx, dy, dz)
-                if (block.type === Material.LAVA && surface(block)) {
-                    block.setType(Material.OBSIDIAN, false)
-                    Classes.obsidianifiedLava.add(Classes.ObsidianifiedLava(block, false))
+        val player = event.player
+
+        when (Classes.getClass(player.uniqueId)) {
+            QuirkClass.LAVACASTER -> {
+                for (dx in -4..4) for (dy in -3..-1) for (dz in -4..4) {
+                    val block = player.location.block.getRelative(dx, dy, dz)
+                    if (block.type === Material.LAVA && surface(block)) {
+                        block.setType(Material.OBSIDIAN, false)
+                        Classes.obsidianifiedLava.add(Classes.ObsidianifiedLava(block, false))
+                    }
                 }
             }
-        }
-        if (Classes.getClass(event.player) == QuirkClass.DIVER) {
-            if (event.player.isSwimming) {
-                event.player.velocity = event.player.location.direction.multiply((1.5 - event.player.velocity.length()) * 0.1 + event.player.velocity.length())
-            }
-            if (event.from.block.type == Material.WATER && event.to.block.type.isAir) {
-                if (event.player.velocity.length() > 0.3)
-                    event.player.velocity = event.player.location.direction.multiply(event.player.velocity.length() * 3)
-                event.player.sendMessage(event.player.velocity.length().toString())
+            QuirkClass.DIVER -> {
+                if (player.isSwimming) {
+                    player.velocity = player.location.direction.multiply((1.5 - player.velocity.length()) * 0.1 + player.velocity.length())
+                }
+                if (event.from.block.type == Material.WATER && event.to.block.type.isAir) {
+                    if (player.velocity.length() > 0.3)
+                        player.velocity = player.location.direction.multiply(player.velocity.length() * 3)
+                    player.sendMessage(player.velocity.length().toString())
+                }
             }
         }
     }
@@ -51,7 +55,8 @@ class ClassesEvents : Listener {
     @EventHandler
     fun playerDamage(event: EntityDamageEvent) {
         val player = if (event.entity is Player) event.entity as Player else return
-        if (Classes.getClass(player) == QuirkClass.DIVER && event.cause == EntityDamageEvent.DamageCause.FALL && player.world.environment != World.Environment.NETHER) {
+
+        if (Classes.getClass(player.uniqueId) == QuirkClass.DIVER && event.cause == EntityDamageEvent.DamageCause.FALL && player.world.environment != World.Environment.NETHER) {
             event.isCancelled = true
             val block = player.location.block
             if (!block.type.isAir) block.breakNaturally()
@@ -69,7 +74,8 @@ class ClassesEvents : Listener {
     @EventHandler
     fun entityDamageEntity(event: EntityDamageByEntityEvent) {
         val player = if (event.damager is Player) event.damager as Player else return
-        if (Classes.getClass(player) == QuirkClass.LAVACASTER) {
+
+        if (Classes.getClass(player.uniqueId) == QuirkClass.LAVACASTER) {
             event.entity.fireTicks = 80
         }
     }

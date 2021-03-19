@@ -25,7 +25,6 @@ class TeamCommands : BaseCommand() {
 	@Description("remove all current teams")
 	fun clearTeams(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return //TODO make team commands available to do during the game
 
 		/* unstage everyone and remove teams */
 		TeamData.removeAllTeams { uuid -> PlayerData.setStaged(uuid, false) }
