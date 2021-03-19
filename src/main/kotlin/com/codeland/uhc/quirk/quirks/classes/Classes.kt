@@ -8,6 +8,7 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.Sound
 import org.bukkit.block.Block
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
@@ -63,12 +64,40 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 			} && run { ol.block.setType(if (ol.flowing) Material.AIR else Material.LAVA, false); true })
 		}
+
+		Bukkit.getOnlinePlayers()
+				.filter { PlayerData.getPlayerData(it.uniqueId).alive }
+				.forEach { player ->
+					val uuid = player.uniqueId
+					if (inHandMap[uuid] == null) {
+						inHandMap[uuid] = InHandItem(player.inventory.itemInMainHand, 1)
+					} else {
+						val inHand = inHandMap[uuid]!!
+						if (inHand.item == player.inventory.itemInMainHand) {
+							inHand.ticks++
+						} else {
+							inHand.item = player.inventory.itemInMainHand
+							inHand.ticks = 1
+						}
+						if (inHand.item.type == Material.BUCKET && inHand.ticks >= 60) {
+							if (getClass(uuid) == QuirkClass.LAVACASTER) {
+								inHand.item.type = Material.LAVA_BUCKET
+							} else if (getClass(uuid) == QuirkClass.DIVER) {
+								inHand.item.type = Material.WATER_BUCKET
+								player.playSound(player.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
+							}
+						}
+					}
+				}
 	}
 
 	data class ObsidianifiedLava(val block: Block, val flowing: Boolean)
 
+	data class InHandItem(var item: ItemStack, var ticks: Int)
+
 	companion object {
 		var obsidianifiedLava: MutableList<ObsidianifiedLava> = mutableListOf()
+		val inHandMap = mutableMapOf<UUID, InHandItem>()
 
 		fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
 			PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = quirkClass
@@ -106,5 +135,6 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 
 		private var timerId: Int = 0
+
 	}
 }
