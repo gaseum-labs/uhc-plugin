@@ -1,6 +1,5 @@
 package com.codeland.uhc
 
-import co.aikar.commands.BukkitCommandManager
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.*
 import com.codeland.uhc.team.TeamMaker
@@ -13,8 +12,6 @@ import com.codeland.uhc.event.*
 import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.VariantList
-import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.util.GoogleDDNSUpdater
@@ -44,6 +41,7 @@ class UHCPlugin : JavaPlugin() {
 		Chat.loadFile()
 
 		/* register all events */
+		server.pluginManager.registerEvents(ClassesEvents(), this)
 		server.pluginManager.registerEvents(Chat(), this)
 		server.pluginManager.registerEvents(Crits(), this)
 		server.pluginManager.registerEvents(EventListener(), this)

@@ -196,9 +196,9 @@ class ParticipantCommands : BaseCommand() {
 		if (!GameRunner.uhc.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
 
 		val playerData = PlayerData.getPlayerData(sender.uniqueId)
-		if (!playerData.participating) return Commands.errorMessage(sender, "You are not playing")
+//		if (!playerData.participating) return Commands.errorMessage(sender, "You are not playing")
 
-		if (!GameRunner.uhc.isPhase(PhaseType.GRACE))
+		if (!(GameRunner.uhc.isPhase(PhaseType.GRACE) || GameRunner.uhc.isPhase(PhaseType.WAITING)))
 			return Commands.errorMessage(sender, "You can't change your class right now")
 
 		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "You must pick a class")
