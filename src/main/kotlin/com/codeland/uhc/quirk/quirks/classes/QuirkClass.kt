@@ -5,34 +5,32 @@ import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
-enum class QuirkClass(val prettyName: String, val headBlock: Material, val onStart: (Player) -> Unit) {
-	NO_CLASS("", Material.DIRT, {}),
+enum class QuirkClass(val prettyName: String, val headBlock: Material, val onStart: (Player) -> Unit, val onEnd: (Player) -> Unit) {
+	NO_CLASS("", Material.DIRT, {}, {}),
 
 	LAVACASTER("Lavacaster", Material.MAGMA_BLOCK, { player ->
 		player.addPotionEffect(PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false, true))
+	}, { player ->
+		player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE)
 	}),
 
 	MINER("Miner", Material.DIAMOND_ORE, { player ->
 		player.addPotionEffect(PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 2, false, false, true))
+	}, { player ->
+		player.removePotionEffect(PotionEffectType.FAST_DIGGING)
 	}),
 
-	HUNTER("Hunter", Material.WITHER_SKELETON_SKULL, {
+	HUNTER("Hunter", Material.WITHER_SKELETON_SKULL, {}, {}),
 
-	}),
+	ALCHEMIST("Alchemist", Material.RED_STAINED_GLASS, {}, {}),
 
-	ALCHEMIST("Alchemist", Material.RED_STAINED_GLASS, {
-
-	}),
-
-	ENCHANTER("Enchanter", Material.ENCHANTING_TABLE, {
-
-	}),
+	ENCHANTER("Enchanter", Material.ENCHANTING_TABLE, {}, {}),
 
 	DIVER("Diver", Material.PRISMARINE_BRICKS, { player ->
 		player.addPotionEffect(PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false, true))
+	}, { player ->
+		player.removePotionEffect(PotionEffectType.WATER_BREATHING)
 	}),
 
-	TRAPPER("Trapper", Material.PISTON, {
-
-	})
+	TRAPPER("Trapper", Material.PISTON, {}, {})
 }
