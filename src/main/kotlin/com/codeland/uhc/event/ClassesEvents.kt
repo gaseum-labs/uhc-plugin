@@ -14,6 +14,7 @@ import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.FaceAttachable
 import org.bukkit.block.data.Levelled
 import org.bukkit.block.data.type.Grindstone
+import org.bukkit.block.data.type.Switch
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -22,6 +23,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.player.PlayerExpChangeEvent
 import org.bukkit.event.player.PlayerMoveEvent
+import org.bukkit.event.player.PlayerToggleSneakEvent
 import org.bukkit.inventory.EnchantingInventory
 import org.bukkit.inventory.ItemStack
 
@@ -74,7 +76,6 @@ class ClassesEvents : Listener {
                     if (event.from.block.type === Material.WATER && event.to.block.type.isAir) {
                         if (player.velocity.length() > 0.3)
                             player.velocity = player.location.direction.multiply(player.velocity.length() * 3)
-                        player.sendMessage(player.velocity.length().toString())
                     }
                 }
             }
@@ -98,6 +99,9 @@ class ClassesEvents : Listener {
                         block.world.playSound(block.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
                     }
                 }
+            }
+            if (Classes.getClass(player.uniqueId) == QuirkClass.TRAPPER && event.cause == EntityDamageEvent.DamageCause.FALL) {
+                event.isCancelled = true
             }
         }
     }
@@ -134,6 +138,33 @@ class ClassesEvents : Listener {
                     inventory.secondary = ItemStack(Material.LAPIS_LAZULI)
                 else
                     ++lapis.amount
+            }
+        }
+    }
+
+    @EventHandler
+    fun onShift(event: PlayerToggleSneakEvent) {
+        if (event.isSneaking && Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+            var activated = false
+            if (Classes.lastShiftMap[event.player.uniqueId] != null) {
+                val lastShift = Classes.lastShiftMap[event.player.uniqueId]!!
+                if (System.currentTimeMillis() - lastShift < 500) {
+                    activated = true
+                    val RADIUS = 10
+                    for (dx in -RADIUS..RADIUS) for (dy in -RADIUS..RADIUS) for (dz in -RADIUS..RADIUS) {
+                        val block = event.player.location.block.getRelative(dx, dy, dz)
+                        if (block.type == Material.LEVER) {
+                            val data: Switch = block.blockData as Switch
+                            data.isPowered = !data.isPowered
+                            block.blockData = data
+                        }
+                    }
+                }
+            }
+            Classes.lastShiftMap[event.player.uniqueId] = System.currentTimeMillis()
+            if (activated) {
+                // to prevent triple shift from triggering twice
+                Classes.lastShiftMap[event.player.uniqueId] = 0
             }
         }
     }
