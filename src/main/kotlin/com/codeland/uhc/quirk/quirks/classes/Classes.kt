@@ -78,6 +78,32 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				}
 			}
 
+			Bukkit.getOnlinePlayers()
+				.filter { PlayerData.getPlayerData(it.uniqueId).alive }
+				.forEach { player ->
+					val uuid = player.uniqueId
+					if (inHandMap[uuid] == null) {
+						inHandMap[uuid] = InHandItem(player.inventory.itemInMainHand, 1)
+					} else {
+						val inHand = inHandMap[uuid]!!
+						if (inHand.item == player.inventory.itemInMainHand) {
+							inHand.ticks++
+						} else {
+							inHand.item = player.inventory.itemInMainHand
+							inHand.ticks = 1
+						}
+						if (inHand.item.type == Material.BUCKET && inHand.ticks >= 60) {
+							if (getClass(uuid) == QuirkClass.LAVACASTER) {
+								inHand.item.type = Material.LAVA_BUCKET
+								player.playSound(player.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
+							} else if (getClass(uuid) == QuirkClass.DIVER) {
+								inHand.item.type = Material.WATER_BUCKET
+								player.playSound(player.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
+							}
+						}
+					}
+				}
+
 			++currentTick
 		}
 	}
@@ -106,49 +132,6 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	override fun defaultData(): Any {
 		return QuirkClass.NO_CLASS
-	}
-
-	private fun everyTick() {
-		obsidianifiedLava.removeIf { ol ->
-			ol.block.type != Material.OBSIDIAN ||
-
-			(Bukkit.getOnlinePlayers().none { player ->
-				val playerData = PlayerData.getPlayerData(player.uniqueId)
-
-				playerData.participating
-					&& getClass(playerData) == QuirkClass.LAVACASTER
-					&& abs(player.location.x - ol.block.x) <= 4
-					&& abs(player.location.y - ol.block.y) <= 4
-					&& abs(player.location.z - ol.block.z) <= 3
-
-			} && run { ol.block.setType(if (ol.flowing) Material.AIR else Material.LAVA, false); true })
-		}
-
-		Bukkit.getOnlinePlayers()
-				.filter { PlayerData.getPlayerData(it.uniqueId).alive }
-				.forEach { player ->
-					val uuid = player.uniqueId
-					if (inHandMap[uuid] == null) {
-						inHandMap[uuid] = InHandItem(player.inventory.itemInMainHand, 1)
-					} else {
-						val inHand = inHandMap[uuid]!!
-						if (inHand.item == player.inventory.itemInMainHand) {
-							inHand.ticks++
-						} else {
-							inHand.item = player.inventory.itemInMainHand
-							inHand.ticks = 1
-						}
-						if (inHand.item.type == Material.BUCKET && inHand.ticks >= 60) {
-							if (getClass(uuid) == QuirkClass.LAVACASTER) {
-								inHand.item.type = Material.LAVA_BUCKET
-								player.playSound(player.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
-							} else if (getClass(uuid) == QuirkClass.DIVER) {
-								inHand.item.type = Material.WATER_BUCKET
-								player.playSound(player.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
-							}
-						}
-					}
-				}
 	}
 
 	data class ObsidianifiedLava(val block: Block, val flowing: Boolean)

@@ -17,12 +17,14 @@ import org.bukkit.block.data.FaceAttachable
 import org.bukkit.block.data.Levelled
 import org.bukkit.block.data.type.Grindstone
 import org.bukkit.block.data.type.Switch
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.PlayerExpChangeEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.event.player.PlayerToggleSneakEvent
@@ -39,15 +41,16 @@ class ClassesEvents : Listener {
 			|| block.getRelative(0, 0, -1).type.isAir
 	}
 
-	fun <T> auraReplacer(player: Player, list: MutableList<T>, from: Material, to: Material, radiusX: Int, lowY: Int, highY: Int, radiusZ: Int, produce: (Block) -> T) {
+	fun <T> auraReplacer(player: Player, list: MutableList<T>, from: Material, to: Material, radiusX: Int, lowY: Int, highY: Int, radiusZ: Int, produce: (Block) -> T, modify: (Block) -> Unit) {
 		for (dx in -radiusX..radiusX)
 			for (dy in lowY..highY)
 				for (dz in -radiusZ..radiusZ) {
 					val block = player.location.block.getRelative(dx, dy, dz)
 
 					if (block.type === from && surface(block)) {
-						block.setType(to, true)
 						list.add(produce(block))
+						block.setType(to, true)
+						modify(block)
 					}
 				}
 	}
@@ -59,17 +62,16 @@ class ClassesEvents : Listener {
 
 			when (Classes.getClass(player.uniqueId)) {
 				QuirkClass.LAVACASTER -> {
-					auraReplacer(player, Classes.obsidianifiedLava, Material.LAVA, Material.OBSIDIAN, 3, -2, -1, 3) { block ->
+					auraReplacer(player, Classes.obsidianifiedLava, Material.LAVA, Material.OBSIDIAN, 3, -2, -1, 3, { block ->
 						Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
-					}
+					}, {})
 				}
 				QuirkClass.ENCHANTER -> {
-					auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 1, -2, -1, 1) { block ->
+					auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 1, -2, -1, 1, { it }, { block ->
 						val data = block.blockData as Grindstone
 						data.attachedFace = FaceAttachable.AttachedFace.FLOOR
 						block.setBlockData(data, false)
-						block
-					}
+					})
 				}
 				QuirkClass.DIVER -> {
 					if (player.isSwimming) {
@@ -175,6 +177,29 @@ class ClassesEvents : Listener {
 					inventory.secondary = ItemStack(Material.LAPIS_LAZULI)
 				else
 					++lapis.amount
+			}
+		}
+	}
+
+	val armors = arrayOf(
+		Material.LEATHER_BOOTS, Material.LEATHER_LEGGINGS, Material.LEATHER_CHESTPLATE, Material.LEATHER_HELMET,
+		Material.GOLDEN_BOOTS, Material.GOLDEN_LEGGINGS, Material.GOLDEN_CHESTPLATE, Material.GOLDEN_HELMET,
+		Material.CHAINMAIL_BOOTS, Material.CHAINMAIL_LEGGINGS, Material.CHAINMAIL_CHESTPLATE, Material.CHAINMAIL_HELMET,
+		Material.IRON_BOOTS, Material.IRON_LEGGINGS, Material.IRON_CHESTPLATE, Material.IRON_HELMET,
+		Material.DIAMOND_BOOTS, Material.DIAMOND_LEGGINGS, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_HELMET
+	)
+
+	@EventHandler
+	fun onCraft(event: CraftItemEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+			if (Classes.getClass(event.whoClicked.uniqueId) == QuirkClass.ENCHANTER) {
+				val item = event.currentItem ?: return
+
+				if (armors.contains(item.type)) {
+					val meta = item.itemMeta
+					meta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 1, true)
+					item.itemMeta = meta
+				}
 			}
 		}
 	}
