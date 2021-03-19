@@ -97,7 +97,6 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		return QuirkClass.NO_CLASS
 	}
 
-<<<<<<< HEAD
 	private fun everyTick() {
 		obsidianifiedLava.removeIf { ol ->
 			ol.block.type != Material.OBSIDIAN ||
@@ -131,6 +130,7 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 						if (inHand.item.type == Material.BUCKET && inHand.ticks >= 60) {
 							if (getClass(uuid) == QuirkClass.LAVACASTER) {
 								inHand.item.type = Material.LAVA_BUCKET
+								player.playSound(player.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
 							} else if (getClass(uuid) == QuirkClass.DIVER) {
 								inHand.item.type = Material.WATER_BUCKET
 								player.playSound(player.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
@@ -147,6 +147,7 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	companion object {
 		var obsidianifiedLava: MutableList<ObsidianifiedLava> = mutableListOf()
 		val inHandMap = mutableMapOf<UUID, InHandItem>()
+		val lastShiftMap = mutableMapOf<UUID, Int>()
 
 		fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
 			PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = quirkClass
