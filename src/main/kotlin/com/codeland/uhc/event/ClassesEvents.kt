@@ -5,6 +5,7 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.util.SchedulerUtil
+import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
@@ -109,10 +110,55 @@ class ClassesEvents : Listener {
     @EventHandler
     fun entityDamageEntity(event: EntityDamageByEntityEvent) {
         if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
-            val player = if (event.damager is Player) event.damager as Player else return
+            val player = event.damager as? Player ?: return
 
-            if (Classes.getClass(player.uniqueId) == QuirkClass.LAVACASTER) {
-                event.entity.fireTicks = 80
+            when (Classes.getClass(player.uniqueId)) {
+                QuirkClass.LAVACASTER -> {
+                    event.entity.fireTicks = 80
+                }
+                QuirkClass.ENCHANTER -> {
+                    val hurtPlayer = event.entity as? Player ?: return
+
+                    val enchantColors = arrayOf(
+                        ChatColor.RED, ChatColor.GOLD,
+                        ChatColor.YELLOW, ChatColor.GREEN,
+                        ChatColor.AQUA, ChatColor.BLUE,
+                        ChatColor.LIGHT_PURPLE
+                    )
+
+                    fun enchantColor(index: Int) = if (index > enchantColors.lastIndex)
+                        enchantColors.last() else enchantColors[index]
+
+                    fun tellItem(itemStack: ItemStack) {
+                        val meta = itemStack.itemMeta
+
+                        player.sendActionBar(meta.enchants.map { (enchant, level) -> "${enchant.key.key} $level" }
+                            .foldIndexed("${ChatColor.WHITE}${hurtPlayer.name}'s ${itemStack.type.name.toLowerCase()}: ") { index, acc, next ->
+                                if (index == meta.enchants.size - 1)
+                                    "$acc${enchantColor(index)}$next"
+                                else
+                                    "$acc${enchantColor(index)}$next, "
+                            }
+                        )
+                    }
+
+                    fun validItem(itemStack: ItemStack?) = itemStack != null &&
+                        itemStack?.itemMeta?.enchants?.isNotEmpty() != null
+
+                    fun tellSlot(slot: Int): Boolean {
+                        val item = if (slot == 4)
+                            hurtPlayer.inventory.itemInMainHand
+                        else
+                            hurtPlayer.inventory.armorContents[slot]
+
+                        return if (validItem(item)) {
+                            tellItem(item); true
+                        } else false
+                    }
+
+                    val offset = (Math.random() * 5).toInt()
+                    (0..4).any { slot -> tellSlot((slot + offset) % 5) }
+                }
             }
         }
     }
@@ -144,27 +190,29 @@ class ClassesEvents : Listener {
 
     @EventHandler
     fun onShift(event: PlayerToggleSneakEvent) {
-        if (event.isSneaking && Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
-            var activated = false
-            if (Classes.lastShiftMap[event.player.uniqueId] != null) {
-                val lastShift = Classes.lastShiftMap[event.player.uniqueId]!!
-                if (System.currentTimeMillis() - lastShift < 500) {
-                    activated = true
-                    val RADIUS = 10
-                    for (dx in -RADIUS..RADIUS) for (dy in -RADIUS..RADIUS) for (dz in -RADIUS..RADIUS) {
-                        val block = event.player.location.block.getRelative(dx, dy, dz)
-                        if (block.type == Material.LEVER) {
-                            val data: Switch = block.blockData as Switch
-                            data.isPowered = !data.isPowered
-                            block.blockData = data
+        if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+            if (event.isSneaking && Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+                var activated = false
+                if (Classes.lastShiftMap[event.player.uniqueId] != null) {
+                    val lastShift = Classes.lastShiftMap[event.player.uniqueId]!!
+                    if (System.currentTimeMillis() - lastShift < 500) {
+                        activated = true
+                        val RADIUS = 10
+                        for (dx in -RADIUS..RADIUS) for (dy in -RADIUS..RADIUS) for (dz in -RADIUS..RADIUS) {
+                            val block = event.player.location.block.getRelative(dx, dy, dz)
+                            if (block.type == Material.LEVER) {
+                                val data: Switch = block.blockData as Switch
+                                data.isPowered = !data.isPowered
+                                block.blockData = data
+                            }
                         }
                     }
                 }
-            }
-            Classes.lastShiftMap[event.player.uniqueId] = System.currentTimeMillis()
-            if (activated) {
-                // to prevent triple shift from triggering twice
-                Classes.lastShiftMap[event.player.uniqueId] = 0
+                Classes.lastShiftMap[event.player.uniqueId] = System.currentTimeMillis()
+                if (activated) {
+                    // to prevent triple shift from triggering twice
+                    Classes.lastShiftMap[event.player.uniqueId] = 0
+                }
             }
         }
     }
