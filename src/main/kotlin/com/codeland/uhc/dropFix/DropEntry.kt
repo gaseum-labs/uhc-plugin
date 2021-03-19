@@ -139,5 +139,13 @@ class DropEntry(val onDrop: (looting: Int, entity: Entity) -> Array<ItemStack?>)
 				)
 			}
 		}
+
+		fun endermanHolding(): DropEntry {
+			return DropEntry { _, entity -> (entity as Enderman)
+				val material = entity.carriedBlock?.material
+
+				arrayOf(if (material == null) material else ItemStack(material))
+			}
+		}
 	}
 }

@@ -2,6 +2,7 @@ package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
+import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
@@ -12,16 +13,15 @@ import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.team.TeamMaker
-import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
+import org.bukkit.attribute.Attribute
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import kotlin.math.ceil
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -140,41 +140,57 @@ class AdminCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "${player.name} is staged for participating")
 	}
 
+	@CommandCompletion("@uhcplayer")
 	@Subcommand("addLate")
 	@Description("adds a player to the game after it has already started")
-	fun addLate(sender: CommandSender, playerName: String, teammateName: String) {
+	fun addLate(sender: CommandSender, offlinePlayer: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
-
-		val player = Bukkit.getPlayer(playerName) ?: return Commands.errorMessage(sender, "Can't find player $playerName")
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val teammate = Bukkit.getPlayer(teammateName) ?: return Commands.errorMessage(sender, "Can't find player $teammateName")
-
 		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
-		if (playerData.optingOut) return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
 
-		val joinTeam = TeamData.playersTeam(teammate.uniqueId) ?: return Commands.errorMessage(sender, "${teammate.name} has no team to join!")
+		val playerData = PlayerData.getPlayerData(offlinePlayer.uniqueId)
+		if (playerData.optingOut) return Commands.errorMessage(sender, "${offlinePlayer.name} is opting out of participating!")
 
-		lateTeamTeleport(sender, player, playerData, teammate.location, TeamData.addToTeam(joinTeam, player.uniqueId, true))
-	}
+		/* teleport will be to an alive team member if player is on a team */
+		/* will be to a random location if not on a team or no playing team members */
+		val team = TeamData.playersTeam(offlinePlayer.uniqueId)
 
-	@Subcommand("addLate")
-	@Description("adds a player to the game after it has already started")
-	fun addLate(sender: CommandSender, playerName: String) {
-		if (Commands.opGuard(sender)) return
+		fun randomLocation(): Location? {
+			val world = GameRunner.uhc.getDefaultWorld()
+			return GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+		}
 
-		val player = Bukkit.getPlayer(playerName) ?: return Commands.errorMessage(sender, "Can't find player ${playerName}")
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val teleportLocation = if (team == null) {
+			randomLocation()
+		} else {
+			/* find a team member who is not the added player, and who is participating */
+			val teammate = team.members.find { teammateUUID ->
+				if (offlinePlayer.uniqueId != teammateUUID) {
+					val teammateData = PlayerData.getPlayerData(teammateUUID)
+					teammateData.participating
 
-		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
-		if (playerData.optingOut) return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
+				} else {
+					false
+				}
+			}
 
-		val world = Bukkit.getWorlds()[0]
-		val teleportLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
-			?: return Commands.errorMessage(sender, "No suitible teleport location found!")
+			/* teleport to the teammate if possible */
+			if (teammate == null)
+				randomLocation()
+			else
+				GameRunner.getPlayerLocation(teammate) ?: randomLocation()
 
-		var teamColorPairs = TeamMaker.getColorList(1) ?: return Commands.errorMessage(sender, "There are already the maximum amount of teams (${TeamData.MAX_TEAMS})")
+		} ?: return Commands.errorMessage(sender, "No teleport location found")
 
-		lateTeamTeleport(sender, player, playerData, teleportLocation, TeamData.addToTeam(teamColorPairs[0], player.uniqueId, true))
+		GameRunner.teleportPlayer(offlinePlayer.uniqueId, teleportLocation)
+
+		/* set playerdata for starting a player (these parts are the same as in GraceDefault) */
+		playerData.lobbyPVP.inPvp = false
+		playerData.staged = false
+		playerData.alive = true
+		playerData.participating = true
+
+		/* set player stats for starting a player */
+		GameRunner.playerAction(offlinePlayer.uniqueId, GraceDefault.Companion::startPlayer)
 	}
 
 	@Subcommand("pregen")
@@ -184,21 +200,6 @@ class AdminCommands : BaseCommand() {
 			PreGenner.pregen(sender as Player)
 		} else {
 			Commands.errorMessage(sender, "Pregen has already started!")
-		}
-	}
-
-	private fun lateTeamTeleport(sender: CommandSender, player: Player, playerData: PlayerData, location: Location, team: Team) {
-		playerData.alive = true
-		playerData.participating = true
-
-		player.teleportAsync(location).thenAccept {
-			player.gameMode = GameMode.SURVIVAL
-
-			/* make sure the player doesn't die when they get teleported */
-			player.fallDistance = 0f
-			player.addPotionEffect(PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100, 10, true))
-
-			GameRunner.sendGameMessage(sender, "${player.name} successfully added to team ${team.colorPair.colorString(team.displayName)}")
 		}
 	}
 }

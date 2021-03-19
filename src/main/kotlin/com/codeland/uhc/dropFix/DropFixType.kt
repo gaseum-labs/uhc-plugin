@@ -1,5 +1,6 @@
 package com.codeland.uhc.dropFix
 
+import com.codeland.uhc.dropFix.DropEntry.Companion.endermanHolding
 import com.codeland.uhc.dropFix.DropEntry.Companion.entity
 import com.codeland.uhc.dropFix.DropEntry.Companion.hasTrident
 import com.codeland.uhc.dropFix.DropEntry.Companion.isSize
@@ -69,6 +70,12 @@ enum class DropFixType(val dropFix: DropFix) {
 		nothing()
 	))),
 
+	DONKEY(DropFix(EntityType.DONKEY, arrayOf(
+		arrayOf(DropEntry.horseInventory(), lootEntity(noBaby { LEATHER }, ::lootItem))
+	), arrayOf(
+		nothing()
+	))),
+
 	CHICKEN(DropFix(EntityType.CHICKEN, arrayOf(
 		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(0))),
 		arrayOf(lootEntity(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), lootEntity(noBaby { FEATHER }, lootMulti(1))),
@@ -77,13 +84,13 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	ENDERMAN(DropFix(EntityType.ENDERMAN, arrayOf(
-		arrayOf(loot(ENDER_PEARL, ::lootItem))
+		arrayOf(loot(ENDER_PEARL, ::lootItem), endermanHolding())
 	), arrayOf(
 		nothing()
 	))),
 
 	MAGMA_CUBE(DropFix(EntityType.MAGMA_CUBE, arrayOf(
-		arrayOf(DropEntry.nothing()),
+		arrayOf(nothing()),
 		arrayOf(lootEntity(isSize(MAGMA_CREAM, 1), ::lootItem))
 	), arrayOf(
 		nothing()
@@ -118,8 +125,7 @@ enum class DropFixType(val dropFix: DropFix) {
 	WITCH(DropFix(EntityType.WITCH, arrayOf(
 		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.INSTANT_HEAL)),
 		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.FIRE_RESISTANCE)),
-		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.SPEED)),
-		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.WATER_BREATHING)),
+		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.SPEED))
 	), arrayOf(
 		item(STICK)
 	))),

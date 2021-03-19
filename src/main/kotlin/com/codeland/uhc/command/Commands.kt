@@ -1,6 +1,11 @@
 package com.codeland.uhc.command
 
+import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.quirk.quirks.classes.QuirkClass
+import com.codeland.uhc.team.TeamData
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -40,5 +45,19 @@ object Commands {
         }
 
         return false
+    }
+
+    fun registerCompletions(commandManager: PaperCommandManager) {
+        commandManager.commandCompletions.registerCompletion("uhcplayer") {
+            PlayerData.playerDataList.map { (uuid, _) -> Bukkit.getOfflinePlayer(uuid).name }
+        }
+
+        commandManager.commandCompletions.registerCompletion("teamcolor") {
+            TeamData.teamColors.map { teamColor -> teamColor.name.toLowerCase() }
+        }
+
+        commandManager.commandCompletions.registerCompletion("quirkclass") {
+            QuirkClass.values().mapIndexedNotNull { i, quirkClass -> if (i == 0) null else quirkClass.name }
+        }
     }
 }

@@ -225,7 +225,11 @@ object GameRunner {
 		if (onlinePlayer == null) {
 			val playerData = PlayerData.getPlayerData(uuid)
 
-			playerData.offlineZombie?.teleport(location)
+			val zombie = playerData.offlineZombie
+			if (zombie == null)
+				playerData.createDefaultZombie(uuid, location)
+			else
+				zombie.teleport(location)
 
 		} else {
 			onlinePlayer.teleport(location)

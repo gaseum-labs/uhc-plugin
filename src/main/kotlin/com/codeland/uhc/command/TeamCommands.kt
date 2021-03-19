@@ -2,11 +2,11 @@ package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
+import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
@@ -16,7 +16,6 @@ import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import java.util.*
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 
 @CommandAlias("uhca")
@@ -34,6 +33,7 @@ class TeamCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
 
+	@CommandCompletion("@teamcolor @uhcplayer")
 	@Subcommand("add")
 	@Description("add a player to a team")
 	fun addPlayerToTeamCommand(sender: CommandSender, color: ChatColor, player: OfflinePlayer) {
@@ -42,7 +42,8 @@ class TeamCommands : BaseCommand() {
 		internalAddPlayerToTeam(sender, ColorPair(color), player)
 	}
 
-	@Subcommand("add")
+	@CommandCompletion("@teamcolor @teamcolor @uhcplayer")
+	@Subcommand("add2")
 	@Description("add a player to a team with two colors")
 	fun addPlayerToTeamCommand(sender: CommandSender, color0: ChatColor, color1: ChatColor, player: OfflinePlayer) {
 		if (!Team.isValidColor(color0)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color0.ordinal]} is not a valid color")
@@ -51,6 +52,7 @@ class TeamCommands : BaseCommand() {
 		internalAddPlayerToTeam(sender, ColorPair(color0, color1), player)
 	}
 
+	@CommandCompletion("@uhcplayer @uhcplayer")
 	@Subcommand("join")
 	@Description("add a player to another player's team")
 	fun addPlayerToTeamCommand(sender: CommandSender, teamPlayer: OfflinePlayer, player: OfflinePlayer) {
@@ -74,6 +76,7 @@ class TeamCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
 	}
 
+	@CommandCompletion("@uhcplayer")
 	@Subcommand("remove")
 	@Description("remove a player from a team")
 	fun removePlayerFromTeamCommand(sender: CommandSender, player: OfflinePlayer) {
@@ -121,6 +124,7 @@ class TeamCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Created ${teams.size} teams with a team size of ${teamSize}!")
 	}
 
+	@CommandCompletion("@uhcplayer @uhcplayer")
 	@Subcommand("swap")
 	@Description("swap the teams of two players")
 	fun swapTeams(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
