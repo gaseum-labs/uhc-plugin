@@ -147,7 +147,7 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	companion object {
 		var obsidianifiedLava: MutableList<ObsidianifiedLava> = mutableListOf()
 		val inHandMap = mutableMapOf<UUID, InHandItem>()
-		val lastShiftMap = mutableMapOf<UUID, Int>()
+		val lastShiftMap = mutableMapOf<UUID, Long>()
 
 		fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
 			PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = quirkClass
