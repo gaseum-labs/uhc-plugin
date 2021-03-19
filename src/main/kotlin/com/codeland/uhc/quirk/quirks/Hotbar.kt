@@ -15,43 +15,43 @@ import org.bukkit.inventory.ItemStack
 import java.util.*
 
 class Hotbar(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
-    override fun onEnable() {}
+	override fun onEnable() {}
 
-    override fun onDisable() {}
+	override fun onDisable() {}
 
-    override val representation: ItemStack
-        get() = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
+	override val representation: ItemStack
+		get() = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
 
-    override fun onStart(uuid: UUID) {
-        GameRunner.playerAction(uuid) { player ->
-            for (slot in 9 until 36)
-                player.inventory.setItem(slot, createUnusableSlot())
-        }
-    }
+	override fun onStart(uuid: UUID) {
+		GameRunner.playerAction(uuid) { player ->
+			for (slot in 9 until 36)
+				player.inventory.setItem(slot, createUnusableSlot())
+		}
+	}
 
-    override fun onEnd(uuid: UUID) {
-        Util.log("ENDING FOR: ${uuid}")
-        GameRunner.playerAction(uuid) { player ->
-            for (slot in 9 until 36)
-                player.inventory.setItem(slot, null)
-        }
-    }
+	override fun onEnd(uuid: UUID) {
+		Util.log("ENDING FOR: ${uuid}")
+		GameRunner.playerAction(uuid) { player ->
+			for (slot in 9 until 36)
+				player.inventory.setItem(slot, null)
+		}
+	}
 
-    companion object {
-        fun createUnusableSlot(): ItemStack {
-            val itemStack = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
+	companion object {
+		fun createUnusableSlot(): ItemStack {
+			val itemStack = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
 
-            val meta = itemStack.itemMeta
-            meta.setDisplayName("${ChatColor.RESET}${ChatColor.DARK_PURPLE}${ChatColor.BOLD}Unusable Slot")
-            itemStack.itemMeta = meta
+			val meta = itemStack.itemMeta
+			meta.setDisplayName("${ChatColor.RESET}${ChatColor.DARK_PURPLE}${ChatColor.BOLD}Unusable Slot")
+			itemStack.itemMeta = meta
 
-            return itemStack
-        }
+			return itemStack
+		}
 
-        fun filterDrops(drops: MutableList<ItemStack>) {
-            drops.removeAll { itemStack ->
-                itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.hasDisplayName()
-            }
-        }
-    }
+		fun filterDrops(drops: MutableList<ItemStack>) {
+			drops.removeAll { itemStack ->
+				itemStack.type == Material.BLACK_STAINED_GLASS_PANE && itemStack.itemMeta.hasDisplayName()
+			}
+		}
+	}
 }

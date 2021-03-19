@@ -9,47 +9,47 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
 class SharedInventory(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
-    companion object {
-        lateinit var contents: Array<out ItemStack?>
-        var taskId: Int = 0
-    }
+	companion object {
+		lateinit var contents: Array<out ItemStack?>
+		var taskId: Int = 0
+	}
 
-    override fun onEnable() {
-        contents = Bukkit.getOnlinePlayers().first().inventory.contents
+	override fun onEnable() {
+		contents = Bukkit.getOnlinePlayers().first().inventory.contents
 
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
-            Bukkit.getOnlinePlayers().any { player ->
-                val playersContents = player.inventory.contents
+		taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
+			Bukkit.getOnlinePlayers().any { player ->
+				val playersContents = player.inventory.contents
 
-                if (!contentsSimilar(contents, playersContents)) {
-                    contents = contentsCopy(playersContents)
+				if (!contentsSimilar(contents, playersContents)) {
+					contents = contentsCopy(playersContents)
 
-                    Bukkit.getOnlinePlayers().forEach { otherPlayer ->
-                        if (otherPlayer != player) otherPlayer.inventory.contents = contents as Array<out ItemStack>
-                    }
+					Bukkit.getOnlinePlayers().forEach { otherPlayer ->
+						if (otherPlayer != player) otherPlayer.inventory.contents = contents as Array<out ItemStack>
+					}
 
-                    true
-                }
+					true
+				}
 
-                false
-            }
-        }, 1, 1)
-    }
+				false
+			}
+		}, 1, 1)
+	}
 
-    private fun contentsSimilar(contents1: Array<out ItemStack?>, contents2: Array<out ItemStack?>): Boolean {
-        for (i in contents1.indices) if (contents1[i] != contents2[i]) return false
+	private fun contentsSimilar(contents1: Array<out ItemStack?>, contents2: Array<out ItemStack?>): Boolean {
+		for (i in contents1.indices) if (contents1[i] != contents2[i]) return false
 
-        return true
-    }
+		return true
+	}
 
-    private fun contentsCopy(contents: Array<out ItemStack?>): Array<out ItemStack?> {
-        return Array(contents.size) { i -> contents[i]?.clone() }
-    }
+	private fun contentsCopy(contents: Array<out ItemStack?>): Array<out ItemStack?> {
+		return Array(contents.size) { i -> contents[i]?.clone() }
+	}
 
-    override fun onDisable() {
-        Bukkit.getScheduler().cancelTask(taskId)
-    }
+	override fun onDisable() {
+		Bukkit.getScheduler().cancelTask(taskId)
+	}
 
-    override val representation: ItemStack
-        get() = ItemStack(Material.KNOWLEDGE_BOOK)
+	override val representation: ItemStack
+		get() = ItemStack(Material.KNOWLEDGE_BOOK)
 }

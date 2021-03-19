@@ -14,36 +14,36 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 class ShareCoordsCommand : BaseCommand() {
-    @CommandAlias("sharecoords")
-    @Description("shares your coordinates with your teammates")
-    fun shareCoords(sender : CommandSender) {
-        sender as Player
+	@CommandAlias("sharecoords")
+	@Description("shares your coordinates with your teammates")
+	fun shareCoords(sender : CommandSender) {
+		sender as Player
 
-        /* sharecoords command can only be used during the game */
-        if (!GameRunner.uhc.isGameGoing())
-            return Commands.errorMessage(sender, "Game is not running")
+		/* sharecoords command can only be used during the game */
+		if (!GameRunner.uhc.isGameGoing())
+			return Commands.errorMessage(sender, "Game is not running")
 
-        /* sharecoords command can only be used when playing */
-        if (!PlayerData.isParticipating(sender.uniqueId))
-            return Commands.errorMessage(sender, "You are not participating in this game")
+		/* sharecoords command can only be used when playing */
+		if (!PlayerData.isParticipating(sender.uniqueId))
+			return Commands.errorMessage(sender, "You are not participating in this game")
 
-        val team = TeamData.playersTeam(sender.uniqueId)
-        val location = sender.location
+		val team = TeamData.playersTeam(sender.uniqueId)
+		val location = sender.location
 
-        /* different message based on teams or no teams */
-        if (team == null) {
-            val message = "${GOLD}You are located at ${location.blockX}, ${location.blockY}, ${location.blockZ}"
+		/* different message based on teams or no teams */
+		if (team == null) {
+			val message = "${GOLD}You are located at ${location.blockX}, ${location.blockY}, ${location.blockZ}"
 
-           sender.sendMessage(message)
+		   sender.sendMessage(message)
 
-        } else {
-            val message = team.colorPair.colorString("${sender.name} is located at ${location.blockX}, ${location.blockY}, ${location.blockZ}")
+		} else {
+			val message = team.colorPair.colorString("${sender.name} is located at ${location.blockX}, ${location.blockY}, ${location.blockZ}")
 
-            /* send to all team members (including self) */
-            team.members.forEach { uuid ->
-                val player = Bukkit.getPlayer(uuid)
-                player?.sendMessage(message)
-            }
-        }
-    }
+			/* send to all team members (including self) */
+			team.members.forEach { uuid ->
+				val player = Bukkit.getPlayer(uuid)
+				player?.sendMessage(message)
+			}
+		}
+	}
 }
