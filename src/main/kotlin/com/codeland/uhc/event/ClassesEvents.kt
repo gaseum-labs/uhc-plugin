@@ -9,8 +9,11 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
 import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.block.data.BlockData
+import org.bukkit.block.data.FaceAttachable
 import org.bukkit.block.data.Levelled
+import org.bukkit.block.data.type.Grindstone
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -32,6 +35,19 @@ class ClassesEvents : Listener {
                 || block.getRelative(0, 0, -1).type.isAir
     }
 
+    fun <T> auraReplacer(player: Player, list: MutableList<T>, from: Material, to: Material, radiusX: Int, lowY: Int, highY: Int, radiusZ: Int, produce: (Block) -> T) {
+        for (dx in -radiusX..radiusX)
+            for (dy in lowY..highY)
+                for (dz in -radiusZ..radiusZ) {
+                    val block = player.location.block.getRelative(dx, dy, dz)
+
+                    if (block.type === from && surface(block)) {
+                        block.setType(to, true)
+                        list.add(produce(block))
+                    }
+                }
+    }
+
     @EventHandler
     fun playerMove(event: PlayerMoveEvent) {
         if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
@@ -39,20 +55,23 @@ class ClassesEvents : Listener {
 
             when (Classes.getClass(player.uniqueId)) {
                 QuirkClass.LAVACASTER -> {
-                    for (dx in -3..3) for (dy in -2..-1) for (dz in -3..3) {
-                        val block = player.location.block.getRelative(dx, dy, dz)
-                        if (block.type === Material.LAVA && surface(block)) {
-                            val flowing = (block.blockData as Levelled).level != 0
-                            block.setType(Material.OBSIDIAN, true)
-                            Classes.obsidianifiedLava.add(Classes.ObsidianifiedLava(block, flowing))
-                        }
+                    auraReplacer(player, Classes.obsidianifiedLava, Material.LAVA, Material.OBSIDIAN, 3, -2, -1, 3) { block ->
+                        Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
+                    }
+                }
+                QuirkClass.ENCHANTER -> {
+                    auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 1, -2, -1, 1) { block ->
+                        val data = block.blockData as Grindstone
+                        data.attachedFace = FaceAttachable.AttachedFace.FLOOR
+                        block.setBlockData(data, false)
+                        block
                     }
                 }
                 QuirkClass.DIVER -> {
                     if (player.isSwimming) {
                         player.velocity = player.location.direction.multiply((1.5 - player.velocity.length()) * 0.1 + player.velocity.length())
                     }
-                    if (event.from.block.type == Material.WATER && event.to.block.type.isAir) {
+                    if (event.from.block.type === Material.WATER && event.to.block.type.isAir) {
                         if (player.velocity.length() > 0.3)
                             player.velocity = player.location.direction.multiply(player.velocity.length() * 3)
                         player.sendMessage(player.velocity.length().toString())
@@ -67,7 +86,7 @@ class ClassesEvents : Listener {
         if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
             val player = if (event.entity is Player) event.entity as Player else return
 
-            if (Classes.getClass(player.uniqueId) == QuirkClass.DIVER && event.cause == EntityDamageEvent.DamageCause.FALL && player.world.environment != World.Environment.NETHER) {
+            if (Classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL && player.world.environment !== World.Environment.NETHER) {
                 event.isCancelled = true
                 val block = player.location.block
                 if (!block.type.isAir) block.breakNaturally()
