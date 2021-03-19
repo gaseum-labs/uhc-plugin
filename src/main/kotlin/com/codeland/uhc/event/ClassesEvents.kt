@@ -39,11 +39,12 @@ class ClassesEvents : Listener {
 
             when (Classes.getClass(player.uniqueId)) {
                 QuirkClass.LAVACASTER -> {
-                    for (dx in -4..4) for (dy in -3..-1) for (dz in -4..4) {
+                    for (dx in -3..3) for (dy in -2..-1) for (dz in -3..3) {
                         val block = player.location.block.getRelative(dx, dy, dz)
                         if (block.type === Material.LAVA && surface(block)) {
-                            block.setType(Material.OBSIDIAN, false)
-                            Classes.obsidianifiedLava.add(Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0))
+                            val flowing = (block.blockData as Levelled).level != 0
+                            block.setType(Material.OBSIDIAN, true)
+                            Classes.obsidianifiedLava.add(Classes.ObsidianifiedLava(block, flowing))
                         }
                     }
                 }

@@ -28,14 +28,15 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 				(Bukkit.getOnlinePlayers().none { player ->
 					val playerData = PlayerData.getPlayerData(player.uniqueId)
+					val block = player.location.block
 
 					playerData.participating
 						&& getClass(playerData) == QuirkClass.LAVACASTER
-						&& abs(player.location.x - ol.block.x) <= 4
-						&& abs(player.location.y - ol.block.y) <= 4
-						&& abs(player.location.z - ol.block.z) <= 3
+						&& abs(block.x - ol.block.x) <= 4
+						&& abs(block.y - ol.block.y) <= 3
+						&& abs(block.z - ol.block.z) <= 4
 
-				} && run { ol.block.setType(if (ol.flowing) Material.AIR else Material.LAVA, false); true })
+				} && run { ol.block.setType(if (ol.flowing) Material.AIR else Material.LAVA, true); true })
 			}
 
 			fun regenDurability(itemStack: ItemStack?) {
