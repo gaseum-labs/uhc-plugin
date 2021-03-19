@@ -11,7 +11,6 @@ import org.bukkit.Sound
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.FaceAttachable
 import org.bukkit.block.data.Levelled
 import org.bukkit.block.data.type.Grindstone
@@ -19,6 +18,7 @@ import org.bukkit.block.data.type.Switch
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
@@ -30,12 +30,9 @@ import org.bukkit.inventory.ItemStack
 
 class ClassesEvents : Listener {
     private fun surface(block: Block): Boolean {
-        return block.getRelative(0, 1, 0).type.isAir
-                || block.getRelative(1, 0, 0).type.isAir
-                || block.getRelative(0, 0, 1).type.isAir
-                || block.getRelative(0, -1, 0).type.isAir
-                || block.getRelative(-1, 0, 0).type.isAir
-                || block.getRelative(0, 0, -1).type.isAir
+        return BlockFace.values().take(6).any { d ->
+            block.getRelative(d).type.isAir
+        }
     }
 
     fun <T> auraReplacer(player: Player, list: MutableList<T>, from: Material, to: Material, radiusX: Int, lowY: Int, highY: Int, radiusZ: Int, produce: (Block) -> T) {
@@ -73,6 +70,8 @@ class ClassesEvents : Listener {
                 QuirkClass.DIVER -> {
                     if (player.isSwimming) {
                         player.velocity = player.location.direction.multiply((1.5 - player.velocity.length()) * 0.1 + player.velocity.length())
+                    } else if (player.location.block.type == Material.WATER) {
+                        player.velocity = player.velocity.multiply(3)
                     }
                     if (event.from.block.type === Material.WATER && event.to.block.type.isAir) {
                         if (player.velocity.length() > 0.3)
@@ -212,6 +211,39 @@ class ClassesEvents : Listener {
                 if (activated) {
                     // to prevent triple shift from triggering twice
                     Classes.lastShiftMap[event.player.uniqueId] = 0
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    fun blockBreak(event: BlockBreakEvent) {
+        if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+            if (Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+                val logs = listOf(
+                        Material.OAK_LOG,
+                        Material.BIRCH_LOG,
+                        Material.DARK_OAK_LOG,
+                        Material.ACACIA_LOG,
+                        Material.SPRUCE_LOG,
+                        Material.JUNGLE_LOG)
+                if (event.block.type in logs) {
+                    // breaks all blocks adjacent to this block of the same type, with a delay
+                    fun breakRecursively(block: Block, type: Material) {
+                        for (d in BlockFace.values().take(6)) {
+                            val nextBlock = block.getRelative(d)
+                            if (nextBlock.type == type) {
+                                SchedulerUtil.later(1) {
+                                    // extra check to make sure the block hasn't changed
+                                    if (nextBlock.type == type) {
+                                        nextBlock.breakNaturally()
+                                        breakRecursively(nextBlock, type)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    breakRecursively(event.block, event.block.type)
                 }
             }
         }
