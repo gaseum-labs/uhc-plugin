@@ -20,14 +20,15 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.PlayerExpChangeEvent
+import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
-import org.bukkit.event.player.PlayerToggleSneakEvent
 import org.bukkit.inventory.EnchantingInventory
 import org.bukkit.inventory.ItemStack
 
@@ -202,35 +203,6 @@ class ClassesEvents : Listener {
 	}
 
 	@EventHandler
-	fun onShift(event: PlayerToggleSneakEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
-			if (event.isSneaking && Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
-				var activated = false
-				if (Classes.lastShiftMap[event.player.uniqueId] != null) {
-					val lastShift = Classes.lastShiftMap[event.player.uniqueId]!!
-					if (System.currentTimeMillis() - lastShift < 500) {
-						activated = true
-						val RADIUS = 10
-						for (dx in -RADIUS..RADIUS) for (dy in -RADIUS..RADIUS) for (dz in -RADIUS..RADIUS) {
-							val block = event.player.location.block.getRelative(dx, dy, dz)
-							if (block.type == Material.LEVER) {
-								val data: Switch = block.blockData as Switch
-								data.isPowered = !data.isPowered
-								block.blockData = data
-							}
-						}
-					}
-				}
-				Classes.lastShiftMap[event.player.uniqueId] = System.currentTimeMillis()
-				if (activated) {
-					// to prevent triple shift from triggering twice
-					Classes.lastShiftMap[event.player.uniqueId] = 0
-				}
-			}
-		}
-	}
-
-	@EventHandler
 	fun blockBreak(event: BlockBreakEvent) {
 		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
@@ -251,6 +223,7 @@ class ClassesEvents : Listener {
 									// extra check to make sure the block hasn't changed
 									if (nextBlock.type == type) {
 										nextBlock.breakNaturally()
+                                        nextBlock.world.playSound(nextBlock.location, Sound.BLOCK_WOOD_BREAK, 1.0f, 1.0f)
 										breakRecursively(nextBlock, type)
 									}
 								}
@@ -258,6 +231,81 @@ class ClassesEvents : Listener {
 						}
 					}
 					breakRecursively(event.block, event.block.type)
+				}
+				if (event.block.type == Material.REDSTONE_ORE) {
+					// list of components with their relative frequency
+					val components = listOf(
+							Pair(10, Material.STONE_PRESSURE_PLATE),
+							Pair(10, Material.REDSTONE_TORCH),
+							Pair(10, Material.LEVER),
+							Pair(10, Material.REPEATER),
+							Pair(10, Material.COMPARATOR),
+							Pair(5, Material.DROPPER),
+							Pair(5, Material.DISPENSER),
+							Pair(5, Material.TRAPPED_CHEST),
+							Pair(5, Material.PISTON),
+							Pair(5, Material.OBSERVER),
+							Pair(1, Material.STICKY_PISTON),
+							Pair(1, Material.SLIME_BLOCK),
+							Pair(1, Material.TNT),
+					)
+					outer@ for (i in 1..5) {
+						var total = components.map { it.first }.sum()
+						for (c in components) {
+							if (Math.random() < c.first.toDouble() / total) {
+								event.block.world.dropItemNaturally(event.block.location, ItemStack(c.second))
+								continue@outer
+							} else {
+								total -= c.first
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	fun interactEvent(event: PlayerInteractEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+			if (Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+				when (event.action) {
+					Action.LEFT_CLICK_BLOCK -> {
+						if (event.player.isSneaking && event.clickedBlock!!.type == Material.LEVER) {
+							val lever = event.clickedBlock!!
+							val existing = Classes.remoteControls.find { (_, block, _) ->
+								block == lever }
+							if (existing != null && event.player.inventory.contains(existing.item)) {
+								if (event.player.inventory.itemInMainHand != existing.item)
+									event.player.sendMessage("${RED}You already have a controller for this lever.")
+							} else {
+								val item = ItemStack(Material.REDSTONE_TORCH)
+								val control = Classes.RemoteControl(item, lever, "Remote Control")
+								Classes.remoteControls.add(control)
+								event.player.inventory.addItem(Classes.updateRemoteControl(control))
+							}
+						}
+					}
+					Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
+						val control = Classes.remoteControls.find { (item, _, _) ->
+							item == event.player.inventory.itemInMainHand }
+						if (control != null) {
+							event.isCancelled = true
+							val leverData = control.block.blockData as? Switch
+							if (leverData != null) {
+								leverData.isPowered = !leverData.isPowered
+								control.block.blockData = leverData
+								control.block.world.playSound(
+										control.block.location,
+										Sound.BLOCK_LEVER_CLICK,
+										1.0f,
+										// some attempt to preserve the difference in pitch of on and off
+										if (leverData.isPowered) 1.5f else 1.0f
+								)
+							}
+							event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+						}
+					}
 				}
 			}
 		}

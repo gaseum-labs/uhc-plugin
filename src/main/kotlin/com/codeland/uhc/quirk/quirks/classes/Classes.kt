@@ -8,9 +8,11 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.block.Block
+import org.bukkit.block.data.type.Switch
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -138,6 +140,8 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	data class InHandItem(var item: ItemStack, var ticks: Int)
 
+	data class RemoteControl(var item: ItemStack, val block: Block, var displayName: String)
+
 	companion object {
 		var obsidianifiedLava: MutableList<ObsidianifiedLava> = mutableListOf()
 
@@ -145,6 +149,49 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 		val inHandMap = mutableMapOf<UUID, InHandItem>()
 		val lastShiftMap = mutableMapOf<UUID, Long>()
+
+		val remoteControls = mutableListOf<RemoteControl>()
+
+		fun updateRemoteControl(control: RemoteControl): ItemStack {
+			val lever = control.block
+			val leverData = lever.blockData as? Switch
+			val statusColor =
+					when {
+						leverData == null -> {
+							ChatColor.BLUE
+						}
+						leverData.isPowered -> {
+							ChatColor.GREEN
+						}
+						else -> {
+							ChatColor.RED
+						}
+					}
+			val currentStatus =
+					when {
+						leverData == null -> {
+							"DESTROYED"
+						}
+						leverData.isPowered -> {
+							"POWERED"
+						}
+						else -> {
+							"UNPOWERED"
+						}
+					}
+			val newItem = ItemStack(Material.REDSTONE_TORCH)
+			val meta = newItem.itemMeta
+			meta.setDisplayName("${ChatColor.RESET}${statusColor}${control.displayName}")
+			meta.lore = mutableListOf("${ChatColor.GRAY}Controlling the lever at (" +
+					ChatColor.GOLD + lever.x + ChatColor.GRAY + ", " +
+					ChatColor.GOLD + lever.y + ChatColor.GRAY + ", " +
+					ChatColor.GOLD + lever.z + ChatColor.GRAY + ").",
+					"${ChatColor.GRAY}Current status: $statusColor$currentStatus"
+			)
+			newItem.itemMeta = meta
+			control.item = newItem
+			return newItem
+		}
 
 		fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
 			PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = quirkClass

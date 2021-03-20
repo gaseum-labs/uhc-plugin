@@ -215,4 +215,21 @@ class ParticipantCommands : BaseCommand() {
 		/* only start them if the game has already started */
 		if (GameRunner.uhc.isGameGoing()) Classes.startAsClass(sender, quirkClass, oldClass)
 	}
+
+	@Subcommand("rename")
+	@Description("rename a remote control in classes chc")
+	fun renameCommand(sender: CommandSender, name: String) {
+		sender as Player
+
+		if (!GameRunner.uhc.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled.")
+
+		if (Classes.getClass(sender.uniqueId) != QuirkClass.TRAPPER) return Commands.errorMessage(sender, "Your class can't use this command.")
+
+		val control = Classes.remoteControls.find { (item, _, _) ->
+			item == sender.inventory.itemInMainHand }
+				?: return Commands.errorMessage(sender, "You're not holding a remote control.")
+
+		control.displayName = name
+		sender.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+	}
 }
