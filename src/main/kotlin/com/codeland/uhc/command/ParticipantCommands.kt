@@ -202,6 +202,10 @@ class ParticipantCommands : BaseCommand() {
 		if (!(GameRunner.uhc.isPhase(PhaseType.GRACE) || GameRunner.uhc.isPhase(PhaseType.WAITING)))
 			return Commands.errorMessage(sender, "You can't change your class right now")
 
+		if (GameRunner.uhc.isPhase(PhaseType.GRACE) && Classes.getClass(sender.uniqueId) != QuirkClass.NO_CLASS) {
+			return Commands.errorMessage(sender, "You've already chosen a class")
+		}
+
 		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "You must pick a class")
 
 		val playerData = PlayerData.getPlayerData(sender.uniqueId)
