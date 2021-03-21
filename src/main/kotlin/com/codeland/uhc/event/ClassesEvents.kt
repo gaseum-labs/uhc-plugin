@@ -1,15 +1,16 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.quirk.quirks.Summoner
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
-import org.bukkit.ChatColor
+import com.codeland.uhc.util.Util
+import org.bukkit.*
 import org.bukkit.ChatColor.*
-import org.bukkit.Material
-import org.bukkit.Sound
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.FaceAttachable
@@ -23,14 +24,14 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.enchantment.EnchantItemEvent
-import org.bukkit.event.entity.EntityDamageByEntityEvent
-import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.PlayerExpChangeEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.inventory.EnchantingInventory
 import org.bukkit.inventory.ItemStack
+import java.util.*
 
 class ClassesEvents : Listener {
 	private fun surface(block: Block): Boolean {
@@ -187,17 +188,32 @@ class ClassesEvents : Listener {
 		Material.DIAMOND_BOOTS, Material.DIAMOND_LEGGINGS, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_HELMET
 	)
 
+	val weapons = arrayOf(
+		Material.WOODEN_SWORD, Material.GOLDEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD,
+		Material.WOODEN_AXE, Material.GOLDEN_AXE, Material.STONE_AXE, Material.IRON_AXE, Material.DIAMOND_AXE
+	)
+
+	val bows = arrayOf(Material.BOW)
+
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
 		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.whoClicked.uniqueId) == QuirkClass.ENCHANTER) {
 				val item = event.currentItem ?: return
 
-				if (armors.contains(item.type)) {
-					val meta = item.itemMeta
-					meta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 1, true)
-					item.itemMeta = meta
-				}
+				fun autoEnchant(materials: Array<Material>, enchant: Enchantment) =
+					if (materials.contains(item.type)) {
+						val meta = item.itemMeta
+						meta.addEnchant(enchant, 1, true)
+						item.itemMeta = meta
+						true
+					} else {
+						false
+					}
+
+				autoEnchant(armors, Enchantment.PROTECTION_ENVIRONMENTAL) ||
+				autoEnchant(weapons, Enchantment.DAMAGE_ALL) ||
+				autoEnchant(bows, Enchantment.ARROW_DAMAGE)
 			}
 		}
 	}
@@ -304,6 +320,81 @@ class ClassesEvents : Listener {
 								)
 							}
 							event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+			val player = event.target as? Player ?: return
+
+			if (Classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
+				event.isCancelled = true
+			}
+		}
+	}
+
+	@EventHandler
+	fun onMobDrop(event: EntityDeathEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+			val killer = event.entity.killer ?: return
+
+			if (Classes.getClass(killer.uniqueId) == QuirkClass.HUNTER) {
+				val eggMaterial = Summoner.getSpawnEgg(event.entity.type, true, false) ?: return
+
+				event.drops.add(ItemStack(eggMaterial))
+			}
+		}
+	}
+
+	@EventHandler
+	fun onUseItem(event: PlayerInteractEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+			val player = event.player
+
+			if (Classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
+				if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
+					val item = event.item
+
+					if (item != null && item.type == Material.COMPASS) {
+						fun onSameTeam(otherUUID: UUID): Boolean {
+							val team = TeamData.playersTeam(otherUUID)
+							return team != null && team.members.contains(player.uniqueId)
+						}
+
+						/* get the nearest player's location to the player */
+						val trackLocation = PlayerData.playerDataList.asIterable().filter { (uuid, playerData) ->
+							/* don't find the hunter themselves and don't find their teammates, spectators */
+							playerData.participating && uuid != player.uniqueId && !onSameTeam(uuid)
+						}.mapNotNull { (uuid, _) ->
+							/* get the location of each other player */
+							GameRunner.getPlayerLocation(uuid)
+						}.filter { otherLocation ->
+							/* prevent errors on .distance() */
+							otherLocation.world == player.world
+						}.map { otherLocation ->
+							/* associate each location with a distance to player */
+							Pair(otherLocation.distance(player.location), otherLocation)
+						}.minBy { locationPair ->
+							/* sort by distance to find the nearest */
+							locationPair.first
+						}?.second
+
+						if (trackLocation == null) {
+							player.sendActionBar("${RED}No players found!")
+
+						} else {
+							val vector = trackLocation.subtract(player.location).toVector().normalize()
+
+							for (i in 0..64) {
+								player.spawnParticle(Particle.REDSTONE, player.location.clone().add(vector.clone().multiply(i * (1.0 / 3.0))).add(0.0, 1.0, 0.0), 3, 0.1, 0.1, 0.1, Particle.DustOptions(Color.RED, 1.0f))
+							}
+
+							--item.amount
 						}
 					}
 				}
