@@ -57,7 +57,7 @@ object Commands {
         }
 
         commandManager.commandCompletions.registerCompletion("quirkclass") {
-            QuirkClass.values().mapIndexedNotNull { i, quirkClass -> if (i == 0) null else quirkClass.name }
+            QuirkClass.values().mapIndexedNotNull { i, quirkClass -> if (i == 0) null else quirkClass.name.toLowerCase() }
         }
     }
 }

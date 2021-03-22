@@ -10,9 +10,13 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.Preset
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.quirk.quirks.classes.Classes
+import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.team.TeamMaker
+import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -196,10 +200,37 @@ class AdminCommands : BaseCommand() {
 	@Subcommand("pregen")
 	@Description("Generates all chunks in the playable area")
 	fun pregen(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
 		if (PreGenner.taskID == -1) {
 			PreGenner.pregen(sender as Player)
 		} else {
 			Commands.errorMessage(sender, "Pregen has already started!")
 		}
+	}
+
+	@CommandCompletion("@uhcplayer @quirkclass")
+	@Subcommand("class")
+	@Description("override someone's class")
+	fun classCommand(sender: CommandSender, player: OfflinePlayer, quirkClass: QuirkClass) {
+		sender as Player
+
+		if (Commands.opGuard(sender)) return
+
+		if (!GameRunner.uhc.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
+
+		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
+
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val oldClass = Classes.getClass(playerData)
+
+		Classes.setClass(player.uniqueId, quirkClass)
+
+		/* only start them if the game has already started */
+		if (GameRunner.uhc.isGameGoing() && playerData.participating) GameRunner.playerAction(player.uniqueId) { onlinePlayer ->
+			Classes.startAsClass(onlinePlayer, quirkClass, oldClass)
+		}
+
+		GameRunner.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
 	}
 }

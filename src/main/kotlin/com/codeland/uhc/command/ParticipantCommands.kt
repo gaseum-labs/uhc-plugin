@@ -211,13 +211,13 @@ class ParticipantCommands : BaseCommand() {
 		val playerData = PlayerData.getPlayerData(sender.uniqueId)
 		val oldClass = Classes.getClass(playerData)
 
-		Util.debug(oldClass.name)
-
 		/* always set their class, even during waiting */
 		Classes.setClass(sender.uniqueId, quirkClass)
 
 		/* only start them if the game has already started */
 		if (GameRunner.uhc.isGameGoing()) Classes.startAsClass(sender, quirkClass, oldClass)
+
+		GameRunner.sendGameMessage(sender, "Set your class to ${quirkClass.prettyName}")
 	}
 
 	@Subcommand("rename")

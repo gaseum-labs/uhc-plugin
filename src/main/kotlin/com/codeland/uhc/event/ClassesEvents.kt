@@ -76,12 +76,23 @@ class ClassesEvents : Listener {
 					})
 				}
 				QuirkClass.DIVER -> {
+					val velocity = player.velocity.length()
+
+					val motion = event.to.toVector().subtract(event.from.toVector())
+					val horz = motion.clone().setY(0)
+
 					if (player.isSwimming) {
-						player.velocity = player.location.direction.multiply((1.5 - player.velocity.length()) * 0.1 + player.velocity.length())
+						player.velocity = player.location.direction.multiply((1.5 - velocity) * 0.1 + velocity)
 					}
-					if (event.from.block.type === Material.WATER && event.to.block.type.isAir) {
-						if (player.velocity.length() > 0.3)
-							player.velocity = player.location.direction.multiply(player.velocity.length() * 3)
+
+					val from = event.from.block.type
+					val to = event.to.block.type
+
+					if (from === Material.WATER && to.isAir) {
+						player.velocity = motion.clone().multiply(3)
+
+					} else if (from.isAir && to === Material.WATER) {
+						player.velocity = motion.clone().multiply(3)
 					}
 				}
 			}

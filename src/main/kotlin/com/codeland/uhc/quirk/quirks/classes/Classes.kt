@@ -239,6 +239,9 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 			val meta = headItem.itemMeta
 			meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
+			if (quirkClass == QuirkClass.DIVER) {
+				meta.addEnchant(Enchantment.WATER_WORKER, 1, true)
+			}
 			headItem.itemMeta = meta
 
 			player.inventory.helmet = headItem

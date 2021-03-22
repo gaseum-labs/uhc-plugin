@@ -22,8 +22,6 @@ enum class QuirkClass(val prettyName: String, val headBlock: Material, val onSta
 
 	HUNTER("Hunter", Material.WITHER_SKELETON_SKULL, {}, {}),
 
-	ALCHEMIST("Alchemist", Material.RED_STAINED_GLASS, {}, {}),
-
 	ENCHANTER("Enchanter", Material.ENCHANTING_TABLE, {}, {}),
 
 	DIVER("Diver", Material.PRISMARINE_BRICKS, { player ->
