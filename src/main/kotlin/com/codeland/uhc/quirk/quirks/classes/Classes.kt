@@ -149,7 +149,7 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 								// todo make this work
 								player.location.block.type = Material.TORCH
 							} else {
-								println(player.location.block.lightLevel)
+//								println(player.location.block.lightLevel)
 							}
 						}
 					}
