@@ -13,6 +13,11 @@ import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.ChatColor.*
+import org.bukkit.ChatColor.*
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.Sound
+import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.FaceAttachable
@@ -30,11 +35,15 @@ import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.PlayerExpChangeEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.player.PlayerItemBreakEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.inventory.EnchantingInventory
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 
 class ClassesEvents : Listener {
 	private fun surface(block: Block): Boolean {
@@ -327,6 +336,107 @@ class ClassesEvents : Listener {
 					}
 				}
 			}
+			if (Classes.getClass(event.player.uniqueId) == QuirkClass.MINER && event.player.inventory.itemInMainHand.type.toString().contains("PICKAXE") && event.hand == EquipmentSlot.HAND) {
+				if (event.action == Action.RIGHT_CLICK_BLOCK || event.action == Action.RIGHT_CLICK_AIR) {
+					if (Classes.superBreakMap[event.player.uniqueId] == null) {
+						// this shouldn't happen, but just in case
+						Classes.superBreakMap[event.player.uniqueId] = System.currentTimeMillis()
+					}
+					val timePassed = System.currentTimeMillis() - Classes.superBreakMap[event.player.uniqueId]!!
+					if (timePassed < 30000 && timePassed > 1000) {
+						val timeLeftSeconds = 30 - (timePassed / 1000)
+						return event.player.sendMessage("${RED}You can't use that yet. Try again in ${
+							when (timeLeftSeconds) {
+								0L -> "a moment"
+								1L -> "1 second"
+								else -> "$timeLeftSeconds seconds"
+							}
+						}.")
+					} else {
+						fun superRecursive(x: Double, z: Double, dx: Double, dz: Double, y: Double, n: Int, limit: Int) {
+							if (n > limit) return
+							for (i in -1..1) for (j in 0..1) for (k in -1..1) {
+								val block = event.player.world.getBlockAt(x.toInt(), y.toInt(), z.toInt()).getRelative(i, j, k)
+								if (block.type != Material.BEDROCK && block.type != Material.OBSIDIAN) {
+									block.breakNaturally()
+								}
+							}
+							event.player.world.playSound(Location(event.player.world, x, y, z), Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f)
+							SchedulerUtil.later(4) {
+								superRecursive(x + dx, z + dz, dx, dz, y, n + 1, limit)
+							}
+						}
+
+						var dir = event.player.location.direction
+						dir.setY(0)
+						dir = dir.normalize()
+						val numBlocks = when {
+							timePassed < 30 * 1000 -> timePassed / 1000 / 3.0
+							timePassed < 60 * 1000 -> 10 + (timePassed - 30 * 1000) / 1000 / 1.5
+							else -> 30.0
+						}.toInt()
+						superRecursive(event.player.location.x, event.player.location.z, dir.x, dir.z, event.player.location.y, 0, numBlocks)
+						Classes.superBreakMap[event.player.uniqueId] = System.currentTimeMillis()
+					}
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	fun itemBreak(event: PlayerItemBreakEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+			if (Classes.getClass(event.player.uniqueId) == QuirkClass.MINER && event.brokenItem.type.toString().contains("PICKAXE")) {
+				xray(event.player)
+			}
+		}
+	}
+
+	private fun xray(sender: Player) {
+		val radius = 35
+		val shouldRemove = listOf(
+				Material.STONE,
+				Material.ANDESITE,
+				Material.DIORITE,
+				Material.GRANITE,
+				Material.DIRT,
+				Material.GRAVEL,
+				Material.SANDSTONE,
+				Material.SAND
+		)
+		val centerLocation = sender.location.clone()
+		sender.addPotionEffect(PotionEffect(PotionEffectType.NIGHT_VISION, 6 * radius + 20 * 20, 1))
+		fun fillRecursive(z: Int, limit: Int) {
+			if (z > limit) return
+			for (dx in -radius..radius) for (dy in -radius..radius) {
+				if (centerLocation.block.getRelative(dx, dy, z).type in shouldRemove) {
+					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, z).location, Material.BARRIER.createBlockData())
+				}
+				if (z != 0 && centerLocation.block.getRelative(dx, dy, -z).type in shouldRemove) {
+					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, -z).location, Material.BARRIER.createBlockData())
+				}
+			}
+			SchedulerUtil.later(6) {
+				fillRecursive(z + 1, limit)
+			}
+		}
+		fun restoreRecursive(z: Int) {
+			if (z < 0) return
+			for (dx in -radius..radius) for (dy in -radius..radius) {
+				if (centerLocation.block.getRelative(dx, dy, z).type in shouldRemove) {
+					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, z).location, centerLocation.block.getRelative(dx, dy, z).blockData)
+				}
+				if (z != 0 && centerLocation.block.getRelative(dx, dy, -z).type in shouldRemove) {
+					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, -z).location, centerLocation.block.getRelative(dx, dy, -z).blockData)
+				}
+			}
+			SchedulerUtil.later(6) {
+				restoreRecursive(z - 1)
+			}
+		}
+		fillRecursive(0, radius)
+		SchedulerUtil.later((6 * radius * 2 + 20 * 20).toLong()) {
+			restoreRecursive(radius)
 		}
 	}
 

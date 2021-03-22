@@ -22,6 +22,9 @@ import org.bukkit.inventory.meta.Damageable
 import org.bukkit.inventory.meta.ItemMeta
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.random.Random.Default.nextInt
 
 class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun onEnable() {
@@ -108,6 +111,49 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 					}
 				}
 
+			Bukkit.getOnlinePlayers()
+					.filter { PlayerData.getPlayerData(it.uniqueId).alive }
+					.forEach { player ->
+						if (getClass(player.uniqueId) == QuirkClass.MINER) {
+							val timePassed = System.currentTimeMillis() - superBreakMap[player.uniqueId]!!
+							val (percent, overflow) = when {
+								timePassed < 30 * 1000 -> Pair(timePassed / (30.0 * 1000), false)
+								timePassed < 60 * 1000 -> Pair(timePassed / (30.0 * 1000) - 1, true)
+								else -> Pair(1.0, true)
+							}
+							player.sendActionBar(generateSuperbreakMessage(percent, overflow))
+							if (player.location.block.lightLevel < 7) {
+//								val r = Random()
+//								var dx = r.nextInt(10) - 5
+//								var dy = 0
+//								var dz = r.nextInt(10) - 5
+//								var n = 0
+//								var makeTorch = true
+//								while (!player.location.block.getRelative(dx, dy, dz).type.isAir) {
+//									dx = r.nextInt(10) - 5
+//									dz = r.nextInt(10) - 5
+//									n++
+//									if (n > 100) {
+//										makeTorch = false
+//										break
+//									}
+//								}
+//								while (!player.location.block.getRelative(dx, dy - 1, dz).type.isSolid) {
+//									dy--
+//									if (dy < 0) {
+//										makeTorch = false
+//										break
+//									}
+//								}
+//								println("adding torch! $dx $dy $dz $makeTorch")
+								// todo make this work
+								player.location.block.type = Material.TORCH
+							} else {
+								println(player.location.block.lightLevel)
+							}
+						}
+					}
+
 			++currentTick
 		}
 	}
@@ -129,6 +175,18 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		val playerData = PlayerData.getPlayerData(uuid)
 
 		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = QuirkClass.NO_CLASS
+	}
+
+	private fun generateSuperbreakMessage(percent: Double, overflow: Boolean): String {
+		val message = StringBuilder("${ChatColor.GRAY}Superbreak - ")
+
+		for (i in 0 until floor(10 * percent).toInt())
+			message.append("${if (overflow) ChatColor.LIGHT_PURPLE else ChatColor.GREEN}▮")
+
+		for (i in 0 until 10 - floor(10 * percent).toInt())
+			message.append("${if (overflow) ChatColor.GREEN else ChatColor.GRAY}▮")
+
+		return message.toString()
 	}
 
 	override val representation: ItemStack
@@ -169,6 +227,8 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		val lastShiftMap = mutableMapOf<UUID, Long>()
 
 		val remoteControls = mutableListOf<RemoteControl>()
+
+		val superBreakMap: MutableMap<UUID, Long> = mutableMapOf()
 
 		fun updateRemoteControl(control: RemoteControl): ItemStack {
 			val lever = control.block
