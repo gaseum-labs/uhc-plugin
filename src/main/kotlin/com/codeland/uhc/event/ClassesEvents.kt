@@ -1,10 +1,12 @@
 package com.codeland.uhc.event
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Summoner
 import com.codeland.uhc.quirk.quirks.classes.Classes
+import com.codeland.uhc.quirk.quirks.classes.Classes.Companion.HUNTER_SPAWN_META
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
@@ -31,6 +33,7 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.inventory.EnchantingInventory
 import org.bukkit.inventory.ItemStack
+import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
 
 class ClassesEvents : Listener {
@@ -328,25 +331,21 @@ class ClassesEvents : Listener {
 	}
 
 	@EventHandler
+	fun onMobSpawn(event: EntitySpawnEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+			if (event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) {
+				event.entity.setMetadata(HUNTER_SPAWN_META, FixedMetadataValue(UHCPlugin.plugin, true))
+			}
+		}
+	}
+
+	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
 		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
 			val player = event.target as? Player ?: return
 
 			if (Classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
 				event.isCancelled = true
-			}
-		}
-	}
-
-	@EventHandler
-	fun onMobDrop(event: EntityDeathEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
-			val killer = event.entity.killer ?: return
-
-			if (Classes.getClass(killer.uniqueId) == QuirkClass.HUNTER) {
-				val eggMaterial = Summoner.getSpawnEgg(event.entity.type, true, false) ?: return
-
-				event.drops.add(ItemStack(eggMaterial))
 			}
 		}
 	}

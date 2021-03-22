@@ -5,6 +5,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.quirk.quirks.Summoner
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
@@ -14,6 +15,7 @@ import org.bukkit.Sound
 import org.bukkit.block.Block
 import org.bukkit.block.data.type.Switch
 import org.bukkit.enchantments.Enchantment
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.Damageable
@@ -136,6 +138,20 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		return QuirkClass.NO_CLASS
 	}
 
+	override fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
+		if (killer != null && getClass(killer.uniqueId) == QuirkClass.HUNTER) {
+			return if (entity.getMetadata(HUNTER_SPAWN_META).isNotEmpty()) {
+				drops.clear()
+				true
+			} else {
+				drops.addAll((0..0).mapNotNull { Summoner.getSpawnEgg(entity.type, true, false) }.map { ItemStack(it) })
+				false
+			}
+		}
+
+		return false
+	}
+
 	data class ObsidianifiedLava(val block: Block, val flowing: Boolean)
 
 	data class InHandItem(var item: ItemStack, var ticks: Int)
@@ -143,6 +159,8 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	data class RemoteControl(var item: ItemStack, val block: Block, var displayName: String)
 
 	companion object {
+		val HUNTER_SPAWN_META = "CLASSES_HUNTER_SPAWN"
+
 		var obsidianifiedLava: MutableList<ObsidianifiedLava> = mutableListOf()
 
 		var grindedStone: MutableList<Block> = mutableListOf()
