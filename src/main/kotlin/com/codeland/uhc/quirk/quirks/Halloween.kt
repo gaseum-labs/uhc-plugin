@@ -20,8 +20,29 @@ class Halloween(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		hasGottenDiamonds = false
 	}
 
-	override fun onDisable() {
+	override fun onDisable() {}
 
+	override fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
+		if (entity is Monster) {
+			val random = Math.random()
+
+			val candy = when {
+				random < 0.025 -> ItemStack(CAKE)
+				random < 0.050 -> ItemStack(PUMPKIN_PIE)
+				random < 0.100 -> ItemStack(HONEY_BOTTLE)
+				random < 0.125 -> ItemStack(COOKIE)
+				random < 0.150 -> ItemStack(SWEET_BERRIES)
+				else -> null
+			}
+
+			if (candy != null) drops.add(candy)
+		}
+
+		if (entity is LivingEntity && Math.random() < 0.25) {
+			entity.world.spawnEntity(entity.location, BAT, CreatureSpawnEvent.SpawnReason.CUSTOM)
+		}
+
+		return false
 	}
 
 	override val representation: ItemStack
@@ -32,26 +53,6 @@ class Halloween(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			if (entity as? LivingEntity != null) {
 				entity.equipment?.helmet = ItemStack(if (Math.random() < 0.5) CARVED_PUMPKIN else JACK_O_LANTERN)
 				entity.equipment?.helmetDropChance = 0.25f
-			}
-		}
-
-		fun onEntityDeath(entity: Entity) {
-			if (entity is LivingEntity && Math.random() < 0.25) {
-				entity.world.spawnEntity(entity.location, BAT, CreatureSpawnEvent.SpawnReason.CUSTOM)
-			}
-		}
-
-		fun addDrops(entity: Entity, drops: MutableList<ItemStack>) {
-			if (entity is Monster) {
-				val random = Math.random()
-
-				when {
-					random < 0.025 -> drops.add(ItemStack(CAKE))
-					random < 0.050 -> drops.add(ItemStack(PUMPKIN_PIE))
-					random < 0.100 -> drops.add(ItemStack(HONEY_BOTTLE))
-					random < 0.125 -> drops.add(ItemStack(COOKIE))
-					random < 0.150 -> drops.add(ItemStack(SWEET_BERRIES))
-				}
 			}
 		}
 

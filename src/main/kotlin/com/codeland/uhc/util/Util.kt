@@ -249,7 +249,7 @@ object Util {
 		return (2 * r - d).coerceAtLeast(0.0)
 	}
 
-	fun <T>shuffleArray(array: Array<T>) {
+	fun <T>shuffleArray(array: Array<T>): Array<T> {
 		val random = Random((Math.random() * 7238201).toInt())
 
 		for (i in array.indices) {
@@ -259,5 +259,7 @@ object Util {
 			array[i] = array[otherIndex]
 			array[otherIndex] = temp
 		}
+
+		return array
 	}
 }

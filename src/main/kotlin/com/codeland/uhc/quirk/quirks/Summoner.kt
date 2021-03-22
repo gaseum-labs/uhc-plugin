@@ -38,8 +38,15 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 	}
 
+	override fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
+		val spawnEgg = getSpawnEgg(entity.type)
+		if (spawnEgg != null) drops.add(ItemStack(spawnEgg))
+
+		return false
+	}
+
 	override val representation: ItemStack
-		get() = ItemStack(Material.MULE_SPAWN_EGG)
+		get() = ItemStack(MULE_SPAWN_EGG)
 
 	var allowAggro = addProperty(BoolProperty(true))
 	var allowPassive = addProperty(BoolProperty(true))

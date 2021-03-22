@@ -4,8 +4,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.customSpawning.SpawnInfo
-import com.codeland.uhc.dropFix.DropEntry.Companion.loot
-import com.codeland.uhc.dropFix.DropEntry.Companion.lootEntity
+import com.codeland.uhc.dropFix.DropEntry.Companion.item
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
 import com.codeland.uhc.dropFix.DropEntry.Companion.onFire
 import com.codeland.uhc.dropFix.DropFix
@@ -45,9 +44,9 @@ class Underwater(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	override fun customDrops(): Array<DropFix>? {
 		return arrayOf(
 			DropFix(EntityType.DOLPHIN, arrayOf(
-				arrayOf(lootEntity(onFire(Material.COD, Material.COOKED_COD), ::lootItem), loot(Material.LEATHER, ::lootItem))
+				arrayOf(item(onFire(Material.COD, Material.COOKED_COD), ::lootItem), item(Material.LEATHER, ::lootItem))
 			), arrayOf(
-				lootEntity(onFire(Material.COD, Material.COOKED_COD), ::lootItem)
+				item(onFire(Material.COD, Material.COOKED_COD), ::lootItem)
 			))
 		)
 	}

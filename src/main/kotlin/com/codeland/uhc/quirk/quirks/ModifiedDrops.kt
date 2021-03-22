@@ -1,6 +1,14 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.dropFix.DropEntry
+import com.codeland.uhc.dropFix.DropEntry.Companion.arrayItem
+import com.codeland.uhc.dropFix.DropEntry.Companion.item
+import com.codeland.uhc.dropFix.DropEntry.Companion.lootMulti
+import com.codeland.uhc.dropFix.DropEntry.Companion.nothing
+import com.codeland.uhc.dropFix.DropEntry.Companion.stackItem
+import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
+import com.codeland.uhc.dropFix.DropFix
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
@@ -32,113 +40,93 @@ class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 	}
 
-	companion object {
-		fun onDrop(type: EntityType, drops: MutableList<ItemStack>): Boolean {
-			val rand = Math.random()
-			val third = 1 / 3.0
-			val twoThirds = 2 / 3.0
+	override fun customDrops(): Array<DropFix> {
+		return arrayOf(
+			DropFix(EntityType.CREEPER, arrayOf(
+				arrayOf(item(Material.TNT, lootMulti(2))),
+				arrayOf(stackItem { ItemUtil.fireworkStar(2, Color.LIME) }),
+				arrayOf(item(Material.GUNPOWDER, lootMulti(4)))
+			), arrayOf(
+				nothing()
+			)),
 
-			return when (type) {
-				EntityType.CREEPER -> {
-					drops.add(when {
-						rand < 0.25 -> ItemStack(Material.TNT, Util.randRange(1, 3))
-						rand < 0.5 -> ItemUtil.fireworkStar(Util.randRange(1, 3), Color.LIME)
-						else -> ItemStack(Material.GUNPOWDER, Util.randRange(2, 6))
-					})
-					true
-				}
-
-				EntityType.PHANTOM -> {
-					if (Math.random() < twoThirds) {
-						val elytra = ItemUtil.randomDamagedItem(Material.ELYTRA)
-
-						ItemUtil.addRandomEnchants(elytra, arrayOf(
-							Enchantment.DURABILITY,
-							Enchantment.MENDING
-						), 0.5)
-
-						drops.add(elytra)
-					}
-					true
-				}
-
-				EntityType.ZOMBIE, EntityType.HUSK, EntityType.ZOMBIE_VILLAGER -> {
-					if (Math.random() < 0.04)
-						for (i in 0..30)
-							drops.add(ItemUtil.namedItem(Material.CARROT, "${ChatColor.GOLD}${ChatColor.BOLD}Carrot Warrior #${Util.randRange(0, Int.MAX_VALUE - 1)}"))
-					else
-						drops.add(ItemStack(Material.CARROT))
-
-					if (Math.random() < 0.15) {
-						val egg = Summoner.getSpawnEgg(type, true, false)
-
-						if (egg != null)
-							drops.add(ItemStack(egg))
-					}
-					true
-				}
-
-				EntityType.SKELETON, EntityType.STRAY -> {
-					/* if naturally drops bow let it */
-					if (drops.find { it.type == Material.BOW } == null) {
-						if (rand < 0.33) {
-							val bow = ItemUtil.randomDamagedItem(Material.BOW)
-
-							ItemUtil.addRandomEnchants(bow, arrayOf(
-									Enchantment.ARROW_DAMAGE,
-									Enchantment.ARROW_KNOCKBACK,
-									Enchantment.ARROW_INFINITE,
-									Enchantment.ARROW_FIRE,
-									Enchantment.MENDING,
-									Enchantment.DURABILITY
-							), 0.5)
-
-							drops.add(bow)
-
-						} else if (rand < (2 / 3.0f)) {
-							val crossbow = ItemUtil.randomDamagedItem(Material.CROSSBOW)
-
-							ItemUtil.addRandomEnchants(crossbow, arrayOf(
-									Enchantment.MULTISHOT,
-									Enchantment.QUICK_CHARGE,
-									Enchantment.PIERCING,
-									Enchantment.MENDING,
-									Enchantment.DURABILITY
-							), 0.5)
-
-							drops.add(crossbow)
-						}
-					}
-					true
-				}
-
-				EntityType.SPIDER, EntityType.CAVE_SPIDER, EntityType.SILVERFISH -> {
-					val amount = Util.randRange(0, 3)
-
-					if (amount > 0)
-						drops.add(ItemStack(Material.PAPER, amount))
-
-					if (Math.random() < 0.04)
-						drops.add(ItemUtil.randomEnchantedBook())
-					true
-				}
-
-				EntityType.DROWNED -> {
-					val trident = ItemUtil.randomDamagedItem(Material.TRIDENT)
-
-					ItemUtil.addRandomEnchants(trident, arrayOf(
-							Enchantment.RIPTIDE,
-							Enchantment.LOYALTY,
-							Enchantment.MENDING,
-							Enchantment.DURABILITY
+			DropFix(EntityType.PHANTOM, arrayOf(
+				arrayOf(stackItem { ItemUtil.addRandomEnchants(
+					ItemUtil.randomDamagedItem(Material.ELYTRA), arrayOf(
+						Enchantment.DURABILITY,
+						Enchantment.MENDING
 					), 0.5)
+				}, item(Material.PHANTOM_MEMBRANE, ::lootItem))
+			), arrayOf(
+				nothing()
+			)),
 
-					drops.add(trident)
-					true
-				}
+			DropFix(EntityType.ZOMBIE, arrayOf(
+				arrayOf(item(Material.ROTTEN_FLESH, ::lootItem), item(Summoner.getSpawnEgg(EntityType.ZOMBIE, true, false) ?: Material.STONE)),
+				arrayOf(arrayItem { Array(30) {
+					ItemUtil.namedItem(Material.CARROT, "${ChatColor.GOLD}${ChatColor.BOLD}Carrot Warrior #${Util.randRange(0, Int.MAX_VALUE - 1)}")
+				}}),
+				arrayOf(item(Material.ROTTEN_FLESH, ::lootItem)),
+				arrayOf(item(Material.ROTTEN_FLESH, ::lootItem)),
+				arrayOf(item(Material.ROTTEN_FLESH, ::lootItem)),
+				arrayOf(item(Material.ROTTEN_FLESH, ::lootItem)),
+				arrayOf(item(Material.ROTTEN_FLESH, ::lootItem)),
+				arrayOf(item(Material.ROTTEN_FLESH, ::lootItem)),
+			), arrayOf(
+				item(Material.ROTTEN_FLESH)
+			)),
 
-				else -> false
-			}
-		}
+			DropFix(EntityType.SKELETON, arrayOf(
+				arrayOf(item(Material.BONE, ::lootItem), item(Material.ARROW, ::lootItem)),
+				arrayOf(item(Material.BONE, ::lootItem), item(Material.ARROW, ::lootItem)),
+				arrayOf(item(Material.BONE, ::lootItem), item(Material.ARROW, ::lootItem), stackItem {
+					ItemUtil.addRandomEnchants(ItemUtil.randomDamagedItem(Material.BOW), arrayOf(
+						Enchantment.ARROW_DAMAGE,
+						Enchantment.ARROW_KNOCKBACK,
+						Enchantment.ARROW_INFINITE,
+						Enchantment.ARROW_FIRE,
+						Enchantment.MENDING,
+						Enchantment.DURABILITY
+					), 0.5)
+				}),
+				arrayOf(item(Material.BONE, ::lootItem), item(Material.ARROW, ::lootItem), stackItem {
+					ItemUtil.addRandomEnchants(ItemUtil.randomDamagedItem(Material.CROSSBOW), arrayOf(
+						Enchantment.MULTISHOT,
+						Enchantment.QUICK_CHARGE,
+						Enchantment.PIERCING,
+						Enchantment.MENDING,
+						Enchantment.DURABILITY
+					), 0.5)
+				})
+			), arrayOf(
+				item(Material.BONE)
+			)),
+
+			DropFix(EntityType.SPIDER, arrayOf(
+				arrayOf(item(Material.STRING, ::lootItem), item(Material.PAPER, lootMulti(2)), item(Material.SPIDER_EYE, lootMulti(-1))),
+				arrayOf(item(Material.STRING, ::lootItem), item(Material.PAPER, lootMulti(2)), item(Material.SPIDER_EYE, lootMulti( 0))),
+				arrayOf(item(Material.STRING, ::lootItem), item(Material.PAPER, lootMulti(2)), item(Material.SPIDER_EYE, lootMulti( 1))),
+				arrayOf(item(Material.STRING, ::lootItem), item(Material.PAPER, lootMulti(2)), item(Material.SPIDER_EYE, lootMulti(-1))),
+				arrayOf(item(Material.STRING, ::lootItem), item(Material.PAPER, lootMulti(2)), item(Material.SPIDER_EYE, lootMulti( 0))),
+				arrayOf(item(Material.STRING, ::lootItem), item(Material.PAPER, lootMulti(2)), item(Material.SPIDER_EYE, lootMulti( 1)),
+					stackItem { ItemUtil.randomEnchantedBook() }
+				)
+			), arrayOf(
+				nothing()
+			)),
+
+			DropFix(EntityType.DROWNED, arrayOf(
+				arrayOf(item(Material.ROTTEN_FLESH, ::lootItem), item(Material.GOLD_INGOT), stackItem {
+					ItemUtil.addRandomEnchants(ItemUtil.randomDamagedItem(Material.TRIDENT), arrayOf(
+						Enchantment.RIPTIDE,
+						Enchantment.LOYALTY,
+						Enchantment.MENDING,
+						Enchantment.DURABILITY
+					), 0.5)
+				})
+			), arrayOf(
+				item(Material.ROTTEN_FLESH)
+			))
+		)
 	}
 }

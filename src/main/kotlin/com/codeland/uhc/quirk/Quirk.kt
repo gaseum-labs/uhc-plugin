@@ -10,6 +10,8 @@ import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.util.ItemUtil
 import org.bukkit.ChatColor
 import org.bukkit.Material
+import org.bukkit.entity.Entity
+import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
@@ -54,7 +56,7 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 
 	val inventory: GuiInventory = GuiInventory(4, type.prettyName)
 
-	val drops = customDrops()
+	val customDrops = customDrops()
 	val spawnInfos = customSpawnInfos()
 
 	init {
@@ -75,6 +77,8 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 				return setName(ItemStack(Material.PRISMARINE_SHARD), "${ChatColor.BLUE}Back")
 			}
 		})
+
+		customDrops?.sortBy { dropFix -> dropFix.entityType }
 	}
 
 	protected fun addProperty(property: BoolProperty): BoolProperty {
@@ -100,4 +104,13 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 	open fun onPhaseSwitch(phase: PhaseVariant) {}
 	open fun customDrops(): Array<DropFix>? = null
 	open fun customSpawnInfos(): Array<SpawnInfo>? = null
+
+	/* event wrappers (makes them compatible with uhc event flow) */
+	/* more will be added */
+
+	/**
+	 * returns true if it replaces drops entirely and other
+	 * quirks / dropfix should not be applied
+	 */
+	open fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>) = false
 }

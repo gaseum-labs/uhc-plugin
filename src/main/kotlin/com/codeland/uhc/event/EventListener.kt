@@ -338,23 +338,18 @@ class EventListener : Listener {
 					GameRunner.playerDeath(uuid, killer)
 			}
 		} else {
-			if (!GameRunner.uhc.isEnabled(QuirkType.MODIFIED_DROPS) || !ModifiedDrops.onDrop(event.entityType, event.drops)) {
-				GameRunner.uhc.quirks.any { quirk ->
-					quirk.enabled && quirk.drops != null && quirk.drops.any { dropFix -> dropFix.onDeath(event.entity, killer, event.drops) }
-				} ||
-				DropFixType.values().any { dropFixType -> dropFixType.dropFix.onDeath(event.entity, killer, event.drops) }
-			}
+			/* find a quirk that has a dropfix for this entity */
+			/* if not fallback to default list of dropfixes */
+			(GameRunner.uhc.quirks.filter { quirk ->
+				quirk.enabled && quirk.customDrops != null
+			}.map { quirk ->
+				Util.binaryFind(event.entityType, quirk.customDrops!!) { dropFix -> dropFix.entityType }
+			}.firstOrNull()
+				?: Util.binaryFind(event.entityType, DropFixType.list) { dropFixType -> dropFixType.dropFix.entityType }?.dropFix
+			)?.onDeath(event.entity, killer, event.drops)
 
-			val summoner = GameRunner.uhc.getQuirk(QuirkType.SUMMONER) as Summoner
-			if (!Summoner.isCommanded(event.entity) && summoner.enabled) {
-				val spawnEgg = summoner.getSpawnEgg(event.entityType)
-
-				if (spawnEgg != null) event.drops.add(ItemStack(spawnEgg))
-			}
-
-			if (GameRunner.uhc.isEnabled(QuirkType.HALLOWEEN)) {
-				Halloween.addDrops(event.entity, event.drops)
-				Halloween.onEntityDeath(event.entity)
+			GameRunner.uhc.quirks.any { quirk ->
+				quirk.enabled && quirk.modifyEntityDrops(event.entity, killer, event.drops)
 			}
 		}
 	}
