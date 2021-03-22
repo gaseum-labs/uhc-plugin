@@ -97,11 +97,14 @@ class ClassesEvents : Listener {
 					val from = event.from.block.type
 					val to = event.to.block.type
 
-					if (from === Material.WATER && to.isAir) {
+					if (player.isJumping && from === Material.WATER) {
+						player.isJumping = false
+						player.velocity = motion.clone().multiply(3)
+					} else if (from === Material.WATER && to.isAir) {
 						player.velocity = motion.clone().multiply(3)
 
 					} else if (from.isAir && to === Material.WATER) {
-						player.velocity = motion.clone().multiply(3)
+						player.velocity = motion.clone().multiply(3).setY(motion.y)
 					}
 				}
 			}
@@ -115,14 +118,19 @@ class ClassesEvents : Listener {
 
 			if (Classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL && player.world.environment !== World.Environment.NETHER) {
 				event.isCancelled = true
+
 				val block = player.location.block
 				if (!block.type.isAir) block.breakNaturally()
+
 				block.type = Material.WATER
-				block.world.playSound(block.location, Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
-				SchedulerUtil.later(10) {
+				block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
+
+				if (player.isSprinting) player.velocity = player.location.direction.multiply(2)
+
+				SchedulerUtil.later(60) {
 					if (block.type == Material.WATER) {
 						block.type = Material.AIR
-						block.world.playSound(block.location, Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
+						block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
 					}
 				}
 			}

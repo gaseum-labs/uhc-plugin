@@ -3,6 +3,8 @@ package com.codeland.uhc.quirk.quirks.classes
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Summoner
@@ -177,6 +179,17 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = QuirkClass.NO_CLASS
 	}
 
+	override fun onPhaseSwitch(phase: PhaseVariant) {
+		if (phase.type == PhaseType.WAITING) {
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				setClass(uuid, QuirkClass.NO_CLASS)
+				GameRunner.playerAction(uuid) { player ->
+					startAsClass(player, QuirkClass.NO_CLASS, getClass(playerData))
+				}
+			}
+		}
+	}
+
 	private fun generateSuperbreakMessage(percent: Double, overflow: Boolean): String {
 		val message = StringBuilder("${ChatColor.GRAY}Superbreak - ")
 
@@ -233,38 +246,27 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		fun updateRemoteControl(control: RemoteControl): ItemStack {
 			val lever = control.block
 			val leverData = lever.blockData as? Switch
-			val statusColor =
-					when {
-						leverData == null -> {
-							ChatColor.BLUE
-						}
-						leverData.isPowered -> {
-							ChatColor.GREEN
-						}
-						else -> {
-							ChatColor.RED
-						}
-					}
-			val currentStatus =
-					when {
-						leverData == null -> {
-							"DESTROYED"
-						}
-						leverData.isPowered -> {
-							"POWERED"
-						}
-						else -> {
-							"UNPOWERED"
-						}
-					}
+
+			val statusColor = when {
+				leverData == null -> ChatColor.BLUE
+				leverData.isPowered -> ChatColor.GREEN
+				else -> ChatColor.RED
+			}
+
+			val currentStatus = when {
+				leverData == null -> "DESTROYED"
+				leverData.isPowered -> "POWERED"
+				else -> "UNPOWERED"
+			}
+
 			val newItem = ItemStack(Material.REDSTONE_TORCH)
 			val meta = newItem.itemMeta
 			meta.setDisplayName("${ChatColor.RESET}${statusColor}${control.displayName}")
 			meta.lore = mutableListOf("${ChatColor.GRAY}Controlling the lever at (" +
-					ChatColor.GOLD + lever.x + ChatColor.GRAY + ", " +
-					ChatColor.GOLD + lever.y + ChatColor.GRAY + ", " +
-					ChatColor.GOLD + lever.z + ChatColor.GRAY + ").",
-					"${ChatColor.GRAY}Current status: $statusColor$currentStatus"
+				ChatColor.GOLD + lever.x + ChatColor.GRAY + ", " +
+				ChatColor.GOLD + lever.y + ChatColor.GRAY + ", " +
+				ChatColor.GOLD + lever.z + ChatColor.GRAY + ").",
+				"${ChatColor.GRAY}Current status: $statusColor$currentStatus"
 			)
 			newItem.itemMeta = meta
 			control.item = newItem
@@ -280,7 +282,7 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 
 		fun startAsClass(player: Player, quirkClass: QuirkClass, oldClass: QuirkClass) {
-			if (oldClass != QuirkClass.NO_CLASS) oldClass.onEnd(player)
+			oldClass.onEnd(player)
 
 			giveClassHead(player, quirkClass)
 			quirkClass.onStart(player)
@@ -295,16 +297,20 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 
 		fun giveClassHead(player: Player, quirkClass: QuirkClass) {
-			val headItem = ItemStack(quirkClass.headBlock)
+			player.inventory.helmet = if (quirkClass == QuirkClass.NO_CLASS) {
+				null
 
-			val meta = headItem.itemMeta
-			meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
-			if (quirkClass == QuirkClass.DIVER) {
-				meta.addEnchant(Enchantment.WATER_WORKER, 1, true)
+			} else {
+				val headItem = ItemStack(quirkClass.headBlock)
+
+				val meta = headItem.itemMeta
+				meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
+				meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true)
+				quirkClass.headMeta(meta)
+				headItem.itemMeta = meta
+
+				headItem
 			}
-			headItem.itemMeta = meta
-
-			player.inventory.helmet = headItem
 		}
 
 		fun removeHead(player: Player) {
@@ -312,6 +318,5 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 
 		private var timerId: Int = 0
-
 	}
 }
