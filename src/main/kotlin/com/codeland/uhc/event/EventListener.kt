@@ -12,6 +12,7 @@ import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.phase.phases.waiting.AbstractLobby
 import com.codeland.uhc.phase.phases.waiting.PvpData
+import com.codeland.uhc.quirk.HorseQuirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.team.HideManager
@@ -22,6 +23,7 @@ import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
@@ -32,6 +34,7 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
+import org.bukkit.event.vehicle.VehicleExitEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
@@ -174,6 +177,10 @@ class EventListener : Listener {
 			if (GameRunner.uhc.isEnabled(QuirkType.HOTBAR)) Hotbar.filterDrops(event.drops)
 			if (GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS)) PlayerCompass.filterDrops(event.drops)
 			if (GameRunner.uhc.isEnabled(QuirkType.INFINITE_INVENTORY)) InfiniteInventory.modifyDrops(event.drops, event.entity)
+		}
+		if (GameRunner.uhc.isEnabled(QuirkType.HORSE)) {
+			val horse = HorseQuirk.horseMap.entries.find { (_, uuid) -> uuid == event.entity.uniqueId }?.key
+			horse?.teleport(Location(horse.world, 0.0, -100000.0, 0.0))
 		}
 	}
 
@@ -596,6 +603,23 @@ class EventListener : Listener {
 			if (!halloween.hasGottenDiamonds) {
 				Halloween.jumpScare(event.entity as Player)
 				halloween.hasGottenDiamonds = true
+			}
+		}
+	}
+
+	fun horseLeave(event: VehicleExitEvent) {
+		val player = event.exited as? Player ?: return
+		if (GameRunner.uhc.isEnabled(QuirkType.HORSE) && event.vehicle is Horse) {
+			event.isCancelled = true
+		}
+	}
+
+	fun entityDamage(event: EntityDamageEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.HORSE)) {
+			if (event.entity is Horse) {
+				val uuid = HorseQuirk.horseMap[event.entity] ?: return
+				event.isCancelled = true
+				GameRunner.damagePlayer(uuid, event.damage)
 			}
 		}
 	}
