@@ -19,7 +19,7 @@ class HorseQuirk(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			horse.inventory.saddle = ItemStack(Material.SADDLE)
 			horse.isTamed = true
 			horse.owner = player
-			horse.passengers.add(player)
+			horse.setPassenger(player)
 			horseMap[horse] = uuid
 		}
 	}
