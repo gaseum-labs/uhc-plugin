@@ -102,6 +102,10 @@ enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Qui
 	CLASSES("Classes", ::Classes, arrayOf(
 		"Pick a class as the game begins",
 		"Get cool abilities"
+	)),
+	HORSE("Horse", ::HorseQuirk, arrayOf(
+			"Horse",
+			"Horse"
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
