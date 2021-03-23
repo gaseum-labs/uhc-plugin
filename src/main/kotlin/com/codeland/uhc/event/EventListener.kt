@@ -618,6 +618,11 @@ class EventListener : Listener {
 		if (GameRunner.uhc.isEnabled(QuirkType.HORSE)) {
 			if (event.entity is Horse) {
 				val uuid = HorseQuirk.horseMap[event.entity] ?: return
+				if (event is EntityDamageByEntityEvent
+					&& event.damager is Player
+					&& TeamData.playersTeam(uuid)?.members?.contains(event.damager.uniqueId) == true
+				)
+					return
 				event.isCancelled = true
 				GameRunner.damagePlayer(uuid, event.damage)
 			}
