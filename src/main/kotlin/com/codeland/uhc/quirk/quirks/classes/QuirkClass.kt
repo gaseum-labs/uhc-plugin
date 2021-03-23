@@ -17,10 +17,9 @@ enum class QuirkClass(val prettyName: String, val headBlock: Material, val onSta
 	}),
 
 	MINER("Miner", Material.DIAMOND_ORE, { player ->
-		player.addPotionEffect(PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 2, false, false, true))
-		Classes.superBreakMap[player.uniqueId] = System.currentTimeMillis()
+		Classes.minerDatas[player.uniqueId] = Classes.MinerData(0)
 	}, {}, { player ->
-		player.removePotionEffect(PotionEffectType.FAST_DIGGING)
+		Classes.minerDatas.remove(player.uniqueId)
 	}),
 
 	HUNTER("Hunter", Material.SPAWNER, {}, {}, {}),

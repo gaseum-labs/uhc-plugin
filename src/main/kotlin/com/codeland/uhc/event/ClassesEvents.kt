@@ -33,10 +33,7 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
-import org.bukkit.event.player.PlayerExpChangeEvent
-import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.event.player.PlayerItemBreakEvent
-import org.bukkit.event.player.PlayerMoveEvent
+import org.bukkit.event.player.*
 import org.bukkit.inventory.EnchantingInventory
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
@@ -78,33 +75,33 @@ class ClassesEvents : Listener {
 					}, {})
 				}
 				QuirkClass.ENCHANTER -> {
-					auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 1, -2, -1, 1, { it }, { block ->
+					auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 0, -1, -1, 0, { it }, { block ->
 						val data = block.blockData as Grindstone
 						data.attachedFace = FaceAttachable.AttachedFace.FLOOR
 						block.setBlockData(data, false)
 					})
 				}
 				QuirkClass.DIVER -> {
-					val velocity = player.velocity.length()
+					if (player.world.environment != World.Environment.NETHER) {
+						val velocity = player.velocity.length()
 
-					val motion = event.to.toVector().subtract(event.from.toVector())
-					val horz = motion.clone().setY(0)
+						val motion = event.to.toVector().subtract(event.from.toVector())
+						val horz = motion.clone().setY(0)
 
-					if (player.isSwimming) {
-						player.velocity = player.location.direction.multiply((1.5 - velocity) * 0.1 + velocity)
-					}
+						if (player.isSwimming) {
+							player.velocity = player.location.direction.multiply((1.5 - velocity) * 0.1 + velocity)
+						}
 
-					val from = event.from.block.type
-					val to = event.to.block.type
+						val from = event.from.block.type
+						val to = event.to.block.type
 
-					if (player.isJumping && from === Material.WATER) {
-						player.isJumping = false
-						player.velocity = motion.clone().multiply(3)
-					} else if (from === Material.WATER && to.isAir) {
-						player.velocity = motion.clone().multiply(3)
+						if (from === Material.WATER && to.isAir) {
+							player.velocity = motion.clone().multiply(3)
 
-					} else if (from.isAir && to === Material.WATER) {
-						player.velocity = motion.clone().multiply(3).setY(motion.y)
+						} else if (from.isAir && to === Material.WATER) {
+							player.velocity = motion.clone().normalize().multiply(3).setY(motion.y)
+							player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 40, 2, false, false, false))
+						}
 					}
 				}
 			}
@@ -116,7 +113,7 @@ class ClassesEvents : Listener {
 		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
 			val player = if (event.entity is Player) event.entity as Player else return
 
-			if (Classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL && player.world.environment !== World.Environment.NETHER) {
+			if (Classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
 				event.isCancelled = true
 
 				val block = player.location.block
@@ -125,15 +122,16 @@ class ClassesEvents : Listener {
 				block.type = Material.WATER
 				block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
 
-				if (player.isSprinting) player.velocity = player.location.direction.multiply(2)
+				if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity = player.location.direction.multiply(2)
 
-				SchedulerUtil.later(60) {
+				SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
 					if (block.type == Material.WATER) {
 						block.type = Material.AIR
 						block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
 					}
 				}
 			}
+
 			if (Classes.getClass(player.uniqueId) == QuirkClass.TRAPPER && event.cause == EntityDamageEvent.DamageCause.FALL) {
 				event.isCancelled = true
 			}
@@ -196,6 +194,16 @@ class ClassesEvents : Listener {
 	}
 
 	@EventHandler
+	fun onBlockDrop(event: BlockBreakEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+			if (Classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER && event.block.type == Material.GRINDSTONE) {
+				event.isDropItems = false
+				event.block.world.dropItem(event.block.location.toCenterLocation(), ItemStack(Material.COBBLESTONE))
+			}
+		}
+	}
+
+	@EventHandler
 	fun onEnchant(event: EnchantItemEvent) {
 		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.enchanter.uniqueId) == QuirkClass.ENCHANTER) {
@@ -216,12 +224,17 @@ class ClassesEvents : Listener {
 		Material.GOLDEN_BOOTS, Material.GOLDEN_LEGGINGS, Material.GOLDEN_CHESTPLATE, Material.GOLDEN_HELMET,
 		Material.CHAINMAIL_BOOTS, Material.CHAINMAIL_LEGGINGS, Material.CHAINMAIL_CHESTPLATE, Material.CHAINMAIL_HELMET,
 		Material.IRON_BOOTS, Material.IRON_LEGGINGS, Material.IRON_CHESTPLATE, Material.IRON_HELMET,
-		Material.DIAMOND_BOOTS, Material.DIAMOND_LEGGINGS, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_HELMET
+		Material.DIAMOND_BOOTS, Material.DIAMOND_LEGGINGS, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_HELMET,
+		Material.NETHERITE_BOOTS, Material.NETHERITE_LEGGINGS, Material.NETHERITE_CHESTPLATE, Material.NETHERITE_HELMET,
 	)
 
 	val weapons = arrayOf(
-		Material.WOODEN_SWORD, Material.GOLDEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD,
-		Material.WOODEN_AXE, Material.GOLDEN_AXE, Material.STONE_AXE, Material.IRON_AXE, Material.DIAMOND_AXE
+		Material.WOODEN_SWORD, Material.GOLDEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD,
+		Material.WOODEN_AXE, Material.GOLDEN_AXE, Material.STONE_AXE, Material.IRON_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE
+	)
+
+	val pickaxes = arrayOf(
+		Material.WOODEN_PICKAXE, Material.GOLDEN_PICKAXE, Material.STONE_PICKAXE, Material.IRON_PICKAXE, Material.DIAMOND_PICKAXE, Material.NETHERITE_PICKAXE
 	)
 
 	val bows = arrayOf(Material.BOW)
@@ -244,6 +257,7 @@ class ClassesEvents : Listener {
 
 				autoEnchant(armors, Enchantment.PROTECTION_ENVIRONMENTAL) ||
 				autoEnchant(weapons, Enchantment.DAMAGE_ALL) ||
+				autoEnchant(pickaxes, Enchantment.DIG_SPEED) ||
 				autoEnchant(bows, Enchantment.ARROW_DAMAGE)
 			}
 		}
@@ -355,47 +369,60 @@ class ClassesEvents : Listener {
 					}
 				}
 			}
-			if (Classes.getClass(event.player.uniqueId) == QuirkClass.MINER && event.player.inventory.itemInMainHand.type.toString().contains("PICKAXE") && event.hand == EquipmentSlot.HAND) {
-				if (event.action == Action.RIGHT_CLICK_BLOCK || event.action == Action.RIGHT_CLICK_AIR) {
-					if (Classes.superBreakMap[event.player.uniqueId] == null) {
-						// this shouldn't happen, but just in case
-						Classes.superBreakMap[event.player.uniqueId] = System.currentTimeMillis()
-					}
-					val timePassed = System.currentTimeMillis() - Classes.superBreakMap[event.player.uniqueId]!!
-					if (timePassed < 30000 && timePassed > 1000) {
-						val timeLeftSeconds = 30 - (timePassed / 1000)
-						return event.player.sendMessage("${RED}You can't use that yet. Try again in ${
-							when (timeLeftSeconds) {
-								0L -> "a moment"
-								1L -> "1 second"
-								else -> "$timeLeftSeconds seconds"
-							}
-						}.")
-					} else {
-						fun superRecursive(x: Double, z: Double, dx: Double, dz: Double, y: Double, n: Int, limit: Int) {
-							if (n > limit) return
-							for (i in -1..1) for (j in 0..1) for (k in -1..1) {
-								val block = event.player.world.getBlockAt(x.toInt(), y.toInt(), z.toInt()).getRelative(i, j, k)
-								if (block.type != Material.BEDROCK && block.type != Material.OBSIDIAN) {
-									block.breakNaturally()
-								}
-							}
-							event.player.world.playSound(Location(event.player.world, x, y, z), Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f)
-							SchedulerUtil.later(4) {
-								superRecursive(x + dx, z + dz, dx, dz, y, n + 1, limit)
-							}
-						}
 
-						var dir = event.player.location.direction
-						dir.setY(0)
-						dir = dir.normalize()
-						val numBlocks = when {
-							timePassed < 30 * 1000 -> timePassed / 1000 / 3.0
-							timePassed < 60 * 1000 -> 10 + (timePassed - 30 * 1000) / 1000 / 1.5
-							else -> 30.0
-						}.toInt()
-						superRecursive(event.player.location.x, event.player.location.z, dir.x, dir.z, event.player.location.y, 0, numBlocks)
-						Classes.superBreakMap[event.player.uniqueId] = System.currentTimeMillis()
+			else if (
+				Classes.getClass(event.player.uniqueId) == QuirkClass.MINER &&
+				pickaxes.contains(event.player.inventory.itemInMainHand.type) &&
+				event.hand == EquipmentSlot.HAND
+			) {
+				if (event.action == Action.RIGHT_CLICK_BLOCK || event.action == Action.RIGHT_CLICK_AIR) {
+					val minerData = Classes.minerDatas[event.player.uniqueId]
+
+					if (minerData != null) {
+						val superBreakTimer = minerData.superBreakTimer
+
+						if (superBreakTimer < 20 * 30) {
+							val timeLeftSeconds = 30 - (superBreakTimer / 20)
+
+							return event.player.sendMessage("${RED}You can't use that yet. Try again in ${
+								when (timeLeftSeconds) {
+									0 -> "a moment"
+									1 -> "1 second"
+									else -> "$timeLeftSeconds seconds"
+								}
+							}.")
+
+						} else {
+							fun superRecursive(x: Double, z: Double, dx: Double, dz: Double, y: Double, n: Int, limit: Int) {
+								if (n > limit) return
+
+								for (i in -1..1) for (j in 0..1) for (k in -1..1) {
+									val block = event.player.world.getBlockAt(x.toInt(), y.toInt(), z.toInt()).getRelative(i, j, k)
+
+									if (block.type != Material.BEDROCK && block.type != Material.OBSIDIAN) {
+										block.breakNaturally()
+									}
+								}
+
+								event.player.world.playSound(Location(event.player.world, x, y, z), Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f)
+
+								SchedulerUtil.later(4) { superRecursive(x + dx, z + dz, dx, dz, y, n + 1, limit) }
+							}
+
+							val dir = event.player.location.direction.setY(0).normalize()
+
+							val numBlocks = when {
+								superBreakTimer < 30 * 20 -> superBreakTimer / 20 / 3.0
+								superBreakTimer < 60 * 20 -> 10 + (superBreakTimer - 30 * 20) / 20 / 1.5
+								else -> 30.0
+							}.toInt()
+
+							/* begin digging tunnel */
+							superRecursive(event.player.location.x, event.player.location.z, dir.x, dir.z, event.player.location.y, 0, numBlocks)
+
+							/* reset timer */
+							minerData.superBreakTimer = 0
+						}
 					}
 				}
 			}
@@ -405,7 +432,7 @@ class ClassesEvents : Listener {
 	@EventHandler
 	fun itemBreak(event: PlayerItemBreakEvent) {
 		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
-			if (Classes.getClass(event.player.uniqueId) == QuirkClass.MINER && event.brokenItem.type.toString().contains("PICKAXE")) {
+			if (Classes.getClass(event.player.uniqueId) == QuirkClass.MINER && pickaxes.contains(event.brokenItem.type)) {
 				xray(event.player)
 			}
 		}

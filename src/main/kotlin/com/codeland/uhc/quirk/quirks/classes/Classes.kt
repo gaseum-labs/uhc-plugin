@@ -15,6 +15,7 @@ import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.block.data.type.Switch
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
@@ -26,6 +27,7 @@ import java.util.*
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.min
 import kotlin.random.Random.Default.nextInt
 
 class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
@@ -59,7 +61,7 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 			cleanupList(obsidianifiedLava, QuirkClass.LAVACASTER, Material.OBSIDIAN, 3, 3, 3, { it.block }, { if (it.flowing) Material.AIR else Material.LAVA })
 
-			cleanupList(grindedStone, QuirkClass.ENCHANTER, Material.GRINDSTONE, 1, 3, 1, { it }, { Material.STONE })
+			cleanupList(grindedStone, QuirkClass.ENCHANTER, Material.GRINDSTONE, 0, 3, 0, { it }, { Material.STONE })
 
 			fun regenDurability(itemStack: ItemStack?) {
 				if (itemStack == null) return
@@ -113,48 +115,44 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 					}
 				}
 
-			Bukkit.getOnlinePlayers()
-					.filter { PlayerData.getPlayerData(it.uniqueId).alive }
-					.forEach { player ->
-						if (getClass(player.uniqueId) == QuirkClass.MINER) {
-							val timePassed = System.currentTimeMillis() - superBreakMap[player.uniqueId]!!
-							val (percent, overflow) = when {
-								timePassed < 30 * 1000 -> Pair(timePassed / (30.0 * 1000), false)
-								timePassed < 60 * 1000 -> Pair(timePassed / (30.0 * 1000) - 1, true)
-								else -> Pair(1.0, true)
-							}
-							player.sendActionBar(generateSuperbreakMessage(percent, overflow))
-							if (player.location.block.lightLevel < 7) {
-//								val r = Random()
-//								var dx = r.nextInt(10) - 5
-//								var dy = 0
-//								var dz = r.nextInt(10) - 5
-//								var n = 0
-//								var makeTorch = true
-//								while (!player.location.block.getRelative(dx, dy, dz).type.isAir) {
-//									dx = r.nextInt(10) - 5
-//									dz = r.nextInt(10) - 5
-//									n++
-//									if (n > 100) {
-//										makeTorch = false
-//										break
-//									}
-//								}
-//								while (!player.location.block.getRelative(dx, dy - 1, dz).type.isSolid) {
-//									dy--
-//									if (dy < 0) {
-//										makeTorch = false
-//										break
-//									}
-//								}
-//								println("adding torch! $dx $dy $dz $makeTorch")
-								// todo make this work
-								player.location.block.type = Material.TORCH
-							} else {
-//								println(player.location.block.lightLevel)
-							}
-						}
+			minerDatas.forEach { (uuid, minerData) ->
+				val player = Bukkit.getPlayer(uuid)
+
+				if (player != null) {
+					/* super break display */
+
+					val superBreakTimer = ++minerData.superBreakTimer
+
+					val (percent, overflow) = when {
+						superBreakTimer < 30 * 20 -> Pair(superBreakTimer / (30.0 * 20), false)
+						superBreakTimer < 60 * 20 -> Pair(superBreakTimer / (30.0 * 20) - 1, true)
+						else -> Pair(1.0, true)
 					}
+
+					player.sendActionBar(generateSuperbreakMessage(percent, overflow))
+
+					/* auto torch */
+					val validTorchSpots = arrayOf(
+						Material.STONE,
+						Material.ANDESITE,
+						Material.DIORITE,
+						Material.GRANITE,
+						Material.DIRT
+					)
+
+					if (currentTick % 20 == 0) {
+						(0..8).map { i ->
+							Pair((i % 3) - 1, (i / 3) - 1)
+						}.filter { pair ->
+							pair.first != 0 && pair.second != 0
+						}.map { pair ->
+							player.location.block.getRelative(pair.first, 0, pair.second)
+						}.firstOrNull { block ->
+							block.type.isAir && block.lightLevel <= 7 && validTorchSpots.contains(block.getRelative(BlockFace.DOWN).type)
+						}?.setType(Material.TORCH, true)
+					}
+				}
+			}
 
 			++currentTick
 		}
@@ -229,6 +227,8 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 	data class RemoteControl(var item: ItemStack, val block: Block, var displayName: String)
 
+	data class MinerData(var superBreakTimer: Int)
+
 	companion object {
 		val HUNTER_SPAWN_META = "CLASSES_HUNTER_SPAWN"
 
@@ -241,7 +241,7 @@ class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 
 		val remoteControls = mutableListOf<RemoteControl>()
 
-		val superBreakMap: MutableMap<UUID, Long> = mutableMapOf()
+		val minerDatas: MutableMap<UUID, MinerData> = mutableMapOf()
 
 		fun updateRemoteControl(control: RemoteControl): ItemStack {
 			val lever = control.block
