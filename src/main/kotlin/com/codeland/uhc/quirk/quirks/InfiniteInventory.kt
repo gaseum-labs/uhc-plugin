@@ -133,11 +133,20 @@ class InfiniteInventory(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				val page = pages[i]
 				if (i == currentPage) save()
 				for (j in 0..23) {
-					// todo: maybe it could stack onto other items of the same type,
-					// don't know how hard that would be
-					if (page[j] == null) {
+					val existing = page[j]
+					if (existing == null) {
 						page[j] = item
 						if (i == currentPage) restore()
+						return
+					}
+					else if (existing.isSimilar(item) && existing.amount < existing.maxStackSize) {
+						if (existing.amount + item.amount > existing.maxStackSize) {
+							existing.amount = existing.maxStackSize;
+							item.amount -= (existing.maxStackSize - existing.amount)
+							store(item)
+						} else {
+							existing.amount += item.amount
+						}
 						return
 					}
 				}
