@@ -178,10 +178,6 @@ class EventListener : Listener {
 			if (GameRunner.uhc.isEnabled(QuirkType.PLAYER_COMPASS)) PlayerCompass.filterDrops(event.drops)
 			if (GameRunner.uhc.isEnabled(QuirkType.INFINITE_INVENTORY)) InfiniteInventory.modifyDrops(event.drops, event.entity)
 		}
-		if (GameRunner.uhc.isEnabled(QuirkType.HORSE)) {
-			val horse = HorseQuirk.horseMap.entries.find { (_, uuid) -> uuid == event.entity.uniqueId }?.key
-			horse?.damage(100000000000.0)
-		}
 	}
 
 	@EventHandler
@@ -608,28 +604,13 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun horseLeave(event: VehicleExitEvent) {
-		val player = event.exited as? Player ?: return
-		if (GameRunner.uhc.isEnabled(QuirkType.HORSE) && event.vehicle is Horse) {
-			if (!event.vehicle.isDead)
-				SchedulerUtil.later(2) {
-					GameRunner.playerAction(player.uniqueId) { p ->
-						p.isSneaking = false
-						(event.vehicle as Horse).setPassenger(p)
-					}
-				}
-		}
-	}
-
-	@EventHandler
 	fun entityDamageA(event: EntityDamageEvent) {
 		if (GameRunner.uhc.isEnabled(QuirkType.HORSE)) {
-			if (event.entity is Horse) {
-				val horse = event.entity as Horse
-				val uuid = HorseQuirk.horseMap[horse] ?: return
-				event.isCancelled = true
-				GameRunner.damagePlayer(uuid, event.damage)
-			}
+			val horse = event.entity as? Horse ?: return
+			val playerUUID = HorseQuirk.horseMap[horse.uniqueId] ?: return
+
+			event.isCancelled = true
+			GameRunner.damagePlayer(playerUUID, event.damage)
 		}
 	}
 }

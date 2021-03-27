@@ -16,6 +16,7 @@ import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.DisplaySlot
@@ -272,6 +273,18 @@ object GameRunner {
 
 		} else {
 			onlinePlayer.location
+		}
+	}
+
+	fun setPlayerRiding(uuid: UUID, entity: Entity) {
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+
+		if (onlinePlayer == null) {
+			val zombie = PlayerData.getPlayerData(uuid).offlineZombie
+			if (zombie != null) entity.addPassenger(zombie)
+
+		} else {
+			entity.addPassenger(onlinePlayer)
 		}
 	}
 
