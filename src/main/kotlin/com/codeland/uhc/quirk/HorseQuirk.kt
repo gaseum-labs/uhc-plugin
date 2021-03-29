@@ -13,6 +13,8 @@ import org.bukkit.attribute.Attribute
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Horse
 import org.bukkit.inventory.ItemStack
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import java.util.*
 
 class HorseQuirk(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
@@ -47,6 +49,8 @@ class HorseQuirk(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		GameRunner.playerAction(uuid) { player ->
 			horse.owner = player
 			horse.addPassenger(player)
+
+			player.addPotionEffect(PotionEffect(PotionEffectType.CONDUIT_POWER, Int.MAX_VALUE, 30, false, false, false))
 		}
 
 		for (x in -1..1) for (z in -1..1) for (y in 0..2) {
@@ -54,13 +58,33 @@ class HorseQuirk(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		}
 	}
 
+	override fun onEnd(uuid: UUID) {
+		GameRunner.playerAction(uuid) { player ->
+			player.removePotionEffect(PotionEffectType.CONDUIT_POWER)
+		}
+	}
+
 	override fun onEnable() {
 		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
 			horseMap.forEach { (horseUuid, playerUuid) ->
-				val horse = Bukkit.getEntity(horseUuid)
+				val horse = Bukkit.getEntity(horseUuid) as Horse?
 				val player = Bukkit.getPlayer(playerUuid)
 
-				if (horse != null && horse.passengers.isEmpty() && player != null) horse.addPassenger(player)
+				if (horse != null && player != null) {
+					if (horse.passengers.isEmpty()) horse.addPassenger(player)
+
+					/* armor items do not have attributes apparently */
+					//val (armor, toughness) = player.inventory.armorContents.filterNotNull().fold(Pair(0.0, 0.0)) { (armor, toughness), itemStack ->
+					//	Pair(
+					//		armor + (itemStack.itemMeta.getAttributeModifiers(Attribute.GENERIC_ARMOR)?.firstOrNull()?.amount ?: 0.0),
+					//		toughness + (itemStack.itemMeta.getAttributeModifiers(Attribute.GENERIC_ARMOR_TOUGHNESS)?.firstOrNull()?.amount ?: 0.0)
+					//	)
+					//}
+					//
+					//Util.debug("${armor} | ${toughness}")
+					//horse.getAttribute(Attribute.GENERIC_ARMOR)?.baseValue = armor
+					//horse.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS)?.baseValue = toughness
+				}
 			}
 		}, 0, 20)
 	}

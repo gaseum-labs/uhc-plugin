@@ -25,6 +25,8 @@ import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.attribute.Attribute
+import org.bukkit.attribute.AttributeModifier
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -610,7 +612,24 @@ class EventListener : Listener {
 			val playerUUID = HorseQuirk.horseMap[horse.uniqueId] ?: return
 
 			event.isCancelled = true
-			GameRunner.damagePlayer(playerUUID, event.damage)
+
+			GameRunner.damagePlayer(playerUUID, event.finalDamage)
+		}
+	}
+
+	@EventHandler
+	fun onSneak(event: PlayerToggleSneakEvent) {
+		if (GameRunner.uhc.isEnabled(QuirkType.HORSE)) {
+			val player = event.player
+
+			val horseUUID = HorseQuirk.horseMap.asIterable().find { (_, playerUUID) ->
+				player.uniqueId == playerUUID
+			}?.key ?: return
+
+			val horse = Bukkit.getEntity(horseUUID) as Horse? ?: return
+
+			horse.addPassenger(player)
+			event.isCancelled = true
 		}
 	}
 }

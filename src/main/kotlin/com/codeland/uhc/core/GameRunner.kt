@@ -252,15 +252,15 @@ object GameRunner {
 		}
 	}
 
-	fun damagePlayer(uuid: UUID, damage: Double) {
+	fun damagePlayer(uuid: UUID, damage: Double, source: Entity? = null) {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
 		if (onlinePlayer == null) {
 			val playerData = PlayerData.getPlayerData(uuid)
-			playerData.offlineZombie?.damage(damage)
+			playerData.offlineZombie?.damage(damage, source)
 
 		} else {
-			onlinePlayer.damage(damage)
+			onlinePlayer.damage(damage, source)
 		}
 	}
 
