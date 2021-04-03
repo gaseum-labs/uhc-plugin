@@ -2,6 +2,7 @@ package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
+import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
@@ -15,20 +16,18 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
-import com.codeland.uhc.quirk.quirks.classes.Classes
-import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
+import com.mojang.authlib.GameProfile
+import net.minecraft.server.v1_16_R3.PacketPlayOutEntityDestroy
+import net.minecraft.server.v1_16_R3.PacketPlayOutNamedEntitySpawn
 import org.bukkit.*
-import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import java.util.*
-import kotlin.collections.HashMap
 
 @CommandAlias("uhct")
 class TestCommands : BaseCommand() {
@@ -207,5 +206,36 @@ class TestCommands : BaseCommand() {
 		} else {
 			errorMessage(sender, "You are not in PVP!")
 		}
+	}
+
+	@CommandCompletion("@uhcplayer")
+	@Subcommand("changeName")
+	fun changeName(sender: CommandSender, player: OfflinePlayer) {
+		val namePlayer = Bukkit.getPlayer(player.uniqueId) as CraftPlayer? ?: return
+
+		val nameField = GameProfile::class.java.getDeclaredField("name")
+		nameField.isAccessible = true
+
+		val modifiers = Field::class.java.getDeclaredField("modifiers")
+		modifiers.isAccessible = true
+		modifiers.setInt(nameField, nameField.modifiers.and(Modifier.FINAL.inv()))
+
+		val actualName = namePlayer.profile.name
+		nameField.set(namePlayer.profile, "${ChatColor.RESET}A")
+
+		Bukkit.getOnlinePlayers().filter { it != namePlayer }.forEach { viewPlayer ->
+			viewPlayer as CraftPlayer
+
+			val destroyPacket = PacketPlayOutEntityDestroy(namePlayer.entityId)
+			viewPlayer.handle.playerConnection.sendPacket(destroyPacket)
+
+			//val pack = PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, namePlayer.handle)
+			//viewPlayer.handle.playerConnection.sendPacket(pack)
+
+			val spawnPacket = PacketPlayOutNamedEntitySpawn(namePlayer.handle)
+			viewPlayer.handle.playerConnection.sendPacket(spawnPacket)
+		}
+
+		nameField.set(namePlayer.profile, actualName)
 	}
 }

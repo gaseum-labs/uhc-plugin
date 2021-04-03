@@ -13,6 +13,8 @@ import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import com.mojang.authlib.GameProfile
+import io.netty.buffer.*
 import net.md_5.bungee.api.ChatColor
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
@@ -21,6 +23,8 @@ import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.command.CommandSender
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt

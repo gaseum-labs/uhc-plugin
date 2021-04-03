@@ -1,8 +1,13 @@
 package com.codeland.uhc.team
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.PlayerData
+import net.minecraft.server.v1_16_R3.PacketPlayOutEntityDestroy
+import net.minecraft.server.v1_16_R3.PacketPlayOutNamedEntitySpawn
+import net.minecraft.server.v1_16_R3.PacketPlayOutPlayerInfo
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.Team
 
@@ -16,18 +21,41 @@ object NameManager {
 
 		playerData.replaceZombieWithPlayer(player)
 
-		val team = TeamData.playersTeam(player.uniqueId)
-		val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
-		val fakeTeam = scoreboard.getTeam(player.name) ?: makeFakeTeam(player.name)
+		Bukkit.getOnlinePlayers().filter { it != player }.forEach { onlineplayer ->
+			onlineplayer as CraftPlayer
+			player as CraftPlayer
 
-		if (team == null) {
-			player.setPlayerListName(null)
-			updateTeam(fakeTeam, ColorPair(ChatColor.WHITE))
+			Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
+				onlineplayer.handle.playerConnection.sendPacket(
+					PacketPlayOutEntityDestroy(player.entityId)
+				)
 
-		} else {
-			player.setPlayerListName(team.colorPair.colorString(player.name))
-			updateTeam(fakeTeam, team.colorPair)
+				onlineplayer.handle.playerConnection.sendPacket(
+					PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, player.handle)
+				)
+
+				onlineplayer.handle.playerConnection.sendPacket(
+					PacketPlayOutNamedEntitySpawn(player.handle)
+				)
+			}
 		}
+
+		(player as CraftPlayer).handle.playerConnection.sendPacket(
+			PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, player.handle)
+		)
+
+		//val team = TeamData.playersTeam(player.uniqueId)
+		//val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
+		//val fakeTeam = scoreboard.getTeam(player.name) ?: makeFakeTeam(player.name)
+
+		//if (team == null) {
+		//	player.setPlayerListName(null)
+		//	updateTeam(fakeTeam, ColorPair(ChatColor.WHITE))
+//
+		//} else {
+		//	player.setPlayerListName(team.colorPair.colorString(player.name))
+		//	updateTeam(fakeTeam, team.colorPair)
+		//}
 	}
 
 	fun makeFakeTeam(name: String): Team {
