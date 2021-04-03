@@ -25,6 +25,11 @@ class DungeonChestReplacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(si
 
 						chest.inventory.clear()
 
+                        val table = chest.lootTable
+                        if (table != null) {
+                            table.key.key
+                        }
+
 						val numRares = Util.randRange(1, 2)
 						val numCommons = NUM_ITEMS - numRares
 

@@ -17,11 +17,14 @@ import com.codeland.uhc.util.Util
 import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
+import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.command.CommandSender
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_16_R3.metadata.EntityMetadataStore
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
@@ -222,6 +225,30 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			//ParkourCheckpoint.lobbyParkourTick() //DISABLED FOR NOW
 
 			AbstractLobby.lobbyTipsTick(currentTick)
+
+            TeamData.teams.forEach { team ->
+                val teamPlayers = team.members.mapNotNull { Bukkit.getPlayer(it) }
+
+                teamPlayers.forEachIndexed { i, player ->
+                    teamPlayers.forEachIndexed { j, otherPlayer ->
+                        if (i != j) {
+                            val meta = DataWatcher((otherPlayer as CraftPlayer).handle)
+	                        
+                            (player as CraftPlayer).handle.playerConnection.sendPacket(
+                                PacketPlayOutEntityMetadata(otherPlayer.entityId, meta, false)
+                            )
+                        }
+                    }
+                }
+            }
+
+            PlayerData.playerDataList.forEach { (uuid, playerData) ->
+                val player = Bukkit.getPlayer(uuid)
+                if (player != null) {
+                    val entityPacket = PacketPlayOutEntityMetadata()
+                    (player as CraftPlayer).handle.playerConnection.sendPacket(entityPacket)
+                }
+            }
 
 			/* highly composite number */
 			currentTick = (currentTick + 1) % 294053760
