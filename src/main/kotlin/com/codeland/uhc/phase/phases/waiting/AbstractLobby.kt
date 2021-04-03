@@ -8,6 +8,7 @@ import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
@@ -62,7 +63,7 @@ object AbstractLobby {
 			fun tip(player: Player, playerData: PlayerData) {
 				if (isFirst()) playerData.loadingTip = (Math.random() * loadingTips.size).toInt()
 
-				player.sendActionBar("${ChatColor.GOLD}UHC Tips: ${ChatColor.WHITE}${ChatColor.BOLD}${loadingTips[playerData.loadingTip]}")
+				player.sendActionBar(Component.text("${ChatColor.GOLD}UHC Tips: ${ChatColor.WHITE}${ChatColor.BOLD}${loadingTips[playerData.loadingTip]}"))
 			}
 
 			Bukkit.getOnlinePlayers().forEach { player ->
@@ -72,9 +73,9 @@ object AbstractLobby {
 				if (!playerData.participating && !playerData.lobbyPVP.inPvp) {
 					if (player.gameMode == GameMode.SPECTATOR) {
 						if (slideN(0)) {
-							player.sendActionBar("${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc lobby ${ChatColor.GOLD}to return to lobby")
+							player.sendActionBar(Component.text("${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc lobby ${ChatColor.GOLD}to return to lobby"))
 						} else {
-							player.sendActionBar("")
+							player.sendActionBar(Component.empty())
 						}
 					} else {
 						when {
@@ -83,7 +84,7 @@ object AbstractLobby {
 									val linked = GameRunner.bot?.isLinked(player.uniqueId)
 
 									if (linked == null || linked) tip(player, playerData)
-									else player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}You are not linked! ${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}\"%link [your minecraft username]\" ${ChatColor.GOLD}in discord")
+									else player.sendActionBar(Component.text("${ChatColor.RED}${ChatColor.BOLD}You are not linked! ${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}\"%link [your minecraft username]\" ${ChatColor.GOLD}in discord"))
 								} else tip(player, playerData)
 							}
 							slideN(1) -> {
@@ -91,7 +92,7 @@ object AbstractLobby {
 							}
 							slideN(2) -> {
 								if (team == null) tip(player, playerData)
-								else player.sendActionBar("${ChatColor.GOLD}Team name: ${team.colorPair.colorStringModified(team.displayName, ChatColor.BOLD)} ${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc name [name] ${ChatColor.GOLD}to set your team's name")
+								else player.sendActionBar(Component.text("${ChatColor.GOLD}Team name: ${team.colorPair.colorStringModified(team.displayName, ChatColor.BOLD)} ${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc name [name] ${ChatColor.GOLD}to set your team's name"))
 							}
 						}
 					}

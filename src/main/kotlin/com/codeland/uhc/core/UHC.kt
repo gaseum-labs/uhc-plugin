@@ -2,9 +2,9 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.gui.item.ParkourCheckpoint
-import com.codeland.uhc.phase.*
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.waiting.AbstractLobby
 import com.codeland.uhc.phase.phases.waiting.PvpData
@@ -13,10 +13,7 @@ import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
-import com.destroystokyo.paper.Title
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.chat.TextComponent
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
@@ -24,7 +21,6 @@ import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.command.CommandSender
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
-import org.bukkit.craftbukkit.v1_16_R3.metadata.EntityMetadataStore
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
@@ -151,7 +147,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		quirks[type.ordinal].enabled = enabled
 
 		if (enabled) type.incompatibilities.forEach { other ->
-			var otherQuirk = GameRunner.uhc.getQuirk(other)
+			val otherQuirk = GameRunner.uhc.getQuirk(other)
 
 			if (otherQuirk.enabled) {
 				otherQuirk.enabled = false
@@ -233,9 +229,11 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
                     teamPlayers.forEachIndexed { j, otherPlayer ->
                         if (i != j) {
                             val meta = DataWatcher((otherPlayer as CraftPlayer).handle)
-	                        
+
+	                        meta.register(DataWatcherObject(0, DataWatcherRegistry.a), 0x40)
+
                             (player as CraftPlayer).handle.playerConnection.sendPacket(
-                                PacketPlayOutEntityMetadata(otherPlayer.entityId, meta, false)
+                                PacketPlayOutEntityMetadata(otherPlayer.entityId, meta, true)
                             )
                         }
                     }
@@ -320,19 +318,19 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		if (winners.isNotEmpty()) {
 			val winningTeam = TeamData.playersTeam(winners[0])
 
-			val topMessage: TextComponent
-			val bottomMessage: TextComponent
+			val topMessage: String
+			val bottomMessage: String
 
 			if (winningTeam == null) {
 				val winningPlayer = Bukkit.getPlayer(winners[0])
 
-				topMessage = TextComponent("${ChatColor.GOLD}${ChatColor.BOLD}${winningPlayer?.name} Has Won!")
-				bottomMessage = TextComponent()
+				topMessage = "${ChatColor.GOLD}${ChatColor.BOLD}${winningPlayer?.name} Has Won!"
+				bottomMessage = ""
 
 				ledger.addEntry(winningPlayer?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
 
 			} else {
-				topMessage = TextComponent(winningTeam.colorPair.colorString("${winningTeam.displayName} Has Won!"))
+				topMessage = winningTeam.colorPair.colorString("${winningTeam.displayName} Has Won!")
 
 				var playerString = ""
 				winners.forEach { winner ->
@@ -342,19 +340,16 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 					ledger.addEntry(player?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
 				}
 
-				bottomMessage = TextComponent(winningTeam.colorPair.colorString(playerString.dropLast(1)))
+				bottomMessage = winningTeam.colorPair.colorString(playerString.dropLast(1))
 			}
 
-			val title = Title(topMessage, bottomMessage, 0, 200, 40)
-			Bukkit.getServer().onlinePlayers.forEach { player -> player.sendTitle(title) }
+			Bukkit.getServer().onlinePlayers.forEach { player -> player.sendTitle(topMessage, bottomMessage, 0, 200, 40) }
 
 			ledger.createTextFile()
 
 		/* no one won the game */
 		} else {
-			val title = Title(TextComponent("${ChatColor.GOLD}${ChatColor.BOLD}No one wins?"), TextComponent(""), 0, 200, 40)
-
-			Bukkit.getServer().onlinePlayers.forEach { player -> player.sendTitle(title) }
+			Bukkit.getServer().onlinePlayers.forEach { player -> player.sendTitle("${ChatColor.GOLD}${ChatColor.BOLD}No one wins?", "", 0, 200, 40) }
 		}
 
 		/* remove all teams */

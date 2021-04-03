@@ -2,6 +2,7 @@ package com.codeland.uhc.util
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.util.Util.randFromArray
+import net.kyori.adventure.text.Component
 import org.bukkit.Color
 import org.bukkit.FireworkEffect
 import org.bukkit.Material
@@ -359,6 +360,7 @@ object ItemUtil {
 		override fun isCursed() = false
 		override fun conflictsWith(other: Enchantment) = false
 		override fun canEnchantItem(item: ItemStack) = true
+		override fun displayName(level: Int) = Component.empty()
 	}
 
 	fun randomAddInventory(inventory: Inventory, item: ItemStack) {
