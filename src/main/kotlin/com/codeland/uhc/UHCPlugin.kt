@@ -61,8 +61,8 @@ class UHCPlugin : JavaPlugin() {
 		try {
 			Util.log(GoogleDDNSUpdater.updateDomain(address))
 		} catch (ex: Exception) {
-			Util.log("${ex}")
-			Util.log("${ChatColor.RED}DDNS FAILED | STARTING SERVER AT ${address}")
+			Util.log("$ex")
+			Util.log("${ChatColor.RED}DDNS FAILED | STARTING SERVER AT $address")
 		}
 
 		GameRunner.bot = try {

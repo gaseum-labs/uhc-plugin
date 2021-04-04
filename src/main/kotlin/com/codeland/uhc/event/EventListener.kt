@@ -139,8 +139,9 @@ class EventListener : Listener {
 		/* dying in lobby pvp */
 		if (playerData.lobbyPVP.inPvp) {
 			/* announce death to only lobby pvpers */
-			PvpData.allInPvp { pvpPlayer, _ ->
-				pvpPlayer.sendMessage(event.deathMessage ?: "${player.name} fucking died")
+			val deathMessage = event.deathMessage()
+			if (deathMessage != null) PvpData.allInPvp { pvpPlayer, _ ->
+				pvpPlayer.sendMessage(deathMessage)
 			}
 
 			/* lobby pvp players do not drop items */

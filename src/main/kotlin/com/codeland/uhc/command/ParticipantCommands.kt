@@ -14,9 +14,7 @@ import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.*
 import com.codeland.uhc.util.Util
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Material
+import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -235,5 +233,27 @@ class ParticipantCommands : BaseCommand() {
 
 		control.displayName = name
 		sender.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+	}
+
+	@CommandCompletion("@uhcplayer")
+	@Subcommand("tp")
+	@Description("teleport to a player as a spectator")
+	fun tpHereCommand(sender: CommandSender, toPlayer: OfflinePlayer) {
+		sender as Player
+
+		val playerData = PlayerData.getPlayerData(sender.uniqueId)
+
+		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && !playerData.participating && sender.gameMode == GameMode.SPECTATOR) {
+			val location = GameRunner.getPlayerLocation(toPlayer.uniqueId)
+
+			if (location != null) {
+				sender.teleport(location)
+				GameRunner.sendGameMessage(sender, "Teleported to ${toPlayer.name}")
+			} else {
+				Commands.errorMessage(sender, "Could not find player ${toPlayer.name}")
+			}
+		} else {
+			Commands.errorMessage(sender, "You cannot teleport right now")
+		}
 	}
 }

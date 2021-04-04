@@ -203,11 +203,6 @@ object GameRunner {
 		return respawnLocation
 	}
 
-	fun prettyPlayerName(player: Player): String {
-		val team = TeamData.playersTeam(player.uniqueId)
-		return team?.colorPair?.colorString(player.name) ?: player.name
-	}
-
 	fun sendGameMessage(player: Player, message: String) {
 		player.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}$message")
 	}
@@ -290,10 +285,6 @@ object GameRunner {
 
 	fun coloredInGameMessage(string: String, color: ChatColor): String {
 		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
-	}
-
-	fun broadcast(message: String) {
-		Bukkit.getOnlinePlayers().forEach { sendGameMessage(it, message)}
 	}
 
 	fun netherIsAllowed() : Boolean {

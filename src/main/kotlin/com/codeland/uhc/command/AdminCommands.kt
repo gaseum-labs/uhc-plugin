@@ -233,4 +233,33 @@ class AdminCommands : BaseCommand() {
 
 		GameRunner.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
 	}
+
+	@CommandCompletion("@uhcplayer")
+	@Subcommand("tp")
+	@Description("teleport to a player's location")
+	fun tpCommand(sender: CommandSender, toPlayer: OfflinePlayer) {
+		sender as Player
+		if (Commands.opGuard(sender)) return
+
+		val location = GameRunner.getPlayerLocation(toPlayer.uniqueId)
+
+		if (location == null) {
+			Commands.errorMessage(sender, "Could not find that player!")
+		} else {
+			GameRunner.sendGameMessage(sender, "Teleported to ${toPlayer.name}")
+			sender.teleport(location)
+		}
+	}
+
+	@CommandCompletion("@uhcplayer")
+	@Subcommand("tphere")
+	@Description("teleport a player to you")
+	fun tpHereCommand(sender: CommandSender, toPlayer: OfflinePlayer) {
+		sender as Player
+		if (Commands.opGuard(sender)) return
+
+		GameRunner.teleportPlayer(toPlayer.uniqueId, sender.location)
+
+		GameRunner.sendGameMessage(sender, "Teleported ${toPlayer.name} to you")
+	}
 }

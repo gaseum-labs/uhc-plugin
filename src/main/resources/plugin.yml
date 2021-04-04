@@ -8,3 +8,5 @@ authors:
 load: STARTUP
 main: com.codeland.uhc.UHCPlugin
 api-version: 1.16
+depend:
+  - ProtocolLib
