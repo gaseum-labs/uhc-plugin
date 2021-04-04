@@ -226,32 +226,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 			AbstractLobby.lobbyTipsTick(currentTick)
 
-            TeamData.teams.forEach { team ->
-                val teamPlayers = team.members.mapNotNull { Bukkit.getPlayer(it) }
-
-                teamPlayers.forEachIndexed { i, player ->
-                    teamPlayers.forEachIndexed { j, otherPlayer ->
-                        if (i != j) {
-                            val meta = DataWatcher((otherPlayer as CraftPlayer).handle)
-
-	                        meta.register(DataWatcherObject(0, DataWatcherRegistry.a), 0x40)
-
-                            (player as CraftPlayer).handle.playerConnection.sendPacket(
-                                PacketPlayOutEntityMetadata(otherPlayer.entityId, meta, true)
-                            )
-                        }
-                    }
-                }
-            }
-
-            PlayerData.playerDataList.forEach { (uuid, playerData) ->
-                val player = Bukkit.getPlayer(uuid)
-                if (player != null) {
-                    val entityPacket = PacketPlayOutEntityMetadata()
-                    (player as CraftPlayer).handle.playerConnection.sendPacket(entityPacket)
-                }
-            }
-
 			/* highly composite number */
 			currentTick = (currentTick + 1) % 294053760
 		}

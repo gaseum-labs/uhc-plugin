@@ -2,14 +2,10 @@ package com.codeland.uhc.team
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.PlayerData
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityDestroy
-import net.minecraft.server.v1_16_R3.PacketPlayOutNamedEntitySpawn
-import net.minecraft.server.v1_16_R3.PacketPlayOutPlayerInfo
+import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
-import org.bukkit.scoreboard.Team
 
 object NameManager {
 	fun updateName(player: Player) {
@@ -22,21 +18,37 @@ object NameManager {
 		playerData.replaceZombieWithPlayer(player)
 
 		/* refresh the entity for the updated player for each other player */
-		Bukkit.getOnlinePlayers().filter { it != player }.forEach { onlineplayer ->
-			onlineplayer as CraftPlayer
+		Bukkit.getOnlinePlayers().filter { it != player }.forEach { onlinePlayer ->
+			onlinePlayer as CraftPlayer
 			player as CraftPlayer
 
+			onlinePlayer.handle.playerConnection.sendPacket(
+				PacketPlayOutEntityDestroy(player.entityId)
+			)
+
+			onlinePlayer.handle.playerConnection.sendPacket(
+				PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, player.handle)
+			)
+
+			onlinePlayer.handle.playerConnection.sendPacket(
+				PacketPlayOutNamedEntitySpawn(player.handle)
+			)
+
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
-				onlineplayer.handle.playerConnection.sendPacket(
-					PacketPlayOutEntityDestroy(player.entityId)
+				val dataWatcher = DataWatcher(player.handle)
+				dataWatcher.register(DataWatcherObject(0, DataWatcherRegistry.a), 0x00)
+				dataWatcher.register(DataWatcherObject(16, DataWatcherRegistry.a), 0xff.toByte())
+
+				onlinePlayer.handle.playerConnection.sendPacket(
+					PacketPlayOutEntityMetadata(player.entityId, dataWatcher, true)
 				)
 
-				onlineplayer.handle.playerConnection.sendPacket(
-					PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, player.handle)
-				)
+				/* remove glowing from other players who are no longer teammates */
+				val otherPlayerGlowUpdater = DataWatcher(onlinePlayer.handle)
+				otherPlayerGlowUpdater.register(DataWatcherObject(0, DataWatcherRegistry.a), 0x00)
 
-				onlineplayer.handle.playerConnection.sendPacket(
-					PacketPlayOutNamedEntitySpawn(player.handle)
+				player.handle.playerConnection.sendPacket(
+					PacketPlayOutEntityMetadata(onlinePlayer.entityId, otherPlayerGlowUpdater , true)
 				)
 			}
 		}
