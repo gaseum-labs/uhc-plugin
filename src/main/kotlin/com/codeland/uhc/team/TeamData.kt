@@ -58,8 +58,8 @@ object TeamData {
 		return ColorPair(first, second)
 	}
 
-	fun teamExists(colorPair: ColorPair): Boolean {
-		return teams.any { team -> team.colorPair == colorPair }
+	fun teamExists(colorPair: ColorPair, otherThan: Team): Boolean {
+		return teams.any { team -> team !== otherThan && team.colorPair == colorPair }
 	}
 
 	fun playersTeam(playerUuid: UUID): Team? {

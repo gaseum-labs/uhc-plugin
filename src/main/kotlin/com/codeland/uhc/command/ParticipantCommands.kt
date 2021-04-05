@@ -88,14 +88,14 @@ class ParticipantCommands : BaseCommand() {
 		}
 	}
 
-	@CommandCompletion("@chatcolors")
+	@CommandCompletion("@teamcolor")
 	@Subcommand("color")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender, color0: ChatColor) {
 		changeTeamColor(sender, color0, null)
 	}
 
-	@CommandCompletion("@chatcolors @chatcolors")
+	@CommandCompletion("@teamcolor @teamcolor")
 	@Subcommand("color")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor) {
@@ -108,7 +108,7 @@ class ParticipantCommands : BaseCommand() {
 		val colors = TeamMaker.getColorList(1)
 
 		if (colors == null)
-			Commands.errorMessage(sender, "Could not make you a new random color!")
+			Commands.errorMessage(sender, "Could not make you a new random color")
 		else
 			changeTeamColor(sender, colors[0].color0, colors[0].color1)
 	}
@@ -157,19 +157,21 @@ class ParticipantCommands : BaseCommand() {
 		val team = TeamData.playersTeam((sender as Player).uniqueId)
 			?: return Commands.errorMessage(sender, "You are not on a team!")
 
-		fun colorError(color: ChatColor) {
+		fun colorError(color: ChatColor) =
 			Commands.errorMessage(sender, "${color}${Util.colorPrettyNames[color.ordinal]} ${ChatColor.RESET}is not a valid team color!")
-		}
 
 		if (!Team.isValidColor(color0)) return colorError(color0)
+
 		if (color1 != null && !Team.isValidColor(color1)) return colorError(color1)
 
+		/* parse what the color the user wants to change to */
 		val colorPair = ColorPair(color0, color1)
 
-		if (colorPair.color0 == colorPair.color1)
-			return Commands.errorMessage(sender, "Invalid color combination!")
+		if (!colorPair.valid()) return Commands.errorMessage(sender, "Invalid color combination!")
 
-		if (TeamData.teamExists(colorPair))
+		if (colorPair.orderEquals(team.colorPair)) return Commands.errorMessage(sender, "This is already your color!")
+
+		if (TeamData.teamExists(colorPair, team))
 			return Commands.errorMessage(sender, "That color combination is already being used by another team!")
 
 		/* change team name to be default name for new color if no custom name has been set */

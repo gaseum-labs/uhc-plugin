@@ -5,20 +5,7 @@ import org.bukkit.ChatColor
 import org.bukkit.Color
 import kotlin.math.ceil
 
-class ColorPair {
-	constructor(color0: ChatColor, color1: ChatColor?) {
-		this.color0 = color0
-		this.color1 = color1
-	}
-
-	constructor(color: ChatColor) {
-		this.color0 = color
-		this.color1 = null
-	}
-
-	val color0: ChatColor
-	val color1: ChatColor?
-
+class ColorPair(val color0: ChatColor, val color1: ChatColor? = null) {
 	/**
 	 * colors a string based on this colorPair
 	 * single colored pairs will just make the string one color
@@ -113,7 +100,11 @@ class ColorPair {
 		return (color0 == other.color0 || color0 == other.color1) && (color1 == other.color0 || color1 == other.color1)
 	}
 
-	companion object {
-		val DEFAULT = ColorPair(ChatColor.WHITE)
+	fun orderEquals(other: ColorPair): Boolean {
+		return color0 == other.color0 && color1 == other.color1
+	}
+
+	fun valid(): Boolean {
+		return color0 != color1
 	}
 }
