@@ -174,7 +174,13 @@ class ParticipantCommands : BaseCommand() {
 
 		/* change team name to be default name for new color if no custom name has been set */
 		if (team.isDefaultName()) team.displayName = colorPair.getName()
+		val oldColorPair = team.colorPair
 		team.colorPair = colorPair
+
+		/* update team channel name */
+		if (GameRunner.uhc.usingBot) {
+			GameRunner.bot?.updateTeamChannel(oldColorPair, colorPair)
+		}
 
 		val message = "Your team color has been changed to ${colorPair.colorString(colorPair.getName())}"
 

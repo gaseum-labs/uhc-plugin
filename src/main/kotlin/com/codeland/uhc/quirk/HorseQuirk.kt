@@ -81,7 +81,6 @@ class HorseQuirk(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 					//	)
 					//}
 					//
-					//Util.debug("${armor} | ${toughness}")
 					//horse.getAttribute(Attribute.GENERIC_ARMOR)?.baseValue = armor
 					//horse.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS)?.baseValue = toughness
 				}

@@ -34,7 +34,6 @@ object PreGenner {
 				val chunkTEST = world.getChunkAt(x, z)
 
 				val bt = chunkTEST.getBlock(0, 0, 0)
-				Util.debug("${bt.x} | ${bt.z}")
 
 				if (++along == max) {
 					Bukkit.getScheduler().cancelTask(taskID)
