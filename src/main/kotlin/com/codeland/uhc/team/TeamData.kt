@@ -41,13 +41,24 @@ object TeamData {
 
 	val teams = ArrayList<Team>()
 
-	fun colorPairFromIndex(index: Int): ColorPair? {
-		val pair = Util.getCombination(index, teamColors.size)
+	fun colorPairFromIndex(index: Int): ColorPair {
+		val pair = Util.combination(index)
 
-		if (pair.first == -1) return null
-		if (pair.first == pair.second) return ColorPair(teamColors[pair.first])
+		return if (pair.first == pair.second)
+			ColorPair(teamColors[pair.first])
+		else
+			ColorPair(teamColors[pair.first], teamColors[pair.second])
+	}
 
-		return ColorPair(teamColors[pair.first], teamColors[pair.second])
+	fun indexFromColorPair(pair: ColorPair): Int {
+		val first = teamColorIndices[pair.color0.ordinal]
+		val secondColor = pair.color1
+		val second = if (secondColor == null) first else teamColorIndices[secondColor.ordinal]
+
+		return if (first >= second)
+			Util.inverseCombination(first, second)
+		else
+			Util.inverseCombination(second, first)
 	}
 
 	fun colorPairPermutation(n: Int): ColorPair? {

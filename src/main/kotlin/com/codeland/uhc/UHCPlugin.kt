@@ -81,8 +81,6 @@ class UHCPlugin : JavaPlugin() {
 			PhaseVariant.POSTGAME_DEFAULT
 		))
 
-		TeamMaker.readData()
-
 		server.scheduler.scheduleSyncDelayedTask(this) {
 			WorldManager.initWorlds()
 

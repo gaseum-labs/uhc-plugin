@@ -154,27 +154,16 @@ object Util {
 		return (value - low) / (high - low)
 	}
 
-	fun getCombination(index: Int, size: Int): Pair<Int, Int> {
-		var gate = size
-		var numIters = 0
-		var modIndex = index
-
-		while (numIters < size) {
-			if (index < gate) {
-				var firstIndex = numIters
-				var secondIndex = modIndex
-
-				return Pair(firstIndex, secondIndex)
-
-			} else {
-				++numIters
-				modIndex -= size - numIters
-				gate += size - numIters
-			}
-		}
-
-		return Pair(-1, -1)
+	fun combination(index: Int): Pair<Int, Int> {
+		val first = inverseSumToN(index) - 1
+		return Pair(first, index - sumToN(first))
 	}
+
+	fun inverseCombination(first: Int, second: Int) = sumToN(first) + second
+
+	fun sumToN(n: Int) = (n * (n + 1)) / 2
+
+	fun inverseSumToN(sum: Int) = ((1 + sqrt(1 + 8.0 * sum)) / 2).toInt()
 
 	val colorPrettyNames = arrayOf(
 		"Black",
@@ -261,5 +250,14 @@ object Util {
 		}
 
 		return array
+	}
+}
+
+fun main() {
+	for (i in 0..90) {
+		val (first, second) = Util.combination(i)
+		val result = Util.inverseCombination(first, second)
+
+		println("$i -> ($first, $second) -> $result")
 	}
 }

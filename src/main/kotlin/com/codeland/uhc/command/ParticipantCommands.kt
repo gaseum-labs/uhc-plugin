@@ -105,7 +105,7 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("color random")
 	@Description("change your team color")
 	fun teamColor(sender: CommandSender) {
-		val colors = TeamMaker.getColorList(1)
+		val colors = TeamMaker.randomAvailable(1)
 
 		if (colors == null)
 			Commands.errorMessage(sender, "Could not make you a new random color")

@@ -107,9 +107,8 @@ class TeamCommands : BaseCommand() {
 		val teams = TeamMaker.getTeamsRandom(playerArray, teamSize)
 		val numPreMadeTeams = teams.size
 
-		val teamColorPairs = TeamMaker.getColorList(numPreMadeTeams)
+		val teamColorPairs = TeamMaker.randomAvailable(numPreMadeTeams)
 			?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!")
-
 
 		teams.forEachIndexed { index, uuids ->
 			uuids.forEach { uuid ->
