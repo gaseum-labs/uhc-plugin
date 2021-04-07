@@ -17,6 +17,9 @@ import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.util.GoogleDDNSUpdater
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.craftbukkit.v1_16_R3.CraftServer
+import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
+import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
 
 class UHCPlugin : JavaPlugin() {
@@ -92,7 +95,7 @@ class UHCPlugin : JavaPlugin() {
 			GameRunner.uhc.startWaiting()
 		}
 	}
-	
+
 	override fun onDisable() {
 		Chat.saveFile()
 	}
