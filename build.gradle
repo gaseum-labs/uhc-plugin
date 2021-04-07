@@ -8,11 +8,18 @@ buildscript {
 plugins {
     id 'idea'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.72'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
+    id 'fr.il_totore.manadrop' version '0.4.1-SNAPSHOT'
 }
 
 /* local gradle tasks */
 apply from: 'user.gradle'
+
+import static fr.il_totore.manadrop.MinecraftDependencyHelper.*
+import static fr.il_totore.manadrop.MinecraftRepositoryHelper.*
+
+group = pluginGroup
+version = pluginVersion
 
 idea {
     module {
@@ -36,25 +43,15 @@ compileTestKotlin {
 
 repositories {
     mavenCentral()
-    maven {
-        name = 'papermc'
-        url = 'https://papermc.io/repo/repository/maven-public/'
-    }
-    maven {
-        name = 'sonatype'
-        url = 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
+    paperPublic()
+    sonatype()
     maven {
         name = 'aikar'
         url = "https://repo.aikar.co/content/groups/aikar/"
     }
     maven {
         name = 'dmulloy2'
-        url = 'https://repo.dmulloy2.net/repository/public'
-    }
-    maven {
-        name = 'spigot'
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+        url = 'https://repo.dmulloy2.net/nexus/repository/public/'
     }
 }
 
@@ -62,27 +59,24 @@ allprojects {
     repositories {
         mavenCentral()
         jcenter()
-        mavenLocal()
         maven { url 'https://jitpack.io' }
     }
 }
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.4.32'
     implementation 'org.kodein.di:kodein-di:7.0.0'
-    implementation 'com.destroystokyo.paper:paper-api:1.16.1-R0.1-SNAPSHOT'
+    implementation paperApi('1.16.5')
+    implementation spigot('1.16.4')
     implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
     implementation 'net.dv8tion:JDA:4.2.0_168'
     compileOnly 'com.comphenix.protocol:ProtocolLib:4.6.0'
-    compileOnly 'com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT'
-    compileOnly 'org.spigotmc:spigot:1.16.5-R0.1-SNAPSHOT'
 }
 
 shadowJar {
     relocate 'co.aikar.commands', 'com.codeland.uhc.acf'
     relocate 'co.aikar.locales', 'com.codeland.uhc.locales'
-    exclude 'paper-184.jar'
-    exclude 'com.comphenix.*'
 }
 
 build.dependsOn shadowJar

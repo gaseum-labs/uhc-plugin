@@ -15,8 +15,10 @@ import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.util.GoogleDDNSUpdater
+import com.codeland.uhc.world.gen.WorldGenManager
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
 
 class UHCPlugin : JavaPlugin() {
@@ -44,6 +46,7 @@ class UHCPlugin : JavaPlugin() {
 
 		/* register all events */
 		server.pluginManager.registerEvents(ClassesEvents(), this)
+		server.pluginManager.registerEvents(WorldGenManager(server), this)
 		server.pluginManager.registerEvents(Chat(), this)
 		server.pluginManager.registerEvents(Crits(), this)
 		server.pluginManager.registerEvents(EventListener(), this)
@@ -92,8 +95,12 @@ class UHCPlugin : JavaPlugin() {
 			GameRunner.uhc.startWaiting()
 		}
 	}
-	
+
 	override fun onDisable() {
 		Chat.saveFile()
+	}
+
+	override fun getDefaultWorldGenerator(worldName: String, id: String?): ChunkGenerator? {
+		return super.getDefaultWorldGenerator(worldName, id)
 	}
 }
