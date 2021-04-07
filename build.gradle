@@ -50,6 +50,7 @@ repositories {
     }
     maven {
         name = 'dmulloy2'
+        url = 'https://repo.dmulloy2.net/nexus/repository/public/'
         url = 'https://repo.dmulloy2.net/repository/public'
     }
     maven {
