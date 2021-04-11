@@ -19,6 +19,9 @@ object WorldGenManager {
     private val jField = WorldChunkManagerOverworld::class.java.getDeclaredField("j")
     private val kField = WorldChunkManagerOverworld::class.java.getDeclaredField("k")
 
+	/* spooky biome stuff */
+	private val genLayerField = WorldChunkManagerOverworld::class.java.getDeclaredField("f")
+
     fun init(server: Server) {
 	    serverWorldsField.isAccessible = true
 	    worldServerField.isAccessible = true
@@ -30,6 +33,8 @@ object WorldGenManager {
 	    iField.isAccessible = true
 	    jField.isAccessible = true
 	    kField.isAccessible = true
+
+	    genLayerField.isAccessible = true
 
 	    /* replace worlds hashmap on server */
 	    serverWorldsField[server] = object : HashMap<String, World>() {

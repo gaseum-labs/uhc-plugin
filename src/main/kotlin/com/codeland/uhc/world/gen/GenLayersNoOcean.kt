@@ -1,0 +1,131 @@
+package com.codeland.uhc.world.gen
+
+import net.minecraft.server.v1_16_R3.*
+import net.minecraft.server.v1_16_R3.GenLayerSpecial.*
+import java.util.function.LongFunction
+
+object GenLayersNoOcean {
+	val aFunction = GenLayers::class.java.getDeclaredMethod("a", Long::class.java, AreaTransformer2::class.java, AreaFactory::class.java, Int::class.java, LongFunction::class.java)
+
+	init {
+		aFunction.isAccessible = true
+	}
+
+	private fun <T : Area, C : AreaContextTransformed<T>> createAreaFactory(var0: Boolean, var1: Int, var2: Int, var3: LongFunction<C>): AreaFactory<T> {
+		var var4 = LayerIsland.INSTANCE.a(var3.apply(1L))
+		var4 = GenLayerZoom.FUZZY.a(var3.apply(2000L), var4)
+		var4 = GenLayerIsland.INSTANCE.a(var3.apply(1L), var4)
+		var4 = GenLayerZoom.NORMAL.a(var3.apply(2001L), var4)
+		var4 = GenLayerIsland.INSTANCE.a(var3.apply(2L), var4)
+		var4 = GenLayerIsland.INSTANCE.a(var3.apply(50L), var4)
+		var4 = GenLayerIsland.INSTANCE.a(var3.apply(70L), var4)
+		var4 = GenLayerIcePlains.INSTANCE.a(var3.apply(2L), var4)
+
+		var var5 = GenLayerOceanEdge.INSTANCE.a(var3.apply(2L))
+		var5 = aFunction.invoke(null, 2001L, GenLayerZoom.NORMAL, var5, 6, var3) as AreaFactory<T>
+		var4 = GenLayerTopSoil.INSTANCE.a(var3.apply(2L), var4)
+		var4 = GenLayerIsland.INSTANCE.a(var3.apply(3L), var4)
+		var4 = Special1.INSTANCE.a(var3.apply(2L), var4)
+		var4 = Special2.INSTANCE.a(var3.apply(2L), var4)
+		var4 = Special3.INSTANCE.a(var3.apply(3L), var4)
+		var4 = GenLayerZoom.NORMAL.a(var3.apply(2002L), var4)
+		var4 = GenLayerZoom.NORMAL.a(var3.apply(2003L), var4)
+		var4 = GenLayerIsland.INSTANCE.a(var3.apply(4L), var4)
+		var4 = GenLayerMushroomIsland.INSTANCE.a(var3.apply(5L), var4)
+		var4 = GenLayerDeepOcean.INSTANCE.a(var3.apply(4L), var4)
+		var4 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var4, 0, var3) as AreaFactory<T>
+
+		var var6 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var4, 0, var3) as AreaFactory<T>
+		var6 = GenLayerCleaner.INSTANCE.a(var3.apply(100L), var6)
+
+		var var7 = GenLayerBiome(var0).a(var3.apply(200L), var4)
+		var7 = GenLayerJungle.INSTANCE.a(var3.apply(1001L), var7)
+		var7 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var7, 2, var3) as AreaFactory<T>
+		var7 = GenLayerDesert.INSTANCE.a(var3.apply(1000L), var7)
+
+		val var8 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var6, 2, var3) as AreaFactory<T>
+		var7 = GenLayerRegionHills.INSTANCE.a(var3.apply(1000L), var7, var8)
+		var6 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var6, 2, var3) as AreaFactory<T>
+		var6 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var6, var2, var3) as AreaFactory<T>
+		var6 = GenLayerRiver.INSTANCE.a(var3.apply(1L), var6)
+		var6 = GenLayerSmooth.INSTANCE.a(var3.apply(1000L), var6)
+		var7 = GenLayerPlains.INSTANCE.a(var3.apply(1001L), var7)
+
+		for (var9 in 0 until var1) {
+			var7 = GenLayerZoom.NORMAL.a(var3.apply((1000 + var9).toLong()), var7)
+			if (var9 == 0) {
+				var7 = GenLayerIsland.INSTANCE.a(var3.apply(3L), var7)
+			}
+			if (var9 == 1 || var1 == 1) {
+				var7 = GenLayerMushroomShore.INSTANCE.a(var3.apply(1000L), var7)
+			}
+		}
+
+		var7 = GenLayerSmooth.INSTANCE.a(var3.apply(1000L), var7)
+		var7 = GenLayerRiverMix.INSTANCE.a(var3.apply(100L), var7, var6)
+		var7 = GenLayerOcean.INSTANCE.a(var3.apply(100L), var7, var5)
+		return var7
+	}
+
+	private fun <T : Area, C : AreaContextTransformed<T>> createAreaFactoryNoOceans(var0: Boolean, var1: Int, var2: Int, var3: LongFunction<C>): AreaFactory<T> {
+		//var var4 = LayerIsland.INSTANCE.a(var3.apply(1L))
+		//var4 = GenLayerZoom.FUZZY.a(var3.apply(2000L), var4)
+		//var4 = GenLayerIsland.INSTANCE.a(var3.apply(1L), var4)
+		//var4 = GenLayerZoom.NORMAL.a(var3.apply(2001L), var4)
+		//var4 = GenLayerIsland.INSTANCE.a(var3.apply(2L), var4)
+		//var4 = GenLayerIsland.INSTANCE.a(var3.apply(50L), var4)
+		//var4 = GenLayerIsland.INSTANCE.a(var3.apply(70L), var4)
+		//var4 = GenLayerIcePlains.INSTANCE.a(var3.apply(2L), var4)
+		var var4 = LayerNoOcean().a(var3.apply(2L))
+
+		var var5 = GenLayerOceanEdge.INSTANCE.a(var3.apply(2L))
+		var5 = aFunction.invoke(null, 2001L, GenLayerZoom.NORMAL, var5, 6, var3) as AreaFactory<T>
+		var4 = GenLayerTopSoil.INSTANCE.a(var3.apply(2L), var4)
+		var4 = GenLayerIsland.INSTANCE.a(var3.apply(3L), var4)
+		var4 = Special1.INSTANCE.a(var3.apply(2L), var4)
+		var4 = Special2.INSTANCE.a(var3.apply(2L), var4)
+		var4 = Special3.INSTANCE.a(var3.apply(3L), var4)
+		var4 = GenLayerZoom.NORMAL.a(var3.apply(2002L), var4)
+		//var4 = GenLayerZoom.NORMAL.a(var3.apply(2003L), var4)
+		var4 = GenLayerIsland.INSTANCE.a(var3.apply(4L), var4)
+		var4 = GenLayerMushroomIsland.INSTANCE.a(var3.apply(5L), var4)
+		//var4 = GenLayerDeepOcean.INSTANCE.a(var3.apply(4L), var4) not needed because no oceans
+		var4 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var4, 0, var3) as AreaFactory<T>
+
+		var var6 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var4, 0, var3) as AreaFactory<T>
+		var6 = GenLayerCleaner.INSTANCE.a(var3.apply(100L), var6)
+
+		var var7 = GenLayerBiome(var0).a(var3.apply(200L), var4)
+		var7 = GenLayerJungle.INSTANCE.a(var3.apply(1001L), var7)
+		//var7 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var7, 2, var3) as AreaFactory<T>
+		var7 = GenLayerDesert.INSTANCE.a(var3.apply(1000L), var7)
+
+		val var8 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var6, 2, var3) as AreaFactory<T>
+		var7 = GenLayerRegionHills.INSTANCE.a(var3.apply(1000L), var7, var8)
+		var6 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var6, 2, var3) as AreaFactory<T>
+		var6 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var6, var2, var3) as AreaFactory<T>
+		var6 = GenLayerRiver.INSTANCE.a(var3.apply(1L), var6)
+		var6 = GenLayerSmooth.INSTANCE.a(var3.apply(1000L), var6)
+		var7 = GenLayerPlains.INSTANCE.a(var3.apply(1001L), var7)
+
+		for (var9 in 0 until var1) {
+			var7 = GenLayerZoom.NORMAL.a(var3.apply((1000 + var9).toLong()), var7)
+			if (var9 == 0) {
+				var7 = GenLayerIsland.INSTANCE.a(var3.apply(3L), var7)
+			}
+			if (var9 == 1 || var1 == 1) {
+				var7 = GenLayerMushroomShore.INSTANCE.a(var3.apply(1000L), var7)
+			}
+		}
+
+		var7 = GenLayerSmooth.INSTANCE.a(var3.apply(1000L), var7)
+		var7 = GenLayerRiverMix.INSTANCE.a(var3.apply(100L), var7, var6)
+		var7 = GenLayerOcean.INSTANCE.a(var3.apply(100L), var7, var5)
+		return var7
+	}
+
+	fun createGenLayer(var0: Long, var2: Boolean, var3: Int, var4: Int): GenLayer {
+		val var6 = createAreaFactoryNoOceans(var2, var3, var4, LongFunction { var2x: Long -> WorldGenContextArea(25, var0, var2x) })
+		return GenLayer(var6)
+	}
+}
