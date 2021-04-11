@@ -1,9 +1,12 @@
 package com.codeland.uhc.world.gen
 
+import com.codeland.uhc.core.WorldGenOption
+import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.util.Util
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Server
 import org.bukkit.World
+import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import org.bukkit.craftbukkit.v1_16_R3.CraftServer
 import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
 
@@ -18,9 +21,11 @@ object WorldGenManager {
     private val iField = WorldChunkManagerOverworld::class.java.getDeclaredField("i")
     private val jField = WorldChunkManagerOverworld::class.java.getDeclaredField("j")
     private val kField = WorldChunkManagerOverworld::class.java.getDeclaredField("k")
+	private val biomeMapField = BiomeRegistry::class.java.getDeclaredField("c")
+	private val minecraftKeyField = ResourceKey::class.java.getDeclaredField("c")
+	private val keyField = MinecraftKey::class.java.getDeclaredField("key")
 
-	/* spooky biome stuff */
-	private val genLayerField = WorldChunkManagerOverworld::class.java.getDeclaredField("f")
+	var centerBiome: ResourceKey<BiomeBase>? = null
 
     fun init(server: Server) {
 	    serverWorldsField.isAccessible = true
@@ -33,21 +38,28 @@ object WorldGenManager {
 	    iField.isAccessible = true
 	    jField.isAccessible = true
 	    kField.isAccessible = true
-
-	    genLayerField.isAccessible = true
+		biomeMapField.isAccessible = true
+		minecraftKeyField.isAccessible = true
+	    keyField.isAccessible = true
 
 	    /* replace worlds hashmap on server */
+
 	    serverWorldsField[server] = object : HashMap<String, World>() {
 		    override fun put(key: String, value: World): World? {
 			    onWorldAdded(value)
 			    return super.put(key, value)
 		    }
 	    }
+
+	    /* parse center biome */
+
+	    val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
+	    centerBiome = biomeMap.asIterable().find { key ->
+		    (keyField[(minecraftKeyField[key.value] as MinecraftKey)] as String).toLowerCase() == WorldGenOption.CENTER_BIOME.get()
+	    }?.value
     }
 
     private fun onWorldAdded(world: World) {
-	    Util.log("WORLD ${world.name} ADDED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
         if (world.environment == World.Environment.NORMAL) {
             val worldServer = worldServerField[world] as WorldServer
             val chunkProviderServer = chunkProviderServerField[worldServer] as ChunkProviderServer
@@ -58,7 +70,8 @@ object WorldGenManager {
                 hField.getLong(worldChunkGeneratorOverworld),
                 iField.getBoolean(worldChunkGeneratorOverworld),
                 jField.getBoolean(worldChunkGeneratorOverworld),
-                kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>
+                kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+	            centerBiome
             )
 
             worldChunkManagerBField[chunkGenerator] = worldChunkGeneratorOverworldNoOcean

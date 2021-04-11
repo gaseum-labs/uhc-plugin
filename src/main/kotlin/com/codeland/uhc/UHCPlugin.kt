@@ -2,10 +2,7 @@ package com.codeland.uhc
 
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.*
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.Preset
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.core.*
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
 import com.codeland.uhc.phase.DimensionBar
@@ -54,6 +51,9 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Brew(), this)
 		server.pluginManager.registerEvents(Barter(), this)
 		Packet.init()
+
+		WorldGenOption.readFile("uhc.properties")
+		WorldGenOption.displayOptions()
 
 		WorldGenManager.init(server)
 
