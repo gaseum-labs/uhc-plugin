@@ -10,7 +10,9 @@ import com.codeland.uhc.command.Commands.errorMessage
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.phases.waiting.AbstractLobby
 import com.codeland.uhc.phase.phases.waiting.PvpData
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
@@ -208,34 +210,19 @@ class TestCommands : BaseCommand() {
 		}
 	}
 
-	@CommandCompletion("@uhcplayer")
-	@Subcommand("changeName")
-	fun changeName(sender: CommandSender, player: OfflinePlayer) {
-		val namePlayer = Bukkit.getPlayer(player.uniqueId) as CraftPlayer? ?: return
+	@Subcommand("lobbyCycle")
+	fun lobbyCycle(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
 
-		val nameField = GameProfile::class.java.getDeclaredField("name")
-		nameField.isAccessible = true
-
-		val modifiers = Field::class.java.getDeclaredField("modifiers")
-		modifiers.isAccessible = true
-		modifiers.setInt(nameField, nameField.modifiers.and(Modifier.FINAL.inv()))
-
-		val actualName = namePlayer.profile.name
-		nameField.set(namePlayer.profile, "${ChatColor.RESET}A")
-
-		Bukkit.getOnlinePlayers().filter { it != namePlayer }.forEach { viewPlayer ->
-			viewPlayer as CraftPlayer
-
-			val destroyPacket = PacketPlayOutEntityDestroy(namePlayer.entityId)
-			viewPlayer.handle.playerConnection.sendPacket(destroyPacket)
-
-			//val pack = PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, namePlayer.handle)
-			//viewPlayer.handle.playerConnection.sendPacket(pack)
-
-			val spawnPacket = PacketPlayOutNamedEntitySpawn(namePlayer.handle)
-			viewPlayer.handle.playerConnection.sendPacket(spawnPacket)
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.lobbyPVP.inPvp) {
+				val player = Bukkit.getPlayer(uuid)
+				if (player != null) PvpData.disablePvp(player)
+			}
 		}
 
-		nameField.set(namePlayer.profile, actualName)
+		WorldManager.destroyPVPWorld()
+		val pvpWorld = WorldManager.createPVPWorld()
+		if (pvpWorld != null) AbstractLobby.prepareWorld(pvpWorld, GameRunner.uhc)
 	}
 }

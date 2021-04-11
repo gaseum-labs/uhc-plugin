@@ -59,6 +59,35 @@ object WorldGenManager {
 	    }?.value
     }
 
+	val lobbyBiomes = arrayOf(
+		Biomes.MODIFIED_JUNGLE,
+		Biomes.MUSHROOM_FIELDS,
+		Biomes.SHATTERED_SAVANNA,
+		Biomes.ERODED_BADLANDS,
+		Biomes.GIANT_SPRUCE_TAIGA_HILLS,
+		Biomes.DARK_FOREST_HILLS,
+		Biomes.ICE_SPIKES,
+		Biomes.BASALT_DELTAS
+	)
+
+	val lobbyCenterBiomes = arrayOf(
+		Biomes.DESERT,
+		Biomes.MODIFIED_JUNGLE_EDGE,
+		Biomes.PLAINS,
+		Biomes.BIRCH_FOREST
+	)
+
+	val oceanBiomes = arrayOf(
+		Biomes.WARM_OCEAN,
+		Biomes.LUKEWARM_OCEAN,
+		Biomes.OCEAN
+	)
+
+	fun getBiomes(): Pair<ResourceKey<BiomeBase>, ResourceKey<BiomeBase>> {
+		val list = lobbyBiomes.asIterable().shuffled()
+		return Pair(list[0], list[1])
+	}
+
     private fun onWorldAdded(world: World) {
         if (world.environment == World.Environment.NORMAL) {
             val worldServer = worldServerField[world] as WorldServer
@@ -66,16 +95,31 @@ object WorldGenManager {
             val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGenerator
             val worldChunkGeneratorOverworld = worldChunkManagerBField[chunkGenerator] as? WorldChunkManagerOverworld ?: return Util.log("Wrong WorldChunkGenerator found.")
 
-            val worldChunkGeneratorOverworldNoOcean = WorldChunkManagerOverworldNoOcean(
-                hField.getLong(worldChunkGeneratorOverworld),
-                iField.getBoolean(worldChunkGeneratorOverworld),
-                jField.getBoolean(worldChunkGeneratorOverworld),
-                kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
-	            centerBiome
-            )
+	        val customWorldChunkGeneratorOverworld = if (WorldManager.isNonGameWorld(world)) {
+		        val (biome0, biome1) = getBiomes()
+		        WorldChunkManagerOverworldLobby(
+			        hField.getLong(worldChunkGeneratorOverworld),
+			        iField.getBoolean(worldChunkGeneratorOverworld),
+			        jField.getBoolean(worldChunkGeneratorOverworld),
+			        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+			        biome0,
+			        biome1,
+			        Util.randFromArray(lobbyCenterBiomes),
+			        Util.randFromArray(oceanBiomes),
+			        60
+		        )
+	        } else {
+		        WorldChunkManagerOverworldNoOcean(
+			        hField.getLong(worldChunkGeneratorOverworld),
+			        iField.getBoolean(worldChunkGeneratorOverworld),
+			        jField.getBoolean(worldChunkGeneratorOverworld),
+			        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+			        centerBiome
+		        )
+	        }
 
-            worldChunkManagerBField[chunkGenerator] = worldChunkGeneratorOverworldNoOcean
-	        worldChunkManagerCField[chunkGenerator] = worldChunkGeneratorOverworldNoOcean
+            worldChunkManagerBField[chunkGenerator] = customWorldChunkGeneratorOverworld
+	        worldChunkManagerCField[chunkGenerator] = customWorldChunkGeneratorOverworld
         }
     }
 }

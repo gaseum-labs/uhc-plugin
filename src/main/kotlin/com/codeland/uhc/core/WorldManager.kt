@@ -4,6 +4,7 @@ import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.WorldCreator
 import org.bukkit.generator.ChunkGenerator
+import java.io.File
 
 object WorldManager {
 	const val LOBBY_WORLD_NAME = "uhc_lobby"
@@ -19,6 +20,15 @@ object WorldManager {
 		creator.environment(World.Environment.NORMAL)
 		creator.generateStructures(true)
 		return creator.createWorld()
+	}
+
+	fun destroyPVPWorld() {
+		Bukkit.getServer().unloadWorld(PVP_WORLD_NAME, false)
+
+		val file = File(PVP_WORLD_NAME)
+		if (file.exists() && file.isDirectory) {
+			file.deleteRecursively()
+		}
 	}
 
 	fun createLobbyWorld(): World? {

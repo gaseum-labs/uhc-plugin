@@ -4,15 +4,13 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.event.Chat
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.GameMode
-import org.bukkit.Location
+import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 
@@ -97,6 +95,32 @@ object AbstractLobby {
 						}
 					}
 				}
+			}
+		}
+	}
+
+	fun prepareWorld(world: World, uhc: UHC) {
+		Util.debug("${ChatColor.RED}PREPARING ${world.name}")
+		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, true)
+		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
+		world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
+		world.difficulty = Difficulty.NORMAL
+
+		if (WorldManager.isNonGameWorld(world)) {
+			world.worldBorder.center = Location(world, 0.5, 0.0, 0.5)
+			world.worldBorder.size = uhc.lobbyRadius * 2 + 1.0
+
+			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+			world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
+			world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
+			world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, false)
+
+			world.time = 6000
+			world.isThundering = false
+			world.setStorm(false)
+
+			if (world.name == WorldManager.PVP_WORLD_NAME) {
+				PvpArena.prepareArena(world, uhc.lobbyRadius, uhc)
 			}
 		}
 	}
