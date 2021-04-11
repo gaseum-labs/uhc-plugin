@@ -83,6 +83,19 @@ object WorldGenManager {
 		Biomes.OCEAN
 	)
 
+	val pvpBiomes = arrayOf(
+		Biomes.MODIFIED_WOODED_BADLANDS_PLATEAU,
+		Biomes.MODIFIED_JUNGLE_EDGE,
+		Biomes.ICE_SPIKES,
+		Biomes.DESERT_HILLS,
+		Biomes.JUNGLE,
+		Biomes.DARK_FOREST_HILLS,
+		Biomes.TALL_BIRCH_FOREST,
+		Biomes.SUNFLOWER_PLAINS,
+		Biomes.GRAVELLY_MOUNTAINS,
+		Biomes.SNOWY_TUNDRA
+	)
+
 	fun getBiomes(): Pair<ResourceKey<BiomeBase>, ResourceKey<BiomeBase>> {
 		val list = lobbyBiomes.asIterable().shuffled()
 		return Pair(list[0], list[1])
@@ -95,7 +108,7 @@ object WorldGenManager {
             val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGenerator
             val worldChunkGeneratorOverworld = worldChunkManagerBField[chunkGenerator] as? WorldChunkManagerOverworld ?: return Util.log("Wrong WorldChunkGenerator found.")
 
-	        val customWorldChunkGeneratorOverworld = if (WorldManager.isNonGameWorld(world)) {
+	        val customWorldChunkGeneratorOverworld = if (world.name == WorldManager.LOBBY_WORLD_NAME) {
 		        val (biome0, biome1) = getBiomes()
 		        WorldChunkManagerOverworldLobby(
 			        hField.getLong(worldChunkGeneratorOverworld),
@@ -108,6 +121,15 @@ object WorldGenManager {
 			        Util.randFromArray(oceanBiomes),
 			        60
 		        )
+	        } else if (world.name == WorldManager.PVP_WORLD_NAME) {
+	        	WorldChunkManagerOverworldPvp(
+			        hField.getLong(worldChunkGeneratorOverworld),
+			        iField.getBoolean(worldChunkGeneratorOverworld),
+			        jField.getBoolean(worldChunkGeneratorOverworld),
+			        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+			        pvpBiomes,
+			        48
+	        	)
 	        } else {
 		        WorldChunkManagerOverworldNoOcean(
 			        hField.getLong(worldChunkGeneratorOverworld),
