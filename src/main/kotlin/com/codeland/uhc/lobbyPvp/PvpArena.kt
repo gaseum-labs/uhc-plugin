@@ -1,4 +1,4 @@
-package com.codeland.uhc.phase.phases.waiting
+package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.phases.endgame.AbstractEndgame

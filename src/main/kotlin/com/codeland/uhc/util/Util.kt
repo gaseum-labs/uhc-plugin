@@ -1,6 +1,11 @@
 package com.codeland.uhc.util
 
 import com.destroystokyo.paper.utils.PaperPluginLogger
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.ComponentBuilder
+import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.World
 import java.util.logging.Level
 import kotlin.math.acos
@@ -250,6 +255,20 @@ object Util {
 		}
 
 		return array
+	}
+
+	fun gradientString(string: String, from: TextColor, to: TextColor): Component {
+		var component = Component.empty()
+
+		string.forEachIndexed { i, c ->
+			val along = i.toFloat() / (string.length - 1)
+			val red = ((to.red() - from.red()) * along + from.red()).toInt()
+			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
+			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
+			component = component.append(Component.text(c, TextColor.color(red.shl(16).or(gre.shl(8)).or(blu))))
+		}
+
+		return component
 	}
 }
 

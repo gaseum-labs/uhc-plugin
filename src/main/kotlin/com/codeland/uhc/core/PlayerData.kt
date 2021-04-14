@@ -1,7 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.phase.phases.waiting.PvpData
+import com.codeland.uhc.lobbyPvp.PvpData
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.Location

@@ -8,7 +8,7 @@ import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.waiting.AbstractLobby
+import com.codeland.uhc.core.AbstractLobby
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass

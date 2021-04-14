@@ -1,15 +1,13 @@
-package com.codeland.uhc.phase.phases.waiting
+package com.codeland.uhc.core
 
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.WorldManager
-import com.codeland.uhc.event.Chat
 import com.codeland.uhc.gui.item.CommandItemType
+import com.codeland.uhc.lobbyPvp.PvpArena
+import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
@@ -43,7 +41,7 @@ object AbstractLobby {
 		player.teleport(location)
 
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
-		CommandItemType.giveItem(CommandItemType.JOIN_PVP, player.inventory)
+		CommandItemType.giveItem(CommandItemType.PVP_QUEUE, player.inventory)
 		//CommandItemType.giveItem(CommandItemType.PARKOUR_CHECKPOINT, player.inventory)
 		CommandItemType.giveItem(CommandItemType.SPECTATE, player.inventory)
 
@@ -67,9 +65,13 @@ object AbstractLobby {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				val playerData = PlayerData.getPlayerData(player.uniqueId)
 				val team = TeamData.playersTeam(player.uniqueId)
+				val queueTime = PvpQueue.queueTime(player.uniqueId)
 
 				if (!playerData.participating && !playerData.lobbyPVP.inPvp) {
-					if (player.gameMode == GameMode.SPECTATOR) {
+					if (queueTime != null) {
+						player.sendActionBar(Util.gradientString("Queue Time: ${Util.timeString(queueTime)} | Players in Queue: ${PvpQueue.size()}", TextColor.color(0xff3190), TextColor.color(0x003190)))
+
+					} else if (player.gameMode == GameMode.SPECTATOR) {
 						if (slideN(0)) {
 							player.sendActionBar(Component.text("${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc lobby ${ChatColor.GOLD}to return to lobby"))
 						} else {

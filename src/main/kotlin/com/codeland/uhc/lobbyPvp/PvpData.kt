@@ -1,21 +1,16 @@
-package com.codeland.uhc.phase.phases.waiting
+package com.codeland.uhc.lobbyPvp
 
-import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.WorldManager
-import com.codeland.uhc.phase.phases.endgame.AbstractEndgame
+import com.codeland.uhc.core.AbstractLobby
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.*
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
-import org.bukkit.block.Block
-import org.bukkit.block.Sign
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
-import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -34,10 +29,11 @@ class PvpData(
 	var lastLocation: Location,
 	var oldGamemode: GameMode,
 	var oldInventoryContents: Array<out ItemStack>,
+	var lastPlayed: UUID?
 ) {
 	companion object {
 		fun defaultPvpData(): PvpData {
-			return PvpData(false, false, 0, 0, 0, genKillstreakList(), Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0), GameMode.CREATIVE, emptyArray())
+			return PvpData(false, false, 0, 0, 0, genKillstreakList(), Location(Bukkit.getWorlds()[0], 0.0, 0.0, 0.0), GameMode.CREATIVE, emptyArray(), null)
 		}
 
 		val STILL_TIME = 10 * 20
@@ -72,7 +68,7 @@ class PvpData(
 			LobbyPvpItems::genAnvil,
 		)
 
-		fun enablePvp(player: Player, save: Boolean, teleport: Boolean): Location {
+		fun enablePvp(player: Player, save: Boolean, location: Location) {
 			val pvpData = PlayerData.getLobbyPvp(player.uniqueId)
 
 			/* save before pvp state */
@@ -116,23 +112,7 @@ class PvpData(
 			player.fallDistance = 0f
 			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
 
-			/* tell player how to exit */
-			player.sendActionBar("${GOLD}You have entered PVP. Use ${WHITE}${BOLD}/uhc lobby ${GOLD}to exit")
-
-			val location = pvpSpawnLocation(GameRunner.uhc, player)
-			if (teleport) player.teleport(location)
-
-			allInPvp { sendPlayer, pvpData ->
-				GameRunner.sendGameMessage(sendPlayer, "${player.name} entered pvp")
-			}
-
-			/* for some reason XP cannot get set immediately on respawn */
-			SchedulerUtil.nextTick {
-				player.exp = 0.0f
-				player.level = 5
-			}
-
-			return location
+			player.teleport(location)
 		}
 
 		fun disablePvp(player: Player) {

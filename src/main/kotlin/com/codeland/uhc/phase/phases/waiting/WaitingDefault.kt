@@ -1,5 +1,6 @@
 package com.codeland.uhc.phase.phases.waiting
 
+import com.codeland.uhc.core.AbstractLobby
 import com.codeland.uhc.phase.Phase
 import org.bukkit.*
 import org.bukkit.entity.Player

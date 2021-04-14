@@ -1,13 +1,11 @@
-package com.codeland.uhc.phase.phases.waiting
+package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.event.Brew
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
-import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
 

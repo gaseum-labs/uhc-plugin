@@ -2,7 +2,6 @@ package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
-import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
@@ -12,23 +11,17 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.waiting.AbstractLobby
-import com.codeland.uhc.phase.phases.waiting.PvpData
+import com.codeland.uhc.core.AbstractLobby
+import com.codeland.uhc.lobbyPvp.PvpData
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
 import com.codeland.uhc.team.TeamData
-import com.mojang.authlib.GameProfile
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityDestroy
-import net.minecraft.server.v1_16_R3.PacketPlayOutNamedEntitySpawn
 import org.bukkit.*
 import org.bukkit.command.CommandSender
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 import java.util.*
 
 @CommandAlias("uhct")

@@ -1,7 +1,6 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.phase.phases.waiting.PvpData
+import com.codeland.uhc.lobbyPvp.PvpData
 import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -10,8 +9,6 @@ import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityShootBowEvent
-import org.bukkit.event.entity.PlayerDeathEvent
-import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerInteractEvent
 
 class PvpListener : Listener {

@@ -10,8 +10,8 @@ import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
-import com.codeland.uhc.phase.phases.waiting.AbstractLobby
-import com.codeland.uhc.phase.phases.waiting.PvpData
+import com.codeland.uhc.core.AbstractLobby
+import com.codeland.uhc.lobbyPvp.PvpData
 import com.codeland.uhc.quirk.HorseQuirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
@@ -23,10 +23,7 @@ import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
-import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.attribute.Attribute
-import org.bukkit.attribute.AttributeModifier
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -36,7 +33,6 @@ import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
-import org.bukkit.event.vehicle.VehicleExitEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
@@ -207,17 +203,14 @@ class EventListener : Listener {
 		val player = event.player
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		/* pvp respawns back into pvp */
-		if (playerData.lobbyPVP.inPvp) {
-			event.respawnLocation = PvpData.enablePvp(player, false, false)
-
 		/* players respawning who are in the game */
-		} else if (playerData.participating) {
+		 if (playerData.participating) {
 			val respawnLocation = GameRunner.respawnPlayer(player, player.uniqueId, playerData)
 			if (respawnLocation != null) event.respawnLocation = respawnLocation
 
-		/* players respawning when they are eliminated */
+		/* players respawning when they are eliminated or when dying in lobby pvp */
 		} else {
+			playerData.lobbyPVP.inPvp = false
 			event.respawnLocation = AbstractLobby.onSpawnLobby(player)
 		}
 	}

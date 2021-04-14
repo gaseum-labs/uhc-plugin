@@ -6,25 +6,20 @@ import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.grace.GraceDefault
-import com.codeland.uhc.phase.phases.waiting.AbstractLobby
-import com.codeland.uhc.phase.phases.waiting.PvpData
+import com.codeland.uhc.lobbyPvp.PvpData
+import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
-import com.mojang.authlib.GameProfile
-import io.netty.buffer.*
 import net.md_5.bungee.api.ChatColor
-import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.command.CommandSender
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
@@ -225,6 +220,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			//ParkourCheckpoint.lobbyParkourTick() //DISABLED FOR NOW
 
 			AbstractLobby.lobbyTipsTick(currentTick)
+
+			PvpGameManager.perTick(currentTick)
 
 			/* highly composite number */
 			currentTick = (currentTick + 1) % 294053760

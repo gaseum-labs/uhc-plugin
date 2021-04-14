@@ -1,21 +1,22 @@
 package com.codeland.uhc.gui.item
 
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phase.phases.waiting.PvpData
+import com.codeland.uhc.lobbyPvp.PvpData
+import com.codeland.uhc.lobbyPvp.PvpQueue
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class JoinPvp : CommandItem() {
+class QueuePVP : CommandItem() {
 	val MATERIAL = Material.IRON_SWORD
 
 	override fun create(): ItemStack {
 		val stack = ItemStack(MATERIAL)
 		val meta = stack.itemMeta
 
-		meta.setDisplayName("${ChatColor.RESET}${ChatColor.RED}Join PVP")
-		meta.lore = listOf("Right click to enter the lobby pvp arena")
+		meta.setDisplayName("${ChatColor.RESET}${ChatColor.RED}Queue for PVP")
+		meta.lore = listOf("Right click to to join the lobby PVP queue")
 
 		stack.itemMeta = meta
 		return stack
@@ -26,6 +27,12 @@ class JoinPvp : CommandItem() {
 	}
 
 	override fun onUse(uhc: UHC, player: Player) {
-		PvpData.enablePvp(player, true, true)
+		if (PvpQueue.queueTime(player.uniqueId) == null) {
+			PvpQueue.add(player.uniqueId)
+			player.sendMessage("${ChatColor.RED}Entered PVP Queue")
+		} else {
+			PvpQueue.remove(player.uniqueId)
+			player.sendMessage("${ChatColor.RED}Left PVP Queue")
+		}
 	}
 }
