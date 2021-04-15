@@ -10,8 +10,6 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.team.TeamMaker
-import com.codeland.uhc.util.Util
 import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
@@ -23,56 +21,76 @@ import kotlin.collections.ArrayList
 class TeamCommands : BaseCommand() {
 	@Subcommand("clear")
 	@Description("remove all current teams")
-	fun clearTeams(sender : CommandSender) {
+	fun clearTeamsCommand(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
 		/* unstage everyone and remove teams */
-		TeamData.removeAllTeams { uuid -> PlayerData.setStaged(uuid, false) }
+		TeamData.destroyTeam(null, true) { PlayerData.setStaged(it, false) }
 
 		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
 
 	@CommandCompletion("@teamcolor @uhcplayer")
-	@Subcommand("add")
-	@Description("add a player to a team")
-	fun addPlayerToTeamCommand(sender: CommandSender, color: ChatColor, player: OfflinePlayer) {
-		if (!Team.isValidColor(color)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color.ordinal]} is not a valid color")
+	@Subcommand("create")
+	@Description("create a new team for a player")
+	fun createTeamCommand(sender: CommandSender, player: OfflinePlayer) {
+		if (Commands.opGuard(sender)) return
 
-		internalAddPlayerToTeam(sender, ColorPair(color), player)
+		internalAddPlayersToTeam(sender, null, listOf(player), { list ->
+			GameRunner.sendGameMessage(sender, "Created a team for ${list.firstOrNull()?.name}}")
+		}, {
+			Commands.errorMessage(sender, "Could not create a team")
+		})
 	}
 
-	@CommandCompletion("@teamcolor @teamcolor @uhcplayer")
-	@Subcommand("add2")
-	@Description("add a player to a team with two colors")
-	fun addPlayerToTeamCommand(sender: CommandSender, color0: ChatColor, color1: ChatColor, player: OfflinePlayer) {
-		if (!Team.isValidColor(color0)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color0.ordinal]} is not a valid color")
-		if (!Team.isValidColor(color1)) return Commands.errorMessage(sender, "${Util.colorPrettyNames[color1.ordinal]} is not a valid color")
+	@CommandCompletion("@teamcolor @uhcplayer @uhcplayer")
+	@Subcommand("create")
+	@Description("create a new team comprised of players")
+	fun createTeamCommand(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
+		if (Commands.opGuard(sender)) return
 
-		internalAddPlayerToTeam(sender, ColorPair(color0, color1), player)
+		internalAddPlayersToTeam(sender, null, listOf(player1, player2), { list ->
+			GameRunner.sendGameMessage(sender, "Created a team for ${list.mapNotNull { it.name }.joinToString(" and ")}")
+		}, {
+			Commands.errorMessage(sender, "Could not create a team")
+		})
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
 	@Subcommand("join")
-	@Description("add a player to another player's team")
+	@Description("add the second player to the first player's team")
 	fun addPlayerToTeamCommand(sender: CommandSender, teamPlayer: OfflinePlayer, player: OfflinePlayer) {
-		val team = TeamData.playersTeam(teamPlayer.uniqueId)
-			?: return Commands.errorMessage(sender, "${teamPlayer.name} is not on a team!")
+		if (Commands.opGuard(sender)) return
 
-		internalAddPlayerToTeam(sender, team.colorPair, player)
+		val team = TeamData.playersTeam(teamPlayer.uniqueId)
+			?: return Commands.errorMessage(sender, "${teamPlayer.name} is not on a team")
+
+		internalAddPlayersToTeam(sender, team, listOf(player), { list ->
+			GameRunner.sendGameMessage(sender, "Added ${list.mapNotNull { it.name }.joinToString(" and ")} to ${teamPlayer.name}'s team")
+		}, {
+			Commands.errorMessage(sender, "Could not add players to ${teamPlayer.name}'s team")
+		})
 	}
 
-	private fun internalAddPlayerToTeam(sender: CommandSender, colorPair: ColorPair, player: OfflinePlayer) {
-		if (Commands.opGuard(sender)) return
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+	private fun internalAddPlayersToTeam(
+		sender: CommandSender,
+		team: Team?,
+		players: List<OfflinePlayer>,
+		onSuccess: (List<OfflinePlayer>) -> Unit,
+		onFail: () -> Unit
+	) {
+		val addedPlayers = players.filter { player ->
+			if (PlayerData.isOptingOut(player.uniqueId)) {
+				Commands.errorMessage(sender, "${player.name} is opting out of participating")
+				false
+			} else {
+				true
+			}
+		}
 
-		if (playerData.optingOut)
-			return Commands.errorMessage(sender, "${player.name} is opting out of participating!")
+		val team = TeamData.addToTeam(team, addedPlayers.map { it.uniqueId }, true) { PlayerData.setStaged(it, true) }
 
-		/* stage player and add them to team */
-		val team = TeamData.addToTeam(colorPair, player.uniqueId, true)
-		playerData.staged = true
-
-		GameRunner.sendGameMessage(sender, "Added ${player.name} to team ${colorPair.colorString(team.displayName)}")
+		if (team == null) onFail() else onSuccess(addedPlayers)
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -82,13 +100,13 @@ class TeamCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		val team = TeamData.playersTeam(player.uniqueId)
-			?: return Commands.errorMessage(sender, "${player.name} is not on a team!")
+			?: return Commands.errorMessage(sender, "${player.name} is not on a team")
 
 		/* unstage and remove player from team */
-		TeamData.removeFromTeam(team, player.uniqueId, true)
+		TeamData.removeFromTeam(team, player.uniqueId, true, true)
 		PlayerData.setStaged(player.uniqueId, false)
 
-		GameRunner.sendGameMessage(sender, "Removed ${player.name} from ${team.colorPair.colorString(team.displayName)}")
+		GameRunner.sendGameMessage(sender, "Removed ${player.name} from their team")
 	}
 
 	@Subcommand("random")
@@ -96,42 +114,27 @@ class TeamCommands : BaseCommand() {
 	fun randomTeams(sender : CommandSender, teamSize : Int) {
 		if (Commands.opGuard(sender)) return
 
-		val onlinePlayers = sender.server.onlinePlayers
-		val playerArray = ArrayList<UUID>(onlinePlayers.size)
+		val memberLists = TeamData.generateMemberLists(sender.server.onlinePlayers.filter { player ->
+			!TeamData.isOnTeam(player.uniqueId) && !PlayerData.isOptingOut(player.uniqueId)
+		}.map { it.uniqueId }, teamSize)
 
-		onlinePlayers.forEach { player ->
-			if (TeamData.playersTeam(player.uniqueId) == null && !PlayerData.isOptingOut(player.uniqueId))
-				playerArray.add(player.uniqueId)
+		memberLists.forEach { memberList ->
+			TeamData.addToTeam(null, memberList.filterNotNull(), true) { PlayerData.setStaged(it, true) }
 		}
 
-		val teams = TeamMaker.getTeamsRandom(playerArray, teamSize)
-		val numPreMadeTeams = teams.size
-
-		val teamColorPairs = TeamMaker.randomAvailable(numPreMadeTeams)
-			?: return Commands.errorMessage(sender, "Team Maker could not make enough teams!")
-
-		teams.forEachIndexed { index, uuids ->
-			uuids.forEach { uuid ->
-				if (uuid != null) {
-					TeamData.addToTeam(teamColorPairs[index], uuid, true)
-					PlayerData.setStaged(uuid, true)
-				}
-			}
-		}
-
-		GameRunner.sendGameMessage(sender, "Created ${teams.size} teams with a team size of ${teamSize}!")
+		GameRunner.sendGameMessage(sender, "Created ${memberLists.size} teams of size $teamSize")
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
 	@Subcommand("swap")
 	@Description("swap the teams of two players")
 	fun swapTeams(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
-		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team!")
-		val team2 = TeamData.playersTeam(player2.uniqueId) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team!")
+		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team")
+		val team2 = TeamData.playersTeam(player2.uniqueId) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team")
 
-		TeamData.addToTeam(team2, player1.uniqueId, false)
-		TeamData.addToTeam(team1, player2.uniqueId, false)
+		TeamData.addToTeam(team2, listOf(player1.uniqueId), false) {}
+		TeamData.addToTeam(team1, listOf(player2.uniqueId), false) {}
 
-		GameRunner.sendGameMessage(sender, "${team2.colorPair.colorString(player1.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}and ${team1.colorPair.colorString(player2.name ?: "unknown")} ${ChatColor.GOLD}${ChatColor.BOLD}sucessfully swapped teams!")
+		GameRunner.sendGameMessage(sender, "Swapped teams of ${player1.name} and ${player2.name}")
 	}
 }

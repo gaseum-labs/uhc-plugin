@@ -13,19 +13,11 @@ import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
-import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.team.TeamMaker
-import com.codeland.uhc.util.Util
-import org.bukkit.Bukkit
-import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
-import org.bukkit.attribute.Attribute
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {

@@ -1,77 +1,16 @@
 package com.codeland.uhc.team
 
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.event.Chat
-import com.codeland.uhc.event.Coloring
-import com.codeland.uhc.util.Util
-import net.minecraft.server.v1_16_R3.DataWatcher
-import net.minecraft.server.v1_16_R3.DataWatcherObject
-import net.minecraft.server.v1_16_R3.DataWatcherRegistry
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityMetadata
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor.*
-import org.bukkit.ChatColor
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
-import org.bukkit.entity.Player
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.ceil
 
 object TeamData {
-	val teamColors = arrayOf(
-		BLUE,
-		RED,
-		GREEN,
-		AQUA,
-		LIGHT_PURPLE,
-		YELLOW,
-		DARK_RED,
-		DARK_AQUA,
-		DARK_PURPLE,
-		GRAY,
-		DARK_BLUE,
-		DARK_GREEN,
-		DARK_GRAY
-	)
-
-	val teamColorIndices = Array(ChatColor.values().size) { i ->
-		teamColors.indexOf(ChatColor.values()[i])
-	}
-
-	val MAX_TEAMS = 91
+	val teamColor = TeamColor(4)
 
 	val teams = ArrayList<Team>()
 
-	fun colorPairFromIndex(index: Int): ColorPair {
-		val pair = Util.combination(index)
-
-		return if (pair.first == pair.second)
-			ColorPair(teamColors[pair.first])
-		else
-			ColorPair(teamColors[pair.first], teamColors[pair.second])
-	}
-
-	fun indexFromColorPair(pair: ColorPair): Int {
-		val first = teamColorIndices[pair.color0.ordinal]
-		val secondColor = pair.color1
-		val second = if (secondColor == null) first else teamColorIndices[secondColor.ordinal]
-
-		return if (first >= second)
-			Util.inverseCombination(first, second)
-		else
-			Util.inverseCombination(second, first)
-	}
-
-	fun colorPairPermutation(n: Int): ColorPair? {
-		if (n > teamColors.size * teamColors.size) return null
-		val first: ChatColor = teamColors[n / teamColors.size]
-		var second: ChatColor? = teamColors[n % teamColors.size]
-		if (second == first) second = null
-		return ColorPair(first, second)
-	}
-
-	fun teamExists(colorPair: ColorPair, otherThan: Team): Boolean {
-		return teams.any { team -> team !== otherThan && team.colorPair == colorPair }
-	}
+	var nextTeamID = 0
 
 	fun playersTeam(playerUuid: UUID): Team? {
 		for (team in teams)
@@ -81,77 +20,112 @@ object TeamData {
 		return null
 	}
 
-	fun isOnTeam(playerUuid: UUID): Boolean {
-		for (team in teams)
-			for (teamUUID in team.members)
-				if (playerUuid == teamUUID) return true
+	fun isOnTeam(playerUuid: UUID) = playersTeam(playerUuid) != null
 
-		return false
-	}
+	/**
+	 * @param team the team to add players to. Null if a new team is to be created
+	 * @param destroyTeam set to true if doing anything other than swapping
+	 * @return null if the team could not be created
+	 */
+	fun addToTeam(team: Team?, players: List<UUID>, destroyTeam: Boolean, onAdd: (UUID) -> Unit): Team? {
+		if (players.isEmpty()) return null
 
-	fun playersColor(uuid: UUID): Coloring {
-		val team = playersTeam(uuid) ?: return Chat.solid(BLUE)
-		return team.colorPair::colorString
-	}
+		if (team == null) {
+			/* create the team with players added */
+			val (color1, color2) = teamColor.pickTeam() ?: return null
+			val newTeam = Team(nextTeamID, color1, color2, players as ArrayList<UUID>)
+			++nextTeamID
 
-	fun addToTeam(colorPair: ColorPair, uuid: UUID, destroyTeam: Boolean): Team {
-		/* find if the new team exists */
-		var newTeam = teams.find { team -> team.colorPair == colorPair }
+			/* remove players from their old team */
+			players.forEach { uuid -> removeFromTeam(uuid, destroyTeam, destroyTeam) }
 
-		/* create the team if it doesn't exist */
-		if (newTeam == null) {
-			newTeam = Team(colorPair)
+			/* add new team internally */
 			teams.add(newTeam)
+
+			updateMemberNames(newTeam.members)
+			players.forEach { onAdd(it) }
+
+			return newTeam
+
+		} else {
+			val addedPlayers = players.mapNotNull { uuid ->
+				/* remove player from old team if they are on one */
+				val oldTeam = playersTeam(uuid)
+				if (oldTeam == team) return@mapNotNull null
+
+				if (oldTeam != null) removeFromTeam(oldTeam, uuid, destroyTeam, destroyTeam)
+
+				/* add player to team */
+				team.members.add(uuid)
+
+				uuid
+			}
+
+			updateMemberNames(addedPlayers as ArrayList<UUID>)
+			addedPlayers.forEach { onAdd(it) }
+
+			return team
 		}
-
-		return addToTeam(newTeam, uuid, destroyTeam)
 	}
 
-	fun addToTeam(team: Team, uuid: UUID, destroyTeam: Boolean): Team {
-		/* remove player from old team if they are on one */
-		val oldTeam = playersTeam(uuid)
-		if (oldTeam == team) return team
-		if (oldTeam != null) removeFromTeam(oldTeam, uuid, destroyTeam)
-
-		/* actually add to team internally */
-		team.members.add(uuid)
-
-		/* update player's display name */
-		val onlinePlayer = Bukkit.getPlayer(uuid)
-		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
-
-		/* move player's vc */
-		if (GameRunner.uhc.usingBot) GameRunner.bot?.addToTeamChannel(team, uuid)
-
-		return team
+	fun removeFromTeam(player: UUID, destroyTeam: Boolean, updateNames: Boolean) {
+		val oldTeam = playersTeam(player) ?: return
+		removeFromTeam(oldTeam, player, destroyTeam, updateNames)
 	}
 
-	fun removeFromTeam(player: UUID, destroyTeam: Boolean) {
-		removeFromTeam(playersTeam(player), player, destroyTeam)
-	}
-
-	fun removeFromTeam(oldTeam: Team?, uuid: UUID, destroyTeam: Boolean): Boolean {
-		if (oldTeam == null) return false
-
+	fun removeFromTeam(oldTeam: Team, uuid: UUID, destroyTeam: Boolean, updateNames: Boolean) {
+		/* remove player from the team */
 		oldTeam.members.removeIf { memberUuid -> memberUuid == uuid }
 
-		val onlinePlayer = Bukkit.getPlayer(uuid)
-		if (onlinePlayer != null) NameManager.updateName(onlinePlayer)
-
-		/* remove the team if no one is left on it */
-		if (destroyTeam && oldTeam.members.isEmpty()) {
-			teams.removeIf { team -> team === oldTeam }
-
-			if (GameRunner.uhc.usingBot) GameRunner.bot?.destroyTeamChannel(oldTeam)
-		}
-
-		return true
+		if (oldTeam.members.isEmpty() && destroyTeam) destroyTeam(oldTeam, updateNames) {}
 	}
 
-	fun removeAllTeams(onRemove: (UUID) -> Unit) {
-		while (teams.isNotEmpty()) {
-			onRemove(teams[0].members[0])
-			removeFromTeam(teams[0], teams[0].members[0], true)
+	/**
+	 * @param team the team to destroy. Null to destroy all teams
+	 * @param onRemove called for each player that was removed from a team this way
+	 */
+	fun destroyTeam(team: Team?, updateNames: Boolean, onRemove: (UUID) -> Unit) {
+		teams.removeIf { currentTeam ->
+			if (currentTeam === team || team == null) {
+				/* store a copy of letters to iterate over */
+				val oldMemberList = ArrayList(currentTeam.members)
+
+				/* remove the internal representation of players from the team */
+				currentTeam.members.removeIf { onRemove(it); true }
+
+				/* the names will be updated as if they were not on the team */
+				if (updateNames) updateMemberNames(oldMemberList)
+				teamColor.removeTeam(currentTeam.color1, currentTeam.color2)
+
+				true
+			} else {
+				false
+			}
+		}
+	}
+
+	private fun updateMemberNames(memberList: ArrayList<UUID>) {
+		memberList.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateName(it) }
+	}
+
+	fun generateMemberLists(players: List<UUID>, teamSize: Int): Array<List<UUID?>> {
+		val used = Array(players.size) { false }
+
+		val numTeams = ceil(players.size / teamSize.toDouble()).toInt()
+
+		return Array(numTeams) {
+			List(teamSize) {
+				var index = (Math.random() * players.size).toInt()
+				val startIndex = index
+
+				while (used[index]) {
+					index = (index + 1) % players.size
+					if (index == startIndex) return@List null
+				}
+				used[index] = true
+
+				players[index]
+			}
 		}
 	}
 }

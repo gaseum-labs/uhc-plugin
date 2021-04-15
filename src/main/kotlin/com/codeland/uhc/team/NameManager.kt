@@ -17,6 +17,8 @@ object NameManager {
 
 		playerData.replaceZombieWithPlayer(player)
 
+		/* team name updating */
+
 		/* refresh the entity for the updated player for each other player */
 		Bukkit.getOnlinePlayers().filter { it != player }.forEach { onlinePlayer ->
 			onlinePlayer as CraftPlayer
