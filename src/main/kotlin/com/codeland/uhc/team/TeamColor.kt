@@ -4,31 +4,30 @@ import net.kyori.adventure.text.format.TextColor
 import kotlin.random.Random
 
 class TeamColor(val subdivisions: Int) {
-	val cube = Array(subdivisions * subdivisions * subdivisions) { defaultTaken(it) }
-
+	/* may not actually, be used, instead relying solely on pickTeam for fail state */
 	val maxTeams = ((subdivisions * subdivisions * subdivisions) - subdivisions) / 2
 
+	private val cube = Array(subdivisions * subdivisions * subdivisions) { defaultTaken(it) }
+
+	private val subSize = 256 / subdivisions
+
 	private fun defaultTaken(index: Int): Boolean {
-		val (r, g, b) = rgbFromIndex(index)
-		return r == g && g == b && b == r
+		val (x, y, z) = positionFromIndex(index)
+		return x == y && y == z && z == x
 	}
 
-	private fun findOneColor(random: Random): Int? {
+	private fun findIndex(random: Random): Int? {
 		val offset = random.nextInt(0, cube.size)
 
 		for (i in cube.indices) {
 			val index = (i + offset) % cube.size
-
-			if (!cube[index]) {
-				cube[index] = true
-				return index
-			}
+			if (!cube[index]) return index
 		}
 
 		return null
 	}
 
-	private fun rgbFromIndex(index: Int): Triple<Int, Int, Int> {
+	private fun positionFromIndex(index: Int): Triple<Int, Int, Int> {
 		return Triple(
 			index % subdivisions,
 			(index / subdivisions) % subdivisions,
@@ -36,20 +35,16 @@ class TeamColor(val subdivisions: Int) {
 		)
 	}
 
-	private fun colorFromRGB(rgb: Triple<Int, Int, Int>): TextColor {
-		return TextColor.color(rgb.first.shl(16).or(rgb.second.shl(8)).or(rgb.third))
-	}
-
-	fun pickTeam(): Pair<TextColor, TextColor>? {
+	private fun colorFromPosition(xyz: Triple<Int, Int, Int>): TextColor {
 		val random = Random((Math.random() * Int.MAX_VALUE).toInt())
+		val red = xyz.first * subSize + random.nextInt(0, subSize)
+		val gre = xyz.second * subSize + random.nextInt(0, subSize)
+		val blu = xyz.third * subSize + random.nextInt(0, subSize)
 
-		val color1 = findOneColor(random) ?: return null
-		val color2 = findOneColor(random) ?: return null
-
-		return Pair(colorFromRGB(rgbFromIndex(color1)), colorFromRGB(rgbFromIndex(color2)))
+		return TextColor.color(red.shl(16).or(gre.shl(8)).or(blu))
 	}
 
-	private fun indexFromRgb(red: Int, gre: Int, blu: Int): Int {
+	private fun indexFromColor(red: Int, gre: Int, blu: Int): Int {
 		val x = red / (256 / subdivisions)
 		val y = gre / (256 / subdivisions)
 		val z = blu / (256 / subdivisions)
@@ -57,12 +52,31 @@ class TeamColor(val subdivisions: Int) {
 		return x + (y * subdivisions) + (z * subdivisions * subdivisions)
 	}
 
-	fun removeTeam(color0: TextColor, color1: TextColor) {
-		cube[indexFromRgb(color0.red(), color0.green(), color0.blue())] = false
-		cube[indexFromRgb(color1.red(), color1.green(), color1.blue())] = false
+	/* interface */
+
+	/**
+	 * picks two free colors for a new teams and modifies
+	 * internal cube so that they are marked as taken
+	 *
+	 * @return the two team colors, or null if no team could be created
+	 */
+	fun pickTeam(): Pair<TextColor, TextColor>? {
+		val random = Random((Math.random() * Int.MAX_VALUE).toInt())
+
+		val index0 = findIndex(random) ?: return null
+		val index1 = findIndex(random) ?: return null
+
+		cube[index0] = true
+		cube[index1] = true
+
+		return Pair(colorFromPosition(positionFromIndex(index0)), colorFromPosition(positionFromIndex(index1)))
 	}
 
-	fun removeAllTeams() {
-		for (i in cube.indices) cube[i] = defaultTaken(i)
+	/**
+	 * unmarks the colors as taken from the internal cube
+	 */
+	fun removeTeam(color0: TextColor, color1: TextColor) {
+		cube[indexFromColor(color0.red(), color0.green(), color0.blue())] = false
+		cube[indexFromColor(color1.red(), color1.green(), color1.blue())] = false
 	}
 }
