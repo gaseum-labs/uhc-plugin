@@ -2,7 +2,14 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.lobbyPvp.PvpData
+import com.codeland.uhc.team.Team
+import io.papermc.paper.event.player.AsyncChatEvent
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
@@ -10,109 +17,113 @@ import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.player.AsyncPlayerChatEvent
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
 import java.util.*
-
-typealias Coloring = (String) -> String
+import kotlin.collections.ArrayList
 
 class Chat : Listener {
 	companion object {
-		fun solid(chatColor: ChatColor): Coloring {
-			// don't ask
-			return { chatColor.toString() + it.replace("@", "@$chatColor") }
-		}
+		val NICKANAME_FILEPATH = "./nicknames.txt"
+
+		val nickMap = mutableMapOf<UUID, MutableList<String>>()
 
 		fun loadFile() {
-			val file = File("./nicknames.txt")
-			if (!file.exists()) {
-				return
-			}
+			val file = File(NICKANAME_FILEPATH)
+			if (!file.exists()) return
+
 			FileReader(file).use { reader ->
-				val list = reader.readLines().map { it.split(",")}
-				list.forEach { l ->
-					nickMap[UUID.fromString(l.first())] = MutableList(l.size - 1) {l.takeLast(l.size - 1)[it]}
+				val lines = reader.readLines().map { it.split(",") }
+
+				lines.forEach { line ->
+					nickMap[UUID.fromString(line.first())] = MutableList(line.size - 1) { line[it + 1] }
 				}
 			}
 		}
 
 		fun saveFile() {
-			val file = File("./nicknames.txt")
-			file.writeText("")
-			FileWriter(file).use { writer ->
-				nickMap.entries.forEach { e ->
-					writer.append(e.key.toString() + "," + e.value.joinToString(separator = ",") + "\n")
-				}
+			FileWriter(File(NICKANAME_FILEPATH), false).use { writer ->
+				nickMap.entries.forEach { (key, value) -> writer.append("${key},${value.joinToString(",")}\n") }
 			}
 		}
 
-		fun underline(string: String): String {
-			var newString = string
-			newString = ChatColor.UNDERLINE.toString() + newString
-			var index = newString.indexOf(ChatColor.COLOR_CHAR)
-			while (index != -1) {
-				newString = newString.substring(0, index + 2) + ChatColor.UNDERLINE + newString.substring(index + 2, newString.length)
-				index = newString.indexOf(ChatColor.COLOR_CHAR, index + 3)
-			}
-			return newString
-		}
-
-		val nickMap = mutableMapOf<UUID, MutableList<String>>()
-
-		fun addNick(player: Player, nickname: String) {
+		fun addNick(player: UUID, nickname: String) {
 			getNicks(player).add(nickname)
 		}
 
-		fun removeNick(player: Player, nickname: String) {
-			getNicks(player).removeIf {
-				it.toLowerCase() == nickname.toLowerCase()
-			}
+		fun removeNick(player: UUID, nickname: String) {
+			val lowerNickname = nickname.toLowerCase()
+
+			getNicks(player).removeIf { it.toLowerCase() == lowerNickname }
 		}
 
-		fun getNicks(player: Player): MutableList<String> {
-			return nickMap[player.uniqueId] ?: {
-				nickMap[player.uniqueId] = mutableListOf()
-				nickMap[player.uniqueId]!!
-			}()
+		fun getNicks(player: UUID): MutableList<String> {
+			return nickMap.getOrPut(player) { mutableListOf() }
+		}
+
+		fun defaultGenerator(string: String): Component {
+			return Component.text(string).style(Style.style(NamedTextColor.GOLD, TextDecoration.BOLD))
+		}
+
+		interface Mention {
+			fun matches(): String
+			fun includes(player: Player): Boolean
+			fun generate(string: String): Component
+			fun needsOp(): Boolean
+		}
+
+		val mentionEveryone = object : Mention {
+			override fun matches() = "everyone"
+			override fun includes(player: Player) = true
+			override fun generate(string: String) = defaultGenerator(string)
+			override fun needsOp() = true
+		}
+
+		val mentionParticipating = object : Mention {
+			override fun matches() = "participating"
+			override fun includes(player: Player) = PlayerData.isParticipating(player.uniqueId)
+			override fun generate(string: String) = defaultGenerator(string)
+			override fun needsOp() = true
+		}
+
+		val mentionPvp = object : Mention {
+			override fun matches() = "pvp"
+			override fun includes(player: Player) = PlayerData.getLobbyPvp(player.uniqueId).inPvp
+			override fun generate(string: String) = defaultGenerator(string)
+			override fun needsOp() = true
+		}
+
+		val mentionSpectating = object : Mention {
+			override fun matches() = "spectating"
+			override fun includes(player: Player) = !PlayerData.isParticipating(player.uniqueId) && player.gameMode == GameMode.SPECTATOR
+			override fun generate(string: String) = defaultGenerator(string)
+			override fun needsOp() = false
+		}
+
+		val mentionOp = object : Mention {
+			override fun matches() = "op"
+			override fun includes(player: Player) = player.isOp
+			override fun generate(string: String) = defaultGenerator(string)
+			override fun needsOp() = false
+		}
+
+		class PlayerMention(val player: Player) : Mention {
+			override fun matches() = player.name
+			override fun includes(player: Player) = this.player === player
+			override fun generate(string: String) = TeamData.playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
+			override fun needsOp() = false
+		}
+
+		class TeamMention(val team: Team) : Mention {
+			override fun matches() = team.gameName()
+			override fun includes(player: Player) = team.members.contains(player.uniqueId)
+			override fun generate(string: String) = team.apply(string)
+			override fun needsOp() = false
 		}
 	}
 
-	class SpecialMention(val name: String, val includes: (Player) -> Boolean, val needsOp: Boolean = false, val coloring: Coloring = solid(ChatColor.GOLD))
-
-	private val mentions = {
-		val list = mutableListOf<SpecialMention>()
-
-		list.addAll(mutableListOf(
-				SpecialMention("everyone", { true }, needsOp = true),
-				SpecialMention("players", { p -> p.gameMode == GameMode.SURVIVAL }),
-				SpecialMention("spectators", { p -> p.gameMode == GameMode.SPECTATOR }),
-				SpecialMention("admins", { p -> p.isOp})
-		))
-
-		for (c in 0 until TeamData.teamColors.size * TeamData.teamColors.size) {
-			val colorPair = TeamData.colorPairPermutation(c) ?: continue
-			list += SpecialMention(colorPair.getName().replace(" ", "").toLowerCase(), { p -> TeamData.playersTeam(p.uniqueId)?.colorPair == colorPair}, coloring = colorPair::colorString)
-		}
-
-		list.addAll(
-			Bukkit.getOnlinePlayers().map { p ->
-				SpecialMention(name = p.name, coloring = TeamData.playersColor(p.uniqueId), includes = { it == p})
-			}
-		)
-
-		for (e in nickMap.entries.filter { Bukkit.getPlayer(it.key) != null }) {
-			list.addAll(e.value.map { nickname ->
-				val player = Bukkit.getPlayer(e.key)!!
-				SpecialMention(name = nickname, coloring = TeamData.playersColor(player.uniqueId), includes = { it == player})
-			})
-		}
-
-		list.sortedByDescending { it.name.length }
-	}
-
-	private fun addMentions(event: AsyncPlayerChatEvent) {
+	private fun addMentions(event: AsyncChatEvent) {
 		fun findAll(message: String, name: String): MutableList<Int> {
 			val lowerMessage = message.toLowerCase()
 			val lowerName = name.toLowerCase()
@@ -167,8 +178,105 @@ class Chat : Listener {
 		}
 	}
 
+	/**
+	 * @param startIndex the index of the @ of the mention in the string
+	 * @return a pair of the mention found and the corresponding endIndex for the matched substring in message,
+	 *         or null if no mention watch found
+	 */
+	private fun matchMention(message: String, startIndex: Int, checkList: ArrayList<Mention>): Pair<Mention, Int>? {
+		/* a list tracking if each mention in checklist is still matching the message */
+		/* elements are set to false when the corresponding mention fails to matach the message */
+		var numRemaining = checkList.size
+		val remaining = Array(numRemaining) { true }
+
+		/* go over characters in the message starting at startIndex */
+		for (iMessage in startIndex + 1 until message.length) {
+			val iMatch = iMessage - startIndex - 1
+
+			/* compare the current character to all remaining mentions */
+			for (j in remaining.indices) if (remaining[j]) {
+				val mention = checkList[j]
+
+				if (iMatch == mention.matches().length) {
+					if (numRemaining == 1) {
+						return Pair(mention, iMessage)
+
+					} else {
+						remaining[j] = false
+						if (--numRemaining == 0) return null
+					}
+				} else if (mention.matches()[iMatch] != message[iMessage]) {
+					remaining[j] = false
+					if (--numRemaining == 0) return null
+				}
+			}
+		}
+
+		return null
+	}
+
+	private fun collectMentions(message: String, checkList: ArrayList<Mention>): ArrayList<Triple<Mention, Int, Int>> {
+		val mentionList = ArrayList<Triple<Mention, Int, Int>>()
+		var iterIndex = 0
+
+		while (iterIndex < message.length) {
+			if (message[iterIndex] == '@') {
+				val matched = matchMention(message, iterIndex, checkList)
+
+				if (matched != null) {
+					val (mention, endIndex) = matched
+					mentionList.add(Triple(mention, iterIndex, endIndex))
+
+					iterIndex = endIndex
+
+				} else {
+					++iterIndex
+				}
+			} else {
+				++iterIndex
+			}
+		}
+
+		return mentionList
+	}
+
+	private fun replaceMentions(message: String, player: Player, mentions: ArrayList<Triple<Mention, Int, Int>>): Component {
+		val usedMentions = mentions.filter { (mention, _, _) -> mention.includes(player) }
+
+		/* begin with the part before the first mention */
+		var replacedMessage = Component.text(message.substring(0, if (usedMentions.isEmpty()) message.length else usedMentions[0].second))
+
+		for (i in usedMentions.indices) {
+			val (mention, startIndex, endIndex) = mentions[i]
+
+			/* add the mention, which is replaced */
+			replacedMessage = replacedMessage.append(mention.generate(message.substring(startIndex, endIndex)))
+
+			/* the part after the mention until the next mention, or until the end of the message */
+			.append(Component.text(message.substring(endIndex, if (i == usedMentions.lastIndex) message.length else usedMentions[i + 1].second)))
+		}
+
+		return replacedMessage
+	}
+
+	private fun generateMentions(): ArrayList<Mention> {
+		val list = arrayListOf(
+			mentionEveryone,
+			mentionOp,
+			mentionParticipating,
+			mentionPvp,
+			mentionSpectating
+		)
+
+		list.addAll(Bukkit.getOnlinePlayers().map { PlayerMention(it) })
+
+		list.addAll(TeamData.teams.map { TeamMention(it) })
+
+		return list
+	}
+
 	@EventHandler
-	fun onMessage(event: AsyncPlayerChatEvent) {
+	fun onMessage(event: AsyncChatEvent) {
 		/* only modify chat when game is running */
 		if (!GameRunner.uhc.isGameGoing()) {
 			addMentions(event)

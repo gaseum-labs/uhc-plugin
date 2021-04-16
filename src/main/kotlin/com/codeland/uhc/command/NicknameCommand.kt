@@ -2,6 +2,7 @@ package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
+import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
@@ -61,17 +62,16 @@ class NicknameCommand : BaseCommand() {
 		}
 	}
 
+	@CommandCompletion("@uhcplayer")
 	@Subcommand("list")
 	@Description("list the nicknames of a player")
 	fun list(sender: CommandSender, target: String) {
-		val player = if (sender is Player) sender else return
-		if (Bukkit.getPlayer(target) == null) {
-			Commands.errorMessage(player, "The player ${Commands.coloredInError(target, GRAY)} doesn't exist or isn't online.")
-			return
-		}
-		val targetPlayer = Bukkit.getPlayer(target)!!
-		val coloring: Coloring = { Chat.underline(TeamData.playersColor(targetPlayer.uniqueId)(it)) }
-		if (Chat.getNicks(targetPlayer).size == 0) {
+		sender as Player
+
+		val target = Bukkit.getPlayer(target)
+			?: return Commands.errorMessage(sender, "Player named $target not found")
+
+		if (Chat.getNicks(target).size == 0) {
 			GameRunner.sendGameMessage(player, "This player has no nicknames.")
 		} else {
 			GameRunner.sendGameMessage(player, "Showing ${GameRunner.coloredInGameMessage(target, GRAY)}'s nicknames...")

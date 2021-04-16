@@ -1,12 +1,14 @@
 package com.codeland.uhc.team
 
 import com.codeland.uhc.team.Team.Companion.internalAutomaticName
+import com.codeland.uhc.util.Util
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Bukkit
 import java.util.*
 import kotlin.collections.ArrayList
 
-class Team(val id: Int, val color1: TextColor, val color2: TextColor, val members: ArrayList<UUID>) {
+class Team(val id: Int, var color1: TextColor, var color2: TextColor, val members: ArrayList<UUID>) {
 	var name: String? = null
 
 	/**
@@ -19,17 +21,16 @@ class Team(val id: Int, val color1: TextColor, val color2: TextColor, val member
 		name = internalAutomaticName(members.mapNotNull { Bukkit.getOfflinePlayer(it).name })
 	}
 
+	fun apply(string: String): Component {
+		return Util.gradientString(string, color1, color2)
+	}
+
 	companion object {
 		fun internalAutomaticName(names: List<String>): String {
-			val parts = names.size
-			return names.mapIndexed { i, name ->
-				val len = name.length
-
-				name.substring(
-					(i * (len.toDouble() / parts)).toInt(),
-					((i + 1) * (len.toDouble() / parts)).toInt(),
-				)
-			}.joinToString()
+			return names.mapIndexed { i, name -> name.substring(
+				(i * (name.length.toDouble() / names.size)).toInt(),
+				((i + 1) * (name.length.toDouble() / names.size)).toInt(),
+			)}.joinToString()
 		}
 	}
 }

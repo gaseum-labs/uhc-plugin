@@ -7,6 +7,7 @@ import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.team.TeamData
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.ChatColor.*
@@ -32,18 +33,13 @@ class ShareCoordsCommand : BaseCommand() {
 
 		/* different message based on teams or no teams */
 		if (team == null) {
-			val message = "${GOLD}You are located at ${location.blockX}, ${location.blockY}, ${location.blockZ}"
-
-		   sender.sendMessage(message)
+		   sender.sendMessage("${GOLD}You are at ${location.blockX}, ${location.blockY}, ${location.blockZ}")
 
 		} else {
-			val message = team.colorPair.colorString("${sender.name} is located at ${location.blockX}, ${location.blockY}, ${location.blockZ}")
+			val message = team.apply(sender.name).append(Component.text(" is at ${location.blockX}, ${location.blockY}, ${location.blockZ}"))
 
-			/* send to all team members (including self) */
-			team.members.forEach { uuid ->
-				val player = Bukkit.getPlayer(uuid)
-				player?.sendMessage(message)
-			}
+			/* tell everyone on the team where player is */
+			team.members.forEach { Bukkit.getPlayer(it)?.sendMessage(message) }
 		}
 	}
 }

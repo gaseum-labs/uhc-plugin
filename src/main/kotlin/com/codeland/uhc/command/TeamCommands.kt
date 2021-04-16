@@ -30,7 +30,7 @@ class TeamCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
 
-	@CommandCompletion("@teamcolor @uhcplayer")
+	@CommandCompletion("@uhcplayer")
 	@Subcommand("create")
 	@Description("create a new team for a player")
 	fun createTeamCommand(sender: CommandSender, player: OfflinePlayer) {
@@ -43,7 +43,7 @@ class TeamCommands : BaseCommand() {
 		})
 	}
 
-	@CommandCompletion("@teamcolor @uhcplayer @uhcplayer")
+	@CommandCompletion("@uhcplayer @uhcplayer")
 	@Subcommand("create")
 	@Description("create a new team comprised of players")
 	fun createTeamCommand(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {

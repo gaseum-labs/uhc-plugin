@@ -42,8 +42,7 @@ class ParticipantCommands : BaseCommand() {
 			playerData.optingOut = true
 			playerData.staged = false
 
-			val team = TeamData.playersTeam(sender.uniqueId)
-			if (team != null) TeamData.removeFromTeam(team, sender.uniqueId, true)
+			TeamData.removeFromTeam(sender.uniqueId, true, true)
 
 			GameRunner.sendGameMessage(sender, "You have opted out of participating")
 		}
@@ -66,51 +65,6 @@ class ParticipantCommands : BaseCommand() {
 
 			GameRunner.sendGameMessage(sender, "You have opted back into participating")
 		}
-	}
-
-	@Subcommand("name")
-	@Description("change the name of your team")
-	fun teamName(sender: CommandSender, newName: String) {
-		val team = TeamData.playersTeam((sender as Player).uniqueId)
-			?: return Commands.errorMessage(sender, "You are not on a team!")
-
-		var realNewName = newName
-		if (realNewName.startsWith('"') && realNewName.endsWith('"') && realNewName.length > 1) {
-			realNewName = realNewName.substring(1, realNewName.length - 1)
-		}
-
-		team.displayName = realNewName
-
-		/* broadcast change to all teammates */
-		team.members.forEach { uuid ->
-			val player = Bukkit.getPlayer(uuid)
-			player?.sendMessage("Your team name has been changed to \"${team.colorPair.colorString(realNewName)}\"")
-		}
-	}
-
-	@CommandCompletion("@teamcolor")
-	@Subcommand("color")
-	@Description("change your team color")
-	fun teamColor(sender: CommandSender, color0: ChatColor) {
-		changeTeamColor(sender, color0, null)
-	}
-
-	@CommandCompletion("@teamcolor @teamcolor")
-	@Subcommand("color")
-	@Description("change your team color")
-	fun teamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor) {
-		changeTeamColor(sender, color0, color1)
-	}
-
-	@Subcommand("color random")
-	@Description("change your team color")
-	fun teamColor(sender: CommandSender) {
-		val colors = TeamMaker.randomAvailable(1)
-
-		if (colors == null)
-			Commands.errorMessage(sender, "Could not make you a new random color")
-		else
-			changeTeamColor(sender, colors[0].color0, colors[0].color1)
 	}
 
 	@Subcommand("compass")
@@ -150,50 +104,6 @@ class ParticipantCommands : BaseCommand() {
 		/* specs immediately go to lobby */
 		} else {
 			AbstractLobby.onSpawnLobby(sender)
-		}
-	}
-
-	private fun changeTeamColor(sender: CommandSender, color0: ChatColor, color1: ChatColor?) {
-		val team = TeamData.playersTeam((sender as Player).uniqueId)
-			?: return Commands.errorMessage(sender, "You are not on a team!")
-
-		fun colorError(color: ChatColor) =
-			Commands.errorMessage(sender, "${color}${Util.colorPrettyNames[color.ordinal]} ${ChatColor.RESET}is not a valid team color!")
-
-		if (!Team.isValidColor(color0)) return colorError(color0)
-
-		if (color1 != null && !Team.isValidColor(color1)) return colorError(color1)
-
-		/* parse what the color the user wants to change to */
-		val colorPair = ColorPair(color0, color1)
-
-		if (!colorPair.valid()) return Commands.errorMessage(sender, "Invalid color combination!")
-
-		if (colorPair.orderEquals(team.colorPair)) return Commands.errorMessage(sender, "This is already your color!")
-
-		if (TeamData.teamExists(colorPair, team))
-			return Commands.errorMessage(sender, "That color combination is already being used by another team!")
-
-		/* change team name to be default name for new color if no custom name has been set */
-		if (team.isDefaultName()) team.displayName = colorPair.getName()
-		val oldColorPair = team.colorPair
-		team.colorPair = colorPair
-
-		/* update team channel name */
-		if (GameRunner.uhc.usingBot) {
-			GameRunner.bot?.updateTeamChannel(oldColorPair, colorPair)
-		}
-
-		val message = "Your team color has been changed to ${colorPair.colorString(colorPair.getName())}"
-
-		/* broadcast change to all teammates */
-		team.members.forEach { uuid ->
-			val player = Bukkit.getPlayer(uuid)
-
-			if (player != null) {
-				GameRunner.sendGameMessage(player, message)
-				NameManager.updateName(player)
-			}
 		}
 	}
 

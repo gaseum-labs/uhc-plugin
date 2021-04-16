@@ -52,10 +52,6 @@ object Commands {
             PlayerData.playerDataList.map { (uuid, _) -> Bukkit.getOfflinePlayer(uuid).name }
         }
 
-        commandManager.commandCompletions.registerCompletion("teamcolor") {
-            TeamData.teamColors.map { teamColor -> teamColor.name.toLowerCase() }
-        }
-
         commandManager.commandCompletions.registerCompletion("quirkclass") {
             QuirkClass.values().mapIndexedNotNull { i, quirkClass -> if (i == 0) null else quirkClass.name.toLowerCase() }
         }

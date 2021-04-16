@@ -37,9 +37,10 @@ class TeamColor(val subdivisions: Int) {
 
 	private fun colorFromPosition(xyz: Triple<Int, Int, Int>): TextColor {
 		val random = Random((Math.random() * Int.MAX_VALUE).toInt())
-		val red = xyz.first * subSize + random.nextInt(0, subSize)
-		val gre = xyz.second * subSize + random.nextInt(0, subSize)
-		val blu = xyz.third * subSize + random.nextInt(0, subSize)
+
+		val red = (xyz.first  * subSize) + (subSize / 2)
+		val gre = (xyz.second * subSize) + (subSize / 2)
+		val blu = (xyz.third  * subSize) + (subSize / 2)
 
 		return TextColor.color(red.shl(16).or(gre.shl(8)).or(blu))
 	}
