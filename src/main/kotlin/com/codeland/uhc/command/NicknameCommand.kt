@@ -7,12 +7,9 @@ import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.event.Chat
-import com.codeland.uhc.event.Coloring
-import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor
 import org.bukkit.ChatColor.*
+import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -20,64 +17,57 @@ import org.bukkit.entity.Player
 class NicknameCommand : BaseCommand() {
 	private fun validNickname(nickname: String): Boolean {
 		val allowedCharacters = ('a'..'z').toList() + ('0'..'9').toList() + '_'
-		return nickname.toLowerCase().all {
-			it in allowedCharacters
-		}
+
+		return nickname.toLowerCase().all { it in allowedCharacters }
 	}
 
 	private fun nicknameTaken(nickname: String): Boolean {
-		return Chat.nickMap.values.any { it.any { it.equals(nickname, ignoreCase = true) } }
+		return Chat.nickMap.values.any { nickList -> nickList.any { nick -> nick.equals(nickname, ignoreCase = true) } }
 	}
 
 	@Subcommand("add")
 	@Description("add a nickname that can be used in mentions")
-	fun add(sender: CommandSender, target: String, nickname: String) {
-		val player = if (sender is Player) sender else return
-		if (!validNickname(nickname)) {
-			Commands.errorMessage(player, "Usernames must be alphanumeric (including underscores).")
-		} else if (nicknameTaken(nickname)) {
-			Commands.errorMessage(player, "That nickname is already taken by another player.")
-		} else if (Bukkit.getPlayer(target) == null) {
-			Commands.errorMessage(player, "The player ${Commands.coloredInError(target, GRAY)} doesn't exist or isn't online.")//
-		} else {
-			Chat.addNick(Bukkit.getPlayer(target)!!, nickname)
-			GameRunner.sendGameMessage(player, "${GameRunner.coloredInGameMessage(target, GRAY)} can now be called ${GameRunner.coloredInGameMessage(nickname, GRAY)}.")
-		}
+	fun add(sender: CommandSender, targetName: String, nickname: String) {
+		if (!validNickname(nickname))
+			return Commands.errorMessage(sender, "Usernames must be alphanumeric (including underscores)")
+
+		if (nicknameTaken(nickname))
+			return Commands.errorMessage(sender, "That nickname is already taken by another player")
+
+		val target = Bukkit.getOfflinePlayerIfCached(targetName)
+			?: return Commands.errorMessage(sender, "Cannot find player by the name ${Commands.coloredInError(targetName, GRAY)}")
+
+		Chat.addNick(target.uniqueId, nickname)
+
+		GameRunner.sendGameMessage(sender, "${GameRunner.coloredInGameMessage(targetName, GRAY)} can now be called ${GameRunner.coloredInGameMessage(nickname, GRAY)}")
 	}
 
 	@Subcommand("remove")
 	@Description("remove a previously added nickname")
-	fun remove(sender: CommandSender, target: String, nickname: String) {
-		val player = if (sender is Player) sender else return
-		if (Bukkit.getPlayer(target) == null) {
-			Commands.errorMessage(player, "The player ${Commands.coloredInError(target, GRAY)} doesn't exist or isn't online.")
-			return
-		}
-		val targetPlayer = Bukkit.getPlayer(target)!!
-		if (Chat.getNicks(targetPlayer).any { it.equals(nickname, ignoreCase = true) }) {//
-			Chat.removeNick(targetPlayer, nickname)
-			GameRunner.sendGameMessage(player, "${GameRunner.coloredInGameMessage(target, GRAY)} can no longer be called ${GameRunner.coloredInGameMessage(nickname, GRAY)}.")
-		} else {
-			Commands.errorMessage(player, "${Commands.coloredInError(nickname, GRAY)} is not one of ${Commands.coloredInError(target, GRAY)}'s nicknames.")
-		}
+	fun remove(sender: CommandSender, targetName: String, nickname: String) {
+		val target = Bukkit.getOfflinePlayerIfCached(targetName)
+			?: return Commands.errorMessage(sender, "Cannot find player by the name ${Commands.coloredInError(targetName, GRAY)}")
+
+		if (Chat.removeNick(target.uniqueId, nickname))
+			GameRunner.sendGameMessage(sender, "${GameRunner.coloredInGameMessage(targetName, GRAY)} can no longer be called ${GameRunner.coloredInGameMessage(nickname, GRAY)}")
+		else
+			Commands.errorMessage(sender, "${Commands.coloredInError(nickname, GRAY)} is not one of ${Commands.coloredInError(targetName, GRAY)}'s nicknames")
 	}
 
 	@CommandCompletion("@uhcplayer")
 	@Subcommand("list")
 	@Description("list the nicknames of a player")
-	fun list(sender: CommandSender, target: String) {
-		sender as Player
+	fun list(sender: CommandSender, targetName: String) {
+		val target = Bukkit.getOfflinePlayerIfCached(targetName)
+			?: return Commands.errorMessage(sender, "Cannot find player by the name ${Commands.coloredInError(targetName, GRAY)}")
 
-		val target = Bukkit.getPlayer(target)
-			?: return Commands.errorMessage(sender, "Player named $target not found")
-
-		if (Chat.getNicks(target).size == 0) {
-			GameRunner.sendGameMessage(player, "This player has no nicknames.")
+		val nickList = Chat.getNicks(target.uniqueId)
+		
+		if (nickList.isEmpty()) {
+			GameRunner.sendGameMessage(sender, "This player has no nicknames.")
 		} else {
-			GameRunner.sendGameMessage(player, "Showing ${GameRunner.coloredInGameMessage(target, GRAY)}'s nicknames...")
-			Chat.getNicks(targetPlayer).forEach { nickname ->
-				player.sendMessage("$GOLD- " + coloring("@$nickname"))
-			}
+			GameRunner.sendGameMessage(sender, "Nicknames for ${GameRunner.coloredInGameMessage(targetName, GRAY)}:")
+			nickList.forEach { nickname -> sender.sendMessage("$GOLD- $nickname") }
 		}
 	}
 }

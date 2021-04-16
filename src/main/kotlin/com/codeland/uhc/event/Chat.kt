@@ -53,10 +53,10 @@ class Chat : Listener {
 			getNicks(player).add(nickname)
 		}
 
-		fun removeNick(player: UUID, nickname: String) {
+		fun removeNick(player: UUID, nickname: String): Boolean {
 			val lowerNickname = nickname.toLowerCase()
 
-			getNicks(player).removeIf { it.toLowerCase() == lowerNickname }
+			return getNicks(player).removeIf { it.toLowerCase() == lowerNickname }
 		}
 
 		fun getNicks(player: UUID): MutableList<String> {
@@ -123,7 +123,7 @@ class Chat : Listener {
 			override fun needsOp() = false
 		}
 	}
-	
+
 	/**
 	 * @param startIndex the index of the @ of the mention in the string
 	 * @return a pair of the mention found and the corresponding endIndex for the matched substring in message,
