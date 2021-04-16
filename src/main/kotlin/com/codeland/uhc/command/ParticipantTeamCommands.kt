@@ -4,7 +4,9 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -14,20 +16,13 @@ class ParticipantTeamCommands : BaseCommand() {
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
 		val team = TeamData.playersTeam((sender as Player).uniqueId)
-			?: return Commands.errorMessage(sender, "You are not on a team!")
-
-		//TODO remove this
-		//var realNewName = newName
-		//if (realNewName.startsWith('"') && realNewName.endsWith('"') && realNewName.length > 1) {
-		//	realNewName = realNewName.substring(1, realNewName.length - 1)
-		//}
+			?: return Commands.errorMessage(sender, "You are not on a team")
 
 		team.name = newName
 
 		/* broadcast change to all teammates */
-		team.members.forEach { uuid ->
-			Bukkit.getPlayer(uuid)?.sendMessage("Your team name has been changed to $newName")
-		}
+		val message = Component.text("Your team name has been changed to ").append(team.apply(newName))
+		team.members.forEach { uuid -> Bukkit.getPlayer(uuid)?.sendMessage(message) }
 	}
 
 	@CommandAlias("teamColor")
@@ -43,6 +38,11 @@ class ParticipantTeamCommands : BaseCommand() {
 		team.color1 = color1
 		team.color2 = color2
 
-		GameRunner.sendGameMessage(sender, "Updated your team's color")
+		val message = team.apply("Updated your team's color")
+
+		team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach {
+			NameManager.updateName(it)
+			it.sendMessage(message)
+		}
 	}
 }

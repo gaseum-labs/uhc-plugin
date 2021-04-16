@@ -222,9 +222,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			if (isGameGoing()) PlayerData.zombieBorderTick(currentTick)
 
 			PvpData.onTick(currentTick)
-
-			//ParkourCheckpoint.lobbyParkourTick() //DISABLED FOR NOW
-
+			
 			AbstractLobby.lobbyTipsTick(currentTick)
 
 			PvpGameManager.perTick(currentTick)

@@ -88,6 +88,9 @@ object TeamData {
 
 			/* destroy the team if everyone has been removed */
 			if (destroyTeam && team.members.isEmpty()) destroyTeam(team, discord, updateNames) {}
+
+			/* update names to no longer be on team */
+			if (updateNames) updateMemberNames(teamPlayers)
 		}
 	}
 
