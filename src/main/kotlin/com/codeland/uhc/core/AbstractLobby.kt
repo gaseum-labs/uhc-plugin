@@ -9,6 +9,7 @@ import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.*
+import org.bukkit.ChatColor.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 
@@ -42,11 +43,14 @@ object AbstractLobby {
 
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
 		CommandItemType.giveItem(CommandItemType.PVP_QUEUE, player.inventory)
-		//CommandItemType.giveItem(CommandItemType.PARKOUR_CHECKPOINT, player.inventory)
 		CommandItemType.giveItem(CommandItemType.SPECTATE, player.inventory)
 
 		return location
 	}
+
+	fun isLinked(player: Player) = if (GameRunner.uhc.usingBot) {
+		GameRunner.bot?.isLinked(player.uniqueId) ?: true
+	} else true
 
 	fun lobbyTipsTick(subTick: Int) {
 		if (subTick % 20 == 0) {
@@ -59,7 +63,7 @@ object AbstractLobby {
 			fun tip(player: Player, playerData: PlayerData) {
 				if (isFirst()) playerData.loadingTip = (Math.random() * loadingTips.size).toInt()
 
-				player.sendActionBar(Component.text("${ChatColor.GOLD}UHC Tips: ${ChatColor.WHITE}${ChatColor.BOLD}${loadingTips[playerData.loadingTip]}"))
+				player.sendActionBar(Component.text("${GOLD}UHC Tips: $WHITE$BOLD${loadingTips[playerData.loadingTip]}"))
 			}
 
 			Bukkit.getOnlinePlayers().forEach { player ->
@@ -73,28 +77,19 @@ object AbstractLobby {
 
 					} else if (player.gameMode == GameMode.SPECTATOR) {
 						if (slideN(0)) {
-							player.sendActionBar(Component.text("${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc lobby ${ChatColor.GOLD}to return to lobby"))
+							player.sendActionBar(Component.text("${GOLD}Use $WHITE$BOLD/uhc lobby ${GOLD}to return to lobby"))
+
 						} else {
 							player.sendActionBar(Component.empty())
 						}
-					} else {
-						when {
-							slideN(0) -> {
-								if (GameRunner.uhc.usingBot) {
-									val linked = GameRunner.bot?.isLinked(player.uniqueId)
+					} else if (!isLinked(player)) {
+						player.sendActionBar(Component.text("$RED${BOLD}You are not linked! ${GOLD}Use $WHITE$BOLD\"%link [your minecraft username]\" ${GOLD}in discord"))
 
-									if (linked == null || linked) tip(player, playerData)
-									else player.sendActionBar(Component.text("${ChatColor.RED}${ChatColor.BOLD}You are not linked! ${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}\"%link [your minecraft username]\" ${ChatColor.GOLD}in discord"))
-								} else tip(player, playerData)
-							}
-							slideN(1) -> {
-								tip(player, playerData)
-							}
-							slideN(2) -> {
-								if (team == null) tip(player, playerData)
-								else player.sendActionBar(Component.text("${ChatColor.GOLD}Team name: ${team.colorPair.colorStringModified(team.displayName, ChatColor.BOLD)} ${ChatColor.GOLD}Use ${ChatColor.WHITE}${ChatColor.BOLD}/uhc name [name] ${ChatColor.GOLD}to set your team's name"))
-							}
-						}
+					} else if (team != null && team.name == null) {
+						player.sendActionBar(Component.text("$RED${BOLD}Your team does not have a name! ${GOLD}Use ${WHITE}${BOLD}\"/teamName [name]\" ${GOLD}to set your team's name"))
+
+					} else {
+						tip(player, playerData)
 					}
 				}
 			}
@@ -102,7 +97,6 @@ object AbstractLobby {
 	}
 
 	fun prepareWorld(world: World, uhc: UHC) {
-		Util.debug("${ChatColor.RED}PREPARING ${world.name}")
 		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, true)
 		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
 		world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
