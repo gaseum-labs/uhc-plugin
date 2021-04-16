@@ -7,6 +7,10 @@ import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
@@ -109,10 +113,10 @@ object GameRunner {
 
 		/* broadcast elimination message for a team */
 		} else if (deadPlayerTeam != null && !teamIsAlive) {
-			val message0 = "${deadPlayerTeam.colorPair.colorString(deadPlayerTeam.displayName)} ${ChatColor.GOLD}${ChatColor.BOLD}has been Eliminated!"
+			val message0 = deadPlayerTeam.apply(deadPlayerTeam.gameName()).append(Component.text("has been eliminated!").style(Style.style(NamedTextColor.GOLD, TextDecoration.BOLD)))
 
 			Bukkit.getServer().onlinePlayers.forEach { player ->
-				sendGameMessage(player, message0)
+				player.sendMessage(message0)
 				sendGameMessage(player, message1)
 			}
 		}

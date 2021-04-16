@@ -1,8 +1,11 @@
 package com.codeland.uhc.team
 
+import com.codeland.uhc.core.GameRunner
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.math.ceil
 
 object TeamData {
@@ -22,12 +25,14 @@ object TeamData {
 
 	fun isOnTeam(playerUuid: UUID) = playersTeam(playerUuid) != null
 
+	/* team management interface */
+
 	/**
 	 * @param team the team to add players to. Null if a new team is to be created
 	 * @param destroyTeam set to true if doing anything other than swapping
 	 * @return null if the team could not be created
 	 */
-	fun addToTeam(team: Team?, players: List<UUID>, destroyTeam: Boolean, onAdd: (UUID) -> Unit): Team? {
+	fun addToTeam(team: Team?, players: List<UUID>, discord: Boolean, destroyTeam: Boolean, onAdd: (UUID) -> Unit): Team? {
 		if (players.isEmpty()) return null
 
 		if (team == null) {
@@ -37,7 +42,11 @@ object TeamData {
 			++nextTeamID
 
 			/* remove players from their old team */
-			players.forEach { uuid -> removeFromTeam(uuid, destroyTeam, destroyTeam) }
+			/* do not make them leave the discord or update their names, because they're about to re added */
+            removeFromTeam(players, false, destroyTeam, false)
+
+			/* add them to the team on discord */
+			if (discord) GameRunner.bot?.addToTeamChannel(newTeam, players)
 
 			/* add new team internally */
 			teams.add(newTeam)
@@ -48,47 +57,52 @@ object TeamData {
 			return newTeam
 
 		} else {
-			val addedPlayers = players.mapNotNull { uuid ->
-				/* remove player from old team if they are on one */
-				val oldTeam = playersTeam(uuid)
-				if (oldTeam == team) return@mapNotNull null
+			/* remove players from their old team */
+			removeFromTeam(players, false, destroyTeam, false)
 
-				if (oldTeam != null) removeFromTeam(oldTeam, uuid, destroyTeam, destroyTeam)
+			/* add these players to the team */
+			team.members.addAll(players)
 
-				/* add player to team */
-				team.members.add(uuid)
-
-				uuid
-			}
-
-			updateMemberNames(addedPlayers as ArrayList<UUID>)
-			addedPlayers.forEach { onAdd(it) }
+			updateMemberNames(players as ArrayList<UUID>)
+			players.forEach { onAdd(it) }
 
 			return team
 		}
 	}
 
-	fun removeFromTeam(player: UUID, destroyTeam: Boolean, updateNames: Boolean) {
-		val oldTeam = playersTeam(player) ?: return
-		removeFromTeam(oldTeam, player, destroyTeam, updateNames)
-	}
+	fun removeFromTeam(players: List<UUID>, discord: Boolean, destroyTeam: Boolean, updateNames: Boolean) {
+		/* associate all player's with their team */
+		val teamMap = HashMap<Team, ArrayList<UUID>>()
 
-	fun removeFromTeam(oldTeam: Team, uuid: UUID, destroyTeam: Boolean, updateNames: Boolean) {
-		/* remove player from the team */
-		oldTeam.members.removeIf { memberUuid -> memberUuid == uuid }
+		players.forEach { player ->
+			val team = playersTeam(player)
+			if (team != null) teamMap.getOrPut(team, { ArrayList() }).add(player)
+		}
 
-		if (oldTeam.members.isEmpty() && destroyTeam) destroyTeam(oldTeam, updateNames) {}
+		teamMap.forEach { (team, teamPlayers) ->
+			/* remove these players from the team channel */
+			if (discord) GameRunner.bot?.removeFromTeamChannel(team, team.members.size, teamPlayers)
+
+			/* remove these players from the team internally */
+			team.members.removeAll(teamPlayers)
+
+			/* destroy the team if everyone has been removed */
+			if (destroyTeam && team.members.isEmpty()) destroyTeam(team, discord, updateNames) {}
+		}
 	}
 
 	/**
 	 * @param team the team to destroy. Null to destroy all teams
 	 * @param onRemove called for each player that was removed from a team this way
 	 */
-	fun destroyTeam(team: Team?, updateNames: Boolean, onRemove: (UUID) -> Unit) {
+	fun destroyTeam(team: Team?, discord: Boolean, updateNames: Boolean, onRemove: (UUID) -> Unit) {
 		teams.removeIf { currentTeam ->
 			if (currentTeam === team || team == null) {
 				/* store a copy of letters to iterate over */
 				val oldMemberList = ArrayList(currentTeam.members)
+
+				/* destroy team channel on discord */
+				if (discord) GameRunner.bot?.destroyTeamChannel(currentTeam)
 
 				/* remove the internal representation of players from the team */
 				currentTeam.members.removeIf { onRemove(it); true }
@@ -103,6 +117,8 @@ object TeamData {
 			}
 		}
 	}
+
+	/* util */
 
 	private fun updateMemberNames(memberList: ArrayList<UUID>) {
 		memberList.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateName(it) }

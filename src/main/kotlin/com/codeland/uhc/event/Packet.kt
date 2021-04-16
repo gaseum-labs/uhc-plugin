@@ -11,6 +11,7 @@ import com.comphenix.protocol.events.PacketAdapter
 import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
+import net.kyori.adventure.text.Component
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -35,11 +36,6 @@ object Packet {
 		}
 
 		return String(name)
-	}
-
-	fun splitName(name: String): Pair<String, String> {
-		val mid: Int = ceil(name.length / 2.0).toInt()
-		return Pair(name.substring(0, mid), name.substring(mid))
 	}
 
 	fun init() {
@@ -70,14 +66,13 @@ object Packet {
 						}
 
 						val oldName = playerInfoData.profile.name
-						val (oldNamePrefix, oldNameSuffix) = splitName(oldName)
 						val newName = intToName(nameIndex)
 
 						/* send team packet */
+						/* this affects above name for other players, and scoreboard for all players */
 						val team = ScoreboardTeam(Scoreboard(), newName)
-						team.color = EnumChatFormat.values()[uhcTeam.colorPair.color0.ordinal]
-						team.prefix = ChatMessage("${uhcTeam.colorPair.color0}${oldNamePrefix}")
-						team.suffix = ChatMessage("${uhcTeam.colorPair.color1 ?: uhcTeam.colorPair.color0}${oldNameSuffix}")
+						team.color = EnumChatFormat.RED
+						team.prefix = Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2)
 						team.playerNameSet.add(newName)
 
 						/* remove team then re-send */
@@ -85,19 +80,17 @@ object Packet {
 						sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(team, 0))
 
 						/* send another fake team targeting the self-player's entity */
+						/* this team only affects which glow color the player sees themselves as */
 						if (sentPlayer.uniqueId == uuid) {
 							val selfTeam = ScoreboardTeam(Scoreboard(), oldName)
-							selfTeam.color = EnumChatFormat.values()[uhcTeam.colorPair.color0.ordinal]
+							selfTeam.color = EnumChatFormat.AQUA
 							selfTeam.playerNameSet.add(oldName)
 
 							sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(selfTeam, 1))
 							sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(selfTeam, 0))
 						}
-						/* ---------------- */
 
-						val customProfile = playerInfoData.profile.withName(newName)
-
-						PlayerInfoData(customProfile, playerInfoData.latency, playerInfoData.gameMode, playerInfoData.displayName)
+						PlayerInfoData(playerInfoData.profile.withName(newName), playerInfoData.latency, playerInfoData.gameMode, playerInfoData.displayName)
 					}
 				})
 			}

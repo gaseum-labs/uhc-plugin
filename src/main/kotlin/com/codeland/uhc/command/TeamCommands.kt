@@ -21,13 +21,16 @@ import kotlin.collections.ArrayList
 @CommandAlias("uhca")
 @Subcommand("team")
 class TeamCommands : BaseCommand() {
+	/* should the team commands add people to their discord channels */
+	private fun useDiscord() = GameRunner.uhc.isGameGoing() && GameRunner.uhc.usingBot
+
 	@Subcommand("clear")
 	@Description("remove all current teams")
 	fun clearTeamsCommand(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
 		/* unstage everyone and remove teams */
-		TeamData.destroyTeam(null, true) { PlayerData.setStaged(it, false) }
+		TeamData.destroyTeam(null, useDiscord(), true) { PlayerData.setStaged(it, false) }
 
 		GameRunner.sendGameMessage(sender, "Cleared all teams")
 	}
@@ -90,7 +93,7 @@ class TeamCommands : BaseCommand() {
 			}
 		}
 
-		val team = TeamData.addToTeam(team, addedPlayers.map { it.uniqueId }, true) { PlayerData.setStaged(it, true) }
+		val team = TeamData.addToTeam(team, addedPlayers.map { it.uniqueId }, useDiscord(), true) { PlayerData.setStaged(it, true) }
 
 		if (team == null) onFail() else onSuccess(addedPlayers)
 	}
@@ -101,11 +104,11 @@ class TeamCommands : BaseCommand() {
 	fun removePlayerFromTeamCommand(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
-		val team = TeamData.playersTeam(player.uniqueId)
+		TeamData.playersTeam(player.uniqueId)
 			?: return Commands.errorMessage(sender, "${player.name} is not on a team")
 
 		/* unstage and remove player from team */
-		TeamData.removeFromTeam(team, player.uniqueId, true, true)
+		TeamData.removeFromTeam(arrayListOf(player.uniqueId), useDiscord(), true, true)
 		PlayerData.setStaged(player.uniqueId, false)
 
 		GameRunner.sendGameMessage(sender, "Removed ${player.name} from their team")
@@ -121,7 +124,7 @@ class TeamCommands : BaseCommand() {
 		}.map { it.uniqueId }, teamSize)
 
 		memberLists.forEach { memberList ->
-			TeamData.addToTeam(null, memberList.filterNotNull(), true) { PlayerData.setStaged(it, true) }
+			TeamData.addToTeam(null, memberList.filterNotNull(), useDiscord(), true) { PlayerData.setStaged(it, true) }
 		}
 
 		GameRunner.sendGameMessage(sender, "Created ${memberLists.size} teams of size $teamSize")
@@ -136,8 +139,8 @@ class TeamCommands : BaseCommand() {
 		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team")
 		val team2 = TeamData.playersTeam(player2.uniqueId) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team")
 
-		TeamData.addToTeam(team2, listOf(player1.uniqueId), false) {}
-		TeamData.addToTeam(team1, listOf(player2.uniqueId), false) {}
+		TeamData.addToTeam(team2, listOf(player1.uniqueId), useDiscord(), false) {}
+		TeamData.addToTeam(team1, listOf(player2.uniqueId), useDiscord(), false) {}
 
 		GameRunner.sendGameMessage(sender, "Swapped teams of ${player1.name} and ${player2.name}")
 	}

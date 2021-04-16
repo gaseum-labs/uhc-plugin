@@ -91,8 +91,8 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		val team = TeamData.playersTeam(event.player.uniqueId)
 		if (team != null) {
 			setCommandedBy(entity, team)
-
-			if (commander.value) entity.customName = "${team.colorPair.colorString(team.displayName)}${ChatColor.RESET} ${entity.name}"
+			
+			if (commander.value) entity.customName(team.apply("${team.gameName()} ${entity.name}"))
 		}
 
 		--item.amount

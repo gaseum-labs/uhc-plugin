@@ -42,7 +42,7 @@ class ParticipantCommands : BaseCommand() {
 			playerData.optingOut = true
 			playerData.staged = false
 
-			TeamData.removeFromTeam(sender.uniqueId, true, true)
+			TeamData.removeFromTeam(arrayListOf(sender.uniqueId), GameRunner.uhc.usingBot, true, true)
 
 			GameRunner.sendGameMessage(sender, "You have opted out of participating")
 		}

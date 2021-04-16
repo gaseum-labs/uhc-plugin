@@ -30,7 +30,7 @@ class Team(val id: Int, var color1: TextColor, var color2: TextColor, val member
 			return names.mapIndexed { i, name -> name.substring(
 				(i * (name.length.toDouble() / names.size)).toInt(),
 				((i + 1) * (name.length.toDouble() / names.size)).toInt(),
-			)}.joinToString()
+			)}.joinToString("")
 		}
 	}
 }

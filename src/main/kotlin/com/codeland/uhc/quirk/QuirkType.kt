@@ -64,11 +64,6 @@ enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Qui
 		"at randomly chosen intervals"
 	)),
 
-	BETRAYAL("Betrayal", ::Betrayal, arrayOf(
-		"Players swap teams when killed",
-		"Game ends when everyone is on one team"
-	)),
-
 	HALLOWEEN("Halloween", ::Halloween, arrayOf(
 		"Mobs drop candy",
 		"Witches?!"
@@ -140,7 +135,6 @@ enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Qui
     companion object {
         init {
             CREATIVE.setIncompatible(UNSHELTERED)
-			PESTS.setIncompatible(BETRAYAL)
 	        CARE_PACKAGES.setIncompatible(CHAOTIC_CARE_PACKAGES)
 	        INFINITE_INVENTORY.setIncompatible(HOTBAR)
 		}

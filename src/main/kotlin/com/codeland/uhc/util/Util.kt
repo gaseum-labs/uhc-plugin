@@ -6,6 +6,7 @@ import net.kyori.adventure.text.ComponentBuilder
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
+import net.minecraft.server.v1_16_R3.*
 import org.bukkit.World
 import java.util.logging.Level
 import kotlin.math.acos
@@ -265,7 +266,21 @@ object Util {
 			val red = ((to.red() - from.red()) * along + from.red()).toInt()
 			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
 			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
-			component = component.append(Component.text(c, TextColor.color(red.shl(16).or(gre.shl(8)).or(blu))))
+			component = component.append(Component.text(c, TextColor.color(red, gre, blu)))
+		}
+
+		return component
+	}
+
+	fun nmsGradientString(string: String, from: TextColor, to: TextColor): IChatBaseComponent {
+		var component = ChatComponentText("") as IChatMutableComponent
+
+		string.forEachIndexed { i, c ->
+			val along = i.toFloat() / (string.length - 1)
+			val red = ((to.red() - from.red()) * along + from.red()).toInt()
+			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
+			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
+			component = component.addSibling(ChatComponentText("$c").setChatModifier(ChatModifier.a.setColor(ChatHexColor.a(red.shl(16).or(gre.shl(8)).or(blu)))))
 		}
 
 		return component

@@ -4,6 +4,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
@@ -48,6 +49,13 @@ class GraceDefault : Phase() {
 			}
 		}
 
+		/* give all teams that don't have names a name */
+		/* add people to team vcs */
+		TeamData.teams.forEach { team ->
+			if (team.name == null) team.automaticName()
+			if (uhc.usingBot) GameRunner.bot?.addToTeamChannel(team, team.members)
+		}
+		
 		/* reset the ledger */
 		uhc.elapsedTime = 0
 		uhc.ledger = Ledger()

@@ -4,7 +4,6 @@ import com.codeland.uhc.discord.command.GeneralCommand
 import com.codeland.uhc.discord.command.LinkCommand
 import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.command.SummaryCommand
-import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
@@ -15,6 +14,7 @@ import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
+import net.dv8tion.jda.api.requests.RestAction
 import java.io.*
 import java.lang.Exception
 import java.util.*
@@ -175,39 +175,11 @@ class MixerBot(
 		val writer = FileWriter(File(linkDataPath), false).close()
 	}
 
-	/* ---------------------------- */
-	/*         TEAM UTILITY         */
-	/* ---------------------------- */
-
-	fun destroyTeamChannel(team: Team) {
-		val guild = guild ?: return
-
-		getTeamChannel(team.colorPair) { teamChannel ->
-			if (teamChannel != null) destroyTeamChannel(guild, teamChannel)
-		}
+	private fun membersFromPlayers(guild: Guild, players: ArrayList<UUID>): List<Member> {
+		return players.mapNotNull { getMinecraftUserIndex(it) }
+			.mapNotNull { guild.getMemberById(discordIDs[it]) }
+			.filter { it.voiceState?.inVoiceChannel() == true }
 	}
-
-	fun addToTeamChannel(team: Team, uniqueID: UUID) {
-		val guild = guild ?: return
-
-		val userIndex = getMinecraftUserIndex(uniqueID)
-		if (userIndex == -1) return
-		val member = guild.getMemberById(discordIDs[userIndex])
-
-		if (member?.voiceState?.inVoiceChannel() == true) {
-			getTeamChannel(team.colorPair) { teamChannel ->
-				if (teamChannel != null) guild.moveVoiceMember(member, teamChannel).queue()
-			}
-		}
-	}
-
-	fun updateTeamChannel(oldColor: ColorPair, newColor: ColorPair) {
-		getTeamChannel(oldColor) { teamChannel ->
-			teamChannel?.manager?.setName(newColor.getName())?.queue()
-		}
-	}
-
-	/* --------------------------------------------------------------- */
 
 	fun isLinked(uuid: UUID): Boolean {
 		val idString = uuidToString(uuid)
@@ -217,44 +189,92 @@ class MixerBot(
 		}
 	}
 
+	private class Awaiter(val num: Int, val onComplete: () -> Unit) {
+		var completed = 0
+
+		fun queue(action: RestAction<Void>) {
+			action.queue({ if (++completed == num) onComplete() }, { if (++completed == num) onComplete() })
+		}
+	}
+
+	/* ---------------------------- */
+	/*         TEAM UTILITY         */
+	/* ---------------------------- */
+
+	fun destroyTeamChannel(team: Team) {
+		val guild = guild ?: return
+
+		getTeamChannel(team.id) { teamChannel ->
+			destroyTeamChannel(guild, teamChannel)
+		}
+	}
+
+	/**
+	 * removes an arbitrary amount of players from a team channel,
+	 * will delete the team channel if everyone is removed
+	 * @param teamSize the number of players on this team before removal
+	 * @param players a list of player UUIDs on the team to move to general
+	 */
+	fun removeFromTeamChannel(team: Team, teamSize: Int, players: ArrayList<UUID>) {
+		val guild = guild ?: return
+		val voiceChannel = voiceChannel ?: return
+
+		/* should never be above but just in case */
+		/* remove everyone, delete channel */
+		if (players.size >= teamSize) {
+			destroyTeamChannel(team)
+
+		/* remove only certain players, don't delete channel */
+		} else {
+			membersFromPlayers(guild, players).forEach { member ->
+				guild.moveVoiceMember(member, voiceChannel).queue()
+			}
+		}
+	}
+
+	fun addToTeamChannel(team: Team, players: ArrayList<UUID>) {
+		val guild = guild ?: return
+
+		getTeamChannel(team.id) { teamChannel ->
+			membersFromPlayers(guild, players).forEach { member ->
+				guild.moveVoiceMember(member, teamChannel).queue()
+			}
+		}
+	}
+
+	/* --------------------------------------------------------------- */
+
 	/**
 	 * will create a new voice channel for
 	 * the team if none currently exists
 	 *
-	 * asynchronous function
-	 * get channel from callback
-	 *
-	 * @return a voice channel corresponding to a team's color
+	 * the voiceChannel is passed into onVoiceChannel
+	 * callback is not called if there was an error
 	 */
-	private fun getTeamChannel(colorPair: ColorPair, onVoiceChannel: (VoiceChannel?) -> Unit) {
-		val category = voiceCategory ?: return onVoiceChannel(null)
-		val teamChannelName = colorPair.getName()
+	private fun getTeamChannel(id: Int, onVoiceChannel: (VoiceChannel) -> Unit) {
+		val category = voiceCategory ?: return
+		val teamChannelName = "Team $id"
 
 		val existingChannel = category.voiceChannels.find { channel -> channel.name == teamChannelName }
 
-		if (existingChannel != null) {
+		if (existingChannel != null)
 			onVoiceChannel(existingChannel)
-		} else {
-			category.createVoiceChannel(teamChannelName).queue({ onVoiceChannel(it) }, { onVoiceChannel(null) })
-		}
+		else
+			category.createVoiceChannel(teamChannelName).queue { onVoiceChannel(it) }
 	}
 
 	private fun destroyTeamChannel(guild: Guild, teamChannel: VoiceChannel) {
-		val numUsers = teamChannel.members.size
-		var completed = 0
-
 		if (teamChannel.members.isEmpty()) {
 			teamChannel.delete().queue()
 
 		} else {
+			val awaiter = Awaiter(teamChannel.members.size) {
+				teamChannel.delete().queue()
+			}
+
+			/* move members to general before deleting team channel */
 			teamChannel.members.forEach { member ->
-				/* move members the general */
-				/* believe me, we need to duplicate code here or else BAD things happen */
-				guild.moveVoiceMember(member, voiceChannel).queue({
-					if (++completed == numUsers) teamChannel.delete().queue()
-			    }, {
-					if (++completed == numUsers) teamChannel.delete().queue()
-				})
+				awaiter.queue(guild.moveVoiceMember(member, voiceChannel))
 			}
 		}
 	}
@@ -296,12 +316,12 @@ class MixerBot(
 		return "${String.Companion.format("%016x", uuid.mostSignificantBits)}${String.Companion.format("%016x", uuid.leastSignificantBits)}"
 	}
 
-	private fun getMinecraftUserIndex(uuid: UUID): Int {
+	private fun getMinecraftUserIndex(uuid: UUID): Int? {
 		val uuidString = uuidToString(uuid)
 
 		for (i in discordIDs.indices)
 			if (uuidString == minecraftIDs[i]) return i
 
-		return -1
+		return null
 	}
 }

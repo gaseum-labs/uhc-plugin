@@ -14,12 +14,18 @@ import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.title.Title
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.command.CommandSender
+import java.time.Duration
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
@@ -290,45 +296,42 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	 */
 	fun endUHC(winners: ArrayList<UUID>) {
 		/* if someone won */
-		if (winners.isNotEmpty()) {
+		val title = if (winners.isNotEmpty()) {
 			val winningTeam = TeamData.playersTeam(winners[0])
 
-			val topMessage: String
-			val bottomMessage: String
+			val topMessage: Component
+			val bottomMessage: Component
 
 			if (winningTeam == null) {
 				val winningPlayer = Bukkit.getPlayer(winners[0])
 
-				topMessage = "${ChatColor.GOLD}${ChatColor.BOLD}${winningPlayer?.name} Has Won!"
-				bottomMessage = ""
+				topMessage = Component.text("${winningPlayer?.name} has won!").style(Style.style(TextDecoration.BOLD, NamedTextColor.GOLD))
+				bottomMessage = Component.empty()
 
 				ledger.addEntry(winningPlayer?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
 
 			} else {
-				topMessage = winningTeam.colorPair.colorString("${winningTeam.displayName} Has Won!")
+				topMessage = winningTeam.apply("${winningTeam.gameName()} has won!")
 
-				var playerString = ""
-				winners.forEach { winner ->
-					val player = Bukkit.getPlayer(winner)
+				var playerString = winners.joinToString(" ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }
+				winners.forEach { ledger.addEntry(Bukkit.getOfflinePlayer(it).name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true) }
 
-					playerString += "${player?.name} "
-					ledger.addEntry(player?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
-				}
-
-				bottomMessage = winningTeam.colorPair.colorString(playerString.dropLast(1))
+				bottomMessage = winningTeam.apply(playerString)
 			}
-
-			Bukkit.getServer().onlinePlayers.forEach { player -> player.sendTitle(topMessage, bottomMessage, 0, 200, 40) }
 
 			ledger.createTextFile()
 
+			Title.title(topMessage, bottomMessage, Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2)))
+
 		/* no one won the game */
 		} else {
-			Bukkit.getServer().onlinePlayers.forEach { player -> player.sendTitle("${ChatColor.GOLD}${ChatColor.BOLD}No one wins?", "", 0, 200, 40) }
+			Title.title(Component.text("No one wins?").style(Style.style(NamedTextColor.GOLD, TextDecoration.BOLD)), Component.empty(), Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2)))
 		}
 
+		Bukkit.getServer().onlinePlayers.forEach { player -> player.showTitle(title) }
+
 		/* remove all teams */
-		TeamData.removeAllTeams {}
+		TeamData.destroyTeam(null, usingBot, true) {}
 
 		/* reset all player data states */
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->

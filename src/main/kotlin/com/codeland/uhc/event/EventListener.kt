@@ -149,27 +149,15 @@ class EventListener : Listener {
 
 		/* players dying in the game */
 		} else if (playerData.participating) {
-			/* dying in betrayal chc */
-			if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL)) {
-				val killer = player.killer
-
-				/* don't drop if you were killed and team swapped */
-				if (killer != null) {
-					event.keepInventory = true
-					event.drops.clear()
-
-					Betrayal.onPlayerDeath(player.uniqueId, killer.uniqueId)
-				}
-
 			/* regular deaths */
-			} else if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
+			if (!(GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))) {
 				val wasPest = Pests.isPest(player)
 
 				if (GameRunner.uhc.isEnabled(QuirkType.PESTS) && !wasPest) Pests.makePest(player)
 
 				if (playerData.alive) GameRunner.playerDeath(player.uniqueId, player.killer)
 
-				if (Pests.isPest(player)) TeamData.removeFromTeam(player.uniqueId, true)
+				if (Pests.isPest(player)) TeamData.removeFromTeam(arrayListOf(player.uniqueId), GameRunner.uhc.usingBot, true, true)
 			}
 
 			/* remove chc specific items from drops */
@@ -320,22 +308,16 @@ class EventListener : Listener {
 			playerData.offlineZombie = null
 			event.drops.clear()
 
-			/* betrayal */
-			if (GameRunner.uhc.isEnabled(QuirkType.BETRAYAL) && killer != null) {
-				Betrayal.onPlayerDeath(uuid, killer.uniqueId)
+			/* drop they player's inventory and experience */
+			inventory.forEach { drop -> event.drops.add(drop) }
+			val droppedExperience = experience.coerceAtMost(100)
+			event.droppedExp = droppedExperience
 
-			} else {
-				/* drop they player's inventory and experience */
-				inventory.forEach { drop -> event.drops.add(drop) }
-				val droppedExperience = experience.coerceAtMost(100)
-				event.droppedExp = droppedExperience
-
-				/* player can respawn only in grace forgiving */
-				if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))
-					GameRunner.respawnPlayer(null, uuid, playerData)
-				else
-					GameRunner.playerDeath(uuid, killer)
-			}
+			/* player can respawn only in grace forgiving */
+			if (GameRunner.uhc.isVariant(PhaseVariant.GRACE_FORGIVING))
+				GameRunner.respawnPlayer(null, uuid, playerData)
+			else
+				GameRunner.playerDeath(uuid, killer)
 		} else {
 			/* find a quirk that has a dropfix for this entity */
 			/* if not fallback to default list of dropfixes */
