@@ -3,12 +3,13 @@ package com.codeland.uhc.event
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.lobbyPvp.PvpData
 import com.codeland.uhc.team.Team
 import io.papermc.paper.event.player.AsyncChatEvent
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -122,62 +123,7 @@ class Chat : Listener {
 			override fun needsOp() = false
 		}
 	}
-
-	private fun addMentions(event: AsyncChatEvent) {
-		fun findAll(message: String, name: String): MutableList<Int> {
-			val lowerMessage = message.toLowerCase()
-			val lowerName = name.toLowerCase()
-			val list = mutableListOf<Int>()
-			var index = lowerMessage.indexOf(lowerName)
-			while (index != -1) {
-				if (index + name.length >= lowerMessage.length || lowerMessage[index + name.length] !in 'a'..'z')
-					list.add(index)
-				index = lowerMessage.indexOf(lowerName, index + 1)
-			}
-			return list
-		}
-
-		fun colorAll(message: String, coloring: Coloring, target: String): String {
-			val mentions = findAll(message, target)
-			var offset = 0
-			var newMessage = message
-			for (m in mentions) {
-				newMessage = newMessage.substring(0, m + offset) + coloring(target) + ChatColor.WHITE + newMessage.substring(m + offset + target.length, newMessage.length)
-				offset += coloring(target).length - target.length + 2
-			}
-			return newMessage
-		}
-
-		event.isCancelled = true
-
-		val sendersTeam = TeamData.playersTeam(event.player.uniqueId)
-		val playerPart = if (sendersTeam == null)
-			"<${event.player.name}>"
-		else
-			sendersTeam.colorPair.colorString("<${event.player.name}>")
-
-		for (p in Bukkit.getOnlinePlayers()) {
-			var message = event.message
-			var mentioned = false
-			for (dynamic in mentions()) {
-				val mention = "@" + dynamic.name
-				val mentions = findAll(message, mention)
-				if (mentions.size > 0 && (!dynamic.needsOp || event.player.isOp)) {
-					var coloring = dynamic.coloring
-					var c: Coloring
-					c = if (dynamic.includes(p)) {
-						mentioned = true
-						{ underline(coloring(it)) }
-					} else coloring
-					message = colorAll(message, c, mention)
-				}
-			}
-
-			if (mentioned) p.playSound(p.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 5f, 5f)
-			p.sendMessage("$playerPart ${ChatColor.RESET}$message")
-		}
-	}
-
+	
 	/**
 	 * @param startIndex the index of the @ of the mention in the string
 	 * @return a pair of the mention found and the corresponding endIndex for the matched substring in message,
@@ -240,20 +186,23 @@ class Chat : Listener {
 		return mentionList
 	}
 
-	private fun replaceMentions(message: String, player: Player, mentions: ArrayList<Triple<Mention, Int, Int>>): Component {
-		val usedMentions = mentions.filter { (mention, _, _) -> mention.includes(player) }
+	private fun replaceMentions(message: String, player: Player, collected: ArrayList<Triple<Mention, Int, Int>>, chatColor: TextColor): Component {
+		val used = collected.filter { (mention, _, _) -> mention.includes(player) }
+
+		/* ping player, they are mentioned */
+		if (used.isNotEmpty()) player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 5f, 5f)
 
 		/* begin with the part before the first mention */
-		var replacedMessage = Component.text(message.substring(0, if (usedMentions.isEmpty()) message.length else usedMentions[0].second))
+		var replacedMessage = Component.text(message.substring(0, if (used.isEmpty()) message.length else used[0].second)).style(Style.style(chatColor))
 
-		for (i in usedMentions.indices) {
-			val (mention, startIndex, endIndex) = mentions[i]
+		for (i in used.indices) {
+			val (mention, startIndex, endIndex) = collected[i]
 
 			/* add the mention, which is replaced */
 			replacedMessage = replacedMessage.append(mention.generate(message.substring(startIndex, endIndex)))
 
 			/* the part after the mention until the next mention, or until the end of the message */
-			.append(Component.text(message.substring(endIndex, if (i == usedMentions.lastIndex) message.length else usedMentions[i + 1].second)))
+			.append(Component.text(message.substring(endIndex, if (i == used.lastIndex) message.length else used[i + 1].second))).style(Style.style(chatColor))
 		}
 
 		return replacedMessage
@@ -275,44 +224,35 @@ class Chat : Listener {
 		return list
 	}
 
+	private fun playerComponent(team: Team?, player: Player): Component {
+		val str = "<${player.name}> "
+		return team?.apply(str) ?: Component.text(str)
+	}
+
 	@EventHandler
 	fun onMessage(event: AsyncChatEvent) {
-		/* only modify chat when game is running */
-		if (!GameRunner.uhc.isGameGoing()) {
-			addMentions(event)
-			return
-		}
+		event.isCancelled = true
 
-		/* only modify chat behavior with players on teams */
-		val team = TeamData.playersTeam(event.player.uniqueId) ?: return
+		val message = (event.message() as? TextComponent)?.content() ?: return
 
-		fun firstIsMention(message: String): Boolean {
-			if (message.startsWith("@")) {
-				for (dynamic in mentions()) {
-					if (message.length >= dynamic.name.length + 1 && message.substring(0, dynamic.name.length + 1) == "@" + dynamic.name) return true
-				}
+		val team = TeamData.playersTeam(event.player.uniqueId)
+		val playerComponent = playerComponent(team, event.player)
+
+		val collected = collectMentions(message, generateMentions())
+
+		/* filter messages only to teammates */
+		/* if the sending player is on a team */
+		/* if the message does not start with a mention */
+		/* and the message does not start with ! */
+		if (GameRunner.uhc.isGameGoing() && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
+			team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
+				player.sendMessage(playerComponent.append(replaceMentions(message, player, collected, team.color1)))
 			}
-			return false
-		}
 
-		if (event.message.startsWith("!") || firstIsMention(event.message)) {
-			/* prevent blank global messages */
-			if (event.message.length == 1)
-				event.isCancelled = true
-			else
-				if (event.message.startsWith("!"))
-					event.message = event.message.substring(1)
-
-			addMentions(event)
-
+		/* regular chat behavior before game */
 		} else {
-			event.isCancelled = true
-
-			val component = "${team.colorPair.colorString("<${event.player.name}>")} ${team.colorPair.color0}${event.message}"
-
-			team.members.forEach { member ->
-				val player = Bukkit.getPlayer(member)
-				player?.sendMessage(component)
+			Bukkit.getOnlinePlayers().forEach { player ->
+				player.sendMessage(playerComponent.append(replaceMentions(if (message.startsWith("!")) message.substring(1) else message, player, collected, NamedTextColor.WHITE)))
 			}
 		}
 	}
