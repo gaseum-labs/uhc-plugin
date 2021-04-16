@@ -1,15 +1,17 @@
 package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
-import co.aikar.commands.annotation.CommandAlias
-import co.aikar.commands.annotation.CommandCompletion
-import co.aikar.commands.annotation.Description
-import co.aikar.commands.annotation.Subcommand
+import co.aikar.commands.annotation.*
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.format.TextDecoration
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
@@ -129,6 +131,8 @@ class TeamCommands : BaseCommand() {
 	@Subcommand("swap")
 	@Description("swap the teams of two players")
 	fun swapTeams(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
+		if (Commands.opGuard(sender)) return
+
 		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team")
 		val team2 = TeamData.playersTeam(player2.uniqueId) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team")
 
@@ -136,5 +140,25 @@ class TeamCommands : BaseCommand() {
 		TeamData.addToTeam(team1, listOf(player2.uniqueId), false) {}
 
 		GameRunner.sendGameMessage(sender, "Swapped teams of ${player1.name} and ${player2.name}")
+	}
+
+	@Subcommand("list")
+	@Description("lists out all teams and members")
+	fun testTeams(sender: CommandSender) {
+		val teams = TeamData.teams
+
+		teams.forEach { team ->
+			sender.sendMessage(team.apply("${team.name ?: "(Name not chosen)"}:").style(Style.style(TextDecoration.BOLD)))
+
+			team.members.forEach { uuid ->
+				sender.sendMessage(Component.text("- ").append(team.apply(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
+			}
+		}
+
+		sender.sendMessage(Component.text("Individual players:").style(Style.style(NamedTextColor.GRAY, TextDecoration.BOLD)))
+
+		PlayerData.playerDataList.filter { (uuid, playerData) -> (playerData.participating || playerData.staged) && !TeamData.isOnTeam(uuid) }.forEach { (uuid, playerData) ->
+			sender.sendMessage(Component.text("- ").append(Component.text(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
+		}
 	}
 }

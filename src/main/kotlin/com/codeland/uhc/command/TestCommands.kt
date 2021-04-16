@@ -104,29 +104,6 @@ class TestCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Elapsed time: ${GameRunner.uhc.elapsedTime}")
 	}
 
-	@Subcommand("teams")
-	@Description("gives an overview of teams")
-	fun testTeams(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		val teams = TeamData.teams
-
-		teams.forEach { team ->
-			GameRunner.sendGameMessage(sender, team.colorPair.colorString(team.displayName))
-			team.members.forEach { uuid ->
-				val player = Bukkit.getOfflinePlayer(uuid)
-				GameRunner.sendGameMessage(sender, team.colorPair.colorString(player.name ?: "NULL"))
-			}
-		}
-
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if ((playerData.participating || playerData.staged) && !TeamData.isOnTeam(uuid)) {
-				val player = Bukkit.getOfflinePlayer(uuid)
-				GameRunner.sendGameMessage(sender, player.name ?: "NULL")
-			}
-		}
-	}
-
 	@Subcommand("playerData")
 	@Description("get this player's playerData")
 	fun testPlayerData(sender: CommandSender, player: OfflinePlayer) {

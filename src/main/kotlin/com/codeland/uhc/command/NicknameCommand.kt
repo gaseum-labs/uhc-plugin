@@ -62,7 +62,7 @@ class NicknameCommand : BaseCommand() {
 			?: return Commands.errorMessage(sender, "Cannot find player by the name ${Commands.coloredInError(targetName, GRAY)}")
 
 		val nickList = Chat.getNicks(target.uniqueId)
-		
+
 		if (nickList.isEmpty()) {
 			GameRunner.sendGameMessage(sender, "This player has no nicknames.")
 		} else {
