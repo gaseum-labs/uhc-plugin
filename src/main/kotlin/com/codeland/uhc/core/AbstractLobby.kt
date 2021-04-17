@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.gui.item.CommandItemType
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.TeamData
@@ -20,12 +21,27 @@ object AbstractLobby {
 		return Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 	}
 
-	fun onSpawnLobby(player: Player): Location {
-		player.exp = 0.0F
+	fun resetPlayerStats(player: Player) {
+		player.exp = 0.0f
+		player.totalExperience = 0
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
 		player.health = 20.0
 		player.foodLevel = 20
+		player.saturation = 5.0f
 		player.fallDistance = 0f
+		player.fireTicks = -1
+		player.inventory.clear()
+		player.setItemOnCursor(null)
+		player.activePotionEffects.forEach { player.removePotionEffect(it.type) }
+		player.fallDistance = 0f
+		player.setStatistic(Statistic.TIME_SINCE_REST, 0)
+		player.isFlying = false
+		player.isSneaking = false
+	}
+
+	fun onSpawnLobby(player: Player): Location {
+		resetPlayerStats(player)
+
 		player.gameMode = GameMode.CREATIVE
 
 		/* get them on the health scoreboard */
@@ -76,10 +92,11 @@ object AbstractLobby {
 				val playerData = PlayerData.getPlayerData(player.uniqueId)
 				val team = TeamData.playersTeam(player.uniqueId)
 				val queueTime = PvpQueue.queueTime(player.uniqueId)
+				val game = PvpGameManager.playersGame(player.uniqueId)
 
-				if (!playerData.participating && !playerData.lobbyPVP.inPvp) {
+				if (!playerData.participating && game == null) {
 					if (queueTime != null) {
-						player.sendActionBar(Util.gradientString("Queue Time: ${Util.timeString(queueTime)} | Players in Queue: ${PvpQueue.size()}", TextColor.color(0xff3190), TextColor.color(0x003190)))
+						player.sendActionBar(Util.gradientString("Queue Time: ${Util.timeString(queueTime)} | Players in Queue: ${PvpQueue.size()}", TextColor.color(0x750c0c), TextColor.color(0xeb1f0c)))
 
 					} else if (player.gameMode == GameMode.SPECTATOR) {
 						if (slideN(0)) {
@@ -112,7 +129,6 @@ object AbstractLobby {
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
 			world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
 			world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
-			world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, false)
 
 			world.time = 6000
 			world.isThundering = false

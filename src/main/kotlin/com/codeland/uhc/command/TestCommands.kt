@@ -12,12 +12,11 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.core.AbstractLobby
-import com.codeland.uhc.lobbyPvp.PvpData
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
-import com.codeland.uhc.team.TeamData
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -114,7 +113,7 @@ class TestCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Participating: ${playerData.participating}")
 		GameRunner.sendGameMessage(sender, "Alive: ${playerData.alive}")
 		GameRunner.sendGameMessage(sender, "Opting Out: ${playerData.optingOut}")
-		GameRunner.sendGameMessage(sender, "In Lobby PVP: ${playerData.lobbyPVP.inPvp}")
+		GameRunner.sendGameMessage(sender, "Last Played: ${playerData.lastPlayed}")
 	}
 
 	@Subcommand("zombie")
@@ -164,31 +163,13 @@ class TestCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
 	}
 
-	@Subcommand("killstreak")
-	@Description("test a player's individual mobcap")
-	fun testKillstreak(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		sender as Player
-		val pvpData = PlayerData.getLobbyPvp(sender.uniqueId)
-
-		if (pvpData.inPvp) {
-			PvpData.onKill(sender)
-			GameRunner.sendGameMessage(sender, "Killstreak increased to ${pvpData.killstreak}")
-		} else {
-			errorMessage(sender, "You are not in PVP!")
-		}
-	}
-
 	@Subcommand("lobbyCycle")
 	fun lobbyCycle(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.lobbyPVP.inPvp) {
-				val player = Bukkit.getPlayer(uuid)
-				if (player != null) PvpData.disablePvp(player)
-			}
+		PvpGameManager.ongoingGames.removeIf { game ->
+			game.players.mapNotNull { Bukkit.getPlayer(it) }.forEach { PvpGameManager.disablePvp(it) }
+			true
 		}
 
 		WorldManager.destroyPVPWorld()

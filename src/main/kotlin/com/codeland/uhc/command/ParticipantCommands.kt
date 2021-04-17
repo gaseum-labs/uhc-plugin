@@ -9,6 +9,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.core.AbstractLobby
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
@@ -91,20 +92,13 @@ class ParticipantCommands : BaseCommand() {
 	@Description("allows spectators to go back to lobby")
 	fun lobbyCommand(sender: CommandSender) {
 		sender as Player
-		val playerData = PlayerData.getPlayerData(sender.uniqueId)
 
 		/* only non players can use this command */
-		if (playerData.participating) return Commands.errorMessage(sender, "You're playing the game")
+		if (PlayerData.isParticipating(sender.uniqueId) || PvpGameManager.playersGame(sender.uniqueId) != null)
+			return Commands.errorMessage(sender, "You can't use this command right now")
 
-		/* lobby pvpers have to wait */
-		if (playerData.lobbyPVP.inPvp) {
-			playerData.lobbyPVP.exiting = true
-			GameRunner.sendGameMessage(sender, "Stand still to return to lobby")
-
-		/* specs immediately go to lobby */
-		} else {
-			AbstractLobby.onSpawnLobby(sender)
-		}
+		/* specs can go back to lobby */
+		AbstractLobby.onSpawnLobby(sender)
 	}
 
 	@CommandCompletion("@quirkclass")

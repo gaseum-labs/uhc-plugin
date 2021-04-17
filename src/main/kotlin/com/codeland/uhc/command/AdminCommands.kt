@@ -142,9 +142,7 @@ class AdminCommands : BaseCommand() {
 	fun addLate(sender: CommandSender, offlinePlayer: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
-
-		val playerData = PlayerData.getPlayerData(offlinePlayer.uniqueId)
-		if (playerData.optingOut) return Commands.errorMessage(sender, "${offlinePlayer.name} is opting out of participating!")
+		if (PlayerData.isOptingOut(offlinePlayer.uniqueId)) return Commands.errorMessage(sender, "${offlinePlayer.name} is opting out of participating!")
 
 		/* teleport will be to an alive team member if player is on a team */
 		/* will be to a random location if not on a team or no playing team members */
@@ -157,17 +155,10 @@ class AdminCommands : BaseCommand() {
 
 		val teleportLocation = if (team == null) {
 			randomLocation()
+
 		} else {
 			/* find a team member who is not the added player, and who is participating */
-			val teammate = team.members.find { teammateUUID ->
-				if (offlinePlayer.uniqueId != teammateUUID) {
-					val teammateData = PlayerData.getPlayerData(teammateUUID)
-					teammateData.participating
-
-				} else {
-					false
-				}
-			}
+			val teammate = team.members.filter { it != offlinePlayer.uniqueId }.find { PlayerData.isParticipating(it) }
 
 			/* teleport to the teammate if possible */
 			if (teammate == null)
@@ -177,16 +168,9 @@ class AdminCommands : BaseCommand() {
 
 		} ?: return Commands.errorMessage(sender, "No teleport location found")
 
-		GameRunner.teleportPlayer(offlinePlayer.uniqueId, teleportLocation)
+		GraceDefault.startPlayer(offlinePlayer.uniqueId, teleportLocation)
 
-		/* set playerdata for starting a player (these parts are the same as in GraceDefault) */
-		playerData.lobbyPVP.inPvp = false
-		playerData.staged = false
-		playerData.alive = true
-		playerData.participating = true
-
-		/* set player stats for starting a player */
-		GameRunner.playerAction(offlinePlayer.uniqueId, GraceDefault.Companion::startPlayer)
+		GameRunner.sendGameMessage(sender, "Started player ${offlinePlayer.name} late")
 	}
 
 	@Subcommand("pregen")

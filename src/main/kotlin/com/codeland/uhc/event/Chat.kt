@@ -89,13 +89,6 @@ class Chat : Listener {
 			override fun needsOp() = true
 		}
 
-		val mentionPvp = object : Mention {
-			override fun matches() = "pvp"
-			override fun includes(player: Player) = PlayerData.getLobbyPvp(player.uniqueId).inPvp
-			override fun generate(string: String) = defaultGenerator(string)
-			override fun needsOp() = true
-		}
-
 		val mentionSpectating = object : Mention {
 			override fun matches() = "spectating"
 			override fun includes(player: Player) = !PlayerData.isParticipating(player.uniqueId) && player.gameMode == GameMode.SPECTATOR
@@ -239,7 +232,6 @@ class Chat : Listener {
 			mentionEveryone,
 			mentionOp,
 			mentionParticipating,
-			mentionPvp,
 			mentionSpectating
 		)
 

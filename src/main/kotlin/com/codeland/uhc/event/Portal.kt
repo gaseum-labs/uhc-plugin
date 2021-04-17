@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.Util
 import org.bukkit.*
@@ -142,20 +143,18 @@ class Portal : Listener {
 	fun onPlayerPortal(event: PlayerPortalEvent) {
 		val player = event.player
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val pvpGame = PvpGameManager.playersGame(player.uniqueId)
 
 		/* lobby pvpers can't escape through the never */
-		if (playerData.lobbyPVP.inPvp)
+		if (pvpGame != null) {
 			event.isCancelled = true
 
 		/* prevent peeking the center during waiting */
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+		} else if (!playerData.participating) {
 			event.isCancelled = true
 
 		/* prevent going to the nether after nether closes */
-		} else if (
-			!GameRunner.netherIsAllowed() &&
-			event.player.gameMode == GameMode.SURVIVAL
-		) {
+		} else if (!GameRunner.netherIsAllowed()) {
 			val location = event.player.location
 			val world = location.world
 

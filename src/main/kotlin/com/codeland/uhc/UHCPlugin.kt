@@ -44,7 +44,6 @@ class UHCPlugin : JavaPlugin() {
 		/* register all events */
 		server.pluginManager.registerEvents(ClassesEvents(), this)
 		server.pluginManager.registerEvents(Chat(), this)
-		server.pluginManager.registerEvents(Crits(), this)
 		server.pluginManager.registerEvents(EventListener(), this)
 		server.pluginManager.registerEvents(Generation(), this)
 		server.pluginManager.registerEvents(Portal(), this)

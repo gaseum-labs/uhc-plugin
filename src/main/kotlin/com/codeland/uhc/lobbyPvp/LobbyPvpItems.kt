@@ -10,6 +10,26 @@ import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
 
 object LobbyPvpItems {
+	val itemsList = arrayOf(
+		/* hotbar */
+		::genAxe,
+		::genSword,
+		::genLavaBucket,
+		::genBow,
+		::genCrossbow,
+		::genWaterBucket,
+		::genGapples,
+		::genRegenPotion,
+		::genPoisonPotion,
+
+		/* inventory */
+		::genFood,
+		::genArrows,
+		::genPick,
+		::genBlocks,
+		::genAnvil,
+	)
+
 	private class EnchantOption(val enchantment: Enchantment, val level: Int)
 
 	private val armorEnchants: Array<EnchantOption?> = arrayOf(

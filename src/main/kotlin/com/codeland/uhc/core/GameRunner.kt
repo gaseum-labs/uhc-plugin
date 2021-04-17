@@ -142,14 +142,15 @@ object GameRunner {
 		}
 	}
 
-	fun respawnPlayer(player: Player?, uuid: UUID, playerData: PlayerData): Location? {
+	fun respawnLocation(player: Player?, uuid: UUID, playerData: PlayerData): Location {
 		val world = uhc.getDefaultWorld()
 		val respawnLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+			?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 
 		/* an offline zombie died */
 		if (player == null)
 			playerData.offlineZombie = playerData.createDefaultZombie(
-				uuid, respawnLocation ?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
+				uuid, respawnLocation
 			)
 
 		/* custom quirk behavior when players start */

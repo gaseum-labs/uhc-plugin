@@ -1,7 +1,6 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.lobbyPvp.PvpData
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -21,7 +20,8 @@ class PlayerData(
 	var participating: Boolean,
 	var alive: Boolean,
 	var optingOut: Boolean,
-	var lobbyPVP: PvpData,
+	var lobbyInventory: Array<ItemStack>,
+	var lastPlayed: UUID?
 ) {
 	class QuirkDataHolder(var applied: Boolean, var data: Any)
 	var quirkDataList = HashMap<QuirkType, QuirkDataHolder>()
@@ -152,9 +152,7 @@ class PlayerData(
 		/* THE player data list */
 		val playerDataList = java.util.HashMap<UUID, PlayerData>()
 
-		fun defaultPlayerData(): PlayerData {
-			return PlayerData(false, false, false, false, PvpData.defaultPvpData())
-		}
+		fun defaultPlayerData() = PlayerData(false, false, false, false, emptyArray(), null)
 
 		/**
 		 * @return -1 experience if this is not a valid offline zombie
@@ -221,10 +219,6 @@ class PlayerData(
 
 		fun isOptingOut(uuid: UUID): Boolean {
 			return getPlayerData(uuid).optingOut
-		}
-
-		fun getLobbyPvp(uuid: UUID): PvpData {
-			return getPlayerData(uuid).lobbyPVP
 		}
 
 		fun isCurrent(uuid: UUID): Boolean {

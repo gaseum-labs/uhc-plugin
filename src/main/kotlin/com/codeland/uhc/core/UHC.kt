@@ -6,7 +6,6 @@ import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.grace.GraceDefault
-import com.codeland.uhc.lobbyPvp.PvpData
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
@@ -216,8 +215,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			if (isGameGoing() && !isPhase(PhaseType.ENDGAME)) CustomSpawning.spawnTick(currentTick)
 
 			if (isGameGoing()) PlayerData.zombieBorderTick(currentTick)
-
-			PvpData.onTick(currentTick)
 
 			AbstractLobby.lobbyTipsTick(currentTick)
 

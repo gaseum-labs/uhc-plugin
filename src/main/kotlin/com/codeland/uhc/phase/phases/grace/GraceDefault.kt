@@ -1,14 +1,16 @@
 package com.codeland.uhc.phase.phases.grace
 
+import com.codeland.uhc.core.AbstractLobby
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Ledger
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.*
-import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
+import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.*
 
@@ -34,28 +36,18 @@ class GraceDefault : Phase() {
 		val teleportGroups = uhc.teleportGroups ?: return
 		val teleportLocations = uhc.teleportLocations ?: return
 
-		/* teleport and set playerData to current */
-		teleportGroups.forEachIndexed { i, teleportGroup ->
-			teleportGroup.forEach { uuid ->
-				val playerData = PlayerData.getPlayerData(uuid)
-				playerData.staged = false
-				playerData.lobbyPVP.inPvp = false
-				playerData.alive = true
-				playerData.participating = true
-
-				GameRunner.teleportPlayer(uuid, teleportLocations[i])
-				GameRunner.playerAction(uuid, ::startPlayer)
-				GameRunner.uhc.quirks.forEach { quirk -> if (quirk.enabled) quirk.onStart(uuid) }
-			}
-		}
-
 		/* give all teams that don't have names a name */
 		/* add people to team vcs */
 		TeamData.teams.forEach { team ->
 			if (team.name == null) team.automaticName()
 			if (uhc.usingBot) GameRunner.bot?.addToTeamChannel(team, team.members)
 		}
-		
+
+		/* teleport and set playerData to current */
+		teleportGroups.forEachIndexed { i, teleportGroup ->
+			teleportGroup.forEach { uuid -> startPlayer(uuid, teleportLocations[i]) }
+		}
+
 		/* reset the ledger */
 		uhc.elapsedTime = 0
 		uhc.ledger = Ledger()
@@ -81,37 +73,31 @@ class GraceDefault : Phase() {
 	}
 
 	companion object {
-		fun startPlayer(player: Player) {
-			/* absolutely nuke the inventory */
-			player.inventory.clear()
-			player.setItemOnCursor(null)
+		fun startPlayer(uuid: UUID, location: Location) {
+			val playerData = PlayerData.getPlayerData(uuid)
+			playerData.staged = false
+			playerData.alive = true
+			playerData.participating = true
 
-			/* clear crafting slots */
-			player.openInventory.topInventory.clear()
-			player.openInventory.bottomInventory.clear()
+			val pvpGame = PvpGameManager.playersGame(uuid)
+			val player = Bukkit.getPlayer(uuid)
+			if (pvpGame != null && player != null) PvpGameManager.disablePvp(player)
 
-			for (activePotionEffect in player.activePotionEffects)
-				player.removePotionEffect(activePotionEffect.type)
-			player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
-			player.health = 20.0
-			player.absorptionAmount = 0.0
-			player.exp = 0f
-			player.level = 0
-			player.foodLevel = 20
-			player.saturation = 5f
-			player.exhaustion = 0f
-			player.fireTicks = -1
-			player.fallDistance = 0f
-			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
+			GameRunner.playerAction(uuid) { player ->
+				AbstractLobby.resetPlayerStats(player)
 
-			/* remove all advancements */
-			Bukkit.getServer().advancementIterator().forEach { advancement ->
-				val progress = player.getAdvancementProgress(advancement)
+				/* remove all advancements */
+				Bukkit.getServer().advancementIterator().forEach { advancement ->
+					val progress = player.getAdvancementProgress(advancement)
 
-				progress.awardedCriteria.forEach { criteria -> progress.revokeCriteria(criteria) }
+					progress.awardedCriteria.forEach { criteria -> progress.revokeCriteria(criteria) }
+				}
+
+				player.gameMode = GameMode.SURVIVAL
 			}
 
-			player.gameMode = GameMode.SURVIVAL
+			GameRunner.teleportPlayer(uuid, location)
+			GameRunner.uhc.quirks.forEach { quirk -> if (quirk.enabled) quirk.onStart(uuid) }
 		}
 
 		fun spreadSinglePlayer(world: World, spreadRadius: Double): Location? {

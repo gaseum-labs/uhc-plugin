@@ -1,6 +1,8 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import com.comphenix.protocol.PacketType
@@ -129,6 +131,38 @@ object Packet {
 					val itemList = packetItemListField.get(packet) as MutableList<DataWatcher.Item<Any>>
 					val value = itemValueField.get(itemList[0]) as? Byte ?: return
 					itemValueField.set(itemList[0], value.or(0x40))
+				}
+			}
+		})
+
+		val borderActionField = PacketPlayOutWorldBorder::class.java.getDeclaredField("a")
+		borderActionField.isAccessible = true
+
+		val borderDiameterField = PacketPlayOutWorldBorder::class.java.getDeclaredField("e")
+		borderDiameterField.isAccessible = true
+
+		val borderCenterXField = PacketPlayOutWorldBorder::class.java.getDeclaredField("c")
+		borderCenterXField.isAccessible = true
+
+		val borderCenterZField = PacketPlayOutWorldBorder::class.java.getDeclaredField("d")
+		borderCenterZField.isAccessible = true
+
+		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.WORLD_BORDER) {
+			override fun onPacketSending(event: PacketEvent) {
+				val sentPlayer = event.player
+				val pvpGame = PvpGameManager.playersGame(sentPlayer.uniqueId)
+
+				if (pvpGame != null && sentPlayer.world.name == WorldManager.PVP_WORLD_NAME) {
+					event.packet = event.packet.deepClone()
+					val packet = event.packet.handle as PacketPlayOutWorldBorder
+
+					if (borderActionField[packet] == PacketPlayOutWorldBorder.EnumWorldBorderAction.INITIALIZE) {
+						val (centerX, centerZ) = pvpGame.centerLocation()
+
+						borderDiameterField[packet] = pvpGame.borderSize.toDouble()
+						borderCenterXField[packet] = centerX.toDouble()
+						borderCenterZField[packet] = centerZ.toDouble()
+					}
 				}
 			}
 		})
