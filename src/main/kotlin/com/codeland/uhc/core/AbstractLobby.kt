@@ -1,7 +1,6 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.gui.item.CommandItemType
-import com.codeland.uhc.lobbyPvp.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.TeamData
@@ -14,7 +13,9 @@ import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 
 object AbstractLobby {
-	fun lobbyLocation(uhc: UHC, player: Player): Location {
+	val LOBBY_RADIUS = 60
+
+	fun lobbyLocation(uhc: UHC): Location {
 		val world = WorldManager.getLobbyWorld()
 		return Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 	}
@@ -43,14 +44,14 @@ object AbstractLobby {
 
 		Pests.makeNotPest(player)
 
-		val location = lobbyLocation(GameRunner.uhc, player)
-		if (location.world != WorldManager.getLobbyWorld()) player.teleport(location)
+		val lobbyLocation = lobbyLocation(GameRunner.uhc)
+		if (player.location.world != WorldManager.getLobbyWorld()) player.teleport(lobbyLocation)
 
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
 		CommandItemType.giveItem(CommandItemType.PVP_QUEUE, player.inventory)
 		CommandItemType.giveItem(CommandItemType.SPECTATE, player.inventory)
 
-		return location
+		return lobbyLocation
 	}
 
 	fun isLinked(player: Player) = if (GameRunner.uhc.usingBot) {
@@ -108,9 +109,6 @@ object AbstractLobby {
 		world.difficulty = Difficulty.NORMAL
 
 		if (WorldManager.isNonGameWorld(world)) {
-			world.worldBorder.center = Location(world, 0.5, 0.0, 0.5)
-			world.worldBorder.size = uhc.lobbyRadius * 2 + 1.0
-
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
 			world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
 			world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
@@ -120,8 +118,9 @@ object AbstractLobby {
 			world.isThundering = false
 			world.setStorm(false)
 
-			if (world.name == WorldManager.PVP_WORLD_NAME) {
-				PvpArena.prepareArena(world, uhc.lobbyRadius, uhc)
+			if (world.name == WorldManager.LOBBY_WORLD_NAME) {
+				world.worldBorder.center = Location(world, 0.5, 0.0, 0.5)
+				world.worldBorder.size = LOBBY_RADIUS * 2 + 1.0
 			}
 		}
 	}

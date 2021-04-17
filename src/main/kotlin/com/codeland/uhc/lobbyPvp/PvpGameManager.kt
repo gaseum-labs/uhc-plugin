@@ -17,6 +17,8 @@ import kotlin.math.sin
 
 object PvpGameManager {
 	const val ARENA_STRIDE = 160
+	const val BEACH = 128
+	const val LARGE_BORDER = 96
 	const val BORDER_SIZE = 64
 
 	class PvpGame(val players: Array<UUID>, position: Int) {

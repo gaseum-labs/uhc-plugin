@@ -1,10 +1,12 @@
 package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
-import co.aikar.commands.annotation.*
+import co.aikar.commands.annotation.CommandAlias
+import co.aikar.commands.annotation.CommandCompletion
+import co.aikar.commands.annotation.Description
+import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.team.ColorPair
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import net.kyori.adventure.text.Component
@@ -12,11 +14,8 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
-import java.util.*
-import kotlin.collections.ArrayList
 
 @CommandAlias("uhca")
 @Subcommand("team")

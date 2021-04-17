@@ -73,10 +73,6 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 	var teleportGroups: Array<Array<UUID>>? = null
 	var teleportLocations: ArrayList<Location>? = null
 
-	var lobbyRadius = 60
-	var lobbyPVPMin = -1
-	var lobbyPVPMax = -1
-
 	fun updateUsingBot(using: Boolean) {
 		val bot = GameRunner.bot
 

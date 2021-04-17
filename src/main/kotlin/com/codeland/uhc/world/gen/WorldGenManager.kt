@@ -127,8 +127,7 @@ object WorldGenManager {
 			        iField.getBoolean(worldChunkGeneratorOverworld),
 			        jField.getBoolean(worldChunkGeneratorOverworld),
 			        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
-			        pvpBiomes,
-			        48
+			        pvpBiomes
 	        	)
 	        } else {
 		        WorldChunkManagerOverworldNoOcean(

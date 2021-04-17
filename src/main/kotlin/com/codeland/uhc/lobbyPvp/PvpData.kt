@@ -136,7 +136,7 @@ class PvpData(
 			player.fallDistance = 0f
 			player.setStatistic(Statistic.TIME_SINCE_REST, 0)
 
-			player.teleport(AbstractLobby.lobbyLocation(GameRunner.uhc, player))
+			player.teleport(AbstractLobby.lobbyLocation(GameRunner.uhc))
 
 			/* restore previous state */
 			val pvpData = PlayerData.getLobbyPvp(player.uniqueId)
@@ -144,50 +144,6 @@ class PvpData(
 
 			player.inventory.contents = pvpData.oldInventoryContents
 			player.gameMode = pvpData.oldGamemode
-		}
-
-		fun pvpSpawnLocation(uhc: UHC, player: Player): Location {
-			val world = WorldManager.getPVPWorld()
-
-			val centerX = 0
-			val centerZ = 0
-			val radius = uhc.lobbyRadius - 5
-
-			val currentlyInPvp = ArrayList<Player>()
-			allInPvp { otherPlayer, pvpData -> if (player !== otherPlayer) currentlyInPvp.add(otherPlayer) }
-
-			var greatestDistance = 0.0
-			var teleportX = 0
-			var teleportZ = 0
-
-			for (i in 0 until 100) {
-				var leastDistance = Double.MAX_VALUE
-
-				val thisTeleportX = Util.randRange(centerX - radius, centerX + radius)
-				val thisTeleportZ = Util.randRange(centerZ - radius, centerZ + radius)
-
-				currentlyInPvp.forEach { otherPlayer ->
-					val distance =
-						sqrt((otherPlayer.location.x - thisTeleportX).pow(2) + (otherPlayer.location.z - thisTeleportZ).pow(2))
-					if (distance < leastDistance) leastDistance = distance
-				}
-
-				if (leastDistance > greatestDistance) {
-					greatestDistance = leastDistance
-					teleportX = thisTeleportX
-					teleportZ = thisTeleportZ
-				}
-			}
-
-			val (liquidY, solidY) = Util.topLiquidSolidYTop(world, 254, teleportX, teleportZ)
-
-			return if (liquidY == -1) {
-				Location(world, teleportX + 0.5, solidY + 1.0, teleportZ + 0.5)
-
-			} else {
-				world.getBlockAt(teleportX, liquidY, teleportZ).setType(Material.STONE, false)
-				Location(world, teleportX + 0.5, liquidY + 1.0, teleportZ + 0.5)
-			}
 		}
 
 		data class KillstreakKit(val name: String, val items: Array<() -> ItemStack>)

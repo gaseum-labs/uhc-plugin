@@ -1,11 +1,12 @@
 package com.codeland.uhc.util
 
-import com.codeland.uhc.team.ColorPair
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.Team
+import kotlin.random.Random
 
 class ScoreboardDisplay(val name: String, var size: Int) {
 	var lines: Array<String>? = null
@@ -19,7 +20,7 @@ class ScoreboardDisplay(val name: String, var size: Int) {
 
 		val objectiveID = generateObjectiveID()
 		id = objectiveID.substring(3)
-		objective = scoreboard.registerNewObjective(objectiveID, "dummy", name)
+		objective = scoreboard.registerNewObjective(objectiveID, "dummy", Component.text(name))
 
 		lines = Array(size) { "" }
 
@@ -36,11 +37,11 @@ class ScoreboardDisplay(val name: String, var size: Int) {
 	}
 
 	fun setName(name: String) {
-		objective.displayName = name
+		objective.displayName(Component.text(name))
 	}
 
 	fun setLine(line: Int, value: String) {
-		teams[line].prefix = value
+		teams[line].prefix(Component.text(value))
 	}
 
 	fun destroy() {
@@ -60,6 +61,8 @@ class ScoreboardDisplay(val name: String, var size: Int) {
 	}
 
 	companion object {
+		val chars = ('0'..'9').toList() + ('A'..'Z').toList() + ('a'..'z').toList()
+
 		fun generateObjectiveID(): String {
 			val scoreboard = Bukkit.getScoreboardManager().mainScoreboard
 
@@ -71,22 +74,9 @@ class ScoreboardDisplay(val name: String, var size: Int) {
 		}
 
 		fun randomObjectiveID(): String {
-			val array = CharArray(16) { i ->
-				if (i < 3) 'U' else {
-					val random = Math.random()
+			val random = Random((Math.random() * Int.MAX_VALUE).toInt())
 
-					when {
-						random < 1 / 3.0 -> Util.randRange(48, 57)
-						random < 2 / 3.0 -> Util.randRange(65, 90)
-						else -> Util.randRange(97, 122)
-					}.toChar()
-				}
-			}
-
-			array[1] = 'H'
-			array[2] = 'C'
-
-			return String(array)
+			return String(CharArray(16) { chars[random.nextInt(0, chars.size)] })
 		}
 
 		fun generateTeamEntry(number: Int): String {

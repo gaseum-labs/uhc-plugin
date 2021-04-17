@@ -441,13 +441,6 @@ class EventListener : Listener {
 				}
 			}
 		}
-
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-
-		if (playerData.lobbyPVP.inPvp && event.block.y < GameRunner.uhc.lobbyPVPMin) {
-			event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Low limit for building is ${GameRunner.uhc.lobbyPVPMin}")
-			event.isCancelled = true
-		}
 	}
 
 	@EventHandler
@@ -525,18 +518,6 @@ class EventListener : Listener {
 				if (!Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 					event.isCancelled = true
 				}
-			}
-		}
-
-		/* things that affect lobby pvp players */
-		else if (playerData.lobbyPVP.inPvp) {
-			if (event.blockPlaced.y > GameRunner.uhc.lobbyPVPMax) {
-				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${GameRunner.uhc.lobbyPVPMax}")
-				event.isCancelled = true
-
-			} else if (event.blockPlaced.y < GameRunner.uhc.lobbyPVPMin) {
-				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Low limit for building is ${GameRunner.uhc.lobbyPVPMin}")
-				event.isCancelled = true
 			}
 		}
 	}

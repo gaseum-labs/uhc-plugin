@@ -1,5 +1,6 @@
 package com.codeland.uhc.world.gen
 
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.util.Util
 import net.minecraft.server.v1_16_R3.*
 import kotlin.math.abs
@@ -13,23 +14,25 @@ class WorldChunkManagerOverworldPvp(
 	var3: Boolean,
 	private val var4: IRegistry<BiomeBase>,
 	val biomes: Array<ResourceKey<BiomeBase>>,
-	size : Int
 ) : WorldChunkManagerOverworld(var0, var2, var3, var4) {
-	val chunkSize = size / 4
+	val stride = PvpGameManager.ARENA_STRIDE
+
+	fun inRange(sx: Int, sz: Int, size: Int): Boolean {
+		val border = (stride - size) / 2
+		return sx > border && sx < stride - border && sz > border && sz < stride - border
+	}
 
     override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
-	    val cx = floor(x.toFloat() / chunkSize).toInt() + Short.MAX_VALUE / 2
-	    val cz = floor(z.toFloat() / chunkSize).toInt() + Short.MAX_VALUE / 2
+	    val cx = floor(x.toFloat() / (stride / 4)).toInt() + Short.MAX_VALUE / 2
+	    val cz = floor(z.toFloat() / (stride / 4)).toInt() + Short.MAX_VALUE / 2
 
-	    val random = Random(cx.shl(16).or(cz))
+	    val sx = Util.mod(x, stride / 4) * 4
+	    val sz = Util.mod(z, stride / 4) * 4
 
-	    val checker = Util.mod(cx, 2) == Util.mod(cz, 2)
-
-	    return var4.d(biomes[
-		    if (checker)
-		    	random.nextInt(0, biomes.size / 2)
-	        else
-			    random.nextInt(biomes.size / 2, biomes.size)
-	    ])
+	    return var4.d(when {
+	    	inRange(sx, sz, PvpGameManager.LARGE_BORDER) -> biomes[Random(cx.shl(16).or(cz)).nextInt(0, biomes.size)]
+		    inRange(sx, sz, PvpGameManager.BEACH) -> Biomes.BEACH
+		    else -> Biomes.OCEAN
+	    })
     }
 }
