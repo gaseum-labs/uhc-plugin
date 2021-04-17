@@ -9,6 +9,7 @@ import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
+import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.collections.ArrayList
@@ -78,6 +79,17 @@ object PvpGameManager {
 	}
 
 	fun perTick(currentTick: Int) {
+		if (currentTick % 4 == 0) {
+			val arrows = WorldManager.getPVPWorld().getEntitiesByClass(AbstractArrow::class.java)
+
+			arrows.forEach { arrow ->
+				val x = Util.mod(arrow.location.blockX, ARENA_STRIDE)
+				val z = Util.mod(arrow.location.blockZ, ARENA_STRIDE)
+
+				if (x < 32 || x > ARENA_STRIDE - 32 || z < 32 || z > ARENA_STRIDE - 32) arrow.remove()
+			}
+		}
+
 		if (currentTick % 20 == 0) {
 			PvpQueue.perSecond()
 

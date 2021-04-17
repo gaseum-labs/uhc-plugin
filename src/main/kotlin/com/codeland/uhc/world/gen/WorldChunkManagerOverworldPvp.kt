@@ -9,12 +9,12 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 class WorldChunkManagerOverworldPvp(
-	var0: Long,
+	val seed: Long,
 	var2: Boolean,
 	var3: Boolean,
 	private val var4: IRegistry<BiomeBase>,
 	val biomes: Array<ResourceKey<BiomeBase>>,
-) : WorldChunkManagerOverworld(var0, var2, var3, var4) {
+) : WorldChunkManagerOverworld(seed, var2, var3, var4) {
 	val stride = PvpGameManager.ARENA_STRIDE
 
 	fun inRange(sx: Int, sz: Int, size: Int): Boolean {
@@ -30,7 +30,7 @@ class WorldChunkManagerOverworldPvp(
 	    val sz = Util.mod(z, stride / 4) * 4
 
 	    return var4.d(when {
-	    	inRange(sx, sz, PvpGameManager.LARGE_BORDER) -> biomes[Random(cx.shl(16).or(cz)).nextInt(0, biomes.size)]
+	    	inRange(sx, sz, PvpGameManager.LARGE_BORDER) -> biomes[Random(cx.toLong().shl(16).or(cz.toLong()).xor(seed)).nextInt(0, biomes.size)]
 		    inRange(sx, sz, PvpGameManager.BEACH) -> Biomes.BEACH
 		    else -> Biomes.OCEAN
 	    })
