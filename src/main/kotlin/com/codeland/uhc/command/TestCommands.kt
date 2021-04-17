@@ -2,6 +2,7 @@ package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
+import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
@@ -13,6 +14,7 @@ import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.core.AbstractLobby
 import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
@@ -175,5 +177,24 @@ class TestCommands : BaseCommand() {
 		WorldManager.destroyPVPWorld()
 		val pvpWorld = WorldManager.createPVPWorld()
 		if (pvpWorld != null) AbstractLobby.prepareWorld(pvpWorld, GameRunner.uhc)
+	}
+
+	@CommandCompletion("@uhcplayer @uhcplayer")
+	@Subcommand("pvpmatch")
+	fun pvpMatch(sender: CommandSender, offlinePlayer1: OfflinePlayer, offlinePlayer2: OfflinePlayer) {
+		val player1 = Bukkit.getPlayer(offlinePlayer1.uniqueId) ?: return errorMessage(sender, "The Player named ${offlinePlayer1.name} could not be found")
+		val player2 = Bukkit.getPlayer(offlinePlayer2.uniqueId) ?: return errorMessage(sender, "The Player named ${offlinePlayer2.name} could not be found")
+
+		if (player1 === player2) return errorMessage(sender, "Must select two different players")
+
+		if (PvpGameManager.playersGame(player1.uniqueId) != null) return errorMessage(sender, "${player1.name} is already in a game")
+		if (PvpGameManager.playersGame(player2.uniqueId) != null) return errorMessage(sender, "${player2.name} is already in a game")
+
+		PvpQueue.remove(player1.uniqueId)
+		PvpQueue.remove(player2.uniqueId)
+
+		PvpGameManager.addGame(arrayOf(player1.uniqueId, player2.uniqueId))
+
+		GameRunner.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
 	}
 }

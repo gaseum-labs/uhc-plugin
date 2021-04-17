@@ -57,6 +57,28 @@ object PvpGameManager {
 			/* if somehow both players disconnect then end it immediately */
 			} else alive.isEmpty()
 		}
+
+		fun prepareArena() {
+			val world = WorldManager.getPVPWorld()
+			val border = (ARENA_STRIDE - LARGE_BORDER) / 2
+
+			for (bx in x * ARENA_STRIDE + border until x * ARENA_STRIDE + ARENA_STRIDE - border) {
+				for (bz in z * ARENA_STRIDE + border until z * ARENA_STRIDE + ARENA_STRIDE - border) {
+					/* bedrock floor below sea level */
+					val aboveBlock = world.getBlockAt(bx, 62, bz)
+
+					if (aboveBlock.type.isAir || aboveBlock.isLiquid) {
+						world.getBlockAt(bx, 61, bz).setType(Material.SAND, false)
+						world.getBlockAt(bx, 60, bz).setType(Material.BEDROCK, false)
+					} else {
+						world.getBlockAt(bx, 61, bz).setType(Material.BEDROCK, false)
+					}
+
+					/* super mountain clearer */
+					for (by in 128..255) world.getBlockAt(bx, by, bz).setType(Material.AIR, false)
+				}
+			}
+		}
 	}
 
 	val ongoingGames = ArrayList<PvpGame>()
@@ -69,6 +91,8 @@ object PvpGameManager {
 		playerData0.lastPlayed = game.players[1]
 		val playerData1 = PlayerData.getPlayerData(game.players[1])
 		playerData1.lastPlayed = game.players[0]
+
+		game.prepareArena()
 
 		++nextGamePosition
 		ongoingGames.add(game)
