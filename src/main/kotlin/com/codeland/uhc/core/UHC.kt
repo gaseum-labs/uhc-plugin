@@ -222,7 +222,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			if (isGameGoing()) PlayerData.zombieBorderTick(currentTick)
 
 			PvpData.onTick(currentTick)
-			
+
 			AbstractLobby.lobbyTipsTick(currentTick)
 
 			PvpGameManager.perTick(currentTick)
@@ -303,7 +303,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			if (winningTeam == null) {
 				val winningPlayer = Bukkit.getPlayer(winners[0])
 
-				topMessage = Component.text("${winningPlayer?.name} has won!").style(Style.style(TextDecoration.BOLD, NamedTextColor.GOLD))
+				topMessage = Component.text("${winningPlayer?.name} has won!", NamedTextColor.GOLD, TextDecoration.BOLD)
 				bottomMessage = Component.empty()
 
 				ledger.addEntry(winningPlayer?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
@@ -323,7 +323,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 
 		/* no one won the game */
 		} else {
-			Title.title(Component.text("No one wins?").style(Style.style(NamedTextColor.GOLD, TextDecoration.BOLD)), Component.empty(), Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2)))
+			Title.title(Component.text("No one wins?", NamedTextColor.GOLD, TextDecoration.BOLD), Component.empty(), Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2)))
 		}
 
 		Bukkit.getServer().onlinePlayers.forEach { player -> player.showTitle(title) }

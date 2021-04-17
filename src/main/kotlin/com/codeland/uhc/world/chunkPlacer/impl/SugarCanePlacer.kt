@@ -28,7 +28,7 @@ class SugarCanePlacer(size: Int, uniqueSeed: Int, val lowBound: Int, val highBou
 			val down = block.getRelative(BlockFace.DOWN)
 
 			if (
-				(block.type == Material.AIR || block.type == Material.CAVE_AIR || block.type == Material.GRASS || block.type == Material.WATER) &&
+				(block.type == Material.AIR || block.type == Material.CAVE_AIR || block.type == Material.GRASS) &&
 				(
 					down.type == Material.GRASS_BLOCK ||
 					down.type == Material.DIRT ||

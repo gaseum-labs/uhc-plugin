@@ -113,7 +113,7 @@ object GameRunner {
 
 		/* broadcast elimination message for a team */
 		} else if (deadPlayerTeam != null && !teamIsAlive) {
-			val message0 = deadPlayerTeam.apply(deadPlayerTeam.gameName()).append(Component.text("has been eliminated!").style(Style.style(NamedTextColor.GOLD, TextDecoration.BOLD)))
+			val message0 = deadPlayerTeam.apply(deadPlayerTeam.gameName()).append(Component.text(" has been eliminated!", NamedTextColor.GOLD, TextDecoration.BOLD))
 
 			Bukkit.getServer().onlinePlayers.forEach { player ->
 				player.sendMessage(message0)

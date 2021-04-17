@@ -32,6 +32,11 @@ object AbstractLobby {
 
 		/* reset applied status for all active quirks */
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
+
+		playerData.staged = false
+		playerData.participating = false
+		playerData.alive = false
+
 		GameRunner.uhc.quirks.forEach { quirk ->
 			if (quirk.enabled) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
 		}
@@ -39,7 +44,7 @@ object AbstractLobby {
 		Pests.makeNotPest(player)
 
 		val location = lobbyLocation(GameRunner.uhc, player)
-		player.teleport(location)
+		if (location.world != WorldManager.getLobbyWorld()) player.teleport(location)
 
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
 		CommandItemType.giveItem(CommandItemType.PVP_QUEUE, player.inventory)

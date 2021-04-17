@@ -150,18 +150,30 @@ class TeamCommands : BaseCommand() {
 	fun testTeams(sender: CommandSender) {
 		val teams = TeamData.teams
 
-		teams.forEach { team ->
-			sender.sendMessage(team.apply("${team.name ?: "(Name not chosen)"}:").style(Style.style(TextDecoration.BOLD)))
+		if (teams.isNotEmpty()) {
+			sender.sendMessage(Component.text("Teams:", NamedTextColor.GRAY, TextDecoration.BOLD))
 
-			team.members.forEach { uuid ->
-				sender.sendMessage(Component.text("- ").append(team.apply(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
+			teams.forEach { team ->
+				sender.sendMessage(team.apply("${team.name ?: "(Name not chosen)"}:").style(Style.style(TextDecoration.BOLD)))
+
+				team.members.forEach { uuid ->
+					sender.sendMessage(Component.text("- ").append(team.apply(Bukkit.getOfflinePlayer(uuid).name
+						?: "NULL")))
+				}
 			}
 		}
 
-		sender.sendMessage(Component.text("Individual players:").style(Style.style(NamedTextColor.GRAY, TextDecoration.BOLD)))
+		val individualPlayers = PlayerData.playerDataList.filter { (uuid, playerData) -> (playerData.participating || playerData.staged) && !TeamData.isOnTeam(uuid) }
 
-		PlayerData.playerDataList.filter { (uuid, playerData) -> (playerData.participating || playerData.staged) && !TeamData.isOnTeam(uuid) }.forEach { (uuid, playerData) ->
-			sender.sendMessage(Component.text("- ").append(Component.text(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
+		if (individualPlayers.isNotEmpty()) {
+			sender.sendMessage(Component.text("Individual players:", NamedTextColor.GRAY, TextDecoration.BOLD))
+
+			individualPlayers.forEach { (uuid, playerData) ->
+				sender.sendMessage(Component.text("- ").append(Component.text(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
+			}
 		}
+
+		if (teams.isEmpty() && individualPlayers.isEmpty())
+			sender.sendMessage(Component.text("There are no teams", NamedTextColor.GRAY, TextDecoration.BOLD))
 	}
 }

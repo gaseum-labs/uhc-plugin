@@ -7,6 +7,7 @@ import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.server.v1_16_R3.*
+import org.bukkit.ChatColor
 import org.bukkit.World
 import java.util.logging.Level
 import kotlin.math.acos
@@ -20,7 +21,7 @@ object Util {
 	}
 
 	fun debug(message: String) {
-		PaperPluginLogger.getGlobal().log(Level.INFO, message)
+		PaperPluginLogger.getGlobal().log(Level.INFO, "${ChatColor.RED}$message")
 	}
 
 	/**
