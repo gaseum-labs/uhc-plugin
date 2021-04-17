@@ -54,6 +54,11 @@ object Packet {
 					val uhcTeam = TeamData.playersTeam(uuid)
 
 					if (uhcTeam == null) {
+						/* delete player's self referential team */
+						if (sentPlayer.uniqueId == uuid) {
+							sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(ScoreboardTeam(Scoreboard(), playerInfoData.profile.name), 1))
+						}
+
 						/* do not change info about the player */
 						playerInfoData
 
@@ -71,7 +76,7 @@ object Packet {
 						/* send team packet */
 						/* this affects above name for other players, and scoreboard for all players */
 						val team = ScoreboardTeam(Scoreboard(), newName)
-						team.color = EnumChatFormat.RED
+						team.color = if (uhcTeam.members.contains(sentPlayer.uniqueId)) EnumChatFormat.AQUA else EnumChatFormat.RED
 						team.prefix = Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2)
 						team.playerNameSet.add(newName)
 

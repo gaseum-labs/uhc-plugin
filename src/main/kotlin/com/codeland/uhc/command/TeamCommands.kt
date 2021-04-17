@@ -42,7 +42,7 @@ class TeamCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		internalAddPlayersToTeam(sender, null, listOf(player), { list ->
-			GameRunner.sendGameMessage(sender, "Created a team for ${list.firstOrNull()?.name}}")
+			GameRunner.sendGameMessage(sender, "Created a team for ${list.firstOrNull()?.name}")
 		}, {
 			Commands.errorMessage(sender, "Could not create a team")
 		})
