@@ -2,7 +2,9 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -62,20 +64,30 @@ class PlayerData(
 		skull.itemMeta = meta
 	}
 
-	private fun internalCreateZombie(location: Location, uuid: UUID, name: String, inventory: Array<ItemStack>, experience: Int): Zombie {
+	private fun internalCreateZombie(location: Location, uuid: UUID, name: Component, inventory: Array<ItemStack>, experience: Int): Zombie {
 		val zombie = location.world.spawn(location, Zombie::class.java)
 
 		zombie.setMetadata(INVENTORY_TAG, FixedMetadataValue(UHCPlugin.plugin, inventory))
 		zombie.setMetadata(XP_TAG, FixedMetadataValue(UHCPlugin.plugin, experience))
 		zombie.setMetadata(UUID_TAG, FixedMetadataValue(UHCPlugin.plugin, uuid))
 
-		zombie.customName = name
+		zombie.customName(name)
 		zombie.setAI(false)
 		zombie.canPickupItems = false
 		zombie.setShouldBurnInDay(false)
-		zombie.conversionTime = Int.MIN_VALUE
+		zombie.conversionTime = -1
+		zombie.removeWhenFarAway = false
 
-		zombie.isBaby = !location.world.getBlockAt(location).getRelative(BlockFace.UP).isPassable
+		zombie.equipment?.helmet = skull
+		zombie.equipment?.helmetDropChance = 0.0f
+		zombie.equipment?.chestplateDropChance = 0.0f
+		zombie.equipment?.leggingsDropChance = 0.0f
+		zombie.equipment?.bootsDropChance = 0.0f
+		zombie.equipment?.itemInMainHandDropChance = 0.0f
+		zombie.equipment?.itemInOffHandDropChance = 0.0f
+
+		/* small zombie when disconnecting while crouching */
+		if (!location.world.getBlockAt(location).getRelative(BlockFace.UP).isPassable) zombie.setBaby()
 
 		return zombie
 	}
@@ -89,22 +101,22 @@ class PlayerData(
 	fun createZombie(player: Player): Zombie {
 		val clonedInventory = Array(player.inventory.contents.size) { i ->
 			player.inventory.contents[i]?.clone()
-		} as Array<ItemStack> // do not remove cast
+		}
 
-		val zombie = internalCreateZombie(player.location, player.uniqueId, player.playerListName, clonedInventory, player.totalExperience)
+		val team = TeamData.playersTeam(player.uniqueId)
+
+		val zombie = internalCreateZombie(
+			player.location,
+			player.uniqueId,
+			team?.apply(player.name) ?: Component.text(player.name),
+			clonedInventory as Array<ItemStack>,
+			player.totalExperience
+		)
 
 		zombie.health = player.health
 		zombie.fireTicks = player.fireTicks
 		zombie.addPotionEffects(player.activePotionEffects)
 
-		zombie.equipment?.helmetDropChance = 0.0f
-		zombie.equipment?.chestplateDropChance = 0.0f
-		zombie.equipment?.leggingsDropChance = 0.0f
-		zombie.equipment?.bootsDropChance = 0.0f
-		zombie.equipment?.itemInMainHandDropChance = 0.0f
-		zombie.equipment?.itemInOffHandDropChance = 0.0f
-
-		zombie.equipment?.helmet = skull
 		zombie.equipment?.chestplate = player.inventory.chestplate?.clone()
 		zombie.equipment?.leggings = player.inventory.leggings?.clone()
 		zombie.equipment?.boots = player.inventory.boots?.clone()
@@ -120,7 +132,10 @@ class PlayerData(
 	 * place this into the offlineZombie field in PlayerData
 	 */
 	fun createDefaultZombie(uuid: UUID, location: Location): Zombie {
-		return internalCreateZombie(location, uuid, Bukkit.getOfflinePlayer(uuid).name ?: "NULL", emptyArray(), 0)
+		val team = TeamData.playersTeam(uuid)
+		val playerName = Bukkit.getOfflinePlayer(uuid).name ?: "NULL"
+
+		return internalCreateZombie(location, uuid, team?.apply(playerName) ?: Component.text(playerName), emptyArray(), 0)
 	}
 
 	fun replaceZombieWithPlayer(player: Player) {

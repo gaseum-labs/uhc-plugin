@@ -80,6 +80,8 @@ class GraceDefault : Phase() {
 			val player = Bukkit.getPlayer(uuid)
 			if (pvpGame != null && player != null) PvpGameManager.disablePvp(player)
 
+			GameRunner.teleportPlayer(uuid, location)
+
 			GameRunner.playerAction(uuid) { player ->
 				AbstractLobby.resetPlayerStats(player)
 
@@ -93,7 +95,6 @@ class GraceDefault : Phase() {
 				player.gameMode = GameMode.SURVIVAL
 			}
 
-			GameRunner.teleportPlayer(uuid, location)
 			UHC.quirks.forEach { quirk -> if (quirk.enabled) quirk.onStart(uuid) }
 		}
 
