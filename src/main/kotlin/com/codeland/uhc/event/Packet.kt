@@ -3,25 +3,24 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.async.AsyncMarker
 import com.comphenix.protocol.events.ListenerPriority
 import com.comphenix.protocol.events.PacketAdapter
+import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
-import net.kyori.adventure.text.Component
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
+import org.bukkit.entity.Player
 import java.util.*
 import kotlin.experimental.or
-import kotlin.math.ceil
 
 object Packet {
 	val playerNames = arrayListOf<UUID>()
@@ -40,65 +39,85 @@ object Packet {
 		return String(name)
 	}
 
+	fun playersIndex(uuid: UUID): Int {
+		var nameIndex = playerNames.indexOf(uuid)
+
+		if (nameIndex == -1) {
+			playerNames.add(uuid)
+			nameIndex = playerNames.lastIndex
+		}
+
+		return nameIndex
+	}
+
+	fun playersNewName(uuid: UUID): String {
+		return intToName(playersIndex(uuid))
+	}
+
+	fun updateTeamColor(teamPlayer: Player, uhcTeam: Team?, newName: String, sentPlayer: Player) {
+		sentPlayer as CraftPlayer
+		val oldName = teamPlayer.name
+
+		/* send team packet */
+		/* this affects above name for other players, and scoreboard for all players */
+		val team = ScoreboardTeam(Scoreboard(), newName)
+		team.color = if (uhcTeam != null && uhcTeam.members.contains(sentPlayer.uniqueId)) EnumChatFormat.AQUA else EnumChatFormat.RED
+		team.prefix = if (uhcTeam != null) Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2) else ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.WHITE))
+		team.playerNameSet.add(newName)
+
+		sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(team, 2))
+
+		/* send another fake team targeting the self-player's entity */
+		/* this team only affects which glow color the player sees themselves as */
+		/*if (sentPlayer.uniqueId == teamPlayer.uniqueId) {
+			val selfTeam = ScoreboardTeam(Scoreboard(), oldName)
+			selfTeam.color = EnumChatFormat.AQUA
+			selfTeam.playerNameSet.add(oldName)
+
+			sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(selfTeam, 2))
+		}*/
+	}
+
 	fun init() {
 		val protocolManager = ProtocolLibrary.getProtocolManager()
 
+		val playerInfoDataListField = PacketPlayOutPlayerInfo::class.java.getDeclaredField("b")
+		playerInfoDataListField.isAccessible = true
+
 		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.PLAYER_INFO) {
 			override fun onPacketSending(event: PacketEvent) {
-				val packet = event.packet
+				/* only change add player packets */
+				val stalePacketWrapper = event.packet
+				if (stalePacketWrapper.playerInfoAction.read(0) != EnumWrappers.PlayerInfoAction.ADD_PLAYER) return
 
-				if (packet.playerInfoAction.read(0) != EnumWrappers.PlayerInfoAction.ADD_PLAYER) return
+				/* create a new packet that would be what the original was */
+				val freshPacket = PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER,
+					(playerInfoDataListField[event.packet.handle] as List<PacketPlayOutPlayerInfo.PlayerInfoData>)
+						.mapNotNull { (Bukkit.getPlayer(it.a().id) as CraftPlayer).handle }
+				)
+
+				/* give the new packet to the event to modify */
+				val freshPacketWrapper = PacketContainer.fromPacket(freshPacket)
+				event.packet = freshPacketWrapper
 
 				val sentPlayer = event.player as CraftPlayer
 
-				packet.playerInfoDataLists.write(0, packet.playerInfoDataLists.read(0).map { playerInfoData ->
-					val uuid = playerInfoData.profile.uuid
-					val uhcTeam = TeamData.playersTeam(uuid)
+				freshPacketWrapper.playerInfoDataLists.write(0, freshPacketWrapper.playerInfoDataLists.read(0).map { playerInfoData ->
+					val newName = playersNewName(playerInfoData.profile.uuid)
 
-					if (uhcTeam == null) {
-						/* delete player's self referential team */
-						if (sentPlayer.uniqueId == uuid) {
-							sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(ScoreboardTeam(Scoreboard(), playerInfoData.profile.name), 1))
-						}
+					/* initialize the team that the sentplayer will know the playerInfoData player by */
+					val sentTeam = ScoreboardTeam(Scoreboard(), newName)
+					sentTeam.playerNameSet.add(newName)
+					sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(sentTeam, 0))
 
-						/* do not change info about the player */
-						playerInfoData
+					//self team would go here if needed
 
-					} else {
-						var nameIndex = playerNames.indexOf(uuid)
-
-						if (nameIndex == -1) {
-							playerNames.add(uuid)
-							nameIndex = playerNames.size - 1
-						}
-
-						val oldName = playerInfoData.profile.name
-						val newName = intToName(nameIndex)
-
-						/* send team packet */
-						/* this affects above name for other players, and scoreboard for all players */
-						val team = ScoreboardTeam(Scoreboard(), newName)
-						team.color = if (uhcTeam.members.contains(sentPlayer.uniqueId)) EnumChatFormat.AQUA else EnumChatFormat.RED
-						team.prefix = Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2)
-						team.playerNameSet.add(newName)
-
-						/* remove team then re-send */
-						sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(team, 1))
-						sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(team, 0))
-
-						/* send another fake team targeting the self-player's entity */
-						/* this team only affects which glow color the player sees themselves as */
-						if (sentPlayer.uniqueId == uuid) {
-							val selfTeam = ScoreboardTeam(Scoreboard(), oldName)
-							selfTeam.color = EnumChatFormat.AQUA
-							selfTeam.playerNameSet.add(oldName)
-
-							sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(selfTeam, 1))
-							sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(selfTeam, 0))
-						}
-
-						PlayerInfoData(playerInfoData.profile.withName(newName), playerInfoData.latency, playerInfoData.gameMode, playerInfoData.displayName)
-					}
+					PlayerInfoData(
+						playerInfoData.profile.withName(playersNewName(playerInfoData.profile.uuid)),
+						playerInfoData.latency,
+						playerInfoData.gameMode,
+						playerInfoData.displayName
+					)
 				})
 			}
 		})

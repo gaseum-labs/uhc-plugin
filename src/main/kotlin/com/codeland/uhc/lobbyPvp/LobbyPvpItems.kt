@@ -5,11 +5,64 @@ import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
+import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
+import kotlin.random.Random
 
 object LobbyPvpItems {
+	class Kit(val inventory: Array<ItemStack>, val armor: Array<ItemStack>) {
+		fun apply(player: Player) {
+			for (i in inventory.indices) player.inventory.contents[i] = inventory[i].clone()
+			for (i in 0..3) player.inventory.armorContents[i] = armor[i].clone()
+		}
+	}
+
+	fun genKit(): Kit? {
+		val inventory = ArrayList<ItemStack>()
+		val random = Random((Math.random() * Int.MAX_VALUE).toInt())
+
+		//fun tryAdd(itemStack: ItemStack?) = if (itemStack != null) inventory.add(itemStack) else Unit
+
+		fun tryAdd(itemStack: Array<ItemStack?>) = inventory.addAll(itemStack.filterNotNull())
+
+		val hasBow = random.nextBoolean()
+		val hasCrossbow = random.nextBoolean() || !hasBow
+		val hasLava = random.nextBoolean()
+
+		inventory.add(genAxe())
+		inventory.add(genSword())
+		if (hasCrossbow) inventory.add(genLavaBucket())
+
+		tryAdd(arrayOf(
+			if (hasBow) genBow() else null,
+			if (hasCrossbow) genCrossbow() else null
+		))
+
+		inventory.add(genWaterBucket())
+
+		inventory.add(genGapples())
+
+		inventory.add(genRegenPotion())
+/*
+		tryAdd(when (random.nextInt(0, 3)) {
+			0 -> emptyArray<ItemStack>()
+			1 -> arrayOf(ItemStack(Material.SPECTRAL_ARROW, 16))
+			2 -> arrayOf(tippedArrow(PotionData(PotionType.SLOWNESS, true, false), 16))
+			else -> arrayOf(tippedArrow(PotionData(PotionType.INSTANT_DAMAGE, true, false), 16))
+		})
+
+		tryAdd(when (random.nextInt(0, 3)) {
+			0 -> emptyArray<ItemStack>()
+			1 -> arrayOf(ItemStack(Material.END_CRYSTAL), ItemStack(Material.OBSIDIAN, random.nextInt(1,4)))
+			else -> arrayOf(ItemStack(Material.ENDER_PEARL, random.nextInt(1,3)))
+		})
+*/
+		return null
+	}
+
 	val itemsList = arrayOf(
 		/* hotbar */
 		::genAxe,
@@ -31,6 +84,16 @@ object LobbyPvpItems {
 	)
 
 	private class EnchantOption(val enchantment: Enchantment, val level: Int)
+
+	private fun tippedArrow(potionData: PotionData, amount: Int): ItemStack {
+		val item = ItemStack(Material.TIPPED_ARROW, amount)
+		val meta = item.itemMeta as PotionMeta
+
+		meta.basePotionData = potionData
+
+		item.itemMeta = meta
+		return item
+	}
 
 	private val armorEnchants: Array<EnchantOption?> = arrayOf(
 		EnchantOption(Enchantment.PROTECTION_PROJECTILE, 1),

@@ -1,18 +1,20 @@
 package com.codeland.uhc.team
 
-import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.event.Packet
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor
+import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
 
 object NameManager {
 	fun updateName(player: Player) {
 		player as CraftPlayer
+
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val team = TeamData.playersTeam(player.uniqueId)
+		val newName = Packet.playersNewName(player.uniqueId)
 
 		playerData.setSkull(player)
 
@@ -23,48 +25,36 @@ object NameManager {
 		/* team name updating */
 
 		/* refresh the entity for the updated player for each other player */
-		Bukkit.getOnlinePlayers().filter { it != player }.forEach { onlinePlayer ->
+		Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
 			onlinePlayer as CraftPlayer
 
-			onlinePlayer.handle.playerConnection.sendPacket(
-				PacketPlayOutEntityDestroy(player.entityId)
-			)
+			/* tell other players this player's name & update glowing */
+			Packet.updateTeamColor(player, team, newName, onlinePlayer)
+			onlinePlayer.handle.playerConnection.sendPacket(metadataPacketDefaultState(player))
 
-			onlinePlayer.handle.playerConnection.sendPacket(
-				PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, player.handle)
-			)
-
-			onlinePlayer.handle.playerConnection.sendPacket(
-				PacketPlayOutNamedEntitySpawn(player.handle)
-			)
-
-			Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
-				val dataWatcher = DataWatcher(player.handle)
-				dataWatcher.register(DataWatcherObject(0, DataWatcherRegistry.a), 0x00)
-				dataWatcher.register(DataWatcherObject(16, DataWatcherRegistry.a), 0xff.toByte())
-
-				onlinePlayer.handle.playerConnection.sendPacket(
-					PacketPlayOutEntityMetadata(player.entityId, dataWatcher, true)
-				)
-
-				/* remove glowing from other players who are no longer teammates */
-				val otherPlayerGlowUpdater = DataWatcher(onlinePlayer.handle)
-				otherPlayerGlowUpdater.register(DataWatcherObject(0, DataWatcherRegistry.a), 0x00)
-
-				player.handle.playerConnection.sendPacket(
-					PacketPlayOutEntityMetadata(onlinePlayer.entityId, otherPlayerGlowUpdater, true)
-				)
-
-				/* update team glow color for all other players to player */
-				player.handle.playerConnection.sendPacket(
-					PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, onlinePlayer.handle)
-				)
+			/* tell this player about other players' names & update glowing */
+			if (player != onlinePlayer) {
+				Packet.updateTeamColor(onlinePlayer, TeamData.playersTeam(onlinePlayer.uniqueId), Packet.playersNewName(onlinePlayer.uniqueId), player)
+				player.handle.playerConnection.sendPacket(metadataPacketDefaultState(onlinePlayer))
 			}
 		}
+	}
 
-		/* do NOT delete the player's entity for the player, only refresh name */
-		player.handle.playerConnection.sendPacket(
-			PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, player.handle)
+	val entriesField = DataWatcher::class.java.getDeclaredField("entries")
+	init { entriesField.isAccessible = true }
+
+	/**
+	 *  creates a metadata packet for the specified player
+	 *  that only contains the first byte field
+	 */
+	private fun metadataPacketDefaultState(player: Player): PacketPlayOutEntityMetadata {
+		player as CraftPlayer
+
+		val dataWatcher = DataWatcher(player.handle)
+		dataWatcher.register(DataWatcherObject(0, DataWatcherRegistry.a),
+			((entriesField[player.handle.dataWatcher] as Int2ObjectOpenHashMap<DataWatcher.Item<Any>>)[0] as DataWatcher.Item<Byte>).b()
 		)
+
+		return PacketPlayOutEntityMetadata(player.entityId, dataWatcher, true)
 	}
 }

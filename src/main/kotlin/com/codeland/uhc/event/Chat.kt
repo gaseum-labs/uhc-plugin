@@ -271,7 +271,7 @@ class Chat : Listener {
 			val messageParts = divideMessage(message, collected, team.color2)
 
 			team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
-				player.sendMessage(messageForPlayer(player, collected, messageParts))
+				player.sendMessage(playerComponent.append(messageForPlayer(player, collected, messageParts)))
 			}
 
 		/* regular chat behavior before game */
@@ -282,7 +282,7 @@ class Chat : Listener {
 				val messageParts = divideMessage(cleanMessage, collected, NamedTextColor.WHITE)
 
 				Bukkit.getOnlinePlayers().forEach { player ->
-					player.sendMessage(messageForPlayer(player, collected, messageParts))
+					player.sendMessage(playerComponent.append(messageForPlayer(player, collected, messageParts)))
 				}
 			}
 		}

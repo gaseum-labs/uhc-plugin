@@ -1,5 +1,6 @@
 package com.codeland.uhc.event
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
@@ -43,21 +44,23 @@ import org.bukkit.potion.PotionType
 class EventListener : Listener {
 	@EventHandler
 	fun onPlayerJoin(event: PlayerJoinEvent) {
-		val player = event.player
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
+			val player = event.player
+			val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		NameManager.updateName(event.player)
-		DimensionBar.setPlayerBarDimension(event.player)
+			NameManager.updateName(event.player)
+			DimensionBar.setPlayerBarDimension(event.player)
 
-		/* lobby spawn */
-		if (!playerData.participating) {
-			AbstractLobby.onSpawnLobby(event.player)
+			/* lobby spawn */
+			if (!playerData.participating) {
+				AbstractLobby.onSpawnLobby(event.player)
+			}
+
+			/* update who the player sees */
+			HideManager.updateAllForPlayer(player)
+			/* update who sees the player */
+			HideManager.updatePlayerForAll(player)
 		}
-
-		/* update who the player sees */
-		HideManager.updateAllForPlayer(player)
-		/* update who sees the player */
-		HideManager.updatePlayerForAll(player)
 	}
 
 	@EventHandler
@@ -500,7 +503,7 @@ class EventListener : Listener {
 		if (GameRunner.uhc.isGameGoing() && playerData.participating) {
 			/* trying to build above endgame top level */
 			if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.max) {
-				event.player.sendActionBar("${ChatColor.RED}${ChatColor.BOLD}Height limit for building is ${phase.max}")
+				event.player.sendActionBar(Component.text("Height limit for building is ${phase.max}", NamedTextColor.RED, TextDecoration.BOLD))
 				event.isCancelled = true
 
 			/* creative block replenishing */
@@ -527,6 +530,13 @@ class EventListener : Listener {
 				if (!Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 					event.isCancelled = true
 				}
+			}
+		} else {
+			val pvpGame = PvpGameManager.playersGame(player.uniqueId)
+
+			if (pvpGame != null && event.blockPlaced.y > 127) {
+				event.player.sendActionBar(Component.text("Height limit for building is 127", NamedTextColor.RED, TextDecoration.BOLD))
+				event.isCancelled = true
 			}
 		}
 	}
