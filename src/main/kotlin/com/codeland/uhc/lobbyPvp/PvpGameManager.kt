@@ -185,11 +185,9 @@ object PvpGameManager {
 							--game.glowTimer
 
 							if (game.glowTimer == 0) {
-								Util.debug("GLOW NOW!")
 								game.updateGlowAll()
 
 							} else if (game.glowTimer <= -2) {
-								Util.debug("UNGLOW NOW!")
 								game.glowPeriod /= 2
 								game.glowTimer = game.glowPeriod
 								game.updateGlowAll()
