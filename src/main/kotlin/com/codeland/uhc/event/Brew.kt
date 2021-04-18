@@ -263,7 +263,7 @@ class Brew : Listener {
 						/* reject ingredients for banned paths */
 						if (bannedPaths.any { it.applies(inventory) }) {
 							inventory.ingredient = null
-							stand.world.dropItemNaturally(stand.location.add(0.5, 1.0, 0.5), ingredient.clone())
+							stand.world.dropItem(stand.location.add(0.5, 1.0, 0.5), ingredient.clone())
 
 						} else if (customPotionPathList.any { it.applies(inventory) }) {
 							registerBrewTask(stand)

@@ -1,14 +1,12 @@
 package com.codeland.uhc.blockfix
 
-import com.codeland.uhc.core.UHC
 import org.bukkit.Material
-import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 
 class GravelFix : BlockFix("Gravel", arrayOf(
-	Range("Flint", "gravelCount", "gravelIndex", 10, { ItemStack(Material.FLINT) }, { ItemStack(Material.GRAVEL) })
+	Range("Flint", "gravelCount", "gravelIndex", 10, { _, _ -> ItemStack(Material.FLINT) }, { _, _ -> ItemStack(Material.GRAVEL) })
 )) {
-	override fun reject(uhc: UHC, tool: ItemStack, drops: List<Item>): Boolean {
+	override fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean {
 		return isSilkTouch(tool)
 	}
 

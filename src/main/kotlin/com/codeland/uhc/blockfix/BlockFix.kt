@@ -17,12 +17,12 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 		val countMeta: String,
 		val indexMeta: String,
 		val range: Int,
-		val getDrop: (Material) -> ItemStack,
-		val offDrop: (Material) -> ItemStack? = { null }
+		val getDrop: (Material, MutableList<ItemStack>) -> ItemStack,
+		val offDrop: (Material, MutableList<ItemStack>) -> ItemStack? = { _, _ -> null }
 	)
 
 	abstract fun isBlock(material: Material): Boolean
-	abstract fun reject(uhc: UHC, tool: ItemStack, drops: List<Item>): Boolean
+	abstract fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean
 	abstract fun allowTool(tool: ItemStack): Boolean
 
 	fun getInfoString(player: Player, onString: (output: String) -> Unit) {
@@ -81,31 +81,28 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 		return index
 	}
 
-	fun onBreakBlock(uhc: UHC, material: Material, drops: MutableList<Item>, player: Player, onItem: (ItemStack?) -> Unit): Boolean {
+	fun onBreakBlock(material: Material, drops: MutableList<Item>, player: Player, onItem: (ItemStack?) -> Unit): Boolean {
 		val tool = player.inventory.itemInMainHand
+		val stackDrops = drops.map { it.itemStack } as MutableList<ItemStack>
 
-		if (isBlock(material) && !reject(uhc, tool, drops)) {
+		if (isBlock(material) && !reject(tool, stackDrops)) {
 			drops.clear()
 
-			if (allowTool(player.inventory.itemInMainHand)) onBreakBlock(material, player, onItem)
+			if (allowTool(player.inventory.itemInMainHand)) ranges.forEach { range ->
+				val count = increaseCount(player, range)
+
+				onItem(if (count == getIndex(player, range)) range.getDrop(material, stackDrops) else range.offDrop(material, stackDrops))
+
+				if (count == range.range) {
+					resetIndex(player, range)
+					resetCount(player, range)
+				}
+			}
 
 			return true
 		}
 
 		return false
-	}
-
-	fun onBreakBlock(material: Material, player: Player, onItem: (ItemStack?) -> Unit) {
-		ranges.forEach { range ->
-			var count = increaseCount(player, range)
-
-			onItem(if (count == getIndex(player, range)) range.getDrop(material) else range.offDrop(material))
-
-			if (count == range.range) {
-				resetIndex(player, range)
-				resetCount(player, range)
-			}
-		}
 	}
 
 	companion object {

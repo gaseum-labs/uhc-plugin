@@ -1,14 +1,12 @@
 package com.codeland.uhc.blockfix
 
-import com.codeland.uhc.core.UHC
 import org.bukkit.Material
-import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 
 class NetherWartFix : BlockFix("Nether Wart", arrayOf(
-	Range("Wart", "wartCount", "wartIndex", 1, { ItemStack(Material.NETHER_WART) }, { ItemStack(Material.NETHER_WART) })
+	Range("Wart", "wartCount", "wartIndex", 1, { _, _ -> ItemStack(Material.NETHER_WART) }, { _, _ -> ItemStack(Material.NETHER_WART) })
 )) {
-	override fun reject(uhc: UHC, tool: ItemStack, drops: List<Item>): Boolean {
+	override fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean {
 		return false
 	}
 

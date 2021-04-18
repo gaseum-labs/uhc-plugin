@@ -21,7 +21,6 @@ import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.md_5.bungee.api.ChatColor
 import org.bukkit.*
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
@@ -168,7 +167,7 @@ class EventListener : Listener {
 
 			/* drop items */
 			event.drops.forEach { drop ->
-				player.location.world.dropItemNaturally(player.location, drop)
+				player.location.world.dropItem(player.location, drop)
 			}
 
 			/* drop experience */
@@ -413,15 +412,31 @@ class EventListener : Listener {
 
 		val player = event.player
 		val drops = event.items
-		val blockMiddle = block.location.toCenterLocation()
 
 		/* creative mode does not cause blocks to drop */
 		if (event.player.gameMode != GameMode.CREATIVE) {
 			BlockFixType.values().any { blockFixType ->
-				blockFixType.blockFix.onBreakBlock(UHC, type, drops, player) { drop ->
-					if (drop != null) block.world.dropItem(blockMiddle, drop)
+				blockFixType.blockFix.onBreakBlock(type, drops, player) { drop ->
+					if (drop != null) block.world.dropItemNaturally(block.location, drop)
 				}
 			}
+		}
+	}
+
+	private val hoes = arrayOf(
+		Material.SHEARS,
+		Material.WOODEN_HOE,
+		Material.GOLDEN_HOE,
+		Material.STONE_HOE,
+		Material.IRON_HOE,
+		Material.DIAMOND_HOE,
+		Material.NETHERITE_HOE,
+	)
+
+	@EventHandler
+	fun onDamage(event: PlayerItemDamageEvent) {
+		if (hoes.contains(event.item.type)) {
+			event.damage = if (Math.random() < 0.4) 1 else 0
 		}
 	}
 
@@ -462,32 +477,14 @@ class EventListener : Listener {
 
 		val leavesLocation = event.block.location.toCenterLocation()
 
-		var nearestPlayer = null as Player?
-		var nearestDistance = 32.0
-
-		/* find the nearest player within 16 blocks to the decaying leaves */
-		Bukkit.getOnlinePlayers().forEach { player ->
-			if (PlayerData.isParticipating(player.uniqueId)) {
-				val playerLocation = player.location
-
-				if (leavesLocation.world == playerLocation.world) {
-					val distance = playerLocation.distance(leavesLocation)
-
-					if (distance < nearestDistance) {
-						nearestDistance = distance
-						nearestPlayer = player
-					}
-				}
-			}
+		val dropPlayer = Bukkit.getOnlinePlayers().filter { PlayerData.isParticipating(it.uniqueId) && it.world === leavesLocation.world }.minBy {
+			it.location.distance(leavesLocation)
 		}
 
-		val dropPlayer = nearestPlayer
-
 		/* apply applefix to this leaves block for the nearest player */
-		if (dropPlayer != null)
-			BlockFixType.LEAVES.blockFix.onBreakBlock(leavesType, dropPlayer) { drop ->
-				if (drop != null) leavesLocation.world.dropItem(event.block.location.toCenterLocation(), drop)
-			}
+		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(leavesType, mutableListOf(), dropPlayer) { drop ->
+			if (drop != null) leavesLocation.world.dropItemNaturally(event.block.location, drop)
+		}
 	}
 
 	@EventHandler

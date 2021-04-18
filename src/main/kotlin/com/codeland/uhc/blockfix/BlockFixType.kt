@@ -1,6 +1,6 @@
 package com.codeland.uhc.blockfix
 
-enum class BlockFixType(private val createBlockFix: () -> BlockFix) {
+enum class BlockFixType(createBlockFix: () -> BlockFix) {
 	LEAVES(::LeavesFix),
 	BROWN_MUSHROOM(::BrownMushroomFix),
 	RED_MUSHROOM(::RedMushroomFix),
