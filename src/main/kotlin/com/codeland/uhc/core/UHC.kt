@@ -29,18 +29,28 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 
-class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
+object UHC {
 	var ledger = Ledger()
 
 	var mobCapCoefficient = 1.0
 	var killReward = KillReward.REGENERATION
+
+	val defaultPreset = Preset.MEDIUM
+
+	val defaultVariants = arrayOf(
+		PhaseVariant.WAITING_DEFAULT,
+		PhaseVariant.GRACE_FORGIVING,
+		PhaseVariant.SHRINK_DEFAULT,
+		PhaseVariant.ENDGAME_NATURAL_TERRAIN,
+		PhaseVariant.POSTGAME_DEFAULT
+	)
 
 	private var phaseVariants = Array(PhaseType.values().size) { index ->
 		defaultVariants[index]
 	}
 
 	var quirks = Array(QuirkType.values().size) { index ->
-		QuirkType.values()[index].createQuirk(this)
+		QuirkType.values()[index].createQuirk()
 	}
 
 	private var phaseTimes = arrayOf(
@@ -84,7 +94,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		}
 	}
 
-	val gui = Gui(this)
+	val gui = Gui()
 
 	fun spectatorSpawnLocation(): Location {
 		for ((uuid, playerData) in PlayerData.playerDataList) {
@@ -147,7 +157,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 		quirks[type.ordinal].enabled = enabled
 
 		if (enabled) type.incompatibilities.forEach { other ->
-			val otherQuirk = GameRunner.uhc.getQuirk(other)
+			val otherQuirk = getQuirk(other)
 
 			if (otherQuirk.enabled) {
 				otherQuirk.enabled = false
@@ -268,7 +278,7 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			}
 
 			/* switch to grace in 4 seconds */
-			val waiting = GameRunner.uhc.currentPhase as WaitingDefault
+			val waiting = currentPhase as WaitingDefault
 			waiting.updateLength(4)
 
 			null
@@ -299,13 +309,13 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 				topMessage = Component.text("${winningPlayer?.name} has won!", NamedTextColor.GOLD, TextDecoration.BOLD)
 				bottomMessage = Component.empty()
 
-				ledger.addEntry(winningPlayer?.name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true)
+				ledger.addEntry(winningPlayer?.name ?: "NULL", elapsedTime, "winning", true)
 
 			} else {
 				topMessage = winningTeam.apply("${winningTeam.gameName()} has won!")
 
 				var playerString = winners.joinToString(" ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }
-				winners.forEach { ledger.addEntry(Bukkit.getOfflinePlayer(it).name ?: "NULL", GameRunner.uhc.elapsedTime, "winning", true) }
+				winners.forEach { ledger.addEntry(Bukkit.getOfflinePlayer(it).name ?: "NULL", elapsedTime, "winning", true) }
 
 				bottomMessage = winningTeam.apply(playerString)
 			}
@@ -362,6 +372,8 @@ class UHC(val defaultPreset: Preset, val defaultVariants: Array<PhaseVariant>) {
 			if (quirk.enabled) quirk.onPhaseSwitch(phaseVariants[phaseIndex])
 		}
 	}
+
+	fun netherIsAllowed() = !isPhase(PhaseType.ENDGAME)
 
 	fun containSpecs() {
 		Bukkit.getOnlinePlayers().forEach { player ->

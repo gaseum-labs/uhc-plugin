@@ -14,7 +14,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.jetbrains.annotations.NotNull
 
-abstract class GuiItem(val uhc: UHC, val index: Int, val opOnly: Boolean) {
+abstract class GuiItem(val index: Int, val opOnly: Boolean) {
 	lateinit var guiInventory: GuiInventory
 	lateinit var guiStack: ItemStack
 

@@ -26,7 +26,7 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
-class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Summoner(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {
@@ -53,19 +53,19 @@ class Summoner(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	var commander = addProperty(BoolProperty(true))
 
 	init {
-		inventory.addItem(BoolToggle(uhc, 11, allowAggro, {
+		inventory.addItem(BoolToggle(11, allowAggro, {
 			GuiItem.setName(ItemStack(CREEPER_SPAWN_EGG), enabledName("Aggro", true))
 		}, {
 			GuiItem.setName(ItemStack(GUNPOWDER), enabledName("Aggro", false))
 		}))
 
-		inventory.addItem(BoolToggle(uhc, 15, allowPassive, {
+		inventory.addItem(BoolToggle(15, allowPassive, {
 			GuiItem.setName(ItemStack(CHICKEN_SPAWN_EGG), enabledName("Passive", true))
 		}, {
 			GuiItem.setName(ItemStack(FEATHER), enabledName("Passive", false))
 		}))
 
-		inventory.addItem(BoolToggle(uhc, 22, commander, {
+		inventory.addItem(BoolToggle(22, commander, {
 			GuiItem.setName(ItemStack(NETHERITE_HELMET), enabledName("Commander", true))
 		}, {
 			GuiItem.setName(ItemStack(LEATHER_HELMET), enabledName("Commander", false))

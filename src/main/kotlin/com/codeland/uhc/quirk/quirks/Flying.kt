@@ -18,7 +18,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.FireworkMeta
 import java.util.*
 
-class Flying(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Flying(type: QuirkType) : Quirk(type) {
 	var numRockets: Int = DEFAULT_ROCKETS
 
 	override fun onEnable() {}
@@ -37,7 +37,7 @@ class Flying(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		get() = ItemStack(Material.FIREWORK_ROCKET)
 
 	init {
-		val rocketItem = object : GuiItem(uhc, 13, true) {
+		val rocketItem = object : GuiItem(13, true) {
 			override fun onClick(player: Player, shift: Boolean) {
 				if (shift) {
 					--numRockets

@@ -21,11 +21,11 @@ import org.bukkit.inventory.ItemStack
 import java.util.*
 import kotlin.collections.ArrayList
 
-class PlayerCompass(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class PlayerCompass(type: QuirkType) : Quirk(type) {
 	var taskID = 0
 
 	override fun onEnable() {
-		if (uhc.isGameGoing()) {
+		if (UHC.isGameGoing()) {
 			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
 		}
 	}

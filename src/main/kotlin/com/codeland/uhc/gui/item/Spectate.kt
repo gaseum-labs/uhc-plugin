@@ -32,11 +32,11 @@ class Spectate : CommandItem() {
 	override fun onUse(uhc: UHC, player: Player) {
 		if (PlayerData.isParticipating(player.uniqueId)) return
 
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+		if (!UHC.isPhase(PhaseType.WAITING)) {
 			player.gameMode = GameMode.SPECTATOR
 			player.setItemOnCursor(null)
 			player.inventory.clear()
-			player.teleport(GameRunner.uhc.spectatorSpawnLocation())
+			player.teleport(UHC.spectatorSpawnLocation())
 
 		} else {
 			Commands.errorMessage(player, "Game has not started!")

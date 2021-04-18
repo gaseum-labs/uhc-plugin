@@ -54,13 +54,13 @@ object AbstractLobby {
 		playerData.participating = false
 		playerData.alive = false
 
-		GameRunner.uhc.quirks.forEach { quirk ->
+		UHC.quirks.forEach { quirk ->
 			if (quirk.enabled) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
 		}
 
 		Pests.makeNotPest(player)
 
-		val lobbyLocation = lobbyLocation(GameRunner.uhc)
+		val lobbyLocation = lobbyLocation(UHC)
 		if (player.location.world != WorldManager.getLobbyWorld()) player.teleport(lobbyLocation)
 
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
@@ -70,7 +70,7 @@ object AbstractLobby {
 		return lobbyLocation
 	}
 
-	fun isLinked(player: Player) = if (GameRunner.uhc.usingBot) {
+	fun isLinked(player: Player) = if (UHC.usingBot) {
 		GameRunner.bot?.isLinked(player.uniqueId) ?: true
 	} else true
 

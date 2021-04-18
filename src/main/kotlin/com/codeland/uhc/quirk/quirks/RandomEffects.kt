@@ -21,12 +21,12 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 import java.util.*
 
-class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class RandomEffects(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {
 		timer = time
 
 		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
-			if (!GameRunner.uhc.isGameGoing()) return@scheduleSyncRepeatingTask
+			if (!UHC.isGameGoing()) return@scheduleSyncRepeatingTask
 
 			if (--timer == 0) {
 				timer = time
@@ -34,7 +34,7 @@ class RandomEffects(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 			}
 		}, 0, 20)
 
-		if (GameRunner.uhc.isGameGoing())
+		if (UHC.isGameGoing())
 			giveEffects()
 	}
 

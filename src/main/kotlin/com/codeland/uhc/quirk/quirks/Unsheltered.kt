@@ -9,7 +9,7 @@ import org.bukkit.block.Block
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
-class Unsheltered(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Unsheltered(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}
@@ -18,9 +18,9 @@ class Unsheltered(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		get() = ItemStack(Material.SHULKER_SHELL)
 
 	companion object {
-		const val TAG_NAME = "unsheltered broken"
+		const val TAG_NAME = "unsh_b"
 
-		val acceptedBlocks = arrayOf<Material>(
+		val acceptedBlocks = arrayOf(
 			Material.CRAFTING_TABLE,
 			Material.FURNACE,
 			Material.BREWING_STAND,

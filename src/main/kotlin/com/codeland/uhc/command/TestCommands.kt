@@ -7,12 +7,9 @@ import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands.errorMessage
+import com.codeland.uhc.core.*
 import com.codeland.uhc.customSpawning.CustomSpawning
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.core.AbstractLobby
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.QuirkType
@@ -32,10 +29,10 @@ class TestCommands : BaseCommand() {
 	fun testNext(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		if (GameRunner.uhc.isPhase(PhaseType.WAITING))
+		if (UHC.isPhase(PhaseType.WAITING))
 			errorMessage(sender, "In waiting phase, use /start instead")
 		else
-			GameRunner.uhc.startNextPhase()
+			UHC.startNextPhase()
 	}
 
 	@Subcommand("fill")
@@ -102,7 +99,7 @@ class TestCommands : BaseCommand() {
 
 		sender as Player
 
-		GameRunner.sendGameMessage(sender, "Elapsed time: ${GameRunner.uhc.elapsedTime}")
+		GameRunner.sendGameMessage(sender, "Elapsed time: ${UHC.elapsedTime}")
 	}
 
 	@Subcommand("playerData")
@@ -136,7 +133,7 @@ class TestCommands : BaseCommand() {
 	fun testDrop(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		val carePackages = GameRunner.uhc.getQuirk(QuirkType.CARE_PACKAGES) as CarePackages
+		val carePackages = UHC.getQuirk(QuirkType.CARE_PACKAGES) as CarePackages
 
 		if (!carePackages.enabled) return errorMessage(sender, "Care packages is not going!")
 
@@ -176,7 +173,7 @@ class TestCommands : BaseCommand() {
 
 		WorldManager.destroyPVPWorld()
 		val pvpWorld = WorldManager.createPVPWorld()
-		if (pvpWorld != null) AbstractLobby.prepareWorld(pvpWorld, GameRunner.uhc)
+		if (pvpWorld != null) AbstractLobby.prepareWorld(pvpWorld, UHC)
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")

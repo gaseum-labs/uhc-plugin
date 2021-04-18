@@ -21,11 +21,11 @@ import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.plugin.Plugin
 import java.util.*
 
-class Pests(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Pests(type: QuirkType) : Quirk(type) {
     override fun onEnable() {}
 
     override fun onDisable() {
-        if (!(GameRunner.uhc.isPhase(PhaseType.WAITING) || GameRunner.uhc.isPhase(PhaseType.POSTGAME))) {
+        if (!(UHC.isPhase(PhaseType.WAITING) || UHC.isPhase(PhaseType.POSTGAME))) {
             /* kill all pests in the game */
             Bukkit.getOnlinePlayers().forEach { player ->
                 if (isPest(player))

@@ -14,7 +14,7 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Hotbar(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Hotbar(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}

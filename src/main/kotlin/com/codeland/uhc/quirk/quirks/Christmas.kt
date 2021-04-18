@@ -10,7 +10,7 @@ import org.bukkit.GameRule
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
-class Christmas(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Christmas(type: QuirkType) : Quirk(type) {
 	fun setSnowing() {
 		Bukkit.getWorlds().forEach { world ->
 			world.isThundering = false
@@ -28,7 +28,7 @@ class Christmas(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	}
 
 	override fun onEnable() {
-		if (uhc.currentPhase?.phaseType == PhaseType.GRACE) setSnowing()
+		if (UHC.currentPhase?.phaseType == PhaseType.GRACE) setSnowing()
 	}
 
 	override fun onDisable() {

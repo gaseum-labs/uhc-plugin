@@ -9,7 +9,7 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Pumpkin(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Pumpkin(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}

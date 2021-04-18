@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.Util
@@ -154,7 +155,7 @@ class Portal : Listener {
 			event.isCancelled = true
 
 		/* prevent going to the nether after nether closes */
-		} else if (!GameRunner.netherIsAllowed()) {
+		} else if (!UHC.netherIsAllowed()) {
 			val location = event.player.location
 			val world = location.world
 

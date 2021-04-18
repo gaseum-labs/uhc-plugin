@@ -9,6 +9,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.core.AbstractLobby
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
@@ -24,7 +25,7 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
-		GameRunner.uhc.gui.inventory.open(sender as Player)
+		UHC.gui.inventory.open(sender as Player)
 	}
 
 	@Subcommand("optOut")
@@ -33,7 +34,7 @@ class ParticipantCommands : BaseCommand() {
 		sender as Player
 		val playerData = PlayerData.getPlayerData(sender.uniqueId)
 
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+		if (!UHC.isPhase(PhaseType.WAITING)) {
 			Commands.errorMessage(sender, "The game has already started!")
 
 		} else if (playerData.optingOut) {
@@ -43,7 +44,7 @@ class ParticipantCommands : BaseCommand() {
 			playerData.optingOut = true
 			playerData.staged = false
 
-			TeamData.removeFromTeam(arrayListOf(sender.uniqueId), GameRunner.uhc.usingBot, true, true)
+			TeamData.removeFromTeam(arrayListOf(sender.uniqueId), UHC.usingBot, true, true)
 
 			GameRunner.sendGameMessage(sender, "You have opted out of participating")
 		}
@@ -55,7 +56,7 @@ class ParticipantCommands : BaseCommand() {
 		sender as Player
 		val playerData = PlayerData.getPlayerData(sender.uniqueId)
 
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) {
+		if (!UHC.isPhase(PhaseType.WAITING)) {
 			Commands.errorMessage(sender, "The game has already started!")
 
 		} else if (!playerData.optingOut) {
@@ -107,12 +108,12 @@ class ParticipantCommands : BaseCommand() {
 	fun classCommand(sender: CommandSender, quirkClass: QuirkClass) {
 		sender as Player
 
-		if (!GameRunner.uhc.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
+		if (!UHC.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
 
-		if (!(GameRunner.uhc.isPhase(PhaseType.GRACE) || GameRunner.uhc.isPhase(PhaseType.WAITING)))
+		if (!(UHC.isPhase(PhaseType.GRACE) || UHC.isPhase(PhaseType.WAITING)))
 			return Commands.errorMessage(sender, "You can't change your class right now")
 
-		if (GameRunner.uhc.isPhase(PhaseType.GRACE) && Classes.getClass(sender.uniqueId) != QuirkClass.NO_CLASS) {
+		if (UHC.isPhase(PhaseType.GRACE) && Classes.getClass(sender.uniqueId) != QuirkClass.NO_CLASS) {
 			return Commands.errorMessage(sender, "You've already chosen a class")
 		}
 
@@ -125,7 +126,7 @@ class ParticipantCommands : BaseCommand() {
 		Classes.setClass(sender.uniqueId, quirkClass)
 
 		/* only start them if the game has already started */
-		if (GameRunner.uhc.isGameGoing()) Classes.startAsClass(sender, quirkClass, oldClass)
+		if (UHC.isGameGoing()) Classes.startAsClass(sender, quirkClass, oldClass)
 
 		GameRunner.sendGameMessage(sender, "Set your class to ${quirkClass.prettyName}")
 	}
@@ -135,7 +136,7 @@ class ParticipantCommands : BaseCommand() {
 	fun renameCommand(sender: CommandSender, name: String) {
 		sender as Player
 
-		if (!GameRunner.uhc.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled.")
+		if (!UHC.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled.")
 
 		if (Classes.getClass(sender.uniqueId) != QuirkClass.TRAPPER) return Commands.errorMessage(sender, "Your class can't use this command.")
 
@@ -155,7 +156,7 @@ class ParticipantCommands : BaseCommand() {
 
 		val playerData = PlayerData.getPlayerData(sender.uniqueId)
 
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING) && !playerData.participating && sender.gameMode == GameMode.SPECTATOR) {
+		if (!UHC.isPhase(PhaseType.WAITING) && !playerData.participating && sender.gameMode == GameMode.SPECTATOR) {
 			val location = GameRunner.getPlayerLocation(toPlayer.uniqueId)
 
 			if (location != null) {

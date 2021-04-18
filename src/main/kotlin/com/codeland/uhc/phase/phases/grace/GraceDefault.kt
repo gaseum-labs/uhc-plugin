@@ -1,9 +1,6 @@
 package com.codeland.uhc.phase.phases.grace
 
-import com.codeland.uhc.core.AbstractLobby
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.Ledger
-import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.*
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
@@ -97,7 +94,7 @@ class GraceDefault : Phase() {
 			}
 
 			GameRunner.teleportPlayer(uuid, location)
-			GameRunner.uhc.quirks.forEach { quirk -> if (quirk.enabled) quirk.onStart(uuid) }
+			UHC.quirks.forEach { quirk -> if (quirk.enabled) quirk.onStart(uuid) }
 		}
 
 		fun spreadSinglePlayer(world: World, spreadRadius: Double): Location? {

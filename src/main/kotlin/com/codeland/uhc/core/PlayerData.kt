@@ -186,7 +186,7 @@ class PlayerData(
 
 		fun zombieBorderTick(currentTick: Int) {
 			if (currentTick % 20 == 0) {
-				val borderWorld = GameRunner.uhc.getDefaultWorld()
+				val borderWorld = UHC.getDefaultWorld()
 				val borderRadius = borderWorld.worldBorder.size / 2.0
 
 				playerDataList.forEach { (uuid, playerData) ->
@@ -267,7 +267,7 @@ class PlayerData(
 			val value = quirkDataList[type]
 
 			return if (value == null) {
-				val defaultDataHolder = QuirkDataHolder(false, GameRunner.uhc.getQuirk(type).defaultData())
+				val defaultDataHolder = QuirkDataHolder(false, UHC.getQuirk(type).defaultData())
 				quirkDataList[type] = defaultDataHolder
 
 				defaultDataHolder

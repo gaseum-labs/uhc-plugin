@@ -19,9 +19,9 @@ import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayList
 import kotlin.math.ceil
 
-class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Deathswap(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {
-		if (GameRunner.uhc.isGameGoing()) taskId = SchedulerUtil.everyTick(::runTask)
+		if (UHC.isGameGoing()) taskId = SchedulerUtil.everyTick(::runTask)
 	}
 
 	override fun onDisable() {
@@ -63,7 +63,7 @@ class Deathswap(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 				if (playerData.participating && playerData.alive) {
 					used.add(false)
 					players.add(uuid)
-					locations.add(GameRunner.getPlayerLocation(uuid) ?: GameRunner.uhc.spectatorSpawnLocation())
+					locations.add(GameRunner.getPlayerLocation(uuid) ?: UHC.spectatorSpawnLocation())
 				}
 			}
 

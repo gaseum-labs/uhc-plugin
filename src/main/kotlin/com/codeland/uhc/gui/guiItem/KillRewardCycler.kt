@@ -10,13 +10,13 @@ import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class KillRewardCycler(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
+class KillRewardCycler(index: Int) : GuiItem(index, true) {
 	override fun onClick(player: Player, shift: Boolean) {
-		uhc.killReward = KillReward.values()[(uhc.killReward.ordinal + 1) % KillReward.values().size]
+		UHC.killReward = KillReward.values()[(UHC.killReward.ordinal + 1) % KillReward.values().size]
 	}
 
 	override fun getStack(): ItemStack {
-		val killReward = uhc.killReward
+		val killReward = UHC.killReward
 		val stack = ItemStack(killReward.representation)
 		setLore(stack, killReward.lore)
 

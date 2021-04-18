@@ -32,9 +32,9 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-class ChaoticCarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {
-		if (uhc.isGameGoing()) startDropping()
+		if (UHC.isGameGoing()) startDropping()
 	}
 
 	override fun onDisable() {
@@ -63,7 +63,7 @@ class ChaoticCarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	fun startDropping() {
 		timer = 0
 		dropNum = 0
-		random = Random(uhc.getDefaultWorld().seed)
+		random = Random(UHC.getDefaultWorld().seed)
 		taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::onSecond, 0, 20)
 	}
 
@@ -83,7 +83,7 @@ class ChaoticCarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 		++timer
 
 		if (timer >= DROP_TIME) {
-			val world = uhc.getDefaultWorld()
+			val world = UHC.getDefaultWorld()
 			val block = chaoticDropBlock(world)
 			val along = gameAlong()
 
@@ -147,9 +147,9 @@ class ChaoticCarePackages(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
 	 * 1 is shrink just ended
 	 */
 	fun gameAlong(): Double {
-		val phase = uhc.currentPhase ?: return 0.0
-		val graceTime = uhc.getTime(PhaseType.GRACE)
-		val shrinkTime = uhc.getTime(PhaseType.SHRINK)
+		val phase = UHC.currentPhase ?: return 0.0
+		val graceTime = UHC.getTime(PhaseType.GRACE)
+		val shrinkTime = UHC.getTime(PhaseType.SHRINK)
 
 		return when (phase.phaseType) {
 			/* time elapsed in grace out of grace time plus shrink time */

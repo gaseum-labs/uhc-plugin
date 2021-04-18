@@ -8,18 +8,18 @@ import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class VariantCycler(uhc: UHC, index: Int, var phaseType: PhaseType) : GuiItem(uhc, index, true) {
+class VariantCycler(index: Int, var phaseType: PhaseType) : GuiItem(index, true) {
     override fun onClick(player: Player, shift: Boolean) {
 		val variants = VariantList.list[phaseType.ordinal]
-		val index = variants.indexOf(uhc.getVariant(phaseType))
+		val index = variants.indexOf(UHC.getVariant(phaseType))
 
-		uhc.updateVariant(variants[
+		UHC.updateVariant(variants[
             (index + 1) % variants.size
 		])
     }
 
     override fun getStack(): ItemStack {
-        val variant = uhc.getVariant(phaseType)
+        val variant = UHC.getVariant(phaseType)
 
         val stack = ItemStack(variant.representation)
         setName(stack, stateName(phaseType.prettyName, variant.prettyName))

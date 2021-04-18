@@ -7,6 +7,7 @@ import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import net.kyori.adventure.text.Component
@@ -21,7 +22,7 @@ import org.bukkit.command.CommandSender
 @Subcommand("team")
 class TeamCommands : BaseCommand() {
 	/* should the team commands add people to their discord channels */
-	private fun useDiscord() = GameRunner.uhc.isGameGoing() && GameRunner.uhc.usingBot
+	private fun useDiscord() = UHC.isGameGoing() && UHC.usingBot
 
 	@Subcommand("clear")
 	@Description("remove all current teams")

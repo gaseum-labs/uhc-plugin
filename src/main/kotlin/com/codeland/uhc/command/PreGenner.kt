@@ -1,6 +1,7 @@
 package com.codeland.uhc.command
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
@@ -11,9 +12,9 @@ object PreGenner {
 	var taskID = -1
 
 	fun pregen(player: Player) {
-		val world = GameRunner.uhc.getDefaultWorld()
+		val world = UHC.getDefaultWorld()
 
-		val extrema = ceil(GameRunner.uhc.startRadius / 16.0).toInt()
+		val extrema = ceil(UHC.startRadius / 16.0).toInt()
 		val sideLength = (extrema * 2 + 1)
 
 		val max = sideLength * sideLength

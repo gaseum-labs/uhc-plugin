@@ -30,7 +30,7 @@ import kotlin.math.floor
 import kotlin.math.min
 import kotlin.random.Random.Default.nextInt
 
-class Classes(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Classes(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {
 		var currentTick = 0
 

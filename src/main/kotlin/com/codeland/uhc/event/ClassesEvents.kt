@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Summoner
 import com.codeland.uhc.quirk.quirks.classes.Classes
@@ -65,7 +66,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun playerMove(event: PlayerMoveEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			val player = event.player
 
 			when (Classes.getClass(player.uniqueId)) {
@@ -110,7 +111,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun playerDamage(event: EntityDamageEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			val player = if (event.entity is Player) event.entity as Player else return
 
 			if (Classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
@@ -140,7 +141,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun entityDamageEntity(event: EntityDamageByEntityEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			val player = event.damager as? Player ?: return
 
 			when (Classes.getClass(player.uniqueId)) {
@@ -186,7 +187,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onXP(event: PlayerExpChangeEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER) {
 				event.amount = event.amount * 2
 			}
@@ -195,7 +196,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onBlockDrop(event: BlockBreakEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER && event.block.type == Material.GRINDSTONE) {
 				event.isDropItems = false
 				event.block.world.dropItem(event.block.location.toCenterLocation(), ItemStack(Material.COBBLESTONE))
@@ -205,7 +206,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onEnchant(event: EnchantItemEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.enchanter.uniqueId) == QuirkClass.ENCHANTER) {
 				val inventory = event.view.topInventory as EnchantingInventory
 
@@ -241,7 +242,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.whoClicked.uniqueId) == QuirkClass.ENCHANTER) {
 				val item = event.currentItem ?: return
 
@@ -265,7 +266,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun blockBreak(event: BlockBreakEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
 				val logs = listOf(
 						Material.OAK_LOG,
@@ -328,7 +329,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun interactEvent(event: PlayerInteractEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
 				when (event.action) {
 					Action.LEFT_CLICK_BLOCK -> {
@@ -431,7 +432,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun itemBreak(event: PlayerItemBreakEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			if (Classes.getClass(event.player.uniqueId) == QuirkClass.MINER && pickaxes.contains(event.brokenItem.type)) {
 				xray(event.player)
 			}
@@ -488,7 +489,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onMobSpawn(event: EntitySpawnEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			if (event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) {
 				event.entity.setMetadata(HUNTER_SPAWN_META, FixedMetadataValue(UHCPlugin.plugin, true))
 			}
@@ -497,7 +498,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			val player = event.target as? Player ?: return
 
 			if (Classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
@@ -508,7 +509,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		if (GameRunner.uhc.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.isEnabled(QuirkType.CLASSES)) {
 			val player = event.player
 
 			if (Classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {

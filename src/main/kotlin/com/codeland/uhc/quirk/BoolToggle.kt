@@ -6,7 +6,7 @@ import com.codeland.uhc.gui.GuiItem
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class BoolToggle(uhc: UHC, index: Int, val property: BoolProperty, val onTrue: () -> ItemStack, val onFalse: () -> ItemStack) : GuiItem(uhc, index, true) {
+class BoolToggle(index: Int, val property: BoolProperty, val onTrue: () -> ItemStack, val onFalse: () -> ItemStack) : GuiItem(index, true) {
 	override fun onClick(player: Player, shift: Boolean) {
 		property.value = !property.value
 	}

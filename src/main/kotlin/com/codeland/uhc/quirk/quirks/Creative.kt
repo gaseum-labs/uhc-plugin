@@ -6,7 +6,7 @@ import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material.*
 import org.bukkit.inventory.ItemStack
 
-class Creative(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Creative(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}

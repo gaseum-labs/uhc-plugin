@@ -13,7 +13,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 
 
-class LowGravity(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class LowGravity(type: QuirkType) : Quirk(type) {
 	companion object {
 		var taskId: Int = 0
 		var gravity: Double = 0.5

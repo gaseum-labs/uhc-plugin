@@ -3,6 +3,7 @@ package com.codeland.uhc.phase.phases.endgame
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.World
@@ -30,7 +31,7 @@ class EndgameNone : Phase() {
 	companion object {
 		fun closeNether() {
 			SchedulerUtil.nextTick {
-				val defaultWorld = GameRunner.uhc.getDefaultWorld()
+				val defaultWorld = UHC.getDefaultWorld()
 
 				PlayerData.playerDataList.forEach { (uuid, playerData) ->
 					val location = GameRunner.getPlayerLocation(uuid)

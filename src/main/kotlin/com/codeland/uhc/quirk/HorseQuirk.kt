@@ -17,7 +17,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
 
-class HorseQuirk(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class HorseQuirk(type: QuirkType) : Quirk(type) {
 	companion object {
 		var horseMap: MutableMap<UUID, UUID> = mutableMapOf()
 

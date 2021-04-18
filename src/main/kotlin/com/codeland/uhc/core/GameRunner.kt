@@ -25,7 +25,6 @@ import kotlin.collections.ArrayList
 
 object GameRunner {
 	var bot: MixerBot? = null
-	lateinit var uhc: UHC
 
 	fun teamIsAlive(team: Team): Boolean {
 		return team.members.any { member -> PlayerData.isAlive(member) }
@@ -98,7 +97,7 @@ object GameRunner {
 
 		/* add to ledger */
 		val deadPlayerName = Bukkit.getOfflinePlayer(deadUUID).name ?: "NULL"
-		uhc.ledger.addEntry(deadPlayerName, uhc.elapsedTime, killerName)
+		UHC.ledger.addEntry(deadPlayerName, UHC.elapsedTime, killerName)
 
 		val message1 = "$remainingTeams teams remain"
 
@@ -123,7 +122,7 @@ object GameRunner {
 
 		/* uhc ending point (stops kill reward) */
 		if (remainingTeams <= 1)
-			return uhc.endUHC(
+			return UHC.endUHC(
 				if (lastRemaining != null)
 					constructAliveList(lastRemaining)
 				else
@@ -132,18 +131,18 @@ object GameRunner {
 
 		/* kill reward awarding for a team */
 		if (killerTeam != null) {
-			if (!teamIsAlive) uhc.killReward.applyReward(constructAliveList(killerTeam.members).map { uuid ->
+			if (!teamIsAlive) UHC.killReward.applyReward(constructAliveList(killerTeam.members).map { uuid ->
 				Bukkit.getPlayer(uuid)
 			} as ArrayList<Player?>)
 
 		/* kill reward awarding for an individual killer */
 		} else if (killer != null) {
-			if (!teamIsAlive) uhc.killReward.applyReward(arrayListOf(killer))
+			if (!teamIsAlive) UHC.killReward.applyReward(arrayListOf(killer))
 		}
 	}
 
 	fun respawnLocation(player: Player?, uuid: UUID, playerData: PlayerData): Location {
-		val world = uhc.getDefaultWorld()
+		val world = UHC.getDefaultWorld()
 		val respawnLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 			?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 
@@ -155,7 +154,7 @@ object GameRunner {
 
 		/* custom quirk behavior when players start */
 		SchedulerUtil.nextTick {
-			uhc.quirks.forEach { quirk ->
+			UHC.quirks.forEach { quirk ->
 				if (quirk.enabled) quirk.onStart(uuid)
 			}
 		}
@@ -245,10 +244,6 @@ object GameRunner {
 
 	fun coloredInGameMessage(string: String, color: ChatColor): String {
 		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
-	}
-
-	fun netherIsAllowed() : Boolean {
-		return !uhc.isPhase(PhaseType.ENDGAME)
 	}
 
 	fun registerHearts() {

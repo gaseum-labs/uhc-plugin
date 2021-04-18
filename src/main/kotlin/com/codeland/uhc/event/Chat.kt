@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import io.papermc.paper.event.player.AsyncChatEvent
@@ -267,7 +268,7 @@ class Chat : Listener {
 		/* if the sending player is on a team */
 		/* if the message does not start with a mention */
 		/* and the message does not start with ! */
-		if (GameRunner.uhc.isGameGoing() && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
+		if (UHC.isGameGoing() && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
 			val messageParts = divideMessage(message, collected, team.color2)
 
 			team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->

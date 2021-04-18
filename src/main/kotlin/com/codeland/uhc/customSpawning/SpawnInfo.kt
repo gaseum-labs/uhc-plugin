@@ -1,6 +1,6 @@
 package com.codeland.uhc.customSpawning
 
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material
 import org.bukkit.block.Block
@@ -16,8 +16,6 @@ abstract class SpawnInfo {
 
 	companion object {
 		fun isWater(block: Block): Boolean {
-			if (GameRunner.uhc.isEnabled(QuirkType.UNDERWATER)) return false
-
 			return block.type == Material.WATER ||
 				block.type == Material.KELP ||
 				block.type == Material.SEAGRASS ||

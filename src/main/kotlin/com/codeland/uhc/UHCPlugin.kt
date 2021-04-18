@@ -76,14 +76,6 @@ class UHCPlugin : JavaPlugin() {
 			null
 		}
 
-		GameRunner.uhc = UHC(Preset.LARGE, arrayOf(
-			PhaseVariant.WAITING_DEFAULT,
-			PhaseVariant.GRACE_FORGIVING,
-			PhaseVariant.SHRINK_DEFAULT,
-			PhaseVariant.ENDGAME_NATURAL_TERRAIN,
-			PhaseVariant.POSTGAME_DEFAULT
-		))
-
 		server.scheduler.scheduleSyncDelayedTask(this) {
 			WorldManager.initWorlds()
 
@@ -91,8 +83,8 @@ class UHCPlugin : JavaPlugin() {
 
 			DimensionBar.createBossBars(Bukkit.getWorlds())
 
-			GameRunner.uhc.updateDisplays()
-			GameRunner.uhc.startWaiting()
+			UHC.updateDisplays()
+			UHC.startWaiting()
 		}
 	}
 

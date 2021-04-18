@@ -3,6 +3,7 @@ package com.codeland.uhc.command
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
 import org.bukkit.Bukkit
@@ -38,7 +39,7 @@ object Commands {
     }
 
     fun notGoingGuard(sender: CommandSender): Boolean {
-        if (GameRunner.uhc.isGameGoing()) {
+        if (UHC.isGameGoing()) {
             errorMessage(sender, "This command cannot be used while the game is running")
 
             return true

@@ -2,6 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.team.NameManager
@@ -175,7 +176,7 @@ object Packet {
 
 				/* teammate glowing */
 				} else if (
-					GameRunner.uhc.isGameGoing() &&
+					UHC.isGameGoing() &&
 					sentPlayer.entityId != metaPlayerID &&
 					sentPlayerTeam != null &&
 					sentPlayerTeam.members.contains(metaPlayer.uniqueId)

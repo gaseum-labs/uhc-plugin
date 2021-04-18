@@ -14,7 +14,7 @@ import org.bukkit.inventory.ItemStack
 import java.util.*
 import kotlin.collections.HashMap
 
-class InfiniteInventory(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class InfiniteInventory(type: QuirkType) : Quirk(type) {
 
 	// todo: dying doesn't drop blaze rods
 	// todo: dying drops all of your items

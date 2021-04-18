@@ -8,7 +8,7 @@ import org.bukkit.World
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class DefaultEnvironmentCycler(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
+class DefaultEnvironmentCycler(index: Int) : GuiItem(index, true) {
 	private val representations = arrayOf(
 		Material.GRASS_BLOCK,
 		Material.NETHERRACK,
@@ -18,13 +18,13 @@ class DefaultEnvironmentCycler(uhc: UHC, index: Int) : GuiItem(uhc, index, true)
 	override fun onClick(player: Player, shift: Boolean) {
 		/* bad things happen if we allow this value */
 		/* to change during the game */
-		if (uhc.isGameGoing()) return
+		if (UHC.isGameGoing()) return
 
-		uhc.defaultWorldIndex = (uhc.defaultWorldIndex + 1) % 3
+		UHC.defaultWorldIndex = (UHC.defaultWorldIndex + 1) % 3
 	}
 
 	override fun getStack(): ItemStack {
-		val stack = setName(ItemStack(representations[uhc.defaultWorldIndex]), stateName("World", Util.worldPrettyNames[uhc.defaultWorldIndex]))
+		val stack = setName(ItemStack(representations[UHC.defaultWorldIndex]), stateName("World", Util.worldPrettyNames[UHC.defaultWorldIndex]))
 		return setLore(stack, listOf("Which dimension the UHC starts in"))
 	}
 }

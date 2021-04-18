@@ -7,7 +7,7 @@ import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
 import com.codeland.uhc.quirk.quirks.Pumpkin
 import com.codeland.uhc.quirk.quirks.classes.Classes
 
-enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Quirk, val description: Array<String>) {
+enum class QuirkType(val prettyName: String, val create: (QuirkType) -> Quirk, val description: Array<String>) {
 	UNSHELTERED("Unsheltered", ::Unsheltered, arrayOf(
 		"Terrain cannot be modified",
 		"You cannot place or mine blocks",
@@ -85,11 +85,6 @@ enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Qui
 		"Track down players with a special compass"
 	)),
 
-	UNDERWATER("Underwater", ::Underwater, arrayOf(
-		"Breath and mine fast underwater",
-		"Dolphins drop leather"
-	)),
-
 	INFINITE_INVENTORY("Infinite Inventory", ::InfiniteInventory, arrayOf(
 			"Your inventory is unbounded in size"
 	)),
@@ -124,9 +119,9 @@ enum class QuirkType(val prettyName: String, val create: (UHC, QuirkType) -> Qui
         incompatibilities.contains(other)
     }
 
-	fun createQuirk(uhc: UHC): Quirk {
+	fun createQuirk(): Quirk {
 		/* quirk instance from quirk type */
-		val quirk = create(uhc, this)
+		val quirk = create(this)
 
 		/* give quirk instance to UHC */
 		return quirk

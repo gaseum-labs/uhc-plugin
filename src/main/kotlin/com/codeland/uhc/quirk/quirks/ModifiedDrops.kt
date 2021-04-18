@@ -24,7 +24,7 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.EntityType
 import org.bukkit.inventory.ItemStack
 
-class ModifiedDrops(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class ModifiedDrops(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
 	override fun onDisable() {}

@@ -8,7 +8,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
-class SharedInventory(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class SharedInventory(type: QuirkType) : Quirk(type) {
 	companion object {
 		lateinit var contents: Array<out ItemStack?>
 		var taskId: Int = 0

@@ -11,16 +11,16 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class BotToggle(uhc: UHC, index: Int) : GuiItem(uhc, index, true) {
+class BotToggle(index: Int) : GuiItem(index, true) {
 	override fun onClick(player: Player, shift: Boolean) {
-		uhc.updateUsingBot(!uhc.usingBot)
+		UHC.updateUsingBot(!UHC.usingBot)
 	}
 
 	override fun getStack(): ItemStack {
 		val stack = if (GameRunner.bot == null)
 			setName(ItemStack(Material.GUNPOWDER), "${ChatColor.RED}${ChatColor.BOLD}Bot is not running")
 		else
-			setName(ItemStack(if (uhc.usingBot) Material.NAUTILUS_SHELL else Material.HONEYCOMB), enabledName("Bot VCs", uhc.usingBot))
+			setName(ItemStack(if (UHC.usingBot) Material.NAUTILUS_SHELL else Material.HONEYCOMB), enabledName("Bot VCs", UHC.usingBot))
 
 		setLore(stack, listOf("Separate teams into separate discord vcs?"))
 

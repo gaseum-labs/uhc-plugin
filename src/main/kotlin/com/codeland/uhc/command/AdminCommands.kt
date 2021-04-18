@@ -8,6 +8,7 @@ import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.Preset
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.QuirkType
@@ -25,11 +26,11 @@ class AdminCommands : BaseCommand() {
 	@Description("start the UHC")
 	fun startGame(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) return Commands.errorMessage(sender, "Game has already started!")
+		if (!UHC.isPhase(PhaseType.WAITING)) return Commands.errorMessage(sender, "Game has already started!")
 
 		GameRunner.sendGameMessage(sender, "Starting UHC...")
 
-		val errMessage = GameRunner.uhc.startUHC(sender)
+		val errMessage = UHC.startUHC(sender)
 		if (errMessage != null) Commands.errorMessage(sender, errMessage)
 	}
 
@@ -37,7 +38,7 @@ class AdminCommands : BaseCommand() {
 	@Description("start the UHC with no teams")
 	fun startGameAll(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
-		if (!GameRunner.uhc.isPhase(PhaseType.WAITING)) return Commands.errorMessage(sender, "Game has already started!")
+		if (!UHC.isPhase(PhaseType.WAITING)) return Commands.errorMessage(sender, "Game has already started!")
 
 		/* stage everyone */
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
@@ -46,7 +47,7 @@ class AdminCommands : BaseCommand() {
 
 		GameRunner.sendGameMessage(sender, "Starting UHC...")
 
-		val errMessage = GameRunner.uhc.startUHC(sender)
+		val errMessage = UHC.startUHC(sender)
 		if (errMessage != null) Commands.errorMessage(sender, errMessage)
 	}
 
@@ -55,7 +56,7 @@ class AdminCommands : BaseCommand() {
 	fun testReset(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		GameRunner.uhc.startPhase(PhaseType.WAITING)
+		UHC.startPhase(PhaseType.WAITING)
 	}
 
 
@@ -64,14 +65,14 @@ class AdminCommands : BaseCommand() {
 	fun modifyMobCapCoefficient(sender : CommandSender, coefficient : Double) {
 		if (Commands.opGuard(sender)) return
 
-		GameRunner.uhc.mobCapCoefficient = coefficient
+		UHC.mobCapCoefficient = coefficient
 	}
 
 	@Subcommand("setLength")
 	@Description("set the length of a phase")
 	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Int) {
 		if (Commands.opGuard(sender)) return
-		if (GameRunner.uhc.isPhase(type)) {
+		if (UHC.isPhase(type)) {
 			Commands.errorMessage(sender, "Cannot modify the phase you are in!")
 			return
 		}
@@ -79,8 +80,8 @@ class AdminCommands : BaseCommand() {
 		if (!type.hasTimer)
 			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
 
-		GameRunner.uhc.updateTime(type, length)
-		GameRunner.uhc.gui.presetCycler.updateDisplay()
+		UHC.updateTime(type, length)
+		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("startRadius")
@@ -89,8 +90,8 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.updateStartRadius(radius)
-		GameRunner.uhc.gui.presetCycler.updateDisplay()
+		UHC.updateStartRadius(radius)
+		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("endRadius")
@@ -99,8 +100,8 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.updateEndRadius(radius)
-		GameRunner.uhc.gui.presetCycler.updateDisplay()
+		UHC.updateEndRadius(radius)
+		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("preset")
@@ -109,8 +110,8 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.updatePreset(startRadius, endRadius, graceTime, shrinkTime)
-		GameRunner.uhc.gui.presetCycler.updateDisplay()
+		UHC.updatePreset(startRadius, endRadius, graceTime, shrinkTime)
+		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("preset")
@@ -119,8 +120,8 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.uhc.updatePreset(preset)
-		GameRunner.uhc.gui.presetCycler.updateDisplay()
+		UHC.updatePreset(preset)
+		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("stage")
@@ -141,7 +142,7 @@ class AdminCommands : BaseCommand() {
 	@Description("adds a player to the game after it has already started")
 	fun addLate(sender: CommandSender, offlinePlayer: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
-		if (!GameRunner.uhc.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
+		if (!UHC.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
 		if (PlayerData.isOptingOut(offlinePlayer.uniqueId)) return Commands.errorMessage(sender, "${offlinePlayer.name} is opting out of participating!")
 
 		/* teleport will be to an alive team member if player is on a team */
@@ -149,7 +150,7 @@ class AdminCommands : BaseCommand() {
 		val team = TeamData.playersTeam(offlinePlayer.uniqueId)
 
 		fun randomLocation(): Location? {
-			val world = GameRunner.uhc.getDefaultWorld()
+			val world = UHC.getDefaultWorld()
 			return GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 		}
 
@@ -193,7 +194,7 @@ class AdminCommands : BaseCommand() {
 
 		if (Commands.opGuard(sender)) return
 
-		if (!GameRunner.uhc.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
+		if (!UHC.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
 
@@ -203,7 +204,7 @@ class AdminCommands : BaseCommand() {
 		Classes.setClass(player.uniqueId, quirkClass)
 
 		/* only start them if the game has already started */
-		if (GameRunner.uhc.isGameGoing() && playerData.participating) GameRunner.playerAction(player.uniqueId) { onlinePlayer ->
+		if (UHC.isGameGoing() && playerData.participating) GameRunner.playerAction(player.uniqueId) { onlinePlayer ->
 			Classes.startAsClass(onlinePlayer, quirkClass, oldClass)
 		}
 

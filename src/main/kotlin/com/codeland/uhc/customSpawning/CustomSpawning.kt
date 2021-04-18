@@ -3,6 +3,7 @@ package com.codeland.uhc.customSpawning
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
@@ -49,7 +50,7 @@ object CustomSpawning {
 	fun spawnForPlayer(player: Player, playerList: ArrayList<Player>, playerData: PlayerData) {
 		val usingInfo = if (player.world.environment == World.Environment.NORMAL) {
 			val supplementalList = ArrayList<SpawnInfo>()
-			GameRunner.uhc.quirks.forEach { quirk ->
+			UHC.quirks.forEach { quirk ->
 				if (quirk.enabled && quirk.spawnInfos != null) quirk.spawnInfos.forEach { spawnInfo -> supplementalList.add(spawnInfo) }
 			}
 

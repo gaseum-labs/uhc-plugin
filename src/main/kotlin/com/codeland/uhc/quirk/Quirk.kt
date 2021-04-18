@@ -17,14 +17,14 @@ import org.bukkit.inventory.ItemStack
 import java.util.*
 import kotlin.collections.ArrayList
 
-abstract class Quirk(val uhc: UHC, val type: QuirkType) {
+abstract class Quirk(val type: QuirkType) {
 	/* default value will be set upon init */
 	var enabled = false
 	set(value) {
 		/* enable / disable functions come first */
 		if (value) {
 			/* start all players if the game is already going */
-			if (uhc.isGameGoing()) {
+			if (UHC.isGameGoing()) {
 				PlayerData.playerDataList.forEach { (uuid, playerData) ->
 					if (playerData.participating) {
 						/* mark that they have been applied */
@@ -66,12 +66,12 @@ abstract class Quirk(val uhc: UHC, val type: QuirkType) {
 			internal.setItem(i, backgroundItem)
 		}
 
-		inventory.addItem(object : GuiItem(uhc, inventory.inventory.size - 1, false) {
+		inventory.addItem(object : GuiItem(inventory.inventory.size - 1, false) {
 			override fun onClick(player: Player, shift: Boolean) {
 				if (shift)
 					inventory.close(player)
 				else
-					uhc.gui.inventory.open(player)
+					UHC.gui.inventory.open(player)
 			}
 			override fun getStack(): ItemStack {
 				return setName(ItemStack(Material.PRISMARINE_SHARD), "${ChatColor.BLUE}Back")

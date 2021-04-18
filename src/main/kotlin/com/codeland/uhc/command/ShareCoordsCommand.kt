@@ -6,6 +6,7 @@ import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.team.TeamData
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
@@ -21,7 +22,7 @@ class ShareCoordsCommand : BaseCommand() {
 		sender as Player
 
 		/* sharecoords command can only be used during the game */
-		if (!GameRunner.uhc.isGameGoing())
+		if (!UHC.isGameGoing())
 			return Commands.errorMessage(sender, "Game is not running")
 
 		/* sharecoords command can only be used when playing */

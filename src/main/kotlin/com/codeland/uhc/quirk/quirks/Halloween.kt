@@ -13,7 +13,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
-class Halloween(uhc: UHC, type: QuirkType) : Quirk(uhc, type) {
+class Halloween(type: QuirkType) : Quirk(type) {
 	var hasGottenDiamonds = false
 
 	override fun onEnable() {
