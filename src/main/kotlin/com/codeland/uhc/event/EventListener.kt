@@ -68,7 +68,7 @@ class EventListener : Listener {
 		if (pvpGame != null) {
 			PvpGameManager.disablePvp(player)
 
-		} else if (playerData.participating) {
+		} else if (playerData.participating && player.gameMode != GameMode.SPECTATOR) {
 			playerData.offlineZombie = playerData.createZombie(player)
 		}
 	}
@@ -136,8 +136,9 @@ class EventListener : Listener {
 		}
 
 		val player = event.entity
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val pvpGame = PvpGameManager.playersGame(player.uniqueId)
+		val uuid = player.uniqueId
+		val playerData = PlayerData.getPlayerData(uuid)
+		val pvpGame = PvpGameManager.playersGame(uuid)
 
 		/* dying in lobby pvp */
 		if (pvpGame != null) {
@@ -181,11 +182,7 @@ class EventListener : Listener {
 
 			/* respawning in grace */
 			if (UHC.isVariant(PhaseVariant.GRACE_FORGIVING)) {
-				player.gameMode = GameMode.SURVIVAL
-
-				AbstractLobby.resetPlayerStats(player)
-
-				player.teleport(GameRunner.respawnLocation(player, player.uniqueId, playerData))
+				GameRunner.playerRespawn(uuid)
 
 			/* regular deaths */
 			} else {
@@ -336,7 +333,7 @@ class EventListener : Listener {
 
 			/* player can respawn only in grace forgiving */
 			if (UHC.isVariant(PhaseVariant.GRACE_FORGIVING))
-				GameRunner.respawnLocation(null, uuid, playerData)
+				GameRunner.playerRespawn(uuid)
 			else
 				GameRunner.playerDeath(uuid, killer)
 		} else {

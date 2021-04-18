@@ -98,7 +98,7 @@ class Deathswap(type: QuirkType) : Quirk(type) {
 					sendAll("${ChatColor.GOLD}Swapping in ${ChatColor.BLUE}${ceil((swapTime - IMMUNITY) / 20.0).toInt()}...", true)
 				}
 				else -> {
-					sendAll("${ChatColor.GOLD}(debug) Swapping in ${ChatColor.BLUE}${ceil((swapTime - IMMUNITY) / 20.0).toInt()}...", true)
+					sendAll("${ChatColor.GOLD}(d3bug) Swapping in ${ChatColor.BLUE}${ceil((swapTime - IMMUNITY) / 20.0).toInt()}...", true)
 				}
 			}
 		}

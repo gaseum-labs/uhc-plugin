@@ -1,5 +1,6 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.grace.GraceDefault
@@ -13,6 +14,7 @@ import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
@@ -141,25 +143,24 @@ object GameRunner {
 		}
 	}
 
-	fun respawnLocation(player: Player?, uuid: UUID, playerData: PlayerData): Location {
-		val world = UHC.getDefaultWorld()
-		val respawnLocation = GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
-			?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
-
-		/* an offline zombie died */
-		if (player == null)
-			playerData.offlineZombie = playerData.createDefaultZombie(
-				uuid, respawnLocation
-			)
-
-		/* custom quirk behavior when players start */
-		SchedulerUtil.nextTick {
-			UHC.quirks.forEach { quirk ->
-				if (quirk.enabled) quirk.onStart(uuid)
-			}
+	fun playerRespawn(uuid: UUID) {
+		playerAction(uuid) { player ->
+			player.gameMode = GameMode.SPECTATOR
+			AbstractLobby.resetPlayerStats(player)
+			player.sendTitle("${ChatColor.RED}You died!", "${ChatColor.DARK_RED}Prepare to respawn", 0, 80, 20)
 		}
 
-		return respawnLocation
+		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin, {
+			teleportPlayer(uuid, respawnLocation())
+			playerAction(uuid) { it.gameMode = GameMode.SURVIVAL }
+			UHC.quirks.filter { it.enabled }.forEach { it.onStart(uuid) }
+		}, 100)
+	}
+
+	fun respawnLocation(): Location {
+		val world = UHC.getDefaultWorld()
+		return GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+			?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 	}
 
 	fun sendGameMessage(player: Player, message: String) {
@@ -185,7 +186,7 @@ object GameRunner {
 
 			val zombie = playerData.offlineZombie
 			if (zombie == null)
-				playerData.createDefaultZombie(uuid, location)
+				playerData.offlineZombie = playerData.createDefaultZombie(uuid, location)
 			else
 				zombie.teleport(location)
 
