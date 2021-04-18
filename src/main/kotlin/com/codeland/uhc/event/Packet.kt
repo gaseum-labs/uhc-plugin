@@ -1,8 +1,10 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
@@ -17,6 +19,7 @@ import com.comphenix.protocol.wrappers.PlayerInfoData
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
@@ -54,28 +57,39 @@ object Packet {
 		return intToName(playersIndex(uuid))
 	}
 
+	/**
+	 *  creates a metadata packet for the specified player
+	 *  that only contains the first byte field
+	 */
+	fun metadataPacketDefaultState(player: Player): PacketPlayOutEntityMetadata {
+		player as CraftPlayer
+
+		/* a new data watcher which only contains the first byte */
+		val stateDataWatcher = DataWatcher(player.handle)
+		stateDataWatcher.register(DataWatcherObject(0, DataWatcherRegistry.a), getDatawatcherByte(player.handle.dataWatcher))
+
+		return PacketPlayOutEntityMetadata(player.entityId, stateDataWatcher, true)
+	}
+
+	val entriesField = DataWatcher::class.java.getDeclaredField("entries")
+	init { entriesField.isAccessible = true }
+
+	fun getDatawatcherByte(dataWatcher: DataWatcher): Byte {
+		val entries = entriesField[dataWatcher] as Int2ObjectOpenHashMap<DataWatcher.Item<Any>>
+		val item = entries[0] as DataWatcher.Item<Byte>
+		return item.b()
+	}
+
 	fun updateTeamColor(teamPlayer: Player, uhcTeam: Team?, newName: String, sentPlayer: Player) {
 		sentPlayer as CraftPlayer
 		val oldName = teamPlayer.name
 
-		/* send team packet */
-		/* this affects above name for other players, and scoreboard for all players */
 		val team = ScoreboardTeam(Scoreboard(), newName)
 		team.color = if (uhcTeam != null && uhcTeam.members.contains(sentPlayer.uniqueId)) EnumChatFormat.AQUA else EnumChatFormat.RED
 		team.prefix = if (uhcTeam != null) Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2) else ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.WHITE))
 		team.playerNameSet.add(newName)
 
 		sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(team, 2))
-
-		/* send another fake team targeting the self-player's entity */
-		/* this team only affects which glow color the player sees themselves as */
-		/*if (sentPlayer.uniqueId == teamPlayer.uniqueId) {
-			val selfTeam = ScoreboardTeam(Scoreboard(), oldName)
-			selfTeam.color = EnumChatFormat.AQUA
-			selfTeam.playerNameSet.add(oldName)
-
-			sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(selfTeam, 2))
-		}*/
 	}
 
 	fun init() {
@@ -136,20 +150,37 @@ object Packet {
 
 		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.ENTITY_METADATA) {
 			override fun onPacketSending(event: PacketEvent) {
+				/* make sure this packet is sending the first byte of datawatcher info */
+				val staleItemList = packetItemListField[event.packet.handle] as MutableList<DataWatcher.Item<Any>>
+				val byteValue = itemValueField[staleItemList[0]] as? Byte ?: return
+
+				/* find out who this packet deals with */
+				val sentPlayer = event.player as CraftPlayer
+
+				val metaPlayerID = packetEntityIdField.getInt(event.packet.handle)
+				val metaPlayer = Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
+				val sentPlayerTeam = TeamData.playersTeam(sentPlayer.uniqueId)
+				val metaPlayersGame = PvpGameManager.playersGame(metaPlayer.uniqueId)
+
+				/* begin modifying packet */
 				event.packet = event.packet.deepClone()
 
-				val sentPlayer = event.player as CraftPlayer
-				val packet = event.packet.handle as PacketPlayOutEntityMetadata
+				val freshItemList = packetItemListField[event.packet.handle] as MutableList<DataWatcher.Item<Any>>
 
-				val metaPlayerID = packetEntityIdField.getInt(packet)
-				val metaPlayer = Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
+				/* glowing in games */
+				if (metaPlayersGame != null) {
+					if (metaPlayersGame.shouldGlow() && metaPlayersGame.players.contains(sentPlayer.uniqueId)) {
+						itemValueField[freshItemList[0]] = byteValue.or(0x40)
+					}
 
-				val sentPlayerTeam = TeamData.playersTeam(sentPlayer.uniqueId)
-
-				if (sentPlayer.entityId != metaPlayerID && sentPlayerTeam != null && sentPlayerTeam.members.contains(metaPlayer.uniqueId)) {
-					val itemList = packetItemListField.get(packet) as MutableList<DataWatcher.Item<Any>>
-					val value = itemValueField.get(itemList[0]) as? Byte ?: return
-					itemValueField.set(itemList[0], value.or(0x40))
+				/* teammate glowing */
+				} else if (
+					GameRunner.uhc.isGameGoing() &&
+					sentPlayer.entityId != metaPlayerID &&
+					sentPlayerTeam != null &&
+					sentPlayerTeam.members.contains(metaPlayer.uniqueId)
+				) {
+					itemValueField[freshItemList[0]] = byteValue.or(0x40)
 				}
 			}
 		})

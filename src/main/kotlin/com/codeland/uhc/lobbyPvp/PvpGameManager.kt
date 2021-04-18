@@ -2,13 +2,13 @@ package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.AbstractLobby
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.event.Packet
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import org.bukkit.*
-import org.bukkit.attribute.Attribute
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import java.util.*
@@ -30,6 +30,11 @@ object PvpGameManager {
 
 		var winner: String? = null
 		var time = -4
+
+		var glowPeriod = 60
+		var glowTimer = glowPeriod
+
+		fun onlinePlayers() = players.mapNotNull { Bukkit.getPlayer(it) }
 
 		fun centerLocation(): Pair<Int, Int> {
 			return Pair(x * ARENA_STRIDE + (ARENA_STRIDE / 2), z * ARENA_STRIDE + (ARENA_STRIDE / 2))
@@ -76,6 +81,20 @@ object PvpGameManager {
 
 					/* super mountain clearer */
 					for (by in 128..255) world.getBlockAt(bx, by, bz).setType(Material.AIR, false)
+				}
+			}
+		}
+
+		fun shouldGlow(): Boolean {
+			return glowTimer <= 0
+		}
+
+		fun updateGlowAll() {
+			val online = onlinePlayers()
+
+			online.forEach { player1 ->
+				online.forEach { player2 ->
+					(player1 as CraftPlayer).handle.playerConnection.sendPacket(Packet.metadataPacketDefaultState(player2))
 				}
 			}
 		}
@@ -129,7 +148,7 @@ object PvpGameManager {
 				} else when {
 					/* countdown before match starts */
 					game.time < 0 -> {
-						game.players.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
+						game.onlinePlayers().forEach { player ->
 							player.sendTitle("${ChatColor.RED}${-game.time}", "${ChatColor.RED}PVP Match Starting", 0, 21, 0)
 							player.sendActionBar(Component.text(""))
 						}
@@ -145,11 +164,11 @@ object PvpGameManager {
 							Location(world, position.first + 0.5, (if (liquidY == -1) solidY else liquidY) + 1.0, position.second + 0.5)
 						}
 
-						val players = game.players.mapNotNull { Bukkit.getPlayer(it) }
+						val online = game.onlinePlayers()
+						val data = online.zip(positions)
 
-						val data = players.zip(positions)
 						if (data.size < game.players.size) {
-							players.forEach { player -> Commands.errorMessage(player, "Game cancelled! A player left") }
+							online.forEach { player -> Commands.errorMessage(player, "Game cancelled! A player left") }
 							true
 
 						} else {
@@ -162,14 +181,27 @@ object PvpGameManager {
 					}
 					/* during match */
 					else -> {
+						if (game.glowPeriod > 0) {
+							--game.glowTimer
+
+							if (game.glowTimer == 0) {
+								Util.debug("GLOW NOW!")
+								game.updateGlowAll()
+
+							} else if (game.glowTimer <= -2) {
+								Util.debug("UNGLOW NOW!")
+								game.glowPeriod /= 2
+								game.glowTimer = game.glowPeriod
+								game.updateGlowAll()
+							}
+						}
+
 						game.checkEnd()
 					}
 				}
 
-				/* teleport all players back */
-				if (removeResult) {
-					game.players.mapNotNull { Bukkit.getPlayer(it) }.forEach { disablePvp(it) }
-				}
+				/* teleport all players back when the game ends */
+				if (removeResult) game.onlinePlayers().forEach { disablePvp(it) }
 
 				removeResult
 			}
