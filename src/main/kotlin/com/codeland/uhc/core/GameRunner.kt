@@ -21,12 +21,15 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.scoreboard.DisplaySlot
+import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.RenderType
 import java.util.*
 import kotlin.collections.ArrayList
 
 object GameRunner {
 	var bot: MixerBot? = null
+
+	lateinit var heartsObjective: Objective
 
 	fun teamIsAlive(team: Team): Boolean {
 		return team.members.any { member -> PlayerData.isAlive(member) }
@@ -251,10 +254,12 @@ object GameRunner {
 		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
 		val objective = scoreboard.getObjective("hp")
-			?: scoreboard.registerNewObjective("hp", "health", "hp", RenderType.HEARTS)
+			?: scoreboard.registerNewObjective("hp", "health", Component.text("hp"), RenderType.HEARTS)
 
 		objective.renderType = RenderType.HEARTS
-		objective.displayName = "hp"
+		objective.displayName(Component.text("hp"))
 		objective.displaySlot = DisplaySlot.PLAYER_LIST
+
+		heartsObjective = objective
 	}
 }

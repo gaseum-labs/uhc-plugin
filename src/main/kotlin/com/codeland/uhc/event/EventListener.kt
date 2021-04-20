@@ -493,13 +493,13 @@ class EventListener : Listener {
 		/* things that affect players playing the game */
 		if (UHC.isGameGoing() && playerData.participating) {
 			/* trying to build above endgame top level */
-			if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.max) {
-				event.player.sendActionBar(Component.text("Height limit for building is ${phase.max}", NamedTextColor.RED, TextDecoration.BOLD))
-				event.isCancelled = true
+			if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.finalMax) {
+				val block = event.blockPlaced
+				phase.skybaseBlocks.add(EndgameNaturalTerrain.SkybaseBlock(phase.skybaseTicks(block.y), block))
 
 			/* creative block replenishing */
 			} else if (UHC.isEnabled(QuirkType.CREATIVE)) {
-				var material = event.itemInHand.type
+				val material = event.itemInHand.type
 
 				/* replace these blocks */
 				if (Util.binarySearch(material, Creative.blocks)) {
@@ -516,7 +516,7 @@ class EventListener : Listener {
 
 			/* unsheltered block place prevention */
 			} else if (UHC.isEnabled(QuirkType.UNSHELTERED)) {
-				var block = event.block
+				val block = event.block
 
 				if (!Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 					event.isCancelled = true

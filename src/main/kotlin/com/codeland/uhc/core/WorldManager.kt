@@ -1,5 +1,6 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
 import org.bukkit.Bukkit
 import org.bukkit.World
@@ -19,6 +20,8 @@ object WorldManager {
 		Bukkit.unloadWorld("world_the_end", false)
 
 		ChunkPlacerHolderType.resetAll(getGameWorld().seed)
+
+		DimensionBar.createBossBars(Bukkit.getWorlds())
 	}
 
 	fun createPVPWorld(): World? {

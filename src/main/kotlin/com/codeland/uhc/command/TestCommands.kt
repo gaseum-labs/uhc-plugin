@@ -12,6 +12,7 @@ import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
+import com.codeland.uhc.phase.DimensionBar.Companion.createBossBars
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
@@ -195,7 +196,7 @@ class TestCommands : BaseCommand() {
 		val netherWorld = WorldManager.refreshWorld(WorldManager.NETHER_WORLD_NAME, World.Environment.NETHER, false)
 		if (netherWorld != null) AbstractLobby.prepareWorld(netherWorld)
 
-		Util.debug(Bukkit.getWorlds().mapIndexed { i, w -> "$i: ${w.name}" }.joinToString(" | "))
+		createBossBars(Bukkit.getWorlds())
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")

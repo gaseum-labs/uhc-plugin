@@ -81,8 +81,6 @@ class UHCPlugin : JavaPlugin() {
 
 			GameRunner.registerHearts()
 
-			DimensionBar.createBossBars(Bukkit.getWorlds())
-
 			UHC.updateDisplays()
 			UHC.startWaiting()
 		}

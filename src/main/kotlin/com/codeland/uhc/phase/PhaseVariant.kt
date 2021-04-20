@@ -1,6 +1,5 @@
 package com.codeland.uhc.phase
 
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.phases.endgame.*
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.phase.phases.postgame.PostgameDefault
@@ -29,11 +28,6 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 
 	ENDGAME_NONE(PhaseType.ENDGAME, ::EndgameNone, "None", Material.STRUCTURE_VOID, listOf(
 		"Fight to the death without intervention"
-	)),
-
-	ENDGAME_CLEAR_BLOCKS(PhaseType.ENDGAME, ::EndgameClearBlocks, "Clear blocks", Material.STONE_SHOVEL, listOf(
-		"The ground above and below falls away",
-		"Until your only battleground is on a single y level"
 	)),
 
 	ENDGAME_NATURAL_TERRAIN(PhaseType.ENDGAME, ::EndgameNaturalTerrain, "Natural Terrain", Material.OAK_SAPLING, listOf(

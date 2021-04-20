@@ -7,12 +7,12 @@ import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
-import org.bukkit.Bukkit
+import net.minecraft.server.v1_16_R3.PacketPlayOutEntity
+import org.bukkit.*
 import org.bukkit.ChatColor.BOLD
-import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.block.Block
 import org.bukkit.block.TileState
+import org.bukkit.entity.FallingBlock
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import kotlin.math.max
@@ -30,6 +30,24 @@ class EndgameNaturalTerrain : Phase() {
 	var finished = false
 	var timer = 0
 
+	val MAX_DECAY = 400
+	val DECLINE = 4
+
+	class SkybaseBlock(var ticks: Int, val block: Block)
+
+	fun skybaseTicks(y: Int): Int {
+		val distance = y - finalMax
+
+		return if (distance <= 0) {
+			-1
+		} else {
+			val result = MAX_DECAY - DECLINE * distance
+			return if (result < 0) 0 else result
+		}
+	}
+
+	val skybaseBlocks = ArrayList<SkybaseBlock>()
+
 	override fun customStart() {
 		EndgameNone.closeNether()
 
@@ -37,10 +55,11 @@ class EndgameNaturalTerrain : Phase() {
 
 		val (min, max) = AbstractEndgame.determineMinMax(world, UHC.endRadius, 100)
 		finalMin = min
-		finalMax = max
+		finalMax = max + 10
+		if (finalMax > 255) finalMax = 255
 
 		this.max = 255
-		this.min = finalMin - (this.max - finalMax)
+		this.min = 0
 
 		timer = 0
 	}
@@ -58,6 +77,23 @@ class EndgameNaturalTerrain : Phase() {
 				} else {
 					block.setType(Material.BEDROCK, false)
 				}
+			}
+		}
+	}
+
+	fun doUpperLayer(world: World, layer: Int) {
+		val extrema = UHC.endRadius
+
+		val ticks = skybaseTicks(layer)
+
+		if (ticks != -1) for (x in -extrema..extrema) {
+			for (z in -extrema..extrema) {
+				val block = world.getBlockAt(x, layer, z)
+
+				if (ticks == 0)
+					block.setType(Material.AIR, false)
+				else
+					if (!block.isPassable) skybaseBlocks.add(SkybaseBlock(ticks, block))
 			}
 		}
 	}
@@ -120,18 +156,13 @@ class EndgameNaturalTerrain : Phase() {
 				max = newMax
 
 				/* clear all blocks above the top level */
-				for (y in max + 1..255) for (x in -extrema..extrema) for (z in -extrema..extrema) {
-					world.getBlockAt(x, y, z).setType(Material.AIR, false)
-				}
+				if (max < 255) doUpperLayer(world, max + 1)
 			}
 
 			/* finish */
 			if (timer == CLEAR_TIME) {
 				timer = 0
 				finished = true
-
-				/* add 3 blocks to build above the cleared top */
-				max += 3
 
 				/* teleport all sky zombies to the surface */
 				PlayerData.playerDataList.forEach { (uuid, playerData) ->
@@ -143,6 +174,36 @@ class EndgameNaturalTerrain : Phase() {
 					}
 				}
 			}
+		}
+
+		val skybasePlayers = Bukkit.getOnlinePlayers()
+			.filter { PlayerData.isParticipating(it.uniqueId) && it.location.world === world && it.location.block.y >= finalMax }
+
+		skybaseBlocks.removeIf { skybaseBlock ->
+			--skybaseBlock.ticks
+
+			if (skybaseBlock.ticks <= 0 || skybaseBlock.block.isPassable) {
+				skybaseBlock.block.setType(Material.AIR, false)
+
+				true
+			} else {
+				if (skybaseBlock.ticks <= 40 && skybaseBlock.ticks % 10 == 0) {
+					val location = 	skybaseBlock.block.location.toCenterLocation()
+
+					skybasePlayers.filter { it.location.distance(location) < 3.0 }.forEach { player ->
+						player.spawnParticle(Particle.REDSTONE, location, 16, 0.25, 0.25, 0.25, Particle.DustOptions(particleColor(skybaseBlock.ticks), 1.0f))
+					}
+				}
+
+				false
+			}
+		}
+	}
+
+	fun particleColor(ticks: Int): Color {
+		return when {
+			ticks == 40 -> Color.fromRGB(255, 255, 0)
+			else -> Color.fromRGB(255, 0, 0)
 		}
 	}
 
