@@ -4,7 +4,8 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
 import com.codeland.uhc.world.chunkPlacer.impl.OxeyePlacer
 import com.codeland.uhc.world.chunkPlacer.impl.SugarCanePlacer
-import com.codeland.uhc.world.type.*
+import com.codeland.uhc.world.chunkPlacerHolder.*
+import com.codeland.uhc.world.chunkPlacerHolder.type.*
 import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.event.EventHandler

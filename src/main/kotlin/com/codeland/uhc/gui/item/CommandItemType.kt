@@ -5,7 +5,6 @@ import org.bukkit.inventory.Inventory
 enum class CommandItemType(val constructor: () -> CommandItem) {
 	GUI_OPENER(::GuiOpener),
 	PVP_QUEUE(::QueuePVP),
-	PARKOUR_CHECKPOINT(::ParkourCheckpoint),
 	SPECTATE(::Spectate);
 
 	companion object {

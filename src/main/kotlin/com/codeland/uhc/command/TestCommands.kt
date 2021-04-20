@@ -16,6 +16,8 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
+import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -171,14 +173,36 @@ class TestCommands : BaseCommand() {
 			true
 		}
 
-		WorldManager.destroyPVPWorld()
-		val pvpWorld = WorldManager.createPVPWorld()
-		if (pvpWorld != null) AbstractLobby.prepareWorld(pvpWorld, UHC)
+		val pvpWorld = WorldManager.refreshWorld(WorldManager.PVP_WORLD_NAME, World.Environment.NORMAL, true)
+		if (pvpWorld != null) AbstractLobby.prepareWorld(pvpWorld)
+	}
+
+	@Subcommand("worldCycle")
+	fun worldCycle(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
+
+		Bukkit.getOnlinePlayers().forEach { player ->
+			if (!WorldManager.isNonGameWorld(player.world)) AbstractLobby.onSpawnLobby(player)
+		}
+
+		val gameWorld = WorldManager.refreshWorld(WorldManager.GAME_WORLD_NAME, World.Environment.NORMAL, false)
+		if (gameWorld != null) {
+			ChunkPlacerHolderType.resetAll(WorldManager.getGameWorld().seed)
+			AbstractLobby.prepareWorld(gameWorld)
+		}
+
+		val netherWorld = WorldManager.refreshWorld(WorldManager.NETHER_WORLD_NAME, World.Environment.NETHER, false)
+		if (netherWorld != null) AbstractLobby.prepareWorld(netherWorld)
+
+		Util.debug(Bukkit.getWorlds().mapIndexed { i, w -> "$i: ${w.name}" }.joinToString(" | "))
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
 	@Subcommand("pvpmatch")
 	fun pvpMatch(sender: CommandSender, offlinePlayer1: OfflinePlayer, offlinePlayer2: OfflinePlayer) {
+		if (Commands.opGuard(sender)) return
+
 		val player1 = Bukkit.getPlayer(offlinePlayer1.uniqueId) ?: return errorMessage(sender, "The Player named ${offlinePlayer1.name} could not be found")
 		val player2 = Bukkit.getPlayer(offlinePlayer2.uniqueId) ?: return errorMessage(sender, "The Player named ${offlinePlayer2.name} could not be found")
 

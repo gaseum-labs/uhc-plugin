@@ -50,10 +50,10 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 		"Hooray, the match is over!"
 	));
 
-	fun start(uhc: UHC, time: Int, onInject: (Phase) -> Unit): Phase {
+	fun start(time: Int, onInject: (Phase) -> Unit): Phase {
 		val ret = createPhase()
 
-		ret.start(type, this, uhc, time, onInject)
+		ret.start(type, this, time, onInject)
 
 		return ret
 	}

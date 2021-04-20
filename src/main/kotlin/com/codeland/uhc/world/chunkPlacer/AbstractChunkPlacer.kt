@@ -8,10 +8,16 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.sin
 
-abstract class AbstractChunkPlacer(val size: Int, val uniqueSeed: Int) {
+abstract class AbstractChunkPlacer(val size: Int) {
+	var uniqueSeed = 0
+
 	abstract fun place(chunk: Chunk, chunkIndex: Int)
 
 	abstract fun onGenerate(chunk: Chunk, seed: Int)
+
+	open fun reset(uniqueSeed: Int) {
+		this.uniqueSeed = uniqueSeed
+	}
 
 	companion object {
 		/**

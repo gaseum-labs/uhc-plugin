@@ -1,6 +1,7 @@
 package com.codeland.uhc.phase.phases.shrink
 
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.BOLD
@@ -10,20 +11,20 @@ import org.bukkit.World
 
 class ShrinkDefault : Phase() {
 	override fun perSecond(remainingSeconds: Int) {
-		uhc.updateMobCaps()
-		uhc.containSpecs()
+		UHC.updateMobCaps()
+		UHC.containSpecs()
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
-		return if (world === uhc.getDefaultWorld())
-			"${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${uhc.endRadius.toInt()} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"
+		return if (world === UHC.getDefaultWorld())
+			"${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${UHC.endRadius} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"
 		else
 			"${RESET}Dimension closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"	}
 
 	override fun customStart() {
-		val world = uhc.getDefaultWorld()
+		val world = UHC.getDefaultWorld()
 
-		world.worldBorder.setSize(uhc.endRadius * 2 + 1.0, length.toLong())
+		world.worldBorder.setSize(UHC.endRadius * 2 + 1.0, length.toLong())
 		world.worldBorder.damageBuffer = 0.0
 
 		Bukkit.getOnlinePlayers().forEach { player ->

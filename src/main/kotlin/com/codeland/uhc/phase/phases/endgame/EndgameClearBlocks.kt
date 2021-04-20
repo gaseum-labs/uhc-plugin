@@ -2,6 +2,7 @@ package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
@@ -35,8 +36,8 @@ class EndgameClearBlocks : Phase() {
 	override fun perTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
-		val world = uhc.getDefaultWorld()
-		val extrema = uhc.endRadius + 6
+		val world = UHC.getDefaultWorld()
+		val extrema = UHC.endRadius + 6
 
 		if (!finished) {
 			--topBoundary
@@ -63,7 +64,7 @@ class EndgameClearBlocks : Phase() {
 
 					if (zombie != null) {
 						val location = zombie.location
-						GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.x, center + 1.0, location.z))
+						GameRunner.teleportPlayer(uuid, Location(UHC.getDefaultWorld(), location.x, center + 1.0, location.z))
 					}
 				}
 			}

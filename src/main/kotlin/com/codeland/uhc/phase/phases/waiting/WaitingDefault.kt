@@ -3,6 +3,7 @@ package com.codeland.uhc.phase.phases.waiting
 import com.codeland.uhc.core.AbstractLobby
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
 import org.bukkit.*
@@ -11,9 +12,9 @@ import org.bukkit.entity.Player
 class WaitingDefault : Phase() {
 	override fun customStart() {
 		/* set gamerules for all worlds */
-		Bukkit.getWorlds().forEach { world -> AbstractLobby.prepareWorld(world, uhc) }
+		Bukkit.getWorlds().forEach { world -> AbstractLobby.prepareWorld(world) }
 
-		TeamData.destroyTeam(null, uhc.usingBot, true) {}
+		TeamData.destroyTeam(null, UHC.usingBot, true) {}
 
 		Bukkit.getServer().onlinePlayers.forEach { player ->
 			player.inventory.clear()

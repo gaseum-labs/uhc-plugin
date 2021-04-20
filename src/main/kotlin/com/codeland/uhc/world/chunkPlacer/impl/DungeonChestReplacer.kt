@@ -11,7 +11,7 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 
-class DungeonChestReplacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqueSeed) {
+class DungeonChestReplacer(size: Int) : ImmediateChunkPlacer(size) {
 	val NUM_ITEMS = 8
 
 	override fun place(chunk: Chunk, chunkIndex: Int) {

@@ -1,18 +1,24 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
 import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.WorldCreator
-import org.bukkit.generator.ChunkGenerator
 import java.io.File
 
 object WorldManager {
-	const val LOBBY_WORLD_NAME = "uhc_lobby"
+	const val LOBBY_WORLD_NAME = "world"
 	const val PVP_WORLD_NAME = "uhc_pvp"
+	const val GAME_WORLD_NAME = "uhc_game"
+	const val NETHER_WORLD_NAME = "world_nether"
 
 	fun initWorlds() {
-		if (Bukkit.getWorld(LOBBY_WORLD_NAME) == null) createLobbyWorld()
+		if (Bukkit.getWorld(GAME_WORLD_NAME) == null) createGameWorld()
 		if (Bukkit.getWorld(PVP_WORLD_NAME) == null) createPVPWorld()
+
+		Bukkit.unloadWorld("world_the_end", false)
+
+		ChunkPlacerHolderType.resetAll(getGameWorld().seed)
 	}
 
 	fun createPVPWorld(): World? {
@@ -22,31 +28,46 @@ object WorldManager {
 		return creator.createWorld()
 	}
 
-	fun destroyPVPWorld() {
-		Bukkit.getServer().unloadWorld(PVP_WORLD_NAME, false)
-
-		val file = File(PVP_WORLD_NAME)
-		if (file.exists() && file.isDirectory) {
-			file.deleteRecursively()
-		}
-	}
-
-	fun createLobbyWorld(): World? {
-		val creator = WorldCreator(LOBBY_WORLD_NAME)
+	fun createGameWorld(): World? {
+		val creator = WorldCreator(GAME_WORLD_NAME)
 		creator.environment(World.Environment.NORMAL)
-		creator.generateStructures(true)
+		creator.generateStructures(false)
 		return creator.createWorld()
 	}
 
 	fun getLobbyWorld(): World {
-		return Bukkit.getWorld(LOBBY_WORLD_NAME) ?: Bukkit.getWorlds()[0]
+		return Bukkit.getWorlds()[0]
 	}
 
 	fun getPVPWorld(): World {
 		return Bukkit.getWorld(PVP_WORLD_NAME) ?: Bukkit.getWorlds()[0]
 	}
 
+	fun getGameWorld(): World {
+		return Bukkit.getWorld(GAME_WORLD_NAME) ?: Bukkit.getWorlds()[0]
+	}
+
+	fun getNetherWorld(): World {
+		return Bukkit.getWorld(NETHER_WORLD_NAME) ?: Bukkit.getWorlds()[0]
+	}
+
 	fun isNonGameWorld(world: World): Boolean {
 		return world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME
+	}
+
+	fun isGameWorld(world: World): Boolean {
+		return world.name == GAME_WORLD_NAME || world.name == NETHER_WORLD_NAME
+	}
+
+	fun refreshWorld(name: String, environment: World.Environment, structures: Boolean): World? {
+		Bukkit.getServer().unloadWorld(name, false)
+
+		val file = File(name)
+		if (file.exists() && file.isDirectory) file.deleteRecursively()
+
+		val creator = WorldCreator(name)
+		creator.environment(environment)
+		creator.generateStructures(structures)
+		return creator.createWorld()
 	}
 }

@@ -12,7 +12,7 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Orientable
 import org.bukkit.block.data.type.Lantern
 
-class CobwebPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqueSeed) {
+class CobwebPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		for (i in -1..1) {
 			for (j in -1..1) {

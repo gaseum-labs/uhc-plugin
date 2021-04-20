@@ -10,7 +10,7 @@ import org.bukkit.Chunk
 import org.bukkit.World
 import kotlin.system.exitProcess
 
-abstract class DelayedChunkPlacer(size: Int, uniqueSeed: Int) : AbstractChunkPlacer(size, uniqueSeed) {
+abstract class DelayedChunkPlacer(size: Int) : AbstractChunkPlacer(size) {
 	private var chunkList = ArrayList<Pair<Chunk, Int>>()
 
 	abstract fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean
@@ -42,5 +42,11 @@ abstract class DelayedChunkPlacer(size: Int, uniqueSeed: Int) : AbstractChunkPla
 
 			chunkList = newChunkList
 		}
+	}
+
+	override fun reset(uniqueSeed: Int) {
+		super.reset(uniqueSeed)
+
+		chunkList.clear()
 	}
 }

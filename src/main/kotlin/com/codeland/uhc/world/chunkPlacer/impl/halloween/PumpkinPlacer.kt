@@ -8,7 +8,7 @@ import org.bukkit.World
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
 
-class PumpkinPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqueSeed) {
+class PumpkinPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		for (i in -1..1) {
 			for (j in -1..1) {

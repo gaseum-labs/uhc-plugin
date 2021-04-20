@@ -2,6 +2,7 @@ package com.codeland.uhc.phase.phases.endgame
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
@@ -32,9 +33,9 @@ class EndgameNaturalTerrain : Phase() {
 	override fun customStart() {
 		EndgameNone.closeNether()
 
-		val world = uhc.getDefaultWorld()
+		val world = UHC.getDefaultWorld()
 
-		val (min, max) = AbstractEndgame.determineMinMax(world, uhc.endRadius, 100)
+		val (min, max) = AbstractEndgame.determineMinMax(world, UHC.endRadius, 100)
 		finalMin = min
 		finalMax = max
 
@@ -45,7 +46,7 @@ class EndgameNaturalTerrain : Phase() {
 	}
 
 	fun fillBedrockLayer(world: World, layer: Int) {
-		val extrema = uhc.endRadius
+		val extrema = UHC.endRadius
 
 		for (x in -extrema..extrema) {
 			for (z in -extrema..extrema) {
@@ -76,8 +77,8 @@ class EndgameNaturalTerrain : Phase() {
 	}
 
 	override fun perTick(currentTick: Int) {
-		val world = uhc.getDefaultWorld()
-		val extrema = uhc.endRadius
+		val world = UHC.getDefaultWorld()
+		val extrema = UHC.endRadius
 		++timer
 
 		if (finished) {
@@ -138,7 +139,7 @@ class EndgameNaturalTerrain : Phase() {
 
 					if (zombie != null && zombie.location.y > max - 3) {
 						val location = zombie.location
-						GameRunner.teleportPlayer(uuid, Location(Bukkit.getWorlds()[0], location.blockX + 0.5, Util.topBlockY(world, location.blockX, location.blockZ).toDouble(), location.blockZ + 0.5))
+						GameRunner.teleportPlayer(uuid, Location(UHC.getDefaultWorld(), location.blockX + 0.5, Util.topBlockY(world, location.blockX, location.blockZ).toDouble(), location.blockZ + 0.5))
 					}
 				}
 			}
@@ -146,7 +147,7 @@ class EndgameNaturalTerrain : Phase() {
 	}
 
 	override fun perSecond(remainingSeconds: Int) {
-		uhc.containSpecs()
+		UHC.containSpecs()
 	}
 
 	override fun endPhrase() = ""

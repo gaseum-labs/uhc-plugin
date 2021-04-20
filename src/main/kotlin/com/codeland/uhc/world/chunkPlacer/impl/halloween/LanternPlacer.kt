@@ -9,7 +9,7 @@ import org.bukkit.block.Biome
 import org.bukkit.block.data.Orientable
 import org.bukkit.block.data.type.Lantern
 
-class LanternPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqueSeed) {
+class LanternPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 20, 99) { block, x, y, z ->
 			val world = block.world

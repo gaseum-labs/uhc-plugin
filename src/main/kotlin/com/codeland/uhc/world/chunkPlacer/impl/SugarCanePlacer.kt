@@ -15,7 +15,7 @@ import org.bukkit.block.data.type.Lantern
 import java.awt.Event.UP
 import java.util.concurrent.Delayed
 
-class SugarCanePlacer(size: Int, uniqueSeed: Int, val lowBound: Int, val highBound: Int) : DelayedChunkPlacer(size, uniqueSeed) {
+class SugarCanePlacer(size: Int, val lowBound: Int, val highBound: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		return world.isChunkGenerated(chunkX + 1, chunkZ + 1) &&
 			world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&

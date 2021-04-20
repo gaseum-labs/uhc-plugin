@@ -14,12 +14,10 @@ import kotlin.math.*
 class GraceDefault : Phase() {
 	override fun customStart() {
 		/* set border in each game dimension */
-		for (i in 0..2) {
-			val world = Bukkit.getWorlds()[i]
-
-			if (i == uhc.defaultWorldIndex) {
+		listOf(WorldManager.getGameWorld(), WorldManager.getNetherWorld()).forEach { world ->
+			if (world.environment == World.Environment.NORMAL) {
 				world.worldBorder.setCenter(0.5, 0.5)
-				world.worldBorder.size = uhc.startRadius * 2 + 1.0
+				world.worldBorder.size = UHC.startRadius * 2 + 1.0
 
 			} else {
 				world.worldBorder.reset()
@@ -30,14 +28,14 @@ class GraceDefault : Phase() {
 			world.setStorm(false)
 		}
 
-		val teleportGroups = uhc.teleportGroups ?: return
-		val teleportLocations = uhc.teleportLocations ?: return
+		val teleportGroups = UHC.teleportGroups ?: return
+		val teleportLocations = UHC.teleportLocations ?: return
 
 		/* give all teams that don't have names a name */
 		/* add people to team vcs */
 		TeamData.teams.forEach { team ->
 			if (team.name == null) team.automaticName()
-			if (uhc.usingBot) GameRunner.bot?.addToTeamChannel(team, team.members)
+			if (UHC.usingBot) GameRunner.bot?.addToTeamChannel(team, team.members)
 		}
 
 		/* teleport and set playerData to current */
@@ -46,8 +44,8 @@ class GraceDefault : Phase() {
 		}
 
 		/* reset the ledger */
-		uhc.elapsedTime = 0
-		uhc.ledger = Ledger()
+		UHC.elapsedTime = 0
+		UHC.ledger = Ledger()
 	}
 
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
@@ -57,8 +55,8 @@ class GraceDefault : Phase() {
 	override fun perTick(currentTick: Int) {}
 
 	override fun perSecond(remainingSeconds: Int) {
-		uhc.updateMobCaps()
-		uhc.containSpecs()
+		UHC.updateMobCaps()
+		UHC.containSpecs()
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {

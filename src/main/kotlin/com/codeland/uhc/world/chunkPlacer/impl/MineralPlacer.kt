@@ -1,13 +1,13 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.type.OreFix
+import com.codeland.uhc.world.chunkPlacerHolder.type.OreFix
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.World
 
-class MineralPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqueSeed) {
+class MineralPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		for (i in -3..3)
 			if (

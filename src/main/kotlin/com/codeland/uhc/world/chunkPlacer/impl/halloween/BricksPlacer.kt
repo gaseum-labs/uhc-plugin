@@ -8,7 +8,7 @@ import org.bukkit.World
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-class BricksPlacer(size: Int, uniqueSeed: Int) : DelayedChunkPlacer(size, uniqueSeed) {
+class BricksPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		for (i in -1..1) {
 			for (j in -1..1) {

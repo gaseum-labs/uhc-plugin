@@ -4,6 +4,7 @@ import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.Util
@@ -170,9 +171,13 @@ class Portal : Listener {
 			/* override default portal creation behavior */
 			event.canCreatePortal = false
 
-			/* going to the nether if in overworld */
-			/* going to the overworld if in nether */
-			val exitWorld = Bukkit.getWorlds()[if (player.world.environment == World.Environment.NORMAL) 1 else 0]
+			/* going to the nether if in the game world */
+			/* going to the game world if in nether */
+
+			val exitWorld = if (player.world.name == WorldManager.GAME_WORLD_NAME)
+				WorldManager.getNetherWorld()
+			else
+				WorldManager.getGameWorld()
 
 			val entrancePortalBlock = findPlayersPortal(player.world, player.location)
 

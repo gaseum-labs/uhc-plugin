@@ -7,7 +7,7 @@ import org.bukkit.Material
 import org.bukkit.block.Biome
 import org.bukkit.block.BlockFace
 
-class MelonPlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqueSeed) {
+class MelonPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 63, 99) { block, x, y, z ->
 			val world = block.world

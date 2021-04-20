@@ -9,7 +9,7 @@ import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 
-class OrePlacer(size: Int, uniqueSeed: Int, private val low: Int, private val high: Int, private val amount: Int, val type: Material) : DelayedChunkPlacer(size, uniqueSeed) {
+class OrePlacer(size: Int, private val low: Int, private val high: Int, private val amount: Int, val type: Material) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		for (x in -1..1) for (z in -1..1)
 			if (!world.isChunkGenerated(chunkX + x, chunkZ + z)) return false

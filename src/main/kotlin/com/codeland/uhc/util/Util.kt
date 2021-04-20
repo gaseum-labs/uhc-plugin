@@ -197,12 +197,6 @@ object Util {
 		"Reset"
 	)
 
-	val worldPrettyNames = arrayOf(
-		"Overworld",
-		"Nether",
-		"End"
-	)
-
 	fun bilinearWrap(array: Array<Float>, width: Int, height: Int, x: Float, y: Float): Float {
 		val minX = (x * width).toInt() % width
 		val maxX = (minX + 1) % width

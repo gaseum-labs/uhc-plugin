@@ -24,6 +24,7 @@ object AbstractLobby {
 	fun resetPlayerStats(player: Player) {
 		player.exp = 0.0f
 		player.totalExperience = 0
+		player.level = 0
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
 		player.health = 20.0
 		player.foodLevel = 20
@@ -119,7 +120,7 @@ object AbstractLobby {
 		}
 	}
 
-	fun prepareWorld(world: World, uhc: UHC) {
+	fun prepareWorld(world: World) {
 		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, true)
 		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
 		world.setGameRule(GameRule.DO_MOB_SPAWNING, false)

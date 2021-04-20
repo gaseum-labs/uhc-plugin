@@ -15,17 +15,15 @@ import org.bukkit.entity.Player
 abstract class Phase {
 	lateinit var phaseType: PhaseType
 	lateinit var phaseVariant: PhaseVariant
-	lateinit var uhc: UHC
 	var length = 0
 	var currentTick = 0
 	var remainingSeconds = 0
 
 	var taskID = -1
 
-	fun start(phaseType: PhaseType, phaseVariant: PhaseVariant, uhc: UHC, length: Int, onInject: (Phase) -> Unit) {
+	fun start(phaseType: PhaseType, phaseVariant: PhaseVariant, length: Int, onInject: (Phase) -> Unit) {
 		this.phaseType = phaseType
 		this.phaseVariant = phaseVariant
-		this.uhc = uhc
 		this.length = length
 		this.currentTick = 0
 		this.remainingSeconds = length
@@ -35,7 +33,7 @@ abstract class Phase {
 		customStart()
 
 		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
-			if (tick()) uhc.startNextPhase()
+			if (tick()) UHC.startNextPhase()
 		}, 0, 1)
 	}
 
@@ -64,7 +62,7 @@ abstract class Phase {
 
 		if (currentTick == 0) {
 			if (length == 0) ++remainingSeconds else --remainingSeconds
-			if (phaseType.gameGoing) ++uhc.elapsedTime
+			if (phaseType.gameGoing) ++UHC.elapsedTime
 		}
 
 		return endResult

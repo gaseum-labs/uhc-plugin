@@ -11,7 +11,7 @@ import org.bukkit.block.data.Orientable
 import org.bukkit.block.data.type.Lantern
 import java.awt.Event.UP
 
-class OxeyePlacer(size: Int, uniqueSeed: Int) : ImmediateChunkPlacer(size, uniqueSeed) {
+class OxeyePlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 63, 99) { block, x, y, z ->
 			if ((block.biome == Biome.PLAINS || block.biome == Biome.FLOWER_FOREST) && block.getRelative(BlockFace.DOWN).type == Material.GRASS_BLOCK && block.type == Material.AIR) {

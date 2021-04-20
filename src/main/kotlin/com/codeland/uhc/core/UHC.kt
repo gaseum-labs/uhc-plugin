@@ -72,7 +72,7 @@ object UHC {
 
 	var currentPhase = null as Phase?
 
-	var defaultWorldIndex = 0
+	var defaultWorldEnvironment = World.Environment.NORMAL
 
 	var naturalRegeneration = false
 
@@ -100,11 +100,11 @@ object UHC {
 		for ((uuid, playerData) in PlayerData.playerDataList) {
 			if (playerData.alive && playerData.participating) {
 				return GameRunner.getPlayerLocation(uuid)?.clone()?.add(0.0, 2.0, 0.0)
-					?: Location(Bukkit.getWorlds()[0], 0.5, 100.0, 0.5)
+					?: Location(getDefaultWorld(), 0.5, 100.0, 0.5)
 			}
 		}
 
-		return Location(Bukkit.getWorlds()[0], 0.5, 100.0, 0.5)
+		return Location(getDefaultWorld(), 0.5, 100.0, 0.5)
 	}
 
 	/* state setters */
@@ -204,7 +204,10 @@ object UHC {
 	}
 
 	fun getDefaultWorld(): World {
-		return Bukkit.getWorlds()[defaultWorldIndex]
+		return if (defaultWorldEnvironment === World.Environment.NORMAL)
+			WorldManager.getGameWorld()
+		else
+			WorldManager.getNetherWorld()
 	}
 
 	/* game flow modifiers */
@@ -366,7 +369,7 @@ object UHC {
 	fun startPhase(phaseIndex: Int, onInject: (Phase) -> Unit = {}) {
 		currentPhase?.onEnd()
 
-		currentPhase = phaseVariants[phaseIndex].start(this, phaseTimes[phaseIndex], onInject)
+		currentPhase = phaseVariants[phaseIndex].start(phaseTimes[phaseIndex], onInject)
 
 		quirks.forEach { quirk ->
 			if (quirk.enabled) quirk.onPhaseSwitch(phaseVariants[phaseIndex])

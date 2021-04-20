@@ -1,5 +1,6 @@
 package com.codeland.uhc.phase.phases.postgame
 
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import org.bukkit.World
 
@@ -21,6 +22,6 @@ class PostgameDefault : Phase() {
     override fun perTick(currentTick: Int) {}
 
     override fun perSecond(remainingSeconds: Int) {
-        uhc.containSpecs()
+        UHC.containSpecs()
     }
 }
