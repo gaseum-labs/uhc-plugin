@@ -39,7 +39,7 @@ object UHC {
 
 	val defaultVariants = arrayOf(
 		PhaseVariant.WAITING_DEFAULT,
-		PhaseVariant.GRACE_FORGIVING,
+		PhaseVariant.GRACE_DEFAULT,
 		PhaseVariant.SHRINK_DEFAULT,
 		PhaseVariant.ENDGAME_NATURAL_TERRAIN,
 		PhaseVariant.POSTGAME_DEFAULT
@@ -298,7 +298,7 @@ object UHC {
 	 *
 	 * sets the current phase to endgame
 	 */
-	fun endUHC(winners: ArrayList<UUID>) {
+	fun endUHC(winners: List<UUID>) {
 		/* if someone won */
 		val title = if (winners.isNotEmpty()) {
 			val winningTeam = TeamData.playersTeam(winners[0])

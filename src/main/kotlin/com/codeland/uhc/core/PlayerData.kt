@@ -37,6 +37,9 @@ class PlayerData(
 
 	var loadingTip = 0
 
+	fun current() = participating && alive
+	fun undead() = participating && !alive
+
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
 	var offlineZombie: Zombie? = null
@@ -240,6 +243,11 @@ class PlayerData(
 		fun isCurrent(uuid: UUID): Boolean {
 			val playerData = getPlayerData(uuid)
 			return playerData.participating && playerData.alive
+		}
+
+		fun isUndead(uuid: UUID): Boolean {
+			val playerData = getPlayerData(uuid)
+			return playerData.participating && !playerData.alive
 		}
 
 		/* setter operations for player data list */

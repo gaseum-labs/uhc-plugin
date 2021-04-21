@@ -7,17 +7,15 @@ import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntity
 import org.bukkit.*
 import org.bukkit.ChatColor.BOLD
 import org.bukkit.block.Block
 import org.bukkit.block.TileState
-import org.bukkit.entity.FallingBlock
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import kotlin.math.max
 
-class EndgameNaturalTerrain : Phase() {
+class EndgameNaturalTerrain : Endgame() {
 	var min = 0
 	var max = 0
 
@@ -49,11 +47,11 @@ class EndgameNaturalTerrain : Phase() {
 	val skybaseBlocks = ArrayList<SkybaseBlock>()
 
 	override fun customStart() {
-		EndgameNone.closeNether()
+		super.customStart()
 
 		val world = UHC.getDefaultWorld()
 
-		val (min, max) = AbstractEndgame.determineMinMax(world, UHC.endRadius, 100)
+		val (min, max) = determineMinMax(world, UHC.endRadius, 100)
 		finalMin = min
 		finalMax = max + 10
 		if (finalMax > 255) finalMax = 255

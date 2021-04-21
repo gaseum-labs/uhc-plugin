@@ -7,7 +7,6 @@ import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.phase.DimensionBar
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.quirk.HorseQuirk
@@ -180,22 +179,7 @@ class EventListener : Listener {
 				player.sendMessage(deathMessage)
 			}
 
-			/* respawning in grace */
-			if (UHC.isVariant(PhaseVariant.GRACE_FORGIVING)) {
-				GameRunner.playerRespawn(uuid)
-
-			/* regular deaths */
-			} else {
-				player.gameMode = GameMode.SPECTATOR
-
-				val wasPest = Pests.isPest(player)
-
-				if (UHC.isEnabled(QuirkType.PESTS) && !wasPest) Pests.makePest(player)
-
-				if (playerData.alive) GameRunner.playerDeath(player.uniqueId, player.killer)
-
-				if (Pests.isPest(player)) TeamData.removeFromTeam(arrayListOf(player.uniqueId), UHC.usingBot, true, true)
-			}
+			GameRunner.playerDeath(uuid, player.killer, playerData)
 		}
 	}
 
@@ -227,32 +211,26 @@ class EventListener : Listener {
 
 		if (PlayerData.isZombie(target) && (event.entity.type == EntityType.IRON_GOLEM || event.entity.type == EntityType.SNOWMAN)) {
 			event.isCancelled = true
-		}
 
-		/* player targeting */
-		if (target !is Player) return
+		} else if (target is Player) {
+			val summoner = UHC.getQuirk(QuirkType.SUMMONER) as Summoner
+			if (summoner.enabled && summoner.commander.value) {
+				val team = TeamData.playersTeam(target.uniqueId)
+				event.isCancelled = team != null && Summoner.isCommandedBy(event.entity, team)
+			}
 
-		val summoner = UHC.getQuirk(QuirkType.SUMMONER) as Summoner
-		if (summoner.enabled && summoner.commander.value) {
-			val team = TeamData.playersTeam(target.uniqueId)
-
-			if (team != null && Summoner.isCommandedBy(event.entity, team))
-				event.isCancelled = true
-		}
-
-		if (UHC.isEnabled(QuirkType.PESTS)) {
-			if (Pests.isPest(target)) event.isCancelled = true
+			if (UHC.isEnabled(QuirkType.PESTS)) {
+				event.isCancelled = PlayerData.isUndead(target.uniqueId)
+			}
 		}
 	}
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
+		val player = event.whoClicked
+
 		/* prevent pest crafting */
-		if (UHC.isEnabled(QuirkType.PESTS)) {
-			val player = event.whoClicked
-
-			if (!Pests.isPest(player as Player)) return
-
+		if (UHC.isEnabled(QuirkType.PESTS) && PlayerData.isUndead(player.uniqueId)) {
 			event.isCancelled = Util.binarySearch(event.recipe.result.type, Pests.banList)
 		}
 	}
@@ -274,7 +252,7 @@ class EventListener : Listener {
 			pvpGame != null || (
 				playerData.participating &&
 				!UHC.isPhase(PhaseType.GRACE) &&
-				(!UHC.isEnabled(QuirkType.PESTS) || !Pests.isPest(player))
+				!(UHC.isEnabled(QuirkType.PESTS) && playerData.undead())
 			)
 		)
 	}
@@ -331,11 +309,8 @@ class EventListener : Listener {
 			val droppedExperience = experience.coerceAtMost(100)
 			event.droppedExp = droppedExperience
 
-			/* player can respawn only in grace forgiving */
-			if (UHC.isVariant(PhaseVariant.GRACE_FORGIVING))
-				GameRunner.playerRespawn(uuid)
-			else
-				GameRunner.playerDeath(uuid, killer)
+			GameRunner.playerDeath(uuid, killer, playerData)
+
 		} else {
 			/* find a quirk that has a dropfix for this entity */
 			/* if not fallback to default list of dropfixes */
@@ -357,48 +332,25 @@ class EventListener : Listener {
 	fun onEntityDamageEvent(event: EntityDamageByEntityEvent) {
 		val attacker = event.damager
 		val defender = event.entity
-		val grace = UHC.isPhase(PhaseType.GRACE)
-		val pests = UHC.isEnabled(QuirkType.PESTS)
 
-		fun isParticipatingPlayer(entity: Entity): Boolean {
-			return entity is Player && PlayerData.isParticipating(entity.uniqueId)
+		val attackingPlayer = when (attacker) {
+			is Player -> attacker
+			is Projectile -> attacker.shooter as? Player
+			else -> null
 		}
 
-		fun isShootingParticipatingPlayer(entity: Entity): Boolean {
-			if (entity !is Projectile) return false
-			val shooter = entity.shooter
-			return shooter is Player && PlayerData.isParticipating(shooter.uniqueId)
-		}
-
-		/* player attacking */
-		if (isParticipatingPlayer(attacker)) {
-			attacker as Player
-
-			/* another player */
-			if (isParticipatingPlayer(defender)) {
-				defender as Player
-
-				event.isCancelled = grace || (pests && Pests.isPest(attacker) && Pests.isPest(defender))
-
-			/* a player zombie */
-			} else if (PlayerData.isZombie(defender)) {
-				event.isCancelled = grace
-			}
-		/* player shooting */
-		} else if (isShootingParticipatingPlayer(attacker)) {
-			attacker as Projectile
-
-			/* another player */
-			if (isParticipatingPlayer(defender)) {
-				defender as Player
-
-				event.isCancelled = grace || (pests && Pests.isPest(attacker.shooter as Player) && Pests.isPest(defender))
-
-			/* a player zombie */
-			} else if (PlayerData.isZombie(defender)) {
-				event.isCancelled = grace
-			}
-		}
+		event.isCancelled = (
+			attackingPlayer != null &&
+			PlayerData.isParticipating(attackingPlayer.uniqueId) &&
+			defender is Player &&
+			PlayerData.isParticipating(defender.uniqueId)
+		) && (
+			UHC.isPhase(PhaseType.GRACE) || (
+				UHC.isEnabled(QuirkType.PESTS) &&
+				!PlayerData.isAlive(attackingPlayer.uniqueId) &&
+				!PlayerData.isAlive(defender.uniqueId)
+			)
+		)
 	}
 
 	@EventHandler

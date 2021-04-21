@@ -59,8 +59,6 @@ object AbstractLobby {
 			if (quirk.enabled) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
 		}
 
-		Pests.makeNotPest(player)
-
 		val lobbyLocation = lobbyLocation(UHC)
 		if (player.location.world != WorldManager.getLobbyWorld()) player.teleport(lobbyLocation)
 

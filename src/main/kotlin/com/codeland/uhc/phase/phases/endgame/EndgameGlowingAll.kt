@@ -8,9 +8,9 @@ import org.bukkit.World
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
-class EndgameGlowingAll : Phase() {
+class EndgameGlowingAll : Endgame() {
 	override fun customStart() {
-		EndgameNone.closeNether()
+		super.customStart()
 
 		for (player in Bukkit.getServer().onlinePlayers) {
 			GameRunner.sendGameMessage(player, "Glowing has been applied")

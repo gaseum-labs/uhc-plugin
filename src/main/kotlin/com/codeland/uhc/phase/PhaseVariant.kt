@@ -12,22 +12,12 @@ enum class PhaseVariant(var type: PhaseType, var createPhase: () -> Phase, var p
 		"Everyone waits for the UHC to start"
 	)),
 
-	GRACE_FORGIVING(PhaseType.GRACE, ::GraceDefault, "Forgiving", Material.OXEYE_DAISY, listOf(
+	GRACE_DEFAULT(PhaseType.GRACE, ::GraceDefault, "Default", Material.OXEYE_DAISY, listOf(
 		"You may regenerate health and are free from combat to get you started",
-		"If you happen to die you get a second chance"
-	)),
-
-	GRACE_HARSH(PhaseType.GRACE, ::GraceDefault, "Harsh", Material.FEATHER, listOf(
-		"You may regenerate health and are free from combat to get you started",
-		"But make sure you don't die because you don't have a second chance"
 	)),
 
 	SHRINK_DEFAULT(PhaseType.SHRINK, ::ShrinkDefault, "Default", Material.SPAWNER, listOf(
 		"The border begins to force you to the center"
-	)),
-
-	ENDGAME_NONE(PhaseType.ENDGAME, ::EndgameNone, "None", Material.STRUCTURE_VOID, listOf(
-		"Fight to the death without intervention"
 	)),
 
 	ENDGAME_NATURAL_TERRAIN(PhaseType.ENDGAME, ::EndgameNaturalTerrain, "Natural Terrain", Material.OAK_SAPLING, listOf(
