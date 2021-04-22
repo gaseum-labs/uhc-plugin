@@ -7,13 +7,18 @@ import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
+import net.minecraft.server.v1_16_R3.BlockPosition
+import net.minecraft.server.v1_16_R3.PacketPlayOutBlockBreakAnimation
 import org.bukkit.*
 import org.bukkit.ChatColor.BOLD
 import org.bukkit.block.Block
 import org.bukkit.block.TileState
+import org.bukkit.craftbukkit.v1_16_R3.block.CraftBlock
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 class EndgameNaturalTerrain : Endgame() {
 	var min = 0
@@ -31,7 +36,9 @@ class EndgameNaturalTerrain : Endgame() {
 	val MAX_DECAY = 400
 	val DECLINE = 4
 
-	class SkybaseBlock(var ticks: Int, val block: Block, val update: Boolean)
+	var fakeEntityID = Int.MAX_VALUE
+
+	class SkybaseBlock(var ticks: Int, val block: Block, val update: Boolean, val fakeEntityID: Int)
 
 	fun skybaseTicks(y: Int): Int {
 		val distance = y - finalMax
@@ -47,7 +54,7 @@ class EndgameNaturalTerrain : Endgame() {
 	private val skybaseBlocks = ArrayList<SkybaseBlock>()
 
 	fun addSkybaseBlock(block: Block) {
-		skybaseBlocks.add(SkybaseBlock(skybaseTicks(block.y), block, true))
+		skybaseBlocks.add(SkybaseBlock(skybaseTicks(block.y), block, true, fakeEntityID--))
 	}
 
 	override fun customStart() {
@@ -95,7 +102,7 @@ class EndgameNaturalTerrain : Endgame() {
 				if (ticks == 0)
 					block.setType(Material.AIR, false)
 				else
-					if (!block.type.isAir) skybaseBlocks.add(SkybaseBlock(ticks, block, false))
+					if (!block.type.isAir) skybaseBlocks.add(SkybaseBlock(ticks, block, false, 0))
 			}
 		}
 	}
@@ -185,14 +192,16 @@ class EndgameNaturalTerrain : Endgame() {
 			if (skybaseBlock.ticks <= 0 || skybaseBlock.block.type.isAir) {
 				skybaseBlock.block.setType(Material.AIR, skybaseBlock.update)
 
+				if (skybaseBlock.update) {
+					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, 10)
+					skybasePlayers.forEach { (it as CraftPlayer).handle.playerConnection.sendPacket(packet) }
+				}
+
 				true
 			} else {
-				if (skybaseBlock.ticks <= 40 && skybaseBlock.ticks % 10 == 0) {
-					val location = 	skybaseBlock.block.location.toCenterLocation()
-
-					skybasePlayers.filter { it.location.distance(location) < 3.0 }.forEach { player ->
-						player.spawnParticle(Particle.REDSTONE, location, 16, 0.25, 0.25, 0.25, Particle.DustOptions(particleColor(skybaseBlock.ticks), 1.0f))
-					}
+				if (skybaseBlock.ticks <= 40 && skybaseBlock.update) {
+					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, ticksLeftToAnim(skybaseBlock.ticks))
+					skybasePlayers.forEach { (it as CraftPlayer).handle.playerConnection.sendPacket(packet) }
 				}
 
 				false
@@ -200,10 +209,13 @@ class EndgameNaturalTerrain : Endgame() {
 		}
 	}
 
-	fun particleColor(ticks: Int): Color {
-		return when {
-			ticks == 40 -> Color.fromRGB(255, 255, 0)
-			else -> Color.fromRGB(255, 0, 0)
+	private fun ticksLeftToAnim(ticks: Int): Int {
+		val along = 40 - ticks
+
+		return if (along < 0) {
+			10
+		} else {
+			((along / 40.0) * 9).roundToInt()
 		}
 	}
 
