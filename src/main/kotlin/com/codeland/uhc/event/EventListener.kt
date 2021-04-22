@@ -73,28 +73,6 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onPlayerHurt(event: EntityDamageEvent) {
-		val player = event.entity
-		if (player !is Player) return
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-
-		if (playerData.participating) {
-			/* stuff that happens during the game */
-			if (UHC.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
-				event.isCancelled = true
-
-			} else if (event.entity is Player && UHC.isEnabled(QuirkType.DEATHSWAP) && Deathswap.swapTime < Deathswap.IMMUNITY) {
-				event.isCancelled = true
-			}
-
-		/* prevent damage done to players not playing the game and not in lobby pvp */
-		} else {
-			val pvpGame = PvpGameManager.playersGame(player.uniqueId)
-			event.isCancelled = pvpGame == null
-		}
-	}
-
-	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
 		val stack = event.item ?: return
 
@@ -328,8 +306,36 @@ class EventListener : Listener {
 		}
 	}
 
+	/**
+	 * prevents damage dealt to players in protected times
+	 */
 	@EventHandler
-	fun onEntityDamageEvent(event: EntityDamageByEntityEvent) {
+	fun entityDamage(event: EntityDamageEvent) {
+		val player = event.entity as? Player ?: return
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+
+		/* stuff that happens during the game */
+		if (playerData.participating) {
+			if (UHC.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
+				event.isCancelled = true
+
+			} else if (event.entity is Player && UHC.isEnabled(QuirkType.DEATHSWAP) && Deathswap.swapTime < Deathswap.IMMUNITY) {
+				event.isCancelled = true
+			}
+
+		/* prevent lobby and postgame damage */
+		} else {
+			val pvpGame = PvpGameManager.playersGame(player.uniqueId)
+
+			if ((pvpGame != null && pvpGame.isOver()) || pvpGame == null) event.isCancelled = true
+		}
+	}
+
+	/**
+	 * prevents combat during grace or between pests
+	 */
+	@EventHandler
+	fun entityDamageByEntity(event: EntityDamageByEntityEvent) {
 		val attacker = event.damager
 		val defender = event.entity
 
@@ -339,7 +345,7 @@ class EventListener : Listener {
 			else -> null
 		}
 
-		event.isCancelled = (
+		if ((
 			attackingPlayer != null &&
 			PlayerData.isParticipating(attackingPlayer.uniqueId) &&
 			defender is Player &&
@@ -350,7 +356,7 @@ class EventListener : Listener {
 				!PlayerData.isAlive(attackingPlayer.uniqueId) &&
 				!PlayerData.isAlive(defender.uniqueId)
 			)
-		)
+		)) event.isCancelled = true
 	}
 
 	@EventHandler
@@ -383,7 +389,7 @@ class EventListener : Listener {
 	)
 
 	@EventHandler
-	fun onDamage(event: PlayerItemDamageEvent) {
+	fun onItemDamage(event: PlayerItemDamageEvent) {
 		if (hoes.contains(event.item.type)) {
 			event.damage = if (Math.random() < 0.4) 1 else 0
 		}
@@ -391,13 +397,10 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onBreakBlock(event: BlockBreakEvent) {
-		var block = event.block
-		var player = event.player
-		var baseItem = event.player.inventory.itemInMainHand
+		val block = event.block
+		val player = event.player
 
 		if (UHC.isEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
-			var broken = block.state.getMetadata("broken")
-
 			val oldBlockType = block.type
 			val oldData = block.blockData
 
@@ -437,6 +440,18 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
+	fun onBucket(event: PlayerBucketEmptyEvent) {
+		val player = event.player
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val block = event.block
+		val phase = UHC.currentPhase
+
+		if (playerData.participating && phase is EndgameNaturalTerrain && block.y > phase.finalMax) {
+			phase.addSkybaseBlock(block)
+		}
+	}
+
+	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
 		val phase = UHC.currentPhase
 		val player = event.player
@@ -446,8 +461,7 @@ class EventListener : Listener {
 		if (UHC.isGameGoing() && playerData.participating) {
 			/* trying to build above endgame top level */
 			if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.finalMax) {
-				val block = event.blockPlaced
-				phase.skybaseBlocks.add(EndgameNaturalTerrain.SkybaseBlock(phase.skybaseTicks(block.y), block))
+				phase.addSkybaseBlock(event.blockPlaced)
 
 			/* creative block replenishing */
 			} else if (UHC.isEnabled(QuirkType.CREATIVE)) {

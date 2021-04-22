@@ -82,29 +82,29 @@ object GameRunner {
 		return UHC.isPhase(PhaseType.GRACE) || (killer == null && !UHC.isPhase(PhaseType.ENDGAME)) || playerData.undead()
 	}
 
-	private fun playerPermaDeath(deadUUID: UUID, killer: Player?, respawn: Boolean, setupRespawn: (UUID) -> Unit) {
-		PlayerData.setAlive(deadUUID, false)
-		PlayerData.setParticipating(deadUUID, respawn)
+	private fun playerPermaDeath(uuid: UUID, killer: Player?, respawn: Boolean, setupRespawn: (UUID) -> Unit) {
+		PlayerData.setAlive(uuid, false)
+		PlayerData.setParticipating(uuid, respawn)
 
-		val deadPlayerTeam = TeamData.playersTeam(deadUUID)
-		val (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(deadPlayerTeam)
+		val team = TeamData.playersTeam(uuid)
+		val (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(team)
 
 		val killerTeam = if (killer == null) null else TeamData.playersTeam(killer.uniqueId)
 
 		val killerName = when {
 			killer == null -> null
-			killer.uniqueId == deadUUID -> "self"
-			deadPlayerTeam === killerTeam -> "teammate"
+			killer.uniqueId == uuid -> "self"
+			team === killerTeam -> "teammate"
 			else -> killer.name
 		}
 
 		/* add to ledger */
-		val deadPlayerName = Bukkit.getOfflinePlayer(deadUUID).name ?: "NULL"
+		val deadPlayerName = Bukkit.getOfflinePlayer(uuid).name ?: "NULL"
 		UHC.ledger.addEntry(deadPlayerName, UHC.elapsedTime, killerName)
 
 		/* broadcast elimination message */
 		val elimMessage1 = when {
-			deadPlayerTeam != null -> deadPlayerTeam.apply(deadPlayerTeam.gameName()).append(Component.text(" has been eliminated!", NamedTextColor.GOLD, TextDecoration.BOLD))
+			team != null -> team.apply(team.gameName()).append(Component.text(" has been eliminated!", NamedTextColor.GOLD, TextDecoration.BOLD))
 			else -> Component.text("$deadPlayerName has been Eliminated!", NamedTextColor.GRAY, TextDecoration.BOLD)
 		}
 		val elimMessage2 = Component.text("$remainingTeams teams remain", NamedTextColor.GRAY, TextDecoration.BOLD)
@@ -116,27 +116,20 @@ object GameRunner {
 
 		/* does the UHC end here? */
 		if (remainingTeams <= 1) {
+			playerAction(uuid) { it.gameMode = GameMode.SPECTATOR }
 			UHC.endUHC(constructAliveList(lastRemaining))
 
 		/* or does it keep going */
 		} else {
-			/* kill reward awarding for a team */
-			if (killerTeam != null) {
-				if (!teamIsAlive) UHC.killReward.applyReward(constructAliveList(killerTeam.members).map { uuid ->
-					Bukkit.getPlayer(uuid)
-				} as ArrayList<Player?>)
-
-			/* kill reward awarding for an individual killer */
-			} else if (killer != null) {
-				if (!teamIsAlive) UHC.killReward.applyReward(arrayListOf(killer))
-			}
+			/* apply kill reward */
+			if (killer != null) UHC.killReward.applyReward(arrayListOf(killer))
 
 			/* tell player they died */
 			if (respawn) {
-				setupRespawn(deadUUID)
-				playerRespawn(deadUUID)
+				setupRespawn(uuid)
+				playerRespawn(uuid)
 			} else {
-				playerAction(deadUUID) { deathTitle(it, killer, false) }
+				playerAction(uuid) { deathTitle(it, killer, false) }
 			}
 		}
 	}

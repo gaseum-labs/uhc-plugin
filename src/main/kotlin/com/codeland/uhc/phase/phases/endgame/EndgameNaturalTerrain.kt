@@ -31,7 +31,7 @@ class EndgameNaturalTerrain : Endgame() {
 	val MAX_DECAY = 400
 	val DECLINE = 4
 
-	class SkybaseBlock(var ticks: Int, val block: Block)
+	class SkybaseBlock(var ticks: Int, val block: Block, val update: Boolean)
 
 	fun skybaseTicks(y: Int): Int {
 		val distance = y - finalMax
@@ -44,7 +44,11 @@ class EndgameNaturalTerrain : Endgame() {
 		}
 	}
 
-	val skybaseBlocks = ArrayList<SkybaseBlock>()
+	private val skybaseBlocks = ArrayList<SkybaseBlock>()
+
+	fun addSkybaseBlock(block: Block) {
+		skybaseBlocks.add(SkybaseBlock(skybaseTicks(block.y), block, true))
+	}
 
 	override fun customStart() {
 		super.customStart()
@@ -91,7 +95,7 @@ class EndgameNaturalTerrain : Endgame() {
 				if (ticks == 0)
 					block.setType(Material.AIR, false)
 				else
-					if (!block.isPassable) skybaseBlocks.add(SkybaseBlock(ticks, block))
+					if (!block.type.isAir) skybaseBlocks.add(SkybaseBlock(ticks, block, false))
 			}
 		}
 	}
@@ -112,16 +116,15 @@ class EndgameNaturalTerrain : Endgame() {
 
 	override fun perTick(currentTick: Int) {
 		val world = UHC.getDefaultWorld()
-		val extrema = UHC.endRadius
 		++timer
 
 		if (finished) {
 			if (timer == GLOWING_TIME) {
 				timer = 0
 
-				PlayerData.playerDataList.forEach { (uuid, playerData) ->
-					/* glow all nonpest players every 15 seconds for 2 seconds */
-					if (playerData.alive) GameRunner.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
+				/* glow all nonpest players every 15 seconds for 2 seconds */
+				PlayerData.playerDataList.filter { (_, it) -> it.alive }.forEach { (uuid, playerData) ->
+					GameRunner.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
 				}
 			}
 
@@ -163,13 +166,12 @@ class EndgameNaturalTerrain : Endgame() {
 				finished = true
 
 				/* teleport all sky zombies to the surface */
-				PlayerData.playerDataList.forEach { (uuid, playerData) ->
-					val zombie = playerData.offlineZombie
-
-					if (zombie != null && zombie.location.y > max - 3) {
-						val location = zombie.location
-						GameRunner.teleportPlayer(uuid, Location(UHC.getDefaultWorld(), location.blockX + 0.5, Util.topBlockY(world, location.blockX, location.blockZ).toDouble(), location.blockZ + 0.5))
-					}
+				PlayerData.playerDataList.mapNotNull { (uuid, playerData) -> playerData.offlineZombie }
+					.filter { it.location.y > max }
+					.forEach { zombie ->
+					val x = zombie.location.blockX
+					val z = zombie.location.blockX
+					zombie.teleport(Location(UHC.getDefaultWorld(), x + 0.5, Util.topBlockY(world, x, z).toDouble(), z + 0.5))
 				}
 			}
 		}
@@ -180,8 +182,8 @@ class EndgameNaturalTerrain : Endgame() {
 		skybaseBlocks.removeIf { skybaseBlock ->
 			--skybaseBlock.ticks
 
-			if (skybaseBlock.ticks <= 0 || skybaseBlock.block.isPassable) {
-				skybaseBlock.block.setType(Material.AIR, false)
+			if (skybaseBlock.ticks <= 0 || skybaseBlock.block.type.isAir) {
+				skybaseBlock.block.setType(Material.AIR, skybaseBlock.update)
 
 				true
 			} else {

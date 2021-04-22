@@ -98,6 +98,10 @@ object PvpGameManager {
 				}
 			}
 		}
+
+		fun isOver(): Boolean {
+			return winner != null
+		}
 	}
 
 	val ongoingGames = ArrayList<PvpGame>()
@@ -138,10 +142,9 @@ object PvpGameManager {
 
 			ongoingGames.removeIf { game ->
 				++game.time
-				val winner = game.winner
 
 				/* postgame length until game is destroyed */
-				val removeResult = if (winner != null) {
+				val removeResult = if (game.isOver()) {
 					game.time >= 0
 
 				/* before and during the game */
