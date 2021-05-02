@@ -2,15 +2,9 @@ package com.codeland.uhc.phase
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.NamespacedKey
 import org.bukkit.World
-import org.bukkit.boss.BarColor
-import org.bukkit.boss.BarStyle
-import org.bukkit.boss.BossBar
-import org.bukkit.entity.Player
 
 abstract class Phase {
 	lateinit var phaseType: PhaseType
@@ -41,19 +35,15 @@ abstract class Phase {
 	 * @return if the phase should end and the next phase should start
 	 */
 	private fun tick(): Boolean {
-		DimensionBar.dimensionBars.forEach { dimensionBar ->
+		WorldBar.worldBars.forEach { dimensionBar ->
 			dimensionBar.bossBar.setTitle(updateBarTitle(dimensionBar.world, remainingSeconds, currentTick))
 			dimensionBar.bossBar.progress = updateBarLength(remainingSeconds, currentTick)
 			dimensionBar.bossBar.color = phaseType.barColor
 		}
 
-		Bukkit.getOnlinePlayers().forEach { player ->
-			DimensionBar.setPlayerBarDimension(player)
-		}
-
 		perTick(currentTick)
 
-		var endResult = if (currentTick == 0) second()
+		val endResult = if (currentTick == 0) second()
 		else false
 
 		/* advance time */

@@ -118,28 +118,6 @@ object AbstractLobby {
 		}
 	}
 
-	fun prepareWorld(world: World) {
-		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, true)
-		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
-		world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
-		world.difficulty = Difficulty.NORMAL
-
-		if (WorldManager.isNonGameWorld(world)) {
-			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
-			world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
-			world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
-
-			world.time = 6000
-			world.isThundering = false
-			world.setStorm(false)
-
-			if (world.name == WorldManager.LOBBY_WORLD_NAME) {
-				world.worldBorder.center = Location(world, 0.5, 0.0, 0.5)
-				world.worldBorder.size = LOBBY_RADIUS * 2 + 1.0
-			}
-		}
-	}
-
 	val loadingTips = arrayOf(
 		/* generation */
 		"Melons generate in the world and drop 1 melon slice when broken",

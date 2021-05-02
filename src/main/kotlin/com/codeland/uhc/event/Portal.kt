@@ -147,16 +147,21 @@ class Portal : Listener {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 		val pvpGame = PvpGameManager.playersGame(player.uniqueId)
 
+		Util.debug("portaling...")
+
 		/* lobby pvpers can't escape through the never */
 		if (pvpGame != null) {
+			Util.debug("lobby pvp cancelled")
 			event.isCancelled = true
 
 		/* prevent peeking the center during waiting */
 		} else if (!playerData.participating) {
+			Util.debug("participation cancelled")
 			event.isCancelled = true
 
 		/* prevent going to the nether after nether closes */
 		} else if (!UHC.netherIsAllowed()) {
+			Util.debug("nether not allowed")
 			val location = event.player.location
 			val world = location.world
 
@@ -179,6 +184,9 @@ class Portal : Listener {
 			else
 				WorldManager.getGameWorld()
 
+			Util.debug("player world ${player.world.name}")
+			Util.debug("exit world ${exitWorld.name}")
+
 			val entrancePortalBlock = findPlayersPortal(player.world, player.location)
 
 			val (exitPortalX, exitPortalZ) = setWithinBorder(exitWorld.worldBorder, entrancePortalBlock.x, entrancePortalBlock.z)
@@ -192,6 +200,8 @@ class Portal : Listener {
 				else
 					::idealPortalYNether
 			)
+
+			Util.debug("need portal ${needCreatePortal}")
 
 			if (needCreatePortal) buildPortal(exitPortalBlock)
 

@@ -108,41 +108,45 @@ object WorldGenManager {
             val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGenerator
             val worldChunkGeneratorOverworld = worldChunkManagerBField[chunkGenerator] as? WorldChunkManagerOverworld ?: return Util.log("Wrong WorldChunkGenerator found.")
 
-	        /* lobby world */
-	        val customWorldChunkGeneratorOverworld = if (world.name == WorldManager.LOBBY_WORLD_NAME) {
-		        val (biome0, biome1) = getBiomes()
-		        WorldChunkManagerOverworldLobby(
-			        hField.getLong(worldChunkGeneratorOverworld),
-			        iField.getBoolean(worldChunkGeneratorOverworld),
-			        jField.getBoolean(worldChunkGeneratorOverworld),
-			        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
-			        biome0,
-			        biome1,
-			        Util.randFromArray(lobbyCenterBiomes),
-			        Util.randFromArray(oceanBiomes),
-			        60
-		        )
-	        /* pvp world */
-	        } else if (world.name == WorldManager.PVP_WORLD_NAME) {
-	        	WorldChunkManagerOverworldPvp(
-			        hField.getLong(worldChunkGeneratorOverworld),
-			        iField.getBoolean(worldChunkGeneratorOverworld),
-			        jField.getBoolean(worldChunkGeneratorOverworld),
-			        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
-			        pvpBiomes
-	        	)
-	        /* game world */
-	        } else {
-		        WorldChunkManagerOverworldNoOcean(
-			        hField.getLong(worldChunkGeneratorOverworld),
-			        iField.getBoolean(worldChunkGeneratorOverworld),
-			        jField.getBoolean(worldChunkGeneratorOverworld),
-			        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
-			        centerBiome
-		        )
+	        val customWorldChunkGeneratorOverworld = when (world.name) {
+		        /* lobby world */
+		        WorldManager.LOBBY_WORLD_NAME -> {
+			        val (biome0, biome1) = getBiomes()
+			        WorldChunkManagerOverworldLobby(
+				        hField.getLong(worldChunkGeneratorOverworld),
+				        iField.getBoolean(worldChunkGeneratorOverworld),
+				        jField.getBoolean(worldChunkGeneratorOverworld),
+				        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+				        biome0,
+				        biome1,
+				        Util.randFromArray(lobbyCenterBiomes),
+				        Util.randFromArray(oceanBiomes),
+				        60
+			        )
+		        }
+		        /* pvp world */
+		        WorldManager.PVP_WORLD_NAME -> {
+			        WorldChunkManagerOverworldPvp(
+				        hField.getLong(worldChunkGeneratorOverworld),
+				        iField.getBoolean(worldChunkGeneratorOverworld),
+				        jField.getBoolean(worldChunkGeneratorOverworld),
+				        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+				        pvpBiomes
+			        )
+		        }
+		        /* game world */
+		        else -> {
+			        WorldChunkManagerOverworldNoOcean(
+				        hField.getLong(worldChunkGeneratorOverworld),
+				        iField.getBoolean(worldChunkGeneratorOverworld),
+				        jField.getBoolean(worldChunkGeneratorOverworld),
+				        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+				        centerBiome
+			        )
+		        }
 	        }
 
-            worldChunkManagerBField[chunkGenerator] = customWorldChunkGeneratorOverworld
+	        worldChunkManagerBField[chunkGenerator] = customWorldChunkGeneratorOverworld
 	        worldChunkManagerCField[chunkGenerator] = customWorldChunkGeneratorOverworld
         }
     }

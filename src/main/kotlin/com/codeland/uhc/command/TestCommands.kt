@@ -12,13 +12,10 @@ import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
-import com.codeland.uhc.phase.DimensionBar.Companion.createBossBars
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
-import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -163,40 +160,6 @@ class TestCommands : BaseCommand() {
 		val playerMobs = CustomSpawning.calcPlayerMobs(player)
 
 		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
-	}
-
-	@Subcommand("lobbyCycle")
-	fun lobbyCycle(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		PvpGameManager.ongoingGames.removeIf { game ->
-			game.players.mapNotNull { Bukkit.getPlayer(it) }.forEach { PvpGameManager.disablePvp(it) }
-			true
-		}
-
-		val pvpWorld = WorldManager.refreshWorld(WorldManager.PVP_WORLD_NAME, World.Environment.NORMAL, true)
-		if (pvpWorld != null) AbstractLobby.prepareWorld(pvpWorld)
-	}
-
-	@Subcommand("worldCycle")
-	fun worldCycle(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		Bukkit.getOnlinePlayers().forEach { player ->
-			if (!WorldManager.isNonGameWorld(player.world)) AbstractLobby.onSpawnLobby(player)
-		}
-
-		val gameWorld = WorldManager.refreshWorld(WorldManager.GAME_WORLD_NAME, World.Environment.NORMAL, false)
-		if (gameWorld != null) {
-			ChunkPlacerHolderType.resetAll(WorldManager.getGameWorld().seed)
-			AbstractLobby.prepareWorld(gameWorld)
-		}
-
-		val netherWorld = WorldManager.refreshWorld(WorldManager.NETHER_WORLD_NAME, World.Environment.NETHER, false)
-		if (netherWorld != null) AbstractLobby.prepareWorld(netherWorld)
-
-		createBossBars(Bukkit.getWorlds())
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")

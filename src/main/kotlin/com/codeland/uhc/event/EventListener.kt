@@ -5,7 +5,7 @@ import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.core.*
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.CommandItemType
-import com.codeland.uhc.phase.DimensionBar
+import com.codeland.uhc.phase.WorldBar
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.lobbyPvp.PvpGameManager
@@ -44,7 +44,7 @@ class EventListener : Listener {
 			val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 			NameManager.updateName(event.player)
-			DimensionBar.setPlayerBarDimension(event.player)
+			WorldBar.setPlayerBarDimension(event.player)
 
 			/* lobby spawn */
 			if (!playerData.participating) {
@@ -104,6 +104,8 @@ class EventListener : Listener {
 
 		/* hide other players not in the player's new world to the player */
 		HideManager.updateAllForPlayer(event.player)
+
+		WorldBar.setPlayerBarDimension(event.player)
 	}
 
 	@EventHandler
@@ -357,6 +359,18 @@ class EventListener : Listener {
 				!PlayerData.isAlive(defender.uniqueId)
 			)
 		)) event.isCancelled = true
+	}
+
+	/**
+	 * prevent pearl damage
+	 */
+	@EventHandler
+	fun onPlayerPearl(event: PlayerTeleportEvent) {
+		if (event.cause == PlayerTeleportEvent.TeleportCause.ENDER_PEARL) {
+			event.isCancelled = true
+			event.player.noDamageTicks = 1
+			event.player.teleport(event.to)
+		}
 	}
 
 	@EventHandler

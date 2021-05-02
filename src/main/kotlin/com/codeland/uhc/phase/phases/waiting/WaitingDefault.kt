@@ -11,9 +11,6 @@ import org.bukkit.entity.Player
 
 class WaitingDefault : Phase() {
 	override fun customStart() {
-		/* set gamerules for all worlds */
-		Bukkit.getWorlds().forEach { world -> AbstractLobby.prepareWorld(world) }
-
 		TeamData.destroyTeam(null, UHC.usingBot, true) {}
 
 		Bukkit.getServer().onlinePlayers.forEach { player ->

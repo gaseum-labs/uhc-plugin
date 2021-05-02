@@ -5,18 +5,18 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.Preset
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.*
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.OfflinePlayer
+import org.bukkit.World
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -186,29 +186,32 @@ class AdminCommands : BaseCommand() {
 		}
 	}
 
-	@CommandCompletion("@uhcplayer @quirkclass")
-	@Subcommand("class")
-	@Description("override someone's class")
-	fun classCommand(sender: CommandSender, player: OfflinePlayer, quirkClass: QuirkClass) {
-		sender as Player
-
+	@Subcommand("pvpCycle")
+	fun lobbyCycle(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		if (!UHC.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
-
-		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
-
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val oldClass = Classes.getClass(playerData)
-
-		Classes.setClass(player.uniqueId, quirkClass)
-
-		/* only start them if the game has already started */
-		if (UHC.isGameGoing() && playerData.participating) GameRunner.playerAction(player.uniqueId) { onlinePlayer ->
-			Classes.startAsClass(onlinePlayer, quirkClass, oldClass)
+		PvpGameManager.ongoingGames.removeIf { game ->
+			game.players.mapNotNull { Bukkit.getPlayer(it) }.forEach { PvpGameManager.disablePvp(it) }
+			true
 		}
 
-		GameRunner.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
+		WorldManager.refreshWorld(WorldManager.PVP_WORLD_NAME, World.Environment.NORMAL, true)
+
+		GameRunner.sendGameMessage(sender, "Pvp world reset")
+	}
+
+	@Subcommand("worldCycle")
+	fun worldCycle(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
+
+		Bukkit.getOnlinePlayers().forEach { player ->
+			if (!WorldManager.isNonGameWorld(player.world)) AbstractLobby.onSpawnLobby(player)
+		}
+
+		WorldManager.initWorlds(true)
+
+		GameRunner.sendGameMessage(sender, "Game worlds reset")
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -238,5 +241,30 @@ class AdminCommands : BaseCommand() {
 		GameRunner.teleportPlayer(toPlayer.uniqueId, sender.location)
 
 		GameRunner.sendGameMessage(sender, "Teleported ${toPlayer.name} to you")
+	}
+
+	@CommandCompletion("@uhcplayer @quirkclass")
+	@Subcommand("class")
+	@Description("override someone's class")
+	fun classCommand(sender: CommandSender, player: OfflinePlayer, quirkClass: QuirkClass) {
+		sender as Player
+
+		if (Commands.opGuard(sender)) return
+
+		if (!UHC.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
+
+		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
+
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val oldClass = Classes.getClass(playerData)
+
+		Classes.setClass(player.uniqueId, quirkClass)
+
+		/* only start them if the game has already started */
+		if (UHC.isGameGoing() && playerData.participating) GameRunner.playerAction(player.uniqueId) { onlinePlayer ->
+			Classes.startAsClass(onlinePlayer, quirkClass, oldClass)
+		}
+
+		GameRunner.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
 	}
 }

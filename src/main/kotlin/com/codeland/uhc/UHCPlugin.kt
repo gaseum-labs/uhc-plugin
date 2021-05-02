@@ -5,17 +5,13 @@ import com.codeland.uhc.command.*
 import com.codeland.uhc.core.*
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
-import com.codeland.uhc.phase.DimensionBar
-import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.util.GoogleDDNSUpdater
 import com.codeland.uhc.world.gen.WorldGenManager
-import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.plugin.java.JavaPlugin
-import kotlin.system.exitProcess
 
 class UHCPlugin : JavaPlugin() {
 	init {
@@ -77,7 +73,7 @@ class UHCPlugin : JavaPlugin() {
 		}
 
 		server.scheduler.scheduleSyncDelayedTask(this) {
-			WorldManager.initWorlds()
+			WorldManager.initWorlds(false)
 
 			GameRunner.registerHearts()
 
