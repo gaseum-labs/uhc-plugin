@@ -17,5 +17,6 @@ class UHCProperty <T> (val default: T) {
 
 	fun reset() {
 		value = default
+		watcher()
 	}
 }

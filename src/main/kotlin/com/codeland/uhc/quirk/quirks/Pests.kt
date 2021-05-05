@@ -19,7 +19,7 @@ class Pests(type: QuirkType) : Quirk(type) {
     override fun onDisable() {
         if (!(UHC.isPhase(PhaseType.WAITING) || UHC.isPhase(PhaseType.POSTGAME))) {
             /* remove all pests from the game */
-            PlayerData.playerDataList.filter { (_, playerData) -> !playerData.alive && playerData.participating }.forEach { (uuid, _) ->
+            PlayerData.playerDataList.filter { (_, playerData) -> playerData.undead() }.forEach { (uuid, _) ->
 	            GameRunner.playerAction(uuid) { player ->
 		            player.gameMode = GameMode.SPECTATOR
 	            }

@@ -25,7 +25,7 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
-		GuiManager.SETUP_GUI.open(sender as Player)
+		UHC.setupGui.open(sender as Player)
 	}
 
 	@Subcommand("optOut")

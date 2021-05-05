@@ -19,7 +19,7 @@ class Spectate : CommandItem() {
 		val meta = stack.itemMeta
 
 		meta.setDisplayName("${ChatColor.RESET}${ChatColor.BLUE}Spectate")
-		meta.lore = listOf("Right click to spectate if you have died")
+		meta.lore = listOf("${ChatColor.RESET}Right click to spectate if you have died")
 
 		stack.itemMeta = meta
 		return stack

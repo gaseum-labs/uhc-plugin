@@ -1,5 +1,6 @@
 package com.codeland.uhc.gui
 
+import com.codeland.uhc.util.Util
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -7,11 +8,12 @@ import org.bukkit.event.inventory.InventoryClickEvent
 
 class GuiManager : Listener {
 	companion object {
-		val SETUP_GUI = SetupGui()
+		private val guis = ArrayList<GuiPage>()
 
-		val guis = arrayListOf <GuiPage> (
-			SETUP_GUI
-		)
+		fun <G : GuiPage> register(gui: G): G {
+			guis.add(gui)
+			return gui
+		}
 	}
 
 	@EventHandler

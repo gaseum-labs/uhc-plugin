@@ -2,6 +2,7 @@ package com.codeland.uhc.gui
 
 import com.codeland.uhc.util.ItemUtil
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -21,13 +22,17 @@ abstract class GuiItem(val index: Int) {
 	}
 
 	companion object {
-		fun name(stack: ItemStack, component: Component): ItemStack {
+		fun name(stack: ItemStack, component: TextComponent): ItemStack {
 			val meta = stack.itemMeta
+
 			meta.displayName(component)
+
 			stack.itemMeta = meta
 
 			return stack
 		}
+
+		fun name(stack: ItemStack, name: String) = name(stack, Component.text("${ChatColor.RESET}${ChatColor.WHITE}$name"))
 
 		fun lore(stack: ItemStack, lore: List<Component>): ItemStack {
 			val meta = stack.itemMeta
@@ -45,12 +50,12 @@ abstract class GuiItem(val index: Int) {
 			return stack
 		}
 
-		fun stateName(base: String, state: String): Component {
-			return Component.text("$base ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}$state")
+		fun stateName(base: String, state: String): TextComponent {
+			return Component.text("${ChatColor.RESET}${ChatColor.WHITE}$base ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}$state")
 		}
 
-		fun enabledName(base: String, enabled: Boolean): Component {
-			return Component.text("$base ${ChatColor.GRAY}- ${if (enabled) ChatColor.GREEN else ChatColor.RED}${ChatColor.BOLD}${if (enabled) "Enabled" else "Disabled"}")
+		fun enabledName(base: String, enabled: Boolean): TextComponent {
+			return Component.text("${ChatColor.RESET}${ChatColor.WHITE}$base ${ChatColor.GRAY}- ${if (enabled) ChatColor.GREEN else ChatColor.RED}${ChatColor.BOLD}${if (enabled) "Enabled" else "Disabled"}")
 		}
 	}
 }

@@ -59,7 +59,7 @@ abstract class Quirk(val type: QuirkType) {
 
 	private val properties = ArrayList<UHCProperty<*>>()
 
-	val gui: GuiPage = GuiPage(5, Component.text(type.prettyName))
+	val gui: GuiPage = GuiManager.register(GuiPage(5, Component.text(type.prettyName)))
 
 	val customDrops = customDrops()
 	val spawnInfos = customSpawnInfos()
@@ -76,7 +76,7 @@ abstract class Quirk(val type: QuirkType) {
 				if (shift)
 					this@Quirk.gui.close(player)
 				else
-					GuiManager.SETUP_GUI.open(player)
+					UHC.setupGui.open(player)
 			}
 
 			override fun getStack(): ItemStack {
@@ -85,8 +85,6 @@ abstract class Quirk(val type: QuirkType) {
 		})
 
 		customDrops?.sortBy { dropFix -> dropFix.entityType }
-
-		GuiManager.guis.add(gui)
 	}
 
 	protected fun <T> addProperty(property: UHCProperty<T>): UHCProperty<T> {

@@ -1,6 +1,7 @@
 package com.codeland.uhc.gui.item
 
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.event.Chat
 import com.codeland.uhc.gui.GuiManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -16,8 +17,8 @@ class GuiOpener : CommandItem() {
         val stack = ItemStack(MATERIAL)
         val meta = stack.itemMeta
 
-        meta.displayName(Component.text("Open UHC Settings", NamedTextColor.AQUA))
-        meta.lore(listOf(Component.text("Right click to open menu")))
+        meta.displayName(Component.text("${ChatColor.RESET}Open UHC Settings", NamedTextColor.AQUA))
+        meta.lore(listOf(Component.text("${ChatColor.RESET}Right click to open menu")))
 
         stack.itemMeta = meta
         return stack
@@ -28,6 +29,6 @@ class GuiOpener : CommandItem() {
     }
 
     override fun onUse(uhc: UHC, player: Player) {
-        GuiManager.SETUP_GUI.open(player)
+	    UHC.setupGui.open(player)
     }
 }

@@ -8,6 +8,7 @@ import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
+import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -40,12 +41,12 @@ class SetupGui : GuiPage(5, Util.gradientString("UHC Setup", TextColor.color(0x3
 			UHC.properties.forEach { it.reset() }
 		}
 
-		override fun getStack() = name(ItemStack(Material.MUSIC_DISC_WAIT), Component.text("Reset", NamedTextColor.AQUA))
+		override fun getStack() = name(ItemStack(Material.MUSIC_DISC_WAIT), "${ChatColor.AQUA}Reset")
 	}
 
 	private val cancelButton: GuiItem = object : GuiItem(coords(8, 4)) {
 		override fun onClick(player: Player, shift: Boolean) = gui.close(player)
-		override fun getStack() = name(ItemStack(Material.BARRIER), Component.text("Close", NamedTextColor.RED))
+		override fun getStack() = name(ItemStack(Material.BARRIER), "${ChatColor.RED}Close")
 	}
 
 	init {
