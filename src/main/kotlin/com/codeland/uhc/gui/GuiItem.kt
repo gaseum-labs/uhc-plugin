@@ -1,49 +1,43 @@
 package com.codeland.uhc.gui
 
-import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.event.Chat
 import com.codeland.uhc.util.ItemUtil
+import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
-import org.bukkit.enchantments.Enchantment
-import org.bukkit.enchantments.EnchantmentTarget
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.jetbrains.annotations.NotNull
 
-abstract class GuiItem(val index: Int, val opOnly: Boolean) {
-	lateinit var guiInventory: GuiInventory
-	lateinit var guiStack: ItemStack
+abstract class GuiItem(val index: Int) {
+	protected lateinit var gui: GuiPage
 
-	abstract fun onClick(player: Player, shift: Boolean)
+	fun giveGui(gui: GuiPage) {
+		this.gui = gui
+	}
+
 	abstract fun getStack(): ItemStack
+	abstract fun onClick(player: Player, shift: Boolean)
 
 	fun updateDisplay() {
-		guiInventory.inventory.setItem(index, getStack())
-		guiStack = guiInventory.inventory.getItem(index) ?: ItemStack(Material.POTION)
+		gui.inventory.setItem(index, getStack())
 	}
 
 	companion object {
-		fun setName(stack: ItemStack, name: String): ItemStack {
+		fun name(stack: ItemStack, component: Component): ItemStack {
 			val meta = stack.itemMeta
-			meta.setDisplayName("${ChatColor.RESET}$name")
+			meta.displayName(component)
 			stack.itemMeta = meta
 
 			return stack
 		}
 
-		fun setLore(stack: ItemStack, lore: List<String>): ItemStack {
+		fun lore(stack: ItemStack, lore: List<Component>): ItemStack {
 			val meta = stack.itemMeta
-			meta.lore = lore
+			meta.lore(lore)
 			stack.itemMeta = meta
 
 			return stack
 		}
 
-		fun setEnchanted(stack: ItemStack): ItemStack {
+		fun enchant(stack: ItemStack): ItemStack {
 			val meta = stack.itemMeta
 			meta.addEnchant(ItemUtil.FakeEnchantment(), 0, true)
 			stack.itemMeta = meta
@@ -51,12 +45,12 @@ abstract class GuiItem(val index: Int, val opOnly: Boolean) {
 			return stack
 		}
 
-		fun stateName(base: String, state: String): String {
-			return "$base ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}$state"
+		fun stateName(base: String, state: String): Component {
+			return Component.text("$base ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}$state")
 		}
 
-		fun enabledName(base: String, enabled: Boolean): String {
-			return "$base ${ChatColor.GRAY}- ${if (enabled) ChatColor.GREEN else ChatColor.RED}${ChatColor.BOLD}${if (enabled) "Enabled" else "Disabled"}"
+		fun enabledName(base: String, enabled: Boolean): Component {
+			return Component.text("$base ${ChatColor.GRAY}- ${if (enabled) ChatColor.GREEN else ChatColor.RED}${ChatColor.BOLD}${if (enabled) "Enabled" else "Disabled"}")
 		}
 	}
 }

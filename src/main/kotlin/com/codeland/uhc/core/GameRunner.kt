@@ -25,7 +25,6 @@ import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.RenderType
 import java.util.*
-import kotlin.collections.ArrayList
 
 object GameRunner {
 	var bot: MixerBot? = null
@@ -79,7 +78,7 @@ object GameRunner {
 	}
 
 	private fun shouldRespawn(killer: Player?, playerData: PlayerData): Boolean {
-		return UHC.isPhase(PhaseType.GRACE) || (killer == null && !UHC.isPhase(PhaseType.ENDGAME)) || playerData.undead()
+		return UHC.isPhase(PhaseType.GRACE) || playerData.undead()
 	}
 
 	private fun playerPermaDeath(uuid: UUID, killer: Player?, respawn: Boolean, setupRespawn: (UUID) -> Unit) {
@@ -122,7 +121,7 @@ object GameRunner {
 		/* or does it keep going */
 		} else {
 			/* apply kill reward */
-			if (killer != null) UHC.killReward.applyReward(arrayListOf(killer))
+			if (killer != null) UHC.killReward.get().applyReward(arrayListOf(killer))
 
 			/* tell player they died */
 			if (respawn) {
@@ -140,13 +139,13 @@ object GameRunner {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin, {
 			teleportPlayer(uuid, respawnLocation())
 			playerAction(uuid) { it.gameMode = GameMode.SURVIVAL }
-			UHC.quirks.filter { it.enabled }.forEach { it.onStart(uuid) }
+			UHC.quirks.filter { it.enabled.get() }.forEach { it.onStart(uuid) }
 		}, 100)
 	}
 
 	private fun deathTitle(player: Player, killer: Player?, respawn: Boolean) {
 		player.gameMode = GameMode.SPECTATOR
-		AbstractLobby.resetPlayerStats(player)
+		Lobby.resetPlayerStats(player)
 
 		player.sendTitle(
 			"${RED}You died!",

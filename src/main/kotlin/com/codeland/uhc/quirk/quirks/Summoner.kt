@@ -1,11 +1,9 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.GuiItem.Companion.enabledName
-import com.codeland.uhc.quirk.BoolProperty
 import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -13,7 +11,6 @@ import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.entity.Entity
@@ -48,32 +45,32 @@ class Summoner(type: QuirkType) : Quirk(type) {
 	override val representation: ItemStack
 		get() = ItemStack(MULE_SPAWN_EGG)
 
-	var allowAggro = addProperty(BoolProperty(true))
-	var allowPassive = addProperty(BoolProperty(true))
-	var commander = addProperty(BoolProperty(true))
+	var allowAggro = addProperty(UHCProperty(true))
+	var allowPassive = addProperty(UHCProperty(true))
+	var commander = addProperty(UHCProperty(true))
 
 	init {
-		inventory.addItem(BoolToggle(11, allowAggro, {
-			GuiItem.setName(ItemStack(CREEPER_SPAWN_EGG), enabledName("Aggro", true))
+		gui.addItem(BoolToggle(11, allowAggro, {
+			GuiItem.name(ItemStack(CREEPER_SPAWN_EGG), enabledName("Aggro", true))
 		}, {
-			GuiItem.setName(ItemStack(GUNPOWDER), enabledName("Aggro", false))
+			GuiItem.name(ItemStack(GUNPOWDER), enabledName("Aggro", false))
 		}))
 
-		inventory.addItem(BoolToggle(15, allowPassive, {
-			GuiItem.setName(ItemStack(CHICKEN_SPAWN_EGG), enabledName("Passive", true))
+		gui.addItem(BoolToggle(15, allowPassive, {
+			GuiItem.name(ItemStack(CHICKEN_SPAWN_EGG), enabledName("Passive", true))
 		}, {
-			GuiItem.setName(ItemStack(FEATHER), enabledName("Passive", false))
+			GuiItem.name(ItemStack(FEATHER), enabledName("Passive", false))
 		}))
 
-		inventory.addItem(BoolToggle(22, commander, {
-			GuiItem.setName(ItemStack(NETHERITE_HELMET), enabledName("Commander", true))
+		gui.addItem(BoolToggle(22, commander, {
+			GuiItem.name(ItemStack(NETHERITE_HELMET), enabledName("Commander", true))
 		}, {
-			GuiItem.setName(ItemStack(LEATHER_HELMET), enabledName("Commander", false))
+			GuiItem.name(ItemStack(LEATHER_HELMET), enabledName("Commander", false))
 		}))
 	}
 
 	fun getSpawnEgg(entity: EntityType): Material? {
-		return getSpawnEgg(entity, allowAggro.value, allowPassive.value)
+		return getSpawnEgg(entity, allowAggro.get(), allowPassive.get())
 	}
 
 	fun onSummon(event: PlayerInteractEvent): Boolean {
@@ -92,7 +89,7 @@ class Summoner(type: QuirkType) : Quirk(type) {
 		if (team != null) {
 			setCommandedBy(entity, team)
 			
-			if (commander.value) entity.customName(team.apply("${team.gameName()} ${entity.name}"))
+			if (commander.get()) entity.customName(team.apply("${team.gameName()} ${entity.name}"))
 		}
 
 		--item.amount

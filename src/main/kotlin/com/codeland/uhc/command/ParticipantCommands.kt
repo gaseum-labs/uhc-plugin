@@ -8,14 +8,14 @@ import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.core.AbstractLobby
+import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.*
-import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -25,7 +25,7 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
-		UHC.gui.inventory.open(sender as Player)
+		GuiManager.SETUP_GUI.open(sender as Player)
 	}
 
 	@Subcommand("optOut")
@@ -44,7 +44,7 @@ class ParticipantCommands : BaseCommand() {
 			playerData.optingOut = true
 			playerData.staged = false
 
-			TeamData.removeFromTeam(arrayListOf(sender.uniqueId), UHC.usingBot, true, true)
+			TeamData.removeFromTeam(arrayListOf(sender.uniqueId), UHC.usingBot.get(), true, true)
 
 			GameRunner.sendGameMessage(sender, "You have opted out of participating")
 		}
@@ -99,7 +99,7 @@ class ParticipantCommands : BaseCommand() {
 			return Commands.errorMessage(sender, "You can't use this command right now")
 
 		/* specs can go back to lobby */
-		AbstractLobby.onSpawnLobby(sender)
+		Lobby.onSpawnLobby(sender)
 	}
 
 	@CommandCompletion("@quirkclass")

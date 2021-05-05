@@ -51,7 +51,7 @@ object CustomSpawning {
 		val usingInfo = if (player.world.environment == World.Environment.NORMAL) {
 			val supplementalList = ArrayList<SpawnInfo>()
 			UHC.quirks.forEach { quirk ->
-				if (quirk.enabled && quirk.spawnInfos != null) quirk.spawnInfos.forEach { spawnInfo -> supplementalList.add(spawnInfo) }
+				if (quirk.enabled.get() && quirk.spawnInfos != null) quirk.spawnInfos.forEach { spawnInfo -> supplementalList.add(spawnInfo) }
 			}
 
 			/* wrap spawn index */

@@ -1,6 +1,9 @@
 package com.codeland.uhc.gui.item
 
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.GuiManager
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -10,11 +13,11 @@ class GuiOpener : CommandItem() {
     val MATERIAL = Material.MUSIC_DISC_WAIT
 
     override fun create(): ItemStack {
-        var stack = ItemStack(MATERIAL)
-        var meta = stack.itemMeta
+        val stack = ItemStack(MATERIAL)
+        val meta = stack.itemMeta
 
-        meta.setDisplayName("${ChatColor.RESET}${ChatColor.AQUA}Open UHC Settings")
-        meta.lore = listOf("Right click to open menu")
+        meta.displayName(Component.text("Open UHC Settings", NamedTextColor.AQUA))
+        meta.lore(listOf(Component.text("Right click to open menu")))
 
         stack.itemMeta = meta
         return stack
@@ -25,6 +28,6 @@ class GuiOpener : CommandItem() {
     }
 
     override fun onUse(uhc: UHC, player: Player) {
-        uhc.gui.inventory.open(player)
+        GuiManager.SETUP_GUI.open(player)
     }
 }

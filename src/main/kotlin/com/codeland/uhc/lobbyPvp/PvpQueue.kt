@@ -38,7 +38,7 @@ object PvpQueue {
 					val requiredTime = if (element2.uuid == playerData.lastPlayed) 20 else 10
 
 					if (!element2.remove && element.uuid != element2.uuid && element.time >= requiredTime) {
-						PvpGameManager.addGame(arrayOf(element.uuid, element2.uuid))
+						PvpGameManager.addGame(arrayListOf(element.uuid, element2.uuid))
 
 						element.remove = true
 						element2.remove = true

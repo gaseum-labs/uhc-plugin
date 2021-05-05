@@ -1,32 +1,27 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.core.UHCProperty
+import com.codeland.uhc.gui.GuiItemProperty
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.util.ItemUtil
+import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
 import org.bukkit.Material
-import org.bukkit.block.Block
-import org.bukkit.block.BlockState
-import org.bukkit.enchantments.Enchantment
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.FireworkMeta
 import java.util.*
 
 class Flying(type: QuirkType) : Quirk(type) {
-	var numRockets: Int = DEFAULT_ROCKETS
+	val numRockets = addProperty(UHCProperty(DEFAULT_ROCKETS))
 
 	override fun onEnable() {}
 
 	override fun onDisable() {}
 
 	override fun onStart(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player -> giveItems(player, numRockets) }
+		GameRunner.playerAction(uuid) { player -> giveItems(player, numRockets.get()) }
 	}
 
 	override fun onEnd(uuid: UUID) {
@@ -37,23 +32,26 @@ class Flying(type: QuirkType) : Quirk(type) {
 		get() = ItemStack(Material.FIREWORK_ROCKET)
 
 	init {
-		val rocketItem = object : GuiItem(13, true) {
+		val rocketItem = object : GuiItemProperty <Int> (13, numRockets) {
 			override fun onClick(player: Player, shift: Boolean) {
-				if (shift) {
-					--numRockets
-					if (numRockets < MIN_ROCKETS) numRockets = MIN_ROCKETS
-				} else {
-					++numRockets
-					if (numRockets > MAX_ROCKETS) numRockets = MAX_ROCKETS
-				}
+				if (shift)
+					numRockets.set((numRockets.get() - 1).coerceAtLeast(0))
+				else
+					numRockets.set((numRockets.get() + 1).coerceAtMost(MAX_ROCKETS))
 			}
 
-			override fun getStack(): ItemStack {
-				return setLore(setName(ItemStack(if (numRockets == 0) Material.GUNPOWDER else Material.FIREWORK_ROCKET, numRockets.coerceAtLeast(1)), stateName("Num rockets", "$numRockets")), listOf("click to add", "shift click to subtract"))
+			override fun getStackProperty(value: Int): ItemStack {
+				return lore(
+					name(
+						ItemStack(if (value == 0) Material.GUNPOWDER else Material.FIREWORK_ROCKET, value.coerceAtLeast(1)),
+						stateName("Num rockets", "$value")
+					),
+					listOf(Component.text("click to add"), Component.text("shift click to subtract"))
+				)
 			}
 		}
 
-		inventory.addItem(rocketItem)
+		gui.addItem(rocketItem)
 	}
 
 	companion object {

@@ -1,8 +1,6 @@
 package com.codeland.uhc.phase.phases.waiting
 
-import com.codeland.uhc.core.AbstractLobby
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
@@ -11,7 +9,7 @@ import org.bukkit.entity.Player
 
 class WaitingDefault : Phase() {
 	override fun customStart() {
-		TeamData.destroyTeam(null, UHC.usingBot, true) {}
+		TeamData.destroyTeam(null, UHC.usingBot.get(), true) {}
 
 		Bukkit.getServer().onlinePlayers.forEach { player ->
 			player.inventory.clear()
@@ -34,6 +32,6 @@ class WaitingDefault : Phase() {
 	override fun endPhrase() = "Game starts in"
 
 	fun onPlayerJoin(player: Player) {
-		AbstractLobby.onSpawnLobby(player)
+		Lobby.onSpawnLobby(player)
 	}
 }

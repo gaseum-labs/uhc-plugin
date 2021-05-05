@@ -40,7 +40,7 @@ class Pests(type: QuirkType) : Quirk(type) {
 
     companion object {
         fun onBecomePest(uuid: UUID) {
-	        TeamData.removeFromTeam(arrayListOf(uuid), UHC.usingBot, true, true)
+	        TeamData.removeFromTeam(arrayListOf(uuid), UHC.usingBot.get(), true, true)
         }
 
         val banList = arrayOf(

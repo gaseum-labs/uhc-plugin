@@ -41,7 +41,7 @@ object WorldManager {
 
 			if (world.name == LOBBY_WORLD_NAME) {
 				world.worldBorder.center = Location(world, 0.5, 0.0, 0.5)
-				world.worldBorder.size = AbstractLobby.LOBBY_RADIUS * 2 + 1.0
+				world.worldBorder.size = Lobby.LOBBY_RADIUS * 2 + 1.0
 			}
 		}
 	}

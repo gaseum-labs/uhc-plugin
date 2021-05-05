@@ -81,7 +81,6 @@ class AdminCommands : BaseCommand() {
 			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
 
 		UHC.updateTime(type, length)
-		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("startRadius")
@@ -91,7 +90,6 @@ class AdminCommands : BaseCommand() {
 		if (Commands.notGoingGuard(sender)) return
 
 		UHC.updateStartRadius(radius)
-		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("endRadius")
@@ -101,7 +99,6 @@ class AdminCommands : BaseCommand() {
 		if (Commands.notGoingGuard(sender)) return
 
 		UHC.updateEndRadius(radius)
-		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("preset")
@@ -111,7 +108,6 @@ class AdminCommands : BaseCommand() {
 		if (Commands.notGoingGuard(sender)) return
 
 		UHC.updatePreset(startRadius, endRadius, graceTime, shrinkTime)
-		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("preset")
@@ -121,7 +117,6 @@ class AdminCommands : BaseCommand() {
 		if (Commands.notGoingGuard(sender)) return
 
 		UHC.updatePreset(preset)
-		UHC.gui.presetCycler.updateDisplay()
 	}
 
 	@Subcommand("stage")
@@ -206,7 +201,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.notGoingGuard(sender)) return
 
 		Bukkit.getOnlinePlayers().forEach { player ->
-			if (!WorldManager.isNonGameWorld(player.world)) AbstractLobby.onSpawnLobby(player)
+			if (!WorldManager.isNonGameWorld(player.world)) Lobby.onSpawnLobby(player)
 		}
 
 		WorldManager.initWorlds(true)

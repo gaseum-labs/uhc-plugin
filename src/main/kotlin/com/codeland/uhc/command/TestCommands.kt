@@ -135,7 +135,7 @@ class TestCommands : BaseCommand() {
 
 		val carePackages = UHC.getQuirk(QuirkType.CARE_PACKAGES) as CarePackages
 
-		if (!carePackages.enabled) return errorMessage(sender, "Care packages is not going!")
+		if (!carePackages.enabled.get()) return errorMessage(sender, "Care packages is not going!")
 
 		val result = carePackages.forceDrop()
 
@@ -178,7 +178,7 @@ class TestCommands : BaseCommand() {
 		PvpQueue.remove(player1.uniqueId)
 		PvpQueue.remove(player2.uniqueId)
 
-		PvpGameManager.addGame(arrayOf(player1.uniqueId, player2.uniqueId))
+		PvpGameManager.addGame(arrayListOf(player1.uniqueId, player2.uniqueId))
 
 		GameRunner.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
 	}

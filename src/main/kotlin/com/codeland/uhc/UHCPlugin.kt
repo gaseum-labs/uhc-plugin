@@ -5,6 +5,7 @@ import com.codeland.uhc.command.*
 import com.codeland.uhc.core.*
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
+import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WebAddress
@@ -46,6 +47,7 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(PvpListener(), this)
 		server.pluginManager.registerEvents(Brew(), this)
 		server.pluginManager.registerEvents(Barter(), this)
+		server.pluginManager.registerEvents(GuiManager(), this)
 		Packet.init()
 
 		WorldGenOption.readFile("uhc.properties")
@@ -77,7 +79,6 @@ class UHCPlugin : JavaPlugin() {
 
 			GameRunner.registerHearts()
 
-			UHC.updateDisplays()
 			UHC.startWaiting()
 		}
 	}

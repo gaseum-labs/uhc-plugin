@@ -1,13 +1,12 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.customSpawning.CustomSpawning
-import com.codeland.uhc.gui.Gui
+import com.codeland.uhc.event.Portal
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.lobbyPvp.PvpGameManager
-import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -15,10 +14,8 @@ import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
-import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -33,7 +30,6 @@ object UHC {
 	var ledger = Ledger()
 
 	var mobCapCoefficient = 1.0
-	var killReward = KillReward.REGENERATION
 
 	val defaultPreset = Preset.MEDIUM
 
@@ -44,14 +40,6 @@ object UHC {
 		PhaseVariant.ENDGAME_NATURAL_TERRAIN,
 		PhaseVariant.POSTGAME_DEFAULT
 	)
-
-	private var phaseVariants = Array(PhaseType.values().size) { index ->
-		defaultVariants[index]
-	}
-
-	var quirks = Array(QuirkType.values().size) { index ->
-		QuirkType.values()[index].createQuirk()
-	}
 
 	private var phaseTimes = arrayOf(
 		0,
@@ -67,47 +55,44 @@ object UHC {
 	private set
 	var elapsedTime = 0
 
-	/* null if it is a custom preset */
-	var preset: Preset? = defaultPreset
-
 	var currentPhase = null as Phase?
-
-	var defaultWorldEnvironment = World.Environment.NORMAL
-
-	var naturalRegeneration = false
-
-	var usingBot = GameRunner.bot != null
-	private set
 
 	var teleportGroups: Array<Array<UUID>>? = null
 	var teleportLocations: ArrayList<Location>? = null
 
+	/* properties */
+
+	var phaseVariants = Array(PhaseType.values().size) { index ->
+		UHCProperty(defaultVariants[index])
+	}
+
+	var quirks = Array(QuirkType.values().size) { index ->
+		QuirkType.values()[index].createQuirk()
+	}
+
+	var preset = UHCProperty<Preset?>(defaultPreset)
+	var defaultWorldEnvironment = UHCProperty(World.Environment.NORMAL)
+	var naturalRegeneration = UHCProperty(false)
+	var killReward = UHCProperty(KillReward.REGENERATION)
+	var usingBot = UHCProperty(GameRunner.bot != null)
+
+	val properties = arrayOf(
+		preset, defaultWorldEnvironment,
+		naturalRegeneration, killReward, usingBot
+	)
+
+	/* property updaters */
+
 	fun updateUsingBot(using: Boolean) {
 		val bot = GameRunner.bot
 
-		usingBot = if (bot == null) {
+		usingBot.set(if (bot == null) {
 			false
-
 		} else {
-			bot.clearTeamVCs()
+			if (!using) bot.clearTeamVCs()
 			using
-		}
+		})
 	}
-
-	val gui = Gui()
-
-	fun spectatorSpawnLocation(): Location {
-		for ((uuid, playerData) in PlayerData.playerDataList) {
-			if (playerData.alive && playerData.participating) {
-				return GameRunner.getPlayerLocation(uuid)?.clone()?.add(0.0, 2.0, 0.0)
-					?: Location(getDefaultWorld(), 0.5, 100.0, 0.5)
-			}
-		}
-
-		return Location(getDefaultWorld(), 0.5, 100.0, 0.5)
-	}
-
-	/* state setters */
 
 	fun updatePreset(preset: Preset) {
 		updatePreset(preset, preset.startRadius, preset.endRadius, preset.graceTime, preset.shrinkTime)
@@ -118,65 +103,51 @@ object UHC {
 	}
 
 	private fun updatePreset(preset: Preset?, startRadius: Int, endRadius: Int, graceTime: Int, shrinkTime: Int) {
-		this.preset = preset
+		this.preset.set(preset)
 
 		this.startRadius = startRadius
 		this.endRadius = endRadius
 
-		phaseTimes = arrayOf(
-			0,
-			graceTime,
-			shrinkTime,
-			0,
-			0
-		)
-	}
-
-	fun updateTime(phaseType: PhaseType, time: Int) {
-		this.preset = null
-		phaseTimes[phaseType.ordinal] = time
-	}
-
-	fun updateStartRadius(startRadius: Int) {
-		this.preset = null
-		this.startRadius = startRadius
-	}
-
-	fun updateEndRadius(endRadius: Int) {
-		this.preset = null
-		this.endRadius = endRadius
+		phaseTimes = arrayOf(0, graceTime, shrinkTime, 0, 0)
 	}
 
 	fun updateVariant(phaseVariant: PhaseVariant) {
 		val index = phaseVariant.type.ordinal
 
-		phaseVariants[index] = phaseVariant
+		phaseVariants[index].set(phaseVariant)
 	}
 
 	fun updateQuirk(type: QuirkType, enabled: Boolean) {
-		quirks[type.ordinal].enabled = enabled
+		quirks[type.ordinal].enabled.set(enabled)
 
-		if (enabled) type.incompatibilities.forEach { other ->
-			val otherQuirk = getQuirk(other)
-
-			if (otherQuirk.enabled) {
-				otherQuirk.enabled = false
-				gui.quirkToggles[otherQuirk.type.ordinal].updateDisplay()
-			}
-		}
+		if (enabled) type.incompatibilities.forEach { getQuirk(it).enabled.set(false) }
 	}
 
-	/**
-	 * call after object is fully initialized
-	 */
-	fun updateDisplays() {
-		quirks.forEach { quirk -> updateQuirk(quirk.type, quirk.enabled) }
+	fun updateTime(phaseType: PhaseType, time: Int) {
+		this.preset.set(null)
+		phaseTimes[phaseType.ordinal] = time
+	}
+
+	fun updateStartRadius(startRadius: Int) {
+		this.preset.set(null)
+		this.startRadius = startRadius
+	}
+
+	fun updateEndRadius(endRadius: Int) {
+		this.preset.set(null)
+		this.endRadius = endRadius
+	}
+
+	fun updateDefaultWorldEnvironment(environment: World.Environment) {
+		if (isGameGoing()) return
+
+		defaultWorldEnvironment.set(environment)
 	}
 
 	/* state getters */
 
 	fun getVariant(phaseType: PhaseType): PhaseVariant {
-		return phaseVariants[phaseType.ordinal]
+		return phaseVariants[phaseType.ordinal].get()
 	}
 
 	fun getTime(phaseType: PhaseType): Int {
@@ -188,15 +159,15 @@ object UHC {
 	}
 
 	fun isEnabled(quirkType: QuirkType): Boolean {
-		return quirks[quirkType.ordinal].enabled
+		return quirks[quirkType.ordinal].enabled.get()
 	}
 
 	fun isPhase(compare: PhaseType): Boolean {
-		return currentPhase?.phaseType == compare
+		return currentPhase?.phaseType === compare
 	}
 
 	fun isVariant(compare: PhaseVariant): Boolean {
-		return currentPhase?.phaseVariant == compare
+		return currentPhase?.phaseVariant === compare
 	}
 
 	fun isGameGoing(): Boolean {
@@ -204,7 +175,7 @@ object UHC {
 	}
 
 	fun getDefaultWorld(): World {
-		return if (defaultWorldEnvironment === World.Environment.NORMAL)
+		return if (defaultWorldEnvironment.get() === World.Environment.NORMAL)
 			WorldManager.getGameWorld()
 		else
 			WorldManager.getNetherWorld()
@@ -229,9 +200,11 @@ object UHC {
 
 			if (isGameGoing()) PlayerData.zombieBorderTick(currentTick)
 
-			AbstractLobby.lobbyTipsTick(currentTick)
+			Lobby.lobbyTipsTick(currentTick)
 
 			PvpGameManager.perTick(currentTick)
+
+			Portal.portalTick()
 
 			/* highly composite number */
 			currentTick = (currentTick + 1) % 294053760
@@ -335,7 +308,7 @@ object UHC {
 		Bukkit.getServer().onlinePlayers.forEach { player -> player.showTitle(title) }
 
 		/* remove all teams */
-		TeamData.destroyTeam(null, usingBot, true) {}
+		TeamData.destroyTeam(null, usingBot.get(), true) {}
 
 		/* reset all player data states */
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
@@ -369,11 +342,22 @@ object UHC {
 	fun startPhase(phaseIndex: Int, onInject: (Phase) -> Unit = {}) {
 		currentPhase?.onEnd()
 
-		currentPhase = phaseVariants[phaseIndex].start(phaseTimes[phaseIndex], onInject)
+		val variant = phaseVariants[phaseIndex].get()
 
-		quirks.forEach { quirk ->
-			if (quirk.enabled) quirk.onPhaseSwitch(phaseVariants[phaseIndex])
+		currentPhase = variant.start(phaseTimes[phaseIndex], onInject)
+
+		quirks.filter { it.enabled.get() }.forEach { it.onPhaseSwitch(variant) }
+	}
+
+	fun spectatorSpawnLocation(): Location {
+		for ((uuid, playerData) in PlayerData.playerDataList) {
+			if (playerData.alive && playerData.participating) {
+				return GameRunner.getPlayerLocation(uuid)?.clone()?.add(0.0, 2.0, 0.0)
+					?: Location(getDefaultWorld(), 0.5, 100.0, 0.5)
+			}
 		}
+
+		return Location(getDefaultWorld(), 0.5, 100.0, 0.5)
 	}
 
 	fun netherIsAllowed() = !isPhase(PhaseType.ENDGAME)

@@ -13,7 +13,7 @@ import org.bukkit.ChatColor.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 
-object AbstractLobby {
+object Lobby {
 	val LOBBY_RADIUS = 60
 
 	fun lobbyLocation(uhc: UHC): Location {
@@ -56,7 +56,7 @@ object AbstractLobby {
 		playerData.alive = false
 
 		UHC.quirks.forEach { quirk ->
-			if (quirk.enabled) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
+			if (quirk.enabled.get()) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
 		}
 
 		val lobbyLocation = lobbyLocation(UHC)
@@ -69,7 +69,7 @@ object AbstractLobby {
 		return lobbyLocation
 	}
 
-	fun isLinked(player: Player) = if (UHC.usingBot) {
+	fun isLinked(player: Player) = if (UHC.usingBot.get()) {
 		GameRunner.bot?.isLinked(player.uniqueId) ?: true
 	} else true
 

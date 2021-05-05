@@ -1,7 +1,7 @@
 package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.command.Commands
-import com.codeland.uhc.core.AbstractLobby
+import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.event.Packet
@@ -24,7 +24,7 @@ object PvpGameManager {
 	const val LARGE_BORDER = 96
 	const val SMALL_BORDER = 64
 
-	class PvpGame(val players: Array<UUID>, position: Int, val borderSize: Int) {
+	class PvpGame(val players: ArrayList<UUID>, position: Int, val borderSize: Int) {
 		val x = xFromPosition(position)
 		val z = zFromPosition(position)
 
@@ -107,7 +107,7 @@ object PvpGameManager {
 	val ongoingGames = ArrayList<PvpGame>()
 	var nextGamePosition = 0
 
-	fun addGame(players: Array<UUID>) {
+	fun addGame(players: ArrayList<UUID>) {
 		val game = PvpGame(players, nextGamePosition, SMALL_BORDER)
 
 		val playerData0 = PlayerData.getPlayerData(game.players[0])
@@ -231,13 +231,18 @@ object PvpGameManager {
 		return position / 16
 	}
 
+	fun removePlayerFromGame(uuid: UUID) {
+		val game = playersGame(uuid)
+		game?.players?.remove(uuid)
+	}
+
 	fun enablePvp(player: Player, save: Boolean, location: Location) {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		/* save before pvp state */
 		if (save) playerData.lobbyInventory = player.inventory.contents.clone()
 
-		AbstractLobby.resetPlayerStats(player)
+		Lobby.resetPlayerStats(player)
 		player.gameMode = GameMode.SURVIVAL
 
 		/* give items */
@@ -258,7 +263,7 @@ object PvpGameManager {
 	fun disablePvp(player: Player) {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		AbstractLobby.onSpawnLobby(player)
+		Lobby.onSpawnLobby(player)
 
 		player.inventory.contents = playerData.lobbyInventory
 	}

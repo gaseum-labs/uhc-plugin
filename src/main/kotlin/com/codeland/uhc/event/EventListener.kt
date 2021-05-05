@@ -48,7 +48,7 @@ class EventListener : Listener {
 
 			/* lobby spawn */
 			if (!playerData.participating) {
-				AbstractLobby.onSpawnLobby(event.player)
+				Lobby.onSpawnLobby(event.player)
 			}
 
 			/* update who the player sees */
@@ -77,7 +77,7 @@ class EventListener : Listener {
 		val stack = event.item ?: return
 
 		val summoner = UHC.getQuirk(QuirkType.SUMMONER) as Summoner
-		if (summoner.enabled && summoner.onSummon(event)) {
+		if (summoner.enabled.get() && summoner.onSummon(event)) {
 			event.isCancelled = true
 
 		} else if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
@@ -171,7 +171,7 @@ class EventListener : Listener {
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
 		/* witch poison nerf */
-		if (!UHC.naturalRegeneration) {
+		if (UHC.naturalRegeneration.get()) {
 			val potion = event.entity as? ThrownPotion
 			if (potion != null) {
 				if (potion.shooter is Witch) {
@@ -194,7 +194,7 @@ class EventListener : Listener {
 
 		} else if (target is Player) {
 			val summoner = UHC.getQuirk(QuirkType.SUMMONER) as Summoner
-			if (summoner.enabled && summoner.commander.value) {
+			if (summoner.enabled.get() && summoner.commander.get()) {
 				val team = TeamData.playersTeam(target.uniqueId)
 				event.isCancelled = team != null && Summoner.isCommandedBy(event.entity, team)
 			}
@@ -228,7 +228,7 @@ class EventListener : Listener {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 		val pvpGame = PvpGameManager.playersGame(player.uniqueId)
 
-		return !UHC.naturalRegeneration && (
+		return !UHC.naturalRegeneration.get() && (
 			pvpGame != null || (
 				playerData.participating &&
 				!UHC.isPhase(PhaseType.GRACE) &&
@@ -240,7 +240,7 @@ class EventListener : Listener {
 	@EventHandler
 	fun onHealthRegen(event: EntityRegainHealthEvent) {
 		/* no regeneration in UHC */
-		var player = event.entity
+		val player = event.entity
 
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
@@ -295,7 +295,7 @@ class EventListener : Listener {
 			/* find a quirk that has a dropfix for this entity */
 			/* if not fallback to default list of dropfixes */
 			(UHC.quirks.filter { quirk ->
-				quirk.enabled && quirk.customDrops != null
+				quirk.enabled.get() && quirk.customDrops != null
 			}.map { quirk ->
 				Util.binaryFind(event.entityType, quirk.customDrops!!) { dropFix -> dropFix.entityType }
 			}.firstOrNull()
@@ -303,7 +303,7 @@ class EventListener : Listener {
 			)?.onDeath(event.entity, killer, event.drops)
 
 			UHC.quirks.any { quirk ->
-				quirk.enabled && quirk.modifyEntityDrops(event.entity, killer, event.drops)
+				quirk.enabled.get() && quirk.modifyEntityDrops(event.entity, killer, event.drops)
 			}
 		}
 	}
@@ -316,7 +316,7 @@ class EventListener : Listener {
 		val player = event.entity as? Player ?: return
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		/* stuff that happens during the game */
+		///* stuff that happens during the game */
 		if (playerData.participating) {
 			if (UHC.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
 				event.isCancelled = true
@@ -325,7 +325,7 @@ class EventListener : Listener {
 				event.isCancelled = true
 			}
 
-		/* prevent lobby and postgame damage */
+		//* prevent lobby and postgame damage */
 		} else {
 			val pvpGame = PvpGameManager.playersGame(player.uniqueId)
 

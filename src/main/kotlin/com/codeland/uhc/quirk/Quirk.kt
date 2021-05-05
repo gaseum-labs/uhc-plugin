@@ -2,16 +2,19 @@ package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.customSpawning.SpawnInfo
 import com.codeland.uhc.dropFix.DropFix
-import com.codeland.uhc.gui.GuiInventory
+import com.codeland.uhc.gui.GuiPage
 import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.util.ItemUtil
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Entity
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
@@ -19,8 +22,10 @@ import kotlin.collections.ArrayList
 
 abstract class Quirk(val type: QuirkType) {
 	/* default value will be set upon init */
-	var enabled = false
-	set(value) {
+	var enabled = UHCProperty(false)
+	private set
+
+	fun setEnabled(value: Boolean) {
 		/* enable / disable functions come first */
 		if (value) {
 			/* start all players if the game is already going */
@@ -49,48 +54,47 @@ abstract class Quirk(val type: QuirkType) {
 			onDisable()
 		}
 
-		field = value
+		enabled.set(value)
 	}
 
-	private val properties = ArrayList<BoolProperty>()
+	private val properties = ArrayList<UHCProperty<*>>()
 
-	val inventory: GuiInventory = GuiInventory(4, type.prettyName)
+	val gui: GuiPage = GuiPage(5, Component.text(type.prettyName))
 
 	val customDrops = customDrops()
 	val spawnInfos = customSpawnInfos()
 
 	init {
 		val backgroundItem = ItemUtil.namedItem(Material.BLACK_STAINED_GLASS_PANE, "${ChatColor.RESET}${ChatColor.BLACK}_")
-		val internal = inventory.inventory
+		val internal = gui.inventory
 		for (i in 0 until internal.size - 1) {
 			internal.setItem(i, backgroundItem)
 		}
 
-		inventory.addItem(object : GuiItem(inventory.inventory.size - 1, false) {
+		gui.addItem(object : GuiItem(gui.inventory.size - 1) {
 			override fun onClick(player: Player, shift: Boolean) {
 				if (shift)
-					inventory.close(player)
+					this@Quirk.gui.close(player)
 				else
-					UHC.gui.inventory.open(player)
+					GuiManager.SETUP_GUI.open(player)
 			}
+
 			override fun getStack(): ItemStack {
-				return setName(ItemStack(Material.PRISMARINE_SHARD), "${ChatColor.BLUE}Back")
+				return name(ItemStack(Material.PRISMARINE_SHARD), Component.text("Back", NamedTextColor.BLUE))
 			}
 		})
 
 		customDrops?.sortBy { dropFix -> dropFix.entityType }
+
+		GuiManager.guis.add(gui)
 	}
 
-	protected fun addProperty(property: BoolProperty): BoolProperty {
+	protected fun <T> addProperty(property: UHCProperty<T>): UHCProperty<T> {
 		properties.add(property)
 		return property
 	}
 
-	fun resetProperties() {
-		properties.forEach { property ->
-			property.value = property.defaultValue
-		}
-	}
+	fun resetProperties() = properties.forEach { it.reset() }
 
 	abstract fun onEnable()
 	abstract fun onDisable()

@@ -22,7 +22,7 @@ import org.bukkit.command.CommandSender
 @Subcommand("team")
 class TeamCommands : BaseCommand() {
 	/* should the team commands add people to their discord channels */
-	private fun useDiscord() = UHC.isGameGoing() && UHC.usingBot
+	private fun useDiscord() = UHC.isGameGoing() && UHC.usingBot.get()
 
 	@Subcommand("clear")
 	@Description("remove all current teams")

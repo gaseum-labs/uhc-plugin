@@ -1,27 +1,20 @@
 package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.core.KillReward
-import com.codeland.uhc.core.Preset
-import com.codeland.uhc.core.Preset.Companion.NO_PRESET_REPRESENTATION
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.phase.PhaseType
-import org.bukkit.ChatColor
+import com.codeland.uhc.gui.GuiItemProperty
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class KillRewardCycler(index: Int) : GuiItem(index, true) {
+class KillRewardCycler(index: Int) : GuiItemProperty <KillReward> (index, UHC.killReward) {
 	override fun onClick(player: Player, shift: Boolean) {
-		UHC.killReward = KillReward.values()[(UHC.killReward.ordinal + 1) % KillReward.values().size]
+		UHC.killReward.set(
+			KillReward.values()[(UHC.killReward.get().ordinal + 1) % KillReward.values().size]
+		)
 	}
 
-	override fun getStack(): ItemStack {
-		val killReward = UHC.killReward
-		val stack = ItemStack(killReward.representation)
-		setLore(stack, killReward.lore)
-
-		setName(stack, stateName("Kill Reward", killReward.prettyName))
-
-		return stack
+	override fun getStackProperty(value: KillReward): ItemStack {
+		return name(lore(ItemStack(value.representation), value.lore), stateName("Kill Reward", value.prettyName))
 	}
 }

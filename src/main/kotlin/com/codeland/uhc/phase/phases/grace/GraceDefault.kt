@@ -6,7 +6,6 @@ import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.*
-import org.bukkit.entity.Player
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.*
@@ -30,7 +29,7 @@ class GraceDefault : Phase() {
 		/* add people to team vcs */
 		TeamData.teams.forEach { team ->
 			if (team.name == null) team.automaticName()
-			if (UHC.usingBot) GameRunner.bot?.addToTeamChannel(team, team.members)
+			if (UHC.usingBot.get()) GameRunner.bot?.addToTeamChannel(team, team.members)
 		}
 
 		/* teleport and set playerData to current */
@@ -65,18 +64,17 @@ class GraceDefault : Phase() {
 	companion object {
 		fun startPlayer(uuid: UUID, location: Location) {
 			val playerData = PlayerData.getPlayerData(uuid)
+
 			playerData.staged = false
 			playerData.alive = true
 			playerData.participating = true
 
-			val pvpGame = PvpGameManager.playersGame(uuid)
-			val player = Bukkit.getPlayer(uuid)
-			if (pvpGame != null && player != null) PvpGameManager.disablePvp(player)
+			PvpGameManager.removePlayerFromGame(uuid)
 
 			GameRunner.teleportPlayer(uuid, location)
 
 			GameRunner.playerAction(uuid) { player ->
-				AbstractLobby.resetPlayerStats(player)
+				Lobby.resetPlayerStats(player)
 
 				/* remove all advancements */
 				Bukkit.getServer().advancementIterator().forEach { advancement ->
@@ -88,7 +86,7 @@ class GraceDefault : Phase() {
 				player.gameMode = GameMode.SURVIVAL
 			}
 
-			UHC.quirks.forEach { quirk -> if (quirk.enabled) quirk.onStart(uuid) }
+			UHC.quirks.forEach { quirk -> if (quirk.enabled.get()) quirk.onStart(uuid) }
 		}
 
 		fun spreadSinglePlayer(world: World, spreadRadius: Double): Location? {

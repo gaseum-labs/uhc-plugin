@@ -2,28 +2,28 @@ package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.Gui
-import com.codeland.uhc.gui.GuiInventory
 import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.gui.GuiItemProperty
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class BotToggle(index: Int) : GuiItem(index, true) {
+class BotToggle(index: Int) : GuiItemProperty <Boolean> (index, UHC.usingBot) {
 	override fun onClick(player: Player, shift: Boolean) {
-		UHC.updateUsingBot(!UHC.usingBot)
+		UHC.updateUsingBot(!UHC.usingBot.get())
 	}
 
-	override fun getStack(): ItemStack {
-		val stack = if (GameRunner.bot == null)
-			setName(ItemStack(Material.GUNPOWDER), "${ChatColor.RED}${ChatColor.BOLD}Bot is not running")
-		else
-			setName(ItemStack(if (UHC.usingBot) Material.NAUTILUS_SHELL else Material.HONEYCOMB), enabledName("Bot VCs", UHC.usingBot))
-
-		setLore(stack, listOf("Separate teams into separate discord vcs?"))
-
-		return stack
+	override fun getStackProperty(value: Boolean): ItemStack {
+		return lore(
+			if (GameRunner.bot == null)
+				name(ItemStack(Material.GUNPOWDER), Component.text("Bot is not running", NamedTextColor.RED, TextDecoration.BOLD))
+			else
+				name(ItemStack(if (value) Material.NAUTILUS_SHELL else Material.HONEYCOMB), enabledName("Bot VCs", value))
+			, listOf(Component.text("Separate teams into separate discord vcs?"))
+		)
 	}
 }

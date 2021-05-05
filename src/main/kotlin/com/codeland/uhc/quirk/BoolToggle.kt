@@ -1,20 +1,16 @@
 package com.codeland.uhc.quirk
 
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.GuiInventory
-import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.core.UHCProperty
+import com.codeland.uhc.gui.GuiItemProperty
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class BoolToggle(index: Int, val property: BoolProperty, val onTrue: () -> ItemStack, val onFalse: () -> ItemStack) : GuiItem(index, true) {
+class BoolToggle(index: Int, property: UHCProperty<Boolean>, val onTrue: () -> ItemStack, val onFalse: () -> ItemStack) : GuiItemProperty <Boolean> (index, property) {
 	override fun onClick(player: Player, shift: Boolean) {
-		property.value = !property.value
+		property.set(!property.get())
 	}
 
-	override fun getStack(): ItemStack {
-		return if (property.value)
-			onTrue()
-		else
-			onFalse()
+	override fun getStackProperty(value: Boolean): ItemStack {
+		return if (value) onTrue() else onFalse()
 	}
 }

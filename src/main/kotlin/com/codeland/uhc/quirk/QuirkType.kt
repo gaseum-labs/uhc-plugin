@@ -6,96 +6,98 @@ import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
 import com.codeland.uhc.quirk.quirks.Pumpkin
 import com.codeland.uhc.quirk.quirks.classes.Classes
+import net.kyori.adventure.text.Component
 
-enum class QuirkType(val prettyName: String, val create: (QuirkType) -> Quirk, val description: Array<String>) {
-	UNSHELTERED("Unsheltered", ::Unsheltered, arrayOf(
-		"Terrain cannot be modified",
-		"You cannot place or mine blocks",
-		"But you still get the block loot"
+enum class QuirkType(val prettyName: String, val create: (QuirkType) -> Quirk, val description: List<Component>) {
+	UNSHELTERED("Unsheltered", ::Unsheltered, listOf(
+		Component.text("Terrain cannot be modified"),
+		Component.text("You cannot place or mine blocks"),
+		Component.text("But you still get the block loot")
     )),
 
-    PESTS("Pests", ::Pests, arrayOf(
-		"Dead players come back to exact their revenge",
-		"But they are weak and have no access to advanced tools"
+    PESTS("Pests", ::Pests, listOf(
+		Component.text("Dead players come back to exact their revenge"),
+		Component.text("But they are weak and have no access to advanced tools")
 	)),
 
-	MODIFIED_DROPS("Modified Drops", ::ModifiedDrops, arrayOf(
-		"Hostile mobs drop exceptional loot"
+	MODIFIED_DROPS("Modified Drops", ::ModifiedDrops, listOf(
+		Component.text("Hostile mobs drop exceptional loot")
 	)),
 
-    CREATIVE("Creative", ::Creative, arrayOf(
-		"you may place tough to get blocks without them emptying from your inventory"
+    CREATIVE("Creative", ::Creative, listOf(
+	    Component.text("you may place tough to get blocks without them emptying from your inventory")
 	)),
 
-	SUMMONER("Summoner", ::Summoner, arrayOf(
-		"Mobs drop their spawn eggs when killed"
+	SUMMONER("Summoner", ::Summoner, listOf(
+		Component.text("Mobs drop their spawn eggs when killed")
 	)),
 
-	RANDOM_EFFECTS("Random Effects", ::RandomEffects, arrayOf(
-		"Every 3 minutes,",
-		"Everyone gets a random potion effect"
+	RANDOM_EFFECTS("Random Effects", ::RandomEffects, listOf(
+		Component.text("Every 3 minutes,"),
+		Component.text("Everyone gets a random potion effect")
 	)),
 
-	SHARED_INVENTORY("Shared Inventory", ::SharedInventory, arrayOf(
-		"Everyone has one combined inventory"
+	SHARED_INVENTORY("Shared Inventory", ::SharedInventory, listOf(
+		Component.text("Everyone has one combined inventory")
 	)),
 
-	LOW_GRAVITY("Low Gravity", ::LowGravity, arrayOf(
-		"Gravity is much lower than usual"
+	LOW_GRAVITY("Low Gravity", ::LowGravity, listOf(
+		Component.text("Gravity is much lower than usual")
 	)),
 
-	HOTBAR("Limited Inventory", ::Hotbar, arrayOf(
-		"All players are limited to only",
-		"their hotbar to store items"
+	HOTBAR("Limited Inventory", ::Hotbar, listOf(
+		Component.text("All players are limited to only"),
+		Component.text("their hotbar to store items")
   	)),
 
-	CARE_PACKAGES("Care Packages", ::CarePackages, arrayOf(
-		"Chests periodically drop containing good loot",
-		"go there and you should expect a fight"
+	CARE_PACKAGES("Care Packages", ::CarePackages, listOf(
+		Component.text("Chests periodically drop containing good loot"),
+		Component.text("go there and you should expect a fight")
 	)),
 
-	CHAOTIC_CARE_PACKAGES("Chaotic Care Packages", ::ChaoticCarePackages, arrayOf(
-		"Chests drop every 5 seconds",
-		"Wacky loot is inside"
+	CHAOTIC_CARE_PACKAGES("Chaotic Care Packages", ::ChaoticCarePackages, listOf(
+		Component.text("Chests drop every 5 seconds"),
+		Component.text("Wacky loot is inside")
 	)),
 
-	DEATHSWAP("Deathswap", ::Deathswap, arrayOf(
-		"Players switch places with each other",
-		"at randomly chosen intervals"
+	DEATHSWAP("Deathswap", ::Deathswap, listOf(
+		Component.text("Players switch places with each other"),
+		Component.text("at randomly chosen intervals")
 	)),
 
-	HALLOWEEN("Halloween", ::Halloween, arrayOf(
-		"Mobs drop candy",
-		"Witches?!"
+	HALLOWEEN("Halloween", ::Halloween, listOf(
+		Component.text("Mobs drop candy"),
+		Component.text("Witches?!")
 	)),
 
-	PUMPKIN("Pumpkin", ::Pumpkin, arrayOf(
-		"You are forced to have a pumpkin on your head"
+	PUMPKIN("Pumpkin", ::Pumpkin, listOf(
+		Component.text("You are forced to have a pumpkin on your head")
 	)),
 
-	CHRISTMAS("Christmas", ::Christmas, arrayOf(
-		"It's snowing all the time!"
+	CHRISTMAS("Christmas", ::Christmas, listOf(
+		Component.text("It's snowing all the time!")
 	)),
 
-	FLYING("Flying", ::Flying, arrayOf(
-		"Start with an elytra and rockets"
+	FLYING("Flying", ::Flying, listOf(
+		Component.text("Start with an elytra and rockets")
 	)),
 
-	PLAYER_COMPASS("Player Compasses", ::PlayerCompass, arrayOf(
-		"Track down players with a special compass"
+	PLAYER_COMPASS("Player Compasses", ::PlayerCompass, listOf(
+		Component.text("Track down players with a special compass")
 	)),
 
-	INFINITE_INVENTORY("Infinite Inventory", ::InfiniteInventory, arrayOf(
-			"Your inventory is unbounded in size"
+	INFINITE_INVENTORY("Infinite Inventory", ::InfiniteInventory, listOf(
+		Component.text("Your inventory is unbounded in size")
 	)),
 
-	CLASSES("Classes", ::Classes, arrayOf(
-		"Pick a class as the game begins",
-		"Get cool abilities"
+	CLASSES("Classes", ::Classes, listOf(
+		Component.text("Pick a class as the game begins"),
+		Component.text("Get cool abilities")
 	)),
-	HORSE("Horse", ::HorseQuirk, arrayOf(
-			"Horse",
-			"Horse"
+
+	HORSE("Horse", ::HorseQuirk, listOf(
+		Component.text("Horse"),
+		Component.text("Horse")
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
