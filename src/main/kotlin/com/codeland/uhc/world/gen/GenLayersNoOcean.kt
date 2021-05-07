@@ -1,5 +1,6 @@
 package com.codeland.uhc.world.gen
 
+import GenLayerBiomeNoJungle
 import net.minecraft.server.v1_16_R3.*
 import net.minecraft.server.v1_16_R3.GenLayerSpecial.*
 import java.util.function.LongFunction
@@ -67,6 +68,8 @@ object GenLayersNoOcean {
 		return var7
 	}
 
+	/* biome numbers can be found in BiomeRegistry */
+
 	private fun <T : Area, C : AreaContextTransformed<T>> createAreaFactoryNoOceans(var0: Boolean, var1: Int, var2: Int, var3: LongFunction<C>): AreaFactory<T> {
 		//var var4 = LayerIsland.INSTANCE.a(var3.apply(1L))
 		//var4 = GenLayerZoom.FUZZY.a(var3.apply(2000L), var4)
@@ -95,8 +98,8 @@ object GenLayersNoOcean {
 		var var6 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var4, 0, var3) as AreaFactory<T>
 		var6 = GenLayerCleaner.INSTANCE.a(var3.apply(100L), var6)
 
-		var var7 = GenLayerBiome(var0).a(var3.apply(200L), var4)
-		var7 = GenLayerJungle.INSTANCE.a(var3.apply(1001L), var7)
+		var var7 = GenLayerBiomeNoJungle(var0).a(var3.apply(200L), var4)
+		//var7 = GenLayerJungle.INSTANCE.a(var3.apply(1001L), var7)
 		//var7 = aFunction.invoke(null, 1000L, GenLayerZoom.NORMAL, var7, 2, var3) as AreaFactory<T>
 		var7 = GenLayerDesert.INSTANCE.a(var3.apply(1000L), var7)
 

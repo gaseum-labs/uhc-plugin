@@ -18,10 +18,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
-import org.bukkit.Bukkit
-import org.bukkit.GameMode
-import org.bukkit.Location
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.command.CommandSender
 import java.time.Duration
 import java.util.*
@@ -59,24 +56,24 @@ object UHC {
 
 	var currentPhase = null as Phase?
 
-	var teleportGroups: Array<Array<UUID>>? = null
+	var teleportGroups: ArrayList<ArrayList<UUID>>? = null
 	var teleportLocations: ArrayList<Location>? = null
 
 	/* properties */
 
-	var phaseVariants = Array(PhaseType.values().size) { index ->
+	val phaseVariants = Array(PhaseType.values().size) { index ->
 		UHCProperty(defaultVariants[index])
 	}
 
-	var quirks = Array(QuirkType.values().size) { index ->
+	val quirks = Array(QuirkType.values().size) { index ->
 		QuirkType.values()[index].createQuirk()
 	}
 
-	var preset = UHCProperty<Preset?>(defaultPreset)
-	var defaultWorldEnvironment = UHCProperty(World.Environment.NORMAL)
-	var naturalRegeneration = UHCProperty(false)
-	var killReward = UHCProperty(KillReward.REGENERATION)
-	var usingBot = UHCProperty(GameRunner.bot != null)
+	val preset = UHCProperty<Preset?>(defaultPreset)
+	val defaultWorldEnvironment = UHCProperty(World.Environment.NORMAL)
+	val naturalRegeneration = UHCProperty(false)
+	val killReward = UHCProperty(KillReward.REGENERATION)
+	val usingBot = UHCProperty(GameRunner.bot != null)
 
 	val properties = arrayOf(
 		preset, defaultWorldEnvironment,
@@ -180,9 +177,9 @@ object UHC {
 
 	fun getDefaultWorld(): World {
 		return if (defaultWorldEnvironment.get() === World.Environment.NORMAL)
-			WorldManager.getGameWorld()
+			WorldManager.getGameWorldGame()
 		else
-			WorldManager.getNetherWorld()
+			WorldManager.getNetherWorldGame()
 	}
 
 	/* game flow modifiers */
@@ -216,56 +213,68 @@ object UHC {
 	}
 
 	/**
-	 * starts the grace period and ends waiting phase
-	 *
-	 * @return a string if the game couldn't start
+	 * @param messageStream send status messages and error messages to the caller,
+	 * true indicates an error
 	 */
-	fun startUHC(commandSender : CommandSender): String? {
-		if (isGameGoing()) return "Game has already started!"
+	fun canStartUHC(messageStream: (Boolean, String) -> Unit): Pair<ArrayList<ArrayList<UUID>>, ArrayList<Location>> {
+		fun errorValue() = Pair(ArrayList<ArrayList<UUID>>(), ArrayList<Location>())
 
-		val world = getDefaultWorld()
-		val numTeams = TeamData.teams.size
-		val individuals = ArrayList<UUID>()
-
-		/* compile a list of all individuals that will play */
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.staged && !TeamData.isOnTeam(uuid)) individuals.add(uuid)
+		if (WorldManager.getGameWorld() == null || WorldManager.getNetherWorld() == null) {
+			messageStream(true, "Game world has not been initialized, use /uhca worldCycle")
+			return errorValue()
 		}
 
-		if (numTeams + individuals.size == 0) return "No one is playing!"
+		if (isGameGoing()) {
+			messageStream(true, "Game has already started")
+			return errorValue()
+		}
+
+		/* compile a list of all individuals that will play */
+		val individuals = PlayerData.playerDataList
+			.filter { (uuid, playerData) -> playerData.staged && !TeamData.isOnTeam(uuid) }
+			.map { (uuid, _) -> arrayListOf(uuid) }
+
+		val numGroups = TeamData.teams.size + individuals.size
+
+		if (numGroups == 0) {
+			messageStream(true, "No one is playing")
+			return errorValue()
+		}
 
 		/* get where players are teleporting */
-		teleportLocations = GraceDefault.spreadPlayers(
+		val world = getDefaultWorld()
+
+		val tempTeleportLocations = GraceDefault.spreadPlayers(
 			world,
-			numTeams + individuals.size,
+			numGroups,
 			startRadius - 5.0,
 			if (world.environment == World.Environment.NETHER) GraceDefault.Companion::findYMid else GraceDefault.Companion::findYTop
 		)
 
-		/* if teleport locations are found! */
-		return if (teleportLocations?.isNotEmpty() == true) {
-			/* compile teams and individuals into who will teleport to which location */
-			teleportGroups = Array(numTeams + individuals.size) { i ->
-				if (i < numTeams) {
-					val team = TeamData.teams[i]
-
-					Array(team.members.size) { j ->
-						team.members[j]
-					}
-				} else {
-					arrayOf(individuals[i - numTeams])
-				}
-			}
-
-			/* switch to grace in 4 seconds */
-			val waiting = currentPhase as WaitingDefault
-			waiting.updateLength(4)
-
-			null
-
-		} else {
-			"Not enough valid spaces to teleport in this world!"
+		if (tempTeleportLocations.isEmpty()) {
+			messageStream(true, "Not enough valid starting locations found")
+			return errorValue()
 		}
+
+		val tempTeleportGroups = TeamData.teams.map { it.members } as ArrayList<ArrayList<UUID>>
+		tempTeleportGroups.addAll(individuals)
+
+		messageStream(false, "Starting UHC")
+
+		return Pair(tempTeleportGroups, tempTeleportLocations)
+	}
+
+	/**
+	 * actually sets in motion the start of uhc
+	 */
+	fun startUHC(tempTeleportGroups: ArrayList<ArrayList<UUID>>, tempTeleportLocations: ArrayList<Location>) {
+		/* compile teams and individuals into who will teleport to which location */
+		teleportGroups = tempTeleportGroups
+		teleportLocations = tempTeleportLocations
+
+		/* switch to grace in 4 seconds */
+		val waiting = currentPhase as WaitingDefault
+		waiting.updateLength(4)
 	}
 
 	/**

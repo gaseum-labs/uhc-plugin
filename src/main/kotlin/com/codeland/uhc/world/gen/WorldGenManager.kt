@@ -25,39 +25,41 @@ object WorldGenManager {
 	private val minecraftKeyField = ResourceKey::class.java.getDeclaredField("c")
 	private val keyField = MinecraftKey::class.java.getDeclaredField("key")
 
-	var centerBiome: ResourceKey<BiomeBase>? = null
-
-    fun init(server: Server) {
-	    serverWorldsField.isAccessible = true
-	    worldServerField.isAccessible = true
-	    chunkProviderServerField.isAccessible = true
-	    chunkGeneratorField.isAccessible = true
-	    worldChunkManagerBField.isAccessible = true
-	    worldChunkManagerCField.isAccessible = true
-	    hField.isAccessible = true
-	    iField.isAccessible = true
-	    jField.isAccessible = true
-	    kField.isAccessible = true
+	init {
+		serverWorldsField.isAccessible = true
+		worldServerField.isAccessible = true
+		chunkProviderServerField.isAccessible = true
+		chunkGeneratorField.isAccessible = true
+		worldChunkManagerBField.isAccessible = true
+		worldChunkManagerCField.isAccessible = true
+		hField.isAccessible = true
+		iField.isAccessible = true
+		jField.isAccessible = true
+		kField.isAccessible = true
 		biomeMapField.isAccessible = true
 		minecraftKeyField.isAccessible = true
-	    keyField.isAccessible = true
+		keyField.isAccessible = true
+	}
 
+	private val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
+
+    fun init(server: Server) {
 	    /* replace worlds hashmap on server */
-
 	    serverWorldsField[server] = object : HashMap<String, World>() {
 		    override fun put(key: String, value: World): World? {
 			    onWorldAdded(value)
 			    return super.put(key, value)
 		    }
 	    }
-
-	    /* parse center biome */
-
-	    val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
-	    centerBiome = biomeMap.asIterable().find { key ->
-		    (keyField[(minecraftKeyField[key.value] as MinecraftKey)] as String).toLowerCase() == WorldGenOption.CENTER_BIOME.get()
-	    }?.value
     }
+
+	fun biomeFromName(name: String?): ResourceKey<BiomeBase>? {
+		if (name == null) return null
+
+		return biomeMap.asIterable().find { key ->
+			(keyField[(minecraftKeyField[key.value] as MinecraftKey)] as String).toLowerCase() == name
+		}?.value
+	}
 
 	val lobbyBiomes = arrayOf(
 		Biomes.MODIFIED_JUNGLE,
@@ -141,7 +143,7 @@ object WorldGenManager {
 				        iField.getBoolean(worldChunkGeneratorOverworld),
 				        jField.getBoolean(worldChunkGeneratorOverworld),
 				        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
-				        centerBiome
+				        biomeFromName(WorldGenOption.centerBiome?.name)
 			        )
 		        }
 	        }

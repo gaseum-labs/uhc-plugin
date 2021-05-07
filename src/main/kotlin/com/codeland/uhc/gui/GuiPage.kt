@@ -28,12 +28,14 @@ open class GuiPage(val height: Int, val name: Component) {
 		return Pair(index % WIDTH, index / WIDTH)
 	}
 
-	fun addItem(guiItem: GuiItem) {
+	fun <G : GuiItem> addItem(guiItem: G): G {
 		guiItems[guiItem.index] = guiItem
 
 		guiItem.giveGui(this)
 
 		guiItem.updateDisplay()
+
+		return guiItem
 	}
 
 	fun removeItem(index: Int) {

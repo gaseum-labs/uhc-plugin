@@ -45,9 +45,6 @@ object Lobby {
 
 		player.gameMode = GameMode.CREATIVE
 
-		/* get them on the health scoreboard */
-		player.damage(0.05)
-
 		/* reset applied status for all active quirks */
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 

@@ -1,6 +1,8 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.WorldGenOption
+import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.gui.guiItem.*
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
@@ -24,6 +26,11 @@ class SetupGui : GuiPage(5, Util.gradientString("UHC Setup", TextColor.color(0x3
 	private val botToggle = BotToggle(coords(2, 4))
 	private val defaultEnvironmentCycler = DefaultEnvironmentCycler(coords(3, 4))
 	private val naturalRegenerationToggle = NaturalRegenerationToggle(coords(4, 4))
+
+	private val worldButton = object : GuiItem(coords(6, 4)) {
+		override fun onClick(player: Player, shift: Boolean) = WorldGenOption.worldGenGui.open(player)
+		override fun getStack() = name(ItemStack(Material.BARRIER), "${ChatColor.GREEN}World Gen Options")
+	}
 
 	private val resetButton = object : GuiItem(coords(7, 4)) {
 		override fun onClick(player: Player, shift: Boolean) {

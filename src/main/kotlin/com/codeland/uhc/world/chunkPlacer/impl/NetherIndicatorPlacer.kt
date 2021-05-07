@@ -13,7 +13,7 @@ import org.bukkit.block.BlockFace
 class NetherIndicatorPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		SchedulerUtil.nextTick {
-			val netherChunk = WorldManager.getNetherWorld().getChunkAt(chunk.x, chunk.z)
+			val netherChunk = WorldManager.getNetherWorld()?.getChunkAt(chunk.x, chunk.z) ?: return@nextTick
 
 			for (i in 0..20) {
 				val x = Util.randRange(0, 15)

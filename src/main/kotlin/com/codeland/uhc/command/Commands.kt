@@ -8,6 +8,7 @@ import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.block.Biome
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -56,5 +57,9 @@ object Commands {
         commandManager.commandCompletions.registerCompletion("quirkclass") {
             QuirkClass.values().mapIndexedNotNull { i, quirkClass -> if (i == 0) null else quirkClass.name.toLowerCase() }
         }
+
+	    commandManager.commandCompletions.registerCompletion("biome") {
+		   Biome.values().map { it.name.toLowerCase() }
+	    }
     }
 }

@@ -218,6 +218,25 @@ object Packet {
 			}
 		})
 
+		val scoreboardObjectiveField = PacketPlayOutScoreboardScore::class.java.getDeclaredField("b")
+		scoreboardObjectiveField.isAccessible = true
+
+		val scoreboardPlayerField = PacketPlayOutScoreboardScore::class.java.getDeclaredField("a")
+		scoreboardPlayerField.isAccessible = true
+
+		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.SCOREBOARD_SCORE) {
+			override fun onPacketSending(event: PacketEvent) {
+				val objectiveName = scoreboardObjectiveField[event.packet.handle] as String
+				if (objectiveName != GameRunner.heartsObjective.name) return
+
+				val originalPlayerName = scoreboardPlayerField[event.packet.handle] as String
+				val player = Bukkit.getPlayer(originalPlayerName) ?: return
+
+				val mappedPlayerName = playersNewName(player.uniqueId)
+				scoreboardPlayerField.set(event.packet.handle, mappedPlayerName)
+			}
+		})
+
 		/*
 				val sentPlayer = event.player as CraftPlayer
 				val packet = event.packet.handle as PacketPlayOutEntityMetadata

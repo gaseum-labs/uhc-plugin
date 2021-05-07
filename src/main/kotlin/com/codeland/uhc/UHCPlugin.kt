@@ -5,6 +5,7 @@ import com.codeland.uhc.command.*
 import com.codeland.uhc.core.*
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
+import com.codeland.uhc.core.MOTD.setMOTD
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.util.Util
@@ -50,9 +51,6 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(GuiManager(), this)
 		Packet.init()
 
-		WorldGenOption.readFile("uhc.properties")
-		WorldGenOption.displayOptions()
-
 		WorldGenManager.init(server)
 
 		VariantList.create()
@@ -74,8 +72,10 @@ class UHCPlugin : JavaPlugin() {
 			null
 		}
 
+		setMOTD()
+
 		server.scheduler.scheduleSyncDelayedTask(this) {
-			WorldManager.initWorlds(false)
+			WorldManager.init()
 
 			GameRunner.registerHearts()
 

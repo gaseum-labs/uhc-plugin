@@ -1,6 +1,7 @@
 package com.codeland.uhc.phase
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.WorldManager
 import org.bukkit.Bukkit
 import org.bukkit.NamespacedKey
 import org.bukkit.World
@@ -22,12 +23,22 @@ class WorldBar(var bossBar: BossBar, var world: World, var key: NamespacedKey) {
 		}
 
 		fun initWorldBars(worlds: List<World>) {
-			worldBars = worlds.map { world ->
-				val key = keygen(world.name)
-
+			/* wipe residual bars */
+			arrayOf(
+				WorldManager.END_WORLD_NAME,
+				WorldManager.GAME_WORLD_NAME,
+				WorldManager.NETHER_WORLD_NAME,
+				WorldManager.PVP_WORLD_NAME,
+				WorldManager.LOBBY_WORLD_NAME
+			).forEach { name ->
+				val key = keygen(name)
 				Bukkit.getBossBar(key)?.removeAll()
 				Bukkit.removeBossBar(key)
+			}
 
+			/* create bars for the worlds provided */
+			worldBars = worlds.map { world ->
+				val key = keygen(world.name)
 				WorldBar(defaultBar(key), world, key)
 			} as ArrayList<WorldBar>
 

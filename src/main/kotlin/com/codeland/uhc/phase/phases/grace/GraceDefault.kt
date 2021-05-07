@@ -13,7 +13,7 @@ import kotlin.math.*
 class GraceDefault : Phase() {
 	override fun customStart() {
 		/* set border in each game dimension */
-		listOf(WorldManager.getGameWorld(), WorldManager.getNetherWorld()).forEach { world ->
+		listOf(WorldManager.getGameWorldGame(), WorldManager.getNetherWorldGame()).forEach { world ->
 			world.worldBorder.setCenter(0.5, 0.5)
 			world.worldBorder.size = UHC.startRadius * 2 + 1.0
 

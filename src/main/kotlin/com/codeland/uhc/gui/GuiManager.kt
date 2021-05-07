@@ -1,6 +1,5 @@
 package com.codeland.uhc.gui
 
-import com.codeland.uhc.util.Util
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener

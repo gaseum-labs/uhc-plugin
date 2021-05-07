@@ -1,9 +1,9 @@
 name: UHCPlugin
-version: 0.1.0
+version: 1.5.1
 authors:
   - Balduvian
-  - Varas
   - Sumdumdude
+  - C1fr1
   - Rewind
 load: STARTUP
 main: com.codeland.uhc.UHCPlugin

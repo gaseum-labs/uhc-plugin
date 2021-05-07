@@ -191,9 +191,9 @@ class Portal : Listener {
 				/* going to the game world if in nether */
 
 				val exitWorld = if (player.world.name == WorldManager.GAME_WORLD_NAME)
-					WorldManager.getNetherWorld()
+					WorldManager.getNetherWorldGame()
 				else
-					WorldManager.getGameWorld()
+					WorldManager.getGameWorldGame()
 
 				val entrancePortalBlock = findPlayersPortal(player.world, player.location)
 

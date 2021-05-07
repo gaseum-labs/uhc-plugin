@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.PhaseType
@@ -13,10 +14,8 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
-import org.bukkit.Bukkit
-import org.bukkit.Location
-import org.bukkit.OfflinePlayer
-import org.bukkit.World
+import org.bukkit.*
+import org.bukkit.block.Biome
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -26,29 +25,29 @@ class AdminCommands : BaseCommand() {
 	@Description("start the UHC")
 	fun startGame(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
-		if (!UHC.isPhase(PhaseType.WAITING)) return Commands.errorMessage(sender, "Game has already started!")
 
-		GameRunner.sendGameMessage(sender, "Starting UHC...")
+		val (groups, locs) = UHC.canStartUHC { err, message ->
+			if (err) Commands.errorMessage(sender, message) else GameRunner.sendGameMessage(sender, message)
+		}
 
-		val errMessage = UHC.startUHC(sender)
-		if (errMessage != null) Commands.errorMessage(sender, errMessage)
+		if (groups.isNotEmpty()) Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
+			UHC.startUHC(groups, locs)
+		}
 	}
 
 	@Subcommand("startAll")
 	@Description("start the UHC with no teams")
 	fun startGameAll(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
-		if (!UHC.isPhase(PhaseType.WAITING)) return Commands.errorMessage(sender, "Game has already started!")
 
-		/* stage everyone */
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+		/* stage everyone who's online */
+		Bukkit.getOnlinePlayers().forEach { player ->
+			val playerData = PlayerData.getPlayerData(player.uniqueId)
+
 			if (!playerData.optingOut) playerData.staged = true
 		}
 
-		GameRunner.sendGameMessage(sender, "Starting UHC...")
-
-		val errMessage = UHC.startUHC(sender)
-		if (errMessage != null) Commands.errorMessage(sender, errMessage)
+		startGame(sender)
 	}
 
 	@Subcommand("reset")
@@ -58,7 +57,6 @@ class AdminCommands : BaseCommand() {
 
 		UHC.startPhase(PhaseType.WAITING)
 	}
-
 
 	@Subcommand("mobCoefficient")
 	@Description("change the mob spawn cap coefficient")
@@ -195,18 +193,65 @@ class AdminCommands : BaseCommand() {
 		GameRunner.sendGameMessage(sender, "Pvp world reset")
 	}
 
-	@Subcommand("worldCycle")
-	fun worldCycle(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
+	private fun moveAllToLobby() {
 		Bukkit.getOnlinePlayers().forEach { player ->
 			if (!WorldManager.isNonGameWorld(player.world)) Lobby.onSpawnLobby(player)
 		}
+	}
 
-		WorldManager.initWorlds(true)
+	@Subcommand("world destroy")
+	@Description("Destroys the currently loaded game worlds")
+	fun worldDestroy(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
 
-		GameRunner.sendGameMessage(sender, "Game worlds reset")
+		moveAllToLobby()
+
+		val destroyedGameWorld = WorldManager.destroyWorld(WorldManager.GAME_WORLD_NAME)
+		val destroyedNetherWorld = WorldManager.destroyWorld(WorldManager.NETHER_WORLD_NAME)
+
+		if (destroyedGameWorld == null && destroyedNetherWorld == null) {
+			Commands.errorMessage(sender, "Game worlds already unloaded")
+		} else {
+			GameRunner.sendGameMessage(sender, "Game worlds destroyed")
+		}
+	}
+
+	@Subcommand("world recover")
+	@Description("Try to initialize game world that already exist")
+	fun worldRecover(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
+
+		val existed = WorldManager.existsUnloaded(WorldManager.GAME_WORLD_NAME)
+			|| WorldManager.existsUnloaded(WorldManager.NETHER_WORLD_NAME)
+
+		moveAllToLobby()
+
+		WorldManager.refreshGameWorlds(null)
+
+		if (existed) {
+			GameRunner.sendGameMessage(sender, "Recovered game worlds")
+		} else {
+			GameRunner.sendGameMessage(sender, "No existing game worlds found, created them")
+		}
+	}
+
+	@CommandCompletion("@biome")
+	@Subcommand("world refresh")
+	@Description("Initialize the game worlds")
+	fun worldCycle(sender: CommandSender, biome: Biome) {
+		if (Commands.opGuard(sender)) return
+		if (Commands.notGoingGuard(sender)) return
+
+		moveAllToLobby()
+
+		WorldManager.destroyWorld(WorldManager.GAME_WORLD_NAME)
+		WorldManager.destroyWorld(WorldManager.NETHER_WORLD_NAME)
+
+		WorldManager.refreshGameWorlds(biome)
+
+		GameRunner.sendGameMessage(sender, "Game worlds refreshed")
 	}
 
 	@CommandCompletion("@uhcplayer")
