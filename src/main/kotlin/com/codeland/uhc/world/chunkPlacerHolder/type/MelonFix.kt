@@ -15,7 +15,7 @@ class MelonFix : ChunkPlacerHolder() {
 			}
 		}
 
-		val melonPlacer = MelonPlacer(3)
+		val melonPlacer = MelonPlacer(1)
 	}
 
 	override fun list(): Array<AbstractChunkPlacer> = arrayOf(melonPlacer)

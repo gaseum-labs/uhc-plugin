@@ -1,14 +1,13 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
-import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.block.data.MultipleFacing
 
 class MelonPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
@@ -18,29 +17,12 @@ class MelonPlacer(size: Int) : DelayedChunkPlacer(size) {
 			world.isChunkGenerated(chunkX - 1, chunkZ - 1)
 	}
 
-	val TOP_SCORE = 100
-	val OVERHANG_SCORE = 10
-	val SURROUND_SCORE = 1
-
-	val PERFECT_SCORE1 = TOP_SCORE + OVERHANG_SCORE * 4
-	val PERFECT_SCORE2 = TOP_SCORE + SURROUND_SCORE * 4
-
 	override fun place(chunk: Chunk, chunkIndex: Int) {
-		var bestScore = 0
-		var bestBlock: Block? = null
-
-		fun sideScore(block: Block, blockFace: BlockFace): Int {
-			val relative = block.getRelative(blockFace)
-
-			return if (relative.isPassable && !relative.getRelative(BlockFace.UP).isPassable)
-				OVERHANG_SCORE
-			else if (!relative.isPassable)
-				SURROUND_SCORE
-			else
-				0
-		}
-
 		fun hasJungle(): Boolean {
+			/* at least one fourth of the chunk must be jungle */
+			val THRESHOLD = 8 * 8 / 4
+			var count = 0
+
 			for (x in 0..7) for (z in 0..7) {
 				val biome = chunk.getBlock(x * 2, 63, z * 2).biome
 
@@ -49,35 +31,80 @@ class MelonPlacer(size: Int) : DelayedChunkPlacer(size) {
 					biome === Biome.JUNGLE_HILLS ||
 					biome === Biome.MODIFIED_JUNGLE ||
 					biome === Biome.BAMBOO_JUNGLE ||
-					biome === Biome.BAMBOO_JUNGLE_HILLS
-				) return true
+					biome === Biome.BAMBOO_JUNGLE_HILLS ||
+					biome === Biome.JUNGLE_EDGE ||
+					biome === Biome.MODIFIED_JUNGLE_EDGE
+				) ++count
+
+				if (count >= THRESHOLD) return true
 			}
 
 			return false
 		}
 
-		if (!hasJungle()) return
+		fun validSide(block: Block, blockFace: BlockFace): Boolean {
+			var checkBlock = block
 
-		randomPosition(chunk, 63, 80) { block, x, y, z ->
-			if (block.getRelative(BlockFace.DOWN).type == Material.GRASS_BLOCK && block.isPassable) {
-				val score = (if (!block.getRelative(BlockFace.UP).isPassable) TOP_SCORE else 0) +
-					sideScore(block, BlockFace.EAST) +
-					sideScore(block, BlockFace.WEST) +
-					sideScore(block, BlockFace.SOUTH) +
-					sideScore(block, BlockFace.NORTH)
+			for (i in 0..3) {
+				checkBlock = checkBlock.getRelative(blockFace)
 
-				if (score > bestScore) {
-					bestBlock = block
-					bestScore = score
+				if (checkBlock.isPassable) {
+					val up = checkBlock.getRelative(BlockFace.UP)
 
-					if (score == PERFECT_SCORE1 || score == PERFECT_SCORE2) return@randomPosition true
+					/* if there's an air gap, the wall block must come immediately next */
+					if (up.isPassable) return (!checkBlock.getRelative(blockFace).isPassable)
+					/* if there's a roof, continue */
+				} else {
+					/* if there's a wall, good */
+					return true
 				}
 			}
 
-			false
+			/* 4 continuous roof blocks is good */
+			return true
 		}
 
-		bestBlock?.setType(Material.MELON, false)
-		bestBlock?.getRelative(BlockFace.DOWN)?.setType(Material.DIRT, false)
+		fun placeVine(block: Block, blockFace: BlockFace) {
+			val vineBlock = block.getRelative(blockFace)
+
+			if (vineBlock.isPassable) {
+				if (vineBlock.type !== Material.VINE) vineBlock.setType(Material.VINE, false)
+
+				val blockData = vineBlock.blockData as MultipleFacing
+				blockData.setFace(blockFace.oppositeFace, true)
+				vineBlock.blockData = blockData
+			}
+		}
+
+		if (!hasJungle()) return
+
+		randomPosition(chunk, 63, 80) { block, x, y, z ->
+			if (
+				block.isPassable &&
+				block.getRelative(BlockFace.DOWN).type == Material.GRASS_BLOCK &&
+				!block.getRelative(BlockFace.UP).isPassable
+			) {
+				if (
+					validSide(block, BlockFace.EAST) &&
+					validSide(block, BlockFace.WEST) &&
+					validSide(block, BlockFace.SOUTH) &&
+					validSide(block, BlockFace.NORTH)
+				) {
+					block.setType(Material.MELON, false)
+					block.getRelative(BlockFace.DOWN).setType(Material.DIRT, false)
+
+					placeVine(block, BlockFace.EAST)
+					placeVine(block, BlockFace.WEST)
+					placeVine(block, BlockFace.SOUTH)
+					placeVine(block, BlockFace.NORTH)
+
+					true
+				} else {
+					false
+				}
+			} else {
+				false
+			}
+		}
 	}
 }

@@ -32,6 +32,12 @@ object WorldManager {
 		refreshWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
 	}
 
+	fun recoverGameWorlds() {
+		WorldGenOption.centerBiome = null
+		recoverWorld(GAME_WORLD_NAME)
+		recoverWorld(NETHER_WORLD_NAME)
+	}
+
 	fun getLobbyWorld(): World {
 		return Bukkit.getWorlds()[0]
 	}
@@ -126,5 +132,19 @@ object WorldManager {
 		}
 
 		return newWorld
+	}
+
+	fun recoverWorld(name: String): World? {
+		val oldWorld = Bukkit.getServer().getWorld(name)
+		val recovered = WorldCreator(name).createWorld()
+
+		if (recovered != null) {
+			WorldBar.resetWorldBar(oldWorld, recovered)
+			prepareWorld(recovered)
+
+			if (name == GAME_WORLD_NAME) ChunkPlacerHolderType.resetAll(recovered.seed)
+		}
+
+		return recovered
 	}
 }

@@ -199,7 +199,7 @@ class AdminCommands : BaseCommand() {
 		}
 	}
 
-	@Subcommand("world destroy")
+	@Subcommand("worldDestroy")
 	@Description("Destroys the currently loaded game worlds")
 	fun worldDestroy(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -217,7 +217,7 @@ class AdminCommands : BaseCommand() {
 		}
 	}
 
-	@Subcommand("world recover")
+	@Subcommand("worldRecover")
 	@Description("Try to initialize game world that already exist")
 	fun worldRecover(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -228,7 +228,7 @@ class AdminCommands : BaseCommand() {
 
 		moveAllToLobby()
 
-		WorldManager.refreshGameWorlds(null)
+		WorldManager.recoverGameWorlds()
 
 		if (existed) {
 			GameRunner.sendGameMessage(sender, "Recovered game worlds")
@@ -238,7 +238,7 @@ class AdminCommands : BaseCommand() {
 	}
 
 	@CommandCompletion("@biome")
-	@Subcommand("world refresh")
+	@Subcommand("worldRefresh")
 	@Description("Initialize the game worlds")
 	fun worldCycle(sender: CommandSender, biome: Biome) {
 		if (Commands.opGuard(sender)) return

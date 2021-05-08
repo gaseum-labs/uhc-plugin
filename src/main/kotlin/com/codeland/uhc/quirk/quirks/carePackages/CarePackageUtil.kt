@@ -60,7 +60,7 @@ object CarePackageUtil {
 
 				val angle = (atan2(offZ.toDouble(), offX.toDouble()) + PI).toFloat()
 
-				val blockRadius = radius * Util.bilinearWrap(magnitudeField, 3, 3, angle / (PI.toFloat() * 2.0f), magnitudeHeight)
+				val blockRadius = radius * Util.bilinear2D(magnitudeField, 3, 3, angle / (PI.toFloat() * 2.0f), magnitudeHeight)
 
 				if (sqrt(offX.toDouble().pow(2) + offZ.toDouble().pow(2)) < blockRadius) {
 					val circleBlock = world.getBlockAt(block.x + offX, y, block.z + offZ)

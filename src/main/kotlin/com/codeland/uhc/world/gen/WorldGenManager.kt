@@ -1,5 +1,6 @@
 package com.codeland.uhc.world.gen
 
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.WorldGenOption
 import com.codeland.uhc.core.WorldManager
 import com.codeland.uhc.util.Util
@@ -54,10 +55,10 @@ object WorldGenManager {
     }
 
 	fun biomeFromName(name: String?): ResourceKey<BiomeBase>? {
-		if (name == null) return null
+		val lowerName = name?.toLowerCase() ?: return null
 
 		return biomeMap.asIterable().find { key ->
-			(keyField[(minecraftKeyField[key.value] as MinecraftKey)] as String).toLowerCase() == name
+			(keyField[(minecraftKeyField[key.value] as MinecraftKey)] as String) == lowerName
 		}?.value
 	}
 
@@ -138,12 +139,14 @@ object WorldGenManager {
 		        }
 		        /* game world */
 		        else -> {
-			        WorldChunkManagerOverworldNoOcean(
+			        WorldChunkManagerOverworldGame(
 				        hField.getLong(worldChunkGeneratorOverworld),
 				        iField.getBoolean(worldChunkGeneratorOverworld),
 				        jField.getBoolean(worldChunkGeneratorOverworld),
 				        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
-				        biomeFromName(WorldGenOption.centerBiome?.name)
+				        biomeFromName(WorldGenOption.centerBiome?.name),
+				        WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
+				        UHC.startRadius
 			        )
 		        }
 	        }

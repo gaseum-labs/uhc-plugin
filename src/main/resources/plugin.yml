@@ -5,6 +5,7 @@ authors:
   - Sumdumdude
   - C1fr1
   - Rewind
+  - roobley
 load: STARTUP
 main: com.codeland.uhc.UHCPlugin
 api-version: 1.16

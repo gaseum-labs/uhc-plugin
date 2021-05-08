@@ -11,6 +11,7 @@ import org.bukkit.ChatColor
 import org.bukkit.World
 import java.util.logging.Level
 import kotlin.math.acos
+import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -197,7 +198,17 @@ object Util {
 		"Reset"
 	)
 
-	fun bilinearWrap(array: Array<Float>, width: Int, height: Int, x: Float, y: Float): Float {
+	fun bilinear(array: Array<Float>, along: Float): Float {
+		val weight1 = along - floor(along)
+		val weight0 = 1 - weight1
+
+		val left = mod(along.toInt(), array.size)
+		val right =  mod(left + 1, array.size)
+
+		return array[left] * weight0 + array[right] + weight1
+	}
+
+	fun bilinear2D(array: Array<Float>, width: Int, height: Int, x: Float, y: Float): Float {
 		val minX = (x * width).toInt() % width
 		val maxX = (minX + 1) % width
 

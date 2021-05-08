@@ -29,7 +29,7 @@ class SetupGui : GuiPage(5, Util.gradientString("UHC Setup", TextColor.color(0x3
 
 	private val worldButton = object : GuiItem(coords(6, 4)) {
 		override fun onClick(player: Player, shift: Boolean) = WorldGenOption.worldGenGui.open(player)
-		override fun getStack() = name(ItemStack(Material.BARRIER), "${ChatColor.GREEN}World Gen Options")
+		override fun getStack() = name(ItemStack(Material.GOLD_ORE), "${ChatColor.GREEN}World Gen Options")
 	}
 
 	private val resetButton = object : GuiItem(coords(7, 4)) {
@@ -65,6 +65,7 @@ class SetupGui : GuiPage(5, Util.gradientString("UHC Setup", TextColor.color(0x3
 		addItem(botToggle)
 		addItem(defaultEnvironmentCycler)
 		addItem(naturalRegenerationToggle)
+		addItem(worldButton)
 		addItem(resetButton)
 		addItem(cancelButton)
 	}
