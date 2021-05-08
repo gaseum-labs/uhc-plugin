@@ -60,7 +60,11 @@ enum class WorldGenOption(
 
 	CHRISTMAS("Christmas", UHCProperty(false), listOf(
 		Component.text("Covers the world in snow"),
-	), Material.SNOWBALL);
+	), Material.SNOWBALL),
+
+	CHUNK_BIOMES("Chunk Biomes", UHCProperty(false), listOf(
+		Component.text("Each chunk is a different biome"),
+	), Material.DEAD_BUSH);
 
 	companion object {
 		var centerBiome: Biome? = null
@@ -74,7 +78,7 @@ enum class WorldGenOption(
 				values().forEachIndexed { i, option ->
 					addItem(object : GuiItemProperty <Boolean> (i, option.property) {
 						override fun onClick(player: Player, shift: Boolean) {
-							option.property.set(!option.property.get())
+							if (!UHC.isGameGoing()) option.property.set(!option.property.get())
 						}
 
 						override fun getStackProperty(value: Boolean): ItemStack {
@@ -89,8 +93,10 @@ enum class WorldGenOption(
 				}
 
 				addItem(object : GuiItem(coords(7, 4)) {
-					override fun onClick(player: Player, shift: Boolean) = values().forEach { it.property.reset() }
-					override fun getStack() = name(ItemStack(Material.HEART_OF_THE_SEA), "${ChatColor.AQUA}Reset")
+					override fun onClick(player: Player, shift: Boolean) {
+						if (!UHC.isGameGoing()) values().forEach { it.property.reset() }
+					}
+					override fun getStack() = name(ItemStack(Material.MUSIC_DISC_WAIT), "${ChatColor.AQUA}Reset")
 				})
 
 				addItem(object : GuiItem(coords(8, 4)) {

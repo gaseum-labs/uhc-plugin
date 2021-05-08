@@ -111,15 +111,17 @@ object WorldGenManager {
             val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGenerator
             val worldChunkGeneratorOverworld = worldChunkManagerBField[chunkGenerator] as? WorldChunkManagerOverworld ?: return Util.log("Wrong WorldChunkGenerator found.")
 
+	        val seed = hField.getLong(worldChunkGeneratorOverworld)
+	        val bool0 = iField.getBoolean(worldChunkGeneratorOverworld)
+	        val bool1 = jField.getBoolean(worldChunkGeneratorOverworld)
+	        val biomeRegistry = kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>
+
 	        val customWorldChunkGeneratorOverworld = when (world.name) {
 		        /* lobby world */
 		        WorldManager.LOBBY_WORLD_NAME -> {
 			        val (biome0, biome1) = getBiomes()
 			        WorldChunkManagerOverworldLobby(
-				        hField.getLong(worldChunkGeneratorOverworld),
-				        iField.getBoolean(worldChunkGeneratorOverworld),
-				        jField.getBoolean(worldChunkGeneratorOverworld),
-				        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+				        seed, bool0, bool1, biomeRegistry,
 				        biome0,
 				        biome1,
 				        Util.randFromArray(lobbyCenterBiomes),
@@ -130,24 +132,25 @@ object WorldGenManager {
 		        /* pvp world */
 		        WorldManager.PVP_WORLD_NAME -> {
 			        WorldChunkManagerOverworldPvp(
-				        hField.getLong(worldChunkGeneratorOverworld),
-				        iField.getBoolean(worldChunkGeneratorOverworld),
-				        jField.getBoolean(worldChunkGeneratorOverworld),
-				        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
+				        seed, bool0, bool1, biomeRegistry,
 				        pvpBiomes
 			        )
 		        }
 		        /* game world */
 		        else -> {
-			        WorldChunkManagerOverworldGame(
-				        hField.getLong(worldChunkGeneratorOverworld),
-				        iField.getBoolean(worldChunkGeneratorOverworld),
-				        jField.getBoolean(worldChunkGeneratorOverworld),
-				        kField.get(worldChunkGeneratorOverworld) as IRegistry<BiomeBase>,
-				        biomeFromName(WorldGenOption.centerBiome?.name),
-				        WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
-				        UHC.startRadius
-			        )
+			        Util.debug("CHUNK BIOMES: ${WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES)}")
+
+			        if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES))
+			        	WorldChunkManagerOverworldChunkBiomes(
+					        seed, bool0, bool1, biomeRegistry
+			        	)
+		            else
+				        WorldChunkManagerOverworldGame(
+					        seed, bool0, bool1, biomeRegistry,
+					        biomeFromName(WorldGenOption.centerBiome?.name),
+					        WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
+					        UHC.startRadius
+				        )
 		        }
 	        }
 

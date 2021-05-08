@@ -30,7 +30,7 @@ class WorldChunkManagerOverworldPvp(
 	    val sz = Util.mod(z, stride / 4) * 4
 
 	    return var4.d(when {
-	    	inRange(sx, sz, PvpGameManager.LARGE_BORDER) -> biomes[Random(cx.toLong().shl(16).or(cz.toLong()).xor(seed)).nextInt(0, biomes.size)]
+	    	inRange(sx, sz, PvpGameManager.LARGE_BORDER) -> biomes[Random(cx.toLong().shl(32).or(cz.toLong()).xor(seed)).nextInt(0, biomes.size)]
 		    inRange(sx, sz, PvpGameManager.BEACH) -> Biomes.BEACH
 		    else -> Biomes.OCEAN
 	    })
