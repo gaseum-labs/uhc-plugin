@@ -16,20 +16,23 @@ import org.bukkit.inventory.EntityEquipment
 import org.bukkit.inventory.ItemStack
 
 class SpawnZombie : SpawnInfo() {
-	override fun allowSpawn(block: Block, spawnCycle: Int): EntityType? {
+	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
 		if (block.lightLevel > 7) return null
 		if (!spawnFloor(block.getRelative(BlockFace.DOWN))) return null
 		if (spawnObstacle(block) || spawnObstacle(block.getRelative(BlockFace.UP))) return null
 
-		return if (block.biome == Biome.DESERT || block.biome == Biome.DESERT_HILLS || block.biome == Biome.DESERT_LAKES) EntityType.HUSK
-		else if (isWater(block) && isWater(block.getRelative(BlockFace.UP))) EntityType.DROWNED
-		else EntityType.ZOMBIE
+		return if (block.biome == Biome.DESERT || block.biome == Biome.DESERT_HILLS || block.biome == Biome.DESERT_LAKES)
+			reg(EntityType.HUSK)
+		else if (isWater(block) && isWater(block.getRelative(BlockFace.UP)))
+			reg(EntityType.DROWNED)
+		else
+			reg(EntityType.ZOMBIE)
 	}
 
 	override fun onSpawn(block: Block, spawnCycle: Int, entity: Entity) {
 		val zombie = entity as Zombie
 
-		zombie.isBaby = false
+		zombie.setAdult()
 		zombie.canPickupItems = false
 		zombie.equipment?.clear()
 

@@ -135,8 +135,8 @@ class AdminCommands : BaseCommand() {
 	@Description("adds a player to the game after it has already started")
 	fun addLate(sender: CommandSender, offlinePlayer: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
-		if (!UHC.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going!")
-		if (PlayerData.isOptingOut(offlinePlayer.uniqueId)) return Commands.errorMessage(sender, "${offlinePlayer.name} is opting out of participating!")
+		if (!UHC.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going")
+		if (PlayerData.isOptingOut(offlinePlayer.uniqueId)) return Commands.errorMessage(sender, "${offlinePlayer.name} is opting out of participating")
 
 		/* teleport will be to an alive team member if player is on a team */
 		/* will be to a random location if not on a team or no playing team members */
@@ -165,6 +165,21 @@ class AdminCommands : BaseCommand() {
 		GraceDefault.startPlayer(offlinePlayer.uniqueId, teleportLocation)
 
 		GameRunner.sendGameMessage(sender, "Started player ${offlinePlayer.name} late")
+	}
+
+	@CommandCompletion("@uhcplayer")
+	@Subcommand("kill")
+	@Description("kill a player and record it in the death ledger")
+	fun kill(sender: CommandSender, offlinePlayer: OfflinePlayer) {
+		if (Commands.opGuard(sender)) return
+		if (!UHC.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going")
+
+		val playerData = PlayerData.getPlayerData(offlinePlayer.uniqueId)
+
+		if (!playerData.participating) return Commands.errorMessage(sender, "${offlinePlayer.name} is not in the game")
+		if (!playerData.alive) return Commands.errorMessage(sender, "${offlinePlayer.name} is already dead")
+
+		GameRunner.playerDeath(offlinePlayer.uniqueId, null, playerData, true)
 	}
 
 	@Subcommand("pregen")

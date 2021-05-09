@@ -138,8 +138,6 @@ object WorldGenManager {
 		        }
 		        /* game world */
 		        else -> {
-			        Util.debug("CHUNK BIOMES: ${WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES)}")
-
 			        if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES))
 			        	WorldChunkManagerOverworldChunkBiomes(
 					        seed, bool0, bool1, biomeRegistry

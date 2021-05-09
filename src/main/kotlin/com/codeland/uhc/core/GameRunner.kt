@@ -11,6 +11,7 @@ import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -25,6 +26,7 @@ import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.RenderType
 import java.util.*
+import javax.naming.Name
 
 object GameRunner {
 	var bot: MixerBot? = null
@@ -69,8 +71,8 @@ object GameRunner {
 			?: emptyList()
 	}
 
-	fun playerDeath(uuid: UUID, killer: Player?, playerData: PlayerData) {
-		if (shouldRespawn(killer, playerData)) {
+	fun playerDeath(uuid: UUID, killer: Player?, playerData: PlayerData, force: Boolean) {
+		if (shouldRespawn(killer, playerData) && !force) {
 			playerRespawn(uuid)
 		} else {
 			playerPermaDeath(uuid, killer, UHC.isEnabled(QuirkType.PESTS)) { Pests.onBecomePest(it) }
@@ -101,12 +103,22 @@ object GameRunner {
 		val deadPlayerName = Bukkit.getOfflinePlayer(uuid).name ?: "NULL"
 		UHC.ledger.addEntry(deadPlayerName, UHC.elapsedTime, killerName)
 
-		/* broadcast elimination message */
-		val elimMessage1 = when {
-			team != null -> team.apply(team.gameName()).append(Component.text(" has been eliminated!", NamedTextColor.GOLD, TextDecoration.BOLD))
-			else -> Component.text("$deadPlayerName has been Eliminated!", NamedTextColor.GRAY, TextDecoration.BOLD)
+		val hasBeenEliminated = Component.text(" has been eliminated!", NamedTextColor.GOLD, TextDecoration.BOLD)
+
+		val elimMessage1: Component
+		val elimMessage2: Component
+
+		/* full team elimination */
+		if (team == null || !teamIsAlive) {
+			elimMessage1 = team?.apply(team.gameName())?.style(Style.style(TextDecoration.BOLD))?.append(hasBeenEliminated)
+				?: Component.text(deadPlayerName, NamedTextColor.GRAY, TextDecoration.BOLD).append(hasBeenEliminated)
+
+			elimMessage2 = Component.text("$remainingTeams teams remain", NamedTextColor.GOLD, TextDecoration.BOLD)
+		/* team member elimination */
+		} else {
+			elimMessage1 = team.apply(deadPlayerName).style(Style.style(TextDecoration.BOLD)).append(hasBeenEliminated)
+			elimMessage2 = Component.empty()
 		}
-		val elimMessage2 = Component.text("$remainingTeams teams remain", NamedTextColor.GRAY, TextDecoration.BOLD)
 
 		Bukkit.getServer().onlinePlayers.filter { WorldManager.isGameWorld(it.world) }.forEach { player ->
 			player.sendMessage(elimMessage1)

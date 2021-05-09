@@ -5,10 +5,10 @@ import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.core.*
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.CommandItemType
-import com.codeland.uhc.phase.WorldBar
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.phase.WorldBar
+import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.quirk.HorseQuirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
@@ -20,7 +20,14 @@ import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.minecraft.server.v1_16_R3.*
 import org.bukkit.*
+import org.bukkit.Material
+import org.bukkit.Particle
+import org.bukkit.attribute.Attribute
+import org.bukkit.attribute.AttributeModifier
+import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack
+import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftRecipe
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -31,10 +38,11 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.weather.WeatherChangeEvent
-import org.bukkit.inventory.EquipmentSlot
+import org.bukkit.inventory.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionType
+import java.util.*
 
 class EventListener : Listener {
 	@EventHandler
@@ -159,7 +167,7 @@ class EventListener : Listener {
 				player.sendMessage(deathMessage)
 			}
 
-			GameRunner.playerDeath(uuid, player.killer, playerData)
+			GameRunner.playerDeath(uuid, player.killer, playerData, false)
 		}
 	}
 
@@ -196,11 +204,20 @@ class EventListener : Listener {
 			val summoner = UHC.getQuirk(QuirkType.SUMMONER) as Summoner
 			if (summoner.enabled.get() && summoner.commander.get()) {
 				val team = TeamData.playersTeam(target.uniqueId)
-				event.isCancelled = team != null && Summoner.isCommandedBy(event.entity, team)
+
+				if (team != null && Summoner.isCommandedBy(event.entity, team)) {
+					event.isCancelled = true
+				}
 			}
 
-			if (UHC.isEnabled(QuirkType.PESTS)) {
-				event.isCancelled = PlayerData.isUndead(target.uniqueId)
+			if (UHC.isEnabled(QuirkType.PESTS) && PlayerData.isUndead(target.uniqueId)) {
+				event.isCancelled = true
+			}
+
+			if (event.entityType === EntityType.BLAZE) {
+				val distance = event.entity.location.distance(target.location)
+
+				if (distance >= 24) event.isCancelled = true
 			}
 		}
 	}
@@ -211,7 +228,23 @@ class EventListener : Listener {
 
 		/* prevent pest crafting */
 		if (UHC.isEnabled(QuirkType.PESTS) && PlayerData.isUndead(player.uniqueId)) {
-			event.isCancelled = Util.binarySearch(event.recipe.result.type, Pests.banList)
+			if (Util.binarySearch(event.recipe.result.type, Pests.banList)) event.isCancelled = true
+
+		} else {
+			val stack = event.currentItem ?: return
+
+			fun stats(damage: Double, speed: Double) {
+				val meta = stack.itemMeta
+				meta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, AttributeModifier(UUID.randomUUID(), "Damage", damage - 1.0, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND))
+				meta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, AttributeModifier(UUID.randomUUID(), "AttackSpeed", speed - 4.0, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND))
+				stack.itemMeta = meta
+			}
+
+			when (stack.type) {
+				Material.IRON_AXE -> stats(8.0, 0.9)
+				Material.DIAMOND_AXE -> stats(9.0, 1.0)
+				else -> {}
+			}
 		}
 	}
 
@@ -289,7 +322,7 @@ class EventListener : Listener {
 			val droppedExperience = experience.coerceAtMost(100)
 			event.droppedExp = droppedExperience
 
-			GameRunner.playerDeath(uuid, killer, playerData)
+			GameRunner.playerDeath(uuid, killer, playerData, false)
 
 		} else {
 			/* find a quirk that has a dropfix for this entity */

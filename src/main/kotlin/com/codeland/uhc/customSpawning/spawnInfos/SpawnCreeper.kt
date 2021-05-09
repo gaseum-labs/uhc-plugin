@@ -5,9 +5,9 @@ import org.bukkit.block.Block
 import org.bukkit.entity.EntityType
 
 class SpawnCreeper : SpawnInfo() {
-	override fun allowSpawn(block: Block, spawnCycle: Int): EntityType? {
+	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
 		if (!regularAllowSpawn(block, 7)) return null
 
-		return if (onCycle(spawnCycle, 40)) EntityType.WITCH else EntityType.CREEPER
+		return if (onCycle(spawnCycle, 40)) reg(EntityType.WITCH) else reg(EntityType.CREEPER)
 	}
 }

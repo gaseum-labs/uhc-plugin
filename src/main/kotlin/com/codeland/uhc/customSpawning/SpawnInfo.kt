@@ -1,7 +1,5 @@
 package com.codeland.uhc.customSpawning
 
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -9,8 +7,8 @@ import org.bukkit.block.data.Waterlogged
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 
-abstract class SpawnInfo {
-	abstract fun allowSpawn(block: Block, spawnCycle: Int): EntityType?
+abstract class SpawnInfo () {
+	abstract fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>?
 
 	open fun onSpawn(block: Block, spawnCycle: Int, entity: Entity) {}
 
@@ -61,6 +59,10 @@ abstract class SpawnInfo {
 
 		fun onCycleOffset(spawnCycle: Int, n: Int, o: Int): Boolean {
 			return spawnCycle != 0 && spawnCycle % n == o
+		}
+
+		fun reg(entityType: EntityType): Pair<EntityType, Boolean>? {
+			return Pair(entityType, false)
 		}
 	}
 }

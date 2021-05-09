@@ -1,6 +1,7 @@
 package com.codeland.uhc.customSpawning
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
@@ -90,36 +91,69 @@ object CustomSpawning {
 		return false
 	}
 
+	fun lineOfSightCheck(s: Block, e: Block): Boolean {
+		val sX = s.x + 0.5f
+		val eX = e.x + 0.5f
+		val sY = s.y + 1.5f
+		val eY = e.y + 1.5f
+		val sZ = s.z + 0.5f
+		val eZ = e.z + 0.5f
+
+		val numChecks = sqrt((sX - eX) * (sX - eX) + (sY - eY) * (sY - eY) + (sZ - eZ) * (sZ - eZ)).toInt() / 2
+
+		for (i in 1 until numChecks) {
+			val along = i / numChecks.toFloat()
+
+			val x = floor(Util.interp(sX, eX, along)).toInt()
+			val y = floor(Util.interp(sY, eY, along)).toInt()
+			val z = floor(Util.interp(sZ, eZ, along)).toInt()
+
+			if (!s.world.getBlockAt(x, y, z).isPassable) return false
+		}
+
+		return true
+	}
+
 	fun spawnMob(player: Player, playerData: PlayerData, playerList: ArrayList<Player>, spawnCycle: Int, spawnInfo: SpawnInfo): Boolean {
 		val angle = Math.random() * 2 * PI
-
-		val radius = Util.randRange(MIN_RADIUS, MAX_RADIUS)
 
 		val radiusDistance = MAX_RADIUS - MIN_RADIUS
 		val offsetRadius = (Math.random() * radiusDistance).toInt()
 
+		val world = player.world
+		val borderRadius = world.worldBorder.size / 2
+
 		for (j in 0 until radiusDistance step 2) {
-			val radius =  (j + offsetRadius) % (radiusDistance) + MIN_RADIUS
+			val radius = (j + offsetRadius) % (radiusDistance) + MIN_RADIUS
 
-			val blockX = (cos(angle) * radius + player.location.x).toInt()
-			val blockZ = (sin(angle) * radius + player.location.z).toInt()
+			val blockX = floor(cos(angle) * radius + player.location.x).toInt()
+			val blockZ = floor(sin(angle) * radius + player.location.z).toInt()
 
-			if (!anotherPlayerInRange(player, playerList, blockX, blockZ)) {
+			if (
+				abs(blockX) <= borderRadius &&
+				abs(blockZ) <= borderRadius &&
+				!anotherPlayerInRange(player, playerList, blockX, blockZ)
+			) {
 				val minY = (player.location.y - VERTICAL_RADIUS).toInt().coerceAtLeast(0).coerceAtMost(255)
 				val maxY = (player.location.y + VERTICAL_RADIUS).toInt().coerceAtMost(255).coerceAtLeast(0)
 
 				val distance = maxY - minY
 				val offsetY = (Math.random() * distance).toInt()
 
-				val world = player.world
-
 				for (i in 0 until distance) {
 					val y = (i + offsetY) % (distance) + minY
 					val block = world.getBlockAt(blockX, y, blockZ)
 
-					val entityType = spawnInfo.allowSpawn(block, spawnCycle)
+					val spawnResult = spawnInfo.allowSpawn(block, spawnCycle)
 
-					if (entityType != null) {
+					if (spawnResult != null) {
+						val (entityType, lineOfSight) = spawnResult
+
+						/* line of sight check */
+						if (lineOfSight && !lineOfSightCheck(block, player.location.block)) {
+							return false
+						}
+
 						val entity = world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType)
 
 						spawnInfo.onSpawn(block, spawnCycle, entity)

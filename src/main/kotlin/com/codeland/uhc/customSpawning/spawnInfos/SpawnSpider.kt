@@ -7,9 +7,9 @@ import org.bukkit.entity.EntityType
 import org.bukkit.entity.Spider
 
 class SpawnSpider : SpawnInfo() {
-	override fun allowSpawn(block: Block, spawnCycle: Int): EntityType? {
+	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
 		if (block.lightLevel > 7) return null
-		return if (spawnSpace(block, 3, 1, 3)) EntityType.SPIDER else null
+		return if (spawnSpace(block, 3, 1, 3)) reg(EntityType.SPIDER) else null
 	}
 
 	override fun onSpawn(block: Block, spawnCycle: Int, entity: Entity) {

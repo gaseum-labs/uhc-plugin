@@ -8,8 +8,8 @@ import org.bukkit.entity.EntityType
 import org.bukkit.entity.MagmaCube
 
 class SpawnMagmaCube : SpawnInfo() {
-	override fun allowSpawn(block: Block, spawnCycle: Int): EntityType? {
-		return if (spawnSpace(block, 3, 2, 3)) EntityType.MAGMA_CUBE else null
+	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
+		return if (spawnSpace(block, 3, 2, 3)) reg(EntityType.MAGMA_CUBE) else null
 	}
 
 	override fun onSpawn(block: Block, spawnCycle: Int, entity: Entity) {

@@ -8,7 +8,7 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 
 class NetherSpecialSpawn : SpawnInfo() {
-	override fun allowSpawn(block: Block, spawnCycle: Int): EntityType? {
+	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
 		return getSpawnInfo(spawnCycle).allowSpawn(block, spawnCycle)
 	}
 
