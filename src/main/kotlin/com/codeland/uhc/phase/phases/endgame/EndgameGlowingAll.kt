@@ -17,8 +17,8 @@ class EndgameGlowingAll : Endgame() {
 		}
 	}
 
-	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
-		return 1.0
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float {
+		return 1.0f
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {

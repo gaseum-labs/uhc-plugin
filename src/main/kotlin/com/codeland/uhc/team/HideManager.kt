@@ -1,12 +1,9 @@
 package com.codeland.uhc.team
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.world.WorldManager
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
-import java.util.*
-import kotlin.collections.ArrayList
 
 object HideManager {
 	private fun updatePlayer(updatePlayer: Player, hidePlayer: Player, show: Boolean) {

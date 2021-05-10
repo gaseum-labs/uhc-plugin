@@ -1,6 +1,7 @@
-package com.codeland.uhc.core
+package com.codeland.uhc.world
 
-import com.codeland.uhc.phase.WorldBar
+import com.codeland.uhc.core.Lobby
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
 import org.bukkit.*
 import org.bukkit.block.Biome
@@ -21,7 +22,6 @@ object WorldManager {
 		Bukkit.unloadWorld(GAME_WORLD_NAME, true)
 		Bukkit.unloadWorld(NETHER_WORLD_NAME, true)
 
-		WorldBar.initWorldBars(Bukkit.getWorlds())
 		Bukkit.getWorlds().forEach { prepareWorld(it) }
 	}
 
@@ -102,7 +102,19 @@ object WorldManager {
 	fun destroyWorld(name: String): World? {
 		val oldWorld = Bukkit.getServer().getWorld(name)
 
-		if (oldWorld != null) Bukkit.getServer().unloadWorld(oldWorld, false)
+		if (oldWorld != null) {
+			/* remove offline zombies from this world */
+			PlayerData.playerDataList.forEach { (_, playerData) ->
+				val zombie = playerData.offlineZombie
+
+				if (zombie != null && zombie.world === oldWorld) {
+					zombie.remove()
+					playerData.offlineZombie = null
+				}
+			}
+
+			Bukkit.getServer().unloadWorld(oldWorld, false)
+		}
 
 		val file = File(name)
 		if (file.exists() && file.isDirectory) file.deleteRecursively()
@@ -125,7 +137,6 @@ object WorldManager {
 		val (oldWorld, newWorld) = internalRefreshWorld(name, environment, structures)
 
 		if (newWorld != null) {
-			WorldBar.resetWorldBar(oldWorld, newWorld)
 			prepareWorld(newWorld)
 
 			if (name == GAME_WORLD_NAME) ChunkPlacerHolderType.resetAll(newWorld.seed)
@@ -139,7 +150,6 @@ object WorldManager {
 		val recovered = WorldCreator(name).createWorld()
 
 		if (recovered != null) {
-			WorldBar.resetWorldBar(oldWorld, recovered)
 			prepareWorld(recovered)
 
 			if (name == GAME_WORLD_NAME) ChunkPlacerHolderType.resetAll(recovered.seed)

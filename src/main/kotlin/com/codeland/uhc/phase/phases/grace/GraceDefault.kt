@@ -5,6 +5,7 @@ import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -42,7 +43,7 @@ class GraceDefault : Phase() {
 		UHC.ledger = Ledger()
 	}
 
-	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float {
 		return barLengthRemaining(remainingSeconds, currentTick)
 	}
 

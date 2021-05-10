@@ -107,11 +107,11 @@ class EndgameNaturalTerrain : Endgame() {
 		}
 	}
 
-	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float {
 		return if (finished)
-			1.0
+			1.0f
 		else
-			(max - finalMax).toDouble() / (255 - finalMax)
+			(max - finalMax).toFloat() / (255 - finalMax)
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {

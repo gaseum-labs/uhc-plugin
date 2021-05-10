@@ -14,12 +14,12 @@ import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
-import org.bukkit.command.CommandSender
 import java.time.Duration
 import java.util.*
 import kotlin.collections.ArrayList
@@ -220,7 +220,7 @@ object UHC {
 		fun errorValue() = Pair(ArrayList<ArrayList<UUID>>(), ArrayList<Location>())
 
 		if (WorldManager.getGameWorld() == null || WorldManager.getNetherWorld() == null) {
-			messageStream(true, "Game world has not been initialized, use /uhca worldCycle")
+			messageStream(true, "Game world has not been initialized, use /uhca worldRefresh")
 			return errorValue()
 		}
 

@@ -3,9 +3,9 @@ package com.codeland.uhc.core
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
-import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.*

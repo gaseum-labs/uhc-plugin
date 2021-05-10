@@ -11,6 +11,7 @@ import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.util.GoogleDDNSUpdater
+import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.WorldGenManager
 import org.bukkit.ChatColor
 import org.bukkit.plugin.java.JavaPlugin

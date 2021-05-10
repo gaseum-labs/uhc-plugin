@@ -2,8 +2,9 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
-import com.codeland.uhc.core.WorldGenOption.*
-import com.codeland.uhc.core.WorldGenOption.Companion.getEnabled
+import com.codeland.uhc.world.WorldGenOption.*
+import com.codeland.uhc.world.WorldGenOption.Companion.getEnabled
+import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.chunkPlacer.impl.OxeyePlacer
 import com.codeland.uhc.world.chunkPlacer.impl.SugarCanePlacer
 import com.codeland.uhc.world.chunkPlacerHolder.*

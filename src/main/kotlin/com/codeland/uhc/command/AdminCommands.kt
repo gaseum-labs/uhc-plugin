@@ -14,6 +14,7 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
 import org.bukkit.block.Biome
 import org.bukkit.command.CommandSender

@@ -3,13 +3,16 @@ package com.codeland.uhc.core
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.util.Util
+import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
-import org.bukkit.entity.*
+import org.bukkit.entity.Entity
+import org.bukkit.entity.EntityType
+import org.bukkit.entity.Player
+import org.bukkit.entity.Zombie
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.metadata.FixedMetadataValue
@@ -18,35 +21,41 @@ import kotlin.collections.HashMap
 import kotlin.math.abs
 import kotlin.math.max
 
-class PlayerData(
-	var staged: Boolean,
-	var participating: Boolean,
-	var alive: Boolean,
-	var optingOut: Boolean,
-	var lobbyInventory: Array<ItemStack>,
-	var lastPlayed: UUID?
-) {
+class PlayerData {
+	/* the main 4 */
+	var staged = false
+	var participating = false
+	var alive = false
+	var optingOut = false
+
+	/* lobby pvp stuff */
+	var lobbyInventory = emptyArray<ItemStack>()
+	var lastPlayed: UUID? = null
+
+	/* custom spawning */
+	var spawnIndex = 0
+	var spawnCycle = 0
+	var mobcap = 0.0
+
+	/* other stuff */
 	class QuirkDataHolder(var applied: Boolean, var data: Any)
 	var quirkDataList = HashMap<QuirkType, QuirkDataHolder>()
 
 	var skull = ItemStack(Material.PLAYER_HEAD)
 
-	var spawnIndex = 0
-	var spawnCycle = 0
-	var mobcap = 0.0
-
 	var loadingTip = 0
-
-	fun current() = participating && alive
-	fun undead() = participating && !alive
 
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
+	val bossBar = BossBar.bossBar(Component.empty(), 1.0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS)
+
 	var offlineZombie: Zombie? = null
-	set(value: Zombie?) {
+	set(value) {
 		field = if (value == null) {
 			val oldValue = offlineZombie
+
 			if (oldValue != null) {
+				oldValue.remove()
 				oldValue.world.unloadChunk(oldValue.chunk)
 				oldValue.world.setChunkForceLoaded(oldValue.chunk.x, oldValue.chunk.z, false)
 			}
@@ -59,6 +68,15 @@ class PlayerData(
 			value
 		}
 	}
+
+	/* begin functions */
+
+	fun linkBossBar(player: Player) {
+		player.showBossBar(bossBar)
+	}
+
+	fun current() = participating && alive
+	fun undead() = participating && !alive
 
 	fun setSkull(player: Player) {
 		skull = ItemStack(Material.PLAYER_HEAD)
@@ -169,9 +187,14 @@ class PlayerData(
 		const val UUID_TAG = "_UHC_Zombie_uuid"
 
 		/* THE player data list */
-		val playerDataList = java.util.HashMap<UUID, PlayerData>()
+		var playerDataList = HashMap<UUID, PlayerData>()
+		private set
 
-		fun defaultPlayerData() = PlayerData(false, false, false, false, emptyArray(), null)
+		fun prune() {
+			playerDataList = playerDataList.filter { (uuid, _) ->
+				Bukkit.getPlayer(uuid) != null
+			} as HashMap<UUID, PlayerData>
+		}
 
 		/**
 		 * @return -1 experience if this is not a valid offline zombie
@@ -269,15 +292,7 @@ class PlayerData(
 		}
 
 		fun getPlayerData(uuid: UUID): PlayerData {
-			val playerData = playerDataList[uuid]
-
-			return if (playerData == null) {
-				val ret = defaultPlayerData()
-				playerDataList[uuid] = ret
-				ret
-			} else {
-				playerData
-			}
+			return playerDataList.getOrPut(uuid) { PlayerData() }
 		}
 
 		/* quirkData getters */

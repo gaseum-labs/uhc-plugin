@@ -1,14 +1,11 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.WorldGenOption
-import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.gui.guiItem.*
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.ChatColor
 import org.bukkit.Material

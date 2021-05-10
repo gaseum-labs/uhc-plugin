@@ -26,6 +26,8 @@ object NameManager {
 
 		playerData.replaceZombieWithPlayer(player)
 
+		playerData.linkBossBar(player)
+
 		/* add to hearts objective */
 		val playerHealthScore = ceil(player.health).toInt()
 		val scoreboard = (Bukkit.getScoreboardManager().mainScoreboard as CraftScoreboard).handle

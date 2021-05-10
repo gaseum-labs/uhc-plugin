@@ -1,14 +1,14 @@
-package com.codeland.uhc.core
+package com.codeland.uhc.world
 
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.GuiItemProperty
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.GuiPage
-import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
-import net.minecraft.server.v1_16_R3.BiomeBase
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.block.Biome

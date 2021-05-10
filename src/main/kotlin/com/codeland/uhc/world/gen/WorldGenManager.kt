@@ -1,8 +1,8 @@
 package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.WorldGenOption
-import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.world.WorldGenOption
+import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.util.Util
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.Server

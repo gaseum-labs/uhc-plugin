@@ -21,12 +21,12 @@ UHC Plugin implements the gamemode of Ultra Hardcore for a standalone, self-host
 * Management features for ops
 * And much more (Features document coming soon)
 
-## Tools
+## Requirements
 
 * Kotlin 1.4
 * Java 11 or higher
-* Intellij IDEA 2020.3.2 (or any version would probably work)
-* PaperMC 1.16 (latest version preferred) 
+* [PaperMC 1.16](https://papermc.io/)
+* [Protocollib 4.6.0](https://github.com/dmulloy2/ProtocolLib) 
 
 ## Setting up the Project
 
@@ -56,23 +56,23 @@ Navigate to the directory of the project and run `gradle build`
 
 ## Setting up the Server
 
-Copy the built jar in `/build/libs` named `UHC Plugin-all.jar` into the `plugins` directory for your paper server
+Copy the jar built by the project into the `plugins` directory for your paper server
+
+Also copy the Protocollib jar into the directory
 
 ### Note
 
 Compatibility with other plugins is not guaranteed. By its nature this plugin completely takes control of the server
 
-Plugin only works with PaperMC, not Spigot
+Plugin only works with a PaperMC server, not Spigot or CraftBukkit
 
 ### Generated Files in Server Directory
 
-* `uhc.properties` - Additional world generation options for uhc
 * `discordData.txt` - Fill out with instructions in the file if you want to use discord integration
 * `summaries/` - Created when a game completes, contains game summaries
 * `nicknames.txt` - Created by the nickname command
 * `linkData.txt` - Created by the discord integration when players link
-* `ddns.properties` - Optional, API data for Google Domains 
-* `scores.txt` - Currently unused
+* `ddns.properties` - Optional, API data for Google Domains
 
 ## Starting a game
 
@@ -80,6 +80,8 @@ When players join the server, they will be placed in a lobby where they can buil
 
 Right clicking the item called `Open UHC Settings` will open up a menu where ops can change game settings like enabling quirks or setting the game length. 
 
-Once all players are in the server, an op can run the `/uhca team join [color] [player name]` to add players to teams. A quicker way is to run the `/uhca team random [team size]` command to automatically add all players to random teams of a certain size.
+Once all players are in the server, an op can run the `/uhca team create [player]` and `/uhca team join [team player] [added player]` to create teams. A quicker way is to run the `/uhca team random [team size]` command to automatically add all players to random teams of a certain size.
 
-An op can run the `/uhca start` command to start the game.
+Then the game world must be loaded with the `/uhca worldRefresh` command
+
+Then the `/uhca start` command will start the game.

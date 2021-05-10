@@ -9,6 +9,7 @@ import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
@@ -26,7 +27,6 @@ import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.RenderType
 import java.util.*
-import javax.naming.Name
 
 object GameRunner {
 	var bot: MixerBot? = null
@@ -84,8 +84,9 @@ object GameRunner {
 	}
 
 	private fun playerPermaDeath(uuid: UUID, killer: Player?, respawn: Boolean, setupRespawn: (UUID) -> Unit) {
-		PlayerData.setAlive(uuid, false)
-		PlayerData.setParticipating(uuid, respawn)
+		val playerData = PlayerData.getPlayerData(uuid)
+		playerData.alive = false
+		playerData.participating = respawn
 
 		val team = TeamData.playersTeam(uuid)
 		val (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(team)

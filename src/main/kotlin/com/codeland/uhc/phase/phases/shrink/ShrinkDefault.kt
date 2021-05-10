@@ -33,7 +33,7 @@ class ShrinkDefault : Phase() {
 		}
 	}
 
-	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double {
+	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float {
 		return barLengthRemaining(remainingSeconds, currentTick)
 	}
 

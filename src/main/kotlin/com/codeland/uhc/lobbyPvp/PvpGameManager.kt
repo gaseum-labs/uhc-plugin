@@ -3,7 +3,7 @@ package com.codeland.uhc.lobbyPvp
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component

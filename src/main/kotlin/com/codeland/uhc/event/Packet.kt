@@ -3,9 +3,8 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
-import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util

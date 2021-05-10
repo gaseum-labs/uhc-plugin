@@ -1,14 +1,12 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
-import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
-import org.bukkit.Bukkit
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Biome
-import org.bukkit.block.BlockFace
 
 class NetherIndicatorPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {

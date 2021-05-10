@@ -7,7 +7,6 @@ import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.WorldBar
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.quirk.HorseQuirk
 import com.codeland.uhc.quirk.QuirkType
@@ -17,17 +16,15 @@ import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.minecraft.server.v1_16_R3.*
 import org.bukkit.*
 import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.attribute.Attribute
 import org.bukkit.attribute.AttributeModifier
-import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack
-import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftRecipe
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -52,7 +49,6 @@ class EventListener : Listener {
 			val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 			NameManager.updateName(event.player)
-			WorldBar.setPlayerBarDimension(event.player)
 
 			/* lobby spawn */
 			if (!playerData.participating) {
@@ -112,8 +108,6 @@ class EventListener : Listener {
 
 		/* hide other players not in the player's new world to the player */
 		HideManager.updateAllForPlayer(event.player)
-
-		WorldBar.setPlayerBarDimension(event.player)
 	}
 
 	@EventHandler
@@ -178,8 +172,11 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
+		if (event.entity.world.name === WorldManager.LOBBY_WORLD_NAME) {
+			event.isCancelled = true
+
 		/* witch poison nerf */
-		if (UHC.naturalRegeneration.get()) {
+		} else if (!UHC.naturalRegeneration.get()) {
 			val potion = event.entity as? ThrownPotion
 			if (potion != null) {
 				if (potion.shooter is Witch) {

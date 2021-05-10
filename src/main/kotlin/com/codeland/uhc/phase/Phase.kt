@@ -1,7 +1,9 @@
 package com.codeland.uhc.phase
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.World
@@ -35,19 +37,6 @@ abstract class Phase {
 	 * @return if the phase should end and the next phase should start
 	 */
 	private fun tick(): Boolean {
-		WorldBar.worldBars.forEach { dimensionBar ->
-			dimensionBar.bossBar.setTitle(updateBarTitle(dimensionBar.world, remainingSeconds, currentTick))
-			dimensionBar.bossBar.progress = updateBarLength(remainingSeconds, currentTick)
-			dimensionBar.bossBar.color = phaseType.barColor
-		}
-
-		perTick(currentTick)
-
-		val endResult = if (currentTick == 0) second()
-		else false
-
-		/* advance time */
-
 		currentTick = (currentTick + 1) % 20
 
 		if (currentTick == 0) {
@@ -55,7 +44,24 @@ abstract class Phase {
 			if (phaseType.gameGoing) ++UHC.elapsedTime
 		}
 
-		return endResult
+		/* update boss bars */
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			val player = Bukkit.getPlayer(uuid)
+
+			if (player != null) {
+				playerData.bossBar.color(phaseType.barColor)
+				playerData.bossBar.name(Component.text(updateBarTitle(player.world, remainingSeconds, currentTick)))
+				playerData.bossBar.progress(updateBarLength(remainingSeconds, currentTick))
+			}
+		}
+
+		perTick(currentTick)
+
+		return if (currentTick == 0) {
+			second()
+		} else {
+			false
+		}
 	}
 
 	/**
@@ -100,15 +106,15 @@ abstract class Phase {
 		return "${phaseType.chatColor}${ChatColor.BOLD}${phaseType.prettyName}"
 	}
 
-	protected fun barLengthRemaining(remainingSeconds: Int, currentTick: Int): Double {
-		return (remainingSeconds - (currentTick / 20.0)) / length.toDouble()
+	protected fun barLengthRemaining(remainingSeconds: Int, currentTick: Int): Float {
+		return (remainingSeconds - (currentTick / 20.0f)) / length.toFloat()
 	}
 
 	/* abstract */
 
 	abstract fun customStart()
 
-	abstract fun updateBarLength(remainingSeconds: Int, currentTick: Int): Double
+	abstract fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float
 	abstract fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String
 
 	abstract fun perTick(currentTick: Int)

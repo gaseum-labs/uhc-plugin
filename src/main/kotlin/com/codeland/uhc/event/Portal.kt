@@ -3,7 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.WorldManager
+import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import org.bukkit.*
 import org.bukkit.block.Block
