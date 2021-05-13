@@ -7,12 +7,14 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileWriter
+import java.lang.StrictMath.abs
 import java.time.LocalDateTime
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.math.floor
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 class Ledger {
@@ -59,12 +61,6 @@ class Ledger {
 			firstChunk
 		}
 
-		val lastPosition = list.last.lastOrNull()
-
-		if (lastPosition != null) {
-			/* TODO raster line algorithm */
-		}
-
 		val chunk = list.last
 
 		if (chunk.size == POSITION_CHUNK_SIZE) {
@@ -83,9 +79,30 @@ class Ledger {
 		return Triple(color.ushr(16).and(0xff), color.ushr(8).and(0xff), color.and(0xff))
 	}
 
-	fun generateImage(border: Int, environment: World.Environment, zoom: Float): BufferedImage {
-		val BLACK = 0xff000000.toInt()
+	fun alongColor(red: Int, gre: Int, blu: Int, along: Float): Int {
+		return (red * Util.interp(0.1f, 1.0f, along)).toInt().shl(16)
+			.or((gre * Util.interp(0.1f, 1.0f, along)).toInt().shl(8))
+			.or((blu * Util.interp(0.1f, 1.0f, along)).toInt())
+			.or(BLACK)
+	}
 
+	fun inBound(x: Int, y: Int, size: Int): Boolean {
+		return x >= 0 && y >= 0 && x < size && y < size
+	}
+
+	fun minMax(first: Int, second: Int): Pair<Int, Int> {
+		return if (first < second) Pair(first, second) else Pair(second, first)
+	}
+
+	fun trySetColor(array: IntArray, size: Int, x: Int, y: Int, color: Int) {
+		val i = y * size + x
+
+		if (inBound(x, y, size) && array[i] == BLACK) {
+			array[i] = color
+		}
+	}
+
+	fun generateImage(border: Int, environment: World.Environment, zoom: Float): BufferedImage {
 		val imageSize = ((border * 2 + 1) / zoom).roundToInt()
 		val pixels = IntArray(imageSize * imageSize) { BLACK }
 		val environmentMatch = environment !== World.Environment.NORMAL
@@ -97,29 +114,58 @@ class Ledger {
 			val (red, gre, blu) = selectColor(playerIndex++, playerLocations.size)
 			val trailSize = (trail.size - 1) * POSITION_CHUNK_SIZE + trail.last.size
 
+			/* for connecting lines to */
+			var lastPosition = trail.firstOrNull()?.firstOrNull() ?: 0
+
 			trail.forEachIndexed { i, chunk ->
 				chunk.forEachIndexed { j, position ->
-					val trailIndex = i * POSITION_CHUNK_SIZE + j
-
 					val (x, z, e) = unpackPosition(position)
 
-					val imageX = floor((x + border) / zoom).toInt()
-					val imageY = floor((z + border) / zoom).toInt()
-					val imageI = imageY * imageSize + imageX
+					/* is this pixel for the current world */
+					if (e == environmentMatch) {
+						val (lx, lz, le) = unpackPosition(lastPosition)
+						lastPosition = position
 
-					if (
-						e == environmentMatch &&
-						imageX >= 0 &&
-						imageY >= 0 &&
-						imageX < imageSize &&
-						imageY < imageSize &&
-						pixels[imageI] == BLACK
-					) {
-						val tRed = (red * Util.interp(0.1f, 1.0f, trailIndex / trailSize.toFloat())).toInt()
-						val tGre = (gre * Util.interp(0.1f, 1.0f, trailIndex / trailSize.toFloat())).toInt()
-						val tBlu = (blu * Util.interp(0.1f, 1.0f, trailIndex / trailSize.toFloat())).toInt()
+						val imgLastX = floor((lx + border) / zoom).toInt()
+						val imgLastY = floor((lz + border) / zoom).toInt()
+						val imgX = floor((x + border) / zoom).toInt()
+						val imgY = floor((z + border) / zoom).toInt()
 
-						pixels[imageI] = tRed.shl(16).or(tGre.shl(8)).or(tBlu).or(BLACK)
+						val color = alongColor(red, gre, blu, (i * POSITION_CHUNK_SIZE + j) / trailSize.toFloat())
+
+						val dx = abs(imgLastX - imgX)
+						val dy = abs(imgLastY - imgY)
+
+						/* need to draw line */
+						if (e == le && (dy >= 2 || dx >= 2)) {
+							/* y = mx + b */
+							if (dx > dy) {
+								val slope = (imgLastY - imgY) / (imgLastX - imgX).toFloat()
+								val rise = imgLastY - slope * imgLastX
+
+								val (minX, maxX) = minMax(imgLastX, imgX)
+
+								for (k in minX..maxX) {
+									val l = floor(slope * k + rise).toInt()
+									trySetColor(pixels, imageSize, k, l, color)
+								}
+							/* x = my + b */
+							} else {
+								val slope = (imgLastX - imgX) / (imgLastY - imgY).toFloat()
+								val push = imgLastX - slope * imgLastY
+
+								val (minY, maxY) = minMax(imgLastY, imgY)
+
+								for (l in minY..maxY) {
+									val k = floor(slope * l + push).toInt()
+									trySetColor(pixels, imageSize, k, l, color)
+								}
+							}
+
+						/* single pixel */
+						} else {
+							trySetColor(pixels, imageSize, imgX, imgY, color)
+						}
 					}
 				}
 			}
@@ -204,6 +250,8 @@ class Ledger {
 	}
 
 	companion object {
+		const val BLACK = 0xff000000.toInt()
+
 		fun filename(year: Int, month: Int, day: Int, number: Int): String {
 			return "${year}_${month}_${day}~${number}.txt"
 		}

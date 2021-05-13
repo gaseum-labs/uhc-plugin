@@ -218,7 +218,9 @@ object UHC {
 		if (currentTick % 40 != 0) return
 
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.participating) {
+			val player = Bukkit.getPlayer(uuid)
+
+			if (playerData.participating && (player == null || player.gameMode !== GameMode.SPECTATOR)) {
 				val block = GameRunner.getPlayerLocation(uuid)?.block
 
 				if (block != null) ledger.addPlayerPosition(uuid, block)
