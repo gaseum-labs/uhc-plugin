@@ -1,5 +1,6 @@
 package com.codeland.uhc.lobbyPvp
 
+import com.codeland.uhc.core.AxeFix
 import com.codeland.uhc.event.Brew
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
@@ -125,17 +126,19 @@ object LobbyPvpItems {
 	)
 
 	private fun genTool(material: Material, enchants1: Array<EnchantOption?>): ItemStack {
-		val itemStack = ItemStack(material)
+		return genTool(ItemStack(material), enchants1)
+	}
 
-		val meta = itemStack.itemMeta
+	private fun genTool(stack: ItemStack, enchants1: Array<EnchantOption?>): ItemStack {
+		val meta = stack.itemMeta
 
 		val enchant1 = Util.randFromArray(enchants1)
 		if (enchant1 != null) meta.addEnchant(enchant1.enchantment, enchant1.level, true)
 		meta.isUnbreakable = true
 
-		itemStack.itemMeta = meta
+		stack.itemMeta = meta
 
-		return itemStack
+		return stack
 	}
 
 	fun genHelmet(): ItemStack {
@@ -163,7 +166,7 @@ object LobbyPvpItems {
 	}
 
 	fun genAxe(): ItemStack {
-		return genTool(Material.IRON_AXE, axeEnchants)
+		return genTool(AxeFix.ironAxe(), axeEnchants)
 	}
 
 	fun genBow(): ItemStack {

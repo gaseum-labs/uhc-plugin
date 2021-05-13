@@ -201,6 +201,8 @@ object UHC {
 
 			if (isGameGoing()) PlayerData.zombieBorderTick(currentTick)
 
+			if (isGameGoing()) ledgerTrailTick(currentTick)
+
 			Lobby.lobbyTipsTick(currentTick)
 
 			PvpGameManager.perTick(currentTick)
@@ -209,6 +211,18 @@ object UHC {
 
 			/* highly composite number */
 			currentTick = (currentTick + 1) % 294053760
+		}
+	}
+
+	fun ledgerTrailTick(currentTick: Int) {
+		if (currentTick % 40 != 0) return
+
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.participating) {
+				val block = GameRunner.getPlayerLocation(uuid)?.block
+
+				if (block != null) ledger.addPlayerPosition(uuid, block)
+			}
 		}
 	}
 
@@ -309,14 +323,14 @@ object UHC {
 				bottomMessage = winningTeam.apply(playerString)
 			}
 
-			ledger.createTextFile()
-
 			Title.title(topMessage, bottomMessage, Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2)))
 
 		/* no one won the game */
 		} else {
 			Title.title(Component.text("No one wins?", NamedTextColor.GOLD, TextDecoration.BOLD), Component.empty(), Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2)))
 		}
+
+		ledger.createFile()
 
 		Bukkit.getServer().onlinePlayers.forEach { player -> player.showTitle(title) }
 

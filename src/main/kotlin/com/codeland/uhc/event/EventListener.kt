@@ -172,7 +172,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
-		if (event.entity.world.name === WorldManager.LOBBY_WORLD_NAME) {
+		if (event.entity.world.name == WorldManager.LOBBY_WORLD_NAME) {
 			event.isCancelled = true
 
 		/* witch poison nerf */
@@ -228,19 +228,13 @@ class EventListener : Listener {
 			if (Util.binarySearch(event.recipe.result.type, Pests.banList)) event.isCancelled = true
 
 		} else {
-			val stack = event.currentItem ?: return
+			val type = event.currentItem?.type ?: return
 
-			fun stats(damage: Double, speed: Double) {
-				val meta = stack.itemMeta
-				meta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, AttributeModifier(UUID.randomUUID(), "Damage", damage - 1.0, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND))
-				meta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, AttributeModifier(UUID.randomUUID(), "AttackSpeed", speed - 4.0, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND))
-				stack.itemMeta = meta
-			}
-
-			when (stack.type) {
-				Material.IRON_AXE -> stats(8.0, 0.9)
-				Material.DIAMOND_AXE -> stats(9.0, 1.0)
-				else -> {}
+			event.currentItem = when (type) {
+				Material.STONE_AXE -> AxeFix.stoneAxe()
+				Material.IRON_AXE -> AxeFix.ironAxe()
+				Material.DIAMOND_AXE -> AxeFix.diamondAxe()
+				else -> event.currentItem
 			}
 		}
 	}

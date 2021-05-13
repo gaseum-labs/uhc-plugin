@@ -1,5 +1,6 @@
 package com.codeland.uhc.discord.command
 
+import com.codeland.uhc.core.Ledger
 import com.codeland.uhc.discord.MixerBot
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -19,16 +20,10 @@ class SummaryCommand : MixerCommand(true) {
 		if (attachments.size != 1 || attachments[0].isImage || attachments[0].fileExtension != "txt")
 			return errorMessage(event, "Please attach a summary .txt file")
 
-		val filenameParts = attachments[0].fileName.split('_')
-		if (filenameParts.size != 4)
-			return errorMessage(event, "Summary filename incorrectly formatted\nShould be NUM_DAY_MONTH_YEAR.txt")
+		val parts = Ledger.inverseFilename(attachments[0].fileName)
+			?: return errorMessage(event, "Summary filename is incorrectly formatted")
 
-		val filenameNumberErrString = "Filename encountered an incorrectly formatted number"
-
-		val gameNumber = filenameParts[0].toIntOrNull() ?: return errorMessage(event, filenameNumberErrString)
-		val day = filenameParts[1].toIntOrNull() ?: return errorMessage(event, filenameNumberErrString)
-		val month = filenameParts[2].toIntOrNull() ?: return errorMessage(event, filenameNumberErrString)
-		val year = filenameParts[3].substring(0, filenameParts[3].indexOf('.')).toIntOrNull() ?: return errorMessage(event, filenameNumberErrString)
+		val (year, month, day, number) = parts
 
 		attachments[0].retrieveInputStream().thenAccept{ stream ->
 			val winningPlayers = ArrayList<MixerBot.SummaryEntry>()
@@ -61,7 +56,7 @@ class SummaryCommand : MixerCommand(true) {
 				errorMessage(event, "Error reading summary file")
 			} else {
 				event.message.delete().submit().thenAccept {
-					bot.sendGameSummary(event.message.channel, gameNumber, day, month, year, matchTime, winningPlayers, losingPlayers)
+					bot.sendGameSummary(event.message.channel, number, day, month, year, matchTime, winningPlayers, losingPlayers)
 				}.exceptionally { err ->
 					errorMessage(event, "Unknown error").void()
 				}
