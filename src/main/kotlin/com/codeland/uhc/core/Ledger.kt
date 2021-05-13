@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.util.Util
+import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.block.Block
 import java.awt.Color
@@ -103,16 +104,32 @@ class Ledger {
 	}
 
 	fun generateImage(border: Int, environment: World.Environment, zoom: Float): BufferedImage {
+		/* prepare map part */
 		val imageSize = ((border * 2 + 1) / zoom).roundToInt()
 		val pixels = IntArray(imageSize * imageSize) { BLACK }
 		val environmentMatch = environment !== World.Environment.NORMAL
 
+		/* prepare name column part */
+		val playerNames = playerLocations.map { (uuid, _) -> Bukkit.getOfflinePlayer(uuid).name ?: "unknown" }
+		val columnWidth = (playerNames.map { stringWidth(it) }.max() ?: 0) + 2
+		val namesPixels = IntArray(columnWidth * imageSize) { 0xFF3F3F3F.toInt() }
+
 		var playerIndex = 0
 
 		/* render trail */
-		playerLocations.forEach { (uuid, trail) ->
-			val (red, gre, blu) = selectColor(playerIndex++, playerLocations.size)
+		playerLocations.forEach { (_, trail) ->
+			val (red, gre, blu) = selectColor(playerIndex, playerLocations.size)
+
+			writeString(
+				1, imageSize - (CHAR_HEIGHT + 1) * (playerIndex + 1),
+				playerNames[playerIndex],
+				namesPixels, columnWidth,
+				red.shl(16).or(gre.shl(8)).or(blu).or(BLACK)
+			)
+
 			val trailSize = (trail.size - 1) * POSITION_CHUNK_SIZE + trail.last.size
+
+			++playerIndex
 
 			/* for connecting lines to */
 			var lastPosition = trail.firstOrNull()?.firstOrNull() ?: 0
@@ -171,8 +188,9 @@ class Ledger {
 			}
 		}
 
-		val image = BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB)
+		val image = BufferedImage(imageSize + columnWidth, imageSize, BufferedImage.TYPE_INT_ARGB)
 		image.setRGB(0, 0, imageSize, imageSize, pixels, 0, imageSize)
+		image.setRGB(imageSize, 0, columnWidth, imageSize, namesPixels, 0, columnWidth)
 
 		return image
 	}
@@ -252,6 +270,45 @@ class Ledger {
 	companion object {
 		const val BLACK = 0xff000000.toInt()
 
+		const val CHAR_HEIGHT = 5
+
+		data class Character(var pixels: BooleanArray, var width: Int)
+
+		val characterList = Array(256) { Character(BooleanArray(0), 0) }
+
+		private fun extractSection(x: Int, y: Int, width: Int, height: Int, image: BufferedImage): BooleanArray {
+			val array = IntArray(width * height)
+
+			image.getRGB(x, y, width, height, array, 0, width)
+
+			return BooleanArray(array.size) { i ->
+				array[i] == 0xffffffff.toInt()
+			}
+		}
+
+		init {
+			val characterImage = ImageIO.read(this::class.java.getResourceAsStream("/letters.png"))
+
+			characterList['_'.toInt()] = Character(extractSection(0, 12, 3, CHAR_HEIGHT, characterImage), 3)
+
+			for (i in '0'..'9') {
+				characterList[i.toInt()] = Character(extractSection((i - '0') * 4, 6, 3, CHAR_HEIGHT, characterImage), 3)
+			}
+
+			val letterWidths = arrayOf(3, 3, 3, 3, 3, 3, 3, 3, 1, 3, 3, 3, 5, 4, 3, 3, 4, 3, 3, 3, 3, 3, 5, 3, 3, 3)
+
+			var advance = 0
+			for (i in 'a'..'z') {
+				val width = letterWidths[i - 'a']
+				val character = Character(extractSection(advance, 0, width, CHAR_HEIGHT, characterImage), width)
+
+				characterList[i.toInt()] = character
+				characterList[i.toInt() - ('a' - 'A')] = character
+
+				advance += width + 1
+			}
+		}
+
 		fun filename(year: Int, month: Int, day: Int, number: Int): String {
 			return "${year}_${month}_${day}~${number}.txt"
 		}
@@ -276,5 +333,55 @@ class Ledger {
 
 			return InverseFilenameReturn(year, month, day, number)
 		}
+
+		fun stringWidth(string: String): Int {
+			return string.fold(string.length - 1) { acc, c -> acc + characterList[c.toInt()].width }
+		}
+
+		fun writeString(x: Int, y: Int, string: String, array: IntArray, width: Int, color: Int) {
+			var advance = x
+
+			string.forEach { c ->
+				val character = characterList[c.toInt()]
+
+				for (i in 0 until character.width) {
+					for (j in 0 until CHAR_HEIGHT) {
+						if (character.pixels[j * character.width + i]) {
+							array[(j + y) * width + (i + advance)] = color
+						}
+					}
+				}
+
+				advance += character.width + 1
+			}
+		}
 	}
+}
+
+fun main() {
+	val strings = arrayOf(
+		"Hello",
+		"_World__",
+		"yo mama",
+		"go_d",
+		"May god have mercy on your soul",
+		"not doing a god damn th1ng",
+		"22 j Die in p0000453 deep weeb 35190",
+		"a _lot_cooler_ than always"
+	)
+
+	val maxWidth = strings.map { Ledger.stringWidth(it) }.max()!!
+
+	val width = maxWidth + 2
+	val height = strings.size * (Ledger.CHAR_HEIGHT + 1) + 2
+
+	val array = IntArray(width * height) { Ledger.BLACK }
+
+	strings.forEachIndexed { i, string ->
+		Ledger.writeString(1, height - (Ledger.CHAR_HEIGHT + 1) * (i + 1), string, array, width, 0xff17a9e8.toInt())
+	}
+
+	val image = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+	image.setRGB(0, 0, width, height, array, 0, width)
+	ImageIO.write(image, "PNG", File("./testText.png"))
 }
