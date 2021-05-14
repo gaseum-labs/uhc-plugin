@@ -7,10 +7,8 @@ import kotlin.random.Random
 
 class WorldChunkManagerOverworldChunkBiomes(
 	val seed: Long,
-	var2: Boolean,
-	var3: Boolean,
 	private val var4: IRegistry<BiomeBase>
-) : WorldChunkManagerOverworld(seed, var2, var3, var4) {
+) : WorldChunkManagerOverworld(seed, false, false, var4) {
 	val biomesHashmapField = BiomeRegistry::class.java.getDeclaredField("c")
 
 	init { biomesHashmapField.isAccessible = true }

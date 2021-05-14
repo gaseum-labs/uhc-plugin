@@ -49,7 +49,7 @@ enum class WorldGenOption(
 		Component.text("Sugar cane always generates 3 at a time")
 	), Material.SUGAR_CANE),
 
-	NETHER_INDICATORS("Nether Indicators", UHCProperty(true), listOf(
+	NETHER_INDICATORS("Nether Indicators", UHCProperty(false), listOf(
 		Component.text("Nether blocks generate below y level 15"),
 		Component.text("Indicates the corresponding biome in the nether")
 	), Material.SOUL_SOIL),

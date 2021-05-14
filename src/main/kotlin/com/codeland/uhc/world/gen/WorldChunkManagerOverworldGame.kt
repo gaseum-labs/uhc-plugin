@@ -7,18 +7,16 @@ import kotlin.random.Random
 
 class WorldChunkManagerOverworldGame(
 	val seed: Long,
-	var2: Boolean,
-	var3: Boolean,
 	private val var4: IRegistry<BiomeBase>,
 	val centerBiome: ResourceKey<BiomeBase>?,
 	val fixedJungle: Boolean,
 	val maxRadius: Int
-) : WorldChunkManagerOverworld(seed, var2, var3, var4) {
+) : WorldChunkManagerOverworld(seed, false, false, var4) {
 	private val genLayerField = WorldChunkManagerOverworld::class.java.getDeclaredField("f")
 
 	init {
 		genLayerField.isAccessible = true
-		genLayerField[this] = GenLayersNoOcean.createGenLayer(seed, var2, 2, 4, !fixedJungle)
+		genLayerField[this] = CustomGenLayers.createGenLayer(seed, false, 2, 4, !fixedJungle)
 	}
 
 	/* determine jungle placement */

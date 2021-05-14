@@ -10,11 +10,9 @@ import kotlin.random.Random
 
 class WorldChunkManagerOverworldPvp(
 	val seed: Long,
-	var2: Boolean,
-	var3: Boolean,
 	private val var4: IRegistry<BiomeBase>,
 	val biomes: Array<ResourceKey<BiomeBase>>,
-) : WorldChunkManagerOverworld(seed, var2, var3, var4) {
+) : WorldChunkManagerOverworld(seed, false, false, var4) {
 	val stride = PvpGameManager.ARENA_STRIDE
 
 	fun inRange(sx: Int, sz: Int, size: Int): Boolean {

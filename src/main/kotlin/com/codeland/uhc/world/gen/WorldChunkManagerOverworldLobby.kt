@@ -6,15 +6,13 @@ import kotlin.math.sqrt
 
 class WorldChunkManagerOverworldLobby(
 	var0: Long,
-	var2: Boolean,
-	var3: Boolean,
 	private val var4: IRegistry<BiomeBase>,
 	val biome1: ResourceKey<BiomeBase>,
 	val biome2: ResourceKey<BiomeBase>,
 	val centerBiome: ResourceKey<BiomeBase>,
 	val oceanBiome: ResourceKey<BiomeBase>,
 	val radius : Int
-) : WorldChunkManagerOverworld(var0, var2, var3, var4) {
+) : WorldChunkManagerOverworld(var0, false, false, var4) {
 	fun squaredRadius(x: Int, z: Int, r: Int): Boolean {
 		return abs(x) <= r / 4 && abs(z) <= r / 4
 	}
