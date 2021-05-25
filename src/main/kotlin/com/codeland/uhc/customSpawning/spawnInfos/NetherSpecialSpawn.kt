@@ -18,19 +18,17 @@ class NetherSpecialSpawn : SpawnInfo() {
 
 	companion object {
 		fun getSpawnInfo(spawnCycle: Int): SpawnInfo {
-			return when (spawnCycle % 12) {
+			return when (spawnCycle % 10) {
 				0 -> SpawnInfoType.BLAZE
 				1 -> SpawnInfoType.GHAST
 				2 -> SpawnInfoType.MAGMA_CUBE
-				3 -> SpawnInfoType.BLAZE
-				4 -> SpawnInfoType.ZOMBIE_PIGLIN
-				5 -> SpawnInfoType.ENDERMAN
-				6 -> SpawnInfoType.BLAZE
+				3 -> SpawnInfoType.ZOMBIE_PIGLIN
+				4 -> SpawnInfoType.ENDERMAN
+				5 -> SpawnInfoType.ZOMBIE_PIGLIN
+				6 -> SpawnInfoType.MAGMA_CUBE
 				7 -> SpawnInfoType.ZOMBIE_PIGLIN
-				8 -> SpawnInfoType.MAGMA_CUBE
-				9 -> SpawnInfoType.ZOMBIE_PIGLIN
-				10 -> SpawnInfoType.ZOMBIE_PIGLIN
-				else -> SpawnInfoType.ENDERMAN
+				8 -> SpawnInfoType.ENDERMAN
+				else -> SpawnInfoType.ZOMBIE_PIGLIN
 			}.spawnInfo
 		}
 	}

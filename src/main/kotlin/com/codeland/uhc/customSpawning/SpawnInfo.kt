@@ -54,11 +54,7 @@ abstract class SpawnInfo () {
 		}
 
 		fun onCycle(spawnCycle: Int, n: Int): Boolean {
-			return spawnCycle != 0 && spawnCycle % n == 0
-		}
-
-		fun onCycleOffset(spawnCycle: Int, n: Int, o: Int): Boolean {
-			return spawnCycle != 0 && spawnCycle % n == o
+			return spawnCycle % n == n - 1
 		}
 
 		fun reg(entityType: EntityType): Pair<EntityType, Boolean>? {

@@ -44,7 +44,7 @@ abstract class GuiItem(val index: Int) {
 
 		fun enchant(stack: ItemStack): ItemStack {
 			val meta = stack.itemMeta
-			meta.addEnchant(ItemUtil.FakeEnchantment(), 0, true)
+			meta.addEnchant(ItemUtil.fakeEnchantment, 0, true)
 			stack.itemMeta = meta
 
 			return stack

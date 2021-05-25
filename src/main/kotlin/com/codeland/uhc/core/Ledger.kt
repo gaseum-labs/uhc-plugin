@@ -120,8 +120,10 @@ class Ledger {
 		playerLocations.forEach { (_, trail) ->
 			val (red, gre, blu) = selectColor(playerIndex, playerLocations.size)
 
-			writeString(
-				1, imageSize - (CHAR_HEIGHT + 1) * (playerIndex + 1),
+			val textY = imageSize - (CHAR_HEIGHT + 1) * (playerIndex + 1)
+			/* attempt to draw name (if it will fit in image) */
+			if (textY >= 0) writeString(
+				1, textY,
 				playerNames[playerIndex],
 				namesPixels, columnWidth,
 				red.shl(16).or(gre.shl(8)).or(blu).or(BLACK)
@@ -310,11 +312,11 @@ class Ledger {
 		}
 
 		fun filename(year: Int, month: Int, day: Int, number: Int): String {
-			return "${year}_${month}_${day}~${number}.txt"
+			return "${year}_${month}_${day}_${number}.txt"
 		}
 
 		fun imagename(year: Int, month: Int, day: Int, number: Int, environment: World.Environment): String {
-			return "${year}_${month}_${day}~${number} ${environment.name}.png"
+			return "${year}_${month}_${day}_${number} ${environment.name}.png"
 		}
 
 		data class InverseFilenameReturn (val year: Int, val month: Int, val day: Int, val number: Int)
@@ -322,7 +324,7 @@ class Ledger {
 		fun inverseFilename(filename: String): InverseFilenameReturn? {
 			val lastSlash = filename.indexOfLast { it == '/' }
 
-			val parts = filename.substring(lastSlash + 1).substringBefore('.').split('_', '~')
+			val parts = filename.substring(lastSlash + 1).substringBefore('.').split('_')
 
 			if (parts.size != 4) return null
 

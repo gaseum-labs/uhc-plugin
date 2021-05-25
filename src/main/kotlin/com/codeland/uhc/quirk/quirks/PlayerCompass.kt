@@ -66,7 +66,7 @@ class PlayerCompass(type: QuirkType) : Quirk(type) {
 			val meta = compass.itemMeta
 			meta.setDisplayName("${ChatColor.RESET}${ChatColor.GOLD}Player Compass")
 			meta.lore = listOf("From Player Compasses CHC", "${ChatColor.BLACK}${UUID.randomUUID()}")
-			meta.addEnchant(ItemUtil.FakeEnchantment(), 0, true)
+			meta.addEnchant(ItemUtil.fakeEnchantment, 0, true)
 			compass.itemMeta = meta
 
 			return compass

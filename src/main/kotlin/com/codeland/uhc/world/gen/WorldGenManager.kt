@@ -107,7 +107,7 @@ object WorldGenManager {
 		Biomes.SNOWY_TUNDRA
 	)
 
-	fun getBiomes(): Pair<ResourceKey<BiomeBase>, ResourceKey<BiomeBase>> {
+	private fun getLobbyBiomes(): Pair<ResourceKey<BiomeBase>, ResourceKey<BiomeBase>> {
 		val list = lobbyBiomes.asIterable().shuffled()
 		return Pair(list[0], list[1])
 	}
@@ -119,64 +119,53 @@ object WorldGenManager {
 
         val oldChunkManager = worldChunkManagerBField[chunkGenerator]
 
-        val customChunkGenerator = when (oldChunkManager) {
-            is WorldChunkManagerMultiNoise -> {
-	            val seed = seedFieldMultiNoise.getLong(oldChunkManager)
-				val optional = optionField[oldChunkManager] as Optional<PairM<IRegistry<BiomeBase>, WorldChunkManagerMultiNoise.b>>
+	    val (seed, biomeRegistry) = when (oldChunkManager) {
+	    	is WorldChunkManagerMultiNoise -> {
+			    val optional = optionField[oldChunkManager] as Optional<PairM<IRegistry<BiomeBase>, WorldChunkManagerMultiNoise.b>>
+			    Pair(seedFieldMultiNoise.getLong(oldChunkManager), if (optional.isPresent) optional.get().first else null)
+	    	}
+		    is  WorldChunkManagerOverworld -> Pair(hField.getLong(oldChunkManager), kField[oldChunkManager] as IRegistry<BiomeBase>)
+		    else -> Pair(null, null)
+	    }
 
-	            if (optional.isPresent) {
-		            WorldChunkManagerNether(
-			            seed, optional.get().first
-		            )
-	            } else {
-	            	Util.debug("optional did not contain biome registry")
-	            	null
-	            }
-            }
-	        is WorldChunkManagerOverworld -> {
-		        val seed = hField.getLong(oldChunkManager)
-		        val biomeRegistry = kField[oldChunkManager] as IRegistry<BiomeBase>
+	    /* the old world chunk manager is of a nonsupported type */
+	    if (seed == null || biomeRegistry == null) return
 
-		        when (world.name) {
-			        /* lobby world */
-			        WorldManager.LOBBY_WORLD_NAME -> {
-				        val (biome0, biome1) = getBiomes()
-				        WorldChunkManagerOverworldLobby(
-					        seed, biomeRegistry,
-					        biome0, biome1,
-					        Util.randFromArray(lobbyCenterBiomes),
-					        Util.randFromArray(oceanBiomes),
-					        60
-				        )
-			        }
-			        /* pvp world */
-			        WorldManager.PVP_WORLD_NAME -> {
-				        WorldChunkManagerOverworldPvp(
-					        seed, biomeRegistry, pvpBiomes
-				        )
-			        }
-			        /* game world */
-			        else -> {
-				        if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES))
-					        WorldChunkManagerOverworldChunkBiomes(
-						        seed, biomeRegistry
-					        )
-				        else
-					        WorldChunkManagerOverworldGame(
-						        seed, biomeRegistry,
-						        biomeFromName(WorldGenOption.centerBiome?.name),
-						        WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
-						        UHC.startRadius
-					        )
-			        }
-		        }
-	        }
-	        else -> null
-        }
+	    val customGenerator = when (world.name) {
+	    	WorldManager.NETHER_WORLD_NAME -> {
+			    WorldChunkManagerNether(seed, biomeRegistry)
+	    	}
+		    WorldManager.LOBBY_WORLD_NAME -> {
+			    val (biome0, biome1) = getLobbyBiomes()
+			    WorldChunkManagerOverworldLobby(
+				    seed, biomeRegistry,
+				    biome0, biome1,
+				    Util.randFromArray(lobbyCenterBiomes),
+				    Util.randFromArray(oceanBiomes),
+				    60
+			    )
+		    }
+		    WorldManager.PVP_WORLD_NAME -> {
+			    WorldChunkManagerOverworldPvp(seed, biomeRegistry, pvpBiomes)
+		    }
+		    WorldManager.GAME_WORLD_NAME -> {
+			    if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES))
+				    WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry)
 
-        if (customChunkGenerator != null) {
-	        worldChunkManagerBField[chunkGenerator] = customChunkGenerator
-	        worldChunkManagerCField[chunkGenerator] = customChunkGenerator
+			    else
+				    WorldChunkManagerOverworldGame(
+					    seed, biomeRegistry,
+					    biomeFromName(WorldGenOption.centerBiome?.name),
+					    WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
+					    UHC.startRadius
+				    )
+		    }
+		    else -> null
+	    }
+
+        if (customGenerator != null) {
+	        worldChunkManagerBField[chunkGenerator] = customGenerator
+	        worldChunkManagerCField[chunkGenerator] = customGenerator
         }
     }
 }

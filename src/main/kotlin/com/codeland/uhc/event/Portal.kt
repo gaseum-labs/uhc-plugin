@@ -5,7 +5,9 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
+import net.minecraft.server.v1_16_R3.Advancements
 import org.bukkit.*
+import org.bukkit.advancement.Advancement
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Orientable
@@ -212,6 +214,16 @@ class Portal : Listener {
 				if (needCreatePortal) buildPortal(exitPortalBlock)
 
 				teleportToPortal(player, exitWorld, exitPortalBlock)
+
+				/* nether achievement fix */
+				if (exitWorld.name == WorldManager.NETHER_WORLD_NAME) {
+					val weNeedToGoDeeper = Bukkit.getServer().getAdvancement(NamespacedKey.minecraft("story/enter_the_nether"))
+
+					if (weNeedToGoDeeper != null) {
+						val progress = player.getAdvancementProgress(weNeedToGoDeeper)
+						progress.remainingCriteria.forEach { progress.awardCriteria(it) }
+					}
+				}
 			}
 		}
 

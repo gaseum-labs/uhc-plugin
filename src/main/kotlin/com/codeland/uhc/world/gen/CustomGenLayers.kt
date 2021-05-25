@@ -138,13 +138,12 @@ object CustomGenLayers {
 	): AreaFactory<T> {
 		var baseLayer = LayerNetherBase().a(seed.apply(1932L))
 
-		baseLayer = GenLayerZoom.FUZZY.a(seed.apply(383902L), baseLayer)
+		baseLayer = GenLayerZoom.FUZZY.a(seed.apply(3246L), baseLayer)
+		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(128290L), baseLayer)
+		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(2623L), baseLayer)
 
-		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(9623L), baseLayer)
-
-		baseLayer = GenLayerExpandNether().a(seed.apply(6702L), baseLayer)
-
-		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(1123L), baseLayer)
+		baseLayer = GenLayerExpandNether().a(seed.apply(73232L), baseLayer)
+		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(9L), baseLayer)
 
 		return baseLayer
 	}

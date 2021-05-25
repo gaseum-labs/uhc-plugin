@@ -2,6 +2,7 @@ package com.codeland.uhc.util
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.util.Util.randFromArray
+import io.papermc.paper.enchantments.EnchantmentRarity
 import net.kyori.adventure.text.Component
 import org.bukkit.Color
 import org.bukkit.FireworkEffect
@@ -9,6 +10,8 @@ import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.EnchantmentTarget
+import org.bukkit.entity.EntityCategory
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.*
@@ -361,7 +364,14 @@ object ItemUtil {
 		override fun conflictsWith(other: Enchantment) = false
 		override fun canEnchantItem(item: ItemStack) = true
 		override fun displayName(level: Int) = Component.empty()
+		override fun isTradeable() = false
+		override fun isDiscoverable() = false
+		override fun getRarity() = EnchantmentRarity.COMMON
+		override fun getDamageIncrease(level: Int, entityCategory: EntityCategory) = 0.0f
+		override fun getActiveSlots() = emptySet<EquipmentSlot>()
 	}
+
+	val fakeEnchantment = FakeEnchantment()
 
 	fun randomAddInventory(inventory: Inventory, item: ItemStack) {
 		var space = (Math.random() * inventory.size).toInt()

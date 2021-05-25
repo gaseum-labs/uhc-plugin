@@ -188,10 +188,12 @@ class AdminCommands : BaseCommand() {
 	fun pregen(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		if (PreGenner.taskID == -1) {
-			PreGenner.pregen(sender as Player)
+		if (WorldManager.getGameWorld() == null) {
+			Commands.errorMessage(sender, "World has not been loaded")
+		} else if (WorldManager.pregenTaskID != -1) {
+			Commands.errorMessage(sender, "Pregen has already started")
 		} else {
-			Commands.errorMessage(sender, "Pregen has already started!")
+			WorldManager.pregen(sender as Player)
 		}
 	}
 
@@ -239,12 +241,9 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		val existed = WorldManager.existsUnloaded(WorldManager.GAME_WORLD_NAME)
-			|| WorldManager.existsUnloaded(WorldManager.NETHER_WORLD_NAME)
-
 		moveAllToLobby()
 
-		WorldManager.recoverGameWorlds()
+		val existed = WorldManager.recoverGameWorlds()
 
 		if (existed) {
 			GameRunner.sendGameMessage(sender, "Recovered game worlds")

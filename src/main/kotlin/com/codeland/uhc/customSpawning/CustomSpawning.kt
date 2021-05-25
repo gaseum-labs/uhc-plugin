@@ -180,7 +180,7 @@ object CustomSpawning {
 	fun makePlayerMob(entity: Entity, player: Player, data: PlayerData) {
 		var mobFraction = (1 / data.mobcap).coerceAtLeast(0.0)
 
-		if (entity.location.block.biome == Biome.SOUL_SAND_VALLEY || playerOnSurface(player)) mobFraction *= 2
+		if (entity.location.block.biome === Biome.SOUL_SAND_VALLEY || playerOnSurface(player)) mobFraction *= 2
 
 		entity.setMetadata(SPAWN_TAG, FixedMetadataValue(UHCPlugin.plugin, SpawnTagData(player.uniqueId, mobFraction)))
 	}
