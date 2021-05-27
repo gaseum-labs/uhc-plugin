@@ -8,6 +8,7 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.attribute.Attribute
@@ -72,14 +73,11 @@ object Lobby {
 
 	fun lobbyTipsTick(subTick: Int) {
 		if (subTick % 20 == 0) {
-			val numSlides = 3
-			val perSlide = 6
-
-			fun slideN(n: Int) = (subTick / 20) % (numSlides * perSlide) < perSlide * (n + 1)
-			fun isFirst() = (subTick / 20) % perSlide == 0
+			fun slideN(slide: Int, num: Int, time: Int) = (subTick / 20) % (num * time) < time * (slide + 1)
+			fun isFirst(time: Int) = (subTick / 20) % time == 0
 
 			fun tip(player: Player, playerData: PlayerData) {
-				if (isFirst()) playerData.loadingTip = (Math.random() * loadingTips.size).toInt()
+				if (isFirst(6)) playerData.loadingTip = (Math.random() * loadingTips.size).toInt()
 
 				player.sendActionBar(Component.text("${GOLD}UHC Tips: $WHITE$BOLD${loadingTips[playerData.loadingTip]}"))
 			}
@@ -95,7 +93,7 @@ object Lobby {
 						player.sendActionBar(Util.gradientString("Queue Time: ${Util.timeString(queueTime)} | Players in Queue: ${PvpQueue.size()}", TextColor.color(0x750c0c), TextColor.color(0xeb1f0c)))
 
 					} else if (player.gameMode == GameMode.SPECTATOR) {
-						if (slideN(0)) {
+						if (slideN(0, 3, 6)) {
 							player.sendActionBar(Component.text("${GOLD}Use $WHITE$BOLD/uhc lobby ${GOLD}to return to lobby"))
 
 						} else {
@@ -105,7 +103,15 @@ object Lobby {
 						player.sendActionBar(Component.text("$RED${BOLD}You are not linked! ${GOLD}Use $WHITE$BOLD\"%link [your minecraft username]\" ${GOLD}in discord"))
 
 					} else if (team != null && team.name == null) {
-						player.sendActionBar(Component.text("$RED${BOLD}Your team does not have a name! ${GOLD}Use ${WHITE}${BOLD}\"/teamName [name]\" ${GOLD}to set your team's name"))
+						val warningColor = TextColor.color(if (slideN(0, 2, 1)) 0xFF0000 else 0xFFFFFF)
+
+						val commandComponent = Component.text("\"/teamName [name]\"", warningColor, TextDecoration.BOLD)
+
+						player.sendActionBar(
+							Component.text("$RED${BOLD}Your team does not have a name! ${GOLD}Use").append(
+								commandComponent.append(Component.text("${GOLD}to set your team's name"))
+							)
+						)
 
 					} else {
 						tip(player, playerData)

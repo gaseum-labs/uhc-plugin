@@ -136,6 +136,8 @@ class TeamCommands : BaseCommand() {
 	fun swapTeams(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
+		if (player1.uniqueId == player2.uniqueId) return Commands.errorMessage(sender, "Both arguments are the same player")
+
 		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team")
 		val team2 = TeamData.playersTeam(player2.uniqueId) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team")
 

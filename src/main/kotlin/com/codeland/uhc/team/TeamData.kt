@@ -63,7 +63,7 @@ object TeamData {
 			/* add these players to the team */
 			team.members.addAll(players)
 
-			updateMemberNames(players as ArrayList<UUID>)
+			updateMemberNames(players)
 			players.forEach { onAdd(it) }
 
 			return team
@@ -123,7 +123,7 @@ object TeamData {
 
 	/* util */
 
-	private fun updateMemberNames(memberList: ArrayList<UUID>) {
+	private fun updateMemberNames(memberList: List<UUID>) {
 		memberList.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateName(it) }
 	}
 
