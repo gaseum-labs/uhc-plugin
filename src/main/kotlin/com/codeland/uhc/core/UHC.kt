@@ -389,8 +389,6 @@ object UHC {
 		return Location(getDefaultWorld(), 0.5, 100.0, 0.5)
 	}
 
-	fun netherIsAllowed() = !isPhase(PhaseType.ENDGAME)
-
 	fun containSpecs() {
 		Bukkit.getOnlinePlayers().forEach { player ->
 			if (player.gameMode == GameMode.SPECTATOR) {

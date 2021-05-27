@@ -5,9 +5,9 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.lobbyPvp.PvpGameManager
-import net.minecraft.server.v1_16_R3.Advancements
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.util.Util
 import org.bukkit.*
-import org.bukkit.advancement.Advancement
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Orientable
@@ -18,15 +18,17 @@ import org.bukkit.event.player.PlayerPortalEvent
 
 class Portal : Listener {
 	companion object {
-		data class PortalEnty(val player: Player, var time: Int)
+		data class PortalEntry(val player: Player, var time: Int)
 
-		var portalEntries = ArrayList<PortalEnty>()
+		var portalEntries = ArrayList<PortalEntry>()
+
+		val PORTAL_TIME = 80
 
 		fun portalTick() {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				if (player.location.block.type === Material.NETHER_PORTAL) {
 					if (portalEntries.find { it.player === player } == null) {
-						portalEntries.add(PortalEnty(player, 80))
+						portalEntries.add(PortalEntry(player, PORTAL_TIME))
 					}
 				}
 			}
@@ -46,30 +48,58 @@ class Portal : Listener {
 			}
 		}
 
-		fun searchAround (center: Block): Block {
+		fun searchAround(center: Block): Block {
 			/* if we don't need to search */
 			if (center.type == Material.NETHER_PORTAL) return center
 
-			val world = center.world
-
 			/* one of the portal blocks could be within a 3x3 cube centered on the player */
 			for (x in -1..1) for (y in -1..1) for (z in -1..1) {
-				val searchBlock = world.getBlockAt(center.x + x, center.y + y, center.z + z)
-				if (searchBlock.type == Material.NETHER_PORTAL) return searchBlock
+				val searchBlock = center.getRelative(x, y, z)
+
+				if (searchBlock.type === Material.NETHER_PORTAL) return searchBlock
 			}
 
 			/* if somehow there was no portal found */
 			return center
 		}
 
+		fun portalExtent(block: Block, direction: BlockFace): Block {
+			var extent = block
+
+			/* limit search to 23 blocks for weird circumstances */
+			for (i in 0 until 23) {
+				val next = extent.getRelative(direction)
+
+				if (next.type == Material.NETHER_PORTAL) {
+					extent = next
+				} else {
+					return extent
+				}
+			}
+
+			return extent
+		}
+
+		fun findPortalCenter(exitPortalBlock: Block): Location {
+			val portalBlock = portalExtent(searchAround(exitPortalBlock), BlockFace.DOWN)
+
+			val axis = (portalBlock.blockData as Orientable).axis
+
+			return if (axis === Axis.X) {
+				val westMost = portalExtent(portalBlock, BlockFace.WEST)
+				val eastMost = portalExtent(portalBlock, BlockFace.EAST)
+
+				Location(portalBlock.world, (eastMost.x + westMost.x) / 2.0 + 0.5, portalBlock.y.toDouble(), portalBlock.z + 0.5, 0.0F, 0.0F)
+			} else { /* z axis portal */
+				val northMost = portalExtent(portalBlock, BlockFace.NORTH)
+				val southMost = portalExtent(portalBlock, BlockFace.SOUTH)
+
+				Location(portalBlock.world, portalBlock.x + 0.5, portalBlock.y.toDouble(), (southMost.z + northMost.z) / 2.0 + 0.5, 90.0F, 0.0F)
+			}
+		}
+
 		fun reducePortalCorner(portalBlock: Block): Block {
-			var reduceBlock = portalBlock
-
-			while (reduceBlock.getRelative(BlockFace.WEST).type == Material.NETHER_PORTAL) reduceBlock = reduceBlock.getRelative(BlockFace.WEST)
-			while (reduceBlock.getRelative(BlockFace.NORTH).type == Material.NETHER_PORTAL) reduceBlock = reduceBlock.getRelative(BlockFace.NORTH)
-			while (reduceBlock.getRelative(BlockFace.DOWN).type == Material.NETHER_PORTAL) reduceBlock = reduceBlock.getRelative(BlockFace.DOWN)
-
-			return reduceBlock
+			return portalExtent(portalExtent(portalExtent(portalBlock, BlockFace.NORTH), BlockFace.WEST), BlockFace.DOWN)
 		}
 
 		/**
@@ -109,8 +139,8 @@ class Portal : Listener {
 			return Pair(exitWorld.getBlockAt(x, idealPortalY(exitWorld, x, z), z), true)
 		}
 
-		fun teleportToPortal(player: Player, exitWorld: World, exitPortalBlock: Block) {
-			player.teleport(Location(exitWorld, exitPortalBlock.x + 0.5, exitPortalBlock.y.toDouble(), exitPortalBlock.z + 1.0))
+		fun teleportToPortal(player: Player, exitPortalBlock: Block) {
+			player.teleport(findPortalCenter(exitPortalBlock))
 		}
 
 		fun setWithinBorder(border: WorldBorder, entranceX: Int, entranceZ: Int): Pair<Int, Int> {
@@ -173,11 +203,11 @@ class Portal : Listener {
 			/* lobby pvpers can't escape through the never */
 			if (pvpGame != null) {
 
-				/* prevent peeking the center during waiting */
-			} else if (!playerData.participating) {
+			/* prevent peeking the center during waiting */
+			} else if (!playerData.participating && UHC.isPhase(PhaseType.WAITING)) {
 
-				/* prevent going to the nether after nether closes */
-			} else if (!UHC.netherIsAllowed()) {
+			/* prevent going to the nether after nether closes */
+			} else if (UHC.isPhase(PhaseType.ENDGAME)) {
 				val location = player.location
 				val world = location.world
 
@@ -191,7 +221,6 @@ class Portal : Listener {
 
 				/* going to the nether if in the game world */
 				/* going to the game world if in nether */
-
 				val exitWorld = if (player.world.name == WorldManager.GAME_WORLD_NAME)
 					WorldManager.getNetherWorldGame()
 				else
@@ -213,7 +242,7 @@ class Portal : Listener {
 
 				if (needCreatePortal) buildPortal(exitPortalBlock)
 
-				teleportToPortal(player, exitWorld, exitPortalBlock)
+				teleportToPortal(player, exitPortalBlock)
 
 				/* nether achievement fix */
 				if (exitWorld.name == WorldManager.NETHER_WORLD_NAME) {
@@ -226,8 +255,6 @@ class Portal : Listener {
 				}
 			}
 		}
-
-
 
 		fun concentricSquare(centerX: Int, centerZ: Int, radius: Int, onBlock: (Int, Int) -> Int): Int {
 			if (radius == 0) return onBlock(centerX, centerZ)
@@ -295,7 +322,5 @@ class Portal : Listener {
 	fun onPlayerPortalEvent(event: PlayerPortalEvent) {
 		event.isCancelled = true
 		event.canCreatePortal = false
-
-		//onPlayerPortal(event.player)
 	}
 }
