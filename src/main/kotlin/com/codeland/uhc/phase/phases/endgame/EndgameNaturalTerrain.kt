@@ -62,7 +62,7 @@ class EndgameNaturalTerrain : Endgame() {
 
 		val world = UHC.getDefaultWorld()
 
-		val (min, max) = determineMinMax(world, UHC.endRadius, 100)
+		val (min, max) = determineMinMax(world, UHC.endRadius(), 100)
 		finalMin = min
 		finalMax = max + 10
 		if (finalMax > 255) finalMax = 255
@@ -74,7 +74,7 @@ class EndgameNaturalTerrain : Endgame() {
 	}
 
 	fun fillBedrockLayer(world: World, layer: Int) {
-		val extrema = UHC.endRadius
+		val extrema = UHC.endRadius()
 
 		for (x in -extrema..extrema) {
 			for (z in -extrema..extrema) {
@@ -91,7 +91,7 @@ class EndgameNaturalTerrain : Endgame() {
 	}
 
 	fun doUpperLayer(world: World, layer: Int) {
-		val extrema = UHC.endRadius
+		val extrema = UHC.endRadius()
 
 		val ticks = skybaseTicks(layer)
 

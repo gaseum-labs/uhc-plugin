@@ -26,7 +26,7 @@ abstract class Endgame : Phase() {
 		}
 
 		val world = UHC.getDefaultWorld()
-		world.worldBorder.size = (UHC.endRadius * 2 + 1).toDouble()
+		world.worldBorder.size = (UHC.endRadius() * 2 + 1).toDouble()
 	}
 
 	companion object {

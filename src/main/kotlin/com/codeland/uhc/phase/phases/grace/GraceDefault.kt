@@ -16,7 +16,7 @@ class GraceDefault : Phase() {
 		/* set border in each game dimension */
 		listOf(WorldManager.getGameWorldGame(), WorldManager.getNetherWorldGame()).forEach { world ->
 			world.worldBorder.setCenter(0.5, 0.5)
-			world.worldBorder.size = UHC.startRadius * 2 + 1.0
+			world.worldBorder.size = UHC.startRadius() * 2 + 1.0
 
 			world.time = 0
 			world.isThundering = false

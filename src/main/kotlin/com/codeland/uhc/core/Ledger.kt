@@ -247,8 +247,8 @@ class Ledger {
 		writer.write(generateContents())
 		writer.close()
 
-		val image0 = generateImage(UHC.startRadius, World.Environment.NORMAL, 4.0f)
-		val image1 = generateImage(UHC.startRadius, World.Environment.NETHER, 4.0f)
+		val image0 = generateImage(UHC.startRadius(), World.Environment.NORMAL, 4.0f)
+		val image1 = generateImage(UHC.startRadius(), World.Environment.NETHER, 4.0f)
 
 		ImageIO.write(image0, "PNG", selectImagename(World.Environment.NORMAL))
 		ImageIO.write(image1, "PNG", selectImagename(World.Environment.NETHER))

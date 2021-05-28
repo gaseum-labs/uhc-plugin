@@ -1,7 +1,6 @@
 package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.GuiItemProperty
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
@@ -11,7 +10,7 @@ import org.bukkit.inventory.ItemStack
 
 class DefaultEnvironmentCycler(index: Int) : GuiItemProperty<World.Environment>(index, UHC.defaultWorldEnvironment) {
 	override fun onClick(player: Player, shift: Boolean) {
-		UHC.updateDefaultWorldEnvironment(
+		UHC.defaultWorldEnvironment.set(
 			if (UHC.defaultWorldEnvironment.get() === World.Environment.NORMAL)
 				World.Environment.NETHER
 			else

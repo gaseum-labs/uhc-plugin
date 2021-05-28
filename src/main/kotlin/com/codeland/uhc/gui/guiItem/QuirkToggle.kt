@@ -8,9 +8,10 @@ import org.bukkit.inventory.ItemStack
 
 class QuirkToggle(index: Int, var type: QuirkType) : GuiItemProperty <Boolean> (index, UHC.getQuirk(type).enabled) {
     override fun onClick(player: Player, shift: Boolean) {
-        if (shift) UHC.getQuirk(type).gui.open(player)
-
-        else UHC.updateQuirk(type, !UHC.getQuirk(type).enabled.get())
+        if (shift)
+        	UHC.getQuirk(type).gui.open(player)
+        else
+        	UHC.getQuirk(type).toggleEnabled()
     }
 
     override fun getStackProperty(value: Boolean): ItemStack {

@@ -17,14 +17,14 @@ class ShrinkDefault : Phase() {
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
 		return if (world === UHC.getDefaultWorld())
-			"${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${UHC.endRadius} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"
+			"${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${UHC.endRadius()} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"
 		else
 			"${RESET}Dimension closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"	}
 
 	override fun customStart() {
 		val world = UHC.getDefaultWorld()
 
-		world.worldBorder.setSize(UHC.endRadius * 2 + 1.0, length.toLong())
+		world.worldBorder.setSize(UHC.endRadius() * 2 + 1.0, length.toLong())
 		world.worldBorder.damageBuffer = 0.0
 
 		Bukkit.getOnlinePlayers().forEach { player ->

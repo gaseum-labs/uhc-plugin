@@ -30,8 +30,6 @@ object UHC {
 
 	var mobCapCoefficient = 1.0
 
-	val defaultPreset = Preset.MEDIUM
-
 	val defaultVariants = arrayOf(
 		PhaseVariant.WAITING_DEFAULT,
 		PhaseVariant.GRACE_DEFAULT,
@@ -40,18 +38,6 @@ object UHC {
 		PhaseVariant.POSTGAME_DEFAULT
 	)
 
-	private var phaseTimes = arrayOf(
-		0,
-		defaultPreset.graceTime,
-		defaultPreset.shrinkTime,
-		0,
-		0
-	)
-
-	var startRadius = defaultPreset.startRadius
-	private set
-	var endRadius = defaultPreset.endRadius
-	private set
 	var elapsedTime = 0
 
 	var currentPhase = null as Phase?
@@ -69,14 +55,31 @@ object UHC {
 		QuirkType.values()[index].createQuirk()
 	}
 
-	val preset = UHCProperty<Preset?>(defaultPreset)
-	val defaultWorldEnvironment = UHCProperty(World.Environment.NORMAL)
+	val setup = UHCProperty(Preset.MEDIUM.setup)
 	val naturalRegeneration = UHCProperty(false)
 	val killReward = UHCProperty(KillReward.REGENERATION)
-	val usingBot = UHCProperty(GameRunner.bot != null)
+
+	val defaultWorldEnvironment = UHCProperty(World.Environment.NORMAL) { set ->
+		if (isGameGoing())
+			set
+		else
+			null
+	}
+
+	val usingBot = UHCProperty(GameRunner.bot != null) { set ->
+		val bot = GameRunner.bot
+
+		if (bot == null) {
+			false
+
+		} else {
+			if (!set) bot.clearTeamVCs()
+			set
+		}
+	}
 
 	val properties = arrayOf(
-		preset, defaultWorldEnvironment,
+		setup, defaultWorldEnvironment,
 		naturalRegeneration, killReward, usingBot
 	)
 
@@ -84,75 +87,24 @@ object UHC {
 
 	/* property updaters */
 
-	fun updateUsingBot(using: Boolean) {
-		val bot = GameRunner.bot
-
-		usingBot.set(if (bot == null) {
-			false
-		} else {
-			if (!using) bot.clearTeamVCs()
-			using
-		})
-	}
-
-	fun updatePreset(preset: Preset) {
-		updatePreset(preset, preset.startRadius, preset.endRadius, preset.graceTime, preset.shrinkTime)
-	}
-
-	fun updatePreset(startRadius: Int, endRadius: Int, graceTime: Int, shrinkTime: Int) {
-		updatePreset(null, startRadius, endRadius, graceTime, shrinkTime)
-	}
-
-	private fun updatePreset(preset: Preset?, startRadius: Int, endRadius: Int, graceTime: Int, shrinkTime: Int) {
-		this.preset.set(preset)
-
-		this.startRadius = startRadius
-		this.endRadius = endRadius
-
-		phaseTimes = arrayOf(0, graceTime, shrinkTime, 0, 0)
+	fun updateSetup(modify: (Setup) -> Setup) {
+		setup.set(modify(setup.get()))
 	}
 
 	fun updateVariant(phaseVariant: PhaseVariant) {
-		val index = phaseVariant.type.ordinal
-
-		phaseVariants[index].set(phaseVariant)
-	}
-
-	fun updateQuirk(type: QuirkType, enabled: Boolean) {
-		quirks[type.ordinal].enabled.set(enabled)
-
-		if (enabled) type.incompatibilities.forEach { getQuirk(it).enabled.set(false) }
-	}
-
-	fun updateTime(phaseType: PhaseType, time: Int) {
-		this.preset.set(null)
-		phaseTimes[phaseType.ordinal] = time
-	}
-
-	fun updateStartRadius(startRadius: Int) {
-		this.preset.set(null)
-		this.startRadius = startRadius
-	}
-
-	fun updateEndRadius(endRadius: Int) {
-		this.preset.set(null)
-		this.endRadius = endRadius
-	}
-
-	fun updateDefaultWorldEnvironment(environment: World.Environment) {
-		if (isGameGoing()) return
-
-		defaultWorldEnvironment.set(environment)
+		phaseVariants[phaseVariant.type.ordinal].set(phaseVariant)
 	}
 
 	/* state getters */
 
-	fun getVariant(phaseType: PhaseType): PhaseVariant {
-		return phaseVariants[phaseType.ordinal].get()
+	fun startRadius() = setup.get().startRadius
+	fun endRadius() = setup.get().endRadius
+	fun phaseTime(phaseType: PhaseType): Int {
+		return setup.get().phaseTime(phaseType)
 	}
 
-	fun getTime(phaseType: PhaseType): Int {
-		return phaseTimes[phaseType.ordinal]
+	fun getVariant(phaseType: PhaseType): PhaseVariant {
+		return phaseVariants[phaseType.ordinal].get()
 	}
 
 	fun getQuirk(quirkType: QuirkType): Quirk {
@@ -263,7 +215,7 @@ object UHC {
 		val tempTeleportLocations = GraceDefault.spreadPlayers(
 			world,
 			numGroups,
-			startRadius - 5.0,
+			setup.get().startRadius - 5.0,
 			if (world.environment == World.Environment.NETHER) GraceDefault.Companion::findYMid else GraceDefault.Companion::findYTop
 		)
 
@@ -373,7 +325,7 @@ object UHC {
 
 		val variant = phaseVariants[phaseIndex].get()
 
-		currentPhase = variant.start(phaseTimes[phaseIndex], onInject)
+		currentPhase = variant.start(phaseTime(PhaseType.values()[phaseIndex]), onInject)
 
 		quirks.filter { it.enabled.get() }.forEach { it.onPhaseSwitch(variant) }
 	}
@@ -390,20 +342,22 @@ object UHC {
 	}
 
 	fun containSpecs() {
+		val setup = setup.get()
+
 		Bukkit.getOnlinePlayers().forEach { player ->
 			if (player.gameMode == GameMode.SPECTATOR) {
 				val locX = player.location.blockX.toDouble()
 				val locZ = player.location.blockZ.toDouble()
 
 				val x = when {
-					locX > startRadius -> startRadius.toDouble()
-					locX < -startRadius -> -startRadius.toDouble()
+					locX > setup.startRadius -> setup.startRadius.toDouble()
+					locX < -setup.startRadius -> -setup.startRadius.toDouble()
 					else -> locX
 				}
 
 				val z = when {
-					locZ > startRadius -> startRadius.toDouble()
-					locZ < -startRadius -> -startRadius.toDouble()
+					locZ > setup.startRadius -> setup.startRadius.toDouble()
+					locZ < -setup.startRadius -> -setup.startRadius.toDouble()
 					else -> locZ
 				}
 

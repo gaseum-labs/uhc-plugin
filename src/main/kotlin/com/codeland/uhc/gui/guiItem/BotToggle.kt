@@ -14,7 +14,7 @@ import org.bukkit.inventory.ItemStack
 
 class BotToggle(index: Int) : GuiItemProperty <Boolean> (index, UHC.usingBot) {
 	override fun onClick(player: Player, shift: Boolean) {
-		UHC.updateUsingBot(!UHC.usingBot.get())
+		UHC.usingBot.set(!UHC.usingBot.get())
 	}
 
 	override fun getStackProperty(value: Boolean): ItemStack {

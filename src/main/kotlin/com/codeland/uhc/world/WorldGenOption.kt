@@ -17,54 +17,61 @@ import org.bukkit.inventory.ItemStack
 
 enum class WorldGenOption(
 	val prettyName: String,
-	val property: UHCProperty<Boolean>,
+	defaultEnabled: Boolean,
 	val description: List<Component>,
 	val representation: Material
 ) {
-	NETHER_FIX("Nether Fix", UHCProperty(true), listOf(
+	NETHER_FIX("Nether Fix", true, listOf(
 		Component.text("Nether wart and blazes spawn randomly in the nether")
 	), Material.NETHER_WART),
 
-	MUSHROOM_FIX("Mushroom Fix", UHCProperty(true), listOf(
+	MUSHROOM_FIX("Mushroom Fix", true, listOf(
 		Component.text("Oxeye daisy generation reduced"),
 		Component.text("Giant mushroom drop rate reduced"),
 		Component.text("Mushroom generation in caves increased")
 	), Material.RED_MUSHROOM),
 
-	ORE_FIX("Ore Fix", UHCProperty(true), listOf(
+	ORE_FIX("Ore Fix", true, listOf(
 		Component.text("Gold, lapis, and diamond only generate on the sides of caves"),
 		Component.text("Mineral indicators help find caves")
 	), Material.DIAMOND),
 
-	MELON_FIX("Melon Fix", UHCProperty(true), listOf(
+	MELON_FIX("Melon Fix", true, listOf(
 		Component.text("Melons generate in all biomes")
 	), Material.MELON_SLICE),
 
-	DUNGEON_FIX("Dungeon Fix", UHCProperty(true), listOf(
+	DUNGEON_FIX("Dungeon Fix", true, listOf(
 		Component.text("Loot in dungeon chest is normalized")
 	), Material.MOSSY_COBBLESTONE),
 
-	SUGAR_CANE_FIX("Sugar Cane Fix", UHCProperty(true), listOf(
+	SUGAR_CANE_FIX("Sugar Cane Fix", true, listOf(
 		Component.text("Sugar cane generate is spread out"),
 		Component.text("Sugar cane always generates 3 at a time")
 	), Material.SUGAR_CANE),
 
-	NETHER_INDICATORS("Nether Indicators", UHCProperty(false), listOf(
+	NETHER_INDICATORS("Nether Indicators", false, listOf(
 		Component.text("Nether blocks generate below y level 15"),
 		Component.text("Indicates the corresponding biome in the nether")
 	), Material.SOUL_SOIL),
 
-	HALLOWEEN("Halloween", UHCProperty(false), listOf(
+	HALLOWEEN("Halloween", false, listOf(
 		Component.text("Adds spooky decorations to the world"),
 	), Material.JACK_O_LANTERN),
 
-	CHRISTMAS("Christmas", UHCProperty(false), listOf(
+	CHRISTMAS("Christmas", false, listOf(
 		Component.text("Covers the world in snow"),
 	), Material.SNOWBALL),
 
-	CHUNK_BIOMES("Chunk Biomes", UHCProperty(false), listOf(
+	CHUNK_BIOMES("Chunk Biomes", false, listOf(
 		Component.text("Each chunk is a different biome"),
 	), Material.DEAD_BUSH);
+
+	val property = UHCProperty(defaultEnabled) { set ->
+		if (!UHC.isGameGoing())
+			set
+		else
+			null
+	}
 
 	companion object {
 		var centerBiome: Biome? = null
@@ -78,7 +85,7 @@ enum class WorldGenOption(
 				values().forEachIndexed { i, option ->
 					addItem(object : GuiItemProperty <Boolean> (i, option.property) {
 						override fun onClick(player: Player, shift: Boolean) {
-							if (!UHC.isGameGoing()) option.property.set(!option.property.get())
+							option.property.set(!option.property.get())
 						}
 
 						override fun getStackProperty(value: Boolean): ItemStack {
@@ -94,7 +101,7 @@ enum class WorldGenOption(
 
 				addItem(object : GuiItem(coords(7, 4)) {
 					override fun onClick(player: Player, shift: Boolean) {
-						if (!UHC.isGameGoing()) values().forEach { it.property.reset() }
+						values().forEach { it.property.reset() }
 					}
 					override fun getStack() = name(ItemStack(Material.MUSIC_DISC_WAIT), "${ChatColor.AQUA}Reset")
 				})

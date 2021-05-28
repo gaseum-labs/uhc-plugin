@@ -148,8 +148,8 @@ class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
 	 */
 	fun gameAlong(): Double {
 		val phase = UHC.currentPhase ?: return 0.0
-		val graceTime = UHC.getTime(PhaseType.GRACE)
-		val shrinkTime = UHC.getTime(PhaseType.SHRINK)
+		val graceTime = UHC.phaseTime(PhaseType.GRACE)
+		val shrinkTime = UHC.phaseTime(PhaseType.SHRINK)
 
 		return when (phase.phaseType) {
 			/* time elapsed in grace out of grace time plus shrink time */

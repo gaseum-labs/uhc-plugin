@@ -163,7 +163,7 @@ object WorldManager {
 	fun pregen(player: Player) {
 		val world = UHC.getDefaultWorld()
 
-		val extrema = ceil(UHC.startRadius / 16.0).toInt()
+		val extrema = ceil(UHC.startRadius() / 16.0).toInt()
 		val sideLength = (extrema * 2 + 1)
 
 		val max = sideLength * sideLength

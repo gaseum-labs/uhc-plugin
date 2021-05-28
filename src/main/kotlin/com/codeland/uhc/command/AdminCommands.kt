@@ -71,15 +71,12 @@ class AdminCommands : BaseCommand() {
 	@Description("set the length of a phase")
 	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Int) {
 		if (Commands.opGuard(sender)) return
-		if (UHC.isPhase(type)) {
-			Commands.errorMessage(sender, "Cannot modify the phase you are in!")
-			return
-		}
 
-		if (!type.hasTimer)
-			return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
+		if (UHC.isPhase(type)) return Commands.errorMessage(sender, "Cannot modify the phase you are in!")
 
-		UHC.updateTime(type, length)
+		if (!type.hasTimer) return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
+
+		UHC.updateSetup { it.withPhaseTime(type, length) }
 	}
 
 	@Subcommand("startRadius")
@@ -88,7 +85,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		UHC.updateStartRadius(radius)
+		UHC.updateSetup { it.withStartRadius(radius) }
 	}
 
 	@Subcommand("endRadius")
@@ -97,7 +94,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		UHC.updateEndRadius(radius)
+		UHC.updateSetup { it.withEndRadius(radius) }
 	}
 
 	@Subcommand("preset")
@@ -106,7 +103,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		UHC.updatePreset(startRadius, endRadius, graceTime, shrinkTime)
+		UHC.updateSetup { Setup.custom(startRadius, endRadius, graceTime, shrinkTime) }
 	}
 
 	@Subcommand("preset")
@@ -115,7 +112,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
-		UHC.updatePreset(preset)
+		UHC.updateSetup { preset.setup }
 	}
 
 	@Subcommand("stage")

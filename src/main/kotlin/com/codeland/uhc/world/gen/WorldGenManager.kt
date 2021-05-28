@@ -157,7 +157,7 @@ object WorldGenManager {
 					    seed, biomeRegistry,
 					    biomeFromName(WorldGenOption.centerBiome?.name),
 					    WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
-					    UHC.startRadius
+					    UHC.startRadius()
 				    )
 		    }
 		    else -> null

@@ -1,12 +1,21 @@
 package com.codeland.uhc.core
 
-class UHCProperty <T> (val default: T) {
+class UHCProperty <T> (val default: T, val onSet: (set: T) -> T? = { it }) {
 	private var value = default
 	private var watcher: () -> Unit = {}
 
-	fun get () = value
+	fun get() = value
 
-	fun set (to: T) {
+	fun set(to: T) {
+		val filtered = onSet(to)
+
+		if (filtered != null) {
+			value = filtered
+			watcher()
+		}
+	}
+
+	fun unsafeSet(to: T) {
 		value = to
 		watcher()
 	}
@@ -15,8 +24,5 @@ class UHCProperty <T> (val default: T) {
 		watcher = func
 	}
 
-	fun reset() {
-		value = default
-		watcher()
-	}
+	fun reset() = set(default)
 }

@@ -22,40 +22,34 @@ import kotlin.collections.ArrayList
 
 abstract class Quirk(val type: QuirkType) {
 	/* default value will be set upon init */
-	var enabled = UHCProperty(false)
-	private set
+	val enabled: UHCProperty<Boolean> = UHCProperty(false) { set ->
+		if (set) onEnable() else onDisable()
 
-	fun setEnabled(value: Boolean) {
-		/* enable / disable functions come first */
-		if (value) {
-			/* start all players if the game is already going */
-			if (UHC.isGameGoing()) {
-				PlayerData.playerDataList.forEach { (uuid, playerData) ->
-					if (playerData.participating) {
-						/* mark that they have been applied */
-						PlayerData.getQuirkDataHolder(playerData, type).applied = true
-						onStart(uuid)
-					}
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (set) {
+				if (playerData.participating) {
+					PlayerData.getQuirkDataHolder(playerData, type).applied = true
+					onStart(uuid)
 				}
-			}
-
-			onEnable()
-
-		} else {
-			/* revoke applied status from all players who were applied by this quirk */
-			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			} else {
 				val quirkDataHolder = PlayerData.getQuirkDataHolder(playerData, type)
+
 				if (quirkDataHolder.applied) {
 					onEnd(uuid)
 					quirkDataHolder.applied = false
 				}
 			}
-
-			onDisable()
 		}
 
-		enabled.set(value)
+		type.incompatibilities.forEach {
+			val other = UHC.getQuirk(it)
+			if (other.enabled.get()) other.enabled.set(false)
+		}
+
+		set
 	}
+
+	fun toggleEnabled() = enabled.set(!enabled.get())
 
 	private val properties = ArrayList<UHCProperty<*>>()
 

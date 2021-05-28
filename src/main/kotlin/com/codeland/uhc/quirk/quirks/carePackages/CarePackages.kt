@@ -1,7 +1,6 @@
 package com.codeland.uhc.quirk.quirks.carePackages
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.phase.PhaseType
@@ -119,7 +118,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			/* distribute drops over shrinking phase so that if there were another, */
 			/* it would fall exactly at the end of shrinking phase */
 
-			val dropPeriod = UHC.getTime(PhaseType.SHRINK) * (NUM_DROPS / (NUM_DROPS + 1.0))
+			val dropPeriod = UHC.phaseTime(PhaseType.SHRINK) * (NUM_DROPS / (NUM_DROPS + 1.0))
 			val dropInterval = (dropPeriod / NUM_DROPS).toInt()
 
 			/* all drops are equally spaced by dropInterval */
@@ -129,13 +128,13 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			dropTimes[0] += remaining
 
 			findLocations { i ->
-				UHC.startRadius * (1 - ((dropInterval * i).toDouble() / UHC.getTime(PhaseType.SHRINK)))
+				UHC.startRadius() * (1 - ((dropInterval * i).toDouble() / UHC.phaseTime(PhaseType.SHRINK)))
 			}
 
 		} else if (UHC.isPhase(PhaseType.SHRINK)) {
-			val elapsed = UHC.getTime(PhaseType.SHRINK) - (UHC.currentPhase?.remainingSeconds ?: 0)
+			val elapsed = UHC.phaseTime(PhaseType.SHRINK) - (UHC.currentPhase?.remainingSeconds ?: 0)
 
-			val cutOff = UHC.getTime(PhaseType.SHRINK) * (NUM_DROPS / (NUM_DROPS + 1.0)).toInt()
+			val cutOff = UHC.phaseTime(PhaseType.SHRINK) * (NUM_DROPS / (NUM_DROPS + 1.0)).toInt()
 
 			val available = (cutOff - elapsed)
 			val dropInterval = (available / NUM_DROPS)
@@ -145,7 +144,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			else return false
 
 			findLocations { i ->
-				UHC.startRadius * (1 - ((elapsed + dropInterval * i).toDouble() / UHC.getTime(PhaseType.SHRINK)))
+				UHC.startRadius() * (1 - ((elapsed + dropInterval * i).toDouble() / UHC.phaseTime(PhaseType.SHRINK)))
 			}
 		}
 
@@ -504,10 +503,10 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			}
 
 			val uhc = UHC
-			val phaseTime = uhc.getTime(PhaseType.SHRINK)
+			val phaseTime = uhc.phaseTime(PhaseType.SHRINK)
 			val remainingSeconds = uhc.currentPhase?.remainingSeconds ?: return Location(world, 0.0, 0.0, 0.0)
 
-			val xz = findDropXZ(lastLocation.blockX, lastLocation.blockZ, uhc.startRadius.toDouble(), uhc.endRadius.toDouble(), remainingSeconds, timeUntil, phaseTime, buffer)
+			val xz = findDropXZ(lastLocation.blockX, lastLocation.blockZ, uhc.startRadius().toDouble(), uhc.endRadius().toDouble(), remainingSeconds, timeUntil, phaseTime, buffer)
 
 			return makeLocation(xz.x, xz.z)
 		}
