@@ -55,15 +55,11 @@ object UHC {
 		QuirkType.values()[index].createQuirk()
 	}
 
-	val setup = UHCProperty(Preset.MEDIUM.setup)
 	val naturalRegeneration = UHCProperty(false)
 	val killReward = UHCProperty(KillReward.REGENERATION)
 
 	val defaultWorldEnvironment = UHCProperty(World.Environment.NORMAL) { set ->
-		if (isGameGoing())
-			set
-		else
-			null
+		if (!isGameGoing()) set else null
 	}
 
 	val usingBot = UHCProperty(GameRunner.bot != null) { set ->
@@ -76,6 +72,10 @@ object UHC {
 			if (!set) bot.clearTeamVCs()
 			set
 		}
+	}
+
+	val setup = UHCProperty(Preset.MEDIUM.setup) { set ->
+		if (!isGameGoing()) set else null
 	}
 
 	val properties = arrayOf(
