@@ -181,3 +181,6 @@ server
 
 # local gradle tasks
 /user.gradle
+
+# local build scripts
+/build.sh

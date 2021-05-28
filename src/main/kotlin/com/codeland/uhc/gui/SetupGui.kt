@@ -38,7 +38,7 @@ class SetupGui : GuiPage(5, Util.gradientString("UHC Setup", TextColor.color(0x3
 			QuirkType.values().forEach { quirkType ->
 				val quirk = UHC.getQuirk(quirkType)
 
-				quirk.enabled.reset()
+				quirk.setEnabled(false)
 				quirk.resetProperties()
 			}
 

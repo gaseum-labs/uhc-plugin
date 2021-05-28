@@ -119,9 +119,9 @@ object UHC {
 	}
 
 	fun updateQuirk(type: QuirkType, enabled: Boolean) {
-		quirks[type.ordinal].enabled.set(enabled)
+		quirks[type.ordinal].setEnabled(enabled)
 
-		if (enabled) type.incompatibilities.forEach { getQuirk(it).enabled.set(false) }
+		if (enabled) type.incompatibilities.forEach { getQuirk(it).setEnabled(false) }
 	}
 
 	fun updateTime(phaseType: PhaseType, time: Int) {

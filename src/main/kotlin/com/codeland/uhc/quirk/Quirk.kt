@@ -22,8 +22,7 @@ import kotlin.collections.ArrayList
 
 abstract class Quirk(val type: QuirkType) {
 	/* default value will be set upon init */
-	var enabled = UHCProperty(false)
-	private set
+	val enabled = UHCProperty(false)
 
 	fun setEnabled(value: Boolean) {
 		/* enable / disable functions come first */
