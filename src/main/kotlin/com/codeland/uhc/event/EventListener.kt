@@ -31,6 +31,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
+import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
@@ -542,7 +543,7 @@ class EventListener : Listener {
 			if (event.clickedInventory?.type == InventoryType.PLAYER && event.slot in 9..35) {
 				event.isCancelled = true
 			}
-		if (UHC.isEnabled(QuirkType.INFINITE_INVENTORY) && event.clickedInventory?.type == InventoryType.PLAYER) {
+		if (UHC.isEnabled(QuirkType.INFINITE_INVENTORY) && event.clickedInventory?.type == InventoryType.PLAYER && event.action != InventoryAction.NOTHING) {
 			val player = event.whoClicked as Player
 			if (event.slot == InfiniteInventory.BACK_BUTTON) {
 				InfiniteInventory.prevPage(player)
