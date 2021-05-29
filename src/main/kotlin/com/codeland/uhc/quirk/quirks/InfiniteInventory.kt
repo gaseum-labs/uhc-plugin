@@ -6,6 +6,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.util.ItemUtil
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -24,6 +25,7 @@ class InfiniteInventory(type: QuirkType) : Quirk(type) {
 		const val BACK_BUTTON = 9
 		const val FORWARD_BUTTON = 17
 		const val EMPTY_SLOT = 35
+		val BUTTON_MATERIAL = Material.FEATHER
 
 		var storeTask = 0
 
@@ -48,7 +50,8 @@ class InfiniteInventory(type: QuirkType) : Quirk(type) {
 
 		fun modifyDrops(drops: MutableList<ItemStack>, player: Player) {
 			drops.removeAll { itemStack ->
-				itemStack.type == Material.FEATHER && itemStack.itemMeta.hasDisplayName()
+				itemStack.type == BUTTON_MATERIAL && itemStack.itemMeta.hasDisplayName()
+				// todo: check that the display name is actually the one we're looking for.
 			}
 			drops.addAll(getInventory(player).getAllOtherItems())
 			getInventory(player).resetPages()
@@ -59,14 +62,16 @@ class InfiniteInventory(type: QuirkType) : Quirk(type) {
 		fun addButtons(player: Player) {
 			val inventory = player.inventory
 			val infinventory = getInventory(player)
-			val back = ItemStack(Material.FEATHER)
+			val back = ItemStack(BUTTON_MATERIAL)
+			back.addEnchantment(ItemUtil.FakeEnchantment(), 0)
 			val meta = back.itemMeta
-			meta.setDisplayName(ChatColor.RESET.toString() + "Previous Page (${infinventory.currentPage + 1})")
+			meta.setDisplayName(ChatColor.GOLD.toString() + "Previous Page ${ChatColor.GRAY}(${infinventory.currentPage + 1})")
 			back.itemMeta = meta
 			inventory.setItem(BACK_BUTTON, ItemStack(back))
-			val forward = ItemStack(Material.FEATHER)
+			val forward = ItemStack(BUTTON_MATERIAL)
+			forward.addEnchantment(ItemUtil.FakeEnchantment(), 0)
 			val meta2 = forward.itemMeta
-			meta2.setDisplayName(ChatColor.RESET.toString() + "Next Page (${infinventory.currentPage + 1})")
+			meta2.setDisplayName(ChatColor.GOLD.toString() + "Next Page ${ChatColor.GRAY}(${infinventory.currentPage + 1})")
 			forward.itemMeta = meta2
 			inventory.setItem(FORWARD_BUTTON, ItemStack(forward))
 		}
@@ -177,8 +182,8 @@ class InfiniteInventory(type: QuirkType) : Quirk(type) {
 					inventory.setItem(EMPTY_SLOT, null)
 				}
 				if (
-				   inventory.getItem(BACK_BUTTON)?.type != Material.FEATHER
-				|| inventory.getItem(FORWARD_BUTTON)?.type != Material.FEATHER) {
+				   inventory.getItem(BACK_BUTTON)?.type != BUTTON_MATERIAL
+				|| inventory.getItem(FORWARD_BUTTON)?.type != BUTTON_MATERIAL) {
 					// this should almost never happen
 					addButtons(player)
 				}
