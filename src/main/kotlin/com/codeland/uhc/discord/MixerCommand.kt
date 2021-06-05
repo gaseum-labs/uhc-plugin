@@ -1,4 +1,4 @@
-package com.codeland.uhc.discord.command
+package com.codeland.uhc.discord
 
 import com.codeland.uhc.discord.MixerBot
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -8,8 +8,7 @@ abstract class MixerCommand(val requiresAdmin: Boolean) {
 	fun Any?.unit() = Unit
 	fun Any?.void() = null
 
-	abstract fun isCommand(content: String): Boolean
-
+	abstract fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean
 	abstract fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot)
 
 	companion object {

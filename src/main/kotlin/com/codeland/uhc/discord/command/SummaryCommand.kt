@@ -2,14 +2,13 @@ package com.codeland.uhc.discord.command
 
 import com.codeland.uhc.core.Ledger
 import com.codeland.uhc.discord.MixerBot
-import net.dv8tion.jda.api.Permission
+import com.codeland.uhc.discord.MixerCommand
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.concurrent.TimeUnit
 
 class SummaryCommand : MixerCommand(true) {
-	override fun isCommand(content: String): Boolean {
+	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
 		return content.startsWith("%summary")
 	}
 

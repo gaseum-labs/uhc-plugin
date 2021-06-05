@@ -1,9 +1,11 @@
-package com.codeland.uhc.discord.filesystem
+package com.codeland.uhc.discord.filesystem.file
 
+import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.discord.filesystem.DiscordFile
 import java.util.*
 import kotlin.collections.ArrayList
 
-class NicknamesFile(header: String, channelName: String) : DiscordFile <NicknamesFile.Companion.Nicknames> (header, channelName) {
+class NicknamesFile(header: String, channelName: String) : DiscordFile<NicknamesFile.Companion.Nicknames>(header, channelName) {
 	companion object {
 		data class Nicknames(
 			val minecraftIds: ArrayList<UUID> = ArrayList(),
@@ -43,5 +45,17 @@ class NicknamesFile(header: String, channelName: String) : DiscordFile <Nickname
 
 	override fun defaultContents(): String {
 		return "MINECRAFT_UUID,NICKNAME0,NICKNAME1,NICKNAME2\nMINECRAFT_UUID,NICKNAME0,NICKNAME1\n..."
+	}
+
+	override fun updateContents(dataManager: DataManager, contents: String): Boolean {
+		val nicknames = fromContents(contents)
+
+		return if (nicknames != null) {
+			dataManager.nicknames = nicknames
+			true
+
+		} else {
+			false
+		}
 	}
 }

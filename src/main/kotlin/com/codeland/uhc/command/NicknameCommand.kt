@@ -22,7 +22,13 @@ class NicknameCommand : BaseCommand() {
 	}
 
 	private fun nicknameTaken(nickname: String): Boolean {
-		return Chat.nickMap.values.any { nickList -> nickList.any { nick -> nick.equals(nickname, ignoreCase = true) } }
+		val bot = GameRunner.bot ?: return true
+
+		return bot.dataManager.nicknames.nicknames.any { list ->
+			list.any { nick ->
+				nick.equals(nickname, ignoreCase = true)
+			}
+		}
 	}
 
 	@Subcommand("add")

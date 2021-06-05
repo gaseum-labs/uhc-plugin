@@ -2,7 +2,6 @@ package com.codeland.uhc.discord
 
 import com.codeland.uhc.discord.command.GeneralCommand
 import com.codeland.uhc.discord.command.LinkCommand
-import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.command.SummaryCommand
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.team.Team
@@ -29,8 +28,10 @@ class MixerBot(
 	ip: String
 ) : ListenerAdapter() {
 	companion object {
-		fun createMixerBot(discordDataPath: String, ip: String): MixerBot {
-			val discordDataFile = File(discordDataPath)
+		const val DISCORD_DATA_PATH = "./discordData.txt"
+
+		fun createMixerBot(ip: String): MixerBot {
+			val discordDataFile = File(DISCORD_DATA_PATH)
 
 			/* load the bot token and UHC Server Id from disk */
 			if (discordDataFile.exists()) {
@@ -42,8 +43,8 @@ class MixerBot(
 				reader.close()
 
 				if (token == null || guildID == null) {
-					writeDummyDiscordData(discordDataPath, token)
-					throw Exception("No token found in $discordDataPath")
+					writeDummyDiscordData(token)
+					throw Exception("No token found in $DISCORD_DATA_PATH")
 				}
 
 				val jda = JDABuilder.createDefault(token).build()
@@ -52,13 +53,13 @@ class MixerBot(
 				return MixerBot(jda, dataManager, token, guildID, ip)
 
 			} else {
-				writeDummyDiscordData(discordDataPath)
-				throw Exception("No Discord Data file found, created the template file, $discordDataPath")
+				writeDummyDiscordData()
+				throw Exception("No Discord Data file found, created the template file, $DISCORD_DATA_PATH")
 			}
 		}
 
-		private fun writeDummyDiscordData(discordDataPath: String, token: String? = null) {
-			val writer = FileWriter(File(discordDataPath), false)
+		private fun writeDummyDiscordData(token: String? = null) {
+			val writer = FileWriter(File(DISCORD_DATA_PATH), false)
 
 			writer.write(
 				"${token ?: "BOT TOKEN GOES ON THIS LINE"}\n" +
@@ -92,7 +93,7 @@ class MixerBot(
 		val member = event.member ?: return
 
 		commands.any { command ->
-			if (command.isCommand(content)) {
+			if (command.isCommand(content, event, this)) {
 				if (command.requiresAdmin && !member.permissions.contains(Permission.ADMINISTRATOR))
 					MixerCommand.errorMessage(event, "You must be an administrator to use this command!")
 				else
@@ -115,8 +116,8 @@ class MixerBot(
 
 	/* disk data reading writing */
 
-	fun saveDiscordData(discordDataPath: String) {
-		val writer = FileWriter(File(discordDataPath), false)
+	fun saveDiscordData() {
+		val writer = FileWriter(File(DISCORD_DATA_PATH), false)
 
 		writer.write("${token}\n${guildId}")
 

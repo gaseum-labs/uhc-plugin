@@ -1,9 +1,11 @@
-package com.codeland.uhc.discord.filesystem
+package com.codeland.uhc.discord.filesystem.file
 
+import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.discord.filesystem.DiscordFile
 import java.util.*
 import kotlin.collections.ArrayList
 
-class LinkDataFile(header: String, channelName: String) : DiscordFile <LinkDataFile.Companion.LinkData> (header, channelName) {
+class LinkDataFile(header: String, channelName: String) : DiscordFile<LinkDataFile.Companion.LinkData>(header, channelName) {
 	companion object {
 		data class LinkData(
 			val minecraftIds: ArrayList<UUID> = ArrayList(),
@@ -43,5 +45,17 @@ class LinkDataFile(header: String, channelName: String) : DiscordFile <LinkDataF
 
 	override fun defaultContents(): String {
 		return "MINECRAFT_UUID,DISCORD_ID\nMINECRAFT_UUID,DISCORD_ID\n..."
+	}
+
+	override fun updateContents(dataManager: DataManager, contents: String): Boolean {
+		val linkData = fromContents(contents)
+
+		return if (linkData != null) {
+			dataManager.linkData = linkData
+			true
+
+		} else {
+			false
+		}
 	}
 }

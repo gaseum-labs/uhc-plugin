@@ -38,8 +38,6 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(ShareCoordsCommand(), true)
 		commandManager.registerCommand(NicknameCommand(), true)
 
-		Chat.loadFile()
-
 		/* register all events */
 		server.pluginManager.registerEvents(ClassesEvents(), this)
 		server.pluginManager.registerEvents(Chat(), this)
@@ -66,7 +64,7 @@ class UHCPlugin : JavaPlugin() {
 		}
 
 		GameRunner.bot = try {
-			MixerBot.createMixerBot("./discordData.txt", "./linkData.txt", address)
+			MixerBot.createMixerBot(address)
 		} catch (ex: Exception) {
 			Util.log(ex.message ?: "unknown error")
 			Util.log("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
@@ -82,9 +80,5 @@ class UHCPlugin : JavaPlugin() {
 
 			UHC.startWaiting()
 		}
-	}
-
-	override fun onDisable() {
-		Chat.saveFile()
 	}
 }

@@ -1,7 +1,9 @@
 package com.codeland.uhc.discord.filesystem
 
 import net.dv8tion.jda.api.entities.Category
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
+import java.sql.DataTruncation
 
 abstract class DiscordFile <D> (val header: String, val channelName: String) {
 	var cachedMessageId: Long? = null
@@ -19,6 +21,11 @@ abstract class DiscordFile <D> (val header: String, val channelName: String) {
 		} else {
 			fromContents(DiscordFilesystem.messageData(message))
 		}
+	}
+
+	fun save(guild: Guild, data: D) {
+		val category = DiscordFilesystem.getBotCategory(guild)
+		if (category != null) save(category, data)
 	}
 
 	fun save(category: Category, data: D) {
@@ -56,4 +63,6 @@ abstract class DiscordFile <D> (val header: String, val channelName: String) {
 	protected abstract fun fromContents(contents: String): D?
 	protected abstract fun writeContents(data: D): String
 	protected abstract fun defaultContents(): String
+
+	abstract fun updateContents(dataManager: DataManager, contents: String): Boolean
 }

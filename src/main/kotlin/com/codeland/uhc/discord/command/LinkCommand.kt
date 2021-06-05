@@ -1,11 +1,14 @@
 package com.codeland.uhc.discord.command
 
 import com.codeland.uhc.discord.MixerBot
+import com.codeland.uhc.discord.MixerCommand
 import com.codeland.uhc.discord.MojangAPI
+import com.codeland.uhc.discord.filesystem.DiscordFilesystem
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import java.util.*
 
 class LinkCommand : MixerCommand(false) {
-	override fun isCommand(content: String): Boolean {
+	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
 		return content.startsWith("%link ")
 	}
 
@@ -20,19 +23,26 @@ class LinkCommand : MixerCommand(false) {
 			event.channel.sendMessage("That user does not exist!").queue()
 
 		} else {
-			val discordID = event.author.id
-			val userIndex = bot.getDiscordUserIndex(discordID)
+			/* save link data for this user */
+			val discordId = event.author.idLong
+			val userIndex = bot.getDiscordUserIndex(discordId)
 
-			if (userIndex == -1) {
-				bot.discordIDs.add(discordID)
-				bot.minecraftIDs.add(uuidResponse.uuid)
-			} else {
-				bot.minecraftIDs[userIndex] = uuidResponse.uuid
-			}
+			try {
+				val uuid = UUID.fromString(uuidResponse.uuid)
 
-			event.channel.sendMessage("Successfully linked as ${uuidResponse.name}").queue()
+				val linkData = bot.dataManager.linkData
 
-			bot.saveLinkData()
+				if (userIndex == -1) {
+					linkData.discordIds.add(discordId)
+					linkData.minecraftIds.add(uuid)
+				} else {
+					linkData.minecraftIds[userIndex] = uuid
+				}
+
+				DiscordFilesystem.linkDataFile.save(event.guild, linkData)
+
+				event.channel.sendMessage("Successfully linked as ${uuidResponse.name}").queue()
+			} catch (ex: Exception) {}
 		}
 	}
 }

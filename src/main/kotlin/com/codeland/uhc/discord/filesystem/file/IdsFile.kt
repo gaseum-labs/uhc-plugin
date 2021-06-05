@@ -1,6 +1,9 @@
-package com.codeland.uhc.discord.filesystem
+package com.codeland.uhc.discord.filesystem.file
 
-class IdsFile(header: String, channelName: String) : DiscordFile <IdsFile.Companion.Ids> (header, channelName) {
+import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.discord.filesystem.DiscordFile
+
+class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Companion.Ids>(header, channelName) {
 	companion object {
 		val fieldNames = arrayOf(
 			"voiceCategory",
@@ -45,5 +48,17 @@ class IdsFile(header: String, channelName: String) : DiscordFile <IdsFile.Compan
 
 	override fun defaultContents(): String {
 		return fieldNames.joinToString("\n") { "$it 0" }
+	}
+
+	override fun updateContents(dataManager: DataManager, contents: String): Boolean {
+		val ids = fromContents(contents)
+
+		return if (ids != null) {
+			dataManager.ids = ids
+			true
+
+		} else {
+			false
+		}
 	}
 }

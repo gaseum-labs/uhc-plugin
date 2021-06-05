@@ -1,12 +1,39 @@
 package com.codeland.uhc.discord.filesystem
 
+import com.codeland.uhc.discord.filesystem.file.IdsFile
+import com.codeland.uhc.discord.filesystem.file.LinkDataFile
+import com.codeland.uhc.discord.filesystem.file.NicknamesFile
 import net.dv8tion.jda.api.entities.Category
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.TextChannel
-import net.dv8tion.jda.api.exceptions.ErrorResponseException
-import net.dv8tion.jda.api.requests.ErrorResponse
 
 object DiscordFilesystem {
+	const val CATEGORY_NAME = "bot"
+	const val DATA_CHANNEL_NAME = "data"
+
+	const val IDS_HEADER = "ids"
+	const val LINK_DATA_HEADER = "link data"
+	const val NICKNAMES_HEADER = "nicknames"
+
+	val idsFile = IdsFile(IDS_HEADER, DATA_CHANNEL_NAME)
+	val linkDataFile = LinkDataFile(LINK_DATA_HEADER, DATA_CHANNEL_NAME)
+	val nicknamesFile = NicknamesFile(NICKNAMES_HEADER, DATA_CHANNEL_NAME)
+
+	val files: Array<DiscordFile<*>> = arrayOf(
+		idsFile, linkDataFile, nicknamesFile
+	)
+
+	fun getBotCategory(guild: Guild): Category? {
+		val categories = guild.getCategoriesByName(CATEGORY_NAME, true)
+
+		return when {
+			categories.isEmpty() -> guild.createCategory(CATEGORY_NAME).complete()
+			categories.size > 1 -> null
+			else -> categories.first()
+		}
+	}
+
 	fun getChannel(category: Category, name: String): TextChannel? {
 		return category.textChannels.find { it.name == name } ?: category.createTextChannel(name).complete()
 	}
@@ -81,5 +108,18 @@ object DiscordFilesystem {
 				if (header == messageHeader) return message
 			}
 		}
+	}
+
+	fun updateMessage(dataManager: DataManager, message: Message): Boolean {
+		val header = messageHeader(message)
+		val contents = messageData(message)
+
+		files.forEach { file ->
+			if (file.header == header) {
+				return file.updateContents(dataManager, contents)
+			}
+		}
+
+		return false
 	}
 }
