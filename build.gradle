@@ -1,10 +1,4 @@
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-}
-
 plugins {
     id 'idea'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
@@ -22,7 +16,7 @@ idea {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "13"
     kotlinOptions.javaParameters = true
     kotlinOptions {
         languageVersion = "1.4"
@@ -30,12 +24,10 @@ compileKotlin {
     }
 }
 
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "11"
-}
-
 repositories {
     mavenCentral()
+    mavenLocal()
+    jcenter()
     maven {
         name = 'papermc'
         url = 'https://papermc.io/repo/repository/maven-public/'
@@ -57,14 +49,8 @@ repositories {
         name = 'spigot'
         url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
     }
-}
-
-allprojects {
-    repositories {
-        mavenCentral()
-        jcenter()
-        mavenLocal()
-        maven { url 'https://jitpack.io' }
+    maven {
+        url = 'https://jitpack.io'
     }
 }
 
@@ -85,5 +71,3 @@ shadowJar {
     exclude 'paper-184.jar'
     exclude 'com.comphenix.*'
 }
-
-build.dependsOn shadowJar

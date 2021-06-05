@@ -4,6 +4,7 @@ import com.codeland.uhc.discord.command.GeneralCommand
 import com.codeland.uhc.discord.command.LinkCommand
 import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.command.SummaryCommand
+import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
@@ -21,62 +22,38 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class MixerBot(
-	private val discordDataPath: String,
-	val linkDataPath: String,
+	val jda: JDA,
+	val dataManager: DataManager,
 	val token: String,
-	var guildID: String,
-	var voiceCategoryID: String,
-	var voiceChannelID: String,
+	var guildId: Long,
 	ip: String
 ) : ListenerAdapter() {
-	private val bot: JDA = JDABuilder.createDefault(token).build()
-
-	val discordIDs: ArrayList<String> = ArrayList()
-	val minecraftIDs: ArrayList<String> = ArrayList()
-
-	var guild: Guild? = null
-	var voiceCategory: Category? = null
-	var voiceChannel: VoiceChannel? = null
-
-	val commands = arrayOf(
-		GeneralCommand(),
-		LinkCommand(),
-		SummaryCommand()
-	)
-
-	init {
-		bot.presence.activity = Activity.playing("UHC at $ip")
-		bot.addEventListener(this)
-
-		readLinkData(linkDataPath)
-	}
-
 	companion object {
-		const val NO_ID = "NONE"
-
-		fun createMixerBot(discordDataPath: String, linkDataPath: String, ip: String): MixerBot {
+		fun createMixerBot(discordDataPath: String, ip: String): MixerBot {
 			val discordDataFile = File(discordDataPath)
 
+			/* load the bot token and UHC Server Id from disk */
 			if (discordDataFile.exists()) {
 				val reader = BufferedReader(FileReader(discordDataFile))
 
 				val token = if (reader.ready()) reader.readLine() else null
-				var anyLineFailed = false
-
-				val guildID = if (reader.ready()) reader.readLine() else { anyLineFailed = true; NO_ID }
-				val categoryID = if (reader.ready()) reader.readLine() else { anyLineFailed = true; NO_ID }
-				val channelID = if (reader.ready()) reader.readLine() else { anyLineFailed = true; NO_ID }
+				val guildID = (if (reader.ready()) reader.readLine() else null)?.toLongOrNull()
 
 				reader.close()
 
-				if (token == null || anyLineFailed) writeDummyDiscordData(discordDataPath, token)
-				if (token == null) throw Exception("No token found in $discordDataPath")
+				if (token == null || guildID == null) {
+					writeDummyDiscordData(discordDataPath, token)
+					throw Exception("No token found in $discordDataPath")
+				}
 
-				return MixerBot(discordDataPath, linkDataPath, token, guildID, categoryID, channelID, ip)
+				val jda = JDABuilder.createDefault(token).build()
+				val dataManager = DataManager.createDataManager(jda, guildID) ?: throw Exception("Data Manager could not be created")
+
+				return MixerBot(jda, dataManager, token, guildID, ip)
+
 			} else {
 				writeDummyDiscordData(discordDataPath)
-
-				throw Exception("No Discord data file found, created the template file, $discordDataPath")
+				throw Exception("No Discord Data file found, created the template file, $discordDataPath")
 			}
 		}
 
@@ -85,13 +62,26 @@ class MixerBot(
 
 			writer.write(
 				"${token ?: "BOT TOKEN GOES ON THIS LINE"}\n" +
-				"GUILD ID ON THIS LINE\n" +
-				"VOICE CHANNEL CATEGORY ID ON THIS LINE\n" +
-				"VOICE CHANNEL ID ON THIS LINE\n"
+				"GUILD ID ON THIS LINE\n"
 			)
 
 			writer.close()
 		}
+	}
+
+	var guild: Guild? = null
+	var voiceCategory: Category? = null
+	var generalVoiceChannel: VoiceChannel? = null
+
+	val commands = arrayOf(
+		GeneralCommand(),
+		LinkCommand(),
+		SummaryCommand()
+	)
+
+	init {
+		jda.presence.activity = Activity.playing("UHC at $ip")
+		jda.addEventListener(this)
 	}
 
 	class SummaryEntry(val place: String, val name: String, val killedBy: String)
@@ -116,77 +106,21 @@ class MixerBot(
 	}
 
 	override fun onReady(event: ReadyEvent) {
-		try {
-			guild = if (guildID == NO_ID) null else bot.getGuildById(guildID)
-			voiceCategory = if (voiceCategoryID == NO_ID) null else bot.getCategoryById(voiceCategoryID)
-			voiceChannel = if (voiceChannelID == NO_ID) null else bot.getVoiceChannelById(voiceChannelID)
-		} catch (ex: Exception) {
-			guild = null
-			voiceCategory = null
-			voiceChannel = null
-		}
+		guild = jda.getGuildById(guildId)
+		voiceCategory = jda.getCategoryById(dataManager.ids.voiceCategoryId)
+		generalVoiceChannel = jda.getVoiceChannelById(dataManager.ids.generalVoiceChannelId)
 
 		clearTeamVCs()
 	}
 
 	/* disk data reading writing */
 
-	fun saveDiscordData() {
+	fun saveDiscordData(discordDataPath: String) {
 		val writer = FileWriter(File(discordDataPath), false)
 
-		writer.write("${token}\n$guildID\n$voiceCategoryID\n$voiceChannelID")
+		writer.write("${token}\n${guildId}")
 
 		writer.close()
-	}
-
-	fun saveLinkData() {
-		val writer = FileWriter(File(linkDataPath), false)
-
-		for (i in discordIDs.indices) {
-			writer.write("${discordIDs[i]} ${minecraftIDs[i]}${if (i == discordIDs.lastIndex) "" else "\n"}")
-		}
-
-		writer.close()
-	}
-
-	private fun readLinkData(linkDataPath: String) {
-		discordIDs.clear()
-		minecraftIDs.clear()
-
-		val file = File(linkDataPath)
-
-		if (file.exists()) {
-			val reader = BufferedReader(FileReader(linkDataPath))
-
-			while (reader.ready()) {
-				val line = reader.readLine()
-
-				if (line.contains(" ")) {
-					discordIDs.add(line.substring(0, line.indexOf(" ")))
-					minecraftIDs.add(line.substring(line.lastIndexOf(" ") + 1))
-				}
-			}
-		} else {
-			writeDummyLinkData(linkDataPath)
-		}
-	}
-
-	private fun writeDummyLinkData(linkDataPath: String) {
-		val writer = FileWriter(File(linkDataPath), false).close()
-	}
-
-	private fun membersFromPlayers(guild: Guild, players: ArrayList<UUID>): List<Member> {
-		return players.mapNotNull { getMinecraftUserIndex(it) }
-			.mapNotNull { guild.getMemberById(discordIDs[it]) }
-			.filter { it.voiceState?.inVoiceChannel() == true }
-	}
-
-	fun isLinked(uuid: UUID): Boolean {
-		val idString = uuidToString(uuid)
-
-		return minecraftIDs.any { id ->
-			id == idString
-		}
 	}
 
 	private class Awaiter(val num: Int, val onComplete: () -> Unit) {
@@ -217,7 +151,7 @@ class MixerBot(
 	 */
 	fun removeFromTeamChannel(team: Team, teamSize: Int, players: ArrayList<UUID>) {
 		val guild = guild ?: return
-		val voiceChannel = voiceChannel ?: return
+		val voiceChannel = generalVoiceChannel ?: return
 
 		/* should never be above but just in case */
 		/* remove everyone, delete channel */
@@ -226,7 +160,7 @@ class MixerBot(
 
 		/* remove only certain players, don't delete channel */
 		} else {
-			membersFromPlayers(guild, players).forEach { member ->
+			voiceMembersFromPlayers(guild, players).forEach { member ->
 				guild.moveVoiceMember(member, voiceChannel).queue()
 			}
 		}
@@ -236,7 +170,7 @@ class MixerBot(
 		val guild = guild ?: return
 
 		getTeamChannel(team.id) { teamChannel ->
-			membersFromPlayers(guild, players).forEach { member ->
+			voiceMembersFromPlayers(guild, players).forEach { member ->
 				guild.moveVoiceMember(member, teamChannel).queue()
 			}
 		}
@@ -274,14 +208,14 @@ class MixerBot(
 
 			/* move members to general before deleting team channel */
 			teamChannel.members.forEach { member ->
-				awaiter.queue(guild.moveVoiceMember(member, voiceChannel))
+				awaiter.queue(guild.moveVoiceMember(member, generalVoiceChannel))
 			}
 		}
 	}
 
 	fun clearTeamVCs() {
 		val voiceCategory = voiceCategory ?: return
-		val voiceChannel = voiceChannel ?: return
+		val voiceChannel = generalVoiceChannel ?: return
 		val guild = guild ?: return
 
 		val channels = voiceCategory.voiceChannels
@@ -294,34 +228,26 @@ class MixerBot(
 	/* random utility */
 
 	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: ArrayList<SummaryEntry>, losers: ArrayList<SummaryEntry>) {
-		val embed = EmbedBuilder()
+		channel.sendMessage(EmbedBuilder()
 			.setColor(0xe7c93c)
 			.setTitle("Summary of UHC #$gameNumber on $month/$day/$year")
 			.setDescription("Lasted ${Util.timeString(matchTime)}")
 			.addField("Winners", if (winners.isEmpty()) "No winners" else winners.fold("") { accum, winner -> accum + "${winner.place}: ${winner.name}\n" }, false)
 			.addField("Losers", if (losers.isEmpty()) "No losers" else losers.foldIndexed("") { index, accum, loser -> accum + "${loser.place}: ${loser.name} | killed by ${loser.killedBy}\n"}, false)
 			.build()
-
-		channel.sendMessage(embed).queue()
+		).queue()
 	}
 
-	fun getDiscordUserIndex(discordID: String): Int {
-		for (i in discordIDs.indices)
-			if (discordID == discordIDs[i]) return i
+	fun getDiscordUserIndex(discordID: Long) = dataManager.linkData.discordIds.indexOf(discordID)
 
-		return -1
-	}
+	private fun getMinecraftUserIndex(uuid: UUID) = dataManager.linkData.minecraftIds.indexOf(uuid)
 
-	private fun uuidToString(uuid: UUID): String {
-		return "${String.Companion.format("%016x", uuid.mostSignificantBits)}${String.Companion.format("%016x", uuid.leastSignificantBits)}"
-	}
+	fun isLinked(uuid: UUID) = dataManager.linkData.minecraftIds.contains(uuid)
 
-	private fun getMinecraftUserIndex(uuid: UUID): Int? {
-		val uuidString = uuidToString(uuid)
-
-		for (i in discordIDs.indices)
-			if (uuidString == minecraftIDs[i]) return i
-
-		return null
+	private fun voiceMembersFromPlayers(guild: Guild, players: ArrayList<UUID>): List<Member> {
+		return players.map { getMinecraftUserIndex(it) }
+			.filter { it != -1 }
+			.mapNotNull { guild.getMemberById(dataManager.linkData.discordIds[it]) }
+			.filter { it.voiceState?.inVoiceChannel() == true }
 	}
 }

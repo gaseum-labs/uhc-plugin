@@ -22,13 +22,13 @@ class GeneralCommand : MixerCommand(true) {
 		val category = channel.parent
 			?: return event.channel.sendMessage("Voice channel ${channel.name} must be in a category!").queue().unit()
 
-		bot.guildID = message.guild.id
+		bot.guildId = message.guild.id
 		bot.voiceCategoryID = category.id
 		bot.voiceChannelID = channel.id
 
 		bot.guild = message.guild
 		bot.voiceCategory = category
-		bot.voiceChannel = channel
+		bot.generalVoiceChannel = channel
 
 		bot.saveDiscordData()
 
