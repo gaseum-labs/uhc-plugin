@@ -22,7 +22,7 @@ object Util {
 	}
 
 	fun debug(message: String) {
-		PaperPluginLogger.getGlobal().log(Level.INFO, "${ChatColor.RED}$message")
+		PaperPluginLogger.getGlobal().log(Level.INFO, "${ChatColor.GREEN}$message")
 	}
 
 	/**

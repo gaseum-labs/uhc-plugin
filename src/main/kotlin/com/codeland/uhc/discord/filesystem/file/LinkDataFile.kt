@@ -13,24 +13,28 @@ class LinkDataFile(header: String, channelName: String) : DiscordFile<LinkDataFi
 		)
 	}
 
-	override fun fromContents(contents: String): LinkData {
+	override fun fromContents(contents: String, onError: (String) -> Unit): LinkData {
 		val lines = contents.lines()
 
 		val minecraftIds = ArrayList<UUID>()
 		val discordIds = ArrayList<Long>()
 
-		lines.forEach { line ->
+		lines.forEachIndexed { i, line ->
 			val parts = line.split(',')
 
 			if (parts.size == 2) {
 				try {
 					val uuid = UUID.fromString(parts[0])
-					val discordID = parts[1].toLong()
+					val discordID = parts[1].trim().toLong()
 
 					minecraftIds.add(uuid)
 					discordIds.add(discordID)
 
-				} catch (ex: Exception) {}
+				} catch (ex: Exception) {
+					onError(ex.toString())
+				}
+			} else {
+				onError("There must be exactly one comma on line $i")
 			}
 		}
 
@@ -47,8 +51,12 @@ class LinkDataFile(header: String, channelName: String) : DiscordFile<LinkDataFi
 		return "MINECRAFT_UUID,DISCORD_ID\nMINECRAFT_UUID,DISCORD_ID\n..."
 	}
 
-	override fun updateContents(dataManager: DataManager, contents: String): Boolean {
-		val linkData = fromContents(contents)
+	override fun defaultData(): LinkData {
+		return LinkData(ArrayList(), ArrayList())
+	}
+
+	override fun updateContents(dataManager: DataManager, contents: String, onError: (String) -> Unit): Boolean {
+		val linkData = fromContents(contents, onError)
 
 		return if (linkData != null) {
 			dataManager.linkData = linkData

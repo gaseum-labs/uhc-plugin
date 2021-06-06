@@ -110,13 +110,10 @@ object DiscordFilesystem {
 		}
 	}
 
-	fun updateMessage(dataManager: DataManager, message: Message): Boolean {
-		val header = messageHeader(message)
-		val contents = messageData(message)
-
+	fun updateMessage(dataManager: DataManager, header: String, contents: String, onError: (String) -> Unit): Boolean {
 		files.forEach { file ->
 			if (file.header == header) {
-				return file.updateContents(dataManager, contents)
+				return file.updateContents(dataManager, contents, onError)
 			}
 		}
 

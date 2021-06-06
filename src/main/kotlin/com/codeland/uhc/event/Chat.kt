@@ -34,7 +34,7 @@ class Chat : Listener {
 			getNicks(player).add(nickname)
 
 			val bot = GameRunner.bot ?: return
-			DiscordFilesystem.nicknamesFile.save(bot.guild!!, bot.dataManager.nicknames)
+			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, bot.dataManager.nicknames)
 		}
 
 		fun removeNick(player: UUID, nickname: String): Boolean {
@@ -43,7 +43,7 @@ class Chat : Listener {
 			val removed = getNicks(player).removeIf { it.toLowerCase() == lowerNickname }
 
 			val bot = GameRunner.bot ?: return removed
-			DiscordFilesystem.nicknamesFile.save(bot.guild!!, bot.dataManager.nicknames)
+			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, bot.dataManager.nicknames)
 
 			return removed
 		}

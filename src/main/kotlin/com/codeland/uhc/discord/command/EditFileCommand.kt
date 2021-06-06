@@ -29,20 +29,27 @@ class EditFileCommand : MixerCommand(true) {
 			return errorMessage(event, "This is not a discord file message")
 
 		attachment.retrieveInputStream().thenAccept { stream ->
-			val reader = BufferedReader(InputStreamReader(stream))
+			val contents = String(stream.readAllBytes())
+			stream.close()
 
-			val charBuffer = CharArray(2000)
-			reader.read(charBuffer)
+			var errorMessage = ""
 
-			reference.editMessage(DiscordFilesystem.createMessageContent(header, String(charBuffer))).complete()
+			/* set the internal data associated with the discord file */
+			val valid = DiscordFilesystem.updateMessage(bot.dataManager, header, contents) {
+				errorMessage += "${it}\n"
+			}
 
-			/* update the internal data associated with the edited message */
-			DiscordFilesystem.updateMessage(bot.dataManager, reference)
+			/* report on any defects in the given data */
+			if (errorMessage.isNotEmpty()) errorMessage(event, errorMessage)
 
+			/* only replace the message contents if given valid data */
+			if (valid) reference.editMessage(DiscordFilesystem.createMessageContent(header, contents)).complete()
+
+			/* delete command message to clear channel clutter */
 			event.message.delete().complete()
 
 		}.exceptionally {
-			errorMessage(event, "Something went wrong with the connection").void()
+			errorMessage(event, it.localizedMessage).void()
 		}
 	}
 }

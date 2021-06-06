@@ -13,13 +13,13 @@ class NicknamesFile(header: String, channelName: String) : DiscordFile<Nicknames
 		)
 	}
 
-	override fun fromContents(contents: String): Nicknames {
+	override fun fromContents(contents: String, onError: (String) -> Unit): Nicknames {
 		val lines = contents.lines()
 
 		val minecraftIds: ArrayList<UUID> = ArrayList()
 		val nicknames: ArrayList<ArrayList<String>> = ArrayList()
 
-		lines.forEach { line ->
+		lines.forEachIndexed { i, line ->
 			val parts = line.split(',')
 
 			if (parts.size >= 2) {
@@ -29,8 +29,11 @@ class NicknamesFile(header: String, channelName: String) : DiscordFile<Nicknames
 
 					minecraftIds.add(uuid)
 					nicknames.add(names)
-
-				} catch (ex: Exception) {}
+				} catch (ex: Exception) {
+					onError(ex.message ?: "Unknown error")
+				}
+			} else {
+				onError("line $i does not have a comma")
 			}
 		}
 
@@ -47,8 +50,12 @@ class NicknamesFile(header: String, channelName: String) : DiscordFile<Nicknames
 		return "MINECRAFT_UUID,NICKNAME0,NICKNAME1,NICKNAME2\nMINECRAFT_UUID,NICKNAME0,NICKNAME1\n..."
 	}
 
-	override fun updateContents(dataManager: DataManager, contents: String): Boolean {
-		val nicknames = fromContents(contents)
+	override fun defaultData(): Nicknames {
+		return Nicknames(ArrayList(), ArrayList())
+	}
+
+	override fun updateContents(dataManager: DataManager, contents: String, onError: (String) -> Unit): Boolean {
+		val nicknames = fromContents(contents, onError)
 
 		return if (nicknames != null) {
 			dataManager.nicknames = nicknames

@@ -2,6 +2,7 @@ package com.codeland.uhc.discord.filesystem.file
 
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFile
+import com.codeland.uhc.util.Util
 
 class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Companion.Ids>(header, channelName) {
 	companion object {
@@ -18,21 +19,30 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 		)
 	}
 
-	override fun fromContents(contents: String): Ids? {
+	override fun fromContents(contents: String, onError: (String) -> Unit): Ids? {
 		val lines = contents.lines()
-		if (lines.size < 3) return null
+		if (lines.size < 3) {
+			onError("There are fewer than three lines for the three Ids")
+			return null
+		}
 
 		val fieldValues = Array<Long>(fieldNames.size) { 0 }
 
 		for (i in fieldNames.indices) {
 			val parts = lines[i].split(',')
 
-			if (parts.size != 2) return null
+			if (parts.size != 2) {
+				onError("There is not exactly one comma on line $i")
+				return null
+			}
 
 			val fieldNameIndex = fieldNames.indexOf(parts[0])
 			val value = parts[1].toLongOrNull()
 
-			if (fieldNameIndex == -1 || value == null) return null
+			if (fieldNameIndex == -1 || value == null) {
+				onError("No field name \"${parts[0]}\" found on line $i")
+				return null
+			}
 
 			fieldValues[fieldNameIndex] = value
 		}
@@ -50,8 +60,12 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 		return fieldNames.joinToString("\n") { "$it 0" }
 	}
 
-	override fun updateContents(dataManager: DataManager, contents: String): Boolean {
-		val ids = fromContents(contents)
+	override fun defaultData(): Ids {
+		return Ids(0, 0, 0)
+	}
+
+	override fun updateContents(dataManager: DataManager, contents: String, onError: (String) -> Unit): Boolean {
+		val ids = fromContents(contents, onError)
 
 		return if (ids != null) {
 			dataManager.ids = ids

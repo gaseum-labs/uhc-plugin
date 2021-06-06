@@ -63,13 +63,12 @@ class UHCPlugin : JavaPlugin() {
 			Util.log("${ChatColor.RED}DDNS FAILED | STARTING SERVER AT $address")
 		}
 
-		GameRunner.bot = try {
-			MixerBot.createMixerBot(address)
-		} catch (ex: Exception) {
-			Util.log(ex.message ?: "unknown error")
+		MixerBot.createMixerBot(address, {
+			GameRunner.bot = it
+		}, {
+			Util.log("${ChatColor.RED}$it")
 			Util.log("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
-			null
-		}
+		})
 
 		setMOTD()
 

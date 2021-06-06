@@ -1,5 +1,6 @@
 package com.codeland.uhc.discord.filesystem
 
+import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.entities.Category
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
@@ -8,18 +9,20 @@ import java.sql.DataTruncation
 abstract class DiscordFile <D> (val header: String, val channelName: String) {
 	var cachedMessageId: Long? = null
 
-	fun load(category: Category): D? {
+	fun load(category: Category, onError: (String) -> Unit): D {
 		val message = getMessage(category)
 
 		return if (message == null) {
 			/* when there is no message to load create default */
 			DiscordFilesystem.getChannel(category, channelName)
-				?.sendMessage(defaultContents())
+				?.sendMessage(DiscordFilesystem.createMessageContent(header, defaultContents()))?.complete()
 
-			null
+			onError("No message for $header was found, creating dummy")
+
+			defaultData()
 
 		} else {
-			fromContents(DiscordFilesystem.messageData(message))
+			fromContents(DiscordFilesystem.messageData(message), onError) ?: defaultData()
 		}
 	}
 
@@ -60,9 +63,10 @@ abstract class DiscordFile <D> (val header: String, val channelName: String) {
 		return message
 	}
 
-	protected abstract fun fromContents(contents: String): D?
+	protected abstract fun fromContents(contents: String, onError: (String) -> Unit): D?
 	protected abstract fun writeContents(data: D): String
 	protected abstract fun defaultContents(): String
+	protected abstract fun defaultData(): D
 
-	abstract fun updateContents(dataManager: DataManager, contents: String): Boolean
+	abstract fun updateContents(dataManager: DataManager, contents: String, onError: (String) -> Unit): Boolean
 }
