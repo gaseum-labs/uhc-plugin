@@ -2,7 +2,6 @@ package com.codeland.uhc.discord.filesystem.file
 
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFile
-import com.codeland.uhc.util.Util
 
 class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Companion.Ids>(header, channelName) {
 	companion object {
@@ -10,19 +9,21 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 			"voiceCategory",
 			"generalVoiceChannel",
 			"summaryChannel",
+			"adminRole"
 		)
 
 		data class Ids(
 			var voiceCategoryId: Long,
 			var generalVoiceChannelId: Long,
-			var summaryChannelId: Long
+			var summaryChannelId: Long,
+			var adminRoleId: Long,
 		)
 	}
 
 	override fun fromContents(contents: String, onError: (String) -> Unit): Ids? {
 		val lines = contents.lines()
-		if (lines.size < 3) {
-			onError("There are fewer than three lines for the three Ids")
+		if (lines.size < 4) {
+			onError("There are fewer than four lines")
 			return null
 		}
 
@@ -47,7 +48,7 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 			fieldValues[fieldNameIndex] = value
 		}
 
-		return Ids(fieldValues[0], fieldValues[1], fieldValues[2])
+		return Ids(fieldValues[0], fieldValues[1], fieldValues[2], fieldValues[3])
 	}
 
 	override fun writeContents(data: Ids): String {
@@ -61,7 +62,7 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 	}
 
 	override fun defaultData(): Ids {
-		return Ids(0, 0, 0)
+		return Ids(0, 0, 0, 0)
 	}
 
 	override fun updateContents(dataManager: DataManager, contents: String, onError: (String) -> Unit): Boolean {

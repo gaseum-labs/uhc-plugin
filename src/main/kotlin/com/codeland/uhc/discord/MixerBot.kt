@@ -100,11 +100,6 @@ class MixerBot(
 		}
 	}
 
-	//TODO convert to functions
-	fun guild(): Guild? = jda.getGuildById(guildId)
-	fun voiceCategory(): Category? = jda.getCategoryById(dataManager.ids.voiceCategoryId)
-	fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(dataManager.ids.generalVoiceChannelId)
-
 	val commands = arrayOf(
 		GeneralCommand(),
 		LinkCommand(),
@@ -119,8 +114,6 @@ class MixerBot(
 		clearTeamVCs()
 	}
 
-	class SummaryEntry(val place: String, val name: String, val killedBy: String)
-
 	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
 		val message = event.message
 		val content = message.contentRaw
@@ -128,7 +121,7 @@ class MixerBot(
 
 		commands.any { command ->
 			if (command.isCommand(content, event, this)) {
-				if (command.requiresAdmin && !member.permissions.contains(Permission.ADMINISTRATOR))
+				if (command.requiresAdmin && !isAdmin(member))
 					MixerCommand.errorMessage(event, "You must be an administrator to use this command!")
 				else
 					command.onCommand(content, event, this)
@@ -252,7 +245,13 @@ class MixerBot(
 		}
 	}
 
-	/* random utility */
+	/* utility */
+
+	fun guild(): Guild? = jda.getGuildById(guildId)
+	fun voiceCategory(): Category? = jda.getCategoryById(dataManager.ids.voiceCategoryId)
+	fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(dataManager.ids.generalVoiceChannelId)
+
+	class SummaryEntry(val place: String, val name: String, val killedBy: String)
 
 	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: ArrayList<SummaryEntry>, losers: ArrayList<SummaryEntry>) {
 		channel.sendMessage(EmbedBuilder()
@@ -276,5 +275,9 @@ class MixerBot(
 			.filter { it != -1 }
 			.mapNotNull { guild.getMemberById(dataManager.linkData.discordIds[it]) }
 			.filter { it.voiceState?.inVoiceChannel() == true }
+	}
+
+	fun isAdmin(member: Member): Boolean {
+		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == dataManager.ids.adminRoleId }
 	}
 }

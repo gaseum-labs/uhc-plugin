@@ -52,9 +52,18 @@ class Chat : Listener {
 			val bot = GameRunner.bot ?: return ArrayList()
 
 			val playerIndex = bot.dataManager.nicknames.minecraftIds.indexOf(uuid)
-			if (playerIndex == -1) return ArrayList()
 
-			return bot.dataManager.nicknames.nicknames[playerIndex]
+			/* put into list for a new player*/
+			return if (playerIndex == -1) {
+				bot.dataManager.nicknames.minecraftIds.add(uuid)
+				bot.dataManager.nicknames.nicknames.add(ArrayList())
+
+				bot.dataManager.nicknames.nicknames.last()
+
+			/* nickname list for existing player */
+			} else {
+				bot.dataManager.nicknames.nicknames[playerIndex]
+			}
 		}
 
 		fun defaultGenerator(string: String): Component {

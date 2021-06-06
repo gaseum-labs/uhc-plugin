@@ -15,9 +15,6 @@ class GeneralCommand : MixerCommand(true) {
 		val member = event.member ?: return
 		val message = event.message
 
-		if (!member.permissions.contains(Permission.ADMINISTRATOR))
-			return event.channel.sendMessage("You must be in an admin to use this command!").queue().unit()
-
 		val voiceChannel = member.voiceState?.channel
 			?: return event.channel.sendMessage("You must be in a vc to use this command!").queue().unit()
 
