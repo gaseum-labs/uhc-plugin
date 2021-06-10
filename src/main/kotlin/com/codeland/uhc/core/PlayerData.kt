@@ -1,6 +1,9 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.gui.GuiManager
+import com.codeland.uhc.gui.LobbyPvpGui
+import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import net.kyori.adventure.bossbar.BossBar
@@ -21,7 +24,7 @@ import kotlin.collections.HashMap
 import kotlin.math.abs
 import kotlin.math.max
 
-class PlayerData {
+class PlayerData(val uuid: UUID) {
 	/* the main 4 */
 	var staged = false
 	var participating = false
@@ -31,6 +34,18 @@ class PlayerData {
 	/* lobby pvp stuff */
 	var lobbyInventory = emptyArray<ItemStack>()
 	var lastPlayed: UUID? = null
+	var loadoutSlot = UHCProperty(0)
+	var inLobbyPvpQueue = UHCProperty(false) { set ->
+		if (set) {
+			PvpQueue.add(uuid)
+			true
+
+		} else {
+			PvpQueue.remove(uuid)
+			false
+		}
+	}
+	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
 
 	/* custom spawning */
 	var spawnIndex = 0
@@ -48,6 +63,8 @@ class PlayerData {
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
 	val bossBar = BossBar.bossBar(Component.empty(), 1.0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS)
+
+	var lifeNo = 0
 
 	var offlineZombie: Zombie? = null
 	set(value) {
@@ -292,7 +309,7 @@ class PlayerData {
 		}
 
 		fun getPlayerData(uuid: UUID): PlayerData {
-			return playerDataList.getOrPut(uuid) { PlayerData() }
+			return playerDataList.getOrPut(uuid) { PlayerData(uuid) }
 		}
 
 		/* quirkData getters */

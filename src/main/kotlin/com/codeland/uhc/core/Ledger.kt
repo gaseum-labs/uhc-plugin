@@ -15,7 +15,6 @@ import javax.imageio.ImageIO
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.math.floor
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 class Ledger {
@@ -36,10 +35,11 @@ class Ledger {
 		playerList.add(Entry(username, timeSurvived, killedBy ?: "environment", winning))
 	}
 
-	fun packPosition(x: Short, z: Short, environment: World.Environment): Int {
+	fun packPosition(x: Short, z: Short, environment: World.Environment, lifeNo: Int): Int {
 		return (x.toInt().and(0xFFF).shl(12))
 			.or(z.toInt().and(0xFFF))
 			.or((if (environment === World.Environment.NORMAL) 0 else 1).shl(24))
+			.or((lifeNo % 2).shl(25))
 	}
 
 	fun threeByteShort(int: Int) = (
@@ -49,12 +49,14 @@ class Ledger {
 			int.and(0x0fff)
 	).toShort()
 
-	fun unpackPosition(packed: Int): Triple<Short, Short, Boolean> {
-		return Triple(threeByteShort(packed.ushr(12)), threeByteShort(packed), packed.ushr(24).and(1) == 1)
+	data class Position(val x: Short, val z: Short, val environment: Boolean, val lifeNo: Boolean)
+
+	fun unpackPosition(packed: Int): Position {
+		return Position(threeByteShort(packed.ushr(12)), threeByteShort(packed), packed.ushr(24).and(1) == 1, packed.ushr(25).and(1) == 1)
 	}
 
 	fun addPlayerPosition(uuid: UUID, block: Block) {
-		val position = packPosition(block.x.toShort(), block.z.toShort(), block.world.environment)
+		val position = packPosition(block.x.toShort(), block.z.toShort(), block.world.environment, PlayerData.getPlayerData(uuid).lifeNo)
 
 		val list = playerLocations.getOrPut(uuid) {
 			val firstChunk = LinkedList<ArrayList<Int>>()
@@ -138,11 +140,11 @@ class Ledger {
 
 			trail.forEachIndexed { i, chunk ->
 				chunk.forEachIndexed { j, position ->
-					val (x, z, e) = unpackPosition(position)
+					val (x, z, e, n) = unpackPosition(position)
 
 					/* is this pixel for the current world */
 					if (e == environmentMatch) {
-						val (lx, lz, le) = unpackPosition(lastPosition)
+						val (lx, lz, le, ln) = unpackPosition(lastPosition)
 						lastPosition = position
 
 						val imgLastX = floor((lx + border) / zoom).toInt()
@@ -156,7 +158,7 @@ class Ledger {
 						val dy = abs(imgLastY - imgY)
 
 						/* need to draw line */
-						if (e == le && (dy >= 2 || dx >= 2)) {
+						if (e == le && n == ln && (dy >= 2 || dx >= 2)) {
 							/* y = mx + b */
 							if (dx > dy) {
 								val slope = (imgLastY - imgY) / (imgLastX - imgX).toFloat()

@@ -5,6 +5,7 @@ import com.codeland.uhc.discord.command.GeneralCommand
 import com.codeland.uhc.discord.command.LinkCommand
 import com.codeland.uhc.discord.command.SummaryCommand
 import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
@@ -17,16 +18,13 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
-import org.bukkit.ChatColor
 import java.io.*
 import java.lang.Exception
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.collections.ArrayList
 
 class MixerBot(
 	val jda: JDA,
-	val dataManager: DataManager,
 	val token: String,
 	var guildId: Long,
 	ip: String
@@ -63,20 +61,13 @@ class MixerBot(
 					/* temporary event listener just for the ready */
 					jda.addEventListener(object : ListenerAdapter() {
 						override fun onReady(event: ReadyEvent) {
-							/* data manager requires the bot to be ready */
-							val dataManager = DataManager.createDataManager(jda, guildID) {
-								Util.log("${ChatColor.RED}$it")
-							}
-								?: return onError("Data Manager could not be created")
+							/* create the bot once jda is ready */
+							onMixerBot(MixerBot(jda, token, guildID, ip))
 
-							/* now the bot can have its main listener */
-							onMixerBot(MixerBot(
-								jda,
-								dataManager,
-								token,
-								guildID,
-								ip
-							))
+							/* data manager requires the bot to be ready */
+							DataManager.createDataManager(jda, guildID).exceptionally {
+								onError("Data manager could not be created | ${it.message}").void()
+							}
 						}
 					})
 				} catch (ex: Exception) {
@@ -248,8 +239,8 @@ class MixerBot(
 	/* utility */
 
 	fun guild(): Guild? = jda.getGuildById(guildId)
-	fun voiceCategory(): Category? = jda.getCategoryById(dataManager.ids.voiceCategoryId)
-	fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(dataManager.ids.generalVoiceChannelId)
+	fun voiceCategory(): Category? = jda.getCategoryById(DataManager.ids.voiceCategoryId)
+	fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(DataManager.ids.generalVoiceChannelId)
 
 	class SummaryEntry(val place: String, val name: String, val killedBy: String)
 
@@ -264,20 +255,20 @@ class MixerBot(
 		).queue()
 	}
 
-	fun getDiscordUserIndex(discordID: Long) = dataManager.linkData.discordIds.indexOf(discordID)
+	fun getDiscordUserIndex(discordID: Long) = DataManager.linkData.discordIds.indexOf(discordID)
 
-	private fun getMinecraftUserIndex(uuid: UUID) = dataManager.linkData.minecraftIds.indexOf(uuid)
+	private fun getMinecraftUserIndex(uuid: UUID) = DataManager.linkData.minecraftIds.indexOf(uuid)
 
-	fun isLinked(uuid: UUID) = dataManager.linkData.minecraftIds.contains(uuid)
+	fun isLinked(uuid: UUID) = DataManager.linkData.minecraftIds.contains(uuid)
 
 	private fun voiceMembersFromPlayers(guild: Guild, players: ArrayList<UUID>): List<Member> {
 		return players.map { getMinecraftUserIndex(it) }
 			.filter { it != -1 }
-			.mapNotNull { guild.getMemberById(dataManager.linkData.discordIds[it]) }
+			.mapNotNull { guild.getMemberById(DataManager.linkData.discordIds[it]) }
 			.filter { it.voiceState?.inVoiceChannel() == true }
 	}
 
 	fun isAdmin(member: Member): Boolean {
-		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == dataManager.ids.adminRoleId }
+		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == DataManager.ids.adminRoleId }
 	}
 }

@@ -150,8 +150,12 @@ object GameRunner {
 		playerAction(uuid) { deathTitle(it, null, true) }
 
 		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin, {
+			++PlayerData.getPlayerData(uuid).lifeNo
+
 			teleportPlayer(uuid, respawnLocation())
+
 			playerAction(uuid) { it.gameMode = GameMode.SURVIVAL }
+
 			UHC.quirks.filter { it.enabled.get() }.forEach { it.onStart(uuid) }
 		}, 100)
 	}

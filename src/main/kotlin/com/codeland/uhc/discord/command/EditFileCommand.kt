@@ -3,7 +3,9 @@ package com.codeland.uhc.discord.command
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.MixerCommand
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import org.bukkit.ChatColor
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -16,40 +18,39 @@ class EditFileCommand : MixerCommand(true) {
 
 		val reference = message.referencedMessage
 
-		/* message is replying to one of the bot's own messages */
-		return reference != null &&
-			reference.author.idLong == bot.jda.selfUser.idLong
+		/* replying to a file message */
+		return reference != null && reference.attachments.isNotEmpty()
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
 		val reference = event.message.referencedMessage ?: return
-		val attachment = event.message.attachments.firstOrNull() ?: return
 
 		val header = DiscordFilesystem.messageHeader(reference) ?:
 			return errorMessage(event, "This is not a discord file message")
 
-		attachment.retrieveInputStream().thenAccept { stream ->
-			val contents = String(stream.readAllBytes())
-			stream.close()
-
+		DiscordFilesystem.messageStream(event.message).thenAccept { stream ->
 			var errorMessage = ""
 
 			/* set the internal data associated with the discord file */
-			val valid = DiscordFilesystem.updateMessage(bot.dataManager, header, contents) {
+			val valid = DiscordFilesystem.updateMessage(header, stream) {
 				errorMessage += "${it}\n"
 			}
+
+			stream.close()
 
 			/* report on any defects in the given data */
 			if (errorMessage.isNotEmpty()) errorMessage(event, errorMessage)
 
-			/* only replace the message contents if given valid data */
-			if (valid) reference.editMessage(DiscordFilesystem.createMessageContent(header, contents)).complete()
-
-			/* delete command message to clear channel clutter */
-			event.message.delete().complete()
+			/* delete old message, sent message will be treated as new one */
+			if (valid) {
+				reference.delete().queue()
+			} else {
+				Util.log("${ChatColor.RED}Invalid data sent")
+				event.message.delete().queue()
+			}
 
 		}.exceptionally {
-			errorMessage(event, it.localizedMessage).void()
+			errorMessage(event, it.message ?: "Unknown error").void()
 		}
 	}
 }

@@ -6,6 +6,7 @@ import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.event.Chat
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor.*
@@ -22,9 +23,7 @@ class NicknameCommand : BaseCommand() {
 	}
 
 	private fun nicknameTaken(nickname: String): Boolean {
-		val bot = GameRunner.bot ?: return true
-
-		return bot.dataManager.nicknames.nicknames.any { list ->
+		return DataManager.nicknames.nicknames.any { list ->
 			list.any { nick ->
 				nick.equals(nickname, ignoreCase = true)
 			}

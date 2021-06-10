@@ -1,29 +1,46 @@
 package com.codeland.uhc.discord.filesystem
 
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.discord.filesystem.DataManager.void
 import net.dv8tion.jda.api.entities.Category
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
-import java.sql.DataTruncation
+import java.io.InputStream
+import java.util.concurrent.CompletableFuture
 
 abstract class DiscordFile <D> (val header: String, val channelName: String) {
 	var cachedMessageId: Long? = null
 
-	fun load(category: Category, onError: (String) -> Unit): D {
+	fun load(category: Category, onError: (String) -> Unit): CompletableFuture<D> {
+		val future = CompletableFuture<D>()
+
 		val message = getMessage(category)
 
-		return if (message == null) {
+		if (message == null) {
 			/* when there is no message to load create default */
 			DiscordFilesystem.getChannel(category, channelName)
-				?.sendMessage(DiscordFilesystem.createMessageContent(header, defaultContents()))?.complete()
+				?.sendFile(write(defaultData()), DiscordFilesystem.filename(header))
+				?.complete()
 
 			onError("No message for $header was found, creating dummy")
 
-			defaultData()
+			future.complete(defaultData())
 
 		} else {
-			fromContents(DiscordFilesystem.messageData(message), onError) ?: defaultData()
+			DiscordFilesystem.messageStream(message).thenAccept { stream ->
+				val data = fromStream(stream, onError)
+				stream.close()
+
+				if (data == null)
+					future.completeExceptionally(Exception("Data was parsed incorrectly"))
+				else
+					future.complete(data)
+
+			}.exceptionally {
+				future.completeExceptionally(it).void()
+			}
 		}
+
+		return future
 	}
 
 	fun save(guild: Guild, data: D) {
@@ -32,16 +49,16 @@ abstract class DiscordFile <D> (val header: String, val channelName: String) {
 	}
 
 	fun save(category: Category, data: D) {
-		val contents = DiscordFilesystem.createMessageContent(header, writeContents(data))
-
 		val message = getMessage(category)
 
 		if (message != null) {
-			message.editMessage(contents).complete()
+			message.delete().queue()
+			message.channel.sendFile(write(data), DiscordFilesystem.filename(header)).queue()
 
 		} else {
 			DiscordFilesystem.getChannel(category, channelName)
-				?.sendMessage(contents)?.complete()
+				?.sendFile(write(data), DiscordFilesystem.filename(header))
+				?.queue()
 		}
 	}
 
@@ -63,10 +80,7 @@ abstract class DiscordFile <D> (val header: String, val channelName: String) {
 		return message
 	}
 
-	protected abstract fun fromContents(contents: String, onError: (String) -> Unit): D?
-	protected abstract fun writeContents(data: D): String
-	protected abstract fun defaultContents(): String
-	protected abstract fun defaultData(): D
-
-	abstract fun updateContents(dataManager: DataManager, contents: String, onError: (String) -> Unit): Boolean
+	abstract fun fromStream(stream: InputStream, onError: (String) -> Unit): D?
+	abstract fun write(data: D): ByteArray
+	abstract fun defaultData(): D
 }

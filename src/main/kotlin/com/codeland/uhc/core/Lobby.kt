@@ -61,7 +61,7 @@ object Lobby {
 		if (player.location.world != WorldManager.getLobbyWorld()) player.teleport(lobbyLocation)
 
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
-		CommandItemType.giveItem(CommandItemType.PVP_QUEUE, player.inventory)
+		CommandItemType.giveItem(CommandItemType.PVP_OPENER, player.inventory)
 		CommandItemType.giveItem(CommandItemType.SPECTATE, player.inventory)
 
 		return lobbyLocation

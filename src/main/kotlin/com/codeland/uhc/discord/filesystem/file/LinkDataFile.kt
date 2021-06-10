@@ -1,9 +1,13 @@
 package com.codeland.uhc.discord.filesystem.file
 
-import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.discord.filesystem.DiscordFile
+import com.google.gson.*
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class LinkDataFile(header: String, channelName: String) : DiscordFile<LinkDataFile.Companion.LinkData>(header, channelName) {
 	companion object {
@@ -13,57 +17,41 @@ class LinkDataFile(header: String, channelName: String) : DiscordFile<LinkDataFi
 		)
 	}
 
-	override fun fromContents(contents: String, onError: (String) -> Unit): LinkData {
-		val lines = contents.lines()
-
+	override fun fromStream(stream: InputStream, onError: (String) -> Unit): LinkData? {
 		val minecraftIds = ArrayList<UUID>()
 		val discordIds = ArrayList<Long>()
 
-		lines.forEachIndexed { i, line ->
-			val parts = line.split(',')
+		return try {
+			val gson = Gson().fromJson(InputStreamReader(stream), ArrayList::class.java) as ArrayList<Map<String, String>>
 
-			if (parts.size == 2) {
-				try {
-					val uuid = UUID.fromString(parts[0])
-					val discordID = parts[1].trim().toLong()
-
-					minecraftIds.add(uuid)
-					discordIds.add(discordID)
-
-				} catch (ex: Exception) {
-					onError(ex.toString())
-				}
-			} else {
-				onError("There must be exactly one comma on line $i")
+			gson.forEach { element ->
+				minecraftIds.add(UUID.fromString(element["minecraftId"]))
+				discordIds.add(element["discordId"]!!.toLong())
 			}
-		}
 
-		return LinkData(minecraftIds, discordIds)
-	}
+			LinkData(minecraftIds, discordIds)
 
-	override fun writeContents(data: LinkData): String {
-		return data.minecraftIds.indices.joinToString("\n") { i ->
-			"${data.minecraftIds[i]},${data.discordIds[i]}"
+		} catch (ex: Exception) {
+			onError(ex.message ?: "Unknown JSON error").void()
 		}
 	}
 
-	override fun defaultContents(): String {
-		return "MINECRAFT_UUID,DISCORD_ID\nMINECRAFT_UUID,DISCORD_ID\n..."
+	override fun write(data: LinkData): ByteArray {
+		val gson = GsonBuilder().setPrettyPrinting().create()
+
+		val array = ArrayList<Map<String, String>>(data.discordIds.size)
+
+		data.discordIds.indices.forEach { i ->
+			array.add(hashMapOf(
+				Pair("minecraftId", data.minecraftIds[i].toString()),
+				Pair("discordId", data.discordIds[i].toString())
+			))
+		}
+
+		return gson.toJson(array).toByteArray()
 	}
 
 	override fun defaultData(): LinkData {
-		return LinkData(ArrayList(), ArrayList())
-	}
-
-	override fun updateContents(dataManager: DataManager, contents: String, onError: (String) -> Unit): Boolean {
-		val linkData = fromContents(contents, onError)
-
-		return if (linkData != null) {
-			dataManager.linkData = linkData
-			true
-
-		} else {
-			false
-		}
+		return LinkData(arrayListOf(UUID.randomUUID()), arrayListOf(-1L))
 	}
 }

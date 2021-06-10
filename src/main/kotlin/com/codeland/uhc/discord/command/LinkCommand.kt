@@ -3,6 +3,7 @@ package com.codeland.uhc.discord.command
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.MixerCommand
 import com.codeland.uhc.discord.MojangAPI
+import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import java.util.*
@@ -30,7 +31,7 @@ class LinkCommand : MixerCommand(false) {
 			try {
 				val uuid = UUID.fromString(uuidResponse.uuid)
 
-				val linkData = bot.dataManager.linkData
+				val linkData = DataManager.linkData
 
 				if (userIndex == -1) {
 					linkData.discordIds.add(discordId)

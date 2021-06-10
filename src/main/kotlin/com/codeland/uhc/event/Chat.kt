@@ -34,7 +34,7 @@ class Chat : Listener {
 			getNicks(player).add(nickname)
 
 			val bot = GameRunner.bot ?: return
-			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, bot.dataManager.nicknames)
+			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, DataManager.nicknames)
 		}
 
 		fun removeNick(player: UUID, nickname: String): Boolean {
@@ -43,7 +43,7 @@ class Chat : Listener {
 			val removed = getNicks(player).removeIf { it.toLowerCase() == lowerNickname }
 
 			val bot = GameRunner.bot ?: return removed
-			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, bot.dataManager.nicknames)
+			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, DataManager.nicknames)
 
 			return removed
 		}
@@ -51,18 +51,18 @@ class Chat : Listener {
 		fun getNicks(uuid: UUID): ArrayList<String> {
 			val bot = GameRunner.bot ?: return ArrayList()
 
-			val playerIndex = bot.dataManager.nicknames.minecraftIds.indexOf(uuid)
+			val playerIndex = DataManager.nicknames.minecraftIds.indexOf(uuid)
 
 			/* put into list for a new player*/
 			return if (playerIndex == -1) {
-				bot.dataManager.nicknames.minecraftIds.add(uuid)
-				bot.dataManager.nicknames.nicknames.add(ArrayList())
+				DataManager.nicknames.minecraftIds.add(uuid)
+				DataManager.nicknames.nicknames.add(ArrayList())
 
-				bot.dataManager.nicknames.nicknames.last()
+				DataManager.nicknames.nicknames.last()
 
 			/* nickname list for existing player */
 			} else {
-				bot.dataManager.nicknames.nicknames[playerIndex]
+				DataManager.nicknames.nicknames[playerIndex]
 			}
 		}
 
@@ -242,11 +242,11 @@ class Chat : Listener {
 
 		val bot = GameRunner.bot ?: return ArrayList()
 
-		for (i in bot.dataManager.nicknames.minecraftIds.indices) {
-			val player = Bukkit.getPlayer(bot.dataManager.nicknames.minecraftIds[i])
+		for (i in DataManager.nicknames.minecraftIds.indices) {
+			val player = Bukkit.getPlayer(DataManager.nicknames.minecraftIds[i])
 
 			if (player != null) {
-				val nicks = bot.dataManager.nicknames.nicknames[i]
+				val nicks = DataManager.nicknames.nicknames[i]
 				list.addAll(nicks.map { NickMention(player, it) })
 			}
 		}

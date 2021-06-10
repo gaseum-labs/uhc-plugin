@@ -1,7 +1,10 @@
 package com.codeland.uhc.discord.filesystem.file
 
-import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.discord.filesystem.DiscordFile
+import com.google.gson.*
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -13,56 +16,41 @@ class NicknamesFile(header: String, channelName: String) : DiscordFile<Nicknames
 		)
 	}
 
-	override fun fromContents(contents: String, onError: (String) -> Unit): Nicknames {
-		val lines = contents.lines()
+	override fun fromStream(stream: InputStream, onError: (String) -> Unit): Nicknames? {
+		val minecraftIds = ArrayList<UUID>()
+		val nicknames = ArrayList<ArrayList<String>>()
 
-		val minecraftIds: ArrayList<UUID> = ArrayList()
-		val nicknames: ArrayList<ArrayList<String>> = ArrayList()
+		return try {
+			val gson = Gson().fromJson(InputStreamReader(stream), ArrayList::class.java) as ArrayList<Map<String, Any>>
 
-		lines.forEachIndexed { i, line ->
-			val parts = line.split(',')
-
-			if (parts.size >= 2) {
-				try {
-					val uuid = UUID.fromString(parts[0])
-					val names = ArrayList<String>(parts.subList(1, parts.size))
-
-					minecraftIds.add(uuid)
-					nicknames.add(names)
-				} catch (ex: Exception) {
-					onError(ex.message ?: "Unknown error")
-				}
-			} else {
-				onError("line $i does not have a comma")
+			gson.forEach { element ->
+				minecraftIds.add(UUID.fromString(element["id"] as String))
+				nicknames.add(element["names"] as ArrayList<String>)
 			}
-		}
 
-		return Nicknames(minecraftIds, nicknames)
-	}
+			Nicknames(minecraftIds, nicknames)
 
-	override fun writeContents(data: Nicknames): String {
-		return data.minecraftIds.indices.joinToString("\n") { i ->
-			"${data.minecraftIds[i]},${data.nicknames[i].joinToString(",")}"
+		} catch (ex: Exception) {
+			onError(ex.message ?: "Unknown JSON error").void()
 		}
 	}
 
-	override fun defaultContents(): String {
-		return "MINECRAFT_UUID,NICKNAME0,NICKNAME1,NICKNAME2\nMINECRAFT_UUID,NICKNAME0,NICKNAME1\n..."
+	override fun write(data: Nicknames): ByteArray {
+		val gson = GsonBuilder().setPrettyPrinting().create()
+
+		val array = ArrayList<Map<String, Any>>(data.minecraftIds.size)
+
+		data.nicknames.indices.forEach { i ->
+			array.add(mapOf(
+				Pair("id", data.minecraftIds[i].toString()),
+				Pair("names", data.nicknames[i])
+			))
+		}
+
+		return gson.toJson(array).toByteArray()
 	}
 
 	override fun defaultData(): Nicknames {
-		return Nicknames(ArrayList(), ArrayList())
-	}
-
-	override fun updateContents(dataManager: DataManager, contents: String, onError: (String) -> Unit): Boolean {
-		val nicknames = fromContents(contents, onError)
-
-		return if (nicknames != null) {
-			dataManager.nicknames = nicknames
-			true
-
-		} else {
-			false
-		}
+		return Nicknames(arrayListOf(UUID.randomUUID()), arrayListOf(arrayListOf("(Dummy data, UUID is random)", "name0", "name1", "name2")))
 	}
 }

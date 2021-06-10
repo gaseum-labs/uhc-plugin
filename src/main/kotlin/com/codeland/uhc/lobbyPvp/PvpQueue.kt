@@ -10,7 +10,7 @@ object PvpQueue {
 	private val queue = ArrayList<QueueElement>()
 
 	fun add(uuid: UUID) {
-		queue.add(QueueElement(uuid, 0, false))
+		if (queue.none { it.uuid == uuid }) queue.add(QueueElement(uuid, 0, false))
 	}
 
 	fun remove(uuid: UUID) {
@@ -51,6 +51,9 @@ object PvpQueue {
 
 		queue.removeIf { element ->
 			if (element.remove) {
+				val playerData = PlayerData.getPlayerData(element.uuid)
+				playerData.inLobbyPvpQueue.unsafeSet(false)
+
 				true
 			} else {
 				++element.time

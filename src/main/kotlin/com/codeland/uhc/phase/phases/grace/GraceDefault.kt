@@ -66,10 +66,12 @@ class GraceDefault : Phase() {
 		fun startPlayer(uuid: UUID, location: Location) {
 			val playerData = PlayerData.getPlayerData(uuid)
 
+			playerData.lifeNo = 0
 			playerData.staged = false
 			playerData.alive = true
 			playerData.participating = true
 
+			playerData.inLobbyPvpQueue.set(false)
 			PvpGameManager.removePlayerFromGame(uuid)
 
 			GameRunner.teleportPlayer(uuid, location)

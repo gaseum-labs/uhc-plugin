@@ -2,26 +2,32 @@ package com.codeland.uhc.discord.filesystem
 
 import com.codeland.uhc.discord.filesystem.file.IdsFile
 import com.codeland.uhc.discord.filesystem.file.LinkDataFile
+import com.codeland.uhc.discord.filesystem.file.LoadoutsFile
 import com.codeland.uhc.discord.filesystem.file.NicknamesFile
+import com.codeland.uhc.lobbyPvp.Loadouts
 import net.dv8tion.jda.api.entities.Category
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.TextChannel
+import java.io.InputStream
+import java.util.concurrent.CompletableFuture
 
 object DiscordFilesystem {
 	const val CATEGORY_NAME = "bot"
 	const val DATA_CHANNEL_NAME = "data"
 
 	const val IDS_HEADER = "ids"
-	const val LINK_DATA_HEADER = "link data"
+	const val LINK_DATA_HEADER = "linkdata"
 	const val NICKNAMES_HEADER = "nicknames"
+	const val LOADOUTS_HEADER = "loadouts"
 
 	val idsFile = IdsFile(IDS_HEADER, DATA_CHANNEL_NAME)
 	val linkDataFile = LinkDataFile(LINK_DATA_HEADER, DATA_CHANNEL_NAME)
 	val nicknamesFile = NicknamesFile(NICKNAMES_HEADER, DATA_CHANNEL_NAME)
+	val loadoutsFile = LoadoutsFile(LOADOUTS_HEADER, DATA_CHANNEL_NAME)
 
 	val files: Array<DiscordFile<*>> = arrayOf(
-		idsFile, linkDataFile, nicknamesFile
+		idsFile, linkDataFile, nicknamesFile, loadoutsFile
 	)
 
 	fun getBotCategory(guild: Guild): Category? {
@@ -38,31 +44,30 @@ object DiscordFilesystem {
 		return category.textChannels.find { it.name == name } ?: category.createTextChannel(name).complete()
 	}
 
-	fun messageData(message: Message): String {
-		val content = message.contentRaw
+	fun messageStream(message: Message): CompletableFuture<InputStream> {
+		val attachment = message.attachments.firstOrNull()
 
-		/* the part of the message after the beginning code block */
-		return content.substring(content.indexOf("```", 3) + 3)
-	}
+		return if (attachment == null) {
+			val future = CompletableFuture<InputStream>()
+			future.completeExceptionally(Exception("Message does not have an attachment"))
+			future
 
-	fun createMessageContent(header: String, content: String): String {
-		return "```${header}```${content}"
+		} else {
+			attachment.retrieveInputStream()
+		}
 	}
 
 	fun messageHeader(message: Message): String? {
-		/* data messages are sent by this bot or UHC server bot */
-		if (!message.author.isBot) return null
+		val filename = message.attachments.firstOrNull()?.fileName ?: return null
 
-		val content = message.contentRaw
+		val dotIndex = filename.lastIndexOf('.')
+		if (dotIndex == -1) return null
 
-		/* find the opening and closing header backticks */
-		/* at the beginning of the message */
-		if (!content.startsWith("```")) return null
-		val headerEnding = content.indexOf("```", 3)
-		if (headerEnding == -1) return null
+		return filename.substring(0, dotIndex)
+	}
 
-		/* message header is within backticks */
-		return content.substring(3, headerEnding)
+	fun filename(header: String): String {
+		return "$header.json"
 	}
 
 	fun findMessages(channel: TextChannel, names: Array<String>): Array<Message?> {
@@ -110,10 +115,19 @@ object DiscordFilesystem {
 		}
 	}
 
-	fun updateMessage(dataManager: DataManager, header: String, contents: String, onError: (String) -> Unit): Boolean {
+	fun updateMessage(header: String, stream: InputStream, onError: (String) -> Unit): Boolean {
 		files.forEach { file ->
 			if (file.header == header) {
-				return file.updateContents(dataManager, contents, onError)
+				val data = file.fromStream(stream, onError) ?: return false
+
+				when (header) {
+					IDS_HEADER -> DataManager.ids = data as IdsFile.Companion.Ids
+					LINK_DATA_HEADER -> DataManager.linkData = data as LinkDataFile.Companion.LinkData
+					NICKNAMES_HEADER -> DataManager.nicknames = data as NicknamesFile.Companion.Nicknames
+					LOADOUTS_HEADER -> DataManager.loadouts = data as Loadouts
+				}
+
+				return true
 			}
 		}
 

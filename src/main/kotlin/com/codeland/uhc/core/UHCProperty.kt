@@ -2,7 +2,7 @@ package com.codeland.uhc.core
 
 class UHCProperty <T> (val default: T, val onSet: (set: T) -> T? = { it }) {
 	private var value = default
-	private var watcher: () -> Unit = {}
+	private var watchers = ArrayList<() -> Unit>()
 
 	fun get() = value
 
@@ -11,17 +11,17 @@ class UHCProperty <T> (val default: T, val onSet: (set: T) -> T? = { it }) {
 
 		if (filtered != null) {
 			value = filtered
-			watcher()
+			watchers.forEach { it() }
 		}
 	}
 
 	fun unsafeSet(to: T) {
 		value = to
-		watcher()
+		watchers.forEach { it() }
 	}
 
 	fun watch(func: () -> Unit) {
-		watcher = func
+		watchers.add(func)
 	}
 
 	fun reset() = set(default)

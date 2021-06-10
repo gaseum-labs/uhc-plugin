@@ -175,8 +175,8 @@ class TestCommands : BaseCommand() {
 		if (PvpGameManager.playersGame(player1.uniqueId) != null) return errorMessage(sender, "${player1.name} is already in a game")
 		if (PvpGameManager.playersGame(player2.uniqueId) != null) return errorMessage(sender, "${player2.name} is already in a game")
 
-		PvpQueue.remove(player1.uniqueId)
-		PvpQueue.remove(player2.uniqueId)
+		PlayerData.getPlayerData(player1.uniqueId).inLobbyPvpQueue.set(false)
+		PlayerData.getPlayerData(player2.uniqueId).inLobbyPvpQueue.set(false)
 
 		PvpGameManager.addGame(arrayListOf(player1.uniqueId, player2.uniqueId))
 

@@ -1,5 +1,6 @@
 package com.codeland.uhc.gui.item
 
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
@@ -11,15 +12,15 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class QueuePVP : CommandItem() {
+class PvpGuiOpener : CommandItem() {
 	val MATERIAL = Material.IRON_SWORD
 
 	override fun create(): ItemStack {
 		val stack = ItemStack(MATERIAL)
 		val meta = stack.itemMeta
 
-		meta.displayName(Util.gradientString("Queue for PVP 1v1s", TextColor.color(0xe80e0e), TextColor.color(0xe8c00e)))
-		meta.lore(listOf(Component.text("Right click to to join the 1v1 PVP queue")))
+		meta.displayName(Util.gradientString("Lobby PVP menu", TextColor.color(0xe80e0e), TextColor.color(0xe8c00e)))
+		meta.lore(listOf(Component.text("Right click to to open the Lobby PVP Menu")))
 
 		stack.itemMeta = meta
 		return stack
@@ -30,17 +31,6 @@ class QueuePVP : CommandItem() {
 	}
 
 	override fun onUse(uhc: UHC, player: Player) {
-		val pvpGame = PvpGameManager.playersGame(player.uniqueId)
-
-		if (pvpGame == null) {
-			if (PvpQueue.queueTime(player.uniqueId) == null) {
-				PvpQueue.add(player.uniqueId)
-				player.sendMessage("${ChatColor.RED}Entered PVP Queue")
-
-			} else {
-				PvpQueue.remove(player.uniqueId)
-				player.sendMessage("${ChatColor.GOLD}Left PVP Queue")
-			}
-		}
+		PlayerData.getPlayerData(player.uniqueId).lobbyPvpGui.open(player)
 	}
 }

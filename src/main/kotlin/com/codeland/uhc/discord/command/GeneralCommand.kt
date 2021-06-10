@@ -2,6 +2,7 @@ package com.codeland.uhc.discord.command
 
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.MixerCommand
+import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -25,7 +26,7 @@ class GeneralCommand : MixerCommand(true) {
 		bot.guildId = message.guild.idLong
 		bot.saveDiscordData()
 
-		val ids = bot.dataManager.ids
+		val ids = DataManager.ids
 
 		ids.voiceCategoryId = category.idLong
 		ids.generalVoiceChannelId = voiceChannel.idLong
