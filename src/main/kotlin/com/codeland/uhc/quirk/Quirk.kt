@@ -41,7 +41,7 @@ abstract class Quirk(val type: QuirkType) {
 			}
 		}
 
-		type.incompatibilities.forEach {
+		if (set) type.incompatibilities.forEach {
 			val other = UHC.getQuirk(it)
 			if (other.enabled.get()) other.enabled.set(false)
 		}
