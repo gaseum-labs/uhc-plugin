@@ -1,5 +1,7 @@
 package com.codeland.uhc.gui
 
+import com.codeland.uhc.UHCPlugin
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -63,8 +65,11 @@ class GuiManager : Listener {
 
 	@EventHandler
 	fun onClose(event: InventoryCloseEvent) {
-		val (gui) = findGui(event.inventory, event.player.uniqueId)
-		gui?.onClose(event.player as Player)
+		/* need a tick buffer in case this is called inside an onClick event */
+		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
+			val (gui) = findGui(event.inventory, event.player.uniqueId)
+			gui?.onClose(event.player as Player)
+		}
 	}
 
 	@EventHandler
