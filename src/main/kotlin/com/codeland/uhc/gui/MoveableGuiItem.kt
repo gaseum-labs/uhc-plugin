@@ -7,11 +7,11 @@ abstract class MoveableGuiItem(var rawSlot: Int, val gui: MoveableGuiPage) {
 	abstract fun generate(): ItemStack
 
 	abstract fun onShiftClick(player: Player)
-
 	abstract fun onPickUp(player: Player, inventorySlot: Int)
+	abstract fun canMove(player: Player, newSlot: Int, inventorySlot: Int, other: MoveableGuiItem?): Boolean
 
-	fun onMove(player: Player, newSlot: Int, inventorySlot: Int): Boolean {
-		return if (canMove(player, newSlot, inventorySlot)) {
+	fun move(player: Player, newSlot: Int, inventorySlot: Int, other: MoveableGuiItem?): Boolean {
+		return if (canMove(player, newSlot, inventorySlot, other)) {
 			rawSlot = newSlot
 			true
 
@@ -19,6 +19,4 @@ abstract class MoveableGuiItem(var rawSlot: Int, val gui: MoveableGuiPage) {
 			false
 		}
 	}
-
-	abstract fun canMove(player: Player, newSlot: Int, inventorySlot: Int): Boolean
 }

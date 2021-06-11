@@ -185,6 +185,29 @@ object PvpGameManager {
 					}
 					/* during match */
 					else -> {
+						/* damage if outside the border */
+						game.onlinePlayers().forEach { player ->
+							val minX = (game.x * ARENA_STRIDE) + (ARENA_STRIDE - SMALL_BORDER) / 2
+							val maxX = (game.x * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (SMALL_BORDER / 2)) - 1
+							val minZ = (game.z * ARENA_STRIDE) + (ARENA_STRIDE - SMALL_BORDER) / 2
+							val maxZ = (game.z * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (SMALL_BORDER / 2)) - 1
+
+							val playerX = player.location.blockX
+							val playerZ = player.location.blockZ
+
+							val outside = when {
+								playerX < minX -> minX - playerX
+								playerX > maxX -> playerX - maxX
+								else -> 0
+							} + when {
+								playerZ < minZ -> minZ - playerZ
+								playerZ > maxZ -> playerZ - maxZ
+								else -> 0
+							}
+
+							if (outside > 0) player.damage(outside / 2.0)
+						}
+
 						if (game.glowPeriod > 0) {
 							--game.glowTimer
 

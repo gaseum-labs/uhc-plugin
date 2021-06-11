@@ -92,14 +92,11 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 
 			/* placing item from the cursor */
 			} else if (heldItem != null && event.action == PLACE_ALL) {
-				if (heldItem.onMove(player, rawSlot, event.slot)) event.isCancelled = false
+				if (heldItem.move(player, rawSlot, event.slot, null)) event.isCancelled = false
 
 			/* placing an item, also picking one up */
 			} else if (heldItem != null && clickedItem != null && event.action == SWAP_WITH_CURSOR) {
-				if (heldItem.onMove(player, rawSlot, event.slot)) {
-					clickedItem.onPickUp(player, event.slot)
-					event.isCancelled = false
-				}
+				if (heldItem.move(player, rawSlot, event.slot, clickedItem)) event.isCancelled = false
 
 			/* putting an item onto cursor */
 			} else if (clickedItem != null && event.action == PICKUP_ALL) {

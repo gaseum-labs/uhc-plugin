@@ -40,23 +40,19 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 		}
 	}
 
-	override fun canMove(player: Player, newSlot: Int, inventorySlot: Int): Boolean {
-		return if (newSlot >= gui.inventory.size) {
-			val loadout = DataManager.loadouts.getLoadouts(player.uniqueId)[loadoutSlot]
-			val cost = LoadoutItems.calculateCost(loadout) + loadoutItem.cost
+	override fun canMove(player: Player, newSlot: Int, inventorySlot: Int, other: MoveableGuiItem?): Boolean {
+		/* always can swap in the upper inventory */
+		if (newSlot < gui.inventory.size) return true
 
-			return if (cost > LoadoutItems.MAX_COST) {
-				false
+		val loadout = DataManager.loadouts.getLoadouts(player.uniqueId)[loadoutSlot]
 
-			} else {
-				/* update the loadout */
-				loadout[inventorySlot] = loadoutItem.ordinal
-				playerData.slotCosts[loadoutSlot].set(cost)
+		val cost = LoadoutItems.calculateCost(loadout) + loadoutItem.cost - if (other is LoadoutMover) other.loadoutItem.cost else 0
+		if (cost > LoadoutItems.MAX_COST) return false
 
-				true
-			}
-		} else {
-			true
-		}
+		/* update the loadout */
+		loadout[inventorySlot] = loadoutItem.ordinal
+		playerData.slotCosts[loadoutSlot].set(cost)
+
+		return true
 	}
 }
