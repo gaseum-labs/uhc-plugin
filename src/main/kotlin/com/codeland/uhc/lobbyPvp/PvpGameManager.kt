@@ -3,6 +3,7 @@ package com.codeland.uhc.lobbyPvp
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.util.Util
@@ -246,16 +247,8 @@ object PvpGameManager {
 		player.gameMode = GameMode.SURVIVAL
 
 		/* give items */
-		player.inventory.setArmorContents(arrayOf(
-			LobbyPvpItems.genBoots(),
-			LobbyPvpItems.genLeggings(),
-			LobbyPvpItems.genChestplate(),
-			LobbyPvpItems.genHelmet()
-		))
-
-		player.inventory.setItemInOffHand(LobbyPvpItems.genShield())
-
-		LobbyPvpItems.itemsList.forEach { gen -> player.inventory.addItem(gen()) }
+		val loadout = DataManager.loadouts.getLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
+		LoadoutItems.fillInventory(loadout, player.inventory)
 
 		player.teleport(location)
 	}

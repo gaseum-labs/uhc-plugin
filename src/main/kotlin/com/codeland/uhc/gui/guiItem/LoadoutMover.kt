@@ -12,7 +12,7 @@ import org.bukkit.ChatColor.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class LoadoutMover(slot: Int, gui: MoveableGuiPage, val playerData: PlayerData, val loadoutItem: LoadoutItems, val loadoutSlot: Int) : MoveableGuiItem(slot, gui) {
+class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerData, val loadoutItem: LoadoutItems, val loadoutSlot: Int) : MoveableGuiItem(rawSlot, gui) {
 	override fun generate(): ItemStack {
 		val stack = loadoutItem.createItem()
 
@@ -29,18 +29,18 @@ class LoadoutMover(slot: Int, gui: MoveableGuiPage, val playerData: PlayerData, 
 		//TODO change enchantments
 	}
 
-	override fun onPickUp(player: Player) {
+	override fun onPickUp(player: Player, inventorySlot: Int) {
 		/* only matters if you pick up from bottom inventory */
-		if (slot >= gui.inventory.size) {
+		if (rawSlot >= gui.inventory.size) {
 			val loadout = DataManager.loadouts.getLoadouts(player.uniqueId)[loadoutSlot]
-			loadout[slot - gui.inventory.size] = -1
+			loadout[inventorySlot] = -1
 
 			val cost = LoadoutItems.calculateCost(loadout)
 			playerData.slotCosts[loadoutSlot].set(cost)
 		}
 	}
 
-	override fun canMove(player: Player, newSlot: Int): Boolean {
+	override fun canMove(player: Player, newSlot: Int, inventorySlot: Int): Boolean {
 		return if (newSlot >= gui.inventory.size) {
 			val loadout = DataManager.loadouts.getLoadouts(player.uniqueId)[loadoutSlot]
 			val cost = LoadoutItems.calculateCost(loadout) + loadoutItem.cost
@@ -50,7 +50,7 @@ class LoadoutMover(slot: Int, gui: MoveableGuiPage, val playerData: PlayerData, 
 
 			} else {
 				/* update the loadout */
-				loadout[newSlot - gui.inventory.size] = loadoutItem.ordinal
+				loadout[inventorySlot] = loadoutItem.ordinal
 				playerData.slotCosts[loadoutSlot].set(cost)
 
 				true

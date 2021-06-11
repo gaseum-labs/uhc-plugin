@@ -1,7 +1,6 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.event.Packet
-import com.codeland.uhc.lobbyPvp.LoadoutItems
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import org.bukkit.Material
@@ -32,10 +31,10 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 		moveableGuiItems.forEachIndexed { id, item ->
 			val stack = giveItemId(item.generate(), id)
 
-			if (item.slot < inventory.size) {
-				inventory.setItem(item.slot, stack)
+			if (item.rawSlot < inventory.size) {
+				inventory.setItem(item.rawSlot, stack)
 			} else {
-				player.inventory.setItem(item.slot - inventory.size, stack)
+				player.inventory.setItem(item.rawSlot - inventory.size, stack)
 			}
 		}
 	}
@@ -79,7 +78,7 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 		if (!super.onClick(event, needsOp)) {
 			event.isCancelled = true
 
-			val slot = event.rawSlot
+			val rawSlot = event.rawSlot
 			val player = event.whoClicked as Player
 
 			if (needsOp && !player.isOp) return false
@@ -93,18 +92,18 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 
 			/* placing item from the cursor */
 			} else if (heldItem != null && event.action == PLACE_ALL) {
-				if (heldItem.onMove(player, slot)) event.isCancelled = false
+				if (heldItem.onMove(player, rawSlot, event.slot)) event.isCancelled = false
 
 			/* placing an item, also picking one up */
 			} else if (heldItem != null && clickedItem != null && event.action == SWAP_WITH_CURSOR) {
-				if (heldItem.onMove(player, slot)) {
-					clickedItem.onPickUp(player)
+				if (heldItem.onMove(player, rawSlot, event.slot)) {
+					clickedItem.onPickUp(player, event.slot)
 					event.isCancelled = false
 				}
 
 			/* putting an item onto cursor */
 			} else if (clickedItem != null && event.action == PICKUP_ALL) {
-				clickedItem.onPickUp(player)
+				clickedItem.onPickUp(player, event.slot)
 				event.isCancelled = false
 			}
 		}

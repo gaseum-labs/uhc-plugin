@@ -11,7 +11,7 @@ class Loadouts(
 		const val NUM_SLOTS = 3
 		const val LOADOUT_SIZE = 9 * 4
 
-		fun defaultArray() = Array(NUM_SLOTS) { Array(LOADOUT_SIZE) { -1 } }
+		fun defaultArray() = Array(NUM_SLOTS) { LoadoutItems.defaultLoadout() }
 	}
 
 	fun getLoadouts(uuid: UUID): Array<Array<Int>> {

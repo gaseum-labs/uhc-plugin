@@ -52,8 +52,14 @@ MoveableGuiPage(
 		return list
 	}
 
+	companion object {
+		var globalSaveCount = 0
+	}
+
 	override fun save() {
-		val guild = GameRunner.bot?.guild() ?: return
-		DiscordFilesystem.loadoutsFile.save(guild, DataManager.loadouts)
+		if (++globalSaveCount % 5 == 0) {
+			val guild = GameRunner.bot?.guild() ?: return
+			DiscordFilesystem.loadoutsFile.save(guild, DataManager.loadouts)
+		}
 	}
 }
