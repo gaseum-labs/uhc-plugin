@@ -3,9 +3,9 @@ package com.codeland.uhc.gui
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.EntityPickupItemEvent
+import org.bukkit.event.inventory.*
 import org.bukkit.event.inventory.InventoryAction.MOVE_TO_OTHER_INVENTORY
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.inventory.Inventory
 import java.util.*
 import kotlin.collections.ArrayList
@@ -40,23 +40,11 @@ class GuiManager : Listener {
 	@EventHandler
 	fun onInventoryClick(event: InventoryClickEvent) {
 		val player = event.whoClicked as Player
-		val slot = event.rawSlot
 
 		val (gui, needsOp) = findGui(event.inventory, player.uniqueId)
 		if (gui == null) return
 
-		/* do not manipulate the gui inventory */
-		if (
-			event.action == MOVE_TO_OTHER_INVENTORY ||
-			(slot >= 0 && slot < gui.inventory.size)
-		) {
-			event.isCancelled = true
-		}
-
-		if (slot >= gui.inventory.size || slot < 0) return
-		if (needsOp && !player.isOp) return
-
-		gui.onClick(player, gui.guiItems[slot], event.isShiftClick, slot)
+		gui.onClick(event, needsOp)
 	}
 
 	@EventHandler
@@ -64,7 +52,30 @@ class GuiManager : Listener {
 		val (gui) = findGui(event.inventory, event.whoClicked.uniqueId)
 		val inventory = gui?.inventory ?: return
 
-		/* do not allow dragging into the gui inventory */
-		if (event.rawSlots.any { it < inventory.size }) event.isCancelled = true
+		if (gui is MoveableGuiPage) {
+			/* no dragging at all in moveable gui */
+			event.isCancelled = true
+		} else {
+			/* do not allow dragging into the gui inventory */
+			if (event.rawSlots.any { it < inventory.size }) event.isCancelled = true
+		}
+	}
+
+	@EventHandler
+	fun onClose(event: InventoryCloseEvent) {
+		val (gui) = findGui(event.inventory, event.player.uniqueId)
+		gui?.onClose(event.player as Player)
+	}
+
+	@EventHandler
+	fun onPickupItem(event: EntityPickupItemEvent) {
+		val player = event.entity as? Player ?: return
+
+		if (player.openInventory.type == InventoryType.CRAFTING) return
+
+		val (gui) = findGui(player.openInventory.topInventory, player.uniqueId)
+
+		/* can't have external items added to moveable gui page inventory */
+		if (gui is MoveableGuiPage) event.isCancelled = true
 	}
 }

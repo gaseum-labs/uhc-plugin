@@ -6,6 +6,7 @@ import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.GuiItemProperty
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.GuiPage
+import com.codeland.uhc.gui.guiItem.CloseButton
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
@@ -106,10 +107,7 @@ enum class WorldGenOption(
 					override fun getStack() = name(ItemStack(Material.MUSIC_DISC_WAIT), "${ChatColor.AQUA}Reset")
 				})
 
-				addItem(object : GuiItem(coords(8, 4)) {
-					override fun onClick(player: Player, shift: Boolean) = if (shift) player.closeInventory() else UHC.setupGui.open(player)
-					override fun getStack() = name(ItemStack(Material.PRISMARINE_SHARD), "${ChatColor.BLUE}Back")
-				})
+				addItem(CloseButton(coords(8, 4)))
 			}
 		})
 	}

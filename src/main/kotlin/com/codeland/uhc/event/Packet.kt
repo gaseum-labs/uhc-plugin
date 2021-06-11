@@ -28,12 +28,12 @@ import kotlin.experimental.or
 object Packet {
 	val playerNames = arrayListOf<UUID>()
 
-	fun intToName(int: Int): String {
+	fun intToName(int: Int, length: Int): String {
 		var countDown = int
 
-		val name = CharArray(16)
+		val name = CharArray(length * 2)
 
-		for (i in 0..7) {
+		for (i in 0 until length) {
 			name[i * 2    ] = ChatColor.COLOR_CHAR
 			name[i * 2 + 1] = ChatColor.values()[countDown % 10].char
 			countDown /= 10
@@ -41,6 +41,25 @@ object Packet {
 
 		return String(name)
 	}
+
+	fun nameToInt(name: String, length: Int): Int? {
+		if (name.length < length * 2) return null
+
+		var int = 0
+
+		for (i in length - 1 downTo 0) {
+			if (name[i * 2] != ChatColor.COLOR_CHAR) return null
+			val digit = name[i * 2 + 1]
+
+			if (digit < '0' || digit > '9') return null
+
+			int *= 10
+			int += (digit - '0')
+		}
+
+		return int
+	}
+
 
 	fun playersIndex(uuid: UUID): Int {
 		var nameIndex = playerNames.indexOf(uuid)
@@ -54,7 +73,7 @@ object Packet {
 	}
 
 	fun playersNewName(uuid: UUID): String {
-		return intToName(playersIndex(uuid))
+		return intToName(playersIndex(uuid), 8)
 	}
 
 	/**

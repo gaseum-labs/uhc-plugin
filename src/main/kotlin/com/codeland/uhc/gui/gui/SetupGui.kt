@@ -1,6 +1,8 @@
-package com.codeland.uhc.gui
+package com.codeland.uhc.gui.gui
 
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.GuiPage
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.gui.guiItem.*
 import com.codeland.uhc.phase.PhaseType
@@ -48,10 +50,7 @@ class SetupGui : GuiPage(5, Util.gradientString("UHC Setup", TextColor.color(0x3
 		override fun getStack() = name(ItemStack(Material.MUSIC_DISC_WAIT), "${ChatColor.AQUA}Reset")
 	}
 
-	private val cancelButton: GuiItem = object : GuiItem(coords(8, 4)) {
-		override fun onClick(player: Player, shift: Boolean) = gui.close(player)
-		override fun getStack() = name(ItemStack(Material.BARRIER), "${ChatColor.RED}Close")
-	}
+	private val cancelButton: GuiItem = CloseButton(coords(8, 4))
 
 	init {
 		quirkToggles.forEach { addItem(it) }

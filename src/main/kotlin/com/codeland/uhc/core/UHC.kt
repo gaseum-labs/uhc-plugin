@@ -3,7 +3,7 @@ package com.codeland.uhc.core
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.event.Portal
 import com.codeland.uhc.gui.GuiManager
-import com.codeland.uhc.gui.SetupGui
+import com.codeland.uhc.gui.gui.SetupGui
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant

@@ -2,7 +2,9 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.gui.GuiManager
-import com.codeland.uhc.gui.LobbyPvpGui
+import com.codeland.uhc.gui.gui.LoadoutGui
+import com.codeland.uhc.gui.gui.LobbyPvpGui
+import com.codeland.uhc.lobbyPvp.Loadouts
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
@@ -45,7 +47,13 @@ class PlayerData(val uuid: UUID) {
 			false
 		}
 	}
+	var slotCosts = Array(Loadouts.NUM_SLOTS) { i ->
+		UHCProperty(0)
+	}
 	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
+	var slotGuis = Array(Loadouts.NUM_SLOTS) { i ->
+		GuiManager.registerPersonal(uuid, LoadoutGui(this, i))
+	}
 
 	/* custom spawning */
 	var spawnIndex = 0

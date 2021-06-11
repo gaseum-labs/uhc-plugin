@@ -55,11 +55,11 @@ enum class LoadoutItems(val cost: Int, val enchantOptions: Array<EnchantOption>,
 	IRON_HELMET       (1, armorEnchants, { ItemStack(Material.IRON_HELMET) }),
 	IRON_CHESTPLATE   (1, armorEnchants, { ItemStack(Material.IRON_CHESTPLATE) }),
 	IRON_LEGGINGS     (1, armorEnchants, { ItemStack(Material.IRON_LEGGINGS) }),
-	IRON_BOOTS        (1, armorEnchants, { ItemStack(Material.IRON_LEGGINGS) }),
+	IRON_BOOTS        (1, armorEnchants, { ItemStack(Material.IRON_BOOTS) }),
 	DIAMOND_HELMET    (4, armorEnchants, { ItemStack(Material.DIAMOND_HELMET) }),
 	DIAMOND_CHESTPLATE(5, armorEnchants, { ItemStack(Material.DIAMOND_CHESTPLATE) }),
 	DIAMOND_LEGGINGS  (4, armorEnchants, { ItemStack(Material.DIAMOND_LEGGINGS) }),
-	DIAMOND_BOOTS     (4, armorEnchants, { ItemStack(Material.DIAMOND_LEGGINGS) }),
+	DIAMOND_BOOTS     (4, armorEnchants, { ItemStack(Material.DIAMOND_BOOTS) }),
 
 	IRON_SWORD        (1, swordEnchants, { ItemStack(Material.IRON_SWORD) }),
 	DIAMOND_SWORD     (3, swordEnchants, { ItemStack(Material.DIAMOND_SWORD) }),
@@ -92,5 +92,57 @@ enum class LoadoutItems(val cost: Int, val enchantOptions: Array<EnchantOption>,
 
 	companion object {
 		class EnchantOption(val addCost: Int, val enchant: Enchantment, val level: Int)
+
+		fun calculateCost(loadout: Array<Int>): Int {
+			return loadout.fold(0) { acc, i ->
+				if (i == -1)
+					acc
+				else
+					acc + values()[i].cost
+			}
+		}
+
+		fun defaultLoadout(): Array<Int> {
+			return Array(Loadouts.LOADOUT_SIZE) { -1 }
+		}
+
+		val MAX_COST = 24
+
+		/* it's fine to reorder these */
+		/* determines the order they display by default in the gui */
+		val loadoutItems = arrayOf(
+			IRON_HELMET,
+			IRON_CHESTPLATE,
+			IRON_LEGGINGS,
+			IRON_BOOTS,
+			DIAMOND_HELMET,
+			DIAMOND_CHESTPLATE,
+			DIAMOND_LEGGINGS,
+			DIAMOND_BOOTS,
+			IRON_SWORD,
+			DIAMOND_SWORD,
+			IRON_AXE,
+			DIAMOND_AXE,
+			BOW,
+			CROSSBOW,
+			SHIELD,
+			PICKAXE,
+			ARROWS,
+			ARROWS_2,
+			SPECTRAL_ARROWS,
+			SPECTRAL_ARROWS_2,
+			WATER_BUCKET,
+			LAVA_BUCKET,
+			BLOCKS,
+			BLOCKS_2,
+			ENDER_PEARLS,
+			GOLDEN_APPLES,
+			SPEED_POTION,
+			SPEED_POTION_2,
+			HEALTH_POTION,
+			HEALTH_POTION_2,
+			DAMAGE_POTION,
+			DAMAGE_POTION_2,
+		)
 	}
 }
