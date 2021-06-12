@@ -2,7 +2,7 @@ package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
-import com.codeland.uhc.lobbyPvp.LoadoutItems
+import com.codeland.uhc.lobbyPvp.Loadouts
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -11,7 +11,7 @@ class CostCounter(index: Int, costProperty: UHCProperty<Int>): GuiItemProperty<I
 	override fun onClick(player: Player, shift: Boolean) {}
 
 	override fun getStackProperty(value: Int): ItemStack {
-		val remaining = LoadoutItems.MAX_COST - value
+		val remaining = Loadouts.MAX_COST - value
 
 		return name(
 			ItemStack(

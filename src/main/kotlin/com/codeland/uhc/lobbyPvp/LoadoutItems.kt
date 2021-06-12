@@ -15,8 +15,8 @@ import org.bukkit.potion.PotionType
 val armorEnchants = arrayOf(
 	EnchantOption(1, Enchantment.PROTECTION_ENVIRONMENTAL, 1),
 	EnchantOption(2, Enchantment.PROTECTION_ENVIRONMENTAL, 2),
-	EnchantOption(1, Enchantment.PROTECTION_ENVIRONMENTAL, 1),
-	EnchantOption(2, Enchantment.PROTECTION_ENVIRONMENTAL, 2),
+	EnchantOption(1, Enchantment.PROTECTION_PROJECTILE, 1),
+	EnchantOption(2, Enchantment.PROTECTION_PROJECTILE, 2),
 	EnchantOption(2, Enchantment.THORNS, 1),
 	EnchantOption(3, Enchantment.THORNS, 2),
 )
@@ -94,107 +94,5 @@ enum class LoadoutItems(val cost: Int, val enchantOptions: Array<EnchantOption>,
 
 	companion object {
 		class EnchantOption(val addCost: Int, val enchant: Enchantment, val level: Int)
-
-		fun calculateCost(loadout: Array<Int>): Int {
-			return loadout.fold(0) { acc, i ->
-				if (i == -1)
-					acc
-				else
-					acc + values()[i].cost
-			}
-		}
-
-		fun defaultLoadout(): Array<Int> {
-			val loadout = Array(Loadouts.LOADOUT_SIZE) { -1 }
-
-			loadout[0] = IRON_AXE.ordinal
-			loadout[1] = BLOCKS.ordinal
-			loadout[2] = BOW.ordinal
-			loadout[3] = CROSSBOW.ordinal
-			loadout[4] = LAVA_BUCKET.ordinal
-			loadout[5] = WATER_BUCKET.ordinal
-			loadout[6] = GOLDEN_APPLES.ordinal
-			loadout[7] = SPEED_POTION.ordinal
-			loadout[8] = HEALTH_POTION.ordinal
-
-			loadout[9] = IRON_HELMET.ordinal
-			loadout[10] = IRON_CHESTPLATE.ordinal
-			loadout[11] = IRON_LEGGINGS.ordinal
-			loadout[12] = IRON_BOOTS.ordinal
-			loadout[13] = SHIELD.ordinal
-			loadout[14] = SPECTRAL_ARROWS.ordinal
-			loadout[15] = ARROWS.ordinal
-			loadout[16] = PICKAXE.ordinal
-
-			return loadout
-		}
-
-		private val armorSpaces = arrayOf(
-			arrayOf(Material.IRON_BOOTS, Material.DIAMOND_BOOTS),
-			arrayOf(Material.IRON_LEGGINGS, Material.DIAMOND_LEGGINGS),
-			arrayOf(Material.IRON_CHESTPLATE, Material.DIAMOND_CHESTPLATE),
-			arrayOf(Material.IRON_HELMET, Material.DIAMOND_HELMET)
-		)
-
-		fun findArmorSpace(material: Material, slot: Int): Int {
-			if (material == Material.SHIELD) return 40
-
-			for (i in armorSpaces.indices) {
-				for (j in armorSpaces[i].indices) {
-					if (armorSpaces[i][j] === material) return i + 36
-				}
-			}
-
-			return slot
-		}
-
-		fun fillInventory(loadout: Array<Int>, inventory: PlayerInventory) {
-			loadout.forEachIndexed { slot, id ->
-				if (id != -1) {
-					val stack = values()[id].createItem()
-
-					inventory.setItem(findArmorSpace(stack.type, slot), stack)
-				}
-			}
-		}
-
-		val MAX_COST = 24
-
-		/* it's fine to reorder these */
-		/* determines the order they display by default in the gui */
-		val loadoutItems = arrayOf(
-			IRON_HELMET,
-			IRON_CHESTPLATE,
-			IRON_LEGGINGS,
-			IRON_BOOTS,
-			DIAMOND_HELMET,
-			DIAMOND_CHESTPLATE,
-			DIAMOND_LEGGINGS,
-			DIAMOND_BOOTS,
-			IRON_SWORD,
-			DIAMOND_SWORD,
-			IRON_AXE,
-			DIAMOND_AXE,
-			BOW,
-			CROSSBOW,
-			SHIELD,
-			PICKAXE,
-			ARROWS,
-			ARROWS_2,
-			SPECTRAL_ARROWS,
-			SPECTRAL_ARROWS_2,
-			WATER_BUCKET,
-			LAVA_BUCKET,
-			BLOCKS,
-			BLOCKS_2,
-			ENDER_PEARLS,
-			GOLDEN_APPLES,
-			SPEED_POTION,
-			SPEED_POTION_2,
-			HEALTH_POTION,
-			HEALTH_POTION_2,
-			DAMAGE_POTION,
-			DAMAGE_POTION_2,
-		)
 	}
 }

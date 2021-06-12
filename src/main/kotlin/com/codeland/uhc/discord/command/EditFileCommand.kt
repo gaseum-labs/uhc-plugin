@@ -38,15 +38,14 @@ class EditFileCommand : MixerCommand(true) {
 
 			stream.close()
 
-			/* report on any defects in the given data */
-			if (errorMessage.isNotEmpty()) errorMessage(event, errorMessage)
-
 			/* delete old message, sent message will be treated as new one */
 			if (valid) {
 				reference.delete().queue()
+
+			/* report on any defects in the given data */
 			} else {
 				Util.log("${ChatColor.RED}Invalid data sent")
-				event.message.delete().queue()
+				errorMessage(event, if (errorMessage == "") "Unknown error" else errorMessage)
 			}
 
 		}.exceptionally {

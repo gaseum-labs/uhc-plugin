@@ -29,7 +29,8 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 		moveableGuiItems = createMoveableGuiItems()
 
 		moveableGuiItems.forEachIndexed { id, item ->
-			val stack = giveItemId(item.generate(), id)
+			item.id = id
+			val stack = item.generate()
 
 			if (item.rawSlot < inventory.size) {
 				inventory.setItem(item.rawSlot, stack)
@@ -51,17 +52,6 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 		for (i in 0 until inventory.size) {
 			if (guiItems[i] == null) inventory.setItem(i, null)
 		}
-	}
-
-	fun giveItemId(itemStack: ItemStack, id: Int): ItemStack {
-		val meta = itemStack.itemMeta
-
-		val oldDisplayName = meta.displayName() ?: Component.empty()
-		meta.displayName(Component.text(Packet.intToName(id, 3)).append(oldDisplayName))
-
-		itemStack.itemMeta = meta
-
-		return itemStack
 	}
 
 	fun getItem(itemStack: ItemStack?): MoveableGuiItem? {
@@ -88,7 +78,7 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 
 			/* shift clicking does not move */
 			if (clickedItem != null && event.action == MOVE_TO_OTHER_INVENTORY) {
-				clickedItem.onShiftClick(player)
+				clickedItem.onShiftClick(player, event.currentItem!!)
 
 			/* placing item from the cursor */
 			} else if (heldItem != null && event.action == PLACE_ALL) {

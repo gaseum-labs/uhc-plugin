@@ -5,20 +5,57 @@ import kotlin.collections.ArrayList
 
 class Loadouts(
 	val uuids: ArrayList<UUID> = ArrayList(),
-	val loadouts: ArrayList<Array<Array<Int>>> = ArrayList()
+	val loadouts: ArrayList<Array<Loadout>> = ArrayList()
 ) {
 	companion object {
 		const val NUM_SLOTS = 3
-		const val LOADOUT_SIZE = 9 * 4
+		val MAX_COST = 32
 
-		fun defaultArray() = Array(NUM_SLOTS) { LoadoutItems.defaultLoadout() }
+		/* it's fine to reorder these */
+		/* determines the order they display by default in the gui */
+		val loadoutItems = arrayOf(
+			LoadoutItems.IRON_HELMET,
+			LoadoutItems.IRON_CHESTPLATE,
+			LoadoutItems.IRON_LEGGINGS,
+			LoadoutItems.IRON_BOOTS,
+			LoadoutItems.DIAMOND_HELMET,
+			LoadoutItems.DIAMOND_CHESTPLATE,
+			LoadoutItems.DIAMOND_LEGGINGS,
+			LoadoutItems.DIAMOND_BOOTS,
+			LoadoutItems.IRON_SWORD,
+			LoadoutItems.DIAMOND_SWORD,
+			LoadoutItems.IRON_AXE,
+			LoadoutItems.DIAMOND_AXE,
+			LoadoutItems.BOW,
+			LoadoutItems.CROSSBOW,
+			LoadoutItems.SHIELD,
+			LoadoutItems.PICKAXE,
+			LoadoutItems.ARROWS,
+			LoadoutItems.ARROWS_2,
+			LoadoutItems.SPECTRAL_ARROWS,
+			LoadoutItems.SPECTRAL_ARROWS_2,
+			LoadoutItems.WATER_BUCKET,
+			LoadoutItems.LAVA_BUCKET,
+			LoadoutItems.BLOCKS,
+			LoadoutItems.BLOCKS_2,
+			LoadoutItems.ENDER_PEARLS,
+			LoadoutItems.GOLDEN_APPLES,
+			LoadoutItems.SPEED_POTION,
+			LoadoutItems.SPEED_POTION_2,
+			LoadoutItems.HEALTH_POTION,
+			LoadoutItems.HEALTH_POTION_2,
+			LoadoutItems.DAMAGE_POTION,
+			LoadoutItems.DAMAGE_POTION_2,
+		)
+
+		fun defaultSlots() = Array(NUM_SLOTS) { Loadout.genDefault() }
 	}
 
-	fun getLoadouts(uuid: UUID): Array<Array<Int>> {
+	fun getPlayersLoadouts(uuid: UUID): Array<Loadout> {
 		val index = uuids.indexOfFirst { it == uuid }
 
 		return if (index == -1) {
-			val slots = defaultArray()
+			val slots = defaultSlots()
 
 			uuids.add(uuid)
 			loadouts.add(slots)

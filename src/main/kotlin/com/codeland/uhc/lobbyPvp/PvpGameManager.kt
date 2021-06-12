@@ -270,8 +270,8 @@ object PvpGameManager {
 		player.gameMode = GameMode.SURVIVAL
 
 		/* give items */
-		val loadout = DataManager.loadouts.getLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
-		LoadoutItems.fillInventory(loadout, player.inventory)
+		val loadout = DataManager.loadouts.getPlayersLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
+		loadout.fillInventory(player.inventory)
 
 		player.teleport(location)
 	}
