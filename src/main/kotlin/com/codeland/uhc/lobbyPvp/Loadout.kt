@@ -81,12 +81,20 @@ class Loadout(
 			if (id != -1) {
 				val loadoutItem = LoadoutItems.values()[id]
 
+				/* create the loadout item */
 				val stack = loadoutItem.createItem()
 
-				val option = options[i]
-				if (option != -1) {
-					val enchantOption = loadoutItem.enchantOptions[option]
-					ItemUtil.enchantThing(stack, enchantOption.enchant, enchantOption.level)
+				val optionIndex = options[i]
+				if (optionIndex != -1) {
+					val option = loadoutItem.enchantOptions[optionIndex]
+
+					when (option) {
+						is LoadoutItems.Companion.EnchantOption ->
+							ItemUtil.enchantThing(stack, option.enchant, option.level)
+
+						is LoadoutItems.Companion.AmountOption ->
+							stack.amount += option.addAmount
+					}
 				}
 
 				inventory.setItem(findArmorSpace(stack.type, i), stack)

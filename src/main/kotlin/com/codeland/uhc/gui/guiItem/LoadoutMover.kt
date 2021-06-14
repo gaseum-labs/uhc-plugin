@@ -12,7 +12,7 @@ import org.bukkit.ChatColor.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerData, val loadoutItem: LoadoutItems, var option: Int, val loadoutSlot: Int) : MoveableGuiItem(rawSlot, gui) {
+class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerData, val loadoutItem: LoadoutItems, var optionIndex: Int, val loadoutSlot: Int) : MoveableGuiItem(rawSlot, gui) {
 	override fun generate(): ItemStack {
 		val stack = loadoutItem.createItem()
 
@@ -34,8 +34,8 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 		if (enchantOptions.isEmpty()) return
 
 		/* cycle to next option */
-		++option
-		if (option == enchantOptions.size) option = -1
+		++optionIndex
+		if (optionIndex == enchantOptions.size) optionIndex = -1
 
 		/* change itemstack to match new enchantments */
 		updateItem(itemStack)
@@ -52,28 +52,77 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 		}
 	}
 
+	fun prettifyName(name: String): String {
+		val buffer = CharArray(name.length)
+
+		var startOfWord = true
+
+		for (i in name.indices) {
+			val c = name[i]
+
+			buffer[i] = when {
+				c == '_' -> {
+					startOfWord = true
+					' '
+				}
+				startOfWord -> {
+					startOfWord = false
+					c
+				}
+				else -> {
+					c.toLowerCase()
+				}
+			}
+		}
+
+		return String(buffer)
+	}
+
 	fun updateItem(itemStack: ItemStack) {
-		val enchantOptions = loadoutItem.enchantOptions
+		val options = loadoutItem.enchantOptions
 
 		/* only set enchantments on an enchant option item*/
-		if (enchantOptions.isNotEmpty()) {
-			val meta = itemStack.itemMeta
+		val cyclePart = if (options.isEmpty()) {
+			""
 
-			meta.enchants.forEach { (enchant, _) -> meta.removeEnchant(enchant) }
+		} else {
+			/* get a fresh itemMeta */
+			val baseItem = loadoutItem.createItem()
+			val meta = baseItem.itemMeta
 
-			/* add enchant if there is the option */
-			if (option != -1) {
-				meta.addEnchant(enchantOptions[option].enchant, enchantOptions[option].level, true)
+			itemStack.amount = baseItem.amount
+
+			/* add options if there is the option */
+			if (optionIndex != -1) {
+				val option = options[optionIndex]
+
+				when (option) {
+					is LoadoutItems.Companion.EnchantOption -> {
+						meta.addEnchant(option.enchant, option.level, true)
+					}
+					is LoadoutItems.Companion.AmountOption -> {
+						itemStack.amount += option.addAmount
+					}
+				}
 			}
 
 			itemStack.itemMeta = meta
+
+			/* different types of options have different colors */
+			val color = when (options.first()) {
+				is LoadoutItems.Companion.EnchantOption -> LIGHT_PURPLE
+				is LoadoutItems.Companion.AmountOption -> DARK_PURPLE
+				else -> RED
+			}
+
+			"${color}${BOLD}<${optionIndex + 1}/${options.size}> "
 		}
 
-		setName(itemStack, "$AQUA$BOLD${itemStack.type.name} ${GRAY}- $GREEN$${itemCost()}")
+		setName(itemStack, "$AQUA${prettifyName(itemStack.type.name)} ${cyclePart}${GREEN}${BOLD}$${itemCost()}")
 	}
 
 	fun itemCost(): Int {
-		return loadoutItem.cost + if (option == -1) 0 else loadoutItem.enchantOptions[option].addCost
+		return loadoutItem.cost + if (optionIndex == -1) 0 else loadoutItem.enchantOptions[optionIndex].addCost
 	}
 
 	override fun canMove(player: Player, newSlot: Int, inventorySlot: Int, other: MoveableGuiItem?): Boolean {
@@ -87,7 +136,7 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 
 		/* update the loadout */
 		loadout.ids[inventorySlot] = loadoutItem.ordinal
-		loadout.options[inventorySlot] = option
+		loadout.options[inventorySlot] = optionIndex
 
 		playerData.slotCosts[loadoutSlot].set(cost)
 
