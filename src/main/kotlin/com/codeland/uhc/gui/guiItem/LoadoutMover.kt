@@ -3,7 +3,6 @@ package com.codeland.uhc.gui.guiItem
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.gui.GuiItem.Companion.lore
-import com.codeland.uhc.gui.GuiItem.Companion.name
 import com.codeland.uhc.gui.MoveableGuiItem
 import com.codeland.uhc.gui.MoveableGuiPage
 import com.codeland.uhc.lobbyPvp.LoadoutItems
@@ -22,7 +21,7 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 		if (loadoutItem.enchantOptions.isNotEmpty())
 			lore(stack, listOf(Component.text("Shift click to cycle enchants")))
 
-		itemEnchants(stack)
+		updateItem(stack)
 
 		return stack
 	}
@@ -39,7 +38,7 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 		if (option == enchantOptions.size) option = -1
 
 		/* change itemstack to match new enchantments */
-		itemEnchants(itemStack)
+		updateItem(itemStack)
 	}
 
 	override fun onPickUp(player: Player, inventorySlot: Int) {
@@ -53,21 +52,22 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 		}
 	}
 
-	fun itemEnchants(itemStack: ItemStack) {
+	fun updateItem(itemStack: ItemStack) {
 		val enchantOptions = loadoutItem.enchantOptions
-		val meta = itemStack.itemMeta
 
-		/* reset enchants */
-		meta.enchants.forEach { (enchant, _) ->
-			meta.removeEnchant(enchant)
+		/* only set enchantments on an enchant option item*/
+		if (enchantOptions.isNotEmpty()) {
+			val meta = itemStack.itemMeta
+
+			meta.enchants.forEach { (enchant, _) -> meta.removeEnchant(enchant) }
+
+			/* add enchant if there is the option */
+			if (option != -1) {
+				meta.addEnchant(enchantOptions[option].enchant, enchantOptions[option].level, true)
+			}
+
+			itemStack.itemMeta = meta
 		}
-
-		/* add enchant if there is the option */
-		if (option != -1) {
-			meta.addEnchant(enchantOptions[option].enchant, enchantOptions[option].level, true)
-		}
-
-		itemStack.itemMeta = meta
 
 		setName(itemStack, "$AQUA$BOLD${itemStack.type.name} ${GRAY}- $GREEN$${itemCost()}")
 	}

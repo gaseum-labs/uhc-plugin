@@ -101,7 +101,7 @@ class LoadoutsFile(header: String, channelName: String): DiscordFile<Loadouts>(h
 	}
 
 	override fun write(data: Loadouts): ByteArray {
-		val gson = GsonBuilder().setPrettyPrinting().create()
+		val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
 
 		val array = ArrayList<Map<String, Any>>(data.uuids.size)
 

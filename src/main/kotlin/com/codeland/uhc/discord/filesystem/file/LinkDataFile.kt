@@ -37,7 +37,7 @@ class LinkDataFile(header: String, channelName: String) : DiscordFile<LinkDataFi
 	}
 
 	override fun write(data: LinkData): ByteArray {
-		val gson = GsonBuilder().setPrettyPrinting().create()
+		val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
 
 		val array = ArrayList<Map<String, String>>(data.discordIds.size)
 

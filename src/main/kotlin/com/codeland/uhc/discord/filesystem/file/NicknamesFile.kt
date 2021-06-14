@@ -36,7 +36,7 @@ class NicknamesFile(header: String, channelName: String) : DiscordFile<Nicknames
 	}
 
 	override fun write(data: Nicknames): ByteArray {
-		val gson = GsonBuilder().setPrettyPrinting().create()
+		val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
 
 		val array = ArrayList<Map<String, Any>>(data.minecraftIds.size)
 

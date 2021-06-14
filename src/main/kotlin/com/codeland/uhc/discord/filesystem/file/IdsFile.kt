@@ -45,7 +45,7 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 	}
 
 	override fun write(data: Ids): ByteArray {
-		val gson = GsonBuilder().setPrettyPrinting().create()
+		val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
 
 		val map = HashMap<String, String>()
 
