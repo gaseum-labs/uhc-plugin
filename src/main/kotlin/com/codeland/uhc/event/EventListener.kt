@@ -35,6 +35,7 @@ import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
+import org.bukkit.event.vehicle.VehicleCreateEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.inventory.*
 import org.bukkit.inventory.ItemStack
@@ -535,6 +536,11 @@ class EventListener : Listener {
 				event.isCancelled = true
 			}
 		}
+	}
+
+	@EventHandler
+	fun onVehiclePlace(event: VehicleCreateEvent) {
+		if (event.vehicle.world.name == WorldManager.LOBBY_WORLD_NAME) event.isCancelled = true
 	}
 
 	@EventHandler

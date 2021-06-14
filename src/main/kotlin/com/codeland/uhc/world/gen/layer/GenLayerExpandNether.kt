@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen
+package com.codeland.uhc.world.gen.layer
 
 import net.minecraft.server.v1_16_R3.AreaTransformer4
 import net.minecraft.server.v1_16_R3.WorldGenContext

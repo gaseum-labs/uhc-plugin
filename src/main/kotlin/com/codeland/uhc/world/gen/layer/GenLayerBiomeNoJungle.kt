@@ -1,7 +1,9 @@
+package com.codeland.uhc.world.gen.layer
+
 import net.minecraft.server.v1_16_R3.AreaTransformer5
 import net.minecraft.server.v1_16_R3.WorldGenContext
 
-class GenLayerBiomeNoJungle() : AreaTransformer5 {
+class GenLayerBiomeNoJungle : AreaTransformer5 {
 	companion object {
 		private val a = intArrayOf(1, 2, 4, 3, 5, 6, 38, 39)
 		private val b = intArrayOf(1, 3, 4, 6, 27, 29)

@@ -1,6 +1,6 @@
 package com.codeland.uhc.world.gen
 
-import GenLayerBiomeNoJungle
+import com.codeland.uhc.world.gen.layer.*
 import net.minecraft.server.v1_16_R3.*
 import net.minecraft.server.v1_16_R3.GenLayerSpecial.*
 import java.util.function.LongFunction
@@ -148,6 +148,26 @@ object CustomGenLayers {
 		return baseLayer
 	}
 
+	private fun <T : Area, C : AreaContextTransformed<T>> createAreaFactoryLobby(
+		seed: LongFunction<C>,
+	): AreaFactory<T> {
+		var baseLayer = LayerOceanNoise().a(seed.apply(12L))
+
+		baseLayer = GenLayerZoom.FUZZY.a(seed.apply(24L), baseLayer)
+		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(48L), baseLayer)
+
+		baseLayer = GenLayerShatteredIsland().a(seed.apply(96L), baseLayer)
+
+		baseLayer = GenLayerZoom.FUZZY.a(seed.apply(192L), baseLayer)
+
+		baseLayer = GenLayerOceanRiser().a(seed.apply(3242L), baseLayer)
+
+		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(222L), baseLayer)
+		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(333L), baseLayer)
+
+		return baseLayer
+	}
+
 	fun createGenLayer(var0: Long, var2: Boolean, biomeSize: Int, var4: Int, allowJungles: Boolean): GenLayer {
 		val var6 = createAreaFactoryNoOceans(var2, biomeSize, var4, LongFunction { var2x: Long -> WorldGenContextArea(25, var0, var2x) }, allowJungles)
 		return GenLayer(var6)
@@ -155,6 +175,11 @@ object CustomGenLayers {
 
 	fun createGenLayerNether(seed: Long): GenLayer {
 		val var6 = createAreaFactoryNether(LongFunction { var2x: Long -> WorldGenContextArea(25, seed, var2x) })
+		return GenLayer(var6)
+	}
+
+	fun createGenLayerLobby(seed: Long): GenLayer {
+		val var6 = createAreaFactoryLobby(LongFunction { var2x: Long -> WorldGenContextArea(25, seed, var2x) })
 		return GenLayer(var6)
 	}
 }

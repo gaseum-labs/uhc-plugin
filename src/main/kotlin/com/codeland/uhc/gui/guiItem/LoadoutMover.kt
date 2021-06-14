@@ -94,9 +94,7 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 
 			/* add options if there is the option */
 			if (optionIndex != -1) {
-				val option = options[optionIndex]
-
-				when (option) {
+				when (val option = options[optionIndex]) {
 					is LoadoutItems.Companion.EnchantOption -> {
 						meta.addEnchant(option.enchant, option.level, true)
 					}

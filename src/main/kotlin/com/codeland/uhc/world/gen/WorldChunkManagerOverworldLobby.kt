@@ -1,32 +1,39 @@
 package com.codeland.uhc.world.gen
 
 import net.minecraft.server.v1_16_R3.*
-import kotlin.math.abs
-import kotlin.math.sqrt
+import kotlin.math.*
 
 class WorldChunkManagerOverworldLobby(
-	var0: Long,
+	seed: Long,
 	private val var4: IRegistry<BiomeBase>,
-	val biome1: ResourceKey<BiomeBase>,
-	val biome2: ResourceKey<BiomeBase>,
-	val centerBiome: ResourceKey<BiomeBase>,
-	val oceanBiome: ResourceKey<BiomeBase>,
-	val radius : Int
-) : WorldChunkManagerOverworld(var0, false, false, var4) {
-	fun squaredRadius(x: Int, z: Int, r: Int): Boolean {
-		return abs(x) <= r / 4 && abs(z) <= r / 4
+	val biomes: List<ResourceKey<BiomeBase>>,
+	squareRadius : Int
+) : WorldChunkManagerOverworld(seed, false, false, var4) {
+	private val radius = diagonalToSquare(squareRadius)
+	private val genLayerField = WorldChunkManagerOverworld::class.java.getDeclaredField("f")
+
+	init {
+		genLayerField.isAccessible = true
+		genLayerField[this] = CustomGenLayers.createGenLayerLobby(seed)
 	}
 
-	fun radius(x: Int, z: Int, r: Int): Boolean {
+	fun radius(x: Int, z: Int, r: Float): Boolean {
 		return sqrt(x * x + z * z.toFloat()) <= r / 4
 	}
 
+	fun angleIndex(x: Int, z: Int, size: Int): Int {
+		return ((atan2(x.toFloat(), z.toFloat()) + PI) / (2 * PI) * size).toInt().coerceAtLeast(0).coerceAtMost(size - 1)
+	}
+
+	fun diagonalToSquare(radius: Int): Float {
+		return 2.0F / sqrt(2.0F) * radius
+	}
+
     override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
-	    return var4.d(when {
-	    	radius(x, z, radius / 2) -> centerBiome
-		    squaredRadius(x, z, radius) -> if (x > 0) biome1 else biome2
-		    squaredRadius(x, z, radius + 16) -> Biomes.BEACH
-		    else -> oceanBiome
-	    })
+	    return when {
+	    	radius(x, z, radius) -> var4.d(biomes[angleIndex(x, z, biomes.size)])
+		    radius(x, z, radius + 16) -> var4.d(Biomes.BEACH)
+		    else -> super.getBiome(x, y, z)
+	    }
     }
 }

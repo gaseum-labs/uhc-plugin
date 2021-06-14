@@ -70,15 +70,38 @@ object WorldGenManager {
 		}?.value
 	}
 
-	val lobbyBiomes = arrayOf(
-		Biomes.MODIFIED_JUNGLE,
+	val lobbyBiomes = listOf(
+		Biomes.SNOWY_TUNDRA,
+		Biomes.SNOWY_TAIGA,
+		Biomes.TAIGA,
+		Biomes.PLAINS,
+		Biomes.SUNFLOWER_PLAINS,
+		Biomes.FOREST,
+		Biomes.FLOWER_FOREST,
+		Biomes.BIRCH_FOREST,
+		Biomes.DARK_FOREST,
+		Biomes.JUNGLE,
+		Biomes.JUNGLE_EDGE,
+		Biomes.BAMBOO_JUNGLE,
+		Biomes.DESERT,
+		Biomes.SAVANNA,
+		Biomes.BADLANDS
+	)
+
+	val tallLobbyBiomes = listOf(
+		Biomes.MODIFIED_JUNGLE_EDGE,
+		Biomes.MODIFIED_BADLANDS_PLATEAU,
+		Biomes.MODIFIED_WOODED_BADLANDS_PLATEAU,
+		Biomes.MODIFIED_GRAVELLY_MOUNTAINS,
+		Biomes.TALL_BIRCH_HILLS,
 		Biomes.MUSHROOM_FIELDS,
-		Biomes.SHATTERED_SAVANNA,
-		Biomes.ERODED_BADLANDS,
-		Biomes.GIANT_SPRUCE_TAIGA_HILLS,
-		Biomes.DARK_FOREST_HILLS,
+		Biomes.MODIFIED_JUNGLE,
+		Biomes.GIANT_TREE_TAIGA,
+		Biomes.WOODED_MOUNTAINS,
 		Biomes.ICE_SPIKES,
-		Biomes.BASALT_DELTAS
+		Biomes.SNOWY_TAIGA_MOUNTAINS,
+		Biomes.ERODED_BADLANDS,
+		Biomes.GIANT_SPRUCE_TAIGA
 	)
 
 	val lobbyCenterBiomes = arrayOf(
@@ -139,11 +162,6 @@ object WorldGenManager {
 		Biomes.BASALT_DELTAS
 	)
 
-	private fun getLobbyBiomes(): Pair<ResourceKey<BiomeBase>, ResourceKey<BiomeBase>> {
-		val list = lobbyBiomes.asIterable().shuffled()
-		return Pair(list[0], list[1])
-	}
-
     private fun onWorldAdded(world: World) {
         val worldServer = worldServerField[world] as WorldServer
         val chunkProviderServer = chunkProviderServerField[worldServer] as ChunkProviderServer
@@ -168,12 +186,9 @@ object WorldGenManager {
 			    WorldChunkManagerNether(seed, biomeRegistry)
 	    	}
 		    WorldManager.LOBBY_WORLD_NAME -> {
-			    val (biome0, biome1) = getLobbyBiomes()
 			    WorldChunkManagerOverworldLobby(
 				    seed, biomeRegistry,
-				    biome0, biome1,
-				    Util.randFromArray(lobbyCenterBiomes),
-				    Util.randFromArray(oceanBiomes),
+				    lobbyBiomes.shuffled().zip(tallLobbyBiomes.shuffled()).flatMap { listOf(it.first, it.second) }.take(9),
 				    60
 			    )
 		    }
