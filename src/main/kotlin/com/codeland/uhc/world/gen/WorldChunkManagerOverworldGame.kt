@@ -16,7 +16,8 @@ class WorldChunkManagerOverworldGame(
 
 	init {
 		genLayerField.isAccessible = true
-		genLayerField[this] = CustomGenLayers.createGenLayer(seed, false, 2, 4, !fixedJungle)
+		//genLayerField[this] = CustomGenLayers.createGenLayer(seed, false, 2, 4, !fixedJungle)
+		genLayerField[this] = CustomGenLayers.createGenLayerGame(seed)
 	}
 
 	/* determine jungle placement */
