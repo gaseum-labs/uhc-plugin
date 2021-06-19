@@ -11,6 +11,8 @@ import com.codeland.uhc.world.chunkPlacerHolder.*
 import com.codeland.uhc.world.chunkPlacerHolder.type.*
 import org.bukkit.Bukkit
 import org.bukkit.World
+import org.bukkit.block.BlockFace
+import org.bukkit.entity.Ageable
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.world.ChunkPopulateEvent
@@ -26,6 +28,16 @@ class Generation : Listener {
 			if (WorldManager.isNonGameWorld(world)) return@scheduleSyncDelayedTask
 
 			if (world.environment === World.Environment.NORMAL) {
+				chunk.entities.forEach { entity ->
+					var block = entity.location.block
+					while (!block.isPassable) block = block.getRelative(BlockFace.UP)
+
+					entity.teleport(entity.location.set(block.x + 0.5, block.y.toDouble(), block.z + 0.5))
+
+					/* no baby animals */
+					if (entity is Ageable) entity.setAdult()
+				}
+
 				if (getEnabled(NETHER_INDICATORS)) {
 					NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())
 				}

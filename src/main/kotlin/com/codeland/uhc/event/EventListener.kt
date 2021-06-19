@@ -297,6 +297,10 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
+		if (event.entity is Animals) {
+			println("${event.entityType} died at ${event.entity.location}")
+		}
+
 		val killer = event.entity.killer
 
 		/* test if offline zombie was killed */
