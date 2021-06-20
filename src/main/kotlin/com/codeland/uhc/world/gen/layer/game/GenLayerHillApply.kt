@@ -14,7 +14,7 @@ class GenLayerHillApply : AreaTransformer3, AreaTransformerIdentity {
 				BiomeNo.SNOWY_TAIGA -> BiomeNo.SNOWY_MOUNTAINS
 				BiomeNo.SNOWY_TAIGA_MOUNTAINS -> BiomeNo.SNOWY_MOUNTAINS
 				BiomeNo.TAIGA -> BiomeNo.MOUNTAINS
-				BiomeNo.GIANT_TREE_TAIGA -> BiomeNo.GIANT_SPRUCE_TAIGA_HILLS
+				BiomeNo.GIANT_TREE_TAIGA -> BiomeNo.GIANT_TREE_TAIGA_HILLS
 				BiomeNo.SWAMP -> BiomeNo.MOUNTAINS
 				BiomeNo.SWAMP_HILLS -> BiomeNo.STONE_SHORE
 				BiomeNo.DARK_FOREST -> BiomeNo.GRAVELLY_MOUNTAINS

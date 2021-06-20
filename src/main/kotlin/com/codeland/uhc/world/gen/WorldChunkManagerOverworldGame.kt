@@ -1,7 +1,9 @@
 package com.codeland.uhc.world.gen
 
+import com.codeland.uhc.command.TestCommands
 import com.codeland.uhc.util.Util
 import net.minecraft.server.v1_16_R3.*
+import org.bukkit.event.world.ChunkLoadEvent
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -12,35 +14,17 @@ class WorldChunkManagerOverworldGame(
 	val fixedJungle: Boolean,
 	val maxRadius: Int
 ) : WorldChunkManagerOverworld(seed, false, false, var4) {
-	private val genLayerField = WorldChunkManagerOverworld::class.java.getDeclaredField("f")
-
-	init {
-		genLayerField.isAccessible = true
-		//genLayerField[this] = CustomGenLayers.createGenLayer(seed, false, 2, 4, !fixedJungle)
-		genLayerField[this] = CustomGenLayers.createGenLayerGame(seed)
-	}
+	private val areaLazy = CustomGenLayers.createGenLayerGame(seed)
 
 	/* determine jungle placement */
 
-	data class JunglePlacement(val x: Float, val z: Float, val splitAngle: Float, val widths: Array<Float>)
+	data class JunglePlacement(val x: Float, val z: Float, val angleOffset: Float, val widths: Array<Float>)
 
-	fun genJungleWidths(random: Random, median: Float, deviation: Float): Array<Float> {
-		val numWidths = random.nextInt(5, 8) * 2
-
-		val array = Array(numWidths) { median / 4 }
-		val indices = array.indices.shuffled()
-
-		for (i in 0 until numWidths / 2) {
-			val diff = Util.interp(-deviation, deviation, random.nextFloat()) / 4
-
-			array[indices[i * 2    ]] += diff
-			array[indices[i * 2 + 1]] -= diff
-		}
-
-		return array
+	private fun genJungleWidths(): Array<Float> {
+		return arrayOf(60.0f / 4, 16.0f / 4, 60.0f / 4, 12.0f / 4, 56.0f / 4)
 	}
 
-	fun genJungles(num: Int): Array<JunglePlacement> {
+	private fun genJungles(num: Int): Array<JunglePlacement> {
 		val random = Random(seed)
 
 		val inner = (maxRadius * (1.0 / 3.0)).toInt()
@@ -56,8 +40,8 @@ class WorldChunkManagerOverworldGame(
 			JunglePlacement(
 				cos(angle).toFloat() * radius / 4,
 				sin(angle).toFloat() * radius / 4,
-				random.nextFloat() * PI.toFloat() * 2.0f,
-				genJungleWidths(random, 2.5f * 16.0f, 16.0f)
+				random.nextFloat() * Math.PI.toFloat() * 2,
+				genJungleWidths()
 			)
 		}
 	}
@@ -69,14 +53,12 @@ class WorldChunkManagerOverworldGame(
 	        var4.d(centerBiome)
 
         } else {
-        	var hilly = false
 	        var jungleLevel = 0
 
-	        jungles.any { (jx, jz, splitAngle, widths) ->
+	        jungles.any { (jx, jz, angleOffset, widths) ->
 		        val dist = sqrt((x - jx) * (x - jx) + (z - jz) * (z - jz))
-		        val angleAlong = atan2((z - jz), (x - jx)) / (PI.toFloat() * 2)
+		        val angleAlong = Util.mod((atan2((z - jz), (x - jx)) + angleOffset), PI.toFloat() * 2) / (PI.toFloat() * 2)
 		        val width = Util.bilinear(widths, angleAlong)
-				val side = (x - jx) * sin(splitAngle) - (z - jz) * cos(splitAngle) < 0
 
 		        val thisLevel = when {
 			        dist < width -> 2
@@ -84,24 +66,36 @@ class WorldChunkManagerOverworldGame(
 			        else -> 0
 		        }
 
-		        if (thisLevel > jungleLevel) {
-		        	jungleLevel = thisLevel
-			        hilly = side
-		        }
+		        if (thisLevel > jungleLevel) jungleLevel = thisLevel
 
 		        jungleLevel == 2
 	        }
 
-	        val oldBiome = super.getBiome(x, y, z)
+	        val oldBiome = areaLazy.a(x, z)
+			if (oldBiome == BiomeNo.RIVER) return var4.d(BiomeRegistry.a(oldBiome))
 
-	        if (oldBiome === var4.d(Biomes.RIVER)) {
-	        	oldBiome
-
-	        } else when (jungleLevel) {
-		        2 -> var4.d(if (hilly) Biomes.JUNGLE_HILLS else Biomes.JUNGLE)
-		        1 -> var4.d(Biomes.JUNGLE_EDGE)
+	        val biome = when (jungleLevel) {
+	        	2 -> when (oldBiome) {
+			        BiomeNo.MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE
+			        BiomeNo.GRAVELLY_MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE
+			        BiomeNo.MODIFIED_GRAVELLY_MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE
+			        BiomeNo.WOODED_MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE
+			        BiomeNo.GIANT_TREE_TAIGA -> BiomeNo.BAMBOO_JUNGLE
+			        BiomeNo.GIANT_TREE_TAIGA_HILLS -> BiomeNo.BAMBOO_JUNGLE
+			        BiomeNo.GIANT_SPRUCE_TAIGA -> BiomeNo.BAMBOO_JUNGLE
+			        else -> BiomeNo.JUNGLE
+		        }
+		        1 -> when (oldBiome) {
+			        BiomeNo.MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE_EDGE
+			        BiomeNo.GRAVELLY_MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE_EDGE
+			        BiomeNo.MODIFIED_GRAVELLY_MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE_EDGE
+			        BiomeNo.WOODED_MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE_EDGE
+			        else -> BiomeNo.JUNGLE_EDGE
+		        }
 		        else -> oldBiome
 	        }
+
+	        var4.d(BiomeRegistry.a(biome))
         }
     }
 }

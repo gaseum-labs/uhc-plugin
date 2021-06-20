@@ -182,4 +182,15 @@ class TestCommands : BaseCommand() {
 
 		GameRunner.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
 	}
+
+	companion object {
+		var flag = false
+	}
+
+	@Subcommand("flag")
+	@Description("test a player's individual mobcap")
+	fun testFlag(sender: CommandSender) {
+		flag = !flag
+		GameRunner.sendGameMessage(sender, "Set flag to $flag")
+	}
 }

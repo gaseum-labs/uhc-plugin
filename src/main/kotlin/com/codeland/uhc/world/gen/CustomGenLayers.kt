@@ -190,18 +190,18 @@ object CustomGenLayers {
 		baseLayer = GenLayerSpecial().a(seed.apply(192L), baseLayer)
 
 		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(1003L), baseLayer)
-		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(1004L), baseLayer)
-		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(1005L), baseLayer)
 
 		var hillLayer = LayerNoise().a(seed.apply(88L))
 		hillLayer = GenLayerZoom.NORMAL.a(seed.apply(90L), hillLayer)
 		hillLayer = GenLayerZoom.NORMAL.a(seed.apply(90L), hillLayer)
 		hillLayer = GenLayerEdge(1).a(seed.apply(142L), hillLayer)
 		hillLayer = GenLayerZoom.NORMAL.a(seed.apply(2920L), hillLayer)
-		hillLayer = GenLayerZoom.NORMAL.a(seed.apply(90L), hillLayer)
-		hillLayer = GenLayerZoom.NORMAL.a(seed.apply(2920L), hillLayer)
 
 		baseLayer = GenLayerHillApply().a(seed.apply(23L), baseLayer, hillLayer)
+		baseLayer = GenLayerBiomeEdge().a(seed.apply(292L), baseLayer)
+
+		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(1004L), baseLayer)
+		baseLayer = GenLayerZoom.NORMAL.a(seed.apply(1005L), baseLayer)
 
 		var riverLayer = LayerNoise().a(seed.apply(213L))
 		riverLayer = GenLayerZoom.NORMAL.a(seed.apply(1001L), riverLayer)
@@ -231,8 +231,9 @@ object CustomGenLayers {
 		return GenLayer(var6)
 	}
 
-	fun createGenLayerGame(seed: Long): GenLayer {
-		val var6 = createAreaFactoryGame(LongFunction { var2x: Long -> WorldGenContextArea(25, seed, var2x) })
-		return GenLayer(var6)
+	fun createGenLayerGame(seed: Long): AreaLazy {
+		return createAreaFactoryGame(
+			LongFunction { var2x: Long -> WorldGenContextArea(25, seed, var2x) }
+		).make()
 	}
 }

@@ -2,7 +2,9 @@ package com.codeland.uhc.world.gen.layer.game
 
 import com.codeland.uhc.world.gen.BiomeNo
 import net.minecraft.server.v1_16_R3.AreaTransformer4
+import net.minecraft.server.v1_16_R3.BiomeRegistry
 import net.minecraft.server.v1_16_R3.WorldGenContext
+import org.bukkit.craftbukkit.v1_16_R3.block.CraftBlock
 import javax.management.BadBinaryOpValueExpException
 
 class GenLayerVis : AreaTransformer4 {

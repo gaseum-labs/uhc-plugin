@@ -32,6 +32,10 @@ object Util {
 		return ((a % b) + b) % b
 	}
 
+	fun mod(a: Float, b: Float): Float {
+		return ((a % b) + b) % b
+	}
+
 	fun topBlockY(world: World, x: Int, z: Int): Int {
 		for (y in 255 downTo 0) {
 			var block = world.getBlockAt(x, y, z)
@@ -199,10 +203,12 @@ object Util {
 	)
 
 	fun bilinear(array: Array<Float>, along: Float): Float {
-		val weight1 = along - floor(along)
+		val x = along * array.size
+
+		val weight1 = x - floor(x)
 		val weight0 = 1 - weight1
 
-		val left = mod(along.toInt(), array.size)
+		val left = mod(floor(x).toInt(), array.size)
 		val right =  mod(left + 1, array.size)
 
 		return array[left] * weight0 + array[right] + weight1

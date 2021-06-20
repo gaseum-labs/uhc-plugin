@@ -28,6 +28,8 @@ class Loadout(
 			ids[4] = LoadoutItems.LAVA_BUCKET.ordinal
 			ids[5] = LoadoutItems.WATER_BUCKET.ordinal
 			ids[6] = LoadoutItems.GOLDEN_APPLES.ordinal
+			ops[6] = 0
+
 			ids[7] = LoadoutItems.SPEED_POTION.ordinal
 			ids[8] = LoadoutItems.HEALTH_POTION.ordinal
 
@@ -47,6 +49,8 @@ class Loadout(
 			ids[13] = LoadoutItems.SHIELD.ordinal
 			ids[14] = LoadoutItems.SPECTRAL_ARROWS.ordinal
 			ids[15] = LoadoutItems.ARROWS.ordinal
+			ops[15] = 0
+
 			ids[16] = LoadoutItems.PICKAXE.ordinal
 
 			return loadout
