@@ -297,10 +297,6 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
-		if (event.entity is Animals) {
-			println("${event.entityType} died at ${event.entity.location}")
-		}
-
 		val killer = event.entity.killer
 
 		/* test if offline zombie was killed */
@@ -473,7 +469,7 @@ class EventListener : Listener {
 
 		val leavesLocation = event.block.location.toCenterLocation()
 
-		val dropPlayer = Bukkit.getOnlinePlayers().filter { PlayerData.isParticipating(it.uniqueId) && it.world === leavesLocation.world }.minBy {
+		val dropPlayer = Bukkit.getOnlinePlayers().filter { PlayerData.isParticipating(it.uniqueId) && it.world === leavesLocation.world }.minByOrNull {
 			it.location.distance(leavesLocation)
 		}
 

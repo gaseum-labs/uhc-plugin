@@ -1,7 +1,8 @@
 package com.codeland.uhc.world.gen.layer.game
 
 import com.codeland.uhc.world.gen.BiomeNo
-import net.minecraft.server.v1_16_R3.*
+import net.minecraft.world.level.newbiome.context.WorldGenContext
+import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer4
 
 class GenLayerBiomeEdge : AreaTransformer4 {
 	override fun a(context: WorldGenContext, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int): Int {

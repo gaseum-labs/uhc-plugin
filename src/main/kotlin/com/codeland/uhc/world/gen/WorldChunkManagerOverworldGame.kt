@@ -1,9 +1,11 @@
 package com.codeland.uhc.world.gen
 
-import com.codeland.uhc.command.TestCommands
 import com.codeland.uhc.util.Util
-import net.minecraft.server.v1_16_R3.*
-import org.bukkit.event.world.ChunkLoadEvent
+import net.minecraft.core.IRegistry
+import net.minecraft.data.worldgen.biome.BiomeRegistry
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.level.biome.BiomeBase
+import net.minecraft.world.level.biome.WorldChunkManagerOverworld
 import kotlin.math.*
 import kotlin.random.Random
 

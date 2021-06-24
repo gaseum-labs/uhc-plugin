@@ -113,7 +113,7 @@ class Ledger {
 
 		/* prepare name column part */
 		val playerNames = playerLocations.map { (uuid, _) -> Bukkit.getOfflinePlayer(uuid).name ?: "unknown" }
-		val columnWidth = (playerNames.map { stringWidth(it) }.max() ?: 0) + 2
+		val columnWidth = (playerNames.map { stringWidth(it) }.maxOrNull() ?: 0) + 2
 		val namesPixels = IntArray(columnWidth * imageSize) { 0xFF3F3F3F.toInt() }
 
 		var playerIndex = 0
@@ -374,7 +374,7 @@ fun main() {
 		"a _lot_cooler_ than always"
 	)
 
-	val maxWidth = strings.map { Ledger.stringWidth(it) }.max()!!
+	val maxWidth = strings.maxOf { Ledger.stringWidth(it) }
 
 	val width = maxWidth + 2
 	val height = strings.size * (Ledger.CHAR_HEIGHT + 1) + 2

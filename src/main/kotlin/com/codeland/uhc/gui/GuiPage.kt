@@ -2,7 +2,7 @@ package com.codeland.uhc.gui
 
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftHumanEntity
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftHumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent

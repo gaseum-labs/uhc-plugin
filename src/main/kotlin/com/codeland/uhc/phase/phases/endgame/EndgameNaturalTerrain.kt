@@ -3,18 +3,16 @@ package com.codeland.uhc.phase.phases.endgame
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
-import net.minecraft.server.v1_16_R3.BlockPosition
-import net.minecraft.server.v1_16_R3.PacketPlayOutBlockBreakAnimation
+import net.minecraft.network.protocol.game.PacketPlayOutBlockBreakAnimation
 import org.bukkit.*
 import org.bukkit.ChatColor.BOLD
 import org.bukkit.block.Block
 import org.bukkit.block.TileState
-import org.bukkit.craftbukkit.v1_16_R3.block.CraftBlock
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlock
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import kotlin.math.max
@@ -194,14 +192,14 @@ class EndgameNaturalTerrain : Endgame() {
 
 				if (skybaseBlock.update) {
 					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, 10)
-					skybasePlayers.forEach { (it as CraftPlayer).handle.playerConnection.sendPacket(packet) }
+					skybasePlayers.forEach { (it as CraftPlayer).handle.b.sendPacket(packet) }
 				}
 
 				true
 			} else {
 				if (skybaseBlock.ticks <= 40 && skybaseBlock.update) {
 					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, ticksLeftToAnim(skybaseBlock.ticks))
-					skybasePlayers.forEach { (it as CraftPlayer).handle.playerConnection.sendPacket(packet) }
+					skybasePlayers.forEach { (it as CraftPlayer).handle.b.sendPacket(packet) }
 				}
 
 				false

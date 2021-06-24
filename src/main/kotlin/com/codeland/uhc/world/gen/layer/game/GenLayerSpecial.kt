@@ -4,8 +4,8 @@ import com.codeland.uhc.world.gen.BiomeNo
 import com.codeland.uhc.world.gen.layer.game.GenLayerIdBiome.Companion.id
 import com.codeland.uhc.world.gen.layer.game.GenLayerIdBiome.Companion.spec
 import com.codeland.uhc.world.gen.layer.game.GenLayerIdBiome.Companion.temp
-import net.minecraft.server.v1_16_R3.AreaTransformer4
-import net.minecraft.server.v1_16_R3.WorldGenContext
+import net.minecraft.world.level.newbiome.context.WorldGenContext
+import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer4
 
 class GenLayerSpecial : AreaTransformer4 {
 	override fun a(context: WorldGenContext, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int): Int {

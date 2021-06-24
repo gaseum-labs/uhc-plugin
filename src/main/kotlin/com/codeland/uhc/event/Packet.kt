@@ -16,11 +16,22 @@ import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
-import net.minecraft.server.v1_16_R3.*
+import io.papermc.paper.event.world.border.WorldBorderEvent
+import net.minecraft.EnumChatFormat
+import net.minecraft.network.chat.ChatComponentText
+import net.minecraft.network.chat.ChatModifier
+import net.minecraft.network.protocol.game.*
+import net.minecraft.network.syncher.DataWatcher
+import net.minecraft.network.syncher.DataWatcherObject
+import net.minecraft.network.syncher.DataWatcherRegistry
+import net.minecraft.world.level.border.WorldBorder
+import net.minecraft.world.scores.Scoreboard
+import net.minecraft.world.scores.ScoreboardTeam
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.experimental.or
@@ -90,7 +101,7 @@ object Packet {
 		return PacketPlayOutEntityMetadata(player.entityId, stateDataWatcher, true)
 	}
 
-	val entriesField = DataWatcher::class.java.getDeclaredField("entries")
+	val entriesField = DataWatcher::class.java.getDeclaredField("f")
 	init { entriesField.isAccessible = true }
 
 	fun getDatawatcherByte(dataWatcher: DataWatcher): Byte {
@@ -104,11 +115,11 @@ object Packet {
 		val oldName = teamPlayer.name
 
 		val team = ScoreboardTeam(Scoreboard(), newName)
-		team.color = if (uhcTeam != null && uhcTeam.members.contains(sentPlayer.uniqueId)) EnumChatFormat.AQUA else EnumChatFormat.RED
-		team.prefix = if (uhcTeam != null) Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2) else ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.WHITE))
+		team.color = if (uhcTeam != null && uhcTeam.members.contains(sentPlayer.uniqueId)) EnumChatFormat.l else EnumChatFormat.m
+		team.prefix = if (uhcTeam != null) Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2) else ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.p))
 		team.playerNameSet.add(newName)
 
-		sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(team, 2))
+		sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(team, false))
 	}
 
 	fun init() {
@@ -124,7 +135,7 @@ object Packet {
 				if (stalePacketWrapper.playerInfoAction.read(0) != EnumWrappers.PlayerInfoAction.ADD_PLAYER) return
 
 				/* create a new packet that would be what the original was */
-				val freshPacket = PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER,
+				val freshPacket = PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.a,
 					(playerInfoDataListField[event.packet.handle] as List<PacketPlayOutPlayerInfo.PlayerInfoData>)
 						.mapNotNull { (Bukkit.getPlayer(it.a().id) as CraftPlayer).handle }
 				)
@@ -141,7 +152,7 @@ object Packet {
 					/* initialize the team that the sentplayer will know the playerInfoData player by */
 					val sentTeam = ScoreboardTeam(Scoreboard(), newName)
 					sentTeam.playerNameSet.add(newName)
-					sentPlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardTeam(sentTeam, 0))
+					sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(sentTeam, true))
 
 					//self team would go here if needed
 
@@ -163,9 +174,6 @@ object Packet {
 
 		val itemValueField = DataWatcher.Item::class.java.getDeclaredField("b")
 		itemValueField.isAccessible = true
-
-		val entriesField = DataWatcher::class.java.getDeclaredField("entries")
-		entriesField.isAccessible = true
 
 		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.ENTITY_METADATA) {
 			override fun onPacketSending(event: PacketEvent) {
@@ -204,33 +212,33 @@ object Packet {
 			}
 		})
 
-		val borderActionField = PacketPlayOutWorldBorder::class.java.getDeclaredField("a")
-		borderActionField.isAccessible = true
-
-		val borderDiameterField = PacketPlayOutWorldBorder::class.java.getDeclaredField("e")
-		borderDiameterField.isAccessible = true
-
-		val borderCenterXField = PacketPlayOutWorldBorder::class.java.getDeclaredField("c")
-		borderCenterXField.isAccessible = true
-
-		val borderCenterZField = PacketPlayOutWorldBorder::class.java.getDeclaredField("d")
-		borderCenterZField.isAccessible = true
-
-		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.WORLD_BORDER) {
+		protocolManager.addPacketListener(object : PacketAdapter(
+			UHCPlugin.plugin,
+			ListenerPriority.HIGH,
+			PacketType.fromCurrent(PacketType.Protocol.PLAY, PacketType.Sender.SERVER, 0x42, ClientboundSetBorderCenterPacket::class.java),
+			PacketType.fromCurrent(PacketType.Protocol.PLAY, PacketType.Sender.SERVER, 0x44, ClientboundSetBorderSizePacket::class.java)
+		) {
 			override fun onPacketSending(event: PacketEvent) {
 				val sentPlayer = event.player
 				val pvpGame = PvpGameManager.playersGame(sentPlayer.uniqueId)
 
 				if (pvpGame != null && sentPlayer.world.name == WorldManager.PVP_WORLD_NAME) {
-					event.packet = event.packet.deepClone()
-					val packet = event.packet.handle as PacketPlayOutWorldBorder
 
-					if (borderActionField[packet] == PacketPlayOutWorldBorder.EnumWorldBorderAction.INITIALIZE) {
-						val (centerX, centerZ) = pvpGame.centerLocation()
+					val world = (event.player.world as CraftWorld).handle
+					val border = WorldBorder()
+					border.world = world
 
-						borderDiameterField[packet] = pvpGame.borderSize.toDouble()
-						borderCenterXField[packet] = centerX.toDouble()
-						borderCenterZField[packet] = centerZ.toDouble()
+					/* replace packet */
+					when (val packet = event.packet.handle) {
+						is ClientboundSetBorderCenterPacket -> {
+							val (centerX, centerZ) = pvpGame.centerLocation()
+							border.setCenter(centerX.toDouble(), centerZ.toDouble())
+							event.packet = PacketContainer.fromPacket(ClientboundSetBorderCenterPacket(border))
+						}
+						is ClientboundSetBorderSizePacket -> {
+							border.size = pvpGame.borderSize.toDouble()
+							event.packet = PacketContainer.fromPacket(ClientboundSetBorderCenterPacket(border))
+						}
 					}
 				}
 			}
@@ -254,71 +262,5 @@ object Packet {
 				scoreboardPlayerField.set(event.packet.handle, mappedPlayerName)
 			}
 		})
-
-		/*
-				val sentPlayer = event.player as CraftPlayer
-				val packet = event.packet.handle as PacketPlayOutEntityMetadata
-
-				val metaPlayerID = packetEntityIdField.getInt(packet)
-				val metaPlayer = Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
-
-				val itemList = packetItemListField.get(packet) as MutableList<DataWatcher.Item<Any>>
-				if (itemList.isEmpty()) return
-				val packetFirst = itemValueField.get(itemList[0]) as? Byte ?: return
-
-				val realWatcher = metaPlayer.handle.dataWatcher
-				val realEntries = entriesField.get(realWatcher) as Int2ObjectOpenHashMap<DataWatcher.Item<Any>>
-				if (realEntries.isEmpty()) return
-				val realValue = itemValueField.get(realEntries.get(0)) as? Byte ?: return
-
-				val sentPlayerTeam = TeamData.playersTeam(sentPlayer.uniqueId)
-				val value = if (sentPlayer.entityId != metaPlayerID && sentPlayerTeam != null && sentPlayerTeam.members.contains(metaPlayer.uniqueId)) {
-					realValue.or(0x40)
-				} else {
-					realValue
-				}
-
-				itemList.removeAt(0)
-				itemList.add(0, DataWatcher.Item(DataWatcherObject(0, DataWatcherRegistry.a), value) as DataWatcher.Item<Any>)
-		 */
-/*
-		val sentPlayer = event.player as CraftPlayer
-
-				val dataWatcher = sentPlayer.handle.dataWatcher
-
-				val metaPlayerID = event.packet.integers.read(0)
-				val metaPlayer = Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } ?: return
-
-				val sentPlayerTeam = TeamData.playersTeam(sentPlayer.uniqueId)
-
-				if (sentPlayer.entityId != metaPlayerID && sentPlayerTeam != null && sentPlayerTeam.members.contains(metaPlayer.uniqueId)) {
-					val watchables = event.packet.watchableCollectionModifier.optionRead(0).orElseGet(null) ?: return
-					if (watchables.isEmpty()) return
-					val value = watchables[0]?.value as? Byte ?: return
-
-					val clonedItem = DataWatcher.Item(DataWatcherObject(0, DataWatcherRegistry.a), value.or(0x40))
-					watchables.add(0, WrappedWatchableObject(0, clonedItem))
-
-					event.packet.watchableCollectionModifier.write(0, watchables)
-				}
-
-		TeamData.teams.forEach { team ->
-			val teamPlayers = team.members.mapNotNull { Bukkit.getPlayer(it) }
-
-			teamPlayers.forEachIndexed { i, player ->
-				teamPlayers.forEachIndexed { j, otherPlayer ->
-					if (i != j) {
-						val meta = DataWatcher((otherPlayer as CraftPlayer).handle)
-
-						meta.register(DataWatcherObject(0, DataWatcherRegistry.a), 0x40)
-
-						(player as CraftPlayer).handle.playerConnection.sendPacket(
-							PacketPlayOutEntityMetadata(otherPlayer.entityId, meta, true)
-						)
-					}
-				}
-			}
-		}
-*/
 	}
 }

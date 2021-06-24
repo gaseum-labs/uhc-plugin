@@ -535,7 +535,7 @@ class ClassesEvents : Listener {
 						}.map { otherLocation ->
 							/* associate each location with a distance to player */
 							Pair(otherLocation.distance(player.location), otherLocation)
-						}.minBy { locationPair ->
+						}.minByOrNull { locationPair ->
 							/* sort by distance to find the nearest */
 							locationPair.first
 						}?.second

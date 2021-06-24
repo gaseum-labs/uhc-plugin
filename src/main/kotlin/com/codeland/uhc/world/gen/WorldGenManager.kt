@@ -3,14 +3,24 @@ package com.codeland.uhc.world.gen
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
-import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.gen.generator.ChunkGeneratorUHC
-import net.minecraft.server.v1_16_R3.*
+import com.codeland.uhc.world.gen.generator.NoiseSamplerUHC
+import net.minecraft.core.IRegistry
+import net.minecraft.data.worldgen.biome.BiomeRegistry
+import net.minecraft.resources.MinecraftKey
+import net.minecraft.resources.ResourceKey
+import net.minecraft.server.level.ChunkProviderServer
+import net.minecraft.server.level.WorldServer
+import net.minecraft.world.level.biome.BiomeBase
+import net.minecraft.world.level.biome.Biomes
+import net.minecraft.world.level.biome.WorldChunkManagerMultiNoise
+import net.minecraft.world.level.biome.WorldChunkManagerOverworld
+import net.minecraft.world.level.chunk.ChunkGenerator
+import net.minecraft.world.level.levelgen.ChunkGeneratorAbstract
 import org.bukkit.Server
 import org.bukkit.World
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
-import org.bukkit.craftbukkit.v1_16_R3.CraftServer
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
+import org.bukkit.craftbukkit.v1_17_R1.CraftServer
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import java.util.*
 import kotlin.collections.HashMap
 import com.mojang.datafixers.util.Pair as PairM
@@ -18,9 +28,8 @@ import com.mojang.datafixers.util.Pair as PairM
 object WorldGenManager {
     private val serverWorldsField = CraftServer::class.java.getDeclaredField("worlds")
     private val worldServerField = CraftWorld::class.java.getDeclaredField("world")
-    private val chunkProviderServerField = WorldServer::class.java.getDeclaredField("chunkProvider")
-    private val chunkGeneratorField = ChunkProviderServer::class.java.getDeclaredField("chunkGenerator")
-	private val structureSettingsField = ChunkGenerator::class.java.getDeclaredField("structureSettings")
+    private val chunkProviderServerField = WorldServer::class.java.getDeclaredField("C")
+    private val chunkGeneratorField = ChunkProviderServer::class.java.getDeclaredField("d")
     private val worldChunkManagerBField = ChunkGenerator::class.java.getDeclaredField("b")
 	private val worldChunkManagerCField = ChunkGenerator::class.java.getDeclaredField("c")
     private val hField = WorldChunkManagerOverworld::class.java.getDeclaredField("h")
@@ -29,7 +38,7 @@ object WorldGenManager {
     private val kField = WorldChunkManagerOverworld::class.java.getDeclaredField("k")
 	private val biomeMapField = BiomeRegistry::class.java.getDeclaredField("c")
 	private val minecraftKeyField = ResourceKey::class.java.getDeclaredField("c")
-	private val keyField = MinecraftKey::class.java.getDeclaredField("key")
+	private val keyField = MinecraftKey::class.java.getDeclaredField("e")
 
 	private val optionField = WorldChunkManagerMultiNoise::class.java.getDeclaredField("s")
 	private val seedFieldMultiNoise = WorldChunkManagerMultiNoise::class.java.getDeclaredField("r")
@@ -39,7 +48,6 @@ object WorldGenManager {
 		worldServerField.isAccessible = true
 		chunkProviderServerField.isAccessible = true
 		chunkGeneratorField.isAccessible = true
-		structureSettingsField.isAccessible = true
 		worldChunkManagerBField.isAccessible = true
 		worldChunkManagerCField.isAccessible = true
 		hField.isAccessible = true
@@ -74,95 +82,68 @@ object WorldGenManager {
 	}
 
 	val lobbyBiomes = listOf(
-		Biomes.SNOWY_TUNDRA,
-		Biomes.SNOWY_TAIGA,
-		Biomes.TAIGA,
-		Biomes.PLAINS,
-		Biomes.SUNFLOWER_PLAINS,
-		Biomes.FOREST,
-		Biomes.FLOWER_FOREST,
-		Biomes.BIRCH_FOREST,
-		Biomes.DARK_FOREST,
-		Biomes.JUNGLE,
-		Biomes.JUNGLE_EDGE,
-		Biomes.BAMBOO_JUNGLE,
-		Biomes.DESERT,
-		Biomes.SAVANNA,
-		Biomes.BADLANDS
+		Biomes.m,
+		Biomes.E,
+		Biomes.f,
+		Biomes.b,
+		Biomes.aa,
+		Biomes.e,
+		Biomes.ad,
+		Biomes.B,
+		Biomes.D,
+		Biomes.v,
+		Biomes.x,
+		Biomes.av,
+		Biomes.c,
+		Biomes.J,
+		Biomes.L
 	)
 
 	val tallLobbyBiomes = listOf(
-		Biomes.MODIFIED_JUNGLE_EDGE,
-		Biomes.MODIFIED_BADLANDS_PLATEAU,
-		Biomes.MODIFIED_WOODED_BADLANDS_PLATEAU,
-		Biomes.MODIFIED_GRAVELLY_MOUNTAINS,
-		Biomes.TALL_BIRCH_HILLS,
-		Biomes.MUSHROOM_FIELDS,
-		Biomes.MODIFIED_JUNGLE,
-		Biomes.GIANT_TREE_TAIGA,
-		Biomes.WOODED_MOUNTAINS,
-		Biomes.ICE_SPIKES,
-		Biomes.SNOWY_TAIGA_MOUNTAINS,
-		Biomes.ERODED_BADLANDS,
-		Biomes.GIANT_SPRUCE_TAIGA
-	)
-
-	val lobbyCenterBiomes = arrayOf(
-		Biomes.DESERT,
-		Biomes.MODIFIED_JUNGLE_EDGE,
-		Biomes.PLAINS,
-		Biomes.BIRCH_FOREST
-	)
-
-	val oceanBiomes = arrayOf(
-		Biomes.WARM_OCEAN,
-		Biomes.LUKEWARM_OCEAN,
-		Biomes.OCEAN
+		Biomes.ai,
+		Biomes.au,
+		Biomes.at,
+		Biomes.ap,
+		Biomes.ak,
+		Biomes.o,
+		Biomes.ah,
+		Biomes.G,
+		Biomes.I,
+		Biomes.ag,
+		Biomes.am,
+		Biomes.`as`,
+		Biomes.an
 	)
 
 	val pvpBiomes = arrayOf(
-		Biomes.SNOWY_TUNDRA,
-		Biomes.ICE_SPIKES,
-		Biomes.SNOWY_TAIGA,
-		Biomes.SNOWY_TAIGA_MOUNTAINS,
-		Biomes.MOUNTAINS,
-		Biomes.GRAVELLY_MOUNTAINS,
-		Biomes.WOODED_MOUNTAINS,
-		Biomes.MODIFIED_GRAVELLY_MOUNTAINS,
-		Biomes.TAIGA,
-		Biomes.TAIGA_MOUNTAINS,
-		Biomes.GIANT_TREE_TAIGA,
-		Biomes.GIANT_SPRUCE_TAIGA,
-		Biomes.PLAINS,
-		Biomes.SUNFLOWER_PLAINS,
-		Biomes.FOREST,
-		Biomes.FLOWER_FOREST,
-		Biomes.BIRCH_FOREST,
-		Biomes.TALL_BIRCH_FOREST,
-		Biomes.DARK_FOREST,
-		Biomes.DARK_FOREST_HILLS,
-		Biomes.JUNGLE,
-		Biomes.MODIFIED_JUNGLE,
-		Biomes.MODIFIED_JUNGLE_EDGE,
-		Biomes.BAMBOO_JUNGLE,
-		Biomes.MUSHROOM_FIELDS,
-		Biomes.DESERT,
-		Biomes.SAVANNA,
-		Biomes.SHATTERED_SAVANNA,
-		Biomes.BADLANDS,
-		Biomes.ERODED_BADLANDS,
-		Biomes.WOODED_BADLANDS_PLATEAU,
-		Biomes.MODIFIED_WOODED_BADLANDS_PLATEAU,
-		Biomes.BADLANDS_PLATEAU,
-		Biomes.SAVANNA_PLATEAU,
-		Biomes.MODIFIED_BADLANDS_PLATEAU,
-		Biomes.SHATTERED_SAVANNA_PLATEAU,
-		Biomes.MOUNTAIN_EDGE,
-		Biomes.NETHER_WASTES,
-		Biomes.SOUL_SAND_VALLEY,
-		Biomes.CRIMSON_FOREST,
-		Biomes.WARPED_FOREST,
-		Biomes.BASALT_DELTAS
+		Biomes.m,
+		Biomes.E,
+		Biomes.f,
+		Biomes.b,
+		Biomes.aa,
+		Biomes.e,
+		Biomes.ad,
+		Biomes.B,
+		Biomes.D,
+		Biomes.v,
+		Biomes.x,
+		Biomes.av,
+		Biomes.c,
+		Biomes.J,
+		Biomes.L,
+		Biomes.ai,
+		Biomes.au,
+		Biomes.at,
+		Biomes.ap,
+		Biomes.ak,
+		Biomes.o,
+		Biomes.ah,
+		Biomes.G,
+		Biomes.I,
+		Biomes.ag,
+		Biomes.am,
+		Biomes.`as`,
+		Biomes.an
 	)
 
     private fun onWorldAdded(world: World) {
@@ -177,61 +158,34 @@ object WorldGenManager {
 			    val optional = optionField[oldChunkManager] as Optional<PairM<IRegistry<BiomeBase>, WorldChunkManagerMultiNoise.b>>
 			    Pair(seedFieldMultiNoise.getLong(oldChunkManager), if (optional.isPresent) optional.get().first else null)
 	    	}
-		    is  WorldChunkManagerOverworld -> Pair(hField.getLong(oldChunkManager), kField[oldChunkManager] as IRegistry<BiomeBase>)
+		    is WorldChunkManagerOverworld -> Pair(hField.getLong(oldChunkManager), kField[oldChunkManager] as IRegistry<BiomeBase>)
 		    else -> Pair(null, null)
 	    }
 
 	    /* the old world chunk manager is of a nonsupported type */
 	    if (seed == null || biomeRegistry == null) return
 
-	    /* replace the entire chunk generator for the game */
-	    if (world.name == WorldManager.GAME_WORLD_NAME) {
-		    val customGenerator = if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES)) {
-			    WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry)
-		    } else {
-			    WorldChunkManagerOverworldGame(
-				    seed, biomeRegistry,
-				    biomeFromName(WorldGenOption.centerBiome?.name),
-				    WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
-				    UHC.startRadius()
-			    )
-		    }
+	    val customGenerator = when (world.name) {
+	        WorldManager.GAME_WORLD_NAME -> {
+		        val noiseSamplerUHC = NoiseSamplerUHC.inject(
+			        chunkGenerator as ChunkGeneratorAbstract,
+			        WorldGenOption.getEnabled(WorldGenOption.AMPLIFIED)
+		        )
 
-			val structureSettings = structureSettingsField[chunkGenerator] as StructureSettings
-		    val newChunkGenerator = ChunkGeneratorUHC(customGenerator, structureSettings, seed, chunkGenerator as ChunkGeneratorAbstract)
-
-		    chunkGeneratorField[chunkProviderServer] = newChunkGenerator
-
-        /* only replace the biome generator for other worlds */
-	    } else {
-		    val customGenerator = when (world.name) {
-			    WorldManager.NETHER_WORLD_NAME -> {
-				    WorldChunkManagerNether(seed, biomeRegistry)
-			    }
-			    WorldManager.LOBBY_WORLD_NAME -> {
-				    WorldChunkManagerOverworldLobby(
+			    if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES)) {
+				    WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry)
+			    } else {
+				    WorldChunkManagerOverworldGame(
 					    seed, biomeRegistry,
-					    lobbyBiomes.shuffled().zip(tallLobbyBiomes.shuffled()).flatMap { listOf(it.first, it.second) }.take(9),
-					    60
+					    biomeFromName(WorldGenOption.centerBiome?.name),
+					    WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
+					    UHC.startRadius()
 				    )
 			    }
-			    WorldManager.PVP_WORLD_NAME -> {
-				    WorldChunkManagerOverworldPvp(seed, biomeRegistry, pvpBiomes)
-			    }
-			    else -> null
-		    }
-
-		    if (customGenerator != null) {
-			    worldChunkManagerBField[chunkGenerator] = customGenerator
-			    worldChunkManagerCField[chunkGenerator] = customGenerator
-		    }
-	    }
-
-	    /* create the new biome generator */
-	    val customGenerator = when (world.name) {
-	    	WorldManager.NETHER_WORLD_NAME -> {
+	        }
+		    WorldManager.NETHER_WORLD_NAME -> {
 			    WorldChunkManagerNether(seed, biomeRegistry)
-	    	}
+		    }
 		    WorldManager.LOBBY_WORLD_NAME -> {
 			    WorldChunkManagerOverworldLobby(
 				    seed, biomeRegistry,
@@ -242,24 +196,12 @@ object WorldGenManager {
 		    WorldManager.PVP_WORLD_NAME -> {
 			    WorldChunkManagerOverworldPvp(seed, biomeRegistry, pvpBiomes)
 		    }
-		    WorldManager.GAME_WORLD_NAME -> {
-			    if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES))
-				    WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry)
-
-			    else
-				    WorldChunkManagerOverworldGame(
-					    seed, biomeRegistry,
-					    biomeFromName(WorldGenOption.centerBiome?.name),
-					    WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
-					    UHC.startRadius()
-				    )
-		    }
 		    else -> null
 	    }
 
-        if (customGenerator != null) {
-	        worldChunkManagerBField[chunkGenerator] = customGenerator
-	        worldChunkManagerCField[chunkGenerator] = customGenerator
-        }
+	    if (customGenerator != null) {
+		    worldChunkManagerBField[chunkGenerator] = customGenerator
+		    worldChunkManagerCField[chunkGenerator] = customGenerator
+	    }
     }
 }

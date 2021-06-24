@@ -1,11 +1,8 @@
 package com.codeland.uhc.world.gen.layer.game
 
 import com.codeland.uhc.world.gen.BiomeNo
-import net.minecraft.server.v1_16_R3.AreaTransformer4
-import net.minecraft.server.v1_16_R3.BiomeRegistry
-import net.minecraft.server.v1_16_R3.WorldGenContext
-import org.bukkit.craftbukkit.v1_16_R3.block.CraftBlock
-import javax.management.BadBinaryOpValueExpException
+import net.minecraft.world.level.newbiome.context.WorldGenContext
+import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer4
 
 class GenLayerVis : AreaTransformer4 {
 	override fun a(context: WorldGenContext, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int): Int {

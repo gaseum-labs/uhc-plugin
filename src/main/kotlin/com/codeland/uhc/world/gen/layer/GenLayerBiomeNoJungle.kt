@@ -1,7 +1,7 @@
 package com.codeland.uhc.world.gen.layer
 
-import net.minecraft.server.v1_16_R3.AreaTransformer5
-import net.minecraft.server.v1_16_R3.WorldGenContext
+import net.minecraft.world.level.newbiome.context.WorldGenContext
+import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer5
 
 class GenLayerBiomeNoJungle : AreaTransformer5 {
 	companion object {

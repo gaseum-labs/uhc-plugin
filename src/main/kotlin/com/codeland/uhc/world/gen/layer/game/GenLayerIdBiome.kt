@@ -1,8 +1,8 @@
 package com.codeland.uhc.world.gen.layer.game
 
 import com.codeland.uhc.world.gen.BiomeNo
-import net.minecraft.server.v1_16_R3.AreaTransformer4
-import net.minecraft.server.v1_16_R3.WorldGenContext
+import net.minecraft.world.level.newbiome.context.WorldGenContext
+import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer4
 
 class GenLayerIdBiome: AreaTransformer4 {
 	companion object {

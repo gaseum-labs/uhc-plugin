@@ -2,10 +2,12 @@ package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.util.Util
-import net.minecraft.server.v1_16_R3.*
-import kotlin.math.abs
+import net.minecraft.core.IRegistry
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.level.biome.BiomeBase
+import net.minecraft.world.level.biome.Biomes
+import net.minecraft.world.level.biome.WorldChunkManagerOverworld
 import kotlin.math.floor
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 class WorldChunkManagerOverworldPvp(
@@ -29,8 +31,8 @@ class WorldChunkManagerOverworldPvp(
 
 	    return var4.d(when {
 	    	inRange(sx, sz, PvpGameManager.LARGE_BORDER) -> biomes[Random(cx.toLong().shl(32).or(cz.toLong()).xor(seed)).nextInt(0, biomes.size)]
-		    inRange(sx, sz, PvpGameManager.BEACH) -> Biomes.BEACH
-		    else -> Biomes.OCEAN
+		    inRange(sx, sz, PvpGameManager.BEACH) -> Biomes.q
+		    else -> Biomes.q
 	    })
     }
 }

@@ -4,11 +4,11 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.event.Packet.metadataPacketDefaultState
-import net.minecraft.server.v1_16_R3.PacketPlayOutScoreboardScore
-import net.minecraft.server.v1_16_R3.ScoreboardServer
+import net.minecraft.network.protocol.game.PacketPlayOutScoreboardScore
+import net.minecraft.server.ScoreboardServer
 import org.bukkit.Bukkit
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
-import org.bukkit.craftbukkit.v1_16_R3.scoreboard.CraftScoreboard
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_17_R1.scoreboard.CraftScoreboard
 import org.bukkit.entity.Player
 import kotlin.math.ceil
 
@@ -41,15 +41,15 @@ object NameManager {
 
 			/* tell other players this player's name & update glowing */
 			Packet.updateTeamColor(player, team, newName, onlinePlayer)
-			onlinePlayer.handle.playerConnection.sendPacket(metadataPacketDefaultState(player))
+			onlinePlayer.handle.b.sendPacket(metadataPacketDefaultState(player))
 
 			/* send heart packet on joining */
-			onlinePlayer.handle.playerConnection.sendPacket(PacketPlayOutScoreboardScore(ScoreboardServer.Action.CHANGE, GameRunner.heartsObjective.name, player.name, playerHealthScore))
+			onlinePlayer.handle.b.sendPacket(PacketPlayOutScoreboardScore(ScoreboardServer.Action.a, GameRunner.heartsObjective.name, player.name, playerHealthScore))
 
 			/* tell this player about other players' names & update glowing */
 			if (player != onlinePlayer) {
 				Packet.updateTeamColor(onlinePlayer, TeamData.playersTeam(onlinePlayer.uniqueId), Packet.playersNewName(onlinePlayer.uniqueId), player)
-				player.handle.playerConnection.sendPacket(metadataPacketDefaultState(onlinePlayer))
+				player.handle.b.sendPacket(metadataPacketDefaultState(onlinePlayer))
 			}
 		}
 	}

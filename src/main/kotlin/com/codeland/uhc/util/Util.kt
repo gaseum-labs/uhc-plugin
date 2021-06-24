@@ -2,11 +2,8 @@ package com.codeland.uhc.util
 
 import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.ComponentBuilder
-import net.kyori.adventure.text.TextComponent
-import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
-import net.minecraft.server.v1_16_R3.*
+import net.minecraft.network.chat.*
 import org.bukkit.ChatColor
 import org.bukkit.World
 import java.util.logging.Level

@@ -9,7 +9,7 @@ import com.codeland.uhc.event.Packet
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import org.bukkit.*
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import java.util.*
@@ -95,7 +95,7 @@ object PvpGameManager {
 
 			online.forEach { player1 ->
 				online.forEach { player2 ->
-					(player1 as CraftPlayer).handle.playerConnection.sendPacket(Packet.metadataPacketDefaultState(player2))
+					(player1 as CraftPlayer).handle.b.sendPacket(Packet.metadataPacketDefaultState(player2))
 				}
 			}
 		}

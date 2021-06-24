@@ -1,6 +1,10 @@
 package com.codeland.uhc.world.gen
 
-import net.minecraft.server.v1_16_R3.*
+import net.minecraft.core.IRegistry
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.level.biome.BiomeBase
+import net.minecraft.world.level.biome.Biomes
+import net.minecraft.world.level.biome.WorldChunkManagerOverworld
 import kotlin.math.*
 
 class WorldChunkManagerOverworldLobby(
@@ -32,7 +36,7 @@ class WorldChunkManagerOverworldLobby(
     override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
 	    return when {
 	    	radius(x, z, radius) -> var4.d(biomes[angleIndex(x, z, biomes.size)])
-		    radius(x, z, radius + 16) -> var4.d(Biomes.BEACH)
+		    radius(x, z, radius + 16) -> var4.d(Biomes.q)
 		    else -> super.getBiome(x, y, z)
 	    }
     }

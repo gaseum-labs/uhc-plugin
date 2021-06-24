@@ -65,7 +65,11 @@ enum class WorldGenOption(
 
 	CHUNK_BIOMES("Chunk Biomes", false, listOf(
 		Component.text("Each chunk is a different biome"),
-	), Material.DEAD_BUSH);
+	), Material.DEAD_BUSH),
+
+	AMPLIFIED("Amplified", false, listOf (
+		Component.text("Incredibly mountainous terrain")
+	), Material.ACACIA_SAPLING);
 
 	val property = UHCProperty(defaultEnabled) { set ->
 		if (!UHC.isGameGoing())

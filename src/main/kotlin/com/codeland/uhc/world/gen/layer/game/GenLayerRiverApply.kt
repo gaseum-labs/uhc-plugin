@@ -1,7 +1,10 @@
 package com.codeland.uhc.world.gen.layer.game
 
 import com.codeland.uhc.world.gen.BiomeNo
-import net.minecraft.server.v1_16_R3.*
+import net.minecraft.world.level.newbiome.area.Area
+import net.minecraft.world.level.newbiome.context.WorldGenContext
+import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer3
+import net.minecraft.world.level.newbiome.layer.traits.AreaTransformerIdentity
 
 class GenLayerRiverApply : AreaTransformer3, AreaTransformerIdentity {
 	override fun a(p0: WorldGenContext, biomeArea: Area, riverArea: Area, x: Int, z: Int): Int {

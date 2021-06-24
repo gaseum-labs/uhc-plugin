@@ -2,7 +2,7 @@ package com.codeland.uhc.core
 
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor.*
-import org.bukkit.craftbukkit.v1_16_R3.CraftServer
+import org.bukkit.craftbukkit.v1_17_R1.CraftServer
 
 object MOTD {
 	val l = 0x2770.toChar()
