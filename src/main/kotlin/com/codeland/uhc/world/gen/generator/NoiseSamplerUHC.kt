@@ -21,8 +21,8 @@ class NoiseSamplerUHC(
 	gen3, octaves, noiseModifier
 ) {
 	companion object {
-		const val AMPLIFIED_BASE = 0.0f
-		const val AMPLIFIED_SCALE = 2.0f
+		const val AMPLIFIED_BASE = 1.0f
+		const val AMPLIFIED_SCALE = 3.0f
 
 		val circle = FloatArray(25)
 		init {
@@ -53,10 +53,14 @@ class NoiseSamplerUHC(
 			sField.isAccessible = true
 		}
 
-		fun fromOriginal(original: NoiseSampler, amplified: Boolean): NoiseSamplerUHC {
+		fun fromOriginal(
+			original: NoiseSampler,
+			worldChunkManager: WorldChunkManager,
+			amplified: Boolean
+		): NoiseSamplerUHC {
 			NoiseSamplerUHC
 			return NoiseSamplerUHC(
-				cField[original] as WorldChunkManager,
+				worldChunkManager,
 				dField[original] as Int,
 				eField[original] as Int,
 				fField[original] as Int,
@@ -72,11 +76,15 @@ class NoiseSamplerUHC(
 		val uField = ChunkGeneratorAbstract::class.java.getDeclaredField("u")
 		init { uField.isAccessible = true }
 
-		fun inject(chunkGeneratorAbstract: ChunkGeneratorAbstract, amplified: Boolean): NoiseSamplerUHC {
+		fun inject(
+			chunkGeneratorAbstract: ChunkGeneratorAbstract,
+			worldChunkManager: WorldChunkManager,
+			amplified: Boolean
+		): NoiseSamplerUHC {
 			NoiseSamplerUHC
 			val original = uField[chunkGeneratorAbstract] as NoiseSampler
 
-			val noiseSamplerUHC = fromOriginal(original, amplified)
+			val noiseSamplerUHC = fromOriginal(original, worldChunkManager, amplified)
 			uField[chunkGeneratorAbstract] = noiseSamplerUHC
 
 			return noiseSamplerUHC

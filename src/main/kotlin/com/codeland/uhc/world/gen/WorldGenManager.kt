@@ -165,21 +165,18 @@ object WorldGenManager {
 	    /* the old world chunk manager is of a nonsupported type */
 	    if (seed == null || biomeRegistry == null) return
 
-	    val customGenerator = when (world.name) {
+	    val customManager = when (world.name) {
 	        WorldManager.GAME_WORLD_NAME -> {
-		        val noiseSamplerUHC = NoiseSamplerUHC.inject(
-			        chunkGenerator as ChunkGeneratorAbstract,
-			        WorldGenOption.getEnabled(WorldGenOption.AMPLIFIED)
-		        )
-
 			    if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES)) {
 				    WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry)
+
 			    } else {
 				    WorldChunkManagerOverworldGame(
 					    seed, biomeRegistry,
 					    biomeFromName(WorldGenOption.centerBiome?.name),
 					    WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
-					    UHC.startRadius()
+					    UHC.startRadius(),
+					    UHC.endRadius()
 				    )
 			    }
 	        }
@@ -199,9 +196,18 @@ object WorldGenManager {
 		    else -> null
 	    }
 
-	    if (customGenerator != null) {
-		    worldChunkManagerBField[chunkGenerator] = customGenerator
-		    worldChunkManagerCField[chunkGenerator] = customGenerator
+	    if (customManager != null) {
+		    NoiseSamplerUHC.inject(
+			    chunkGenerator as ChunkGeneratorAbstract,
+			    customManager,
+			    if (world.name == WorldManager.GAME_WORLD_NAME)
+			    	WorldGenOption.getEnabled(WorldGenOption.AMPLIFIED)
+		        else
+		        	false
+		    )
+
+		    worldChunkManagerBField[chunkGenerator] = customManager
+		    worldChunkManagerCField[chunkGenerator] = customManager
 	    }
     }
 }

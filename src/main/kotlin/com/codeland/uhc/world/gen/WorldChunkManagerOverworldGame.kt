@@ -5,6 +5,7 @@ import net.minecraft.core.IRegistry
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.level.biome.BiomeBase
+import net.minecraft.world.level.biome.Biomes
 import net.minecraft.world.level.biome.WorldChunkManagerOverworld
 import kotlin.math.*
 import kotlin.random.Random
@@ -12,11 +13,16 @@ import kotlin.random.Random
 class WorldChunkManagerOverworldGame(
 	val seed: Long,
 	private val var4: IRegistry<BiomeBase>,
-	val centerBiome: ResourceKey<BiomeBase>?,
+	centerBiome: ResourceKey<BiomeBase>?,
 	val fixedJungle: Boolean,
-	val maxRadius: Int
+	val startRadius: Int,
+	val endRadius: Int
 ) : WorldChunkManagerOverworld(seed, false, false, var4) {
 	private val areaLazy = CustomGenLayers.createGenLayerGame(seed)
+
+	private val centerBiome = if (centerBiome == null) null else var4.d(centerBiome)
+	private val oceanBiome = var4.d(Biomes.a)
+	private val beachBiome = var4.d(Biomes.q)
 
 	/* determine jungle placement */
 
@@ -29,8 +35,8 @@ class WorldChunkManagerOverworldGame(
 	private fun genJungles(num: Int): Array<JunglePlacement> {
 		val random = Random(seed)
 
-		val inner = (maxRadius * (1.0 / 3.0)).toInt()
-		val outer = (maxRadius * (2.0 / 3.0)).toInt()
+		val inner = (startRadius * (1.0 / 3.0)).toInt()
+		val outer = (startRadius * (2.0 / 3.0)).toInt()
 
 		val angleAdvance = Math.PI * 2 / num
 		val angleOffset = random.nextFloat() * Math.PI * 2
@@ -50,33 +56,45 @@ class WorldChunkManagerOverworldGame(
 
 	val jungles = genJungles(2)
 
+	fun getJungleLevel(x: Int, z: Int): Int {
+		var jungleLevel = 0
+
+		jungles.forEach { (jx, jz, angleOffset, widths) ->
+			val dist = sqrt((x - jx) * (x - jx) + (z - jz) * (z - jz))
+			val angleAlong = Util.mod((atan2((z - jz), (x - jx)) + angleOffset), PI.toFloat() * 2) / (PI.toFloat() * 2)
+			val width = Util.bilinear(widths, angleAlong)
+
+			val thisLevel = when {
+				dist < width -> 2
+				dist < width + 4 -> 1
+				else -> 0
+			}
+
+			if (thisLevel == 2)
+				return thisLevel
+			else if (thisLevel > jungleLevel)
+				jungleLevel = thisLevel
+		}
+
+		return jungleLevel
+	}
+
+	fun inRange(x: Int, z: Int, range: Int): Boolean {
+		return abs(x) <= range / 4 && abs(z) <= range / 4
+	}
+
     override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
-        return if (centerBiome != null && abs(x) <= 8 && abs(z) <= 8) {
-	        var4.d(centerBiome)
+	    /* center biome area */
+	    return if (centerBiome != null && inRange(x, z, endRadius)) {
+	        centerBiome
 
-        } else {
-	        var jungleLevel = 0
-
-	        jungles.any { (jx, jz, angleOffset, widths) ->
-		        val dist = sqrt((x - jx) * (x - jx) + (z - jz) * (z - jz))
-		        val angleAlong = Util.mod((atan2((z - jz), (x - jx)) + angleOffset), PI.toFloat() * 2) / (PI.toFloat() * 2)
-		        val width = Util.bilinear(widths, angleAlong)
-
-		        val thisLevel = when {
-			        dist < width -> 2
-			        dist < width + 4 -> 1
-			        else -> 0
-		        }
-
-		        if (thisLevel > jungleLevel) jungleLevel = thisLevel
-
-		        jungleLevel == 2
-	        }
-
+	    /* regular game area */
+        } else if (inRange(x, z, startRadius)) {
 	        val oldBiome = areaLazy.a(x, z)
+
 			if (oldBiome == BiomeNo.RIVER) return var4.d(BiomeRegistry.a(oldBiome))
 
-	        val biome = when (jungleLevel) {
+		    var4.d(BiomeRegistry.a(when (getJungleLevel(x, z)) {
 	        	2 -> when (oldBiome) {
 			        BiomeNo.MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE
 			        BiomeNo.GRAVELLY_MOUNTAINS -> BiomeNo.MODIFIED_JUNGLE
@@ -95,9 +113,15 @@ class WorldChunkManagerOverworldGame(
 			        else -> BiomeNo.JUNGLE_EDGE
 		        }
 		        else -> oldBiome
-	        }
+	        }))
 
-	        var4.d(BiomeRegistry.a(biome))
-        }
+	    /* surrounding beach */
+        } else if(inRange(x, z, startRadius + 16)) {
+        	beachBiome
+
+		/* outer oceans */
+	    } else {
+	    	oceanBiome
+	    }
     }
 }
