@@ -3,6 +3,7 @@ package com.codeland.uhc.phase
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.UHCBar
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -49,9 +50,12 @@ abstract class Phase {
 			val player = Bukkit.getPlayer(uuid)
 
 			if (player != null) {
-				playerData.bossBar.color(phaseType.barColor)
-				playerData.bossBar.name(Component.text(updateBarTitle(player.world, remainingSeconds, currentTick)))
-				playerData.bossBar.progress(updateBarLength(remainingSeconds, currentTick))
+				UHCBar.updateBossBar(
+					player,
+					updateBarTitle(player.world, remainingSeconds, currentTick),
+					updateBarLength(remainingSeconds, currentTick),
+					phaseType.barColor
+				)
 			}
 		}
 

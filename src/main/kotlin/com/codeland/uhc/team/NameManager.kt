@@ -2,6 +2,7 @@ package com.codeland.uhc.team
 
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHCBar
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.event.Packet.metadataPacketDefaultState
 import net.minecraft.network.protocol.game.PacketPlayOutScoreboardScore
@@ -26,7 +27,7 @@ object NameManager {
 
 		playerData.replaceZombieWithPlayer(player)
 
-		playerData.linkBossBar(player)
+		UHCBar.addBossBar(player)
 
 		/* add to hearts objective */
 		val playerHealthScore = ceil(player.health).toInt()

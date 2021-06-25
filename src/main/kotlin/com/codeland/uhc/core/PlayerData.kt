@@ -10,6 +10,8 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
+import net.minecraft.server.bossevents.BossBattleCustom
+import net.minecraft.world.BossBattle
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -70,8 +72,6 @@ class PlayerData(val uuid: UUID) {
 
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
-	val bossBar = BossBar.bossBar(Component.empty(), 1.0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS)
-
 	var lifeNo = 0
 
 	var offlineZombie: Zombie? = null
@@ -95,10 +95,6 @@ class PlayerData(val uuid: UUID) {
 	}
 
 	/* begin functions */
-
-	fun linkBossBar(player: Player) {
-		player.showBossBar(bossBar)
-	}
 
 	fun current() = participating && alive
 	fun undead() = participating && !alive
