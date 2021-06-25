@@ -42,7 +42,7 @@ class MineralPlacer(size: Int) : DelayedChunkPlacer(size) {
 							0 -> { replaceType = Material.GRANITE; moveX = 0; moveZ = -4 }
 							1 -> { replaceType = Material.DIORITE; moveX = 4; moveZ = 0 }
 							2 -> { replaceType = Material.ANDESITE; moveX = 0; moveZ = 4 }
-							else -> { replaceType = Material.DIRT; moveX = -4; moveZ = 0 }
+							else -> { replaceType = Material.TUFF; moveX = -4; moveZ = 0 }
 						}
 
 						var worldX = block.x

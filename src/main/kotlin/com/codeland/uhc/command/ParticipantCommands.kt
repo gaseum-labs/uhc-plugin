@@ -83,7 +83,7 @@ class ParticipantCommands : BaseCommand() {
 				Material.GRANITE -> "Granite indicates a cave to the north"
 				Material.DIORITE -> "Diorite indicates a cave to the east"
 				Material.ANDESITE -> "Andesite indicates a cave to the south"
-				Material.DIRT -> "Dirt indicates a cave to the west"
+				Material.TUFF -> "Tuff indicates a cave to the west"
 				else -> "${ChatColor.RED}${ChatColor.BOLD}This block is not a cave indicator"
 			})
 		}

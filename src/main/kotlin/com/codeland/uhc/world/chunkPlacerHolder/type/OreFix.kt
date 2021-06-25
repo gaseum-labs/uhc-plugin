@@ -41,7 +41,7 @@ class OreFix : ChunkPlacerHolder() {
 				Material.GRANITE -> true
 				Material.DIORITE -> true
 				Material.ANDESITE ->  true
-				Material.DIRT -> true
+				Material.TUFF -> true
 				else -> false
 			}
 		}

@@ -185,7 +185,7 @@ object Lobby {
 		"Granite found below Y level 32 indicates a cave to the north",
 		"Diorite found below Y level 32 indicates a cave to the east",
 		"Andesite found below Y level 32 indicates a cave to the south",
-		"Dirt found below Y level 32 indicates a cave to the west",
+		"Tuff found below Y level 32 indicates a cave to the west",
 		"The lava fill level in caves is lowered allowing deeper exploration",
 		"Diamond ore veins will always have 3 diamond ore",
 		"Gold ore veins will always have 5 gold ore",
