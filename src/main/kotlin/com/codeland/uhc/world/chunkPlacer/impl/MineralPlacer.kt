@@ -3,11 +3,17 @@ package com.codeland.uhc.world.chunkPlacer.impl
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacerHolder.type.OreFix
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.world.chunkPlacerHolder.type.OreFix.Companion.random
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.World
+import kotlin.random.Random
 
 class MineralPlacer(size: Int) : DelayedChunkPlacer(size) {
+	val random = Random(size + uniqueSeed)
+
+	val BASE_CHANCE = 0.25f
+
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		for (i in -3..3)
 			if (
@@ -24,26 +30,25 @@ class MineralPlacer(size: Int) : DelayedChunkPlacer(size) {
 				for (z in 0..15) {
 					val block = chunk.getBlock(x, y, z)
 
-					if (block.type == Material.STONE && Math.random() < chance) {
-						val random = Math.random()
-
+					if (
+						(block.type == Material.STONE || block.type == Material.DEEPSLATE) &&
+						random.nextFloat() < chance
+					) {
 						val replaceType: Material
 						val moveX: Int
 						val moveZ: Int
 
-						when {
-							random < 0.25 -> { replaceType = Material.GRANITE; moveX = 0; moveZ = -4 }
-							random < 0.5 -> { replaceType = Material.DIORITE; moveX = 4; moveZ = 0 }
-							random < 0.75 -> { replaceType = Material.ANDESITE; moveX = 0; moveZ = 4 }
+						when (random.nextInt(0, 4)) {
+							0 -> { replaceType = Material.GRANITE; moveX = 0; moveZ = -4 }
+							1 -> { replaceType = Material.DIORITE; moveX = 4; moveZ = 0 }
+							2 -> { replaceType = Material.ANDESITE; moveX = 0; moveZ = 4 }
 							else -> { replaceType = Material.DIRT; moveX = -4; moveZ = 0 }
 						}
-
-						val searchTries = Util.lowBiasRandom(12)
 
 						var worldX = block.x
 						var worldZ = block.z
 
-						for (i in 0 until searchTries) {
+						for (i in 0 until 12) {
 							worldX += moveX
 							worldZ += moveZ
 
@@ -57,12 +62,12 @@ class MineralPlacer(size: Int) : DelayedChunkPlacer(size) {
 			}
 		}
 
-		for (y in (OreFix.highLimit + 1)..OreFix.gradientLimit) {
-			doChunkLayer(y, (1 - Util.invInterp(OreFix.highLimit.toFloat(), OreFix.gradientLimit + 1f, y.toFloat())) / 2)
+		for (y in (OreFix.HEIGHT_LIMIT + 1)..OreFix.GRADIENT_LIMIT) {
+			doChunkLayer(y, (1 - Util.invInterp(OreFix.HEIGHT_LIMIT.toFloat() - 1f, OreFix.GRADIENT_LIMIT + 2f, y.toFloat())) * BASE_CHANCE)
 		}
 
-		for (y in 1..OreFix.highLimit) {
-			doChunkLayer(y, 0.5f)
+		for (y in 1..OreFix.HEIGHT_LIMIT) {
+			doChunkLayer(y, BASE_CHANCE)
 		}
 	}
 }

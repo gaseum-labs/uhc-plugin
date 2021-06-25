@@ -17,6 +17,7 @@ class OxeyePlacer(size: Int) : ImmediateChunkPlacer(size) {
 			if ((block.biome == Biome.PLAINS || block.biome == Biome.FLOWER_FOREST) && block.getRelative(BlockFace.DOWN).type == Material.GRASS_BLOCK && block.type == Material.AIR) {
 				block.setType(Material.OXEYE_DAISY, false)
 				true
+
 			} else {
 				false
 			}

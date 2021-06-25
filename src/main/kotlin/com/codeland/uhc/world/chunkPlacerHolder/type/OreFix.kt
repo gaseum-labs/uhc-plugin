@@ -8,61 +8,68 @@ import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolder
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Block
-import kotlin.math.min
+import java.time.LocalDateTime
+import kotlin.random.Random
 
 class OreFix : ChunkPlacerHolder() {
 	companion object {
-		fun isOre(type: Material): Boolean {
-			return when (type) {
+		val random = Random(LocalDateTime.now().nano)
+
+		const val GRADIENT_LIMIT = 42
+		const val HEIGHT_LIMIT = 32
+
+		val mineralPlacer = MineralPlacer(1)
+
+		val goldPlacer = OrePlacer(3, 5, 32, 5, Material.GOLD_ORE, Material.DEEPSLATE_GOLD_ORE)
+		val lapisPlacer = OrePlacer(4, 5, 32, 4, Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE)
+		val diamondPlacer = OrePlacer(5, 5, 14, 3, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)
+
+		fun isOre(block: Block): Boolean {
+			return when (block.type) {
 				Material.GOLD_ORE -> true
 				Material.LAPIS_ORE -> true
 				Material.DIAMOND_ORE -> true
+				Material.DEEPSLATE_GOLD_ORE -> true
+				Material.DEEPSLATE_LAPIS_ORE -> true
+				Material.DEEPSLATE_DIAMOND_ORE -> true
+				else -> false
+			}
+		}
+
+		fun isMineral(block: Block): Boolean {
+			return when (block.type) {
+				Material.GRANITE -> true
+				Material.DIORITE -> true
+				Material.ANDESITE ->  true
+				Material.DIRT -> true
 				else -> false
 			}
 		}
 
 		fun removeOres(chunk: Chunk) {
-			for (x in 0..15) {
-				for (z in 0..15) {
-					for (y in 1..127) {
-						val block = chunk.getBlock(x, y, z)
-						if (isOre(block.type)) block.setType(Material.STONE, false)
-					}
-				}
+			for (x in 0..15) for (z in 0..15) for (y in 1..127) {
+				val block = chunk.getBlock(x, y, z)
+				if (isOre(block)) block.setType(Material.STONE, false)
 			}
 		}
-
-		val gradientLimit = 42
-		val highLimit = 32
-
-		val minerals = arrayOf(
-			Material.GRANITE,
-			Material.DIORITE,
-			Material.ANDESITE,
-			Material.DIRT
-		)
 
 		fun removeMinerals(chunk: Chunk) {
 			for (x in 0..15) {
 				for (z in 0..15) {
-					/* remove minerals in a gradient */
-					for (y in (highLimit + 1)..gradientLimit) {
-						val chance = Util.invInterp(highLimit.toFloat(), gradientLimit + 1f, y.toFloat())
-
-						if (Math.random() > chance) {
+					/* remove minerals in a gradient above the height limit */
+					for (y in (HEIGHT_LIMIT + 1)..GRADIENT_LIMIT) {
+						if (
+							random.nextFloat() > Util.invInterp(HEIGHT_LIMIT.toFloat(), GRADIENT_LIMIT + 1f, y.toFloat())
+						) {
 							val block = chunk.getBlock(x, y, z)
-
-							if (minerals.contains(block.type))
-								block.setType(Material.STONE, false)
+							if (isMineral(block)) block.setType(Material.STONE, false)
 						}
 					}
 
-					/* remove all minerals below and at high limit */
-					for (y in 1..highLimit) {
+					/* remove all minerals below and at height limit */
+					for (y in 1..HEIGHT_LIMIT) {
 						val block = chunk.getBlock(x, y, z)
-
-						if (minerals.contains(block.type))
-							block.setType(Material.STONE, false)
+						if (isMineral(block)) block.setType(Material.STONE, false)
 					}
 				}
 			}
@@ -110,11 +117,6 @@ class OreFix : ChunkPlacerHolder() {
 			for (y in lowestY + 2..10) removeLavaLayer(chunk, y)
 			for (y in lowestY..lowestY + 1) edgeGuardLavaLayer(chunk, y)
 		}
-
-		val mineralPlacer = MineralPlacer(1)
-		val goldPlacer = OrePlacer(3, 5, 32, 5, Material.GOLD_ORE)
-		val lapisPlacer = OrePlacer(4, 5, 32, 4, Material.LAPIS_ORE)
-		val diamondPlacer = OrePlacer(5, 5, 14, 3, Material.DIAMOND_ORE)
 	}
 
 	override fun list(): Array<AbstractChunkPlacer> = arrayOf(

@@ -12,8 +12,6 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 
 class DungeonChestReplacer(size: Int) : ImmediateChunkPlacer(size) {
-	val NUM_ITEMS = 8
-
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		for (x in 0..15) {
 			for (z in 0..15) {
@@ -25,16 +23,8 @@ class DungeonChestReplacer(size: Int) : ImmediateChunkPlacer(size) {
 
 						chest.inventory.clear()
 
-                        val table = chest.lootTable
-                        if (table != null) {
-                            table.key.key
-                        }
-
-						val numRares = Util.randRange(1, 2)
-						val numCommons = NUM_ITEMS - numRares
-
-						for (i in 0 until numRares) ItemUtil.randomAddInventory(chest.inventory, Util.randFromArray(rareEntries)())
-						for (i in 0 until numCommons) ItemUtil.randomAddInventory(chest.inventory, Util.randFromArray(chestEntries)())
+						for (i in 0 until 2) ItemUtil.randomAddInventory(chest.inventory, Util.randFromArray(rareEntries)())
+						for (i in 0 until 6) ItemUtil.randomAddInventory(chest.inventory, Util.randFromArray(chestEntries)())
 					}
 				}
 			}

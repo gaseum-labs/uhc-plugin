@@ -10,43 +10,41 @@ import org.bukkit.block.data.Ageable
 
 class WartPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
-		randomPosition(chunk, 32, 99) { block, x, y, z ->
-			val world = block.world
+		randomPosition(chunk, 32, 99) { block, _, _, _ ->
 			val under = block.getRelative(BlockFace.DOWN)
 
 			fun placeWart(check: (Block, Block) -> Boolean): Boolean {
 				return if (check(block, under)) {
-					block.type = Material.NETHER_WART
+					block.setType(Material.NETHER_WART, false)
 
-					val data = block.blockData
-					if (data is Ageable) {
-						data.age =  data.maximumAge
-						block.blockData = data
-					}
+					val data = block.blockData as Ageable
+					data.age =  data.maximumAge
+					block.blockData = data
 
-					under.type = Material.SOUL_SAND
+					under.setType(Material.SOUL_SAND, false)
 
 					true
+
 				} else {
 					false
 				}
 			}
 
-			when (world.getBiome(chunk.x * 16 + x, y, chunk.z * 16 + z)) {
+			when (block.biome) {
 				Biome.NETHER_WASTES -> placeWart { top, bottom ->
-					top.type == Material.AIR && bottom.type == Material.SOUL_SAND
+					top.type.isAir && bottom.type == Material.SOUL_SAND
 				}
 				Biome.BASALT_DELTAS -> placeWart { top, bottom ->
-					top.type == Material.AIR && bottom.type == Material.MAGMA_BLOCK
+					top.type.isAir && bottom.type == Material.MAGMA_BLOCK
 				}
 				Biome.CRIMSON_FOREST -> placeWart { top, bottom ->
-					top.type == Material.CRIMSON_ROOTS || top.type == Material.CRIMSON_FUNGUS
+					top.isPassable && bottom.type == Material.CRIMSON_NYLIUM
 				}
 				Biome.WARPED_FOREST -> placeWart { top, bottom ->
-					top.type == Material.WARPED_ROOTS || top.type == Material.WARPED_FUNGUS
+					top.isPassable && bottom.type == Material.WARPED_NYLIUM
 				}
 				Biome.SOUL_SAND_VALLEY -> placeWart { top, bottom ->
-					top.type == Material.AIR && bottom.type == Material.SOUL_SAND
+					top.type.isAir && bottom.type == Material.SOUL_SAND
 				}
 				else -> false
 			}

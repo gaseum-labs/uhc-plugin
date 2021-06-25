@@ -33,6 +33,7 @@ class CaveMushroomPlacer(size: Int, val type: Material) : ImmediateChunkPlacer(s
 			Material.GRANITE -> true
 			Material.DIRT -> true
 			Material.GRAVEL -> true
+			Material.DEEPSLATE -> true
 			else -> false
 		}
 	}

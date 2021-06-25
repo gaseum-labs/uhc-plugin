@@ -1,15 +1,23 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
-import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import org.bukkit.ChatColor
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import kotlin.random.Random
 
-class OrePlacer(size: Int, private val low: Int, private val high: Int, private val amount: Int, val type: Material) : DelayedChunkPlacer(size) {
+class OrePlacer(
+	size: Int,
+	private val low: Int,
+	private val high: Int,
+	private val amount: Int,
+	val type: Material,
+	val deepType: Material
+) : DelayedChunkPlacer(size) {
+	val random = Random(size + low + high + amount + type.ordinal + uniqueSeed)
+
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		for (x in -1..1) for (z in -1..1)
 			if (!world.isChunkGenerated(chunkX + x, chunkZ + z)) return false
@@ -19,46 +27,40 @@ class OrePlacer(size: Int, private val low: Int, private val high: Int, private 
 
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, low, high) { block, _, _, _ ->
-			if (block.type == Material.STONE) {
-				if (
+			if (
+				isStone(block) && (
 					isOpen(block.getRelative(BlockFace. DOWN).type) ||
 					isOpen(block.getRelative(BlockFace.   UP).type) ||
 					isOpen(block.getRelative(BlockFace. EAST).type) ||
 					isOpen(block.getRelative(BlockFace. WEST).type) ||
 					isOpen(block.getRelative(BlockFace.NORTH).type) ||
 					isOpen(block.getRelative(BlockFace.SOUTH).type)
-				) {
-					val veinBlocks = Array(amount) { block }
+				)
+			) {
+				/* place the first ore in the vein */
+				placeOre(block)
+				val veinBlocks = Array(amount) { block }
 
-					/* place the first ore in the vein */
-					block.setType(type, false)
+				/* place the rest in a contiguous cluster */
+				for (j in 1 until amount) {
+					/* get an existing block in the vein */
+					var index = random.nextInt(0, j)
+					val startIndex = index
 
-					/* place the rest in a contiguous cluster */
-					for (j in 1 until amount) {
-						/* get an existing position */
-						var positionIndex = Util.randRange(0, j - 1)
-						val startIndex = positionIndex
+					var currentBlock: Block? = placeRelativeBlock(veinBlocks[index])
 
-						var nextBlock: Block? = null
+					while (currentBlock == null) {
+						index = (index + 1) % amount
+						if (index == startIndex) return@randomPosition true
 
-						while (nextBlock == null) {
-							val thisBlock = veinBlocks[positionIndex]
-							nextBlock = placeRelativeBlock(thisBlock)
-
-							if (nextBlock == null) {
-								positionIndex = (positionIndex + 1) % amount
-								/* no more ores can be placed contiguously */
-								if (positionIndex == startIndex) return@randomPosition true
-							}
-						}
-
-						veinBlocks[j] = nextBlock
+						currentBlock = placeRelativeBlock(veinBlocks[index])
 					}
 
-					true
-				} else {
-					false
+					veinBlocks[j] = currentBlock
 				}
+
+				true
+
 			} else {
 				false
 			}
@@ -72,22 +74,26 @@ class OrePlacer(size: Int, private val low: Int, private val high: Int, private 
 	 * @return null the block couldn't be placed
 	 */
 	private fun placeRelativeBlock(block: Block): Block? {
-		var faceIndex = Util.randRange(0, 5)
+		var faceIndex = random.nextInt(0, 6)
 		val startIndex = faceIndex
 
-		var relativeBlock = block.getRelative(BlockFace.values()[faceIndex])
-
-		while (relativeBlock.type != Material.STONE) {
+		/* try to place a block on the first available face */
+		/* if cannot find an available face return null */
+		while (!isStone(block.getRelative(BlockFace.values()[faceIndex]))) {
 			faceIndex = (faceIndex + 1) % 6
-			/* every single face is covered */
 			if (faceIndex == startIndex) return null
-
-			relativeBlock = block.getRelative(BlockFace.values()[faceIndex])
 		}
 
-		relativeBlock.setType(type, false)
+		return placeOre(block.getRelative(BlockFace.values()[faceIndex]))
+	}
 
-		return relativeBlock
+	fun isStone(block: Block): Boolean {
+		return block.type == Material.STONE || block.type == Material.DEEPSLATE
+	}
+
+	fun placeOre(block: Block): Block {
+		block.setType(if (block.type == Material.DEEPSLATE) deepType else type, false)
+		return block
 	}
 
 	private fun isOpen(type: Material): Boolean {
