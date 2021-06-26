@@ -252,10 +252,9 @@ class EventListener : Listener {
 
 	fun shouldHealthCancelled(player: Player): Boolean {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val pvpGame = PvpGameManager.playersGame(player.uniqueId)
 
 		return !UHC.naturalRegeneration.get() && (
-			pvpGame != null || (
+			PvpGameManager.playersGame(player.uniqueId) != null || (
 				playerData.participating &&
 				!UHC.isPhase(PhaseType.GRACE) &&
 				!(UHC.isEnabled(QuirkType.PESTS) && playerData.undead())
@@ -266,33 +265,45 @@ class EventListener : Listener {
 	@EventHandler
 	fun onHealthRegen(event: EntityRegainHealthEvent) {
 		/* no regeneration in UHC */
-		val player = event.entity
+		val player = event.entity as? Player ?: return
 
 		/* make sure it only applies to players */
 		/* make sure it only applies to regeneration due to hunger */
-		if (player is Player && event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED) {
-			event.isCancelled = shouldHealthCancelled(player)
+		if (
+			event.regainReason == EntityRegainHealthEvent.RegainReason.SATIATED &&
+			shouldHealthCancelled(player)
+		) {
+			event.isCancelled = true
+		} else {
+			/* health total freezes after the pvp game */
+			val game = PvpGameManager.playersGame(player.uniqueId)
+			if (game?.isOver() == true) {
+				event.isCancelled = true
+			}
+		}
+	}
+
+	@EventHandler
+	fun onHealthExhaust(event: EntityExhaustionEvent) {
+		if (
+			event.exhaustionReason == EntityExhaustionEvent.ExhaustionReason.REGEN &&
+			shouldHealthCancelled(event.entity as Player)
+		) {
+			event.isCancelled = true
 		}
 	}
 
 	@EventHandler
 	fun onFoodLevelChange(event: FoodLevelChangeEvent) {
-		val player = event.entity as Player
-
-		/* in any combat situation (lobby pvp, nongrace periods) */
-		if (shouldHealthCancelled(player)) {
-			val over = (event.foodLevel - 17).coerceAtLeast(0)
-
-			if (event.foodLevel > 17) event.foodLevel = 17
-			player.saturation += over
-
-		/* when in lobby there is no hunger */
-		} else if (!PlayerData.isParticipating(player.uniqueId)) {
+		/* players in the lobby or in postgame, excluding those in lobby pvp */
+		/* they don't lose food */
+		if (
+			!shouldHealthCancelled(event.entity as Player) &&
+			!PlayerData.isParticipating(event.entity.uniqueId)
+		) {
 			event.foodLevel = 20
 			event.isCancelled = true
 		}
-
-		/* players in grace will not have hunger affected at all */
 	}
 
 	@EventHandler
