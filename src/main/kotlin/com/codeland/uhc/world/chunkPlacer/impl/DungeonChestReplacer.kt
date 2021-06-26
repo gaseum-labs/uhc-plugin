@@ -2,16 +2,25 @@ package com.codeland.uhc.world.chunkPlacer.impl
 
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
+import org.bukkit.World
 import org.bukkit.block.Biome
 import org.bukkit.block.Chest
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 
-class DungeonChestReplacer(size: Int) : ImmediateChunkPlacer(size) {
+class DungeonChestReplacer(size: Int) : DelayedChunkPlacer(size) {
+	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
+		return world.isChunkGenerated(chunkX + 1, chunkZ) &&
+			world.isChunkGenerated(chunkX - 1, chunkZ) &&
+			world.isChunkGenerated(chunkX, chunkZ + 1) &&
+			world.isChunkGenerated(chunkX, chunkZ - 1)
+	}
+
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		for (x in 0..15) {
 			for (z in 0..15) {

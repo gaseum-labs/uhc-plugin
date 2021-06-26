@@ -69,7 +69,11 @@ enum class WorldGenOption(
 
 	AMPLIFIED("Amplified", false, listOf (
 		Component.text("Incredibly mountainous terrain")
-	), Material.ACACIA_SAPLING);
+	), Material.ACACIA_SAPLING),
+
+	REVERSE_ORE_FIX("Reverse Ore Fix", false, listOf(
+	Component.text("Ores generate at the top of the world")
+	), Material.GOLD_INGOT);
 
 	val property = UHCProperty(defaultEnabled) { set ->
 		if (!UHC.isGameGoing())

@@ -1,6 +1,7 @@
 package com.codeland.uhc.world.gen.generator
 
 import net.minecraft.util.MathHelper
+import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.WorldChunkManager
 import net.minecraft.world.level.levelgen.ChunkGeneratorAbstract
 import net.minecraft.world.level.levelgen.NoiseModifier
@@ -22,7 +23,7 @@ class NoiseSamplerUHC(
 ) {
 	companion object {
 		const val AMPLIFIED_BASE = 1.0f
-		const val AMPLIFIED_SCALE = 3.0f
+		const val AMPLIFIED_SCALE = 3.25f
 
 		val circle = FloatArray(25)
 		init {
@@ -91,6 +92,23 @@ class NoiseSamplerUHC(
 		}
 	}
 
+	fun getBase(biomeBase: BiomeBase): Float {
+		val base = biomeBase.h()
+
+		if (base < 0) return base
+
+		if (amplified) return AMPLIFIED_BASE
+
+		return base
+	}
+
+	fun getScale(biomeBase: BiomeBase): Float {
+		return if (getBase(biomeBase) > 0 && amplified)
+			AMPLIFIED_SCALE
+		else
+			biomeBase.j()
+	}
+
 	override fun a(adouble: DoubleArray, i: Int, j: Int, noisesettings: NoiseSettings, k: Int, l: Int, i1: Int) {
 		val d0: Double
 		val d1: Double
@@ -98,16 +116,14 @@ class NoiseSamplerUHC(
 		var f = 0.0f
 		var f1 = 0.0f
 		var f2 = 0.0f
-		val originBase = if (amplified) AMPLIFIED_BASE else worldChunkManager.getBiome(i, k, j).h()
+		val originBase = getBase(worldChunkManager.getBiome(i, k, j))
 
 		for (k1 in -2..2) {
 			for (l1 in -2..2) {
 				val biome = worldChunkManager.getBiome(i + k1, k, j + l1)
 
-				var otherBase = if (amplified) AMPLIFIED_BASE else biome.h()
-				var otherScale = if (amplified) AMPLIFIED_SCALE else biome.j()
-
-				if (otherBase < -1.8f) otherBase = -1.8f
+				val otherBase = getBase(biome).coerceAtLeast(-1.8f)
+				val otherScale = getScale(biome)
 
 				val f8 = if (otherBase > originBase) 0.5f else 1.0f
 				val f9 = f8 * circle[k1 + 2 + (l1 + 2) * 5] / (otherBase + 2.0f)

@@ -42,9 +42,21 @@ class Generation : Listener {
 					NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (getEnabled(ORE_FIX)) {
-					OreFix.removeMinerals(chunk)
+				if (getEnabled(ORE_FIX) || getEnabled(REVERSE_ORE_FIX)) {
 					OreFix.removeOres(chunk)
+				}
+
+				if (getEnabled(REVERSE_ORE_FIX)) {
+					OreFix.reverseCoalPlacer.onGenerate(chunk, world.seed.toInt())
+					OreFix.reverseIronPlacer.onGenerate(chunk, world.seed.toInt())
+					OreFix.reverseRedstonePlacer.onGenerate(chunk, world.seed.toInt())
+					OreFix.reverseCopperPlacer.onGenerate(chunk, world.seed.toInt())
+					OreFix.reverseGoldPlacer.onGenerate(chunk, world.seed.toInt())
+					OreFix.reverseLapisPlacer.onGenerate(chunk, world.seed.toInt())
+					OreFix.reverseDiamondPlacer.onGenerate(chunk, world.seed.toInt())
+
+				} else if (getEnabled(ORE_FIX)) {
+					OreFix.removeMinerals(chunk)
 					OreFix.reduceLava(chunk)
 
 					OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt())
