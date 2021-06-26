@@ -99,7 +99,10 @@ object CustomSpawning {
 		val sZ = s.z + 0.5f
 		val eZ = e.z + 0.5f
 
-		val numChecks = sqrt((sX - eX) * (sX - eX) + (sY - eY) * (sY - eY) + (sZ - eZ) * (sZ - eZ)).toInt() / 2
+		val distance = sqrt((sX - eX) * (sX - eX) + (sY - eY) * (sY - eY) + (sZ - eZ) * (sZ - eZ))
+		if (distance > 60) return false
+
+		val numChecks = distance.toInt() / 2
 
 		for (i in 1 until numChecks) {
 			val along = i / numChecks.toFloat()
