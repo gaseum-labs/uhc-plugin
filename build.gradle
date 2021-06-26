@@ -58,7 +58,7 @@ dependencies {
     implementation 'net.dv8tion:JDA:4.3.0_277'
     implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
     compileOnly 'io.papermc.paper:paper-api:1.17-R0.1-SNAPSHOT'
-    compileOnly 'com.comphenix.protocol:ProtocolLib:4.6.0'
+    compileOnly 'com.comphenix.protocol:ProtocolLib:4.7.0-SNAPSHOT'
     compileOnly 'org.spigotmc:spigot:1.17-R0.1-SNAPSHOT'
 }
 

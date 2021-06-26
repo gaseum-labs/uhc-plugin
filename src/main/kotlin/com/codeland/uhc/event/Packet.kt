@@ -10,10 +10,7 @@ import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.events.ListenerPriority
-import com.comphenix.protocol.events.PacketAdapter
-import com.comphenix.protocol.events.PacketContainer
-import com.comphenix.protocol.events.PacketEvent
+import com.comphenix.protocol.events.*
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
 import net.minecraft.EnumChatFormat
@@ -109,16 +106,32 @@ object Packet {
 		return item.b()
 	}
 
-	fun updateTeamColor(teamPlayer: Player, uhcTeam: Team?, newName: String, sentPlayer: Player) {
+	fun updateTeamColor(
+		teamPlayer: Player,
+		uhcTeam: Team?,
+		newName: String,
+		sentPlayer: Player
+	) {
 		sentPlayer as CraftPlayer
 		val oldName = teamPlayer.name
 
-		val team = ScoreboardTeam(Scoreboard(), newName)
-		team.color = if (uhcTeam != null && uhcTeam.members.contains(sentPlayer.uniqueId)) EnumChatFormat.l else EnumChatFormat.m
-		team.prefix = if (uhcTeam != null) Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2) else ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.p))
-		team.playerNameSet.add(newName)
+		val game = PvpGameManager.playersGame(teamPlayer.uniqueId)
 
-		sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(team, false))
+		/* rules for if on same team are different in lobby pvp */
+		val isOnTeam = if (game == null) {
+			uhcTeam != null && uhcTeam.members.contains(sentPlayer.uniqueId)
+
+		} else {
+			PvpGameManager.playersTeam(game, teamPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
+		}
+
+		/* create fake scoreboard team */
+		val scoreboardTeam = ScoreboardTeam(Scoreboard(), newName)
+		scoreboardTeam.color = if (isOnTeam) EnumChatFormat.l else EnumChatFormat.m
+		scoreboardTeam.prefix = if (uhcTeam != null) Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2) else ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.p))
+		scoreboardTeam.playerNameSet.add(newName)
+
+		sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(scoreboardTeam, false))
 	}
 
 	fun init() {
@@ -195,7 +208,14 @@ object Packet {
 
 				/* glowing in games */
 				if (metaPlayersGame != null) {
-					if (metaPlayersGame.shouldGlow() && metaPlayersGame.teams.flatten().contains(sentPlayer.uniqueId)) {
+					/* if on same team as meta player (not same player), or if game is in glow phase */
+					if (
+						(
+							metaPlayer.uniqueId != sentPlayer.uniqueId &&
+							PvpGameManager.playersTeam(metaPlayersGame, metaPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
+						) ||
+						(metaPlayersGame.shouldGlow() && metaPlayersGame.teams.flatten().contains(sentPlayer.uniqueId))
+					) {
 						itemValueField[freshItemList[0]] = byteValue.or(0x40)
 					}
 
@@ -207,38 +227,6 @@ object Packet {
 					sentPlayerTeam.members.contains(metaPlayer.uniqueId)
 				) {
 					itemValueField[freshItemList[0]] = byteValue.or(0x40)
-				}
-			}
-		})
-
-		protocolManager.addPacketListener(object : PacketAdapter(
-			UHCPlugin.plugin,
-			ListenerPriority.HIGH,
-			PacketType.fromCurrent(PacketType.Protocol.PLAY, PacketType.Sender.SERVER, 0x42, ClientboundSetBorderCenterPacket::class.java),
-			PacketType.fromCurrent(PacketType.Protocol.PLAY, PacketType.Sender.SERVER, 0x44, ClientboundSetBorderSizePacket::class.java)
-		) {
-			override fun onPacketSending(event: PacketEvent) {
-				val sentPlayer = event.player
-				val pvpGame = PvpGameManager.playersGame(sentPlayer.uniqueId)
-
-				if (pvpGame != null && sentPlayer.world.name == WorldManager.PVP_WORLD_NAME) {
-
-					val world = (event.player.world as CraftWorld).handle
-					val border = WorldBorder()
-					border.world = world
-
-					/* replace packet */
-					when (val packet = event.packet.handle) {
-						is ClientboundSetBorderCenterPacket -> {
-							val (centerX, centerZ) = pvpGame.centerLocation()
-							border.setCenter(centerX.toDouble(), centerZ.toDouble())
-							event.packet = PacketContainer.fromPacket(ClientboundSetBorderCenterPacket(border))
-						}
-						is ClientboundSetBorderSizePacket -> {
-							border.size = pvpGame.borderSize.toDouble()
-							event.packet = PacketContainer.fromPacket(ClientboundSetBorderCenterPacket(border))
-						}
-					}
 				}
 			}
 		})

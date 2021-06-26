@@ -6,9 +6,15 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.event.Packet
+import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
+import com.comphenix.protocol.events.PacketContainer
 import net.kyori.adventure.text.Component
+import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket
+import net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket
+import net.minecraft.world.level.border.WorldBorder
 import org.bukkit.*
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
@@ -158,6 +164,10 @@ object PvpGameManager {
 
 	fun playersGame(uuid: UUID): PvpGame? {
 		return ongoingGames.find { game -> game.teams.any { it.any { it == uuid } } }
+	}
+
+	fun playersTeam(game: PvpGame, uuid: UUID): ArrayList<UUID>? {
+		return game.teams.find { it.contains(uuid) }
 	}
 
 	fun perTick(currentTick: Int) {
@@ -321,7 +331,21 @@ object PvpGameManager {
 		val loadout = DataManager.loadouts.getPlayersLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
 		loadout.fillInventory(player.inventory)
 
+		NameManager.updateName(player)
+
 		player.teleport(location)
+
+		/* fake border */
+		val game = playersGame(player.uniqueId) ?: return
+
+		val border = WorldBorder()
+		border.world = (WorldManager.getPVPWorld() as CraftWorld).handle
+		val (centerX, centerZ) = game.centerLocation()
+		border.setCenter(centerX.toDouble(), centerZ.toDouble())
+		border.size = game.borderSize.toDouble()
+
+		(player as CraftPlayer).handle.b.sendPacket(ClientboundSetBorderCenterPacket(border))
+		(player as CraftPlayer).handle.b.sendPacket(ClientboundSetBorderSizePacket(border))
 	}
 
 	fun disablePvp(player: Player) {

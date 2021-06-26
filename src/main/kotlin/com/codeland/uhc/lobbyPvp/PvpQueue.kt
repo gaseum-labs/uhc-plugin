@@ -67,7 +67,7 @@ object PvpQueue {
 				val element1 = queue[i]
 				val element2 = queue[j]
 
-				if (element1.type == PlayerData.PVP_QUEUE_1V1 && element2.type == PlayerData.PVP_QUEUE_2V2) {
+				if (element1.type == PlayerData.PVP_QUEUE_1V1 && element2.type == PlayerData.PVP_QUEUE_1V1) {
 					val greatestTime = max(element1.time, element2.time)
 					val leastTime = min(element1.time, element2.time)
 
@@ -78,13 +78,11 @@ object PvpQueue {
 						/* last played each other before */
 						if (playerData1.lastPlayed == element2.uuid || playerData2.lastPlayed == element1.uuid) {
 							if (greatestTime >= QUEUE_EXTEND_TIME && leastTime >= QUEUE_TIME) {
-								queuePairs.add(
-									QueuePair(
+								queuePairs.add(QueuePair(
 									element1.uuid, element2.uuid,
 									i, j,
 									0, greatestTime
-								)
-								)
+								))
 							}
 						/* fresh opponent */
 						} else {
