@@ -25,43 +25,71 @@ object PvpGameManager {
 	const val LARGE_BORDER = 96
 	const val SMALL_BORDER = 64
 
-	class PvpGame(val players: ArrayList<UUID>, position: Int, val borderSize: Int) {
+	class PvpGame(val teams: ArrayList<ArrayList<UUID>>, position: Int, val borderSize: Int) {
 		val x = xFromPosition(position)
 		val z = zFromPosition(position)
 
-		var winner: String? = null
+		var winners: List<UUID> = ArrayList()
 		var time = -4
 
 		var glowPeriod = 60
 		var glowTimer = glowPeriod
 
-		fun onlinePlayers() = players.mapNotNull { Bukkit.getPlayer(it) }
+		fun online() = teams.flatMap { team ->
+			team.mapNotNull { Bukkit.getPlayer(it) }
+		}
+
+		fun alivePlayer(uuid: UUID): Player? {
+			val player = Bukkit.getPlayer(uuid) ?: return null
+
+			return if (
+				player.location.world.name == WorldManager.PVP_WORLD_NAME &&
+				player.gameMode != GameMode.SPECTATOR
+			) {
+				player
+			} else {
+				null
+			}
+		}
+
+		fun alive() = teams.flatMap { team -> team.mapNotNull { alivePlayer(it) } }
+
+		fun teamsAlive() = teams.map { team ->
+			team.mapNotNull { alivePlayer(it) }
+		}.filter { it.isNotEmpty() }
 
 		fun centerLocation(): Pair<Int, Int> {
 			return Pair(x * ARENA_STRIDE + (ARENA_STRIDE / 2), z * ARENA_STRIDE + (ARENA_STRIDE / 2))
 		}
 
-		fun alive(): List<Player> {
-			return players.mapNotNull { Bukkit.getPlayer(it) }
-				.filter { it.location.world.name == WorldManager.PVP_WORLD_NAME && it.gameMode != GameMode.SPECTATOR }
-		}
-
-		fun endNaturally(winner: String) {
-			this.winner = winner
+		fun endNaturally(winners: List<Player>) {
+			this.winners = winners.map { it.uniqueId }
 			time = -10
 
-			players.mapNotNull { Bukkit.getPlayer(it) }.forEach { it.sendTitle("${ChatColor.RED}$winner wins!", "", 0, 160, 40) }
+			val winnerString = if (winners.size == 1) {
+				winners.joinToString(" ", "${ChatColor.RED}", " have won!") { it.name }
+			} else {
+				"${ChatColor.RED}${winners.first().name} wins!"
+			}
+
+			online().forEach { it.sendTitle(winnerString, "", 0, 160, 40) }
 		}
 
+		/**
+		 * @return should the game be immediately deleted
+		 */
 		fun checkEnd(): Boolean {
-			val alive = alive()
+			val teamsAlive = teamsAlive()
 
-			return if (alive.size == 1) {
-				endNaturally(alive.first().name)
+			/* one team remains, end naturally */
+			return if (teamsAlive.size == 1) {
+				endNaturally(teamsAlive.first())
 				false
 
-			/* if somehow both players disconnect then end it immediately */
-			} else alive.isEmpty()
+			/* if somehow all players disconnect then end it immediately */
+			} else {
+				teamsAlive.isEmpty()
+			}
 		}
 
 		fun prepareArena() {
@@ -81,7 +109,7 @@ object PvpGameManager {
 					}
 
 					/* super mountain clearer */
-					for (by in 128..255) world.getBlockAt(bx, by, bz).setType(Material.AIR, false)
+					for (by in 101..255) world.getBlockAt(bx, by, bz).setType(Material.AIR, false)
 				}
 			}
 		}
@@ -91,7 +119,7 @@ object PvpGameManager {
 		}
 
 		fun updateGlowAll() {
-			val online = onlinePlayers()
+			val online = online()
 
 			online.forEach { player1 ->
 				online.forEach { player2 ->
@@ -101,20 +129,26 @@ object PvpGameManager {
 		}
 
 		fun isOver(): Boolean {
-			return winner != null
+			return winners.isNotEmpty()
 		}
 	}
 
 	val ongoingGames = ArrayList<PvpGame>()
 	var nextGamePosition = 0
 
-	fun addGame(players: ArrayList<UUID>) {
-		val game = PvpGame(players, nextGamePosition, SMALL_BORDER)
+	fun addGame(teams: ArrayList<ArrayList<UUID>>) {
+		val game = PvpGame(teams, nextGamePosition, SMALL_BORDER)
 
-		val playerData0 = PlayerData.getPlayerData(game.players[0])
-		playerData0.lastPlayed = game.players[1]
-		val playerData1 = PlayerData.getPlayerData(game.players[1])
-		playerData1.lastPlayed = game.players[0]
+		/* set last played against for players */
+		/* can only set last played against for one of the players on the other team */
+		for (i in 0..teams.lastIndex - 1) {
+			val otherTeamIndex = teams.indices.firstOrNull { it != i } ?: continue
+
+			teams[i].zip(teams[otherTeamIndex]).forEach { (playerA, playerB) ->
+				PlayerData.getPlayerData(playerA).lastPlayed = playerB
+				PlayerData.getPlayerData(playerB).lastPlayed = playerA
+			}
+		}
 
 		game.prepareArena()
 
@@ -123,7 +157,7 @@ object PvpGameManager {
 	}
 
 	fun playersGame(uuid: UUID): PvpGame? {
-		return ongoingGames.find { game -> game.players.contains(uuid) }
+		return ongoingGames.find { game -> game.teams.any { it.any { it == uuid } } }
 	}
 
 	fun perTick(currentTick: Int) {
@@ -152,7 +186,7 @@ object PvpGameManager {
 				} else when {
 					/* countdown before match starts */
 					game.time < 0 -> {
-						game.onlinePlayers().forEach { player ->
+						game.online().forEach { player ->
 							player.sendTitle("${ChatColor.RED}${-game.time}", "${ChatColor.RED}PVP Match Starting", 0, 21, 0)
 							player.sendActionBar(Component.text(""))
 						}
@@ -161,32 +195,36 @@ object PvpGameManager {
 					}
 					/* start match */
 					game.time == 0 -> {
-						val world = WorldManager.getPVPWorld()
+						/* everyone must be there to start */
+						if (game.teams.flatten().any { Bukkit.getPlayer(it) == null }) {
+							game.online().forEach { player -> Commands.errorMessage(player, "Game cancelled! A player left") }
 
-						val positions = playerPositions(game).map { position ->
-							val (liquidY, solidY) = Util.topLiquidSolidY(world, position.first, position.second)
-							Location(world, position.first + 0.5, (if (liquidY == -1) solidY else liquidY) + 1.0, position.second + 0.5)
-						}
-
-						val online = game.onlinePlayers()
-						val data = online.zip(positions)
-
-						if (data.size < game.players.size) {
-							online.forEach { player -> Commands.errorMessage(player, "Game cancelled! A player left") }
 							true
 
 						} else {
-							data.forEach { (player, position) ->
-								enablePvp(player, true, position)
-								player.sendTitle("${ChatColor.GOLD}FIGHT", "", 0, 20, 10)
+							val world = WorldManager.getPVPWorld()
+							val locations = teamPositions(game).map { position ->
+								val (liquidY, solidY) = Util.topLiquidSolidY(world, position.first, position.second)
+								Location(world, position.first + 0.5, (if (liquidY == -1) solidY else liquidY) + 1.0, position.second + 0.5)
 							}
+
+							game.teams.zip(locations).forEach { (team, location) ->
+								team.forEach { uuid ->
+									val player = Bukkit.getPlayer(uuid)
+									if (player != null) {
+										enablePvp(player, true, location)
+										player.sendTitle("${ChatColor.GOLD}FIGHT", "", 0, 20, 10)
+									}
+								}
+							}
+
 							false
 						}
 					}
 					/* during match */
 					else -> {
 						/* damage if outside the border */
-						game.onlinePlayers().forEach { player ->
+						game.online().forEach { player ->
 							val minX = (game.x * ARENA_STRIDE) + (ARENA_STRIDE - SMALL_BORDER) / 2
 							val maxX = (game.x * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (SMALL_BORDER / 2)) - 1
 							val minZ = (game.z * ARENA_STRIDE) + (ARENA_STRIDE - SMALL_BORDER) / 2
@@ -226,22 +264,22 @@ object PvpGameManager {
 				}
 
 				/* teleport all players back when the game ends */
-				if (removeResult) game.onlinePlayers().forEach { disablePvp(it) }
+				if (removeResult) game.online().forEach { disablePvp(it) }
 
 				removeResult
 			}
 		}
 	}
 
-	fun playerPositions(game: PvpGame): List<Pair<Int, Int>> {
+	fun teamPositions(game: PvpGame): List<Pair<Int, Int>> {
 		val (centerX, centerZ) = game.centerLocation()
 
 		val radius = SMALL_BORDER / 2 - 4
 
 		val startAngle = Math.random() * PI * 2
-		val angleStride = PI * 2 / game.players.size
+		val angleStride = PI * 2 / game.teams.size
 
-		return (game.players.indices).map { i ->
+		return (game.teams.indices).map { i ->
 			val angle = startAngle + angleStride * i
 			Pair(centerX + (cos(angle) * radius).roundToInt(), centerZ + (sin(angle) * radius).roundToInt())
 		}
@@ -257,7 +295,17 @@ object PvpGameManager {
 
 	fun removePlayerFromGame(uuid: UUID) {
 		val game = playersGame(uuid)
-		game?.players?.remove(uuid)
+		game?.teams?.any { it.removeIf { it == uuid } }
+	}
+
+	fun destroyGames() {
+		/* delete games and remove active players from them */
+		ongoingGames.removeIf { game ->
+			game.teams.forEach {
+				team -> team.mapNotNull { Bukkit.getPlayer(it) }.forEach { disablePvp(it) }
+			}
+			true
+		}
 	}
 
 	fun enablePvp(player: Player, save: Boolean, location: Location) {

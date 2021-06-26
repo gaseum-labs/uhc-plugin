@@ -175,10 +175,10 @@ class TestCommands : BaseCommand() {
 		if (PvpGameManager.playersGame(player1.uniqueId) != null) return errorMessage(sender, "${player1.name} is already in a game")
 		if (PvpGameManager.playersGame(player2.uniqueId) != null) return errorMessage(sender, "${player2.name} is already in a game")
 
-		PlayerData.getPlayerData(player1.uniqueId).inLobbyPvpQueue.set(false)
-		PlayerData.getPlayerData(player2.uniqueId).inLobbyPvpQueue.set(false)
+		PlayerData.getPlayerData(player1.uniqueId).inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT)
+		PlayerData.getPlayerData(player2.uniqueId).inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT)
 
-		PvpGameManager.addGame(arrayListOf(player1.uniqueId, player2.uniqueId))
+		PvpGameManager.addGame(arrayListOf(arrayListOf(player1.uniqueId), arrayListOf(player2.uniqueId)))
 
 		GameRunner.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
 	}

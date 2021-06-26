@@ -16,7 +16,6 @@ import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
-import io.papermc.paper.event.world.border.WorldBorderEvent
 import net.minecraft.EnumChatFormat
 import net.minecraft.network.chat.ChatComponentText
 import net.minecraft.network.chat.ChatModifier
@@ -196,7 +195,7 @@ object Packet {
 
 				/* glowing in games */
 				if (metaPlayersGame != null) {
-					if (metaPlayersGame.shouldGlow() && metaPlayersGame.players.contains(sentPlayer.uniqueId)) {
+					if (metaPlayersGame.shouldGlow() && metaPlayersGame.teams.flatten().contains(sentPlayer.uniqueId)) {
 						itemValueField[freshItemList[0]] = byteValue.or(0x40)
 					}
 

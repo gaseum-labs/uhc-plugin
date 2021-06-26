@@ -198,10 +198,7 @@ class AdminCommands : BaseCommand() {
 	fun lobbyCycle(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		PvpGameManager.ongoingGames.removeIf { game ->
-			game.players.mapNotNull { Bukkit.getPlayer(it) }.forEach { PvpGameManager.disablePvp(it) }
-			true
-		}
+		PvpGameManager.destroyGames()
 
 		WorldManager.refreshWorld(WorldManager.PVP_WORLD_NAME, World.Environment.NORMAL, true)
 

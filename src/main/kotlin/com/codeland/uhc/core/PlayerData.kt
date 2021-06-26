@@ -39,15 +39,13 @@ class PlayerData(val uuid: UUID) {
 	var lobbyInventory = emptyArray<ItemStack>()
 	var lastPlayed: UUID? = null
 	var loadoutSlot = UHCProperty(0)
-	var inLobbyPvpQueue = UHCProperty(false) { set ->
-		if (set) {
-			PvpQueue.add(uuid)
-			true
-
-		} else {
-			PvpQueue.remove(uuid)
-			false
+	var inLobbyPvpQueue = UHCProperty(PVP_QUEUE_NOT) { set ->
+		when (set) {
+			PVP_QUEUE_NOT -> PvpQueue.remove(uuid)
+			PVP_QUEUE_1V1 -> PvpQueue.add(uuid, PVP_QUEUE_1V1)
+			PVP_QUEUE_2V2 -> PvpQueue.add(uuid, PVP_QUEUE_2V2)
 		}
+		set
 	}
 	var slotCosts = Array(Loadouts.NUM_SLOTS) { i ->
 		UHCProperty(0)
@@ -203,6 +201,10 @@ class PlayerData(val uuid: UUID) {
 	}
 
 	companion object {
+		const val PVP_QUEUE_NOT = 0
+		const val PVP_QUEUE_1V1 = 1
+		const val PVP_QUEUE_2V2 = 2
+
 		const val INVENTORY_TAG = "_UHC_Zombie_inv"
 		const val XP_TAG = "_UHC_Zombie_xp"
 		const val UUID_TAG = "_UHC_Zombie_uuid"

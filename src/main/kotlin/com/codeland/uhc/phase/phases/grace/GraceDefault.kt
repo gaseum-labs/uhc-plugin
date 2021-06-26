@@ -71,7 +71,7 @@ class GraceDefault : Phase() {
 			playerData.alive = true
 			playerData.participating = true
 
-			playerData.inLobbyPvpQueue.set(false)
+			playerData.inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT)
 			PvpGameManager.removePlayerFromGame(uuid)
 
 			GameRunner.teleportPlayer(uuid, location)

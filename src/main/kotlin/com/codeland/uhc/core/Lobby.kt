@@ -90,7 +90,14 @@ object Lobby {
 
 				if (!playerData.participating && game == null) {
 					if (queueTime != null) {
-						player.sendActionBar(Util.gradientString("Queue Time: ${Util.timeString(queueTime)} | Players in Queue: ${PvpQueue.size()}", TextColor.color(0x750c0c), TextColor.color(0xeb1f0c)))
+						val queueType = playerData.inLobbyPvpQueue.get()
+
+						player.sendActionBar(Util.gradientString(
+							"${if (queueType == PlayerData.PVP_QUEUE_1V1) "1v1" else "2v2"} | " +
+							"Queue Time: ${Util.timeString(queueTime)} | " +
+							"Players in Queue: ${PvpQueue.size(queueType)}",
+							TextColor.color(0x750c0c), TextColor.color(0xeb1f0c)
+						))
 
 					} else if (player.gameMode == GameMode.SPECTATOR) {
 						if (slideN(0, 3, 6)) {

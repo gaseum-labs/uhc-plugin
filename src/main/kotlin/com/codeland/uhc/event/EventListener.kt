@@ -23,8 +23,6 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.Material
 import org.bukkit.Particle
-import org.bukkit.attribute.Attribute
-import org.bukkit.attribute.AttributeModifier
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -133,7 +131,7 @@ class EventListener : Listener {
 
 			/* announce death to only pvp game players */
 			val deathMessage = event.deathMessage()
-			if (deathMessage != null) pvpGame.players.mapNotNull { Bukkit.getPlayer(it) }.forEach { pvpPlayer ->
+			if (deathMessage != null) pvpGame.online().forEach { pvpPlayer ->
 				pvpPlayer.sendMessage(deathMessage)
 			}
 

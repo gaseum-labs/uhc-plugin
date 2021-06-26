@@ -1,16 +1,39 @@
 package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHCProperty
+import org.apache.logging.log4j.core.config.plugins.convert.TypeConverters
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.max
+import kotlin.math.min
 
 object PvpQueue {
-	data class QueueElement(val uuid: UUID, var time: Int, var remove: Boolean)
+	const val QUEUE_TIME = 10
+	const val QUEUE_EXTEND_TIME = 20
+
+	data class QueueElement(val uuid: UUID, var type: Int, var time: Int)
+
+	val enabled = UHCProperty(true) { set ->
+		if (!set) queue.removeIf {
+			PlayerData.getPlayerData(it.uuid).inLobbyPvpQueue.unsafeSet(PlayerData.PVP_QUEUE_NOT)
+			true
+		}
+
+		set
+	}
 
 	private val queue = ArrayList<QueueElement>()
 
-	fun add(uuid: UUID) {
-		if (queue.none { it.uuid == uuid }) queue.add(QueueElement(uuid, 0, false))
+	fun add(uuid: UUID, type: Int) {
+		val existingEntry = queue.find { it.uuid == uuid }
+
+		if (existingEntry == null) {
+			queue.add(QueueElement(uuid, type, 0))
+
+		} else {
+			existingEntry.type = type
+		}
 	}
 
 	fun remove(uuid: UUID) {
@@ -25,40 +48,115 @@ object PvpQueue {
 		return queue.find { it.uuid == uuid }?.time
 	}
 
-	fun size(): Int {
-		return queue.size
+	fun size(type: Int): Int {
+		return queue.count { it.type == type }
 	}
 
+	data class QueuePair(
+		val player1: UUID, val player2: UUID,
+		val index1: Int, val index2: Int,
+		val priority1: Int, val priority2: Int
+	)
+
 	fun perSecond() {
-		queue.forEach { element ->
-			if (!element.remove) {
-				val playerData = PlayerData.getPlayerData(element.uuid)
+		/* 1v1 queue */
+		val queuePairs = ArrayList<QueuePair>((queue.size * queue.size) / 2)
 
-				for (element2 in queue) {
-					val requiredTime = if (element2.uuid == playerData.lastPlayed) 20 else 10
+		for (i in 1 until queue.size) {
+			for (j in 0 until i) {
+				val element1 = queue[i]
+				val element2 = queue[j]
 
-					if (!element2.remove && element.uuid != element2.uuid && element.time >= requiredTime) {
-						PvpGameManager.addGame(arrayListOf(element.uuid, element2.uuid))
+				if (element1.type == PlayerData.PVP_QUEUE_1V1 && element2.type == PlayerData.PVP_QUEUE_2V2) {
+					val greatestTime = max(element1.time, element2.time)
+					val leastTime = min(element1.time, element2.time)
 
-						element.remove = true
-						element2.remove = true
+					if (greatestTime >= QUEUE_TIME) {
+						val playerData1 = PlayerData.getPlayerData(element1.uuid)
+						val playerData2 = PlayerData.getPlayerData(element2.uuid)
 
-						break
+						/* last played each other before */
+						if (playerData1.lastPlayed == element2.uuid || playerData2.lastPlayed == element1.uuid) {
+							if (greatestTime >= QUEUE_EXTEND_TIME && leastTime >= QUEUE_TIME) {
+								queuePairs.add(
+									QueuePair(
+									element1.uuid, element2.uuid,
+									i, j,
+									0, greatestTime
+								)
+								)
+							}
+						/* fresh opponent */
+						} else {
+							queuePairs.add(QueuePair(
+								element1.uuid, element2.uuid,
+								i, j,
+								1, greatestTime
+							))
+						}
 					}
 				}
 			}
 		}
 
-		queue.removeIf { element ->
-			if (element.remove) {
-				val playerData = PlayerData.getPlayerData(element.uuid)
-				playerData.inLobbyPvpQueue.unsafeSet(false)
+		queuePairs.sortWith(object : Comparator<QueuePair> {
+			override fun compare(o1: QueuePair, o2: QueuePair): Int {
+				if (o1.priority1 > o2.priority1) return 1
+				if (o1.priority1 < o2.priority1) return -1
+				if (o1.priority2 > o2.priority2) return 1
+				if (o1.priority2 < o2.priority2) return -1
+				return 0
+			}
+		})
 
-				true
+		while (true) {
+			val pairFound = queuePairs.lastOrNull()
+
+			if (pairFound == null) {
+				break
+
 			} else {
-				++element.time
-				false
+				/* remove all traces of players added from remaining pairs */
+				queuePairs.removeIf {
+					it.player1 == pairFound.player1 ||
+					it.player1 == pairFound.player2 ||
+					it.player2 == pairFound.player1 ||
+					it.player2 == pairFound.player2
+				}
+
+				/* remove them from the queue */
+				PlayerData.getPlayerData(pairFound.player1).inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT)
+				PlayerData.getPlayerData(pairFound.player2).inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT)
+
+				/* create pvp game */
+				PvpGameManager.addGame(arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)))
 			}
 		}
+
+		/* 2v2 queue */
+		val availablePlayers = ArrayList(queue.filter { it.type == PlayerData.PVP_QUEUE_2V2 }.sortedBy { it.time })
+
+		/* try to create games in sections of 4 */
+		while (true) {
+			if (availablePlayers.size < 4) {
+				break
+
+			} else {
+				val group = Array(4) { availablePlayers[availablePlayers.lastIndex - it].uuid }
+				group.shuffle()
+
+				/* remove them remaining available */
+				availablePlayers.removeIf { element -> group.any { it == element.uuid } }
+
+				/* remove them from the queue */
+				group.forEach { PlayerData.getPlayerData(it).inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT) }
+
+				/* create pvp game */
+				PvpGameManager.addGame(arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])))
+			}
+		}
+
+		/* time increase */
+		queue.forEach { ++it.time }
 	}
 }
