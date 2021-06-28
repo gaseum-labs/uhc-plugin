@@ -46,13 +46,13 @@ object Lobby {
 
 		player.gameMode = GameMode.CREATIVE
 
-		/* reset applied status for all active quirks */
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		playerData.staged = false
 		playerData.participating = false
 		playerData.alive = false
 
+		/* reset applied status for all active quirks */
 		UHC.quirks.forEach { quirk ->
 			if (quirk.enabled.get()) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
 		}
@@ -93,7 +93,7 @@ object Lobby {
 						val queueType = playerData.inLobbyPvpQueue.get()
 
 						player.sendActionBar(Util.gradientString(
-							"${if (queueType == PlayerData.PVP_QUEUE_1V1) "1v1" else "2v2"} | " +
+							"${PvpGameManager.typeName(queueType)} | " +
 							"Queue Time: ${Util.timeString(queueTime)} | " +
 							"Players in Queue: ${PvpQueue.size(queueType)}",
 							TextColor.color(0x750c0c), TextColor.color(0xeb1f0c)
@@ -115,8 +115,8 @@ object Lobby {
 						val commandComponent = Component.text("\"/teamName [name]\"", warningColor, TextDecoration.BOLD)
 
 						player.sendActionBar(
-							Component.text("$RED${BOLD}Your team does not have a name! ${GOLD}Use").append(
-								commandComponent.append(Component.text("${GOLD}to set your team's name"))
+							Component.text("$RED${BOLD}Your team does not have a name! ${GOLD}Use ").append(
+								commandComponent.append(Component.text(" ${GOLD}to set your team's name"))
 							)
 						)
 

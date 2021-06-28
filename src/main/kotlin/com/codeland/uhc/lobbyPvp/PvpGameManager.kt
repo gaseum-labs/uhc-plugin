@@ -31,7 +31,12 @@ object PvpGameManager {
 	const val LARGE_BORDER = 96
 	const val SMALL_BORDER = 64
 
-	class PvpGame(val teams: ArrayList<ArrayList<UUID>>, position: Int, val borderSize: Int) {
+	const val TYPE_1V1 = 1
+	const val TYPE_2V2 = 2
+
+	fun typeName(type: Int) = if (type == TYPE_1V1) "1v1" else "2v2"
+
+	class PvpGame(val teams: ArrayList<ArrayList<UUID>>, val type: Int, position: Int, val borderSize: Int) {
 		val x = xFromPosition(position)
 		val z = zFromPosition(position)
 
@@ -73,12 +78,14 @@ object PvpGameManager {
 			time = -10
 
 			val winnerString = if (winners.size == 1) {
-				winners.joinToString(" ", "${ChatColor.RED}", " have won!") { it.name }
-			} else {
 				"${ChatColor.RED}${winners.first().name} wins!"
+			} else {
+				winners.joinToString(" ", "${ChatColor.RED}", " have won!") { it.name }
 			}
 
 			online().forEach { it.sendTitle(winnerString, "", 0, 160, 40) }
+
+			updateGlowAll()
 		}
 
 		/**
@@ -121,7 +128,7 @@ object PvpGameManager {
 		}
 
 		fun shouldGlow(): Boolean {
-			return glowTimer <= 0
+			return glowTimer <= 0 && !isOver()
 		}
 
 		fun updateGlowAll() {
@@ -142,8 +149,8 @@ object PvpGameManager {
 	val ongoingGames = ArrayList<PvpGame>()
 	var nextGamePosition = 0
 
-	fun addGame(teams: ArrayList<ArrayList<UUID>>) {
-		val game = PvpGame(teams, nextGamePosition, SMALL_BORDER)
+	fun addGame(teams: ArrayList<ArrayList<UUID>>, type: Int) {
+		val game = PvpGame(teams, type, nextGamePosition, SMALL_BORDER)
 
 		/* set last played against for players */
 		/* can only set last played against for one of the players on the other team */
@@ -274,7 +281,7 @@ object PvpGameManager {
 				}
 
 				/* teleport all players back when the game ends */
-				if (removeResult) game.online().forEach { disablePvp(it) }
+				if (removeResult) game.online().forEach { disablePvp(it.uniqueId, it) }
 
 				removeResult
 			}
@@ -303,16 +310,11 @@ object PvpGameManager {
 		return position / 16
 	}
 
-	fun removePlayerFromGame(uuid: UUID) {
-		val game = playersGame(uuid)
-		game?.teams?.any { it.removeIf { it == uuid } }
-	}
-
 	fun destroyGames() {
 		/* delete games and remove active players from them */
 		ongoingGames.removeIf { game ->
 			game.teams.forEach {
-				team -> team.mapNotNull { Bukkit.getPlayer(it) }.forEach { disablePvp(it) }
+				team -> team.mapNotNull { Bukkit.getPlayer(it) }.forEach { disablePvp(it.uniqueId, it) }
 			}
 			true
 		}
@@ -344,11 +346,18 @@ object PvpGameManager {
 		border.setCenter(centerX.toDouble(), centerZ.toDouble())
 		border.size = game.borderSize.toDouble()
 
-		(player as CraftPlayer).handle.b.sendPacket(ClientboundSetBorderCenterPacket(border))
-		(player as CraftPlayer).handle.b.sendPacket(ClientboundSetBorderSizePacket(border))
+		player as CraftPlayer
+		player.handle.b.sendPacket(ClientboundSetBorderCenterPacket(border))
+		player.handle.b.sendPacket(ClientboundSetBorderSizePacket(border))
 	}
 
-	fun disablePvp(player: Player) {
+	fun disablePvp(uuid: UUID, player: Player? = null) {
+		val game = playersGame(uuid)
+		game?.teams?.any { team -> team.removeIf { it == uuid } }
+
+		/* if the player is online */
+		val player = player ?: (Bukkit.getPlayer(uuid) ?: return)
+
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		Lobby.onSpawnLobby(player)

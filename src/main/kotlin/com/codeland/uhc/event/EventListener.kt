@@ -69,7 +69,7 @@ class EventListener : Listener {
 		val pvpGame = PvpGameManager.playersGame(player.uniqueId)
 
 		if (pvpGame != null) {
-			PvpGameManager.disablePvp(player)
+			PvpGameManager.disablePvp(player.uniqueId, player)
 
 		} else if (playerData.participating && player.gameMode != GameMode.SPECTATOR) {
 			playerData.offlineZombie = playerData.createZombie(player)

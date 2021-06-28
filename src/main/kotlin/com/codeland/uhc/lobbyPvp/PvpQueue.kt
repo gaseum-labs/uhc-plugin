@@ -16,7 +16,7 @@ object PvpQueue {
 
 	val enabled = UHCProperty(true) { set ->
 		if (!set) queue.removeIf {
-			PlayerData.getPlayerData(it.uuid).inLobbyPvpQueue.unsafeSet(PlayerData.PVP_QUEUE_NOT)
+			PlayerData.getPlayerData(it.uuid).inLobbyPvpQueue.unsafeSet(0)
 			true
 		}
 
@@ -67,7 +67,7 @@ object PvpQueue {
 				val element1 = queue[i]
 				val element2 = queue[j]
 
-				if (element1.type == PlayerData.PVP_QUEUE_1V1 && element2.type == PlayerData.PVP_QUEUE_1V1) {
+				if (element1.type == PvpGameManager.TYPE_1V1 && element2.type == PvpGameManager.TYPE_1V1) {
 					val greatestTime = max(element1.time, element2.time)
 					val leastTime = min(element1.time, element2.time)
 
@@ -123,16 +123,16 @@ object PvpQueue {
 				}
 
 				/* remove them from the queue */
-				PlayerData.getPlayerData(pairFound.player1).inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT)
-				PlayerData.getPlayerData(pairFound.player2).inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT)
+				PlayerData.getPlayerData(pairFound.player1).inLobbyPvpQueue.set(0)
+				PlayerData.getPlayerData(pairFound.player2).inLobbyPvpQueue.set(0)
 
 				/* create pvp game */
-				PvpGameManager.addGame(arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)))
+				PvpGameManager.addGame(arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)), PvpGameManager.TYPE_1V1)
 			}
 		}
 
 		/* 2v2 queue */
-		val availablePlayers = ArrayList(queue.filter { it.type == PlayerData.PVP_QUEUE_2V2 }.sortedBy { it.time })
+		val availablePlayers = ArrayList(queue.filter { it.type == PvpGameManager.TYPE_2V2 }.sortedBy { it.time })
 
 		/* try to create games in sections of 4 */
 		while (true) {
@@ -147,10 +147,10 @@ object PvpQueue {
 				availablePlayers.removeIf { element -> group.any { it == element.uuid } }
 
 				/* remove them from the queue */
-				group.forEach { PlayerData.getPlayerData(it).inLobbyPvpQueue.set(PlayerData.PVP_QUEUE_NOT) }
+				group.forEach { PlayerData.getPlayerData(it).inLobbyPvpQueue.set(0) }
 
 				/* create pvp game */
-				PvpGameManager.addGame(arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])))
+				PvpGameManager.addGame(arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])), PvpGameManager.TYPE_2V2)
 			}
 		}
 

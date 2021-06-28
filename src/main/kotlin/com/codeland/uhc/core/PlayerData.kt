@@ -5,13 +5,11 @@ import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.LoadoutGui
 import com.codeland.uhc.gui.gui.LobbyPvpGui
 import com.codeland.uhc.lobbyPvp.Loadouts
+import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
-import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
-import net.minecraft.server.bossevents.BossBattleCustom
-import net.minecraft.world.BossBattle
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -39,11 +37,11 @@ class PlayerData(val uuid: UUID) {
 	var lobbyInventory = emptyArray<ItemStack>()
 	var lastPlayed: UUID? = null
 	var loadoutSlot = UHCProperty(0)
-	var inLobbyPvpQueue = UHCProperty(PVP_QUEUE_NOT) { set ->
+	var inLobbyPvpQueue = UHCProperty(0) { set ->
 		when (set) {
-			PVP_QUEUE_NOT -> PvpQueue.remove(uuid)
-			PVP_QUEUE_1V1 -> PvpQueue.add(uuid, PVP_QUEUE_1V1)
-			PVP_QUEUE_2V2 -> PvpQueue.add(uuid, PVP_QUEUE_2V2)
+			0 -> PvpQueue.remove(uuid)
+			PvpGameManager.TYPE_1V1 -> PvpQueue.add(uuid, PvpGameManager.TYPE_1V1)
+			PvpGameManager.TYPE_2V2 -> PvpQueue.add(uuid, PvpGameManager.TYPE_2V2)
 		}
 		set
 	}
@@ -201,10 +199,6 @@ class PlayerData(val uuid: UUID) {
 	}
 
 	companion object {
-		const val PVP_QUEUE_NOT = 0
-		const val PVP_QUEUE_1V1 = 1
-		const val PVP_QUEUE_2V2 = 2
-
 		const val INVENTORY_TAG = "_UHC_Zombie_inv"
 		const val XP_TAG = "_UHC_Zombie_xp"
 		const val UUID_TAG = "_UHC_Zombie_uuid"

@@ -1,6 +1,5 @@
 package com.codeland.uhc.gui.guiItem
 
-import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
 import com.codeland.uhc.lobbyPvp.PvpGameManager
@@ -12,9 +11,9 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
 class QueueJoiner(index: Int, val type: Int, queueProperty: UHCProperty<Int>) : GuiItemProperty<Int>(index, queueProperty) {
-	val name = if (type == PlayerData.PVP_QUEUE_1V1) "1v1" else "2v2"
-	val material = if (type == PlayerData.PVP_QUEUE_1V1) Material.IRON_SWORD else Material.IRON_AXE
-	val disabledMaterial = if (type == PlayerData.PVP_QUEUE_1V1) Material.STONE_SWORD else Material.STONE_AXE
+	val name = PvpGameManager.typeName(type)
+	val material = if (type == PvpGameManager.TYPE_1V1) Material.IRON_SWORD else Material.IRON_AXE
+	val disabledMaterial = if (type == PvpGameManager.TYPE_1V1) Material.STONE_SWORD else Material.STONE_AXE
 
 	init { PvpQueue.enabled.watch(::updateDisplay) }
 
@@ -26,7 +25,7 @@ class QueueJoiner(index: Int, val type: Int, queueProperty: UHCProperty<Int>) : 
 
 		if (property.get() == type) {
 			player.sendMessage("${ChatColor.GOLD}Left $name PVP Queue")
-			property.set(PlayerData.PVP_QUEUE_NOT)
+			property.set(0)
 
 		} else {
 			player.sendMessage("${ChatColor.RED}Entered $name PVP Queue")

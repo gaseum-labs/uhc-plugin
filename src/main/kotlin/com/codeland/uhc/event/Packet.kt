@@ -117,21 +117,28 @@ object Packet {
 
 		val game = PvpGameManager.playersGame(teamPlayer.uniqueId)
 
-		/* rules for if on same team are different in lobby pvp */
-		val isOnTeam = if (game == null) {
-			uhcTeam != null && uhcTeam.members.contains(sentPlayer.uniqueId)
-
-		} else {
-			PvpGameManager.playersTeam(game, teamPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
+		val isOnTeam = when {
+			teamPlayer.uniqueId == sentPlayer.uniqueId -> true
+			game == null -> uhcTeam?.members?.contains(sentPlayer.uniqueId) == true
+			else -> PvpGameManager.playersTeam(game, teamPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
 		}
 
-		/* create fake scoreboard team */
-		val scoreboardTeam = ScoreboardTeam(Scoreboard(), newName)
-		scoreboardTeam.color = if (isOnTeam) EnumChatFormat.l else EnumChatFormat.m
-		scoreboardTeam.prefix = if (uhcTeam != null) Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2) else ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.p))
-		scoreboardTeam.playerNameSet.add(newName)
+		/* update fake scoreboard team */
+		fun updateTeam(name: String) {
+			val scoreboardTeam = ScoreboardTeam(Scoreboard(), name)
+			scoreboardTeam.color = if (isOnTeam) EnumChatFormat.l else EnumChatFormat.m
+			scoreboardTeam.prefix = if (uhcTeam != null) {
+				Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2)
+			} else {
+				ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.p))
+			}
+			scoreboardTeam.playerNameSet.add(name)
 
-		sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(scoreboardTeam, false))
+			sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(scoreboardTeam, false))
+		}
+
+		updateTeam(newName)
+		if (teamPlayer.uniqueId == sentPlayer.uniqueId) updateTeam(oldName)
 	}
 
 	fun init() {
@@ -161,15 +168,18 @@ object Packet {
 				freshPacketWrapper.playerInfoDataLists.write(0, freshPacketWrapper.playerInfoDataLists.read(0).map { playerInfoData ->
 					val newName = playersNewName(playerInfoData.profile.uuid)
 
+					fun createTeam(name: String) {
+						val sentTeam = ScoreboardTeam(Scoreboard(), name)
+						sentTeam.playerNameSet.add(name)
+						sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(sentTeam, true))
+					}
+
+					createTeam(newName)
+					if (sentPlayer.uniqueId == playerInfoData.profile.uuid) createTeam(playerInfoData.profile.name)
+
 					/* initialize the team that the sentplayer will know the playerInfoData player by */
-					val sentTeam = ScoreboardTeam(Scoreboard(), newName)
-					sentTeam.playerNameSet.add(newName)
-					sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(sentTeam, true))
-
-					//self team would go here if needed
-
 					PlayerInfoData(
-						playerInfoData.profile.withName(playersNewName(playerInfoData.profile.uuid)),
+						playerInfoData.profile.withName(newName),
 						playerInfoData.latency,
 						playerInfoData.gameMode,
 						playerInfoData.displayName

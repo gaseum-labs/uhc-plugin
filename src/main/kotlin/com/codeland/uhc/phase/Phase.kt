@@ -4,7 +4,11 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.UHCBar
+import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
+import net.minecraft.world.BossBattle
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.World
@@ -50,12 +54,54 @@ abstract class Phase {
 			val player = Bukkit.getPlayer(uuid)
 
 			if (player != null) {
-				UHCBar.updateBossBar(
-					player,
-					updateBarTitle(player.world, remainingSeconds, currentTick),
-					updateBarLength(remainingSeconds, currentTick),
-					phaseType.barColor
-				)
+				val game = PvpGameManager.playersGame(uuid)
+
+				when {
+					game != null -> {
+						UHCBar.updateBossBar(
+							player,
+							if (game.isOver()) {
+								"${ChatColor.RED}Game Over"
+							} else {
+								"${ChatColor.RED}${PvpGameManager.typeName(game.type)} PVP | " +
+								if (game.shouldGlow()) {
+									"${ChatColor.GOLD}Glowing"
+								} else {
+									"Glowing in ${Util.timeString(game.glowTimer)}"
+								}
+							},
+							if (game.glowPeriod == 0 || game.glowTimer <= 0) {
+								1.0f
+						    } else {
+								1.0f - (game.glowTimer.toFloat() / game.glowPeriod)
+				            },
+							BossBattle.BarColor.c
+						)
+					}
+					player.world.name == WorldManager.LOBBY_WORLD_NAME -> {
+						val phaseType = UHC.currentPhase?.phaseType ?: PhaseType.WAITING
+
+						UHCBar.updateBossBar(
+							player,
+							"${ChatColor.WHITE}Waiting Lobby" +
+							if (phaseType != PhaseType.WAITING) {
+								" | ${phaseType.chatColor}Game Ongoing: ${phaseType.prettyName}"
+							} else {
+								""
+							},
+							updateBarLength(remainingSeconds, currentTick),
+							BossBattle.BarColor.g
+						)
+					}
+					else -> {
+						UHCBar.updateBossBar(
+							player,
+							updateBarTitle(player.world, remainingSeconds, currentTick),
+							updateBarLength(remainingSeconds, currentTick),
+							phaseType.barColor
+						)
+					}
+				}
 			}
 		}
 
