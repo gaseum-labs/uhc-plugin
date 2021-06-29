@@ -192,7 +192,7 @@ object UHC {
 			return errorValue()
 		}
 
-		if (isGameGoing()) {
+		if (currentPhase?.phaseType != PhaseType.WAITING) {
 			messageStream(true, "Game has already started")
 			return errorValue()
 		}
@@ -344,7 +344,8 @@ object UHC {
 	fun containSpecs() {
 		val setup = setup.get()
 
-		Bukkit.getOnlinePlayers().forEach { player ->
+		val gameWorld = WorldManager.getGameWorld()
+		Bukkit.getOnlinePlayers().filter { it.world === gameWorld }.forEach { player ->
 			if (player.gameMode == GameMode.SPECTATOR) {
 				val locX = player.location.blockX.toDouble()
 				val locZ = player.location.blockZ.toDouble()

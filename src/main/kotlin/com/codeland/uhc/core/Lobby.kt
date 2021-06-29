@@ -228,7 +228,7 @@ object Lobby {
 		"The UHC game world has two jungles located midway to the starting border",
 		"You will be automatically moved into a voice call with your team. Communicate!",
 		"The maximum hunger after grace period is reduced, allowing you to eat suspicious stew whenever",
-		"Do not help living players as a spectator. No ghosting!",
+		"Do not help living players as a spectator",
 
 		/* lobby */
 		"Queue for 1v1 KitPVP with the Iron Sword in the Lobby",

@@ -20,26 +20,18 @@ import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
+import kotlin.math.*
 
 object PvpGameManager {
-	const val ARENA_STRIDE = 160
-	const val BEACH = 128
-	const val LARGE_BORDER = 96
-	const val SMALL_BORDER = 64
+	const val ARENA_STRIDE = 80
+	const val BORDER = 64
 
 	const val TYPE_1V1 = 1
 	const val TYPE_2V2 = 2
 
 	fun typeName(type: Int) = if (type == TYPE_1V1) "1v1" else "2v2"
 
-	class PvpGame(val teams: ArrayList<ArrayList<UUID>>, val type: Int, position: Int, val borderSize: Int) {
-		val x = xFromPosition(position)
-		val z = zFromPosition(position)
-
+	class PvpGame(val teams: ArrayList<ArrayList<UUID>>, val type: Int, val x: Int, val z: Int, val borderSize: Int) {
 		var winners: List<UUID> = ArrayList()
 		var time = -4
 
@@ -107,10 +99,10 @@ object PvpGameManager {
 
 		fun prepareArena() {
 			val world = WorldManager.getPVPWorld()
-			val border = (ARENA_STRIDE - LARGE_BORDER) / 2
+			val border = (ARENA_STRIDE - BORDER) / 2
 
-			for (bx in x * ARENA_STRIDE + border until x * ARENA_STRIDE + ARENA_STRIDE - border) {
-				for (bz in z * ARENA_STRIDE + border until z * ARENA_STRIDE + ARENA_STRIDE - border) {
+			for (bx in x * ARENA_STRIDE until (x + 1) * ARENA_STRIDE) {
+				for (bz in z * ARENA_STRIDE until (z + 1) * ARENA_STRIDE) {
 					/* bedrock floor below sea level */
 					val aboveBlock = world.getBlockAt(bx, 62, bz)
 
@@ -147,10 +139,24 @@ object PvpGameManager {
 	}
 
 	val ongoingGames = ArrayList<PvpGame>()
-	var nextGamePosition = 0
+
+	var currentDir = 0
+
+	val axes = arrayOf(0, 0)
+	val maxes = arrayOf(0, 0, 0, 0)
+
+	fun currentAxis(dir: Int) = dir % 2
+	fun increment(dir: Int) = 1 - (dir / 2) * 2
 
 	fun addGame(teams: ArrayList<ArrayList<UUID>>, type: Int) {
-		val game = PvpGame(teams, type, nextGamePosition, SMALL_BORDER)
+		val game = PvpGame(teams, type, axes[0], axes[1], BORDER)
+
+		/* next position in a spiral */
+		axes[currentAxis(currentDir)] += increment(currentDir)
+		if (abs(axes[currentAxis(currentDir)]) > maxes[currentDir]) {
+			maxes[currentDir] = abs(axes[currentAxis(currentDir)])
+			currentDir = (currentDir + 1) % 4
+		}
 
 		/* set last played against for players */
 		/* can only set last played against for one of the players on the other team */
@@ -165,7 +171,6 @@ object PvpGameManager {
 
 		game.prepareArena()
 
-		++nextGamePosition
 		ongoingGames.add(game)
 	}
 
@@ -242,10 +247,10 @@ object PvpGameManager {
 					else -> {
 						/* damage if outside the border */
 						game.online().forEach { player ->
-							val minX = (game.x * ARENA_STRIDE) + (ARENA_STRIDE - SMALL_BORDER) / 2
-							val maxX = (game.x * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (SMALL_BORDER / 2)) - 1
-							val minZ = (game.z * ARENA_STRIDE) + (ARENA_STRIDE - SMALL_BORDER) / 2
-							val maxZ = (game.z * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (SMALL_BORDER / 2)) - 1
+							val minX = (game.x * ARENA_STRIDE) + (ARENA_STRIDE - BORDER) / 2
+							val maxX = (game.x * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (BORDER / 2)) - 1
+							val minZ = (game.z * ARENA_STRIDE) + (ARENA_STRIDE - BORDER) / 2
+							val maxZ = (game.z * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (BORDER / 2)) - 1
 
 							val playerX = player.location.blockX
 							val playerZ = player.location.blockZ
@@ -291,7 +296,7 @@ object PvpGameManager {
 	fun teamPositions(game: PvpGame): List<Pair<Int, Int>> {
 		val (centerX, centerZ) = game.centerLocation()
 
-		val radius = SMALL_BORDER / 2 - 4
+		val radius = BORDER / 2 - 4
 
 		val startAngle = Math.random() * PI * 2
 		val angleStride = PI * 2 / game.teams.size
@@ -300,14 +305,6 @@ object PvpGameManager {
 			val angle = startAngle + angleStride * i
 			Pair(centerX + (cos(angle) * radius).roundToInt(), centerZ + (sin(angle) * radius).roundToInt())
 		}
-	}
-
-	private fun xFromPosition(position: Int): Int {
-		return position % 16
-	}
-
-	private fun zFromPosition(position: Int): Int {
-		return position / 16
 	}
 
 	fun destroyGames() {

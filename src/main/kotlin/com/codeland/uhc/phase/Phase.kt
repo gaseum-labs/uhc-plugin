@@ -63,15 +63,21 @@ abstract class Phase {
 							if (game.isOver()) {
 								"${ChatColor.RED}Game Over"
 							} else {
-								"${ChatColor.RED}${PvpGameManager.typeName(game.type)} PVP | " +
-								if (game.shouldGlow()) {
-									"${ChatColor.GOLD}Glowing"
+								"${ChatColor.RED}${PvpGameManager.typeName(game.type)} PVP" +
+								if (game.time >= 0) {
+									" | " + if (game.shouldGlow()) {
+										"${ChatColor.GOLD}Glowing"
+									} else {
+										"Glowing in ${Util.timeString(game.glowTimer)}"
+									}
 								} else {
-									"Glowing in ${Util.timeString(game.glowTimer)}"
+									""
 								}
 							},
-							if (game.glowPeriod == 0 || game.glowTimer <= 0) {
+							if (game.isOver() || game.glowPeriod == 0 || game.glowTimer <= 0) {
 								1.0f
+						    } else if (game.time < 0) {
+						    	0.0f
 						    } else {
 								1.0f - (game.glowTimer.toFloat() / game.glowPeriod)
 				            },

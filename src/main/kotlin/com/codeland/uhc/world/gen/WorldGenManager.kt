@@ -115,37 +115,6 @@ object WorldGenManager {
 		Biomes.an
 	)
 
-	val pvpBiomes = arrayOf(
-		Biomes.m,
-		Biomes.E,
-		Biomes.f,
-		Biomes.b,
-		Biomes.aa,
-		Biomes.e,
-		Biomes.ad,
-		Biomes.B,
-		Biomes.D,
-		Biomes.v,
-		Biomes.x,
-		Biomes.av,
-		Biomes.c,
-		Biomes.J,
-		Biomes.L,
-		Biomes.ai,
-		Biomes.au,
-		Biomes.at,
-		Biomes.ap,
-		Biomes.ak,
-		Biomes.o,
-		Biomes.ah,
-		Biomes.G,
-		Biomes.I,
-		Biomes.ag,
-		Biomes.am,
-		Biomes.`as`,
-		Biomes.an
-	)
-
     private fun onWorldAdded(world: World) {
         val worldServer = worldServerField[world] as WorldServer
         val chunkProviderServer = chunkProviderServerField[worldServer] as ChunkProviderServer
@@ -191,7 +160,7 @@ object WorldGenManager {
 			    )
 		    }
 		    WorldManager.PVP_WORLD_NAME -> {
-			    WorldChunkManagerOverworldPvp(seed, biomeRegistry, pvpBiomes)
+			    WorldChunkManagerOverworldPvp(seed, biomeRegistry)
 		    }
 		    else -> null
 	    }
