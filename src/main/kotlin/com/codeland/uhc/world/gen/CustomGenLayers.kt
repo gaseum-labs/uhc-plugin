@@ -7,6 +7,7 @@ import com.codeland.uhc.world.gen.layer.lobby.GenLayerOceanDeepener
 import com.codeland.uhc.world.gen.layer.lobby.GenLayerOceanRiser
 import com.codeland.uhc.world.gen.layer.lobby.GenLayerShatteredIsland
 import com.codeland.uhc.world.gen.layer.lobby.LayerOceanNoise
+import com.codeland.uhc.world.gen.layer.pvp.LayerPvp
 import net.minecraft.world.level.newbiome.area.Area
 import net.minecraft.world.level.newbiome.area.AreaFactory
 import net.minecraft.world.level.newbiome.area.AreaLazy
@@ -92,6 +93,18 @@ object CustomGenLayers {
 		baseLayer = GenLayerRiverApply().a(seed.apply(2220L), baseLayer, riverLayer)
 
 		return baseLayer
+	}
+
+	fun createGenLayerPvp(seed: Long): Area {
+		val noise = { s: Long -> WorldGenContextArea(25, seed, s) }
+
+		var baseLayer = LayerPvp().a(noise(1000L))
+		baseLayer = GenLayerZoom.a.a(noise(1001L), baseLayer)
+		baseLayer = GenLayerZoom.a.a(noise(1002L), baseLayer)
+		baseLayer = GenLayerZoom.a.a(noise(1003L), baseLayer)
+		baseLayer = GenLayerZoom.ar.a(noise(1004L), baseLayer)
+
+		return baseLayer.make() as Area
 	}
 
 	fun createGenLayerNether(seed: Long): GenLayer {

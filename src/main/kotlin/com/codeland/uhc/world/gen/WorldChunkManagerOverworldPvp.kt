@@ -14,31 +14,36 @@ class WorldChunkManagerOverworldPvp(
 	val seed: Long,
 	private val biomeRegistry: IRegistry<BiomeBase>,
 ) : WorldChunkManagerOverworld(seed, false, false, biomeRegistry) {
-	val biomes = arrayOf(
-		BiomeNo.PLAINS,
-		BiomeNo.DESERT,
-		BiomeNo.MOUNTAINS,
-		BiomeNo.FOREST,
-		BiomeNo.TAIGA,
-		BiomeNo.SWAMP,
-		BiomeNo.SNOWY_TUNDRA,
-		BiomeNo.MUSHROOM_FIELDS,
-		BiomeNo.STONE_SHORE,
-		BiomeNo.BIRCH_FOREST,
-		BiomeNo.DARK_FOREST,
-		BiomeNo.SAVANNA_PLATEAU,
-		BiomeNo.BADLANDS,
-		BiomeNo.WOODED_BADLANDS_PLATEAU,
-		BiomeNo.FLOWER_FOREST,
-		BiomeNo.ICE_SPIKES,
-		BiomeNo.MODIFIED_GRAVELLY_MOUNTAINS,
-		BiomeNo.ERODED_BADLANDS,
-		BiomeNo.CRIMSON_FOREST
-	).map { biomeRegistry.d(BiomeRegistry.a(it)) }
+	companion object {
+		val biomeNos = arrayOf(
+			BiomeNo.PLAINS,
+			BiomeNo.DESERT,
+			BiomeNo.MOUNTAINS,
+			BiomeNo.FOREST,
+			BiomeNo.TAIGA,
+			BiomeNo.SWAMP,
+			BiomeNo.SNOWY_TUNDRA,
+			BiomeNo.MUSHROOM_FIELDS,
+			BiomeNo.STONE_SHORE,
+			BiomeNo.BIRCH_FOREST,
+			BiomeNo.DARK_FOREST,
+			BiomeNo.SAVANNA_PLATEAU,
+			BiomeNo.BADLANDS,
+			BiomeNo.WOODED_BADLANDS_PLATEAU,
+			BiomeNo.FLOWER_FOREST,
+			BiomeNo.ICE_SPIKES,
+			BiomeNo.MODIFIED_GRAVELLY_MOUNTAINS,
+			BiomeNo.ERODED_BADLANDS
+		)
+	}
+
+	val biomes = biomeNos.map { biomeRegistry.d(BiomeRegistry.a(it)) }
 
 	val inBetween = biomeRegistry.d(BiomeRegistry.a(BiomeNo.BEACH))
 
 	val stride = PvpGameManager.ARENA_STRIDE
+
+	val areaLazy = CustomGenLayers.createGenLayerPvp(seed)
 
 	fun inRange(sx: Int, sz: Int, size: Int): Boolean {
 		val border = (stride - size) / 2
@@ -53,7 +58,7 @@ class WorldChunkManagerOverworldPvp(
 	    val sz = Util.mod(z, stride / 4) * 4
 
 	    return when {
-	    	inRange(sx, sz, PvpGameManager.BORDER) -> biomes[Random(cx.toLong().shl(32).or(cz.toLong()).xor(seed)).nextInt(0, biomes.size)]
+	    	inRange(sx, sz, PvpGameManager.BORDER) -> biomes[areaLazy.a(x, z)]
 		    else -> inBetween
 	    }
     }
