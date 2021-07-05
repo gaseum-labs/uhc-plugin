@@ -1,6 +1,7 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.UHCPlugin
+import net.minecraft.data.worldgen.biome.BiomeRegistry
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -65,11 +66,8 @@ class GuiManager : Listener {
 
 	@EventHandler
 	fun onClose(event: InventoryCloseEvent) {
-		/* need a tick buffer in case this is called inside an onClick event */
-		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
-			val (gui) = findGui(event.inventory, event.player.uniqueId)
-			gui?.onClose(event.player as Player)
-		}
+		val (gui) = findGui(event.inventory, event.player.uniqueId)
+		gui?.onClose(event.player as Player)
 	}
 
 	@EventHandler

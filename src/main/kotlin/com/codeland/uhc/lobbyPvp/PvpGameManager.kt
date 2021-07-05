@@ -8,7 +8,6 @@ import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
-import com.comphenix.protocol.events.PacketContainer
 import net.kyori.adventure.text.Component
 import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket
 import net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket
@@ -60,10 +59,6 @@ object PvpGameManager {
 		fun teamsAlive() = teams.map { team ->
 			team.mapNotNull { alivePlayer(it) }
 		}.filter { it.isNotEmpty() }
-
-		fun centerLocation(): Pair<Int, Int> {
-			return Pair(x * ARENA_STRIDE + (ARENA_STRIDE / 2), z * ARENA_STRIDE + (ARENA_STRIDE / 2))
-		}
 
 		fun endNaturally(winners: List<Player>) {
 			this.winners = winners.map { it.uniqueId }
@@ -136,12 +131,26 @@ object PvpGameManager {
 		fun isOver(): Boolean {
 			return winners.isNotEmpty()
 		}
+
+		fun getCenter(): Pair<Int, Int> {
+			return center(x, z)
+		}
+
+		companion object {
+			fun center(x: Int, z: Int): Pair<Int, Int> {
+				return Pair(
+					x * ARENA_STRIDE + (ARENA_STRIDE / 2),
+					z * ARENA_STRIDE + (ARENA_STRIDE / 2)
+				)
+			}
+		}
 	}
 
 	val ongoingGames = ArrayList<PvpGame>()
 
 	var currentDir = 0
 
+	/* positive x, positive z, negative x, negative z */
 	val axes = arrayOf(0, 0)
 	val maxes = arrayOf(0, 0, 0, 0)
 
@@ -182,20 +191,56 @@ object PvpGameManager {
 		return game.teams.find { it.contains(uuid) }
 	}
 
+	fun onEdge(x: Int, z: Int): Boolean {
+		val x = Util.mod(x, ARENA_STRIDE)
+		val z = Util.mod(z, ARENA_STRIDE)
+		val edge = (ARENA_STRIDE - BORDER) / 2
+
+		return x < edge || x > ARENA_STRIDE - edge || z < edge || z > ARENA_STRIDE - edge
+	}
+
 	fun perTick(currentTick: Int) {
 		if (currentTick % 4 == 0) {
-			val arrows = WorldManager.getPVPWorld().getEntitiesByClass(AbstractArrow::class.java)
-
-			arrows.forEach { arrow ->
-				val x = Util.mod(arrow.location.blockX, ARENA_STRIDE)
-				val z = Util.mod(arrow.location.blockZ, ARENA_STRIDE)
-
-				if (x < 32 || x > ARENA_STRIDE - 32 || z < 32 || z > ARENA_STRIDE - 32) arrow.remove()
+			WorldManager.getPVPWorld().entities.forEach { entity ->
+				if (
+					entity is AbstractArrow &&
+					onEdge(entity.location.blockX, entity.location.blockZ)
+				) entity.remove()
 			}
 		}
 
 		if (currentTick % 20 == 0) {
 			PvpQueue.perSecond()
+
+			/* contain spectators */
+			Bukkit.getOnlinePlayers()
+				.filter {
+					it.gameMode == GameMode.SPECTATOR &&
+					it.world.name == WorldManager.PVP_WORLD_NAME
+				}.forEach { player ->
+					fun contain(value: Int, min: Int, max: Int): Int? {
+						return if (value < min) min else if (value > max) max else null
+					}
+
+					val teleportX = contain(
+						player.location.blockX,
+						-maxes[2] * ARENA_STRIDE,
+						(maxes[0] + 1) * ARENA_STRIDE
+					)
+					val teleportZ = contain(
+						player.location.blockZ,
+						-maxes[3] * ARENA_STRIDE,
+						(maxes[1] + 1) * ARENA_STRIDE
+					)
+
+					if (teleportX != null || teleportZ != null) {
+						player.teleport(player.location.set(
+							teleportX?.toDouble() ?: player.location.x,
+							player.location.y,
+							teleportZ?.toDouble() ?: player.location.z
+						))
+					}
+				}
 
 			ongoingGames.removeIf { game ->
 				++game.time
@@ -294,7 +339,7 @@ object PvpGameManager {
 	}
 
 	fun teamPositions(game: PvpGame): List<Pair<Int, Int>> {
-		val (centerX, centerZ) = game.centerLocation()
+		val (centerX, centerZ) = game.getCenter()
 
 		val radius = BORDER / 2 - 4
 
@@ -318,6 +363,8 @@ object PvpGameManager {
 	}
 
 	fun enablePvp(player: Player, save: Boolean, location: Location) {
+		player.closeInventory()
+
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		/* save before pvp state */
@@ -339,7 +386,7 @@ object PvpGameManager {
 
 		val border = WorldBorder()
 		border.world = (WorldManager.getPVPWorld() as CraftWorld).handle
-		val (centerX, centerZ) = game.centerLocation()
+		val (centerX, centerZ) = game.getCenter()
 		border.setCenter(centerX.toDouble(), centerZ.toDouble())
 		border.size = game.borderSize.toDouble()
 

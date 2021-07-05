@@ -169,10 +169,12 @@ object WorldGenManager {
 		    NoiseSamplerUHC.inject(
 			    chunkGenerator as ChunkGeneratorAbstract,
 			    customManager,
-			    if (world.name == WorldManager.GAME_WORLD_NAME)
-			    	WorldGenOption.getEnabled(WorldGenOption.AMPLIFIED)
-		        else
-		        	false
+			    if (world.name == WorldManager.GAME_WORLD_NAME) {
+				    WorldGenOption.getEnabled(WorldGenOption.AMPLIFIED)
+			    } else {
+				    false
+			    },
+			    world.name == WorldManager.PVP_WORLD_NAME
 		    )
 
 		    worldChunkManagerBField[chunkGenerator] = customManager

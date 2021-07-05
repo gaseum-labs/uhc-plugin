@@ -540,8 +540,8 @@ class EventListener : Listener {
 		} else {
 			val pvpGame = PvpGameManager.playersGame(player.uniqueId)
 
-			if (pvpGame != null && event.blockPlaced.y > 127) {
-				event.player.sendActionBar(Component.text("Height limit for building is 127", NamedTextColor.RED, TextDecoration.BOLD))
+			if (pvpGame != null && event.blockPlaced.y > 100) {
+				event.player.sendActionBar(Component.text("Height limit for building is 100", NamedTextColor.RED, TextDecoration.BOLD))
 				event.isCancelled = true
 			}
 		}

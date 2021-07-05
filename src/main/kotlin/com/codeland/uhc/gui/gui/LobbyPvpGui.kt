@@ -2,10 +2,7 @@ package com.codeland.uhc.gui.gui
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.gui.GuiPage
-import com.codeland.uhc.gui.guiItem.CloseButton
-import com.codeland.uhc.gui.guiItem.LoadoutSlotPicker
-import com.codeland.uhc.gui.guiItem.QueueDisabler
-import com.codeland.uhc.gui.guiItem.QueueJoiner
+import com.codeland.uhc.gui.guiItem.*
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.util.Util
@@ -19,6 +16,7 @@ class LobbyPvpGui(val playerData: PlayerData) : GuiPage(3, Util.gradientString("
 	val slot1 = addItem(LoadoutSlotPicker(coords(4, 2), 1, playerData.loadoutSlot))
 	val slot2 = addItem(LoadoutSlotPicker(coords(5, 2), 2, playerData.loadoutSlot))
 
+	val spectatePvp = addItem(SpectatePvp(coords(0, 2)))
 	val queueDisabler = addItem(QueueDisabler(coords(7, 2), PvpQueue.enabled))
 
 	val closeButton = addItem(CloseButton(coords(8, 2)))

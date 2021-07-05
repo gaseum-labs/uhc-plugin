@@ -1,5 +1,7 @@
 package com.codeland.uhc.world.gen.generator
 
+import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.util.Util
 import net.minecraft.util.MathHelper
 import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.WorldChunkManager
@@ -15,7 +17,7 @@ class NoiseSamplerUHC(
 	val worldChunkManager: WorldChunkManager,
 	val iii: Int, val jjj: Int, val kkk: Int, val noiseSettings: NoiseSettings, val blendedNoise: BlendedNoise,
 	gen3: NoiseGenerator3Handler?, val octaves: NoiseGeneratorOctaves,
-	val noiseModifier: NoiseModifier, val amplified: Boolean
+	val noiseModifier: NoiseModifier, val amplified: Boolean, val pvp: Boolean
 ) : NoiseSampler(
 	worldChunkManager, iii, jjj, kkk,
 	noiseSettings, blendedNoise,
@@ -24,6 +26,9 @@ class NoiseSamplerUHC(
 	companion object {
 		const val AMPLIFIED_BASE = 1.0f
 		const val AMPLIFIED_SCALE = 3.25f
+
+		const val PVP_BASE = 0.2f
+		const val PVP_SCALE = 0.3f
 
 		val circle = FloatArray(25)
 		init {
@@ -57,7 +62,8 @@ class NoiseSamplerUHC(
 		fun fromOriginal(
 			original: NoiseSampler,
 			worldChunkManager: WorldChunkManager,
-			amplified: Boolean
+			amplified: Boolean,
+			pvp: Boolean
 		): NoiseSamplerUHC {
 			NoiseSamplerUHC
 			return NoiseSamplerUHC(
@@ -70,7 +76,8 @@ class NoiseSamplerUHC(
 				iField[original] as NoiseGenerator3Handler?,
 				jField[original] as NoiseGeneratorOctaves,
 				sField[original] as NoiseModifier,
-				amplified
+				amplified,
+				pvp
 			)
 		}
 
@@ -80,19 +87,25 @@ class NoiseSamplerUHC(
 		fun inject(
 			chunkGeneratorAbstract: ChunkGeneratorAbstract,
 			worldChunkManager: WorldChunkManager,
-			amplified: Boolean
+			amplified: Boolean, pvp: Boolean
 		): NoiseSamplerUHC {
 			NoiseSamplerUHC
 			val original = uField[chunkGeneratorAbstract] as NoiseSampler
 
-			val noiseSamplerUHC = fromOriginal(original, worldChunkManager, amplified)
+			val noiseSamplerUHC = fromOriginal(original, worldChunkManager, amplified, pvp)
 			uField[chunkGeneratorAbstract] = noiseSamplerUHC
 
 			return noiseSamplerUHC
 		}
 	}
 
-	fun getBase(biomeBase: BiomeBase): Float {
+	fun getBase(biomeBase: BiomeBase, x: Int, z: Int): Float {
+		if (pvp) return if (PvpGameManager.onEdge(x * 4, z * 4)) {
+			-0.9f
+		} else {
+			PVP_BASE
+		}
+
 		val base = biomeBase.h()
 
 		if (base < 0) return base
@@ -102,11 +115,18 @@ class NoiseSamplerUHC(
 		return base
 	}
 
-	fun getScale(biomeBase: BiomeBase): Float {
-		return if (getBase(biomeBase) > 0 && amplified)
+	fun getScale(biomeBase: BiomeBase, base: Float, x: Int, z: Int): Float {
+		if (pvp) return if (PvpGameManager.onEdge(x * 4, z * 4)) {
+			0.0f
+		} else {
+			PVP_SCALE
+		}
+
+		return if (base > 0 && amplified) {
 			AMPLIFIED_SCALE
-		else
+		} else {
 			biomeBase.j()
+		}
 	}
 
 	override fun a(adouble: DoubleArray, i: Int, j: Int, noisesettings: NoiseSettings, k: Int, l: Int, i1: Int) {
@@ -116,14 +136,17 @@ class NoiseSamplerUHC(
 		var f = 0.0f
 		var f1 = 0.0f
 		var f2 = 0.0f
-		val originBase = getBase(worldChunkManager.getBiome(i, k, j))
+		val originBase = getBase(worldChunkManager.getBiome(i, k, j), i, j)
 
 		for (k1 in -2..2) {
 			for (l1 in -2..2) {
-				val biome = worldChunkManager.getBiome(i + k1, k, j + l1)
+				val x = i + k1
+				val z = j + l1
 
-				val otherBase = getBase(biome).coerceAtLeast(-1.8f)
-				val otherScale = getScale(biome)
+				val biome = worldChunkManager.getBiome(x, k, z)
+
+				val otherBase = getBase(biome, x, z).coerceAtLeast(-1.8f)
+				val otherScale = getScale(biome, otherBase, x, z)
 
 				val f8 = if (otherBase > originBase) 0.5f else 1.0f
 				val f9 = f8 * circle[k1 + 2 + (l1 + 2) * 5] / (otherBase + 2.0f)
