@@ -13,10 +13,14 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.*
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
+import net.kyori.adventure.text.format.TextColor
 import net.minecraft.EnumChatFormat
 import net.minecraft.network.chat.ChatComponentText
 import net.minecraft.network.chat.ChatModifier
+import net.minecraft.network.chat.IChatMutableComponent
 import net.minecraft.network.protocol.game.*
+import net.minecraft.network.protocol.status.PacketStatusOutServerInfo
+import net.minecraft.network.protocol.status.ServerPing
 import net.minecraft.network.syncher.DataWatcher
 import net.minecraft.network.syncher.DataWatcherObject
 import net.minecraft.network.syncher.DataWatcherRegistry
@@ -257,6 +261,47 @@ object Packet {
 
 				val mappedPlayerName = playersNewName(player.uniqueId)
 				scoreboardPlayerField.set(event.packet.handle, mappedPlayerName)
+			}
+		})
+
+		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Status.Server.SERVER_INFO) {
+			override fun onPacketSending(event: PacketEvent) {
+				val oldPing = (event.packet.handle as PacketStatusOutServerInfo).b()
+
+				val newPing = ServerPing()
+				newPing.setServerInfo(ServerPing.ServerData("UHC ${Bukkit.getMinecraftVersion()}", oldPing.serverData.protocolVersion))
+				newPing.setPlayerSample(oldPing.b())
+
+				fun createStrip() = CharArray(30) { 0x2588.toChar() }
+
+				val topStrip = createStrip()
+				val bottomStrip = createStrip()
+
+				topStrip[9] = 0xff35.toChar()
+				bottomStrip[11] = 0xff28.toChar()
+				topStrip[16] = 0xff23.toChar()
+
+				newPing.setMOTD(
+					Util.nmsGradientStringStylized(
+						String(topStrip),
+						TextColor.color(0x1042e6),
+						TextColor.color(0x0af6fa),
+						ChatModifier.a.setItalic(true).setRandom(true),
+						arrayOf(9, 16)
+					).addSibling(
+						Util.nmsGradientStringStylized(
+							String(bottomStrip),
+							TextColor.color(0x1042e6),
+							TextColor.color(0x0af6fa),
+							ChatModifier.a.setItalic(true).setRandom(true),
+							arrayOf(11)
+						)
+					)
+				)
+
+				newPing.setFavicon(GameRunner.bot?.serverIcon ?: oldPing.d())
+
+				event.packet = PacketContainer.fromPacket(PacketStatusOutServerInfo(newPing))
 			}
 		})
 	}

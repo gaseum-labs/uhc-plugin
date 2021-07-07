@@ -8,6 +8,7 @@ import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
+import net.kyori.adventure.text.BlockNBTComponent
 import net.kyori.adventure.text.Component
 import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket
 import net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket
@@ -24,6 +25,8 @@ import kotlin.math.*
 object PvpGameManager {
 	const val ARENA_STRIDE = 80
 	const val BORDER = 64
+	const val START_BUFFER = 5
+	const val TEAM_BUFFER = 3
 
 	const val TYPE_1V1 = 1
 	const val TYPE_2V2 = 2
@@ -134,6 +137,31 @@ object PvpGameManager {
 
 		fun getCenter(): Pair<Int, Int> {
 			return center(x, z)
+		}
+
+		data class Position(val x: Int, val z: Int, val rotation: Float)
+
+		fun playerPositions(): List<List<Position>> {
+			val (centerX, centerZ) = getCenter()
+
+			val radius = BORDER / 2.0f - START_BUFFER
+
+			val startAngle = (Math.random() * PI * 2).toFloat()
+			val angleStride = PI.toFloat() * 2 / teams.size
+
+			val teamAngle = 2 * asin((TEAM_BUFFER / 2.0f) / radius)
+
+			return (teams.indices).map { i ->
+				val baseAngle = startAngle + angleStride * i
+
+				teams[i].indices.map { j ->
+					val angle = baseAngle + teamAngle * j
+					val x = floor(centerX + (cos(angle) * radius)).toInt()
+					val z = floor(centerZ + (sin(angle) * radius)).toInt()
+
+					Position(x, z, angle * 180.0f)
+				}
+			}
 		}
 
 		companion object {
@@ -270,13 +298,23 @@ object PvpGameManager {
 
 						} else {
 							val world = WorldManager.getPVPWorld()
-							val locations = teamPositions(game).map { position ->
-								val (liquidY, solidY) = Util.topLiquidSolidY(world, position.first, position.second)
-								Location(world, position.first + 0.5, (if (liquidY == -1) solidY else liquidY) + 1.0, position.second + 0.5)
+							val teamLocations = game.playerPositions().map {
+								it.map { (x, z, rotation) ->
+									val (liquidY, solidY) = Util.topLiquidSolidY(world, x, z)
+									if (liquidY != -1) world.getBlockAt(x, liquidY, z).type = Material.STONE
+									Location(
+										world,
+										x + 0.5,
+										(if (liquidY == -1) solidY else liquidY) + 1.0,
+										z + 0.5,
+										rotation,
+										0.0f
+									)
+								}
 							}
 
-							game.teams.zip(locations).forEach { (team, location) ->
-								team.forEach { uuid ->
+							game.teams.zip(teamLocations).forEach { (team, teamLocation) ->
+								team.zip(teamLocation).forEach { (uuid, location) ->
 									val player = Bukkit.getPlayer(uuid)
 									if (player != null) {
 										enablePvp(player, true, location)
@@ -335,20 +373,6 @@ object PvpGameManager {
 
 				removeResult
 			}
-		}
-	}
-
-	fun teamPositions(game: PvpGame): List<Pair<Int, Int>> {
-		val (centerX, centerZ) = game.getCenter()
-
-		val radius = BORDER / 2 - 4
-
-		val startAngle = Math.random() * PI * 2
-		val angleStride = PI * 2 / game.teams.size
-
-		return (game.teams.indices).map { i ->
-			val angle = startAngle + angleStride * i
-			Pair(centerX + (cos(angle) * radius).roundToInt(), centerZ + (sin(angle) * radius).roundToInt())
 		}
 	}
 

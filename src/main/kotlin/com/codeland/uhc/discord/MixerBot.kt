@@ -8,6 +8,8 @@ import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Util
+import io.netty.buffer.ByteBufOutputStream
+import io.netty.buffer.Unpooled
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
@@ -18,9 +20,21 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
+import org.bukkit.ChatColor
+import java.awt.RenderingHints
+import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
+import java.awt.image.BufferedImage
 import java.io.*
 import java.lang.Exception
+import java.net.URI
+import java.net.URL
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.nio.charset.StandardCharsets
 import java.util.*
+import javax.imageio.ImageIO
 import kotlin.collections.ArrayList
 
 class MixerBot(
@@ -98,11 +112,43 @@ class MixerBot(
 		EditFileCommand()
 	)
 
+	var serverIcon: String? = null
+
 	init {
 		jda.presence.activity = Activity.playing("UHC at $ip")
 		jda.addEventListener(this)
 
 		clearTeamVCs()
+
+		val iconUrl = guild()?.iconUrl
+		if (iconUrl != null) {
+			val request = HttpRequest.newBuilder(URI(iconUrl)).GET().build()
+			val client = HttpClient.newHttpClient()
+			ImageIO.read(URL(iconUrl))
+			client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).thenAccept { response ->
+				val bytebuf = Unpooled.buffer()
+
+				try {
+					val size = 64
+					val baseImage = ImageIO.read(response.body())
+					val scaledImage = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
+
+					val graphics = scaledImage.createGraphics()
+					graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+					graphics.drawImage(baseImage, 0, 0, size, size, 0, 0, baseImage.width, baseImage.height, null)
+					graphics.dispose()
+
+					ImageIO.write(scaledImage, "PNG", ByteBufOutputStream(bytebuf))
+					bytebuf.setInt(16, size)
+					bytebuf.setInt(20, size)
+					val bytebuffer = Base64.getEncoder().encode(bytebuf.nioBuffer())
+					serverIcon = "data:image/png;base64," + StandardCharsets.UTF_8.decode(bytebuffer)
+
+				} finally {
+					bytebuf.release()
+				}
+			}
+		}
 	}
 
 	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
