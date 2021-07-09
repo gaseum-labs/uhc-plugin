@@ -27,8 +27,8 @@ class NoiseSamplerUHC(
 		const val AMPLIFIED_BASE = 1.0f
 		const val AMPLIFIED_SCALE = 3.25f
 
-		const val PVP_BASE = 0.2f
-		const val PVP_SCALE = 0.3f
+		const val PVP_BASE = 0.0f
+		const val PVP_SCALE = 0.2f
 
 		val circle = FloatArray(25)
 		init {
@@ -130,8 +130,8 @@ class NoiseSamplerUHC(
 	}
 
 	override fun a(adouble: DoubleArray, i: Int, j: Int, noisesettings: NoiseSettings, k: Int, l: Int, i1: Int) {
-		val d0: Double
-		val d1: Double
+		var d0: Double
+		var d1: Double
 		var d2: Double
 		var f = 0.0f
 		var f1 = 0.0f
@@ -163,12 +163,22 @@ class NoiseSamplerUHC(
 		d0 = d2 * 0.265625
 		d1 = 96.0 / d3
 
-		val d4 = 684.412 * noisesettings.c().a()
+		if (pvp && originBase > 0 && d0 < 0) d0 = 0.0
+		if (pvp && originBase > 0 && d1 < 0) d1 = 0.0
+		d2 = 0.0
+
+		var xzScale = noisesettings.c().a()
+		if (pvp) xzScale *= 2.0
+
+		var xzFactor = noisesettings.c().c()
+		//if (pvp) xzFactor *= 2.0
+
+		val d4 = 684.412 * xzScale
 		val d5 = 684.412 * noisesettings.c().b()
-		val d6 = d4 / noisesettings.c().c()
+		val d6 = d4 / xzFactor
 		val d7 = d5 / noisesettings.c().d()
 
-		d2 = if (noisesettings.k()) supplementalNoise(i, j) else 0.0
+		//d2 = if (noisesettings.k()) supplementalNoise(i, j) else 0.0
 
 		for (i2 in 0..i1) {
 			val j2 = i2 + l
@@ -176,6 +186,7 @@ class NoiseSamplerUHC(
 			var d9 = this.supplementalNoise2(j2, d0, d1, d2) + d8
 			d9 = noiseModifier.modifyNoise(d9, j2 * jjj, j * iii, i * iii)
 			d9 = this.supplementalNoise3(d9, j2)
+
 			adouble[i2] = d9
 		}
 	}

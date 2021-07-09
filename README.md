@@ -3,32 +3,18 @@
     UHC Plugin 
 </h1>
 
-A Minecraft 1.16 UHC plugin built in Kotlin for PaperMC
+A Minecraft 1.17 UHC plugin built in Kotlin for PaperMC
 
-## Purpose
-
-UHC Plugin implements the gamemode of Ultra Hardcore for a standalone, self-hosted Minecraft PaperMC server. It is not intended for use in server networks, though it could theoretically be adapted. The game is balanced around an expected number of players of 6 to 20.
-
-## Features
-
-* Configurable game length and border size
-* Competitive balance changes to vanilla Minecraft
-* Custom world generation options
-* Tons of "quirks," custom rules applied to the game
-* Discord integration allowing automatic voice call separation
-* PVP Practice area for spectators
-* Customizable named and colored teams
-* Management features for ops
-* And much more (Features document coming soon)
+UHC Plugin modifies many aspects of the server and is meant to be run by itself without other plugins.
 
 ## Requirements
 
-* Kotlin 1.4
-* Java 11 or higher
-* [PaperMC 1.16](https://papermc.io/)
-* [Protocollib 4.6.0](https://github.com/dmulloy2/ProtocolLib) 
+* Kotlin 1.5
+* Java 16
+* [PaperMC 1.17](https://papermc.io/)
+* [Protocollib 4.7.0](https://github.com/dmulloy2/ProtocolLib) 
 
-## Setting up the Project
+## Setting up the Project *(outdated)*
 
 Clone the repo: `git clone https://github.com/Codeland473/uhc-plugin`
 
@@ -60,19 +46,11 @@ Copy the jar built by the project into the `plugins` directory for your paper se
 
 Also copy the Protocollib jar into the directory
 
-### Note
-
-Compatibility with other plugins is not guaranteed. By its nature this plugin completely takes control of the server
-
-Plugin only works with a PaperMC server, not Spigot or CraftBukkit
-
 ### Generated Files in Server Directory
 
-* `discordData.txt` - Fill out with instructions in the file if you want to use discord integration
-* `summaries/` - Created when a game completes, contains game summaries
-* `nicknames.txt` - Created by the nickname command
-* `linkData.txt` - Created by the discord integration when players link
+* `discordData.txt` - Optional, Discord bot token and Discord server id
 * `ddns.properties` - Optional, API data for Google Domains
+* `summaries/` - Directory containing game summaries
 
 ## Starting a game
 

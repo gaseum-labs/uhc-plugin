@@ -23,8 +23,9 @@ import kotlin.collections.ArrayList
 import kotlin.math.*
 
 object PvpGameManager {
-	const val ARENA_STRIDE = 80
+	const val ARENA_STRIDE = 96
 	const val BORDER = 64
+	const val GUTTER = 8
 	const val START_BUFFER = 5
 	const val TEAM_BUFFER = 3
 
@@ -222,9 +223,8 @@ object PvpGameManager {
 	fun onEdge(x: Int, z: Int): Boolean {
 		val x = Util.mod(x, ARENA_STRIDE)
 		val z = Util.mod(z, ARENA_STRIDE)
-		val edge = (ARENA_STRIDE - BORDER) / 2
 
-		return x < edge || x > ARENA_STRIDE - edge || z < edge || z > ARENA_STRIDE - edge
+		return x < GUTTER || x > ARENA_STRIDE - GUTTER || z < GUTTER || z > ARENA_STRIDE - GUTTER
 	}
 
 	fun perTick(currentTick: Int) {
