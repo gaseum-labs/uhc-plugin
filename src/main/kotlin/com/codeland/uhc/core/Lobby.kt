@@ -58,7 +58,7 @@ object Lobby {
 		}
 
 		val lobbyLocation = lobbyLocation(UHC)
-		if (player.location.world != WorldManager.getLobbyWorld()) player.teleport(lobbyLocation)
+		if (player.location.world.name != WorldManager.LOBBY_WORLD_NAME) player.teleport(lobbyLocation)
 
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
 		CommandItemType.giveItem(CommandItemType.PVP_OPENER, player.inventory)

@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.event.Enchant
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.LoadoutGui
 import com.codeland.uhc.gui.gui.LobbyPvpGui
@@ -14,6 +15,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
+import org.bukkit.enchantments.EnchantmentOffer
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
@@ -69,6 +71,13 @@ class PlayerData(val uuid: UUID) {
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
 	var lifeNo = 0
+
+	/* enchant fix */
+	var enchantCycle: Int = 0
+	var storedOffers: Array<EnchantmentOffer?> = arrayOf(null, null, null)
+	var storedType: Enchant.EnchantType = Enchant.EnchantType.ARMOR
+	var storedShelves: Int = 0
+	var storedHash: Int = 0
 
 	var offlineZombie: Zombie? = null
 	set(value) {
@@ -245,7 +254,7 @@ class PlayerData(val uuid: UUID) {
 
 		fun zombieBorderTick(currentTick: Int) {
 			if (currentTick % 20 == 0) {
-				val borderWorld = UHC.getDefaultWorld()
+				val borderWorld = UHC.getDefaultWorldGame()
 				val borderRadius = borderWorld.worldBorder.size / 2.0
 
 				playerDataList.forEach { (uuid, playerData) ->

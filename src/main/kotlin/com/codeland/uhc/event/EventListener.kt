@@ -190,6 +190,15 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
+	fun onAnimalSpawn(event: CreatureSpawnEvent) {
+		/* no baby animals when pack spawning */
+		val entity = event.entity as? Ageable ?: return
+		if (event.spawnReason == CreatureSpawnEvent.SpawnReason.NATURAL) {
+			entity.setAdult()
+		}
+	}
+
+	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
 		/* offline zombie targeting */
 		val target = event.target ?: return

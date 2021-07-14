@@ -107,7 +107,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				val x = cos(initialAngle + angleAdance * i) * currentRadius / 2
 				val z = sin(initialAngle + angleAdance * i) * currentRadius / 2
 
-				Location(UHC.getDefaultWorld(), x, 0.0, z)
+				Location(UHC.getDefaultWorldGame(), x, 0.0, z)
 			}
 		}
 

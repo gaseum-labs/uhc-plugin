@@ -28,13 +28,8 @@ class Generation : Listener {
 			if (WorldManager.isNonGameWorld(world)) return@scheduleSyncDelayedTask
 
 			if (world.environment === World.Environment.NORMAL) {
+				/* no baby animals */
 				chunk.entities.forEach { entity ->
-					var block = entity.location.block
-					while (!block.isPassable) block = block.getRelative(BlockFace.UP)
-
-					entity.teleport(entity.location.set(block.x + 0.5, block.y.toDouble(), block.z + 0.5))
-
-					/* no baby animals */
 					if (entity is Ageable) entity.setAdult()
 				}
 

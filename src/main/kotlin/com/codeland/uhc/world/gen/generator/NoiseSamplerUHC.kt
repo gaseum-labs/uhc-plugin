@@ -1,7 +1,6 @@
 package com.codeland.uhc.world.gen.generator
 
 import com.codeland.uhc.lobbyPvp.PvpGameManager
-import com.codeland.uhc.util.Util
 import net.minecraft.util.MathHelper
 import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.WorldChunkManager
@@ -24,11 +23,11 @@ class NoiseSamplerUHC(
 	gen3, octaves, noiseModifier
 ) {
 	companion object {
-		const val AMPLIFIED_BASE = 1.0f
-		const val AMPLIFIED_SCALE = 3.25f
+		const val AMPLIFIED_BASE = 1.5f
+		const val AMPLIFIED_SCALE = 4.0f
 
-		const val PVP_BASE = 0.0f
-		const val PVP_SCALE = 0.2f
+		const val PVP_BASE = 0.01f
+		const val PVP_SCALE = 0.16f
 
 		val circle = FloatArray(25)
 		init {
@@ -163,18 +162,25 @@ class NoiseSamplerUHC(
 		d0 = d2 * 0.265625
 		d1 = 96.0 / d3
 
-		if (pvp && originBase > 0 && d0 < 0) d0 = 0.0
-		if (pvp && originBase > 0 && d1 < 0) d1 = 0.0
+		val LOWER_LIMIT = -0.05
+
+		if ((pvp || amplified) && originBase > 0) {
+			if (d0 < LOWER_LIMIT) d0 = LOWER_LIMIT
+			if (d1 < LOWER_LIMIT) d1 = LOWER_LIMIT
+		}
 		d2 = 0.0
+
+		var yScale = noisesettings.c().b()
+		if (amplified) yScale *= 20.0
 
 		var xzScale = noisesettings.c().a()
 		if (pvp) xzScale *= 2.0
 
 		var xzFactor = noisesettings.c().c()
-		//if (pvp) xzFactor *= 2.0
+		if (pvp) xzFactor *= 2.0
 
 		val d4 = 684.412 * xzScale
-		val d5 = 684.412 * noisesettings.c().b()
+		val d5 = 684.412 * yScale
 		val d6 = d4 / xzFactor
 		val d7 = d5 / noisesettings.c().d()
 
@@ -183,9 +189,15 @@ class NoiseSamplerUHC(
 		for (i2 in 0..i1) {
 			val j2 = i2 + l
 			val d8 = blendedNoise.a(i, j2, j, d4, d5, d6, d7)
-			var d9 = this.supplementalNoise2(j2, d0, d1, d2) + d8
-			d9 = noiseModifier.modifyNoise(d9, j2 * jjj, j * iii, i * iii)
-			d9 = this.supplementalNoise3(d9, j2)
+
+			val d9 = if (amplified && originBase > 0) {
+				d8
+
+			} else {
+				var de = this.supplementalNoise2(j2, d0, d1, d2) + d8
+				de = noiseModifier.modifyNoise(de, j2 * jjj, j * iii, i * iii)
+				this.supplementalNoise3(de, j2)
+			}
 
 			adouble[i2] = d9
 		}

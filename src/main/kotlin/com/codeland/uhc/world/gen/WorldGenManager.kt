@@ -10,6 +10,7 @@ import net.minecraft.resources.MinecraftKey
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ChunkProviderServer
 import net.minecraft.server.level.WorldServer
+import net.minecraft.world.level.StructureManager
 import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.Biomes
 import net.minecraft.world.level.biome.WorldChunkManagerMultiNoise

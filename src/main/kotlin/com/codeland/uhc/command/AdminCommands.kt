@@ -141,7 +141,7 @@ class AdminCommands : BaseCommand() {
 		val team = TeamData.playersTeam(offlinePlayer.uniqueId)
 
 		fun randomLocation(): Location? {
-			val world = UHC.getDefaultWorld()
+			val world = UHC.getDefaultWorldGame()
 			return GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 		}
 

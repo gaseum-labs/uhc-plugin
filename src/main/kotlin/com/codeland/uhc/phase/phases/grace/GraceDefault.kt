@@ -49,10 +49,7 @@ class GraceDefault : Phase() {
 
 	override fun perTick(currentTick: Int) {}
 
-	override fun perSecond(remainingSeconds: Int) {
-		UHC.updateMobCaps()
-		UHC.containSpecs()
-	}
+	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
 		return "${ChatColor.RESET}Grace period ends in ${phaseType.chatColor}${ChatColor.BOLD}${Util.timeString(remainingSeconds)}"

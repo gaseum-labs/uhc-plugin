@@ -58,7 +58,7 @@ class EndgameNaturalTerrain : Endgame() {
 	override fun customStart() {
 		super.customStart()
 
-		val world = UHC.getDefaultWorld()
+		val world = UHC.getDefaultWorldGame()
 
 		val (min, max) = determineMinMax(world, UHC.endRadius(), 100)
 		finalMin = min
@@ -120,7 +120,7 @@ class EndgameNaturalTerrain : Endgame() {
 	}
 
 	override fun perTick(currentTick: Int) {
-		val world = UHC.getDefaultWorld()
+		val world = UHC.getDefaultWorldGame()
 		++timer
 
 		if (finished) {
@@ -176,7 +176,7 @@ class EndgameNaturalTerrain : Endgame() {
 					.forEach { zombie ->
 					val x = zombie.location.blockX
 					val z = zombie.location.blockX
-					zombie.teleport(Location(UHC.getDefaultWorld(), x + 0.5, Util.topBlockY(world, x, z).toDouble(), z + 0.5))
+					zombie.teleport(Location(UHC.getDefaultWorldGame(), x + 0.5, Util.topBlockY(world, x, z).toDouble(), z + 0.5))
 				}
 			}
 		}
@@ -217,9 +217,7 @@ class EndgameNaturalTerrain : Endgame() {
 		}
 	}
 
-	override fun perSecond(remainingSeconds: Int) {
-		UHC.containSpecs()
-	}
+	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun endPhrase() = ""
 }

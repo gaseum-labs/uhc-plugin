@@ -127,11 +127,18 @@ object UHC {
 		return currentPhase?.phaseType?.gameGoing ?: false
 	}
 
-	fun getDefaultWorld(): World {
+	fun getDefaultWorldGame(): World {
 		return if (defaultWorldEnvironment.get() === World.Environment.NORMAL)
 			WorldManager.getGameWorldGame()
 		else
 			WorldManager.getNetherWorldGame()
+	}
+
+	fun getDefaultWorld(): World? {
+		return if (defaultWorldEnvironment.get() === World.Environment.NORMAL)
+			WorldManager.getGameWorld()
+		else
+			WorldManager.getNetherWorld()
 	}
 
 	/* game flow modifiers */
@@ -160,6 +167,11 @@ object UHC {
 			PvpGameManager.perTick(currentTick)
 
 			Portal.portalTick()
+
+			if (currentTick % 20 == 0) {
+				containSpecs()
+				updateMobCaps()
+			}
 
 			/* highly composite number */
 			currentTick = (currentTick + 1) % 294053760
@@ -210,7 +222,7 @@ object UHC {
 		}
 
 		/* get where players are teleporting */
-		val world = getDefaultWorld()
+		val world = getDefaultWorldGame()
 
 		val tempTeleportLocations = GraceDefault.spreadPlayers(
 			world,
@@ -334,18 +346,20 @@ object UHC {
 		for ((uuid, playerData) in PlayerData.playerDataList) {
 			if (playerData.alive && playerData.participating) {
 				return GameRunner.getPlayerLocation(uuid)?.clone()?.add(0.0, 2.0, 0.0)
-					?: Location(getDefaultWorld(), 0.5, 100.0, 0.5)
+					?: Location(getDefaultWorldGame(), 0.5, 100.0, 0.5)
 			}
 		}
 
-		return Location(getDefaultWorld(), 0.5, 100.0, 0.5)
+		return Location(getDefaultWorldGame(), 0.5, 100.0, 0.5)
 	}
 
 	fun containSpecs() {
 		val setup = setup.get()
 
 		val gameWorld = WorldManager.getGameWorld()
-		Bukkit.getOnlinePlayers().filter { it.world === gameWorld }.forEach { player ->
+		val netherWorld = WorldManager.getNetherWorld()
+
+		Bukkit.getOnlinePlayers().filter { it.world === gameWorld || it.world === netherWorld }.forEach { player ->
 			if (player.gameMode == GameMode.SPECTATOR) {
 				val locX = player.location.blockX.toDouble()
 				val locZ = player.location.blockZ.toDouble()
@@ -368,17 +382,17 @@ object UHC {
 	}
 
 	fun updateMobCaps() {
-		val world = getDefaultWorld()
+		val world = getDefaultWorld() ?: return
 
 		val borderRadius = world.worldBorder.size / 2
 
 		var spawnModifier = borderRadius / 128.0
 		if (spawnModifier > 1.0) spawnModifier = 1.0
 
-		world.     monsterSpawnLimit = (70 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
-		world.      animalSpawnLimit = (10 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
-		world.     ambientSpawnLimit = (15 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
-		world. waterAnimalSpawnLimit = ( 5 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
-		world.waterAmbientSpawnLimit = (20 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.     monsterSpawnLimit = (0 * 70 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.      animalSpawnLimit = (3 * 10 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.     ambientSpawnLimit = (    15 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world. waterAnimalSpawnLimit = (     5 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.waterAmbientSpawnLimit = (    20 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
 	}
 }

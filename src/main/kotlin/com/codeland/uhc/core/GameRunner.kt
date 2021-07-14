@@ -174,7 +174,7 @@ object GameRunner {
 	}
 
 	fun respawnLocation(): Location {
-		val world = UHC.getDefaultWorld()
+		val world = UHC.getDefaultWorldGame()
 		return GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 			?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 	}

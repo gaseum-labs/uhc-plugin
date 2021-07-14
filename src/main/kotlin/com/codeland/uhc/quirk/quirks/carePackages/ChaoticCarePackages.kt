@@ -63,7 +63,7 @@ class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
 	fun startDropping() {
 		timer = 0
 		dropNum = 0
-		random = Random(UHC.getDefaultWorld().seed)
+		random = Random(UHC.getDefaultWorldGame().seed)
 		taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::onSecond, 0, 20)
 	}
 
@@ -83,7 +83,7 @@ class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
 		++timer
 
 		if (timer >= DROP_TIME) {
-			val world = UHC.getDefaultWorld()
+			val world = UHC.getDefaultWorldGame()
 			val block = chaoticDropBlock(world)
 			val along = gameAlong()
 

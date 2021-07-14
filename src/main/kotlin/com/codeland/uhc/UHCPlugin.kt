@@ -48,6 +48,8 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Brew(), this)
 		server.pluginManager.registerEvents(Barter(), this)
 		server.pluginManager.registerEvents(GuiManager(), this)
+		server.pluginManager.registerEvents(Loot(), this)
+		server.pluginManager.registerEvents(Enchant(), this)
 		Packet.init()
 
 		WorldGenManager.init(server)

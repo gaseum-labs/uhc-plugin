@@ -13,7 +13,7 @@ import kotlin.math.round
 abstract class Endgame : Phase() {
 	override fun customStart() {
 		SchedulerUtil.nextTick {
-			val defaultWorld = UHC.getDefaultWorld()
+			val defaultWorld = UHC.getDefaultWorldGame()
 
 			PlayerData.playerDataList.forEach { (uuid, playerData) ->
 				val location = GameRunner.getPlayerLocation(uuid)
@@ -25,7 +25,7 @@ abstract class Endgame : Phase() {
 			}
 		}
 
-		val world = UHC.getDefaultWorld()
+		val world = UHC.getDefaultWorldGame()
 		world.worldBorder.size = (UHC.endRadius() * 2 + 1).toDouble()
 	}
 

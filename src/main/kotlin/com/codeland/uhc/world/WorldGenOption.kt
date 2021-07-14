@@ -41,7 +41,7 @@ enum class WorldGenOption(
 		Component.text("Melons generate in all biomes")
 	), Material.MELON_SLICE),
 
-	DUNGEON_FIX("Dungeon Fix", true, listOf(
+	DUNGEON_FIX("Dungeon Fix", false, listOf(
 		Component.text("Loot in dungeon chest is normalized")
 	), Material.MOSSY_COBBLESTONE),
 

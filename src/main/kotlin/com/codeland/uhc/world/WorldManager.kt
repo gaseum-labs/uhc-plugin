@@ -2,7 +2,6 @@ package com.codeland.uhc.world
 
 import com.codeland.uhc.core.*
 import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
 import org.bukkit.*
 import org.bukkit.block.Biome
@@ -36,13 +35,13 @@ object WorldManager {
 	fun refreshGameWorlds(centerBiome: Biome?) {
 		WorldGenOption.centerBiome = centerBiome
 
-		refreshWorld(GAME_WORLD_NAME, World.Environment.NORMAL, false)
+		refreshWorld(GAME_WORLD_NAME, World.Environment.NORMAL, true)
 		refreshWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
 	}
 
 	fun recoverGameWorlds(): Boolean {
 		WorldGenOption.centerBiome = null
-		val existed0 = recoverWorld(GAME_WORLD_NAME, World.Environment.NORMAL, false)
+		val existed0 = recoverWorld(GAME_WORLD_NAME, World.Environment.NORMAL, true)
 		val existed1 = recoverWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
 
 		return existed0 || existed1
@@ -90,8 +89,8 @@ object WorldManager {
 	fun prepareWorld(world: World) {
 		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, true)
 		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
-		world.setGameRule(GameRule.DO_MOB_SPAWNING, false)
 		world.difficulty = Difficulty.NORMAL
+		world.setSpawnFlags(false, true)
 
 		if (world.name == GAME_WORLD_NAME) {
 			ChunkPlacerHolderType.resetAll(world.seed)
@@ -161,7 +160,7 @@ object WorldManager {
 	}
 
 	fun pregen(player: Player) {
-		val world = UHC.getDefaultWorld()
+		val world = UHC.getDefaultWorldGame()
 
 		val extrema = ceil(UHC.startRadius() / 16.0).toInt()
 		val sideLength = (extrema * 2 + 1)
