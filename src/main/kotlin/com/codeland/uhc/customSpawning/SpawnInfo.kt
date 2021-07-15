@@ -7,12 +7,21 @@ import org.bukkit.block.data.Waterlogged
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 
-abstract class SpawnInfo () {
+abstract class SpawnInfo {
 	abstract fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>?
 
 	open fun onSpawn(block: Block, spawnCycle: Int, entity: Entity) {}
 
 	companion object {
+		val leaves = arrayOf(
+			Material.OAK_LEAVES,
+			Material.SPRUCE_LEAVES,
+			Material.BIRCH_LEAVES,
+			Material.JUNGLE_LEAVES,
+			Material.ACACIA_LEAVES,
+			Material.DARK_OAK_LEAVES,
+		)
+
 		fun isWater(block: Block): Boolean {
 			return block.type == Material.WATER ||
 				block.type == Material.KELP ||
@@ -26,7 +35,7 @@ abstract class SpawnInfo () {
 		}
 
 		fun spawnFloor(block: Block): Boolean {
-			return !block.isPassable
+			return !block.isPassable && leaves.none { it === block.type }
 		}
 
 		fun regularAllowSpawn(block: Block, lightLevel: Int): Boolean {

@@ -108,12 +108,12 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	ZOMBIE(DropFix(EntityType.ZOMBIE, arrayOf(
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory()),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory()),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory()),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory()),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory()),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT)),
+		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
+		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
+		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
+		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
+		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
+		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(1))),
 		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(CARROT)),
 	), arrayOf(
 		item(ROTTEN_FLESH)
@@ -133,6 +133,16 @@ enum class DropFixType(val dropFix: DropFix) {
 
 	PIGLIN(DropFix(EntityType.PIGLIN, arrayOf(
 		arrayOf(mobArmor())
+	))),
+
+	RABBIT(DropFix(EntityType.RABBIT, arrayOf(
+		arrayOf(item(RABBIT_HIDE, ::lootItem), item(Material.RABBIT, ::lootItem), item(RABBIT_FOOT, lootMulti(-1))),
+		arrayOf(item(RABBIT_HIDE, ::lootItem), item(Material.RABBIT, ::lootItem), item(RABBIT_FOOT, lootMulti(0))),
+		arrayOf(item(RABBIT_HIDE, ::lootItem), item(Material.RABBIT, ::lootItem), item(RABBIT_FOOT, lootMulti(1)))
+	))),
+
+	PARROT(DropFix(EntityType.RABBIT, arrayOf(
+		arrayOf(item(FEATHER, ::lootItem))
 	)));
 
 	companion object {

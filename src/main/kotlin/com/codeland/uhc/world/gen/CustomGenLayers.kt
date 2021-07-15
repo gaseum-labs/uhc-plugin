@@ -61,8 +61,9 @@ object CustomGenLayers {
 
 		baseLayer = GenLayerZoom.a.a(seed.apply(1001L), baseLayer)
 
-		baseLayer = GenLayerMerge().a(seed.apply(2L), baseLayer)
-		baseLayer = GenLayerIdBiome().a(seed.apply(3L), baseLayer)
+		baseLayer = GenLayerMerge().a(seed.apply(1L), baseLayer)
+		baseLayer = GenLayerIdBiome().a(seed.apply(2L), baseLayer)
+		baseLayer = GenLayerMergePlains().a(seed.apply(3L), baseLayer)
 
 		baseLayer = GenLayerZoom.a.a(seed.apply(1002L), baseLayer)
 

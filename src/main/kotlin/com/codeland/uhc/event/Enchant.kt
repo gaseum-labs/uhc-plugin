@@ -120,7 +120,14 @@ class Enchant : Listener {
 
 		val collect = arrayListOf(availables[0].firstOrNull())
 		for (i in 1..2) {
-			collect.add(availables[i].find { offer -> collect.all { offer.enchantment !== it?.enchantment } })
+			collect.add(availables[i].find { available ->
+				/* add this available offer it this enchant has not been added yet */
+				/* and it doesn't conflict with already added enchants */
+				collect.filterNotNull().none { existing ->
+					available.enchantment === existing.enchantment ||
+					available.enchantment.conflictsWith(existing.enchantment)
+				}
+			})
 		}
 
 		return Triple(collect, type, hash)
