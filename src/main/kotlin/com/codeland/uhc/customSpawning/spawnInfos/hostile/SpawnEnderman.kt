@@ -1,11 +1,11 @@
-package com.codeland.uhc.customSpawning.spawnInfos
+package com.codeland.uhc.customSpawning.spawnInfos.hostile
 
 import com.codeland.uhc.customSpawning.SpawnInfo
 import org.bukkit.block.Block
 import org.bukkit.entity.EntityType
 
-class SpawnGhast : SpawnInfo() {
+class SpawnEnderman : SpawnInfo() {
 	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
-		return if (spawnSpace(block, 5, 4, 5)) reg(EntityType.GHAST) else null
+		return if (block.lightLevel <= 7 && spawnSpace(block, 1, 3, 1)) reg(EntityType.ENDERMAN) else null
 	}
 }

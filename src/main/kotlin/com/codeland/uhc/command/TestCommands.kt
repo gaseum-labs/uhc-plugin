@@ -9,6 +9,7 @@ import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands.errorMessage
 import com.codeland.uhc.core.*
 import com.codeland.uhc.customSpawning.CustomSpawning
+import com.codeland.uhc.customSpawning.CustomSpawningType
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
@@ -156,10 +157,10 @@ class TestCommands : BaseCommand() {
 
 	@Subcommand("mobcap")
 	@Description("test a player's individual mobcap")
-	fun testMobCap(sender: CommandSender, player: Player) {
-		val playerMobs = CustomSpawning.calcPlayerMobs(player)
+	fun testMobCap(sender: CommandSender, player: Player, type: CustomSpawningType) {
+		val playerMobs = CustomSpawning.calcPlayerMobs(type, player)
 
-		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
+		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).spawningData[type.ordinal].mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")

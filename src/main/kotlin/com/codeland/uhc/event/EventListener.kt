@@ -3,7 +3,6 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.core.*
-import com.codeland.uhc.customSpawning.PassiveSpawning
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.lobbyPvp.PvpGameManager
@@ -187,17 +186,6 @@ class EventListener : Listener {
 					}
 				}
 			}
-		}
-	}
-
-	@EventHandler
-	fun onAnimalSpawn(event: CreatureSpawnEvent) {
-		PassiveSpawning.modifyMob(event.entity)
-
-		/* no baby animals when pack spawning */
-		val entity = event.entity as? Ageable ?: return
-		if (event.spawnReason == CreatureSpawnEvent.SpawnReason.NATURAL) {
-			entity.setAdult()
 		}
 	}
 

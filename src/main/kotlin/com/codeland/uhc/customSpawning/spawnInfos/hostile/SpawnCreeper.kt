@@ -1,4 +1,4 @@
-package com.codeland.uhc.customSpawning.spawnInfos
+package com.codeland.uhc.customSpawning.spawnInfos.hostile
 
 import com.codeland.uhc.customSpawning.SpawnInfo
 import org.bukkit.block.Block

@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.customSpawning.CustomSpawning
+import com.codeland.uhc.customSpawning.CustomSpawningType
 import com.codeland.uhc.event.Portal
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.SetupGui
@@ -156,7 +157,10 @@ object UHC {
 		var currentTick = 0
 
 		SchedulerUtil.everyTick {
-			if (isGameGoing() && !isPhase(PhaseType.ENDGAME)) CustomSpawning.spawnTick(currentTick)
+			if (isGameGoing() && !isPhase(PhaseType.ENDGAME)) {
+				CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick)
+				CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick)
+			}
 
 			if (isGameGoing()) PlayerData.zombieBorderTick(currentTick)
 
@@ -389,8 +393,8 @@ object UHC {
 		var spawnModifier = borderRadius / 128.0
 		if (spawnModifier > 1.0) spawnModifier = 1.0
 
-		world.     monsterSpawnLimit = (0 * 70 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
-		world.      animalSpawnLimit = (3 * 10 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.     monsterSpawnLimit = (0 * 70 * mobCapCoefficient * spawnModifier).roundToInt()
+		world.      animalSpawnLimit = (0 * 10 * mobCapCoefficient * spawnModifier).roundToInt()
 		world.     ambientSpawnLimit = (    15 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
 		world. waterAnimalSpawnLimit = (     5 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)
 		world.waterAmbientSpawnLimit = (    20 * mobCapCoefficient * spawnModifier).roundToInt().coerceAtLeast(1)

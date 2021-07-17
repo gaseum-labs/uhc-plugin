@@ -90,7 +90,7 @@ object WorldManager {
 		world.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, true)
 		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
 		world.difficulty = Difficulty.NORMAL
-		world.setSpawnFlags(false, true)
+		world.setSpawnFlags(false, false)
 
 		if (world.name == GAME_WORLD_NAME) {
 			ChunkPlacerHolderType.resetAll(world.seed)

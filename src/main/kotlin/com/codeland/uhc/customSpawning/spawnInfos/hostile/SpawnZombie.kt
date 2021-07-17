@@ -1,6 +1,5 @@
-package com.codeland.uhc.customSpawning.spawnInfos
+package com.codeland.uhc.customSpawning.spawnInfos.hostile
 
-import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.SpawnInfo
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
@@ -8,10 +7,7 @@ import org.bukkit.Material
 import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import org.bukkit.entity.Drowned
-import org.bukkit.entity.Entity
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Zombie
+import org.bukkit.entity.*
 import org.bukkit.inventory.EntityEquipment
 import org.bukkit.inventory.ItemStack
 
@@ -21,7 +17,9 @@ class SpawnZombie : SpawnInfo() {
 		if (!spawnFloor(block.getRelative(BlockFace.DOWN))) return null
 		if (spawnObstacle(block) || spawnObstacle(block.getRelative(BlockFace.UP))) return null
 
-		return if (block.biome == Biome.DESERT || block.biome == Biome.DESERT_HILLS || block.biome == Biome.DESERT_LAKES)
+		return if (onCycle(spawnCycle, 20))
+			reg(EntityType.ZOMBIE_VILLAGER)
+		else if (block.biome == Biome.DESERT || block.biome == Biome.DESERT_HILLS || block.biome == Biome.DESERT_LAKES)
 			reg(EntityType.HUSK)
 		else if (isWater(block) && isWater(block.getRelative(BlockFace.UP)))
 			reg(EntityType.DROWNED)
@@ -29,7 +27,7 @@ class SpawnZombie : SpawnInfo() {
 			reg(EntityType.ZOMBIE)
 	}
 
-	override fun onSpawn(block: Block, spawnCycle: Int, entity: Entity) {
+	override fun onSpawn(block: Block, spawnCycle: Int, entity: LivingEntity) {
 		val zombie = entity as Zombie
 
 		zombie.setAdult()
@@ -48,8 +46,7 @@ class SpawnZombie : SpawnInfo() {
 		fun applyEquipment(equipment: EntityEquipment?) {
 			if (equipment == null) return
 
-			val random = Util.randRange(0, 4)
-			when (random) {
+			when (Util.randRange(0, 4)) {
 				0 -> equipment.boots = ItemUtil.halfDamagedItem(Material.IRON_BOOTS)
 				1 -> equipment.leggings = ItemUtil.halfDamagedItem(Material.IRON_LEGGINGS)
 				2 -> equipment.chestplate = ItemUtil.halfDamagedItem(Material.IRON_CHESTPLATE)

@@ -60,8 +60,7 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	CHICKEN(DropFix(EntityType.CHICKEN, arrayOf(
-		arrayOf(item(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), item(noBaby { FEATHER }, lootMulti(0))),
-		arrayOf(item(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), item(noBaby { FEATHER }, lootMulti(1))),
+		arrayOf(item(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), item(noBaby { FEATHER }, ::lootItem)),
 	), arrayOf(
 		item(Material.CHICKEN)
 	))),
@@ -92,9 +91,7 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	DROWNED(DropFix(EntityType.DROWNED, arrayOf(
-		arrayOf(mobInventory(), item(ROTTEN_FLESH, ::lootItem), item(GOLD_INGOT, lootMulti(-1))),
-		arrayOf(mobInventory(), item(ROTTEN_FLESH, ::lootItem), item(GOLD_INGOT, lootMulti( 0))),
-		arrayOf(mobInventory(), item(ROTTEN_FLESH, ::lootItem), item(GOLD_INGOT, lootMulti( 1)))
+		arrayOf(mobInventory(), item(ROTTEN_FLESH, ::lootItem), item(GOLD_INGOT, ::lootItem)),
 	), arrayOf(
 		item(ROTTEN_FLESH)
 	))),
@@ -119,6 +116,12 @@ enum class DropFixType(val dropFix: DropFix) {
 		item(ROTTEN_FLESH)
 	))),
 
+	ZOMBIE_VILLAGER(DropFix(EntityType.ZOMBIE_VILLAGER, arrayOf(
+		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory()),
+	), arrayOf(
+		item(ROTTEN_FLESH)
+	))),
+
 	STRAY(DropFix(EntityType.STRAY, arrayOf(
 		arrayOf(item(BONE, ::lootItem), slownessArrow(), mobArmor())
 	), arrayOf(
@@ -136,13 +139,13 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	RABBIT(DropFix(EntityType.RABBIT, arrayOf(
-		arrayOf(item(RABBIT_HIDE, ::lootItem), item(Material.RABBIT, ::lootItem), item(RABBIT_FOOT, lootMulti(-1))),
-		arrayOf(item(RABBIT_HIDE, ::lootItem), item(Material.RABBIT, ::lootItem), item(RABBIT_FOOT, lootMulti(0))),
-		arrayOf(item(RABBIT_HIDE, ::lootItem), item(Material.RABBIT, ::lootItem), item(RABBIT_FOOT, lootMulti(1)))
+		arrayOf(item(RABBIT_HIDE, ::lootItem), item(onFire(Material.RABBIT, COOKED_RABBIT), ::lootItem), item(RABBIT_FOOT, lootMulti(-1))),
+		arrayOf(item(RABBIT_HIDE, ::lootItem), item(onFire(Material.RABBIT, COOKED_RABBIT), ::lootItem), item(RABBIT_FOOT, lootMulti(0))),
+		arrayOf(item(RABBIT_HIDE, ::lootItem), item(onFire(Material.RABBIT, COOKED_RABBIT), ::lootItem), item(RABBIT_FOOT, lootMulti(1)))
 	))),
 
 	PARROT(DropFix(EntityType.RABBIT, arrayOf(
-		arrayOf(item(FEATHER, ::lootItem))
+		arrayOf(item(FEATHER, lootMulti(2)))
 	)));
 
 	companion object {

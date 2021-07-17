@@ -9,6 +9,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent
 import org.bukkit.inventory.ItemStack
+import org.jetbrains.annotations.NotNull
 import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -31,7 +32,7 @@ class Enchant : Listener {
 
 			for (i in 0..2) {
 				playerData.storedOffers[i] = generatedOffers[i]
-				event.offers[i] = generatedOffers[i]!!
+				(event.offers as Array<EnchantmentOffer?>)[i] = generatedOffers[i]
 			}
 			playerData.storedType = type
 			playerData.storedShelves = bonus
@@ -44,6 +45,9 @@ class Enchant : Listener {
 		val playerData = PlayerData.getPlayerData(event.enchanter.uniqueId)
 
 		val offer = playerData.storedOffers[event.whichButton()]
+		println(offer)
+		println(event.whichButton())
+
 		if (offer != null) {
 			event.enchantsToAdd.clear()
 			event.enchantsToAdd[offer.enchantment] = offer.enchantmentLevel
@@ -74,41 +78,30 @@ class Enchant : Listener {
 		)
 	}
 
-	fun grabExtraEnchant(type: EnchantType, exclude: ArrayList<Pair<Enchantment, Int>>, bonus: Int, random: Random): Pair<Enchantment, Int>? {
-		if (bonus < 0) return null
-
+	fun grabExtraEnchant(type: EnchantType, exclude: ArrayList<Pair<Enchantment, Int>>, bonus: Int, random: Random): Pair<Enchantment, Int>? {		if (bonus < 0) return null
 		return type.options.map { option ->
 			Pair(option.enchantment, option.getLevel(bonus))
+
 		}.shuffled(random).firstOrNull { pair ->
-			pair.second > 0 && exclude.none { pair.first === it.first }
+			pair.second > 0 && exclude.none { already ->
+				pair.first === already.first || pair.first.conflictsWith(already.first)
+			}
 		}
 	}
 
-	fun createOffers(item: ItemStack, bonus: Int, cycle: Int): Triple<ArrayList<EnchantmentOffer?>, EnchantType, Int>? {
+	private fun createOffers(item: ItemStack, bonus: Int, cycle: Int): Triple<List<EnchantmentOffer?>, EnchantType, Int>? {
 		val (type, hash) = EnchantType.get(item.type)
 		if (type == null) return null
 
 		val random = random(cycle, type.ordinal, bonus, hash)
-
-		val options = type.options.copyOf()
-		options.shuffle(random)
-
-		fun findOfferIndex(options: Array<EnchantOption>, startIndex: Int, shelves: Int): Int {
-			for (i in startIndex until options.size) {
-				if (options[i].getLevel(shelves) != 0) {
-					return i
-				}
-			}
-
-			return -1
-		}
+		val options = type.options.toMutableList()
 
 		val availables = arrayOf(
 			Pair((bonus / 3.0f).roundToInt().coerceAtLeast(1), floor(bonus / 2.0f).toInt().coerceAtLeast(1)),
 			Pair((bonus / 2.0f).roundToInt().coerceAtLeast(1), bonus.coerceAtLeast(1)),
 			Pair(bonus.coerceAtLeast(1), (bonus * 2).coerceAtLeast(1))
 		).map { (bonus, cost) ->
-			options.mapNotNull {
+			options.shuffled(random).mapNotNull {
 				val level = it.getLevel(bonus)
 				if (level > 0) {
 					EnchantmentOffer(it.enchantment, level, cost)
@@ -116,21 +109,9 @@ class Enchant : Listener {
 					null
 				}
 			}
-		}
+		}.map { it.firstOrNull() }
 
-		val collect = arrayListOf(availables[0].firstOrNull())
-		for (i in 1..2) {
-			collect.add(availables[i].find { available ->
-				/* add this available offer it this enchant has not been added yet */
-				/* and it doesn't conflict with already added enchants */
-				collect.filterNotNull().none { existing ->
-					available.enchantment === existing.enchantment ||
-					available.enchantment.conflictsWith(existing.enchantment)
-				}
-			})
-		}
-
-		return Triple(collect, type, hash)
+		return Triple(availables, type, hash)
 	}
 
 	data class EnchantOption(val enchantment: Enchantment, val levels: Array<Int>) {
@@ -165,7 +146,7 @@ class Enchant : Listener {
 		), arrayOf(
 			EnchantOption(Enchantment.DURABILITY,        arrayOf(1, 2, 3, 3)),
 			EnchantOption(Enchantment.LOOT_BONUS_BLOCKS, arrayOf(0, 0, 1, 2, 3)),
-			EnchantOption(Enchantment.DIG_SPEED,         arrayOf(1, 2, 3, 4)),
+			EnchantOption(Enchantment.DIG_SPEED,         arrayOf(1, 2, 3, 4, 4)),
 		)),
 		BOW(arrayOf(
 			Material.BOW

@@ -28,10 +28,8 @@ class Generation : Listener {
 			if (WorldManager.isNonGameWorld(world)) return@scheduleSyncDelayedTask
 
 			if (world.environment === World.Environment.NORMAL) {
-				/* no baby animals */
-				chunk.entities.forEach { entity ->
-					if (entity is Ageable) entity.setAdult()
-				}
+				/* no chunk animals */
+				chunk.entities.forEach { entity -> entity.remove() }
 
 				if (getEnabled(NETHER_INDICATORS)) {
 					NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())

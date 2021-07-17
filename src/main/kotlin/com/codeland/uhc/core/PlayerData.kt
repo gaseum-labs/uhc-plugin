@@ -1,6 +1,7 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.customSpawning.CustomSpawningType
 import com.codeland.uhc.event.Enchant
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.LoadoutGui
@@ -56,9 +57,9 @@ class PlayerData(val uuid: UUID) {
 	}
 
 	/* custom spawning */
-	var spawnIndex = 0
-	var spawnCycle = 0
-	var mobcap = 0.0
+	val spawningData = CustomSpawningType.values().map {
+		CustomSpawningType.SpawningPlayerData()
+	}
 
 	/* other stuff */
 	class QuirkDataHolder(var applied: Boolean, var data: Any)
