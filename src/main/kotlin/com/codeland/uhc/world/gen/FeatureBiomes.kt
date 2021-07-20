@@ -69,15 +69,15 @@ object FeatureBiomes {
 
 	val superCaveCarver = caveCarverMaster.a(
 		CaveCarverConfiguration(
-			0.29283719f,
-			BiasedToBottomHeight.a(VerticalAnchor.a(0), VerticalAnchor.a(127), 64),
-			ConstantFloat.a(1.0f),
-			VerticalAnchor.b(0),
+			0.3f,
+			BiasedToBottomHeight.a(VerticalAnchor.a(-16), VerticalAnchor.a(64), 16),
+			ConstantFloat.a(0.5f),
+			VerticalAnchor.b(10),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
+			ConstantFloat.a(3.0f),
 			ConstantFloat.a(2.0f),
-			ConstantFloat.a(2.0f),
-			ConstantFloat.a(-1.7f)
+			ConstantFloat.a(-2.0f)
 		)
 	)
 

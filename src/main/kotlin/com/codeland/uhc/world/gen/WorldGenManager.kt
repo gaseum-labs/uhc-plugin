@@ -171,20 +171,10 @@ object WorldGenManager {
 	    	val customGeneratorSettings = (gField[chunkGenerator] as Supplier<GeneratorSettingBase>).get()
 
 		    noiseCavesField[customGeneratorSettings] = true
-		    noodleCavesField[customGeneratorSettings] = true
+		    noodleCavesField[customGeneratorSettings] = false
 			aquifersField[customGeneratorSettings] = true
 
 		    gField[chunkGenerator] = Supplier<GeneratorSettingBase> { customGeneratorSettings }
-
-		    xField[chunkGenerator] = object : NoodleCavifier(seed) {
-			    override fun a(var0: Double, var2: Int, var3: Int, var4: Int, var5: Double, var7: Double, var9: Double, var11: Double, var13: Int): Double {
-				    val var18 = MathHelper.a(var7, -2.0, 2.0, 0.2, 0.5)
-				    val var20 = abs(1.5 * var9) - var18
-				    val var22 = abs(1.5 * var11) - var18
-				    val var24 = var20.coerceAtLeast(var22)
-				    return var0.coerceAtMost(var24)
-			    }
-		    }
 
 		    NoiseSamplerUHC.inject(
 			    chunkGenerator as ChunkGeneratorAbstract,

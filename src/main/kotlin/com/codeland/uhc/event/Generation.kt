@@ -54,7 +54,7 @@ class Generation : Listener {
 
 				} else if (getEnabled(ORE_FIX)) {
 					OreFix.removeMinerals(chunk)
-					OreFix.reduceLava(chunk)
+					OreFix.lavaPlacer.onGenerate(chunk, world.seed.toInt())
 
 					OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt())
