@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen
+package com.codeland.uhc.world.gen.chunkManager
 
 import net.minecraft.core.IRegistry
 import net.minecraft.data.worldgen.biome.BiomeRegistry

@@ -38,17 +38,17 @@ enum class WorldGenOption(
 	), Material.DIAMOND),
 
 	MELON_FIX("Melon Fix", true, listOf(
-		Component.text("Melons generate in all biomes")
+		Component.text("Melons are hidden in jungles")
 	), Material.MELON_SLICE),
-
-	DUNGEON_FIX("Dungeon Fix", false, listOf(
-		Component.text("Loot in dungeon chest is normalized")
-	), Material.MOSSY_COBBLESTONE),
 
 	SUGAR_CANE_FIX("Sugar Cane Fix", true, listOf(
 		Component.text("Sugar cane generate is spread out"),
 		Component.text("Sugar cane always generates 3 at a time")
 	), Material.SUGAR_CANE),
+
+	DUNGEON_FIX("Dungeon Fix", false, listOf(
+		Component.text("Loot in dungeon chest is normalized")
+	), Material.MOSSY_COBBLESTONE),
 
 	NETHER_INDICATORS("Nether Indicators", false, listOf(
 		Component.text("Nether blocks generate below y level 15"),

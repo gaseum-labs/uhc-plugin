@@ -55,11 +55,11 @@ object Commands {
         }
 
         commandManager.commandCompletions.registerCompletion("quirkclass") {
-            QuirkClass.values().mapIndexedNotNull { i, quirkClass -> if (i == 0) null else quirkClass.name.toLowerCase() }
+            QuirkClass.values().mapIndexedNotNull { i, quirkClass -> if (i == 0) null else quirkClass.name.lowercase() }
         }
 
 	    commandManager.commandCompletions.registerCompletion("biome") {
-		   Biome.values().map { it.name.toLowerCase() }
+		   Biome.values().map { it.name.lowercase()}
 	    }
     }
 }

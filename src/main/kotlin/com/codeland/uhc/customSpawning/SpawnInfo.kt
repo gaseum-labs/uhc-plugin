@@ -56,10 +56,10 @@ abstract class SpawnInfo {
 		fun mountains(biome: Biome) = biome === Biome.MOUNTAINS ||
 			biome === Biome.GRAVELLY_MOUNTAINS ||
 			biome === Biome.WOODED_MOUNTAINS ||
-			biome === Biome.MODIFIED_GRAVELLY_MOUNTAINS ||
-			biome === Biome.SNOWY_MOUNTAINS
+			biome === Biome.MODIFIED_GRAVELLY_MOUNTAINS
 
 		fun snowy(biome: Biome) = biome === Biome.SNOWY_TUNDRA ||
+			biome === Biome.SNOWY_MOUNTAINS ||
 			biome === Biome.ICE_SPIKES
 
 		fun plains(biome: Biome) = biome === Biome.PLAINS ||

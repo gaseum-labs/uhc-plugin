@@ -13,6 +13,8 @@ import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Ageable
+import org.bukkit.entity.Animals
+import org.bukkit.entity.Villager
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.world.ChunkPopulateEvent
@@ -29,7 +31,9 @@ class Generation : Listener {
 
 			if (world.environment === World.Environment.NORMAL) {
 				/* no chunk animals */
-				chunk.entities.forEach { entity -> entity.remove() }
+				chunk.entities.forEach { entity ->
+					if (entity is Animals) entity.remove()
+				}
 
 				if (getEnabled(NETHER_INDICATORS)) {
 					NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())

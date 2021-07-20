@@ -3,27 +3,30 @@ package com.codeland.uhc.world.gen
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
-import com.codeland.uhc.world.gen.generator.NoiseSamplerUHC
+import com.codeland.uhc.world.gen.chunkManager.*
 import net.minecraft.core.IRegistry
-import net.minecraft.data.worldgen.biome.BiomeRegistry
-import net.minecraft.resources.MinecraftKey
-import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ChunkProviderServer
 import net.minecraft.server.level.WorldServer
-import net.minecraft.world.level.StructureManager
+import net.minecraft.util.MathHelper
 import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.Biomes
 import net.minecraft.world.level.biome.WorldChunkManagerMultiNoise
 import net.minecraft.world.level.biome.WorldChunkManagerOverworld
 import net.minecraft.world.level.chunk.ChunkGenerator
 import net.minecraft.world.level.levelgen.ChunkGeneratorAbstract
+import net.minecraft.world.level.levelgen.GeneratorSettingBase
+import net.minecraft.world.level.levelgen.NoodleCavifier
 import org.bukkit.Server
 import org.bukkit.World
-import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import java.util.*
-import kotlin.collections.HashMap
+import java.util.function.Supplier
+import kotlin.Double
+import kotlin.Int
+import kotlin.Pair
+import kotlin.String
+import kotlin.math.abs
 import com.mojang.datafixers.util.Pair as PairM
 
 object WorldGenManager {
@@ -37,12 +40,16 @@ object WorldGenManager {
     private val iField = WorldChunkManagerOverworld::class.java.getDeclaredField("i")
     private val jField = WorldChunkManagerOverworld::class.java.getDeclaredField("j")
     private val kField = WorldChunkManagerOverworld::class.java.getDeclaredField("k")
-	private val biomeMapField = BiomeRegistry::class.java.getDeclaredField("c")
-	private val minecraftKeyField = ResourceKey::class.java.getDeclaredField("c")
-	private val keyField = MinecraftKey::class.java.getDeclaredField("e")
 
 	private val optionField = WorldChunkManagerMultiNoise::class.java.getDeclaredField("s")
 	private val seedFieldMultiNoise = WorldChunkManagerMultiNoise::class.java.getDeclaredField("r")
+
+	private val gField = ChunkGeneratorAbstract::class.java.getDeclaredField("g")
+	private val xField = ChunkGeneratorAbstract::class.java.getDeclaredField("x")
+
+	private val noiseCavesField = GeneratorSettingBase::class.java.getDeclaredField("s")
+	private val noodleCavesField = GeneratorSettingBase::class.java.getDeclaredField("u")
+	private val aquifersField = GeneratorSettingBase::class.java.getDeclaredField("r")
 
 	init {
 		serverWorldsField.isAccessible = true
@@ -55,14 +62,14 @@ object WorldGenManager {
 		iField.isAccessible = true
 		jField.isAccessible = true
 		kField.isAccessible = true
-		biomeMapField.isAccessible = true
-		minecraftKeyField.isAccessible = true
-		keyField.isAccessible = true
 		optionField.isAccessible = true
 		seedFieldMultiNoise.isAccessible = true
+		gField.isAccessible = true
+		noiseCavesField.isAccessible = true
+		noodleCavesField.isAccessible = true
+		aquifersField.isAccessible = true
+		xField.isAccessible = true
 	}
-
-	private val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
 
     fun init(server: Server) {
 	    /* replace worlds hashmap on server */
@@ -73,14 +80,6 @@ object WorldGenManager {
 		    }
 	    }
     }
-
-	fun biomeFromName(name: String?): ResourceKey<BiomeBase>? {
-		val lowerName = name?.toLowerCase() ?: return null
-
-		return biomeMap.asIterable().find { key ->
-			(keyField[(minecraftKeyField[key.value] as MinecraftKey)] as String) == lowerName
-		}?.value
-	}
 
 	val lobbyBiomes = listOf(
 		Biomes.m,
@@ -135,41 +134,61 @@ object WorldGenManager {
 	    /* the old world chunk manager is of a nonsupported type */
 	    if (seed == null || biomeRegistry == null) return
 
-	    val customManager = when (world.name) {
+	    val (biomeManager, featureManager) = when (world.name) {
 	        WorldManager.GAME_WORLD_NAME -> {
 			    if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES)) {
-				    WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry)
+				    Pair(WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry), null)
 
 			    } else {
-				    WorldChunkManagerOverworldGame(
+			    	val manager = WorldChunkManagerOverworldGame(
 					    seed, biomeRegistry,
-					    biomeFromName(WorldGenOption.centerBiome?.name),
+					    BiomeNo.fromName(WorldGenOption.centerBiome?.name),
 					    WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
 					    UHC.startRadius(),
-					    UHC.endRadius()
+					    UHC.endRadius(),
+					    false
 				    )
+				    Pair(manager, manager.withFeatures(true))
 			    }
 	        }
 		    WorldManager.NETHER_WORLD_NAME -> {
-			    WorldChunkManagerNether(seed, biomeRegistry)
+			    Pair(WorldChunkManagerNether(seed, biomeRegistry), null)
 		    }
 		    WorldManager.LOBBY_WORLD_NAME -> {
-			    WorldChunkManagerOverworldLobby(
+			    Pair(WorldChunkManagerOverworldLobby(
 				    seed, biomeRegistry,
 				    lobbyBiomes.shuffled().zip(tallLobbyBiomes.shuffled()).flatMap { listOf(it.first, it.second) }.take(9),
 				    60
-			    )
+			    ), null)
 		    }
 		    WorldManager.PVP_WORLD_NAME -> {
-			    WorldChunkManagerOverworldPvp(seed, biomeRegistry)
+			    Pair(WorldChunkManagerOverworldPvp(seed, biomeRegistry), null)
 		    }
-		    else -> null
+		    else -> Pair(null, null)
 	    }
 
-	    if (customManager != null) {
+	    if (biomeManager != null) {
+	    	val customGeneratorSettings = (gField[chunkGenerator] as Supplier<GeneratorSettingBase>).get()
+
+		    noiseCavesField[customGeneratorSettings] = true
+		    noodleCavesField[customGeneratorSettings] = true
+			aquifersField[customGeneratorSettings] = true
+
+		    gField[chunkGenerator] = Supplier<GeneratorSettingBase> { customGeneratorSettings }
+
+		    xField[chunkGenerator] = object : NoodleCavifier(seed) {
+			    override fun a(var0: Double, var2: Int, var3: Int, var4: Int, var5: Double, var7: Double, var9: Double, var11: Double, var13: Int): Double {
+				    val var18 = MathHelper.a(var7, -2.0, 2.0, 0.2, 0.5)
+				    val var20 = abs(1.5 * var9) - var18
+				    val var22 = abs(1.5 * var11) - var18
+				    val var24 = var20.coerceAtLeast(var22)
+				    return var0.coerceAtMost(var24)
+			    }
+		    }
+
 		    NoiseSamplerUHC.inject(
 			    chunkGenerator as ChunkGeneratorAbstract,
-			    customManager,
+			    biomeManager,
 			    if (world.name == WorldManager.GAME_WORLD_NAME) {
 				    WorldGenOption.getEnabled(WorldGenOption.AMPLIFIED)
 			    } else {
@@ -178,8 +197,8 @@ object WorldGenManager {
 			    world.name == WorldManager.PVP_WORLD_NAME
 		    )
 
-		    worldChunkManagerBField[chunkGenerator] = customManager
-		    worldChunkManagerCField[chunkGenerator] = customManager
+		    worldChunkManagerBField[chunkGenerator] = featureManager ?: biomeManager
+		    worldChunkManagerCField[chunkGenerator] = biomeManager
 	    }
     }
 }

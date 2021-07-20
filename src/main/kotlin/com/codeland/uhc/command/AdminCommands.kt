@@ -14,6 +14,7 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
 import org.bukkit.block.Biome
@@ -237,6 +238,7 @@ class AdminCommands : BaseCommand() {
 
 		moveAllToLobby()
 
+		WorldGenOption.centerBiome = null
 		val existed = WorldManager.recoverGameWorlds()
 
 		if (existed) {
@@ -249,7 +251,18 @@ class AdminCommands : BaseCommand() {
 	@CommandCompletion("@biome")
 	@Subcommand("worldRefresh")
 	@Description("Initialize the game worlds")
-	fun worldCycle(sender: CommandSender, biome: Biome) {
+	fun worldCycle(sender: CommandSender) {
+		internalWorldCycle(sender, null)
+	}
+
+	@CommandCompletion("@biome")
+	@Subcommand("worldRefresh")
+	@Description("Initialize the game worlds")
+	fun worldCycleBiome(sender: CommandSender, biome: Biome) {
+		internalWorldCycle(sender, biome)
+	}
+
+	private fun internalWorldCycle(sender: CommandSender, biome: Biome?) {
 		if (Commands.opGuard(sender)) return
 		if (Commands.notGoingGuard(sender)) return
 
@@ -258,7 +271,8 @@ class AdminCommands : BaseCommand() {
 		WorldManager.destroyWorld(WorldManager.GAME_WORLD_NAME)
 		WorldManager.destroyWorld(WorldManager.NETHER_WORLD_NAME)
 
-		WorldManager.refreshGameWorlds(biome)
+		WorldGenOption.centerBiome = biome
+		WorldManager.refreshGameWorlds()
 
 		GameRunner.sendGameMessage(sender, "Game worlds refreshed")
 	}

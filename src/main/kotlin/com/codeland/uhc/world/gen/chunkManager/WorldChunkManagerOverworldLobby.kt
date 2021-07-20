@@ -1,5 +1,6 @@
-package com.codeland.uhc.world.gen
+package com.codeland.uhc.world.gen.chunkManager
 
+import com.codeland.uhc.world.gen.CustomGenLayers
 import net.minecraft.core.IRegistry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.level.biome.BiomeBase

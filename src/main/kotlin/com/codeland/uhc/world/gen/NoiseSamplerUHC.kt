@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen.generator
+package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.lobbyPvp.PvpGameManager
 import net.minecraft.util.MathHelper

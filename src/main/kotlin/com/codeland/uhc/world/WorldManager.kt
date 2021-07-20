@@ -3,6 +3,8 @@ package com.codeland.uhc.world
 import com.codeland.uhc.core.*
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
+import net.minecraft.data.worldgen.biome.BiomeRegistry
+import net.minecraft.world.level.biome.Biomes
 import org.bukkit.*
 import org.bukkit.block.Biome
 import org.bukkit.entity.Player
@@ -32,15 +34,12 @@ object WorldManager {
 		prepareWorld(getLobbyWorld())
 	}
 
-	fun refreshGameWorlds(centerBiome: Biome?) {
-		WorldGenOption.centerBiome = centerBiome
-
+	fun refreshGameWorlds() {
 		refreshWorld(GAME_WORLD_NAME, World.Environment.NORMAL, true)
 		refreshWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
 	}
 
 	fun recoverGameWorlds(): Boolean {
-		WorldGenOption.centerBiome = null
 		val existed0 = recoverWorld(GAME_WORLD_NAME, World.Environment.NORMAL, true)
 		val existed1 = recoverWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
 
