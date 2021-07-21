@@ -84,7 +84,8 @@ abstract class SpawnInfo {
 				EntityType.POLAR_BEAR,
 				EntityType.DONKEY,
 				EntityType.PANDA,
-				EntityType.HORSE -> animalAllowSpawn(block, 3, 2, 3)
+				EntityType.HORSE,
+				EntityType.TURTLE -> animalAllowSpawn(block, 3, 2, 3)
 				else -> animalAllowSpawn(block, 1, 2, 1)
 			}) {
 				Pair(type, false)

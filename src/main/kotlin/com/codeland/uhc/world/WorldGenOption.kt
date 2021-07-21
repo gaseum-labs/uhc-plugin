@@ -34,7 +34,6 @@ enum class WorldGenOption(
 
 	ORE_FIX("Ore Fix", true, listOf(
 		Component.text("Gold, lapis, and diamond only generate on the sides of caves"),
-		Component.text("Mineral indicators help find caves")
 	), Material.DIAMOND),
 
 	MELON_FIX("Melon Fix", true, listOf(
@@ -45,6 +44,10 @@ enum class WorldGenOption(
 		Component.text("Sugar cane generate is spread out"),
 		Component.text("Sugar cane always generates 3 at a time")
 	), Material.SUGAR_CANE),
+
+	CAVE_INDICATORS("Cave Indicators", false, listOf(
+		Component.text("Minerals underground point you toward caves"),
+	), Material.DIORITE),
 
 	DUNGEON_FIX("Dungeon Fix", false, listOf(
 		Component.text("Loot in dungeon chest is normalized")

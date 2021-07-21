@@ -34,7 +34,7 @@ class WorldChunkManagerOverworldGame(
 
 	fun biomeFromInt(no: Int): BiomeBase {
 		return if (features) {
-			FeatureBiomes.biomes[no] ?: var4.d(BiomeRegistry.a(BiomeNo.PLAINS))
+			FeatureBiomes.biomes[no]!!
 		} else {
 			var4.d(BiomeRegistry.a(no))
 		}

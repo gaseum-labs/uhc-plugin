@@ -21,19 +21,19 @@ import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer2
 import java.util.function.LongFunction
 
 object CustomGenLayers {
-	private fun <T : Area, C : AreaContextTransformed<T>> createAreaFactoryNether(
-		seed: LongFunction<C>,
-	): AreaFactory<T> {
-		var baseLayer = LayerNetherBase().a(seed.apply(1932L))
+	fun createAreaNether(seed: Long): Area {
+		val noise = { s: Long -> WorldGenContextArea(25, seed, s) }
 
-		baseLayer = GenLayerZoom.ar.a(seed.apply(3246L), baseLayer)
-		baseLayer = GenLayerZoom.a.a(seed.apply(128290L), baseLayer)
-		baseLayer = GenLayerZoom.a.a(seed.apply(2623L), baseLayer)
+		var baseLayer = LayerNetherBase().a(noise(101L))
 
-		baseLayer = GenLayerExpandNether().a(seed.apply(73232L), baseLayer)
-		baseLayer = GenLayerZoom.a.a(seed.apply(9L), baseLayer)
+		baseLayer = GenLayerZoom.ar.a(noise(102L), baseLayer)
+		baseLayer = GenLayerZoom.a.a(noise(103L), baseLayer)
+		baseLayer = GenLayerZoom.a.a(noise(104L), baseLayer)
 
-		return baseLayer
+		baseLayer = GenLayerExpandNether().a(noise(105L), baseLayer)
+		baseLayer = GenLayerZoom.a.a(noise(106L), baseLayer)
+
+		return baseLayer.make()
 	}
 
 	private fun <T : Area, C : AreaContextTransformed<T>> createAreaFactoryLobby(
@@ -144,10 +144,6 @@ object CustomGenLayers {
 		baseLayer = GenLayerZoom.ar.a(noise(1004L), baseLayer)
 
 		return baseLayer.make() as Area
-	}
-
-	fun createGenLayerNether(seed: Long): GenLayer {
-		return GenLayer(createAreaFactoryNether { WorldGenContextArea(25, seed, it) })
 	}
 
 	fun createGenLayerLobby(seed: Long): GenLayer {

@@ -35,8 +35,9 @@ class Generation : Listener {
 					if (entity is Animals) entity.remove()
 				}
 
-				if (getEnabled(NETHER_INDICATORS)) {
-					NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())
+				if (getEnabled(CAVE_INDICATORS)) {
+					OreFix.removeMinerals(chunk)
+					OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
 				if (getEnabled(ORE_FIX) || getEnabled(REVERSE_ORE_FIX)) {
@@ -53,13 +54,15 @@ class Generation : Listener {
 					OreFix.reverseDiamondPlacer.onGenerate(chunk, world.seed.toInt())
 
 				} else if (getEnabled(ORE_FIX)) {
-					OreFix.removeMinerals(chunk)
 					OreFix.lavaPlacer.onGenerate(chunk, world.seed.toInt())
 
 					OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt())
+				}
+
+				if (getEnabled(NETHER_INDICATORS)) {
+					NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
 				if (getEnabled(MUSHROOM_FIX)) {

@@ -152,7 +152,8 @@ object WorldGenManager {
 			    }
 	        }
 		    WorldManager.NETHER_WORLD_NAME -> {
-			    Pair(WorldChunkManagerNether(seed, biomeRegistry), null)
+			    val manager = WorldChunkManagerNether(seed, biomeRegistry, false)
+			    Pair(manager, manager.withFeatures(true))
 		    }
 		    WorldManager.LOBBY_WORLD_NAME -> {
 			    Pair(WorldChunkManagerOverworldLobby(
@@ -168,13 +169,15 @@ object WorldGenManager {
 	    }
 
 	    if (biomeManager != null) {
-	    	val customGeneratorSettings = (gField[chunkGenerator] as Supplier<GeneratorSettingBase>).get()
+	    	/* aquifers and noise caves in the game world */
+	    	if (world.name == WorldManager.GAME_WORLD_NAME) {
+			    val customGeneratorSettings = (gField[chunkGenerator] as Supplier<GeneratorSettingBase>).get()
 
-		    noiseCavesField[customGeneratorSettings] = true
-		    noodleCavesField[customGeneratorSettings] = false
-			aquifersField[customGeneratorSettings] = true
+			    noiseCavesField[customGeneratorSettings] = true
+			    aquifersField[customGeneratorSettings] = true
 
-		    gField[chunkGenerator] = Supplier<GeneratorSettingBase> { customGeneratorSettings }
+			    gField[chunkGenerator] = Supplier<GeneratorSettingBase> { customGeneratorSettings }
+		    }
 
 		    NoiseSamplerUHC.inject(
 			    chunkGenerator as ChunkGeneratorAbstract,
