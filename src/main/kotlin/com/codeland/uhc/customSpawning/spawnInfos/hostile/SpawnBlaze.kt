@@ -9,10 +9,20 @@ import org.bukkit.entity.LivingEntity
 
 class SpawnBlaze : SpawnInfo() {
 	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
-		return if (spawnSpace(block, 1, 2, 1)) Pair(EntityType.BLAZE, true) else null
+		return if (block.y > NETHER_CAVE_Y) {
+			if (spawnSpace(block, 1, 2, 1))
+				Pair(EntityType.BLAZE, true)
+			else
+				null
+		} else {
+			if (spawnSpace(block, 3, 3, 3))
+				reg(EntityType.MAGMA_CUBE)
+			else
+				null
+		}
 	}
 
 	override fun onSpawn(block: Block, spawnCycle: Int, entity: LivingEntity) {
-		(entity as Blaze).removeWhenFarAway = false
+		(entity as? Blaze)?.removeWhenFarAway = false
 	}
 }

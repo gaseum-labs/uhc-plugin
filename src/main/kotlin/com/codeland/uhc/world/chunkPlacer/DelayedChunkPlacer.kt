@@ -49,4 +49,13 @@ abstract class DelayedChunkPlacer(size: Int) : AbstractChunkPlacer(size) {
 
 		chunkList.clear()
 	}
+
+	companion object {
+		fun chunkReadyPlus(world: World, chunkX: Int, chunkZ: Int): Boolean {
+			return world.isChunkGenerated(chunkX + 1, chunkZ + 1) &&
+				world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
+				world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
+				world.isChunkGenerated(chunkX - 1, chunkZ - 1)
+		}
+	}
 }

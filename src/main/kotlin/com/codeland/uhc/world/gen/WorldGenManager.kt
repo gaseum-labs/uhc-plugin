@@ -174,6 +174,7 @@ object WorldGenManager {
 			    val customGeneratorSettings = (gField[chunkGenerator] as Supplier<GeneratorSettingBase>).get()
 
 			    noiseCavesField[customGeneratorSettings] = true
+			    noodleCavesField[customGeneratorSettings] = true
 			    aquifersField[customGeneratorSettings] = true
 
 			    gField[chunkGenerator] = Supplier<GeneratorSettingBase> { customGeneratorSettings }

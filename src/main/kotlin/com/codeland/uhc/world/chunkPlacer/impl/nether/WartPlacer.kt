@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.chunkPlacer.impl
+package com.codeland.uhc.world.chunkPlacer.impl.nether
 
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk

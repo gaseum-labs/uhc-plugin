@@ -105,6 +105,11 @@ class Generation : Listener {
 
 			} else if (world.environment === World.Environment.NETHER) {
 				if (getEnabled(NETHER_FIX)) {
+					NetherFix.blackstonePlacer.onGenerate(chunk, world.seed.toInt())
+					NetherFix.magmaPlacer.onGenerate(chunk, world.seed.toInt())
+					NetherFix.lavaStreamPlacer.onGenerate(chunk, world.seed.toInt())
+					OreFix.debrisPlacer.onGenerate(chunk, world.seed.toInt())
+
 					NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 			}

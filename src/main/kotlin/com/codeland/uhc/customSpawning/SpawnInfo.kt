@@ -1,6 +1,7 @@
 package com.codeland.uhc.customSpawning
 
 import org.bukkit.Material
+import org.bukkit.World
 import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -14,6 +15,8 @@ abstract class SpawnInfo {
 	open fun onSpawn(block: Block, spawnCycle: Int, entity: LivingEntity) {}
 
 	companion object {
+		val NETHER_CAVE_Y = 31
+
 		val leaves = arrayOf(
 			Material.OAK_LEAVES,
 			Material.SPRUCE_LEAVES,
@@ -44,7 +47,10 @@ abstract class SpawnInfo {
 		}
 
 		fun regularAllowSpawn(block: Block, lightLevel: Int): Boolean {
-			if (block.lightLevel > lightLevel) return false
+			if (
+				block.world.environment !== World.Environment.NETHER &&
+				block.lightLevel > lightLevel
+			) return false
 
 			return spawnSpace(block, 1, 2, 1)
 		}

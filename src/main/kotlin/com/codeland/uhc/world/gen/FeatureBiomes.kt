@@ -1,9 +1,9 @@
 package com.codeland.uhc.world.gen
 
+import com.codeland.uhc.world.gen.cave.WorldGenCavesSuperNether
 import com.google.common.collect.ImmutableCollection
 import net.minecraft.core.IRegistry
 import net.minecraft.data.RegistryGeneration
-import net.minecraft.data.worldgen.WorldGenCarvers
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.util.valueproviders.ConstantFloat
@@ -15,7 +15,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.levelgen.VerticalAnchor
 import net.minecraft.world.level.levelgen.WorldGenStage
 import net.minecraft.world.level.levelgen.carver.*
-import net.minecraft.world.level.levelgen.heightproviders.BiasedToBottomHeight
 import net.minecraft.world.level.levelgen.heightproviders.UniformHeight
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import java.lang.reflect.Constructor
@@ -67,7 +66,14 @@ object FeatureBiomes {
 	}
 
 	val caveCarverMaster = WorldGenCarverAbstract.a
-	val netherCaveCarverMaster = WorldGenCarverAbstract.b
+	val netherCavesClosed = WorldGenCavesSuperNether(
+		CaveCarverConfiguration.a,
+		false
+	)
+	val netherCavesOpen = WorldGenCavesSuperNether(
+		CaveCarverConfiguration.a,
+		true
+	)
 	val canyonCarverMaster = WorldGenCarverAbstract.c
 
 	val caveLevels = arrayOf(
@@ -127,7 +133,7 @@ object FeatureBiomes {
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
 			ConstantFloat.a(0.9f),
 			ConstantFloat.a(0.9f),
-			ConstantFloat.a(-10.0f)
+			ConstantFloat.a(-1.0f)
 		)
 	)
 
@@ -151,17 +157,45 @@ object FeatureBiomes {
 		)
 	)
 
-	val netherSuperCaveCarver = netherCaveCarverMaster.a(
+	val netherSuperCaveCarver = netherCavesOpen.a(
 		CaveCarverConfiguration(
-			0.25f,
-			UniformHeight.a(VerticalAnchor.a(8), VerticalAnchor.a(32)),
-			ConstantFloat.a(0.25f),
+			0.15f,
+			UniformHeight.a(VerticalAnchor.a(-10), VerticalAnchor.a(30)),
+			ConstantFloat.a(0.1f),
 			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(2.0f),
-			ConstantFloat.a(2.0f),
-			UniformFloat.b(-2.0f, -0.5f)
+			UniformFloat.b(1.0f, 2.0f),
+			UniformFloat.b(1.0f, 2.0f),
+			ConstantFloat.a(-1.0f)
+		)
+	)
+
+	val netherSmallCaveCarver = netherCavesOpen.a(
+		CaveCarverConfiguration(
+			0.4f,
+			UniformHeight.a(VerticalAnchor.a(-8), VerticalAnchor.a(18)),
+			ConstantFloat.a(0.0f),
+			VerticalAnchor.b(6),
+			false,
+			CarverDebugSettings.a(false, Blocks.ne.blockData),
+			ConstantFloat.a(0.9f),
+			ConstantFloat.a(1.25f),
+			ConstantFloat.a(-1.0f)
+		)
+	)
+
+	val netherUpperCaveCarver = netherCavesOpen.a(
+		CaveCarverConfiguration(
+			0.4f,
+			UniformHeight.a(VerticalAnchor.a(29), VerticalAnchor.a(112)),
+			ConstantFloat.a(1.0f),
+			VerticalAnchor.b(6),
+			false,
+			CarverDebugSettings.a(false, Blocks.ne.blockData),
+			ConstantFloat.a(1.0f),
+			ConstantFloat.a(1.0f),
+			ConstantFloat.a(-1.0f)
 		)
 	)
 
@@ -192,17 +226,12 @@ object FeatureBiomes {
 			val newCarverMap = HashMap<WorldGenStage.Features, ArrayList<Supplier<WorldGenCarverWrapper<*>>>>()
 
 			originalCarverMap.forEach { (key, value) ->
-				if (id == BiomeNo.PLAINS) {
-					value.forEach {
-						println(it.get())
-						println(it.get().a())
-					}
-				}
-
 				newCarverMap[key] = if (isNetherBiome(id)) {
-					val list = ArrayList(value.asList())
-					list.add { netherSuperCaveCarver }
-					list
+					arrayListOf(
+						Supplier { netherSuperCaveCarver },
+						Supplier { netherSmallCaveCarver },
+						Supplier { netherUpperCaveCarver },
+					)
 				} else {
 					arrayListOf(
 						Supplier { caveLevels[0] },
@@ -210,7 +239,7 @@ object FeatureBiomes {
 						Supplier { caveLevels[2] },
 						Supplier { caveLevels[3] },
 						Supplier { superCanyonCarver },
-						Supplier { linkCaveCarver }
+						//Supplier { linkCaveCarver }
 					)
 				}
 			}

@@ -88,11 +88,18 @@ class OrePlacer(
 	}
 
 	fun isStone(block: Block): Boolean {
-		return block.type == Material.STONE || block.type == Material.DEEPSLATE
+		return block.type === Material.STONE ||
+			block.type === Material.ANDESITE ||
+			block.type === Material.GRANITE ||
+			block.type === Material.DIORITE ||
+			block.type === Material.TUFF ||
+			block.type === Material.DEEPSLATE ||
+			block.type === Material.BLACKSTONE ||
+			block.type === Material.MAGMA_BLOCK
 	}
 
 	fun placeOre(block: Block): Block {
-		block.setType(if (block.type == Material.DEEPSLATE) deepType else type, false)
+		block.setType(if (block.type === Material.DEEPSLATE) deepType else type, false)
 		return block
 	}
 
