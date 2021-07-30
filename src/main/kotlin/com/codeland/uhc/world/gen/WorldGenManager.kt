@@ -1,5 +1,6 @@
 package com.codeland.uhc.world.gen
 
+import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
@@ -143,7 +144,6 @@ object WorldGenManager {
 			    	val manager = WorldChunkManagerOverworldGame(
 					    seed, biomeRegistry,
 					    BiomeNo.fromName(WorldGenOption.centerBiome?.name),
-					    WorldGenOption.getEnabled(WorldGenOption.MELON_FIX),
 					    UHC.startRadius(),
 					    UHC.endRadius(),
 					    false
@@ -156,10 +156,11 @@ object WorldGenManager {
 			    Pair(manager, manager.withFeatures(true))
 		    }
 		    WorldManager.LOBBY_WORLD_NAME -> {
-			    Pair(WorldChunkManagerOverworldLobby(
+			    Pair(WorldChunkManagerOverworldGame(
 				    seed, biomeRegistry,
-				    lobbyBiomes.shuffled().zip(tallLobbyBiomes.shuffled()).flatMap { listOf(it.first, it.second) }.take(9),
-				    60
+				    null,
+				    Lobby.LOBBY_RADIUS * 2,
+				    0, false
 			    ), null)
 		    }
 		    WorldManager.PVP_WORLD_NAME -> {
@@ -189,7 +190,7 @@ object WorldGenManager {
 				    false
 			    },
 			    world.name == WorldManager.PVP_WORLD_NAME,
-			    UHC.endRadius()
+			    if (world.name == WorldManager.LOBBY_WORLD_NAME) Lobby.LOBBY_RADIUS / 2 else UHC.endRadius()
 		    )
 
 		    worldChunkManagerBField[chunkGenerator] = featureManager ?: biomeManager

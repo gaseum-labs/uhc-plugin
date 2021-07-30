@@ -4,6 +4,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Util
+import com.sun.jna.platform.win32.GL
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
 import net.minecraft.network.protocol.game.PacketPlayOutBlockBreakAnimation
@@ -15,6 +16,7 @@ import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlock
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -25,8 +27,8 @@ class EndgameNaturalTerrain : Endgame() {
 	var finalMin = 0
 	var finalMax = 0
 
-	val GLOWING_TIME = 15 * 20
-	val CLEAR_TIME = 3 * 60 * 20
+	val GLOWING_TIME = 20 * 20
+	val CLEAR_TIME = 5 * 60 * 20
 
 	var finished = false
 	var timer = 0
@@ -62,7 +64,7 @@ class EndgameNaturalTerrain : Endgame() {
 
 		val (min, max) = determineMinMax(world, UHC.endRadius(), 100)
 		finalMin = min
-		finalMax = max + 10
+		finalMax = max
 		if (finalMax > 255) finalMax = 255
 
 		this.max = 255
@@ -107,16 +109,17 @@ class EndgameNaturalTerrain : Endgame() {
 
 	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float {
 		return if (finished)
-			1.0f
+			(timer / GLOWING_TIME.toFloat())
 		else
 			(max - finalMax).toFloat() / (255 - finalMax)
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
-		return if (finished)
-			"$GOLD${BOLD}Endgame $GOLD${BOLD}${min} - $max"
-		else
-			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${max(min, 0)} - $max ${RESET}Final: $GOLD${BOLD}${finalMin} - $finalMax"
+		return if (finished) {
+			"$GOLD${BOLD}Endgame $GOLD${BOLD}${min} - $max ${RESET}Glowing in $GOLD${BOLD}${Util.timeString(ceil((GLOWING_TIME - timer) / 20.0).toInt())}"
+		} else {
+			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${min.coerceAtLeast(0)} - $max ${RESET}Final: $GOLD${BOLD}${finalMin} - $finalMax"
+		}
 	}
 
 	override fun perTick(currentTick: Int) {

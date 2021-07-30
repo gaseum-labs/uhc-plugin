@@ -2,6 +2,7 @@ package com.codeland.uhc.world.chunkPlacerHolder.type
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.impl.AmethystPlacer
 import com.codeland.uhc.world.chunkPlacer.impl.OrePlacer
 import com.codeland.uhc.world.chunkPlacer.impl.MineralPlacer
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolder
@@ -33,6 +34,8 @@ class OreFix : ChunkPlacerHolder() {
 		val reverseDiamondPlacer =  OrePlacer(4, 200, 240, 1, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)
 
 		val debrisPlacer = OrePlacer(5, 6, 30, 2, Material.ANCIENT_DEBRIS, Material.ANCIENT_DEBRIS)
+
+		val amethystPlacer = AmethystPlacer()
 
 		fun isOre(block: Block): Boolean {
 			return when (block.type) {
@@ -99,5 +102,6 @@ class OreFix : ChunkPlacerHolder() {
 		reverseLapisPlacer,
 		reverseDiamondPlacer,
 		debrisPlacer,
+		amethystPlacer,
 	)
 }

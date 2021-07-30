@@ -5,6 +5,7 @@ import com.codeland.uhc.core.*
 import com.codeland.uhc.world.WorldGenOption.*
 import com.codeland.uhc.world.WorldGenOption.Companion.getEnabled
 import com.codeland.uhc.world.WorldManager
+import com.codeland.uhc.world.chunkPlacer.impl.AmethystPlacer
 import com.codeland.uhc.world.chunkPlacer.impl.OxeyePlacer
 import com.codeland.uhc.world.chunkPlacer.impl.SugarCanePlacer
 import com.codeland.uhc.world.chunkPlacerHolder.*
@@ -34,6 +35,8 @@ class Generation : Listener {
 				chunk.entities.forEach { entity ->
 					if (entity is Animals) entity.remove()
 				}
+
+				OreFix.amethystPlacer.onGenerate(chunk, world.seed.toInt())
 
 				if (getEnabled(CAVE_INDICATORS)) {
 					OreFix.removeMinerals(chunk)

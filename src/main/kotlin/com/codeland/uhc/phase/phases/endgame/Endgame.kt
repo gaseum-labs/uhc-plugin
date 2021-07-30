@@ -8,7 +8,7 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.World
-import kotlin.math.round
+import kotlin.math.roundToInt
 
 abstract class Endgame : Phase() {
 	override fun customStart() {
@@ -30,6 +30,8 @@ abstract class Endgame : Phase() {
 	}
 
 	companion object {
+		val RANGE = 24
+
 		fun determineMinMax(world: World, radius: Int, maxHeight: Int): Pair<Int, Int> {
 			/* store every recorded height of every x z coordinate within the radius */
 			val heightList = ArrayList<Int>((radius * 2 + 1) * (radius * 2 + 1))
@@ -72,29 +74,16 @@ abstract class Endgame : Phase() {
 			/* order the height list to find percentiles */
 			heightList.sort()
 
-			/* data not enough to describe the zone */
-			return if (heightList.size < 32) {
-				Pair(58, 66)
-
+			val median60 = if (heightList.isEmpty()) {
+				62
 			} else {
-				/* range is from 10th percentile to 90th percentile */
-				var min = heightList[round(heightList.size * 0.10).toInt().coerceAtMost(heightList.lastIndex)]
-				var max = heightList[round(heightList.size * 0.90).toInt().coerceAtMost(heightList.lastIndex)]
-
-				val rangeSize = max - min + 1
-
-				/* endgame range must be at least 9 blocks */
-				if (rangeSize < 9) {
-					val addedDistance = 9 - rangeSize
-					val topAdded = addedDistance / 2
-					val bottomAdded = addedDistance - topAdded
-
-					max += topAdded
-					min -= bottomAdded
-				}
-
-				Pair(min, max)
+				heightList[(heightList.size * 0.60).roundToInt().coerceAtMost(heightList.lastIndex)]
 			}
+
+			val below = RANGE / 2
+			val above = RANGE - below
+
+			return Pair(median60 - below + 1, median60 + above)
 		}
 	}
 }

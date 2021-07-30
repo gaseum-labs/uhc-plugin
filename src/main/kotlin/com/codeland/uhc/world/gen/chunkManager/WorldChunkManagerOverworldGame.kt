@@ -1,6 +1,5 @@
 package com.codeland.uhc.world.gen.chunkManager
 
-import com.codeland.uhc.world.gen.BiomeNo
 import com.codeland.uhc.world.gen.CustomGenLayers
 import com.codeland.uhc.world.gen.FeatureBiomes
 import net.minecraft.core.IRegistry
@@ -13,7 +12,6 @@ class WorldChunkManagerOverworldGame(
 	val seed: Long,
 	private val var4: IRegistry<BiomeBase>,
 	val centerBiomeNo: Int?,
-	val fixedJungle: Boolean,
 	val startRadius: Int,
 	val endRadius: Int,
 	val features: Boolean,
@@ -24,7 +22,7 @@ class WorldChunkManagerOverworldGame(
 
 	fun withFeatures(newFeatures: Boolean): WorldChunkManagerOverworldGame {
 		return WorldChunkManagerOverworldGame(
-			seed, var4, centerBiomeNo, fixedJungle, startRadius, endRadius, newFeatures
+			seed, var4, centerBiomeNo, startRadius, endRadius, newFeatures
 		)
 	}
 
