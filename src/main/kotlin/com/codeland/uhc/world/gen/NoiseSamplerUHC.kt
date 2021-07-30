@@ -25,7 +25,7 @@ class NoiseSamplerUHC(
 ) {
 	companion object {
 		const val AMPLIFIED_BASE = 1.5f
-		const val AMPLIFIED_SCALE = 4.0f
+		const val AMPLIFIED_SCALE = 5.5f
 
 		const val PVP_BASE = 0.01f
 		const val PVP_SCALE = 0.16f
@@ -182,17 +182,14 @@ class NoiseSamplerUHC(
 		}
 		d2 = 0.0
 
-		var yScale = noisesettings.c().b()
-		if (amplified) yScale *= 20.0
-
 		var xzScale = noisesettings.c().a()
-		if (pvp) xzScale *= 2.0
+		if (pvp) xzScale *= 2.0 else if (amplified) xzScale /= 4.0
 
 		var xzFactor = noisesettings.c().c()
-		if (pvp) xzFactor *= 2.0
+		if (pvp) xzFactor *= 2.0 else if (amplified) xzFactor /= 4.0
 
 		val d4 = 684.412 * xzScale
-		val d5 = 684.412 * yScale
+		val d5 = 684.412 * noisesettings.c().b()
 		val d6 = d4 / xzFactor
 		val d7 = d5 / noisesettings.c().d()
 
@@ -202,14 +199,9 @@ class NoiseSamplerUHC(
 			val j2 = i2 + l
 			val d8 = blendedNoise.a(i, j2, j, d4, d5, d6, d7)
 
-			val d9 = if (amplified && originBase > 0) {
-				d8
-
-			} else {
-				var de = this.supplementalNoise2(j2, d0, d1, d2) + d8
-				de = noiseModifier.modifyNoise(de, j2 * jjj, j * iii, i * iii)
-				this.supplementalNoise3(de, j2)
-			}
+			var d9 = this.supplementalNoise2(j2, d0, d1, d2) + d8
+			d9 = noiseModifier.modifyNoise(d9, j2 * jjj, j * iii, i * iii)
+			this.supplementalNoise3(d9, j2)
 
 			adouble[i2] = d9
 		}

@@ -152,20 +152,6 @@ object FeatureBiomes {
 		)
 	)
 
-	val netherSmallCaveCarver = netherCavesMaster.a(
-		CaveCarverConfiguration(
-			0.45f,
-			UniformHeight.a(VerticalAnchor.a(-8), VerticalAnchor.a(18)),
-			ConstantFloat.a(0.0f),
-			VerticalAnchor.b(6),
-			false,
-			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(0.9f),
-			ConstantFloat.a(1.25f),
-			ConstantFloat.a(-1.0f)
-		)
-	)
-
 	val netherUpperCaveCarver = netherCavesMaster.a(
 		CaveCarverConfiguration(
 			0.45f,
@@ -210,7 +196,6 @@ object FeatureBiomes {
 				newCarverMap[key] = if (isNetherBiome(id)) {
 					arrayListOf(
 						Supplier { netherSuperCaveCarver },
-						//Supplier { netherSmallCaveCarver },
 						Supplier { netherUpperCaveCarver },
 					)
 				} else {
