@@ -4,10 +4,10 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
 class RedMushroomFix : BlockFix("Red mushroom block", arrayOf(
-	Range("Mushroom", "mushroomCount", "mushroomIndex", 25, { _, _ -> ItemStack(Material.RED_MUSHROOM) })
+	Range.countRange("Mushroom", 20) { _, _ -> ItemStack(Material.RED_MUSHROOM) }
 )) {
 	override fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean {
-		return drops.firstOrNull()?.type == Material.RED_MUSHROOM_BLOCK
+		return drops.firstOrNull()?.type === Material.RED_MUSHROOM_BLOCK
 	}
 
 	override fun allowTool(tool: ItemStack): Boolean {
@@ -15,6 +15,6 @@ class RedMushroomFix : BlockFix("Red mushroom block", arrayOf(
 	}
 
 	override fun isBlock(block: Material): Boolean {
-		return block == Material.RED_MUSHROOM_BLOCK
+		return block === Material.RED_MUSHROOM_BLOCK
 	}
 }

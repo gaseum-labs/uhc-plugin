@@ -11,12 +11,13 @@ import net.minecraft.world.level.levelgen.NoiseSettings
 import net.minecraft.world.level.levelgen.synth.BlendedNoise
 import net.minecraft.world.level.levelgen.synth.NoiseGenerator3Handler
 import net.minecraft.world.level.levelgen.synth.NoiseGeneratorOctaves
+import kotlin.math.abs
 
 class NoiseSamplerUHC(
 	val worldChunkManager: WorldChunkManager,
 	val iii: Int, val jjj: Int, val kkk: Int, val noiseSettings: NoiseSettings, val blendedNoise: BlendedNoise,
 	gen3: NoiseGenerator3Handler?, val octaves: NoiseGeneratorOctaves,
-	val noiseModifier: NoiseModifier, val amplified: Boolean, val pvp: Boolean
+	val noiseModifier: NoiseModifier, val amplified: Boolean, val pvp: Boolean, val finalRadius: Int
 ) : NoiseSampler(
 	worldChunkManager, iii, jjj, kkk,
 	noiseSettings, blendedNoise,
@@ -28,6 +29,9 @@ class NoiseSamplerUHC(
 
 		const val PVP_BASE = 0.01f
 		const val PVP_SCALE = 0.16f
+
+		const val FINAL_BASE = 0.36f
+		const val FINAL_SCALE = 0.36f
 
 		val circle = FloatArray(25)
 		init {
@@ -62,7 +66,8 @@ class NoiseSamplerUHC(
 			original: NoiseSampler,
 			worldChunkManager: WorldChunkManager,
 			amplified: Boolean,
-			pvp: Boolean
+			pvp: Boolean,
+			finalRadius: Int,
 		): NoiseSamplerUHC {
 			NoiseSamplerUHC
 			return NoiseSamplerUHC(
@@ -76,7 +81,8 @@ class NoiseSamplerUHC(
 				jField[original] as NoiseGeneratorOctaves,
 				sField[original] as NoiseModifier,
 				amplified,
-				pvp
+				pvp,
+				finalRadius
 			)
 		}
 
@@ -86,12 +92,12 @@ class NoiseSamplerUHC(
 		fun inject(
 			chunkGeneratorAbstract: ChunkGeneratorAbstract,
 			worldChunkManager: WorldChunkManager,
-			amplified: Boolean, pvp: Boolean
+			amplified: Boolean, pvp: Boolean, finalRadius: Int
 		): NoiseSamplerUHC {
 			NoiseSamplerUHC
 			val original = uField[chunkGeneratorAbstract] as NoiseSampler
 
-			val noiseSamplerUHC = fromOriginal(original, worldChunkManager, amplified, pvp)
+			val noiseSamplerUHC = fromOriginal(original, worldChunkManager, amplified, pvp, finalRadius)
 			uField[chunkGeneratorAbstract] = noiseSamplerUHC
 
 			return noiseSamplerUHC
@@ -105,13 +111,19 @@ class NoiseSamplerUHC(
 			PVP_BASE
 		}
 
-		val base = biomeBase.h()
+		val originalBase = biomeBase.h()
 
-		if (base < 0) return base
-
-		if (amplified) return AMPLIFIED_BASE
-
-		return base
+		return if (amplified) {
+			if (originalBase < 0)
+				originalBase
+			else
+				AMPLIFIED_BASE
+		} else {
+			if (abs(x) <= finalRadius / 4 && abs(z) <= finalRadius / 4)
+				FINAL_BASE
+			else
+				biomeBase.h()
+		}
 	}
 
 	fun getScale(biomeBase: BiomeBase, base: Float, x: Int, z: Int): Float {
@@ -121,11 +133,11 @@ class NoiseSamplerUHC(
 			PVP_SCALE
 		}
 
-		return if (base > 0 && amplified) {
-			AMPLIFIED_SCALE
-		} else {
-			biomeBase.j()
-		}
+		if (base > 0 && amplified) return AMPLIFIED_SCALE
+
+		if (abs(x) <= finalRadius && abs(z) <= finalRadius) return FINAL_BASE
+
+		return biomeBase.j()
 	}
 
 	override fun a(adouble: DoubleArray, i: Int, j: Int, noisesettings: NoiseSettings, k: Int, l: Int, i1: Int) {

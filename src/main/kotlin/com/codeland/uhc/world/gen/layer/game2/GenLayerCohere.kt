@@ -17,9 +17,9 @@ class GenLayerCohere : AreaTransformer7 {
 
 		return if (p5 == 2) {
 			if (context.a(2) == 0) {
-				expand(3, 9) ?: expand(0, 1) ?: expand(1, 0) ?: p5
+				expand(0, 1) ?: expand(1, 0) ?: expand(3, 9999) ?: p5
 			} else {
-				expand(3, 9) ?: expand(1, 0) ?: expand(0, 1) ?: p5
+				expand(1, 0) ?: expand(0, 1) ?: expand(3, 9999) ?: p5
 			}
 		} else {
 			p5

@@ -57,5 +57,17 @@ abstract class DelayedChunkPlacer(size: Int) : AbstractChunkPlacer(size) {
 				world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
 				world.isChunkGenerated(chunkX - 1, chunkZ - 1)
 		}
+
+		fun chunkReadyAround(world: World, chunkX: Int, chunkZ: Int): Boolean {
+			return world.isChunkGenerated(chunkX + 1, chunkZ + 1) &&
+				world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
+				world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
+				world.isChunkGenerated(chunkX - 1, chunkZ - 1) &&
+
+				world.isChunkGenerated(chunkX + 1, chunkZ) &&
+				world.isChunkGenerated(chunkX - 1, chunkZ) &&
+				world.isChunkGenerated(chunkX, chunkZ + 1) &&
+				world.isChunkGenerated(chunkX, chunkZ - 1)
+		}
 	}
 }

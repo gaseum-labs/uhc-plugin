@@ -4,7 +4,7 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
 class NetherWartFix : BlockFix("Nether Wart", arrayOf(
-	Range("Wart", "wartCount", "wartIndex", 1, { _, _ -> ItemStack(Material.NETHER_WART) }, { _, _ -> ItemStack(Material.NETHER_WART) })
+	Range.nonCountRange { _, _ -> ItemStack(Material.NETHER_WART) }
 )) {
 	override fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean {
 		return false
@@ -15,6 +15,6 @@ class NetherWartFix : BlockFix("Nether Wart", arrayOf(
 	}
 
 	override fun isBlock(material: Material): Boolean {
-		return material == Material.NETHER_WART
+		return material === Material.NETHER_WART
 	}
 }

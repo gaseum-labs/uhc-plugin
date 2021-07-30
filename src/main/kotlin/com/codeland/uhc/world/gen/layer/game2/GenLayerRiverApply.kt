@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen.layer.game
+package com.codeland.uhc.world.gen.layer.game2
 
 import com.codeland.uhc.world.gen.BiomeNo
 import net.minecraft.world.level.newbiome.area.Area

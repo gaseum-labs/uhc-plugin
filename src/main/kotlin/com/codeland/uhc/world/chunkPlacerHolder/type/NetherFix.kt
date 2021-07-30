@@ -1,10 +1,7 @@
 package com.codeland.uhc.world.chunkPlacerHolder.type;
 
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
-import com.codeland.uhc.world.chunkPlacer.impl.nether.BlackstonePlacer
-import com.codeland.uhc.world.chunkPlacer.impl.nether.LavaStreamPlacer
-import com.codeland.uhc.world.chunkPlacer.impl.nether.MagmaPlacer
-import com.codeland.uhc.world.chunkPlacer.impl.nether.WartPlacer
+import com.codeland.uhc.world.chunkPlacer.impl.nether.*
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolder
 
 class NetherFix : ChunkPlacerHolder() {
@@ -13,11 +10,14 @@ class NetherFix : ChunkPlacerHolder() {
 		val blackstonePlacer = BlackstonePlacer()
 		val magmaPlacer = MagmaPlacer()
 		val lavaStreamPlacer = LavaStreamPlacer(2)
+		val basaltPlacer = BasaltPlacer(2)
 	}
 
 	override fun list(): Array<AbstractChunkPlacer> = arrayOf(
 		wartPlacer,
 		blackstonePlacer,
-		lavaStreamPlacer
+		lavaStreamPlacer,
+		magmaPlacer,
+		basaltPlacer
 	)
 }

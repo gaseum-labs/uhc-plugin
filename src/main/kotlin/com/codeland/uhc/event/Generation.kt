@@ -54,8 +54,6 @@ class Generation : Listener {
 					OreFix.reverseDiamondPlacer.onGenerate(chunk, world.seed.toInt())
 
 				} else if (getEnabled(ORE_FIX)) {
-					OreFix.lavaPlacer.onGenerate(chunk, world.seed.toInt())
-
 					OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt())
@@ -109,6 +107,7 @@ class Generation : Listener {
 					NetherFix.magmaPlacer.onGenerate(chunk, world.seed.toInt())
 					NetherFix.lavaStreamPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.debrisPlacer.onGenerate(chunk, world.seed.toInt())
+					NetherFix.basaltPlacer.onGenerate(chunk, world.seed.toInt())
 
 					NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt())
 				}

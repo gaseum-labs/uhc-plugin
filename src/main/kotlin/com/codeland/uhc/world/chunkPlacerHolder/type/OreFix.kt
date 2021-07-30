@@ -2,7 +2,6 @@ package com.codeland.uhc.world.chunkPlacerHolder.type
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
-import com.codeland.uhc.world.chunkPlacer.impl.LavaPlacer
 import com.codeland.uhc.world.chunkPlacer.impl.OrePlacer
 import com.codeland.uhc.world.chunkPlacer.impl.MineralPlacer
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolder
@@ -20,7 +19,6 @@ class OreFix : ChunkPlacerHolder() {
 		const val HEIGHT_LIMIT = 32
 
 		val mineralPlacer = MineralPlacer(1)
-		val lavaPlacer = LavaPlacer()
 
 		val goldPlacer = OrePlacer(3, 6, 32, 5, Material.GOLD_ORE, Material.DEEPSLATE_GOLD_ORE)
 		val lapisPlacer = OrePlacer(4, 6, 32, 4, Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE)
@@ -34,7 +32,7 @@ class OreFix : ChunkPlacerHolder() {
 		val reverseLapisPlacer =    OrePlacer(3, 150, 240, 3, Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE)
 		val reverseDiamondPlacer =  OrePlacer(4, 200, 240, 1, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)
 
-		val debrisPlacer = OrePlacer(5, 6, 30, 1, Material.ANCIENT_DEBRIS, Material.ANCIENT_DEBRIS)
+		val debrisPlacer = OrePlacer(5, 6, 30, 2, Material.ANCIENT_DEBRIS, Material.ANCIENT_DEBRIS)
 
 		fun isOre(block: Block): Boolean {
 			return when (block.type) {
@@ -90,7 +88,6 @@ class OreFix : ChunkPlacerHolder() {
 
 	override fun list(): Array<AbstractChunkPlacer> = arrayOf(
 		mineralPlacer,
-		lavaPlacer,
 		goldPlacer,
 		lapisPlacer,
 		diamondPlacer,

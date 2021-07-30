@@ -1,7 +1,6 @@
 package com.codeland.uhc.blockfix
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Util
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -11,15 +10,32 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
+typealias Drop = (Material, MutableList<ItemStack>) -> ItemStack?
+
 abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
-	data class Range(
+	data class Range private constructor(
 		val prettyName: String,
-		val countMeta: String,
-		val indexMeta: String,
-		val range: Int,
-		val getDrop: (Material, MutableList<ItemStack>) -> ItemStack,
-		val offDrop: (Material, MutableList<ItemStack>) -> ItemStack? = { _, _ -> null }
-	)
+		val size: Int,
+		val onDrop: Drop,
+		val offDrop: Drop
+	) {
+		val countMeta: String = "${prettyName}Count"
+		val indexMeta: String = "${prettyName}Index"
+
+		companion object {
+			fun countRange(prettyName: String, size: Int, onDrop: Drop): Range {
+				return Range(prettyName, size, onDrop) { _, _ -> null }
+			}
+
+			fun countOffRange(prettyName: String, size: Int, onDrop: Drop, offDrop: Drop): Range {
+				return Range(prettyName, size, onDrop, offDrop)
+			}
+
+			fun nonCountRange(drop: Drop): Range {
+				return Range("Default", 0, drop, drop)
+			}
+		}
+	}
 
 	abstract fun isBlock(material: Material): Boolean
 	abstract fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean
@@ -29,7 +45,10 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 		onString("${ChatColor.GOLD}<$prettyName Ranges>")
 
 		ranges.forEach { range ->
-			onString("${ChatColor.YELLOW}${range.prettyName} count: ${getCount(player, range)} next drop: ${getIndex(player, range)}")
+			if (range.size == 0)
+				onString("${ChatColor.YELLOW}${range.prettyName}")
+			else
+				onString("${ChatColor.YELLOW}${range.prettyName} count: ${getCount(player, range)} next drop: ${getIndex(player, range)}")
 		}
 	}
 
@@ -74,7 +93,7 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 	 * @return the new index
 	 */
 	fun resetIndex(player: Player, range: Range): Int {
-		val index = Util.randRange(1, range.range)
+		val index = Util.randRange(1, range.size)
 
 		player.setMetadata(range.indexMeta, FixedMetadataValue(UHCPlugin.plugin, index))
 
@@ -89,13 +108,20 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 			drops.clear()
 
 			if (allowTool(player.inventory.itemInMainHand)) ranges.forEach { range ->
-				val count = increaseCount(player, range)
+				/* noncounting ranges */
+				if (range.size == 0) {
+					onItem(range.onDrop(material, stackDrops))
 
-				onItem(if (count == getIndex(player, range)) range.getDrop(material, stackDrops) else range.offDrop(material, stackDrops))
+				/* counting ranges */
+				} else {
+					val count = increaseCount(player, range)
 
-				if (count == range.range) {
-					resetIndex(player, range)
-					resetCount(player, range)
+					onItem(if (count == getIndex(player, range)) range.onDrop(material, stackDrops) else range.offDrop(material, stackDrops))
+
+					if (count == range.size) {
+						resetIndex(player, range)
+						resetCount(player, range)
+					}
 				}
 			}
 

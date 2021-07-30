@@ -12,7 +12,7 @@ class GenLayerOcean(borderRadius: Int, zoomsAfter: Int)  : AreaTransformer2, Are
 
 	override fun a(p0: AreaContextTransformed<*>, area: Area, x: Int, z: Int): Int {
 		return if (abs(x) > limit || abs(z) > limit) {
-			Region.OCEAN.ordinal
+			Region.pack(Region.OCEAN, false)
 		} else {
 			area.a(x, z)
 		}

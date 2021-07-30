@@ -4,6 +4,7 @@ import com.codeland.uhc.world.gen.cave.WorldGenCavesSuperNether
 import com.google.common.collect.ImmutableCollection
 import net.minecraft.core.IRegistry
 import net.minecraft.data.RegistryGeneration
+import net.minecraft.data.worldgen.WorldGenCarvers
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.util.valueproviders.ConstantFloat
@@ -15,6 +16,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.levelgen.VerticalAnchor
 import net.minecraft.world.level.levelgen.WorldGenStage
 import net.minecraft.world.level.levelgen.carver.*
+import net.minecraft.world.level.levelgen.heightproviders.BiasedToBottomHeight
 import net.minecraft.world.level.levelgen.heightproviders.UniformHeight
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import java.lang.reflect.Constructor
@@ -66,14 +68,7 @@ object FeatureBiomes {
 	}
 
 	val caveCarverMaster = WorldGenCarverAbstract.a
-	val netherCavesClosed = WorldGenCavesSuperNether(
-		CaveCarverConfiguration.a,
-		false
-	)
-	val netherCavesOpen = WorldGenCavesSuperNether(
-		CaveCarverConfiguration.a,
-		true
-	)
+	val netherCavesMaster = WorldGenCavesSuperNether(CaveCarverConfiguration.a)
 	val canyonCarverMaster = WorldGenCarverAbstract.c
 
 	val caveLevels = arrayOf(
@@ -81,18 +76,18 @@ object FeatureBiomes {
 			0.075f,
 			UniformHeight.a(VerticalAnchor.a(1), VerticalAnchor.a(16)),
 			ConstantFloat.a(0.3f),
-			VerticalAnchor.b(10),
+			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
 			UniformFloat.b(2.0f, 3.4f),
-			UniformFloat.b(1.0f, 1.75f),
-			ConstantFloat.a(-1.0f)
+			UniformFloat.b(1.5f, 2.0f),
+			ConstantFloat.a(0.0f)
 		)),
 		caveCarverMaster.a(CaveCarverConfiguration(
 			0.100f,
 			UniformHeight.a(VerticalAnchor.a(17), VerticalAnchor.a(32)),
 			ConstantFloat.a(0.4f),
-			VerticalAnchor.b(10),
+			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
 			UniformFloat.b(1.5f, 2.6f),
@@ -103,7 +98,7 @@ object FeatureBiomes {
 			0.125f,
 			UniformHeight.a(VerticalAnchor.a(33), VerticalAnchor.a(48)),
 			ConstantFloat.a(0.5f),
-			VerticalAnchor.b(10),
+			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
 			UniformFloat.b(1.25f, 1.8f),
@@ -114,7 +109,7 @@ object FeatureBiomes {
 			0.150f,
 			UniformHeight.a(VerticalAnchor.a(49), VerticalAnchor.a(64)),
 			ConstantFloat.a(0.5f),
-			VerticalAnchor.b(10),
+			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
 			ConstantFloat.a(1.0f),
@@ -123,26 +118,12 @@ object FeatureBiomes {
 		)),
 	)
 
-	val linkCaveCarver = caveCarverMaster.a(
-		CaveCarverConfiguration(
-			0.333f,
-			UniformHeight.a(VerticalAnchor.a(8), VerticalAnchor.a(32)),
-			ConstantFloat.a(0.1f),
-			VerticalAnchor.b(10),
-			false,
-			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(0.9f),
-			ConstantFloat.a(0.9f),
-			ConstantFloat.a(-1.0f)
-		)
-	)
-
 	val superCanyonCarver = canyonCarverMaster.a(
 		CanyonCarverConfiguration(
 			0.02F,
 			UniformHeight.a(VerticalAnchor.a(0), VerticalAnchor.a(48)),
 			ConstantFloat.a(3.0F),
-			VerticalAnchor.b(10),
+			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.nf.blockData),
 			UniformFloat.b(-2.0F, 2.0F),
@@ -157,23 +138,23 @@ object FeatureBiomes {
 		)
 	)
 
-	val netherSuperCaveCarver = netherCavesOpen.a(
+	val netherSuperCaveCarver = netherCavesMaster.a(
 		CaveCarverConfiguration(
-			0.15f,
-			UniformHeight.a(VerticalAnchor.a(-10), VerticalAnchor.a(30)),
-			ConstantFloat.a(0.1f),
+			1.0f,
+			BiasedToBottomHeight.a(VerticalAnchor.a(-8), VerticalAnchor.a(32), 8),
+			ConstantFloat.a(0.0f),
 			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			UniformFloat.b(1.0f, 2.0f),
-			UniformFloat.b(1.0f, 2.0f),
-			ConstantFloat.a(-1.0f)
+			ConstantFloat.a(2.0f),
+			ConstantFloat.a(2.0f),
+			UniformFloat.b(-1.0f, 0.0f)
 		)
 	)
 
-	val netherSmallCaveCarver = netherCavesOpen.a(
+	val netherSmallCaveCarver = netherCavesMaster.a(
 		CaveCarverConfiguration(
-			0.4f,
+			0.45f,
 			UniformHeight.a(VerticalAnchor.a(-8), VerticalAnchor.a(18)),
 			ConstantFloat.a(0.0f),
 			VerticalAnchor.b(6),
@@ -185,11 +166,11 @@ object FeatureBiomes {
 		)
 	)
 
-	val netherUpperCaveCarver = netherCavesOpen.a(
+	val netherUpperCaveCarver = netherCavesMaster.a(
 		CaveCarverConfiguration(
-			0.4f,
+			0.45f,
 			UniformHeight.a(VerticalAnchor.a(29), VerticalAnchor.a(112)),
-			ConstantFloat.a(1.0f),
+			ConstantFloat.a(2.5f),
 			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
@@ -229,7 +210,7 @@ object FeatureBiomes {
 				newCarverMap[key] = if (isNetherBiome(id)) {
 					arrayListOf(
 						Supplier { netherSuperCaveCarver },
-						Supplier { netherSmallCaveCarver },
+						//Supplier { netherSmallCaveCarver },
 						Supplier { netherUpperCaveCarver },
 					)
 				} else {
@@ -239,7 +220,6 @@ object FeatureBiomes {
 						Supplier { caveLevels[2] },
 						Supplier { caveLevels[3] },
 						Supplier { superCanyonCarver },
-						//Supplier { linkCaveCarver }
 					)
 				}
 			}

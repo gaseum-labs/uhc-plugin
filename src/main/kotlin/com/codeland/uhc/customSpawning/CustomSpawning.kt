@@ -8,6 +8,7 @@ import com.codeland.uhc.world.WorldManager
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
+import org.bukkit.World
 import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.entity.*
@@ -174,7 +175,9 @@ object CustomSpawning {
 	fun makePlayerMob(type: CustomSpawningType, entity: LivingEntity, player: Player, data: CustomSpawningType.SpawningPlayerData) {
 		var mobFraction = (1 / data.mobcap).coerceAtLeast(0.0)
 
-		if (entity.location.block.biome === Biome.SOUL_SAND_VALLEY || (type == CustomSpawningType.HOSTILE && playerOnSurface(player))) mobFraction *= 2
+		if (entity.location.world.environment === World.Environment.NETHER && entity.location.block.y <= SpawnInfo.NETHER_CAVE_Y) mobFraction /= 2
+
+		if (entity.location.block.biome === Biome.SOUL_SAND_VALLEY || (type === CustomSpawningType.HOSTILE && playerOnSurface(player))) mobFraction *= 2
 
 		entity.setMetadata(type.spawnTag, FixedMetadataValue(UHCPlugin.plugin, SpawnTagData(player.uniqueId, mobFraction)))
 

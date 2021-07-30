@@ -188,7 +188,8 @@ object WorldGenManager {
 			    } else {
 				    false
 			    },
-			    world.name == WorldManager.PVP_WORLD_NAME
+			    world.name == WorldManager.PVP_WORLD_NAME,
+			    UHC.endRadius()
 		    )
 
 		    worldChunkManagerBField[chunkGenerator] = featureManager ?: biomeManager

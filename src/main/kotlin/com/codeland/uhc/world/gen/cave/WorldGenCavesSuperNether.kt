@@ -17,10 +17,7 @@ import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.mutable.MutableBoole
 import java.util.*
 import java.util.function.Function
 
-class WorldGenCavesSuperNether(
-	codec: Codec<CaveCarverConfiguration>,
-	val open: Boolean
-) : WorldGenCaves(codec) {
+class WorldGenCavesSuperNether(codec: Codec<CaveCarverConfiguration>) : WorldGenCaves(codec) {
 	init {
 		k = ImmutableSet.of(
 			Blocks.b,
@@ -45,48 +42,5 @@ class WorldGenCavesSuperNether(
 			Blocks.B
 		)
 		l = ImmutableSet.of<FluidType>(FluidTypes.e, FluidTypes.c)
-	}
-
-	fun boundaryBlock(chunkAccess: IChunkAccess, blockPosition: BlockPosition): Boolean {
-		val block = chunkAccess.getType(blockPosition).block
-		return block === Blocks.a || block === Blocks.B
-	}
-
-	override fun a(
-		var0: CarvingContext,
-		var1: CaveCarverConfiguration,
-		chunkAccess: IChunkAccess,
-		var3: Function<BlockPosition, BiomeBase>,
-		var4: BitSet,
-		var5: Random,
-		carvePosition: MutableBlockPosition,
-		var7: MutableBlockPosition,
-		var8: Aquifer,
-		var9: MutableBoolean
-	): Boolean {
-		val block = chunkAccess.getType(carvePosition)
-
-		return if (this.a(block)) {
-			val carveBlock = if (
-				!open && (
-					boundaryBlock(chunkAccess, carvePosition.up()) ||
-					boundaryBlock(chunkAccess, carvePosition.down()) ||
-					boundaryBlock(chunkAccess, carvePosition.east()) ||
-					boundaryBlock(chunkAccess, carvePosition.west()) ||
-					boundaryBlock(chunkAccess, carvePosition.north()) ||
-					boundaryBlock(chunkAccess, carvePosition.south())
-				)
-			) {
-				Blocks.cT.blockData
-			} else {
-				h
-			}
-
-			chunkAccess.setType(carvePosition, carveBlock, false)
-			true
-
-		} else {
-			false
-		}
 	}
 }

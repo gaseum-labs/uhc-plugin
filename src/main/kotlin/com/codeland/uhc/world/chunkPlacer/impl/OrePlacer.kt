@@ -95,6 +95,7 @@ class OrePlacer(
 			block.type === Material.TUFF ||
 			block.type === Material.DEEPSLATE ||
 			block.type === Material.BLACKSTONE ||
+			block.type === Material.BASALT ||
 			block.type === Material.MAGMA_BLOCK
 	}
 

@@ -4,7 +4,7 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
 class GravelFix : BlockFix("Gravel", arrayOf(
-	Range("Flint", "gravelCount", "gravelIndex", 10, { _, _ -> ItemStack(Material.FLINT) }, { _, _ -> ItemStack(Material.GRAVEL) })
+	Range.countOffRange("Flint", 10, { _, _ -> ItemStack(Material.FLINT) }, { _, _ -> ItemStack(Material.GRAVEL) })
 )) {
 	override fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean {
 		return isSilkTouch(tool)
@@ -15,6 +15,6 @@ class GravelFix : BlockFix("Gravel", arrayOf(
 	}
 
 	override fun isBlock(material: Material): Boolean {
-		return material == Material.GRAVEL
+		return material === Material.GRAVEL
 	}
 }

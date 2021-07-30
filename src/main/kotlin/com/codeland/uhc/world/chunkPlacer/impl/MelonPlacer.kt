@@ -11,72 +11,39 @@ import org.bukkit.block.data.MultipleFacing
 
 class MelonPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return world.isChunkGenerated(chunkX + 1, chunkZ + 1) &&
-			world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
-			world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
-			world.isChunkGenerated(chunkX - 1, chunkZ - 1)
+		return chunkReadyAround(world, chunkX, chunkZ)
+	}
+
+	fun hasJungle(chunk: Chunk): Boolean {
+		/* at least one fourth of the chunk must be jungle */
+		val THRESHOLD = 8 * 8 / 4
+		var count = 0
+
+		for (x in 0..7) for (z in 0..7) {
+			val biome = chunk.getBlock(x * 2, 63, z * 2).biome
+
+			if (
+				biome === Biome.JUNGLE ||
+				biome === Biome.JUNGLE_HILLS ||
+				biome === Biome.MODIFIED_JUNGLE ||
+				biome === Biome.BAMBOO_JUNGLE ||
+				biome === Biome.BAMBOO_JUNGLE_HILLS ||
+				biome === Biome.JUNGLE_EDGE ||
+				biome === Biome.MODIFIED_JUNGLE_EDGE
+			) ++count
+
+			if (count >= THRESHOLD) return true
+		}
+
+		return false
 	}
 
 	override fun place(chunk: Chunk, chunkIndex: Int) {
-		fun hasJungle(): Boolean {
-			/* at least one fourth of the chunk must be jungle */
-			val THRESHOLD = 8 * 8 / 4
-			var count = 0
+		if (!hasJungle(chunk)) return
 
-			for (x in 0..7) for (z in 0..7) {
-				val biome = chunk.getBlock(x * 2, 63, z * 2).biome
+		fun itb(boolean: Boolean) = if (boolean) 1 else 0
 
-				if (
-					biome === Biome.JUNGLE ||
-					biome === Biome.JUNGLE_HILLS ||
-					biome === Biome.MODIFIED_JUNGLE ||
-					biome === Biome.BAMBOO_JUNGLE ||
-					biome === Biome.BAMBOO_JUNGLE_HILLS ||
-					biome === Biome.JUNGLE_EDGE ||
-					biome === Biome.MODIFIED_JUNGLE_EDGE
-				) ++count
-
-				if (count >= THRESHOLD) return true
-			}
-
-			return false
-		}
-
-		fun validSide(block: Block, blockFace: BlockFace): Boolean {
-			var checkBlock = block
-
-			for (i in 0..3) {
-				checkBlock = checkBlock.getRelative(blockFace)
-
-				if (checkBlock.isPassable) {
-					val up = checkBlock.getRelative(BlockFace.UP)
-
-					/* if there's an air gap, the wall block must come immediately next */
-					if (up.isPassable) return (!checkBlock.getRelative(blockFace).isPassable)
-					/* if there's a roof, continue */
-				} else {
-					/* if there's a wall, good */
-					return true
-				}
-			}
-
-			/* 4 continuous roof blocks is good */
-			return true
-		}
-
-		fun placeVine(block: Block, blockFace: BlockFace) {
-			val vineBlock = block.getRelative(blockFace)
-
-			if (vineBlock.isPassable) {
-				if (vineBlock.type !== Material.VINE) vineBlock.setType(Material.VINE, false)
-
-				val blockData = vineBlock.blockData as MultipleFacing
-				blockData.setFace(blockFace.oppositeFace, true)
-				vineBlock.blockData = blockData
-			}
-		}
-
-		if (!hasJungle()) return
+		var bestPosition = Pair(4, chunk.getBlock(0, 0, 0))
 
 		randomPosition(chunk, 63, 80) { block, x, y, z ->
 			if (
@@ -84,27 +51,35 @@ class MelonPlacer(size: Int) : DelayedChunkPlacer(size) {
 				block.getRelative(BlockFace.DOWN).type == Material.GRASS_BLOCK &&
 				!block.getRelative(BlockFace.UP).isPassable
 			) {
-				if (
-					validSide(block, BlockFace.EAST) &&
-					validSide(block, BlockFace.WEST) &&
-					validSide(block, BlockFace.SOUTH) &&
-					validSide(block, BlockFace.NORTH)
-				) {
-					block.setType(Material.MELON, false)
-					block.getRelative(BlockFace.DOWN).setType(Material.DIRT, false)
+				val numOpen = itb(block.getRelative(BlockFace.EAST).isPassable) +
+					itb(block.getRelative(BlockFace.WEST).isPassable) +
+					itb(block.getRelative(BlockFace.NORTH).isPassable) +
+					itb(block.getRelative(BlockFace.SOUTH).isPassable)
 
-					placeVine(block, BlockFace.EAST)
-					placeVine(block, BlockFace.WEST)
-					placeVine(block, BlockFace.SOUTH)
-					placeVine(block, BlockFace.NORTH)
-
-					true
-				} else {
-					false
+				when {
+					numOpen == 0 -> {
+						bestPosition = Pair(0, block)
+						true
+					}
+					numOpen < bestPosition.first -> {
+						bestPosition = Pair(numOpen, block)
+						false
+					}
+					else -> {
+						false
+					}
 				}
 			} else {
 				false
 			}
+		}
+
+		if (bestPosition.first <= 2) {
+			for (x in -1..1) for (y in -1..1) for (z in -1..1) {
+				val relative = bestPosition.second.getRelative(x, y, z)
+				if (relative.isPassable) relative.setType(Material.JUNGLE_LEAVES, false)
+			}
+			bestPosition.second.setType(Material.MELON, false)
 		}
 	}
 }

@@ -39,9 +39,10 @@ object Lobby {
 		player.setStatistic(Statistic.TIME_SINCE_REST, 0)
 		player.isFlying = false
 		player.isSneaking = false
+		player.enderChest.clear()
 	}
 
-	fun onSpawnLobby(player: Player): Location {
+	fun onSpawnLobby(player: Player) {
 		resetPlayerStats(player)
 
 		player.gameMode = GameMode.CREATIVE
@@ -57,14 +58,11 @@ object Lobby {
 			if (quirk.enabled.get()) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
 		}
 
-		val lobbyLocation = lobbyLocation(UHC)
-		if (player.location.world.name != WorldManager.LOBBY_WORLD_NAME) player.teleport(lobbyLocation)
-
 		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
 		CommandItemType.giveItem(CommandItemType.PVP_OPENER, player.inventory)
 		CommandItemType.giveItem(CommandItemType.SPECTATE, player.inventory)
 
-		return lobbyLocation
+		player.teleport(lobbyLocation(UHC))
 	}
 
 	fun isLinked(player: Player) = if (UHC.usingBot.get()) {
@@ -189,10 +187,6 @@ object Lobby {
 		"Ore veins of diamond, lapis lazuli, and gold are guaranteed to be contiguous",
 		"The generation of coal, iron, and redstone ores is not changed",
 		"Extra brown and red mushrooms spawn in caves below Y level 32",
-		"Granite found below Y level 32 indicates a cave to the north",
-		"Diorite found below Y level 32 indicates a cave to the east",
-		"Andesite found below Y level 32 indicates a cave to the south",
-		"Tuff found below Y level 32 indicates a cave to the west",
 		"The lava fill level in caves is lowered allowing deeper exploration",
 		"Diamond ore veins will always have 3 diamond ore",
 		"Gold ore veins will always have 5 gold ore",
@@ -249,7 +243,7 @@ object Lobby {
 		"Endermen will always drop 1 ender pearl",
 		"Armor and weapon wielding Zombies will always drop their item at half durability",
 		"Piglin bartering gives better loot",
-		"The looting enchantment will always give better drops",
+		"Mobs drop 1 extra item for each level of looting",
 
 		/* mob spawning */
 		"Baby zombies cannot spawn",

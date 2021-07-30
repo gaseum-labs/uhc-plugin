@@ -6,14 +6,14 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
 class LeavesFix : BlockFix("Leaves", arrayOf(
-	Range("apple", "appleCount", "appleIndex", 200, { leaves, _ -> ItemStack(Material.APPLE) }, { leaves, drops ->
-		val drop = drops.firstOrNull() ?: return@Range null
-		if (isLeaves(drop.type)) drop else null
+	Range.countOffRange("Apple", 200, { _, _ -> ItemStack(Material.APPLE) }, { _, drops ->
+		val drop = drops.firstOrNull()
+		if (drop != null && isLeaves(drop.type)) drop else null
 	}),
-	Range("stick", "stickCount", "stickIndex", 50, { leaves, _ -> ItemStack(Material.STICK, Util.randRange(1, 2)) }),
-	Range("sapling", "saplingCount", "saplingIndex", 20, { leaves, _ ->
+	Range.countRange("Stick", 50) { _, _ -> ItemStack(Material.STICK) },
+	Range.countRange("Sapling", 20) { leaves, _ ->
 		ItemStack(Util.binaryFind(leaves, leavesInfo) { info -> info.leaves }?.sapling ?: Material.OAK_SAPLING)
-	})
+	}
 )) {
 	init {
 		leavesInfo.sortBy { info -> info.leaves }
