@@ -7,7 +7,7 @@ import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.grace.GraceDefault
 import com.codeland.uhc.quirk.QuirkType
@@ -199,7 +199,7 @@ class AdminCommands : BaseCommand() {
 	fun lobbyCycle(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		PvpGameManager.destroyGames()
+		ArenaManager.destroyArenas()
 
 		WorldManager.refreshWorld(WorldManager.PVP_WORLD_NAME, World.Environment.NORMAL, true)
 

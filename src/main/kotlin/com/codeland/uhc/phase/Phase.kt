@@ -4,10 +4,10 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.UHCBar
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.PvpArena
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
-import net.kyori.adventure.text.Component
 import net.minecraft.world.BossBattle
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -54,17 +54,17 @@ abstract class Phase {
 			val player = Bukkit.getPlayer(uuid)
 
 			if (player != null) {
-				val game = PvpGameManager.playersGame(uuid)
+				val game = ArenaManager.playersArena(uuid)
 
 				when {
-					game != null -> {
+					game is PvpArena -> {
 						UHCBar.updateBossBar(
 							player,
 							if (game.isOver()) {
 								"${ChatColor.RED}Game Over"
 							} else {
-								"${ChatColor.RED}${PvpGameManager.typeName(game.type)} PVP" +
-								if (game.time >= 0) {
+								"${ChatColor.RED}${PvpArena.typeName(game.matchType)} PVP" +
+								if (game.startTime >= 0) {
 									" | " + if (game.shouldGlow()) {
 										"${ChatColor.GOLD}Glowing"
 									} else {
@@ -76,7 +76,7 @@ abstract class Phase {
 							},
 							if (game.isOver() || game.glowPeriod == 0 || game.glowTimer <= 0) {
 								1.0f
-						    } else if (game.time < 0) {
+						    } else if (game.startTime < 0) {
 						    	0.0f
 						    } else {
 								1.0f - (game.glowTimer.toFloat() / game.glowPeriod)

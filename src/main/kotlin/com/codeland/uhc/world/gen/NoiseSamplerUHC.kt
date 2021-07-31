@@ -1,6 +1,6 @@
 package com.codeland.uhc.world.gen
 
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import net.minecraft.util.MathHelper
 import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.WorldChunkManager
@@ -109,7 +109,7 @@ class NoiseSamplerUHC(
 	}
 
 	fun getBase(biomeBase: BiomeBase, x: Int, z: Int): Float {
-		if (pvp) return if (PvpGameManager.onEdge(x * 4, z * 4)) {
+		if (pvp) return if (ArenaManager.onEdge(x * 4, z * 4)) {
 			-0.9f
 		} else {
 			PVP_BASE
@@ -131,7 +131,7 @@ class NoiseSamplerUHC(
 	}
 
 	fun getScale(biomeBase: BiomeBase, base: Float, x: Int, z: Int): Float {
-		if (pvp) return if (PvpGameManager.onEdge(x * 4, z * 4)) {
+		if (pvp) return if (ArenaManager.onEdge(x * 4, z * 4)) {
 			0.0f
 		} else {
 			PVP_SCALE

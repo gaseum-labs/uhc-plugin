@@ -1,0 +1,173 @@
+package com.codeland.uhc.lobbyPvp
+
+import com.codeland.uhc.command.Commands
+import com.codeland.uhc.core.Lobby
+import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.team.NameManager
+import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldManager
+import net.kyori.adventure.text.Component
+import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket
+import net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket
+import net.minecraft.world.level.border.WorldBorder
+import org.bukkit.*
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
+import org.bukkit.entity.Player
+import java.util.*
+import kotlin.collections.ArrayList
+
+abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>) {
+	var x = 0
+	var z = 0
+	var startTime = -4
+
+	data class Position(val x: Int, val z: Int, val rotation: Float)
+
+	fun perSecond(): Boolean {
+		++startTime
+
+		return if (startTime < 0) {
+			online().forEach { player ->
+				player.sendTitle("${ChatColor.RED}${-startTime}", "${ChatColor.RED}PVP Match Starting", 0, 21, 0)
+				player.sendActionBar(Component.text(""))
+			}
+
+			false
+
+		} else if (startTime == 0) {
+			/* everyone must be there to start */
+			if (teams.flatten().any { Bukkit.getPlayer(it) == null }) {
+				online().forEach { player -> Commands.errorMessage(player, "Game cancelled! A player left") }
+
+				true
+
+			} else {
+				val world = WorldManager.getPVPWorld()
+
+				val positions = startingPositions(teams)
+
+				val teamLocations = positions.map {
+					it.map { (x, z, rotation) ->
+						val (liquidY, solidY) = Util.topLiquidSolidY(world, x, z)
+						if (liquidY != -1) world.getBlockAt(x, liquidY, z).type = Material.STONE
+						Location(
+							world,
+							x + 0.5,
+							(if (liquidY == -1) solidY else liquidY) + 1.0,
+							z + 0.5,
+							rotation,
+							0.0f
+						)
+					}
+				}
+
+				teams.zip(teamLocations).forEach { (team, teamLocation) ->
+					team.zip(teamLocation).forEach { (uuid, location) ->
+						val player = Bukkit.getPlayer(uuid)
+						if (player != null) startPlayer(player, location)
+					}
+				}
+
+				false
+			}
+		} else {
+			customPerSecond()
+		}
+	}
+
+	private fun startPlayer(player: Player, location: Location) {
+		player.closeInventory()
+
+		val playerData = PlayerData.getPlayerData(player.uniqueId)
+
+		/* save before pvp state */
+		playerData.lobbyInventory = player.inventory.contents.clone()
+
+		Lobby.resetPlayerStats(player)
+
+		customStartPlayer(player, playerData)
+
+		NameManager.updateName(player)
+		player.teleport(location)
+
+		/* fake border */
+		val border = WorldBorder()
+		border.world = (WorldManager.getPVPWorld() as CraftWorld).handle
+		val (centerX, centerZ) = getCenter()
+		border.setCenter(centerX.toDouble(), centerZ.toDouble())
+		border.size = ArenaManager.BORDER.toDouble()
+
+		player as CraftPlayer
+		player.handle.b.sendPacket(ClientboundSetBorderCenterPacket(border))
+		player.handle.b.sendPacket(ClientboundSetBorderSizePacket(border))
+	}
+
+	abstract fun customPerSecond(): Boolean
+
+	abstract fun startingPositions(teams: ArrayList<ArrayList<UUID>>): List<List<Position>>
+
+	abstract fun customStartPlayer(player: Player, playerData: PlayerData)
+
+	abstract fun prepareArena(world: World)
+
+	/* utility */
+
+	fun online() = teams.flatMap { team ->
+		team.mapNotNull { Bukkit.getPlayer(it) }
+	}
+
+	fun alive() = teams.flatMap { team -> team.mapNotNull { alivePlayer(it) } }
+
+	fun teamsAlive() = teams.map { team ->
+		team.mapNotNull { alivePlayer(it) }
+	}.filter { it.isNotEmpty() }
+
+	private fun alivePlayer(uuid: UUID): Player? {
+		val player = Bukkit.getPlayer(uuid) ?: return null
+
+		return if (
+			player.location.world.name == WorldManager.PVP_WORLD_NAME &&
+			player.gameMode != GameMode.SPECTATOR
+		) {
+			player
+		} else {
+			null
+		}
+	}
+
+	fun getCenter(): Pair<Int, Int> = Companion.getCenter(x, z)
+
+	companion object {
+		fun getCenter(x: Int, z: Int): Pair<Int, Int> {
+			return Pair(
+				x * ArenaManager.ARENA_STRIDE + (ArenaManager.ARENA_STRIDE / 2),
+				z * ArenaManager.ARENA_STRIDE + (ArenaManager.ARENA_STRIDE / 2)
+			)
+		}
+	}
+
+	fun outsideBorder(onOutside: (Player, Int) -> Unit) {
+		online().forEach { player ->
+			val minX = (x * ArenaManager.ARENA_STRIDE) + (ArenaManager.ARENA_STRIDE - ArenaManager.BORDER) / 2
+			val maxX = (x * ArenaManager.ARENA_STRIDE) + ((ArenaManager.ARENA_STRIDE / 2) + (ArenaManager.BORDER / 2)) - 1
+			val minZ = (z * ArenaManager.ARENA_STRIDE) + (ArenaManager.ARENA_STRIDE - ArenaManager.BORDER) / 2
+			val maxZ = (z * ArenaManager.ARENA_STRIDE) + ((ArenaManager.ARENA_STRIDE / 2) + (ArenaManager.BORDER / 2)) - 1
+
+			val playerX = player.location.blockX
+			val playerZ = player.location.blockZ
+
+			val outside = when {
+				playerX < minX -> minX - playerX
+				playerX > maxX -> playerX - maxX
+				else -> 0
+			} + when {
+				playerZ < minZ -> minZ - playerZ
+				playerZ > maxZ -> playerZ - maxZ
+				else -> 0
+			}
+
+			if (outside > 0) onOutside(player, outside)
+		}
+	}
+}

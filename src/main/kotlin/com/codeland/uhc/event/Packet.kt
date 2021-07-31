@@ -3,8 +3,8 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.world.WorldManager
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.PvpArena
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
@@ -17,20 +17,17 @@ import net.kyori.adventure.text.format.TextColor
 import net.minecraft.EnumChatFormat
 import net.minecraft.network.chat.ChatComponentText
 import net.minecraft.network.chat.ChatModifier
-import net.minecraft.network.chat.IChatMutableComponent
 import net.minecraft.network.protocol.game.*
 import net.minecraft.network.protocol.status.PacketStatusOutServerInfo
 import net.minecraft.network.protocol.status.ServerPing
 import net.minecraft.network.syncher.DataWatcher
 import net.minecraft.network.syncher.DataWatcherObject
 import net.minecraft.network.syncher.DataWatcherRegistry
-import net.minecraft.world.level.border.WorldBorder
 import net.minecraft.world.scores.Scoreboard
 import net.minecraft.world.scores.ScoreboardTeam
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
@@ -119,12 +116,12 @@ object Packet {
 		sentPlayer as CraftPlayer
 		val oldName = teamPlayer.name
 
-		val game = PvpGameManager.playersGame(teamPlayer.uniqueId)
+		val arena = ArenaManager.playersArena(teamPlayer.uniqueId)
 
 		val isOnTeam = when {
 			teamPlayer.uniqueId == sentPlayer.uniqueId -> true
-			game == null -> uhcTeam?.members?.contains(sentPlayer.uniqueId) == true
-			else -> PvpGameManager.playersTeam(game, teamPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
+			arena == null -> uhcTeam?.members?.contains(sentPlayer.uniqueId) == true
+			else -> arena is PvpArena && ArenaManager.playersTeam(arena, teamPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
 		}
 
 		/* update fake scoreboard team */
@@ -213,7 +210,7 @@ object Packet {
 				val metaPlayerID = packetEntityIdField.getInt(event.packet.handle)
 				val metaPlayer = Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
 				val sentPlayerTeam = TeamData.playersTeam(sentPlayer.uniqueId)
-				val metaPlayersGame = PvpGameManager.playersGame(metaPlayer.uniqueId)
+				val metaPlayersArena = ArenaManager.playersArena(metaPlayer.uniqueId)
 
 				/* begin modifying packet */
 				event.packet = event.packet.deepClone()
@@ -221,14 +218,14 @@ object Packet {
 				val freshItemList = packetItemListField[event.packet.handle] as MutableList<DataWatcher.Item<Any>>
 
 				/* glowing in games */
-				if (metaPlayersGame != null) {
+				if (metaPlayersArena is PvpArena) {
 					/* if on same team as meta player (not same player), or if game is in glow phase */
 					if (
 						(
 							metaPlayer.uniqueId != sentPlayer.uniqueId &&
-							PvpGameManager.playersTeam(metaPlayersGame, metaPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
+							ArenaManager.playersTeam(metaPlayersArena, metaPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
 						) ||
-						(metaPlayersGame.shouldGlow() && metaPlayersGame.teams.flatten().contains(sentPlayer.uniqueId))
+						(metaPlayersArena.shouldGlow() && metaPlayersArena.teams.flatten().contains(sentPlayer.uniqueId))
 					) {
 						itemValueField[freshItemList[0]] = byteValue.or(0x40)
 					}

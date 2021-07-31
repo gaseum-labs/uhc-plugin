@@ -1,7 +1,8 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.gui.item.CommandItemType
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
@@ -84,14 +85,14 @@ object Lobby {
 				val playerData = PlayerData.getPlayerData(player.uniqueId)
 				val team = TeamData.playersTeam(player.uniqueId)
 				val queueTime = PvpQueue.queueTime(player.uniqueId)
-				val game = PvpGameManager.playersGame(player.uniqueId)
+				val game = ArenaManager.playersArena(player.uniqueId)
 
 				if (!playerData.participating && game == null) {
 					if (queueTime != null) {
 						val queueType = playerData.inLobbyPvpQueue.get()
 
 						player.sendActionBar(Util.gradientString(
-							"${PvpGameManager.typeName(queueType)} | " +
+							"${PvpArena.typeName(queueType)} | " +
 							"Queue Time: ${Util.timeString(queueTime)} | " +
 							"Players in Queue: ${PvpQueue.size(queueType)}",
 							TextColor.color(0x750c0c), TextColor.color(0xeb1f0c)
@@ -126,7 +127,7 @@ object Lobby {
 		}
 	}
 
-	val loadingTips = arrayOf(
+	private val loadingTips = arrayOf(
 		/* generation */
 		"Melons are hidden in the jungle brush and drop 1 melon slice when broken",
 		"Sugar cane generates at the same rate in all biomes",
@@ -218,7 +219,7 @@ object Lobby {
 		"Two players can tie if they die in the same second",
 		"You can respawn during grace period",
 		"If you disconnect, a dummy zombie will be put in your place until you reconnect. No combat logging!",
-		"The UHC game world has no oceans",
+		"The only ocean is on the edge of the border",
 		"The UHC game world has two jungles located midway to the starting border",
 		"You will be automatically moved into a voice call with your team. Communicate!",
 		"The maximum hunger after grace period is reduced, allowing you to eat suspicious stew whenever",

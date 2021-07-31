@@ -2,7 +2,6 @@ package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHCProperty
-import org.apache.logging.log4j.core.config.plugins.convert.TypeConverters
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.max
@@ -67,7 +66,7 @@ object PvpQueue {
 				val element1 = queue[i]
 				val element2 = queue[j]
 
-				if (element1.type == PvpGameManager.TYPE_1V1 && element2.type == PvpGameManager.TYPE_1V1) {
+				if (element1.type == PvpArena.TYPE_1V1 && element2.type == PvpArena.TYPE_1V1) {
 					val greatestTime = max(element1.time, element2.time)
 					val leastTime = min(element1.time, element2.time)
 
@@ -127,12 +126,16 @@ object PvpQueue {
 				PlayerData.getPlayerData(pairFound.player2).inLobbyPvpQueue.set(0)
 
 				/* create pvp game */
-				PvpGameManager.addGame(arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)), PvpGameManager.TYPE_1V1)
+				ArenaManager.addArena(
+					PvpArena(
+						arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)), PvpArena.TYPE_1V1
+					)
+				)
 			}
 		}
 
 		/* 2v2 queue */
-		val availablePlayers = ArrayList(queue.filter { it.type == PvpGameManager.TYPE_2V2 }.sortedBy { it.time })
+		val availablePlayers = ArrayList(queue.filter { it.type == PvpArena.TYPE_2V2 }.sortedBy { it.time })
 
 		/* try to create games in sections of 4 */
 		while (true) {
@@ -150,7 +153,11 @@ object PvpQueue {
 				group.forEach { PlayerData.getPlayerData(it).inLobbyPvpQueue.set(0) }
 
 				/* create pvp game */
-				PvpGameManager.addGame(arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])), PvpGameManager.TYPE_2V2)
+				ArenaManager.addArena(
+					PvpArena(
+						arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])), PvpArena.TYPE_2V2
+					)
+				)
 			}
 		}
 
