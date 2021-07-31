@@ -30,7 +30,7 @@ class NoiseSamplerUHC(
 		const val PVP_BASE = 0.01f
 		const val PVP_SCALE = 0.16f
 
-		const val FINAL_BASE = 0.36f
+		const val FINAL_BASE = 0.10f
 		const val FINAL_SCALE = 0.36f
 
 		val circle = FloatArray(25)
@@ -104,6 +104,10 @@ class NoiseSamplerUHC(
 		}
 	}
 
+	fun inCenter(x: Int, z: Int): Boolean {
+		return abs(x) <= finalRadius / 4 && abs(z) <= finalRadius / 4
+	}
+
 	fun getBase(biomeBase: BiomeBase, x: Int, z: Int): Float {
 		if (pvp) return if (PvpGameManager.onEdge(x * 4, z * 4)) {
 			-0.9f
@@ -119,7 +123,7 @@ class NoiseSamplerUHC(
 			else
 				AMPLIFIED_BASE
 		} else {
-			if (abs(x) <= finalRadius / 4 && abs(z) <= finalRadius / 4)
+			if (inCenter(x, z))
 				FINAL_BASE
 			else
 				biomeBase.h()
@@ -135,7 +139,7 @@ class NoiseSamplerUHC(
 
 		if (base > 0 && amplified) return AMPLIFIED_SCALE
 
-		if (abs(x) <= finalRadius && abs(z) <= finalRadius) return FINAL_BASE
+		if (inCenter(x, z)) return FINAL_SCALE
 
 		return biomeBase.j()
 	}
@@ -174,12 +178,13 @@ class NoiseSamplerUHC(
 		d0 = d2 * 0.265625
 		d1 = 96.0 / d3
 
-		val LOWER_LIMIT = -0.05
+		val LOWER_LIMIT = 0.0
 
-		if ((pvp || amplified) && originBase > 0) {
+		if (((pvp || amplified) && originBase > 0) || (!pvp && !amplified && inCenter(i, j))) {
 			if (d0 < LOWER_LIMIT) d0 = LOWER_LIMIT
 			if (d1 < LOWER_LIMIT) d1 = LOWER_LIMIT
 		}
+
 		d2 = 0.0
 
 		var xzScale = noisesettings.c().a()
