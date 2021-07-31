@@ -18,6 +18,7 @@ class Loot : Listener {
 		limitToOne(event.loot, Material.APPLE)
 		limitToOne(event.loot, Material.GOLDEN_APPLE)
 		limitToOne(event.loot, Material.ENCHANTED_BOOK)
+		limitToOne(event.loot, Material.GLISTERING_MELON_SLICE)
 	}
 
 	fun limitToOne(loot: MutableList<ItemStack?>, type: Material) {
