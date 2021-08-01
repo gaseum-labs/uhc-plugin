@@ -20,5 +20,7 @@ class LobbyPvpGui(val playerData: PlayerData) : GuiPage(3, Util.gradientString("
 	val spectatePvp = addItem(SpectatePvp(coords(0, 2)))
 	val queueDisabler = addItem(QueueDisabler(coords(7, 2), PvpQueue.enabled))
 
+	val parkourCreator = addItem(ParkourCreator(coords(7, 0)))
+
 	val closeButton = addItem(CloseButton(coords(8, 2)))
 }
