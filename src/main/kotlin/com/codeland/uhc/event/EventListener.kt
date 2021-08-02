@@ -548,6 +548,14 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
+	fun onInteract(event: PlayerInteractEvent) {
+		val block = event.clickedBlock ?: return
+		if (block.type === Material.RESPAWN_ANCHOR && block.world.name == WorldManager.LOBBY_WORLD_NAME) {
+			event.isCancelled = true
+		}
+	}
+
+	@EventHandler
 	fun onVehiclePlace(event: VehicleCreateEvent) {
 		if (event.vehicle.world.name == WorldManager.LOBBY_WORLD_NAME) event.isCancelled = true
 	}
