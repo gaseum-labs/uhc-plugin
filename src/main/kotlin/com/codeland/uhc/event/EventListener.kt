@@ -40,7 +40,6 @@ import org.bukkit.inventory.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionType
-import java.util.*
 
 class EventListener : Listener {
 	@EventHandler
@@ -227,16 +226,6 @@ class EventListener : Listener {
 		/* prevent pest crafting */
 		if (UHC.isEnabled(QuirkType.PESTS) && PlayerData.isUndead(player.uniqueId)) {
 			if (Util.binarySearch(event.recipe.result.type, Pests.banList)) event.isCancelled = true
-
-		} else {
-			val type = event.currentItem?.type ?: return
-
-			event.currentItem = when (type) {
-				Material.STONE_AXE -> AxeFix.stoneAxe()
-				Material.IRON_AXE -> AxeFix.ironAxe()
-				Material.DIAMOND_AXE -> AxeFix.diamondAxe()
-				else -> event.currentItem
-			}
 		}
 	}
 

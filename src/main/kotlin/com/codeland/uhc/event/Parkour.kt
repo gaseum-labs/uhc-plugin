@@ -1,6 +1,5 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.ParkourArena

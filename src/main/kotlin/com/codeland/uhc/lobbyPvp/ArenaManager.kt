@@ -21,26 +21,26 @@ object ArenaManager {
 
 	val spiral = Spiral()
 
-	fun addArena(pvpArena: Arena) {
-		pvpArena.x = spiral.getX()
-		pvpArena.z = spiral.getZ()
+	fun addArena(arena: Arena) {
+		arena.x = spiral.getX()
+		arena.z = spiral.getZ()
 
 		spiral.next()
 
 		/* set last played against for players */
 		/* can only set last played against for one of the players on the other team */
-		for (i in 0..pvpArena.teams.lastIndex - 1) {
-			val otherTeamIndex = pvpArena.teams.indices.firstOrNull { it != i } ?: continue
+		for (i in 0..arena.teams.lastIndex - 1) {
+			val otherTeamIndex = arena.teams.indices.firstOrNull { it != i } ?: continue
 
-			pvpArena.teams[i].zip(pvpArena.teams[otherTeamIndex]).forEach { (playerA, playerB) ->
+			arena.teams[i].zip(arena.teams[otherTeamIndex]).forEach { (playerA, playerB) ->
 				PlayerData.getPlayerData(playerA).lastPlayed = playerB
 				PlayerData.getPlayerData(playerB).lastPlayed = playerA
 			}
 		}
 
-		pvpArena.prepareArena(WorldManager.getPVPWorld())
+		arena.prepareArena(WorldManager.getPVPWorld())
 
-		ongoing.add(pvpArena)
+		ongoing.add(arena)
 	}
 
 	fun playersArena(uuid: UUID): Arena? {
@@ -102,7 +102,7 @@ object ArenaManager {
 				}
 
 			ongoing.removeIf { game ->
-				val removeResult = game.customPerSecond()
+				val removeResult = game.perSecond()
 
 				if (removeResult) {
 					game.online().forEach { removePlayer(it.uniqueId, it) }
