@@ -81,7 +81,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		}
 	}
 
-	private fun startPlayer(player: Player, location: Location) {
+	fun startPlayer(player: Player, location: Location) {
 		player.closeInventory()
 
 		val playerData = PlayerData.getPlayerData(player.uniqueId)

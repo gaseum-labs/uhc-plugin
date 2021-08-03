@@ -50,12 +50,11 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 
 		if (!teams[0].contains(player.uniqueId)) teams[0].add(player.uniqueId)
 
-		teleportPlayer(player)
+		player.teleport(playerLocation(player.uniqueId))
 	}
 
-	fun teleportPlayer(player: Player) {
-		player.teleport((checkpoints[player.uniqueId] ?: start)
-			.location.add(0.5, 1.0, 0.5))
+	fun playerLocation(uuid: UUID): Location {
+		return (checkpoints[uuid] ?: start).location.add(0.5, 1.0, 0.5)
 	}
 
 	private fun enterParticipant(player: Player) {
