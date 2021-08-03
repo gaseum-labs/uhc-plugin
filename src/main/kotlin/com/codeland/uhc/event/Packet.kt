@@ -4,7 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.PvpArena
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util

@@ -7,8 +7,7 @@ import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.LoadoutGui
 import com.codeland.uhc.gui.gui.LobbyPvpGui
 import com.codeland.uhc.lobbyPvp.Loadouts
-import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.PvpArena
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData

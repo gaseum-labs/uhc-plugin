@@ -1,8 +1,11 @@
-package com.codeland.uhc.lobbyPvp
+package com.codeland.uhc.lobbyPvp.arena
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.event.Packet
+import com.codeland.uhc.lobbyPvp.Arena
+import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.ArenaType
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
 import org.bukkit.Material
@@ -160,4 +163,6 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(Are
 			}
 		}
 	}
+
+	override fun startText() = "Entering PVP in"
 }

@@ -5,7 +5,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.UHCBar
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.PvpArena
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.minecraft.world.BossBattle

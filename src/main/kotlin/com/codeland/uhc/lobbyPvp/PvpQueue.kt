@@ -2,6 +2,7 @@ package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHCProperty
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.max

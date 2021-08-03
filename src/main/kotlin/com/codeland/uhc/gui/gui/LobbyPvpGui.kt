@@ -3,8 +3,7 @@ package com.codeland.uhc.gui.gui
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.gui.GuiPage
 import com.codeland.uhc.gui.guiItem.*
-import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.PvpArena
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.format.TextColor

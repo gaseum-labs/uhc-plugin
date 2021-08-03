@@ -3,7 +3,7 @@ package com.codeland.uhc.gui.guiItem
 import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.PvpArena
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor

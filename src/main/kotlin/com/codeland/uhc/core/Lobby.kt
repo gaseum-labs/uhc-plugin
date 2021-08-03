@@ -2,7 +2,7 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.PvpArena
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util

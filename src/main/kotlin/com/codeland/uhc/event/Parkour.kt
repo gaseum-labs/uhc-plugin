@@ -2,12 +2,13 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.ParkourArena
+import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
+import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
@@ -16,6 +17,7 @@ import org.bukkit.event.player.PlayerMoveEvent
 
 class Parkour : Listener {
 	/* checkpoints */
+	@EventHandler
 	fun onMove(event: PlayerMoveEvent) {
 		val player = event.player
 		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
@@ -34,6 +36,7 @@ class Parkour : Listener {
 		}
 	}
 
+	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		val player = event.entity
 		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
@@ -49,11 +52,14 @@ class Parkour : Listener {
 		}
 
 		player.teleport(
-			arena.checkpoints[player.uniqueId]?.getRelative(BlockFace.UP)?.location
+			(
+				arena.checkpoints[player.uniqueId]?.getRelative(BlockFace.UP)?.location
 				?: arena.start.getRelative(BlockFace.UP).location
+			).add(0.5, 0.0, 0.5)
 		)
 	}
 
+	@EventHandler
 	fun onBlockPlace(event: BlockPlaceEvent) {
 		val player = event.player
 		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
@@ -64,6 +70,7 @@ class Parkour : Listener {
 		}
 	}
 
+	@EventHandler
 	fun onBlockDestroy(event: BlockBreakEvent) {
 		val player = event.player
 		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return

@@ -29,7 +29,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 		return if (startTime < 0) {
 			online().forEach { player ->
-				player.sendTitle("${ChatColor.RED}${-startTime}", "${ChatColor.RED}PVP Match Starting", 0, 21, 0)
+				player.sendTitle("${ChatColor.RED}${-startTime}", "${ChatColor.RED}${startText()}", 0, 21, 0)
 				player.sendActionBar(Component.text(""))
 			}
 
@@ -72,7 +72,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 				false
 			}
 		} else {
-			customPerSecond()
+			customPerSecond() || all().none { playerIsParticipating(it) }
 		}
 	}
 
@@ -111,7 +111,11 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 	abstract fun prepareArena(world: World)
 
+	abstract fun startText(): String
+
 	/* utility */
+
+	fun all() = teams.flatten()
 
 	fun online() = teams.flatMap { team ->
 		team.mapNotNull { Bukkit.getPlayer(it) }
@@ -123,17 +127,19 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		team.mapNotNull { alivePlayer(it) }
 	}.filter { it.isNotEmpty() }
 
-	private fun alivePlayer(uuid: UUID): Player? {
+	fun alivePlayer(uuid: UUID): Player? {
 		val player = Bukkit.getPlayer(uuid) ?: return null
+		return if (playerIsAlive(player)) player else null
+	}
 
-		return if (
-			player.location.world.name == WorldManager.PVP_WORLD_NAME &&
+	fun playerIsAlive(player: Player): Boolean {
+		return player.location.world.name == WorldManager.PVP_WORLD_NAME &&
 			player.gameMode != GameMode.SPECTATOR
-		) {
-			player
-		} else {
-			null
-		}
+	}
+
+	fun playerIsParticipating(uuid: UUID): Boolean {
+		val player = Bukkit.getPlayer(uuid) ?: return false
+		return player.location.world.name == WorldManager.PVP_WORLD_NAME
 	}
 
 	fun getCenter(): Pair<Int, Int> = Companion.getCenter(x, z)

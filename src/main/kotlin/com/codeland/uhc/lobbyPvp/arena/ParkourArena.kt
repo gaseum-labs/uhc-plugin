@@ -1,25 +1,22 @@
-package com.codeland.uhc.lobbyPvp
+package com.codeland.uhc.lobbyPvp.arena
 
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.discord.filesystem.DataManager
-import com.codeland.uhc.event.Packet
 import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.item.CommandItemType
+import com.codeland.uhc.lobbyPvp.Arena
+import com.codeland.uhc.lobbyPvp.ArenaType
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
-import it.unimi.dsi.fastutil.Hash
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Block
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.math.*
 
 class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, teams) {
 	var start = defaultStart()
@@ -54,9 +51,12 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 		/* give items */
 		player.inventory.addItem(GuiItem.name(ItemStack(Material.LAPIS_BLOCK), "${ChatColor.BLUE}Lapis (Parkour Start)"))
 		player.inventory.addItem(GuiItem.name(ItemStack(Material.GOLD_BLOCK), "${ChatColor.YELLOW}Gold (Checkpoint)"))
+		CommandItemType.giveItem(CommandItemType.LOBBY_RETURN, player.inventory)
 
 		player.sendTitle("${ChatColor.GOLD}BUILD", "", 0, 20, 10)
 	}
 
 	override fun prepareArena(world: World) {}
+
+	override fun startText() = "Starting parkour in"
 }

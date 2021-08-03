@@ -6,7 +6,7 @@ import com.codeland.uhc.core.*
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.PvpArena
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.quirk.HorseQuirk

@@ -5,7 +5,8 @@ import org.bukkit.inventory.Inventory
 enum class CommandItemType(val constructor: () -> CommandItem) {
 	GUI_OPENER(::GuiOpener),
 	PVP_OPENER(::PvpGuiOpener),
-	SPECTATE(::Spectate);
+	SPECTATE(::Spectate),
+	LOBBY_RETURN(::LobbyReturn);
 
 	companion object {
 		val commandItemList = Array(values().size) { i ->
