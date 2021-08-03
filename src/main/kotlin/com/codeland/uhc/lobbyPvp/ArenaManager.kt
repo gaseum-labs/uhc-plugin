@@ -2,6 +2,7 @@ package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.util.Util
 import org.bukkit.*
@@ -9,6 +10,7 @@ import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 object ArenaManager {
 	const val ARENA_STRIDE = 96
@@ -18,6 +20,8 @@ object ArenaManager {
 	const val TEAM_BUFFER = 3
 
 	val ongoing = ArrayList<Arena>()
+	private val typedOngoing = HashMap<ArenaType, ArrayList<Arena>>()
+	fun <T : Arena> typeList(type: ArenaType): ArrayList<T> = typedOngoing.getOrPut(type) { ArrayList() } as ArrayList<T>
 
 	val spiral = Spiral()
 
@@ -41,6 +45,13 @@ object ArenaManager {
 		arena.prepareArena(WorldManager.getPVPWorld())
 
 		ongoing.add(arena)
+		typeList<Arena>(arena.type).add(arena)
+
+		if (arena.type === ArenaType.PARKOUR) {
+			PlayerData.playerDataList.forEach { (_, playerData) ->
+				if (playerData.parkourIndex.get() == -1) playerData.parkourIndex.set(0)
+			}
+		}
 	}
 
 	fun playersArena(uuid: UUID): Arena? {
@@ -71,42 +82,66 @@ object ArenaManager {
 		if (currentTick % 20 == 0) {
 			PvpQueue.perSecond()
 
+			fun contain(value: Int, min: Int, max: Int): Int? {
+				return if (value < min) min else if (value > max) max else null
+			}
+
+			fun teleportIn(player: Player, x: Int?, z: Int?) {
+				if (x != null || z != null) {
+					player.teleport(player.location.set(
+						x?.toDouble() ?: player.location.x,
+						player.location.y,
+						z?.toDouble() ?: player.location.z
+					))
+				}
+			}
+
 			/* contain spectators */
 			Bukkit.getOnlinePlayers()
 				.filter {
 					it.gameMode == GameMode.SPECTATOR &&
 					it.world.name == WorldManager.PVP_WORLD_NAME
 				}.forEach { player ->
-					fun contain(value: Int, min: Int, max: Int): Int? {
-						return if (value < min) min else if (value > max) max else null
-					}
-
-					val teleportX = contain(
-						player.location.blockX,
-						spiral.minX() * ARENA_STRIDE,
-						(spiral.maxX() + 1) * ARENA_STRIDE
+					teleportIn(player,
+						contain(
+							player.location.blockX,
+							spiral.minX() * ARENA_STRIDE,
+							(spiral.maxX() + 1) * ARENA_STRIDE
+						),
+						contain(
+							player.location.blockZ,
+							spiral.minZ() * ARENA_STRIDE,
+							(spiral.maxZ() + 1) * ARENA_STRIDE
+						)
 					)
-					val teleportZ = contain(
-						player.location.blockZ,
-						spiral.minZ() * ARENA_STRIDE,
-						(spiral.maxZ() + 1) * ARENA_STRIDE
-					)
+				}
 
-					if (teleportX != null || teleportZ != null) {
-						player.teleport(player.location.set(
-							teleportX?.toDouble() ?: player.location.x,
-							player.location.y,
-							teleportZ?.toDouble() ?: player.location.z
-						))
-					}
+			/* contain creatives */
+			Bukkit.getOnlinePlayers()
+				.filter {
+					it.gameMode == GameMode.CREATIVE &&
+					it.world.name == WorldManager.PVP_WORLD_NAME
+				}.forEach { player ->
+					val arena = playersArena(player.uniqueId) ?: return@forEach
+
+					teleportIn(player,
+						contain(
+							player.location.blockX,
+							(arena.x * ARENA_STRIDE) + ((ARENA_STRIDE - BORDER) / 2),
+							(arena.x * ARENA_STRIDE) + ARENA_STRIDE - ((ARENA_STRIDE - BORDER) / 2)
+						),
+						contain(
+							player.location.blockZ,
+							(arena.z * ARENA_STRIDE) + ((ARENA_STRIDE - BORDER) / 2),
+							(arena.z * ARENA_STRIDE) + ARENA_STRIDE - ((ARENA_STRIDE - BORDER) / 2)
+						)
+					)
 				}
 
 			ongoing.removeIf { game ->
 				val removeResult = game.perSecond()
 
-				if (removeResult) {
-					game.online().forEach { removePlayer(it.uniqueId, it) }
-				}
+				if (removeResult) destroyArena(game)
 
 				removeResult
 			}
@@ -114,12 +149,25 @@ object ArenaManager {
 	}
 
 	fun destroyArenas() {
-		/* delete games and remove active players from them */
 		ongoing.removeIf { game ->
-			game.teams.forEach {
-				team -> team.mapNotNull { Bukkit.getPlayer(it) }.forEach { removePlayer(it.uniqueId, it) }
-			}
+			destroyArena(game)
 			true
+		}
+	}
+
+	fun destroyArena(arena: Arena) {
+		arena.online().forEach { removePlayer(it.uniqueId, it) }
+
+		val typeList = typeList<Arena>(arena.type)
+		typeList.removeIf { it === arena }
+
+		if (arena.type === ArenaType.PARKOUR) {
+			typeList as ArrayList<ParkourArena>
+			PlayerData.playerDataList.forEach { (_, playerData) ->
+				if (playerData.parkourIndex.get() >= typeList.size) {
+					playerData.parkourIndex.set(typeList.lastIndex)
+				}
+			}
 		}
 	}
 

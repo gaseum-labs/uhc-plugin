@@ -37,6 +37,7 @@ class PlayerData(val uuid: UUID) {
 	var optingOut = false
 
 	/* lobby pvp stuff */
+
 	var lobbyInventory = emptyArray<ItemStack>()
 	var lastPlayed: UUID? = null
 	var loadoutSlot = UHCProperty(0)
@@ -51,10 +52,11 @@ class PlayerData(val uuid: UUID) {
 	var slotCosts = Array(Loadouts.NUM_SLOTS) { i ->
 		UHCProperty(0)
 	}
-	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
-	var slotGuis = Array(Loadouts.NUM_SLOTS) { i ->
+	val parkourIndex = UHCProperty(-1)
+	val slotGuis = Array(Loadouts.NUM_SLOTS) { i ->
 		GuiManager.registerPersonal(uuid, LoadoutGui(this, i))
 	}
+	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
 
 	/* custom spawning */
 	val spawningData = CustomSpawningType.values().map {

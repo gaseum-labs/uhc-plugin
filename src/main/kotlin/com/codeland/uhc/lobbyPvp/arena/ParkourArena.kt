@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack
 import java.util.*
 
 class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, teams) {
-	var start = defaultStart()
+	lateinit var start: Block
 
 	val checkpoints = HashMap<UUID, Block>()
 	val owner: UUID = teams[0][0]
@@ -102,7 +102,9 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 		enterPlayer(player, false)
 	}
 
-	override fun prepareArena(world: World) {}
+	override fun prepareArena(world: World) {
+		start = defaultStart()
+	}
 
 	override fun startText() = "Starting parkour in"
 
