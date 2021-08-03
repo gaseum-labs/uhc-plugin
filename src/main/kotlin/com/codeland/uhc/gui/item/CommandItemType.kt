@@ -5,7 +5,10 @@ import org.bukkit.inventory.Inventory
 enum class CommandItemType(val constructor: () -> CommandItem) {
 	GUI_OPENER(::GuiOpener),
 	PVP_OPENER(::PvpGuiOpener),
-	SPECTATE(::Spectate);
+	SPECTATE(::Spectate),
+	LOBBY_RETURN(::LobbyReturn),
+	PARKOUR_TEST(::ParkourTest),
+	PARKOUR_CHECKPOINT(::ParkourCheckpoint);
 
 	companion object {
 		val commandItemList = Array(values().size) { i ->
@@ -27,9 +30,15 @@ enum class CommandItemType(val constructor: () -> CommandItem) {
 		/**
 		 * does not give the item if the item is already in inventory
 		 */
-		fun giveItem(commandItemType: CommandItemType, inventory: Inventory) {
+		fun giveItem(commandItemType: CommandItemType, inventory: Inventory, slot: Int? = null) {
 			val item = getItem(commandItemType)
-			if (!hasItem(item, inventory)) inventory.addItem(item.create())
+			if (!hasItem(item, inventory)) {
+				if (slot != null) {
+					inventory.setItem(slot, item.create())
+				} else {
+					inventory.addItem(item.create())
+				}
+			}
 		}
 	}
 }

@@ -7,7 +7,7 @@ import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.LoadoutGui
 import com.codeland.uhc.gui.gui.LobbyPvpGui
 import com.codeland.uhc.lobbyPvp.Loadouts
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
@@ -37,24 +37,26 @@ class PlayerData(val uuid: UUID) {
 	var optingOut = false
 
 	/* lobby pvp stuff */
+
 	var lobbyInventory = emptyArray<ItemStack>()
 	var lastPlayed: UUID? = null
 	var loadoutSlot = UHCProperty(0)
 	var inLobbyPvpQueue = UHCProperty(0) { set ->
 		when (set) {
 			0 -> PvpQueue.remove(uuid)
-			PvpGameManager.TYPE_1V1 -> PvpQueue.add(uuid, PvpGameManager.TYPE_1V1)
-			PvpGameManager.TYPE_2V2 -> PvpQueue.add(uuid, PvpGameManager.TYPE_2V2)
+			PvpArena.TYPE_1V1 -> PvpQueue.add(uuid, PvpArena.TYPE_1V1)
+			PvpArena.TYPE_2V2 -> PvpQueue.add(uuid, PvpArena.TYPE_2V2)
 		}
 		set
 	}
 	var slotCosts = Array(Loadouts.NUM_SLOTS) { i ->
 		UHCProperty(0)
 	}
-	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
-	var slotGuis = Array(Loadouts.NUM_SLOTS) { i ->
+	val parkourIndex = UHCProperty(-1)
+	val slotGuis = Array(Loadouts.NUM_SLOTS) { i ->
 		GuiManager.registerPersonal(uuid, LoadoutGui(this, i))
 	}
+	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
 
 	/* custom spawning */
 	val spawningData = CustomSpawningType.values().map {

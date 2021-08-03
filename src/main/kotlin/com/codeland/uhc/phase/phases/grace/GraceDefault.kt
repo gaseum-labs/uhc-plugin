@@ -1,7 +1,7 @@
 package com.codeland.uhc.phase.phases.grace
 
 import com.codeland.uhc.core.*
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
@@ -69,7 +69,7 @@ class GraceDefault : Phase() {
 			playerData.participating = true
 
 			playerData.inLobbyPvpQueue.set(0)
-			if (PvpGameManager.playersGame(uuid) != null) PvpGameManager.disablePvp(uuid)
+			if (ArenaManager.playersArena(uuid) != null) ArenaManager.removePlayer(uuid)
 
 			GameRunner.teleportPlayer(uuid, location)
 

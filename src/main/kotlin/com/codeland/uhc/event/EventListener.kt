@@ -5,7 +5,8 @@ import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.core.*
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.item.CommandItemType
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
 import com.codeland.uhc.quirk.HorseQuirk
@@ -39,7 +40,6 @@ import org.bukkit.inventory.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionType
-import java.util.*
 
 class EventListener : Listener {
 	@EventHandler
@@ -66,10 +66,10 @@ class EventListener : Listener {
 	fun onLogOut(event: PlayerQuitEvent) {
 		val player = event.player
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val pvpGame = PvpGameManager.playersGame(player.uniqueId)
+		val pvpGame = ArenaManager.playersArena(player.uniqueId)
 
 		if (pvpGame != null) {
-			PvpGameManager.disablePvp(player.uniqueId, player)
+			ArenaManager.removePlayer(player.uniqueId, player)
 
 		} else if (playerData.participating && player.gameMode != GameMode.SPECTATOR) {
 			playerData.offlineZombie = playerData.createZombie(player)
@@ -119,10 +119,10 @@ class EventListener : Listener {
 		val player = event.entity
 		val uuid = player.uniqueId
 		val playerData = PlayerData.getPlayerData(uuid)
-		val pvpGame = PvpGameManager.playersGame(uuid)
+		val arena = ArenaManager.playersArena(uuid)
 
 		/* dying in lobby pvp */
-		if (pvpGame != null) {
+		if (arena is PvpArena) {
 			/* player spectates at that exact place */
 			event.isCancelled = true
 			bloodCloud(player.location)
@@ -131,11 +131,11 @@ class EventListener : Listener {
 
 			/* announce death to only pvp game players */
 			val deathMessage = event.deathMessage()
-			if (deathMessage != null) pvpGame.online().forEach { pvpPlayer ->
+			if (deathMessage != null) arena.online().forEach { pvpPlayer ->
 				pvpPlayer.sendMessage(deathMessage)
 			}
 
-			pvpGame.checkEnd()
+			arena.checkEnd()
 
 		/* players dying in the game */
 		} else if (playerData.participating) {
@@ -226,16 +226,6 @@ class EventListener : Listener {
 		/* prevent pest crafting */
 		if (UHC.isEnabled(QuirkType.PESTS) && PlayerData.isUndead(player.uniqueId)) {
 			if (Util.binarySearch(event.recipe.result.type, Pests.banList)) event.isCancelled = true
-
-		} else {
-			val type = event.currentItem?.type ?: return
-
-			event.currentItem = when (type) {
-				Material.STONE_AXE -> AxeFix.stoneAxe()
-				Material.IRON_AXE -> AxeFix.ironAxe()
-				Material.DIAMOND_AXE -> AxeFix.diamondAxe()
-				else -> event.currentItem
-			}
 		}
 	}
 
@@ -252,7 +242,7 @@ class EventListener : Listener {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		return !UHC.naturalRegeneration.get() && (
-			PvpGameManager.playersGame(player.uniqueId) != null || (
+			ArenaManager.playersArena(player.uniqueId) is PvpArena || (
 				playerData.participating &&
 				!UHC.isPhase(PhaseType.GRACE) &&
 				!(UHC.isEnabled(QuirkType.PESTS) && playerData.undead())
@@ -274,8 +264,8 @@ class EventListener : Listener {
 			event.isCancelled = true
 		} else {
 			/* health total freezes after the pvp game */
-			val game = PvpGameManager.playersGame(player.uniqueId)
-			if (game?.isOver() == true) {
+			val game = ArenaManager.playersArena(player.uniqueId)
+			if ((game as? PvpArena)?.isOver() == true) {
 				event.isCancelled = true
 			}
 		}
@@ -351,7 +341,7 @@ class EventListener : Listener {
 		val player = event.entity as? Player ?: return
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		///* stuff that happens during the game */
+		/* stuff that happens during the game */
 		if (playerData.participating) {
 			if (UHC.isEnabled(QuirkType.LOW_GRAVITY) && event.cause == EntityDamageEvent.DamageCause.FALL) {
 				event.isCancelled = true
@@ -360,11 +350,11 @@ class EventListener : Listener {
 				event.isCancelled = true
 			}
 
-		//* prevent lobby and postgame damage */
+		/* prevent lobby and postgame damage */
 		} else {
-			val pvpGame = PvpGameManager.playersGame(player.uniqueId)
+			val arena = ArenaManager.playersArena(player.uniqueId)
 
-			if ((pvpGame != null && pvpGame.isOver()) || pvpGame == null) event.isCancelled = true
+			if ((arena as? PvpArena)?.isOver() == true || arena == null) event.isCancelled = true
 		}
 	}
 
@@ -538,7 +528,7 @@ class EventListener : Listener {
 				}
 			}
 		} else {
-			val pvpGame = PvpGameManager.playersGame(player.uniqueId)
+			val pvpGame = ArenaManager.playersArena(player.uniqueId)
 
 			if (pvpGame != null && event.blockPlaced.y > 100) {
 				event.player.sendActionBar(Component.text("Height limit for building is 100", NamedTextColor.RED, TextDecoration.BOLD))

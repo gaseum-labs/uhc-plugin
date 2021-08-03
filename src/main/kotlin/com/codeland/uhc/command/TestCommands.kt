@@ -11,8 +11,8 @@ import com.codeland.uhc.core.*
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.lobbyPvp.PvpGameManager
-import com.codeland.uhc.lobbyPvp.PvpQueue
+import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
@@ -173,13 +173,18 @@ class TestCommands : BaseCommand() {
 
 		if (player1 === player2) return errorMessage(sender, "Must select two different players")
 
-		if (PvpGameManager.playersGame(player1.uniqueId) != null) return errorMessage(sender, "${player1.name} is already in a game")
-		if (PvpGameManager.playersGame(player2.uniqueId) != null) return errorMessage(sender, "${player2.name} is already in a game")
+		if (ArenaManager.playersArena(player1.uniqueId) != null) return errorMessage(sender, "${player1.name} is already in a game")
+		if (ArenaManager.playersArena(player2.uniqueId) != null) return errorMessage(sender, "${player2.name} is already in a game")
 
 		PlayerData.getPlayerData(player1.uniqueId).inLobbyPvpQueue.set(0)
 		PlayerData.getPlayerData(player2.uniqueId).inLobbyPvpQueue.set(0)
 
-		PvpGameManager.addGame(arrayListOf(arrayListOf(player1.uniqueId), arrayListOf(player2.uniqueId)), PvpGameManager.TYPE_1V1)
+		ArenaManager.addArena(
+			PvpArena(
+				arrayListOf(arrayListOf(player1.uniqueId),
+				arrayListOf(player2.uniqueId)
+			), PvpArena.TYPE_1V1)
+		)
 
 		GameRunner.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
 	}

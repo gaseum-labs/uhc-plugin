@@ -9,7 +9,7 @@ import com.codeland.uhc.phase.Phase
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.phase.phases.grace.GraceDefault
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.phase.phases.waiting.WaitingDefault
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -168,7 +168,7 @@ object UHC {
 
 			Lobby.lobbyTipsTick(currentTick)
 
-			PvpGameManager.perTick(currentTick)
+			ArenaManager.perTick(currentTick)
 
 			Portal.portalTick()
 

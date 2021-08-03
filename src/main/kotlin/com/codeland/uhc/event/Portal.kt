@@ -4,9 +4,8 @@ import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldManager
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -198,7 +197,7 @@ class Portal : Listener {
 
 		fun onPlayerPortal(player: Player) {
 			val playerData = PlayerData.getPlayerData(player.uniqueId)
-			val pvpGame = PvpGameManager.playersGame(player.uniqueId)
+			val pvpGame = ArenaManager.playersArena(player.uniqueId)
 
 			/* lobby pvpers can't escape through the never */
 			if (pvpGame != null) {

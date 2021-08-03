@@ -1,6 +1,6 @@
 package com.codeland.uhc.world.gen.chunkManager
 
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.world.gen.BiomeNo
 import com.codeland.uhc.world.gen.CustomGenLayers
 import net.minecraft.core.IRegistry
@@ -18,7 +18,7 @@ class WorldChunkManagerOverworldPvp(
 
     override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
 	    return when {
-	    	PvpGameManager.onEdge(x * 4, z * 4) -> inBetween
+	    	ArenaManager.onEdge(x * 4, z * 4) -> inBetween
 		    else -> biomeRegistry.d(BiomeRegistry.a(areaLazy.a(x, z)))
 	    }
     }

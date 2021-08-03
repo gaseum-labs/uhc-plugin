@@ -2,12 +2,9 @@ package com.codeland.uhc.gui.item
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.lobbyPvp.PvpGameManager
-import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
-import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack

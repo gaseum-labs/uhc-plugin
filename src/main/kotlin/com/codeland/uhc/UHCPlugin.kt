@@ -50,6 +50,8 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(GuiManager(), this)
 		server.pluginManager.registerEvents(Loot(), this)
 		server.pluginManager.registerEvents(Enchant(), this)
+		server.pluginManager.registerEvents(Parkour(), this)
+		server.pluginManager.registerEvents(Axe(), this)
 		Packet.init()
 
 		WorldGenManager.init(server)

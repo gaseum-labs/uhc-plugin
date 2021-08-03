@@ -10,8 +10,8 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.GuiManager
-import com.codeland.uhc.lobbyPvp.PvpGameManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
@@ -90,15 +90,19 @@ class ParticipantCommands : BaseCommand() {
 	}
 
 	@Subcommand("lobby")
-	@Description("allows spectators to go back to lobby")
+	@Description("return to the lobby")
 	fun lobbyCommand(sender: CommandSender) {
 		sender as Player
 
 		/* only non players can use this command */
-		if (PlayerData.isParticipating(sender.uniqueId) || PvpGameManager.playersGame(sender.uniqueId) != null)
-			return Commands.errorMessage(sender, "You can't use this command right now")
+		if (PlayerData.isParticipating(sender.uniqueId))
+			return Commands.errorMessage(sender, "You can't use this command in game")
 
-		/* specs can go back to lobby */
+		/* forfeit */
+		val arena = ArenaManager.playersArena(sender.uniqueId)
+		if (arena is PvpArena && arena.playerIsAlive(sender))
+			GameRunner.sendGameMessage(sender, "You have forfeited")
+
 		Lobby.onSpawnLobby(sender)
 	}
 

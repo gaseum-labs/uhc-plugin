@@ -1,6 +1,6 @@
 package com.codeland.uhc.lobbyPvp
 
-import com.codeland.uhc.core.AxeFix
+import com.codeland.uhc.event.Axe
 import com.codeland.uhc.event.Brew
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.AmountOption
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.EnchantOption
@@ -8,7 +8,6 @@ import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.ItemOption
 import com.codeland.uhc.util.ItemUtil
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
-import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
@@ -99,8 +98,8 @@ enum class LoadoutItems(val cost: Int, val enchantOptions: Array<ItemOption>, va
 
 	IRON_SWORD        (1, swordEnchants, { ItemStack(Material.IRON_SWORD) }),
 	DIAMOND_SWORD     (3, swordEnchants, { ItemStack(Material.DIAMOND_SWORD) }),
-	IRON_AXE          (1, axeEnchants,   { AxeFix.ironAxe() }),
-	DIAMOND_AXE       (3, axeEnchants,   { AxeFix.diamondAxe() }),
+	IRON_AXE          (1, axeEnchants,   { Axe.ironAxe() }),
+	DIAMOND_AXE       (3, axeEnchants,   { Axe.diamondAxe() }),
 	BOW               (2, bowEnchants,   { ItemStack(Material.BOW) }),
 	CROSSBOW          (2, emptyArray(),  { ItemUtil.enchantThing(ItemStack(Material.CROSSBOW), Enchantment.PIERCING, 1) }),
 	SHIELD            (2, emptyArray(),  { ItemStack(Material.SHIELD) }),
