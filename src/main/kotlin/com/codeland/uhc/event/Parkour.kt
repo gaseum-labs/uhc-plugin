@@ -1,10 +1,10 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.ChatColor
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
@@ -24,14 +24,26 @@ class Parkour : Listener {
 
 		if (player.gameMode !== GameMode.ADVENTURE) return
 
-		val newCheckpoint = event.to.block.getRelative(BlockFace.DOWN)
+		val under = event.to.block.getRelative(BlockFace.DOWN)
 
-		if (newCheckpoint.type === Material.GOLD_BLOCK) {
+		val checkpointType = when {
+			under.type === Material.GOLD_BLOCK -> 0
+			under.blockKey == arena.start.blockKey -> 1
+			else -> -1
+		}
+
+		if (checkpointType != -1) {
 			val oldCheckpoint = arena.checkpoints[player.uniqueId]
 
-			if (oldCheckpoint == null || oldCheckpoint.blockKey != newCheckpoint.blockKey) {
-				arena.checkpoints[player.uniqueId] = newCheckpoint
-				player.sendActionBar(Component.text("New Checkpoint Reached!", NamedTextColor.GOLD))
+			if (
+				oldCheckpoint?.blockKey != under.blockKey &&
+				!(checkpointType == 1 && oldCheckpoint == null)
+			) {
+				arena.checkpoints[player.uniqueId] = under
+				player.sendActionBar(Component.text(arrayOf(
+					"${ChatColor.GOLD}New Checkpoint Reached!",
+					"${ChatColor.BLUE}Reset to Start!"
+				)[checkpointType]))
 			}
 		}
 	}
@@ -43,20 +55,8 @@ class Parkour : Listener {
 
 		/* respawn players instead of killing them */
 		event.isCancelled = true
-		Lobby.resetPlayerStats(player)
 
-		player.gameMode = if (player.uniqueId == arena.owner) {
-			GameMode.CREATIVE
-		} else {
-			GameMode.ADVENTURE
-		}
-
-		player.teleport(
-			(
-				arena.checkpoints[player.uniqueId]?.getRelative(BlockFace.UP)?.location
-				?: arena.start.getRelative(BlockFace.UP).location
-			).add(0.5, 0.0, 0.5)
-		)
+		arena.enterPlayer(player, false)
 	}
 
 	@EventHandler

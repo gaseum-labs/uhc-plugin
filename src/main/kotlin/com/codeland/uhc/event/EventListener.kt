@@ -242,7 +242,7 @@ class EventListener : Listener {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		return !UHC.naturalRegeneration.get() && (
-			ArenaManager.playersArena(player.uniqueId) != null || (
+			ArenaManager.playersArena(player.uniqueId) is PvpArena || (
 				playerData.participating &&
 				!UHC.isPhase(PhaseType.GRACE) &&
 				!(UHC.isEnabled(QuirkType.PESTS) && playerData.undead())

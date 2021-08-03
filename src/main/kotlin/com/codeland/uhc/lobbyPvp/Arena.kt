@@ -37,7 +37,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 		} else if (startTime == 0) {
 			/* everyone must be there to start */
-			if (teams.flatten().any { Bukkit.getPlayer(it) == null }) {
+			if (all().any { Bukkit.getPlayer(it) == null }) {
 				online().forEach { player -> Commands.errorMessage(player, "Game cancelled! A player left") }
 
 				true
@@ -72,7 +72,12 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 				false
 			}
 		} else {
-			customPerSecond() || all().none { playerIsParticipating(it) }
+			/* clear non-players */
+			teams.forEach { team ->
+				team.removeIf { !playerIsParticipating(it) }
+			}
+
+			customPerSecond() || (shutdownOnLeave() && all().isEmpty())
 		}
 	}
 
@@ -112,6 +117,8 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 	abstract fun prepareArena(world: World)
 
 	abstract fun startText(): String
+
+	abstract fun shutdownOnLeave(): Boolean
 
 	/* utility */
 

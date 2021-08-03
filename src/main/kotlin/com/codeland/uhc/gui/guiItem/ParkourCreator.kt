@@ -11,9 +11,19 @@ import org.bukkit.inventory.ItemStack
 
 class ParkourCreator(index: Int) : GuiItem(index) {
 	override fun onClick(player: Player, shift: Boolean) {
-		if (ArenaManager.playersArena(player.uniqueId) == null) {
-			ArenaManager.addArena(ParkourArena(arrayListOf(arrayListOf(player.uniqueId), arrayListOf())))
+		/* already in an arena, do nothing */
+		if (ArenaManager.playersArena(player.uniqueId) != null) return
+
+		val existingParkour = ParkourArena.playersParkour(player.uniqueId)
+
+		/* player owns an arena already, go there */
+		if (existingParkour != null) {
+			existingParkour.enterPlayer(player, false)
+		} else {
+			ArenaManager.addArena(ParkourArena(arrayListOf(arrayListOf(player.uniqueId))))
 		}
+
+		player.closeInventory()
 	}
 
 	override fun getStack(): ItemStack {

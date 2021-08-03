@@ -165,4 +165,6 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(Are
 	}
 
 	override fun startText() = "Entering PVP in"
+
+	override fun shutdownOnLeave() = true
 }
