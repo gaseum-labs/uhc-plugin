@@ -6,9 +6,12 @@ import com.codeland.uhc.event.Enchant
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.LoadoutGui
 import com.codeland.uhc.gui.gui.LobbyPvpGui
+import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.ArenaType
 import com.codeland.uhc.lobbyPvp.Loadouts
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
+import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import net.kyori.adventure.text.Component
@@ -53,10 +56,14 @@ class PlayerData(val uuid: UUID) {
 		UHCProperty(0)
 	}
 	val parkourIndex = UHCProperty(-1)
+	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
 	val slotGuis = Array(Loadouts.NUM_SLOTS) { i ->
 		GuiManager.registerPersonal(uuid, LoadoutGui(this, i))
 	}
-	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
+
+	init {
+		parkourIndex.set(ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR).lastIndex)
+	}
 
 	/* custom spawning */
 	val spawningData = CustomSpawningType.values().map {

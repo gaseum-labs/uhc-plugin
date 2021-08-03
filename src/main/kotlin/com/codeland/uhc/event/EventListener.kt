@@ -36,6 +36,7 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.vehicle.VehicleCreateEvent
 import org.bukkit.event.weather.WeatherChangeEvent
+import org.bukkit.event.world.WorldSaveEvent
 import org.bukkit.inventory.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
@@ -73,6 +74,13 @@ class EventListener : Listener {
 
 		} else if (playerData.participating && player.gameMode != GameMode.SPECTATOR) {
 			playerData.offlineZombie = playerData.createZombie(player)
+		}
+	}
+
+	@EventHandler
+	fun onSave(event: WorldSaveEvent) {
+		if (event.world.name == WorldManager.PVP_WORLD_NAME) {
+			ArenaManager.saveWorldInfo(event.world)
 		}
 	}
 

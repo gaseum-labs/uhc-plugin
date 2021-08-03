@@ -21,6 +21,10 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(Are
 		const val TYPE_2V2 = 2
 
 		fun typeName(type: Int) = if (type == TYPE_1V1) "1v1" else "2v2"
+
+		fun load(data: String, world: World): Arena? {
+			return null
+		}
 	}
 
 	var winners: List<UUID> = ArrayList()
@@ -167,4 +171,8 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(Are
 	override fun startText() = "Entering PVP in"
 
 	override fun shutdownOnLeave() = true
+
+	override fun customSave(): String {
+		return ""
+	}
 }

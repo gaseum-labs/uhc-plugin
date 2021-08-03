@@ -7,6 +7,7 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
 import com.codeland.uhc.gui.GuiManager
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.phase.VariantList
 import com.codeland.uhc.util.GoogleDDNSUpdater
 import com.codeland.uhc.util.Util
@@ -81,5 +82,9 @@ class UHCPlugin : JavaPlugin() {
 
 			UHC.startWaiting()
 		}
+	}
+
+	override fun onDisable() {
+		ArenaManager.saveWorldInfo(WorldManager.getPVPWorld())
 	}
 }

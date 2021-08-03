@@ -42,6 +42,31 @@ class Spiral {
 		}
 	}
 
+	fun toMetadata(): String {
+		return "${axes[0]},${axes[1]},${maxes[0]},${maxes[1]},${maxes[2]},${maxes[3]}"
+	}
+
+	fun fromMetadata(metadata: String): Boolean {
+		val parts = metadata.split(',')
+		if (parts.size != 6) return false
+
+		val x = parts[0].toIntOrNull() ?: return false
+		val z = parts[1].toIntOrNull() ?: return false
+		val maxX = parts[2].toIntOrNull() ?: return false
+		val maxZ = parts[3].toIntOrNull() ?: return false
+		val minX = parts[4].toIntOrNull() ?: return false
+		val minZ = parts[5].toIntOrNull() ?: return false
+
+		axes[0] = x
+		axes[1] = z
+		maxes[0] = maxX
+		maxes[1] = maxZ
+		maxes[2] = minX
+		maxes[3] = minZ
+
+		return true
+	}
+
 	/* internal */
 
 	private fun currentAxis() = currentDir % 2

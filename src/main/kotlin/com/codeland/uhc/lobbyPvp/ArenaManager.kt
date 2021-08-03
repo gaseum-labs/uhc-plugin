@@ -2,10 +2,14 @@ package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.event.Chat
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.util.Util
 import org.bukkit.*
+import org.bukkit.block.Structure
+import org.bukkit.block.data.type.StructureBlock
+import org.bukkit.block.structure.UsageMode
 import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import java.util.*
@@ -25,11 +29,15 @@ object ArenaManager {
 
 	val spiral = Spiral()
 
-	fun addArena(arena: Arena) {
-		arena.x = spiral.getX()
-		arena.z = spiral.getZ()
-
-		spiral.next()
+	fun addArena(arena: Arena, coords: Pair<Int, Int>? = null) {
+		if (coords == null) {
+			arena.x = spiral.getX()
+			arena.z = spiral.getZ()
+			spiral.next()
+		} else {
+			arena.x = coords?.first
+			arena.z = coords?.second
+		}
 
 		/* set last played against for players */
 		/* can only set last played against for one of the players on the other team */
@@ -42,7 +50,7 @@ object ArenaManager {
 			}
 		}
 
-		arena.prepareArena(WorldManager.getPVPWorld())
+		if (coords == null) arena.prepareArena(WorldManager.getPVPWorld())
 
 		ongoing.add(arena)
 		typeList<Arena>(arena.type).add(arena)
@@ -161,6 +169,8 @@ object ArenaManager {
 		val typeList = typeList<Arena>(arena.type)
 		typeList.removeIf { it === arena }
 
+		destroyStore(WorldManager.getPVPWorld(), arena.x * ARENA_STRIDE, arena.z * ARENA_STRIDE)
+
 		if (arena.type === ArenaType.PARKOUR) {
 			typeList as ArrayList<ParkourArena>
 			PlayerData.playerDataList.forEach { (_, playerData) ->
@@ -183,5 +193,45 @@ object ArenaManager {
 		Lobby.onSpawnLobby(player)
 
 		player.inventory.contents = playerData.lobbyInventory
+	}
+
+	fun destroyStore(world: World, x: Int, z: Int) {
+		val infoBlock = world.getBlockAt(x, 0, z)
+		infoBlock.setType(Material.BEDROCK, false)
+	}
+
+	fun storeBlock(world: World, x: Int, z: Int, data: String) {
+		val infoBlock = world.getBlockAt(x, 0, z)
+
+		infoBlock.setType(Material.STRUCTURE_BLOCK, false)
+		val state = infoBlock.getState(false) as Structure
+
+		state.usageMode = UsageMode.DATA
+		state.metadata = data
+	}
+
+	fun loadBlock(world: World, x: Int, z: Int): String? {
+		val infoBlock = world.getBlockAt(x, 0, z)
+
+		if (infoBlock.type !== Material.STRUCTURE_BLOCK) return null
+		val state = infoBlock.getState(false) as Structure
+
+		return state.metadata
+	}
+
+	fun saveWorldInfo(world: World) {
+		storeBlock(world, 1, 1, spiral.toMetadata())
+		ongoing.forEach { arena -> arena.save(world) }
+	}
+
+	fun loadWorldInfo(world: World) {
+		val spiralData = loadBlock(world, 1, 1) ?: return
+
+		if(spiral.fromMetadata(spiralData)) {
+			for (x in spiral.minX()..spiral.maxX()) for (z in spiral.minZ()..spiral.maxZ()) {
+				val loadedArena = Arena.load(world, x, z)
+				if (loadedArena != null) addArena(loadedArena, Pair(x, z))
+			}
+		}
 	}
 }

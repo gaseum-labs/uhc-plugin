@@ -269,7 +269,7 @@ object Packet {
 				newPing.setServerInfo(ServerPing.ServerData("UHC ${Bukkit.getMinecraftVersion()}", oldPing.serverData.protocolVersion))
 				newPing.setPlayerSample(oldPing.b())
 
-				fun createStrip() = CharArray(30) { 0x2588.toChar() }
+				fun createStrip() = CharArray(38) { 0xff35.toChar() } //ff35 2588
 
 				val topStrip = createStrip()
 				val bottomStrip = createStrip()

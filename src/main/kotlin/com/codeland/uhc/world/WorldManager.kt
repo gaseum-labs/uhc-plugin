@@ -1,6 +1,7 @@
 package com.codeland.uhc.world
 
 import com.codeland.uhc.core.*
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
 import net.minecraft.data.worldgen.biome.BiomeRegistry
@@ -23,7 +24,11 @@ object WorldManager {
 	var pregenTaskID = -1
 
 	fun init() {
-		if (Bukkit.getWorld(PVP_WORLD_NAME) == null) refreshWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
+		if (existsUnloaded(PVP_WORLD_NAME)) {
+			recoverWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
+		} else {
+			refreshWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
+		}
 
 		Bukkit.unloadWorld(END_WORLD_NAME, false)
 		Bukkit.unloadWorld(BAD_NETHER_WORLD_NAME, false)
@@ -106,6 +111,9 @@ object WorldManager {
 			if (world.name == LOBBY_WORLD_NAME) {
 				world.worldBorder.center = Location(world, 0.5, 0.0, 0.5)
 				world.worldBorder.size = Lobby.LOBBY_RADIUS * 2 + 1.0
+
+			} else if (world.name == PVP_WORLD_NAME) {
+				ArenaManager.loadWorldInfo(world)
 			}
 		}
 	}

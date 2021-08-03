@@ -108,6 +108,15 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		player.handle.b.sendPacket(ClientboundSetBorderSizePacket(border))
 	}
 
+	fun save(world: World) {
+		ArenaManager.storeBlock(
+			world,
+			x * ArenaManager.ARENA_STRIDE,
+			z * ArenaManager.ARENA_STRIDE,
+			"${type.name}|${customSave()}"
+		)
+	}
+
 	abstract fun customPerSecond(): Boolean
 
 	abstract fun startingPositions(teams: ArrayList<ArrayList<UUID>>): List<List<Position>>
@@ -119,6 +128,8 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 	abstract fun startText(): String
 
 	abstract fun shutdownOnLeave(): Boolean
+
+	abstract fun customSave(): String
 
 	/* utility */
 
@@ -157,6 +168,26 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 				x * ArenaManager.ARENA_STRIDE + (ArenaManager.ARENA_STRIDE / 2),
 				z * ArenaManager.ARENA_STRIDE + (ArenaManager.ARENA_STRIDE / 2)
 			)
+		}
+
+		fun load(world: World, x: Int, z: Int): Arena? {
+			val data = ArenaManager.loadBlock(
+				world,
+				x * ArenaManager.ARENA_STRIDE,
+				z * ArenaManager.ARENA_STRIDE
+			) ?: return null
+
+			val parts = data.split('|')
+			if (parts.size != 2) return null
+
+			val typeName = parts[0]
+			val arenaType = ArenaType.values().find { it.name == typeName } ?: return null
+
+			val arena = arenaType.load(parts[1], world) ?: return null
+			arena.x = x
+			arena.z = z
+
+			return arena
 		}
 	}
 

@@ -20,12 +20,31 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 	lateinit var start: Block
 
 	val checkpoints = HashMap<UUID, Block>()
-	val owner: UUID = teams[0][0]
+	var owner: UUID = if (teams[0].isEmpty()) UUID(0, 0) else teams[0][0]
 
 	companion object {
 		fun playersParkour(uuid: UUID) = ArenaManager.ongoing.find { arena ->
 			arena is ParkourArena && arena.owner == uuid
 		} as ParkourArena?
+
+		fun load(data: String, world: World): Arena? {
+			val parts = data.split(',')
+			if (parts.size != 2) return null
+
+			val key = parts[0].toLongOrNull() ?: return null
+			val uuid = try {
+				UUID.fromString(parts[1])
+			} catch (ex: Exception) {
+				null
+			} ?: return null
+
+			val arena = ParkourArena(arrayListOf(arrayListOf()))
+
+			arena.start = world.getBlockAtKey(key)
+			arena.owner = uuid
+
+			return arena
+		}
 	}
 
 	/* override */
@@ -109,4 +128,8 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 	override fun startText() = "Starting parkour in"
 
 	override fun shutdownOnLeave() = false
+
+	override fun customSave(): String {
+		return "${start.blockKey},${owner}"
+	}
 }
