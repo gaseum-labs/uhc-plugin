@@ -18,7 +18,7 @@ class ParkourCreator(index: Int) : GuiItem(index) {
 
 		/* player owns an arena already, go there */
 		if (existingParkour != null) {
-			existingParkour.startPlayer(player, existingParkour.playerLocation(player.uniqueId))
+			existingParkour.startPlayer(player, existingParkour.playerLocation(player))
 		} else {
 			ArenaManager.addArena(ParkourArena(arrayListOf(arrayListOf(player.uniqueId))))
 		}

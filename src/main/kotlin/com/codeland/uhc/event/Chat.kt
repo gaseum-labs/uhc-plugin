@@ -7,6 +7,7 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
 import com.codeland.uhc.team.Team
+import com.codeland.uhc.util.FancyText
 import com.codeland.uhc.util.Util
 import io.papermc.paper.event.player.AsyncChatEvent
 import net.kyori.adventure.text.Component
@@ -270,11 +271,19 @@ class Chat : Listener {
 
 		val collected = collectMentions(message, generateMentions())
 
+
+		if (message.startsWith('$')) {
+			val cleanMessage = FancyText.make(message.substring(1))
+
+			Bukkit.getOnlinePlayers().forEach { player ->
+				player.sendMessage(playerComponent.append(Component.text(cleanMessage)))
+			}
+
 		/* filter messages only to teammates */
 		/* if the sending player is on a team */
 		/* if the message does not start with a mention */
 		/* and the message does not start with ! */
-		if (UHC.isGameGoing() && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
+		} else if (UHC.isGameGoing() && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
 			val messageParts = divideMessage(message, collected, team.color2)
 
 			team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->

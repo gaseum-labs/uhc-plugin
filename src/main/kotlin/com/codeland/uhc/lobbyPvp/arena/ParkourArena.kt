@@ -49,7 +49,7 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 
 	/* override */
 
-	fun enterPlayer(player: Player, forceParticipate: Boolean) {
+	fun enterPlayer(player: Player, forceParticipate: Boolean, teleport: Boolean) {
 		Lobby.resetPlayerStats(player)
 
 		val isOwner = player.uniqueId == owner
@@ -69,11 +69,14 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 
 		if (!teams[0].contains(player.uniqueId)) teams[0].add(player.uniqueId)
 
-		player.teleport(playerLocation(player.uniqueId))
+		if (teleport) player.teleport(playerLocation(player))
 	}
 
-	fun playerLocation(uuid: UUID): Location {
-		return (checkpoints[uuid] ?: start).location.add(0.5, 1.0, 0.5)
+	fun playerLocation(player: Player): Location {
+		val location = (checkpoints[player.uniqueId] ?: start).location.add(0.5, 1.0, 0.5)
+		location.pitch = player.location.pitch
+		location.yaw = player.location.yaw
+		return location
 	}
 
 	private fun enterParticipant(player: Player) {
@@ -118,7 +121,7 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 	}
 
 	override fun customStartPlayer(player: Player, playerData: PlayerData) {
-		enterPlayer(player, false)
+		enterPlayer(player, false, false)
 	}
 
 	override fun prepareArena(world: World) {

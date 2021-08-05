@@ -32,6 +32,7 @@ import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.experimental.or
+import kotlin.random.Random
 
 object Packet {
 	val playerNames = arrayListOf<UUID>()
@@ -269,29 +270,48 @@ object Packet {
 				newPing.setServerInfo(ServerPing.ServerData("UHC ${Bukkit.getMinecraftVersion()}", oldPing.serverData.protocolVersion))
 				newPing.setPlayerSample(oldPing.b())
 
-				fun createStrip() = CharArray(38) { 0xff35.toChar() } //ff35 2588
+				val random = Random(event.hashCode())
+
+				val us = arrayOf(
+					0x1200, 0x1201,
+					0x1205, 0x1206,
+					0x1207,
+				)
+
+				val hs = arrayOf(
+					0x12d8, 0x12d9,
+					0x12da, 0x12db,
+					0x12dc, 0x12dd,
+					0x12de, 0x12df,
+					0x12e0, 0x12e1,
+					0x12e2, 0x12e3,
+					0x12e4, 0x12e5,
+					0x12e6, 0x12e7,
+				)
+
+				val cs = arrayOf(
+					0x122d, 0x122e
+				)
+
+				fun createStrip() = CharArray(46) { i -> if (i == 45) '\n' else when (i % 3) {
+					0 -> us[random.nextInt(us.size)]
+					1 -> hs[random.nextInt(hs.size)]
+					else -> cs[random.nextInt(cs.size)]
+				}.toChar() } //ff35 2588
 
 				val topStrip = createStrip()
 				val bottomStrip = createStrip()
 
-				topStrip[9] = 0xff35.toChar()
-				bottomStrip[11] = 0xff28.toChar()
-				topStrip[16] = 0xff23.toChar()
-
 				newPing.setMOTD(
-					Util.nmsGradientStringStylized(
+					Util.nmsGradientString(
 						String(topStrip),
 						TextColor.color(0x1042e6),
-						TextColor.color(0x0af6fa),
-						ChatModifier.a.setItalic(true).setRandom(true),
-						arrayOf(9, 16)
+						TextColor.color(0x0af6fa)
 					).addSibling(
-						Util.nmsGradientStringStylized(
+						Util.nmsGradientString(
 							String(bottomStrip),
 							TextColor.color(0x1042e6),
-							TextColor.color(0x0af6fa),
-							ChatModifier.a.setItalic(true).setRandom(true),
-							arrayOf(11)
+							TextColor.color(0x0af6fa)
 						)
 					)
 				)

@@ -35,6 +35,6 @@ class ParkourCheckpoint : CommandItem() {
     override fun onUse(uhc: UHC, player: Player) {
         val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
 
-        arena.enterPlayer(player, true)
+        arena.enterPlayer(player, true, true)
     }
 }

@@ -35,6 +35,6 @@ class ParkourTest : CommandItem() {
     override fun onUse(uhc: UHC, player: Player) {
         val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
 
-        arena.enterPlayer(player, player.gameMode === GameMode.CREATIVE)
+        arena.enterPlayer(player, player.gameMode === GameMode.CREATIVE, false)
     }
 }

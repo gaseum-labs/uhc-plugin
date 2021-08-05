@@ -31,7 +31,7 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) : GuiIte
 			if (ArenaManager.playersArena(player.uniqueId) != null) return
 
 			val arena = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)[property.get()]
-			arena.startPlayer(player, arena.playerLocation(player.uniqueId))
+			arena.startPlayer(player, arena.playerLocation(player))
 
 			player.closeInventory()
 		}

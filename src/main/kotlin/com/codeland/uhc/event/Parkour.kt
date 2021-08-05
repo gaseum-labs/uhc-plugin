@@ -22,8 +22,6 @@ class Parkour : Listener {
 		val player = event.player
 		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
 
-		if (player.gameMode !== GameMode.ADVENTURE) return
-
 		val under = event.to.block.getRelative(BlockFace.DOWN)
 
 		val checkpointType = when {
@@ -33,6 +31,7 @@ class Parkour : Listener {
 		}
 
 		if (checkpointType != -1) {
+			val isBuilding = player.gameMode === GameMode.CREATIVE
 			val oldCheckpoint = arena.checkpoints[player.uniqueId]
 
 			if (
@@ -40,10 +39,16 @@ class Parkour : Listener {
 				!(checkpointType == 1 && oldCheckpoint == null)
 			) {
 				arena.checkpoints[player.uniqueId] = under
-				player.sendActionBar(Component.text(arrayOf(
-					"${ChatColor.GOLD}New Checkpoint Reached!",
-					"${ChatColor.BLUE}Reset to Start!"
-				)[checkpointType]))
+				player.sendActionBar(Component.text(
+					if (isBuilding) {
+						"${ChatColor.AQUA}Set Testing Start"
+					} else {
+						arrayOf(
+							"${ChatColor.GOLD}New Checkpoint Reached!",
+							"${ChatColor.BLUE}Reset to Start!"
+						)[checkpointType]
+					}
+				))
 			}
 		}
 	}
@@ -56,7 +61,7 @@ class Parkour : Listener {
 		/* respawn players instead of killing them */
 		event.isCancelled = true
 
-		arena.enterPlayer(player, false)
+		arena.enterPlayer(player, false, true)
 	}
 
 	@EventHandler
