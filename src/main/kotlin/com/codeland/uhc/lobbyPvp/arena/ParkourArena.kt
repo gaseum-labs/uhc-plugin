@@ -4,7 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.gui.item.CommandItemType
+import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.Arena
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.ArenaType
@@ -60,10 +60,10 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 			enterParticipant(player)
 		}
 
-		CommandItemType.giveItem(CommandItemType.LOBBY_RETURN, player.inventory)
+		CommandItemType.LOBBY_RETURN.giveItem(player.inventory)
 		if (isOwner) Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin, {
 			if (playerIsParticipating(player.uniqueId)) {
-				CommandItemType.giveItem(CommandItemType.PARKOUR_TEST, player.inventory, 8)
+				CommandItemType.PARKOUR_TEST.giveItem(player.inventory, 8)
 			}
 		}, 40)
 
@@ -84,7 +84,8 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 
 		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin, {
 			if (playerIsParticipating(player.uniqueId)) {
-				CommandItemType.giveItem(CommandItemType.PARKOUR_CHECKPOINT, player.inventory, 1)
+				CommandItemType.PARKOUR_CHECKPOINT.giveItem(player.inventory)
+				CommandItemType.PARKOUR_RESET.giveItem(player.inventory)
 			}
 		}, 40)
 

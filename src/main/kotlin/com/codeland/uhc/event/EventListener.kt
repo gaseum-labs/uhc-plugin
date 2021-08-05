@@ -4,7 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.core.*
 import com.codeland.uhc.dropFix.DropFixType
-import com.codeland.uhc.gui.item.CommandItemType
+import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.phase.PhaseType
@@ -93,9 +93,9 @@ class EventListener : Listener {
 			event.isCancelled = true
 
 		} else if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
-			CommandItemType.commandItemList.any { commandItem ->
-				if (commandItem.isItem(stack)) {
-					commandItem.onUse(UHC, event.player)
+			CommandItemType.values().any { type ->
+				if (type.isItem(stack)) {
+					type.execute(event.player)
 					true
 
 				} else false
@@ -241,9 +241,12 @@ class EventListener : Listener {
 	fun onPlayerDropItem(event: PlayerDropItemEvent) {
 		val stack = event.itemDrop.itemStack
 
-		event.isCancelled =
-			CommandItemType.commandItemList.any { commandItem -> commandItem.isItem(stack) } ||
-			(UHC.isEnabled(QuirkType.PLAYER_COMPASS) && PlayerCompass.isCompass(stack))
+		if (
+			CommandItemType.values().any { it.isItem(stack) }
+			|| (UHC.isEnabled(QuirkType.PLAYER_COMPASS) && PlayerCompass.isCompass(stack))
+		) {
+			event.isCancelled = true
+		}
 	}
 
 	fun shouldHealthCancelled(player: Player): Boolean {

@@ -11,6 +11,7 @@ import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
@@ -26,6 +27,18 @@ class ParticipantCommands : BaseCommand() {
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
 		UHC.setupGui.open(sender as Player)
+	}
+
+	@Subcommand("pvp")
+	fun openPvp(sender: CommandSender) {
+		sender as Player
+
+		if (
+			PlayerData.isParticipating(sender.uniqueId) ||
+			ArenaManager.playersArena(sender.uniqueId) is PvpArena
+		) return Commands.errorMessage(sender, "You can't use this menu right now")
+
+		PlayerData.getPlayerData(sender.uniqueId).lobbyPvpGui.open(sender)
 	}
 
 	@Subcommand("optOut")
@@ -106,6 +119,23 @@ class ParticipantCommands : BaseCommand() {
 		Lobby.onSpawnLobby(sender)
 	}
 
+	@Subcommand("spectate")
+	fun spectate(sender: CommandSender) {
+		sender as Player
+
+		if (PlayerData.isParticipating(sender.uniqueId)) return
+
+		if (!UHC.isPhase(PhaseType.WAITING)) {
+			sender.gameMode = GameMode.SPECTATOR
+			sender.setItemOnCursor(null)
+			sender.inventory.clear()
+			sender.teleport(UHC.spectatorSpawnLocation())
+
+		} else {
+			Commands.errorMessage(sender, "Game has not started!")
+		}
+	}
+
 	@CommandCompletion("@quirkclass")
 	@Subcommand("class")
 	@Description("set your class for classes quirk")
@@ -172,5 +202,32 @@ class ParticipantCommands : BaseCommand() {
 		} else {
 			Commands.errorMessage(sender, "You cannot teleport right now")
 		}
+	}
+
+	/* lobby parkour */
+	@Subcommand("parkour test")
+	fun parkourTest(sender: CommandSender) {
+		sender as Player
+
+		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
+		arena.enterPlayer(sender, sender.gameMode === GameMode.CREATIVE, false)
+	}
+
+	@Subcommand("parkour checkpoint")
+	fun parkourCheckpoint(sender: CommandSender) {
+		sender as Player
+
+		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
+		arena.enterPlayer(sender, true, true)
+	}
+
+	@Subcommand("parkour reset")
+	fun parkourReset(sender: CommandSender) {
+		sender as Player
+
+		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
+
+		arena.checkpoints[sender.uniqueId] = arena.start
+		arena.enterPlayer(sender, true, true)
 	}
 }

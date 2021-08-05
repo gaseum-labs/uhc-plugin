@@ -1,6 +1,6 @@
 package com.codeland.uhc.core
 
-import com.codeland.uhc.gui.item.CommandItemType
+import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
@@ -59,9 +59,9 @@ object Lobby {
 			if (quirk.enabled.get()) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
 		}
 
-		CommandItemType.giveItem(CommandItemType.GUI_OPENER, player.inventory)
-		CommandItemType.giveItem(CommandItemType.PVP_OPENER, player.inventory)
-		CommandItemType.giveItem(CommandItemType.SPECTATE, player.inventory)
+		CommandItemType.GUI_OPENER.giveItem(player.inventory)
+		CommandItemType.PVP_OPENER.giveItem(player.inventory)
+		CommandItemType.SPECTATE.giveItem(player.inventory)
 
 		player.teleport(lobbyLocation(UHC))
 	}
