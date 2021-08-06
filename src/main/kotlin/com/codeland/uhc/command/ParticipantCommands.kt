@@ -227,7 +227,10 @@ class ParticipantCommands : BaseCommand() {
 
 		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
 
-		arena.checkpoints[sender.uniqueId] = arena.start
+		val data = arena.getParkourData(sender.uniqueId)
+		data.checkpoint = arena.start
+		data.timer = 0
+		data.timerGoing = false
 		arena.enterPlayer(sender, true, true)
 	}
 }

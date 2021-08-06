@@ -30,15 +30,14 @@ class Parkour : Listener {
 			else -> -1
 		}
 
+		val parkourData = arena.getParkourData(player.uniqueId)
+		parkourData.timerGoing = true
+
 		if (checkpointType != -1) {
 			val isBuilding = player.gameMode === GameMode.CREATIVE
-			val oldCheckpoint = arena.checkpoints[player.uniqueId]
 
-			if (
-				oldCheckpoint?.blockKey != under.blockKey &&
-				!(checkpointType == 1 && oldCheckpoint == null)
-			) {
-				arena.checkpoints[player.uniqueId] = under
+			if (parkourData.checkpoint.blockKey != under.blockKey) {
+				parkourData.checkpoint = under
 				player.sendActionBar(Component.text(
 					if (isBuilding) {
 						"${ChatColor.AQUA}Set Testing Start"

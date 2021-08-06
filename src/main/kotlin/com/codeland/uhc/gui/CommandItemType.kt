@@ -1,12 +1,16 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
+import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
@@ -24,7 +28,7 @@ enum class CommandItemType(
 	),
 	PVP_OPENER(
 		Material.IRON_SWORD,
-		Component.text("${ChatColor.RED}Open PVP Menu"),
+		Util.gradientString("Open PVP Menu", TextColor.color(0xe01047), TextColor.color(0xe08910)),
 		"uhc pvp"
 	),
 	SPECTATE(
@@ -81,18 +85,11 @@ enum class CommandItemType(
 	}
 
 	private fun createItem(): ItemStack {
-		val stack = ItemStack(material)
-
-		val itemMeta = stack.itemMeta
-
-		itemMeta.displayName(displayName)
-		itemMeta.lore(listOf(Component.text("Shortcut: ${ChatColor.BOLD}/${command}")))
-
-		(itemMeta as PersistentDataHolder).persistentDataContainer.set(key, PersistentDataType.INTEGER, ordinal)
-
-		stack.itemMeta = itemMeta
-
-		return stack
+		return ItemCreator.fromType(material)
+			.name(displayName)
+			.lore("Shortcut: ${ChatColor.BOLD}/${command}")
+			.setData(key, ordinal)
+			.create()
 	}
 
 	companion object {

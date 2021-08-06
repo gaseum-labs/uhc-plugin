@@ -2,10 +2,7 @@ package com.codeland.uhc.world
 
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.UHCProperty
-import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.gui.GuiItemProperty
-import com.codeland.uhc.gui.GuiManager
-import com.codeland.uhc.gui.GuiPage
+import com.codeland.uhc.gui.*
 import com.codeland.uhc.gui.guiItem.CloseButton
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
@@ -101,12 +98,11 @@ enum class WorldGenOption(
 						}
 
 						override fun getStackProperty(value: Boolean): ItemStack {
-							val item = lore(
-								name(ItemStack(option.representation), enabledName(option.prettyName, value)),
-								option.description
-							)
-
-							return if (value) enchant(item) else item
+							return ItemCreator.fromType(option.representation)
+								.name(ItemCreator.enabledName(option.prettyName, value))
+								.lore(option.description)
+								.enchant(value)
+								.create()
 						}
 					})
 				}
@@ -115,7 +111,7 @@ enum class WorldGenOption(
 					override fun onClick(player: Player, shift: Boolean) {
 						values().forEach { it.property.reset() }
 					}
-					override fun getStack() = name(ItemStack(Material.MUSIC_DISC_WAIT), "${ChatColor.AQUA}Reset")
+					override fun getStack() = ItemCreator.fromType(Material.MUSIC_DISC_MALL).name("${ChatColor.AQUA}Reset").create()
 				})
 
 				addItem(CloseButton(coords(8, 4)))

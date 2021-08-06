@@ -2,6 +2,7 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material
@@ -14,8 +15,7 @@ class Unsheltered(type: QuirkType) : Quirk(type) {
 
 	override fun onDisable() {}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.SHULKER_SHELL)
+	override val representation = ItemCreator.fromType(Material.SHULKER_SHELL)
 
 	companion object {
 		const val TAG_NAME = "unsh_b"

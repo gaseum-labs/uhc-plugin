@@ -3,6 +3,7 @@ package com.codeland.uhc.quirk.quirks
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
@@ -28,8 +29,7 @@ class Deathswap(type: QuirkType) : Quirk(type) {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.MAGENTA_GLAZED_TERRACOTTA)
+	override val representation = ItemCreator.fromType(Material.MAGENTA_GLAZED_TERRACOTTA)
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) {

@@ -9,6 +9,7 @@ import com.codeland.uhc.dropFix.DropEntry.Companion.nothing
 import com.codeland.uhc.dropFix.DropEntry.Companion.stackItem
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
 import com.codeland.uhc.dropFix.DropFix
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
@@ -29,8 +30,7 @@ class ModifiedDrops(type: QuirkType) : Quirk(type) {
 
 	override fun onDisable() {}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.STRING)
+	override val representation = ItemCreator.fromType(Material.STRING)
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) {

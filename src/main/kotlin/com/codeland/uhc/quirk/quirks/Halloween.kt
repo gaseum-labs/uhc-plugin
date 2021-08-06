@@ -2,6 +2,7 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.SchedulerUtil
@@ -45,8 +46,7 @@ class Halloween(type: QuirkType) : Quirk(type) {
 		return false
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(PUMPKIN_PIE)
+	override val representation = ItemCreator.fromType(PUMPKIN_PIE)
 
 	companion object {
 		fun onEntitySpawn(entity: Entity) {

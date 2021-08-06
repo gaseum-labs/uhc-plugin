@@ -4,6 +4,7 @@ import com.codeland.uhc.core.KillReward
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.GuiItemProperty
+import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
@@ -15,6 +16,9 @@ class KillRewardCycler(index: Int) : GuiItemProperty <KillReward> (index, UHC.ki
 	}
 
 	override fun getStackProperty(value: KillReward): ItemStack {
-		return name(lore(ItemStack(value.representation), value.lore), stateName("Kill Reward", value.prettyName))
+		return ItemCreator.fromType(value.representation)
+			.name(ItemCreator.stateName("Kill Reward", value.prettyName))
+			.lore(value.lore)
+			.create()
 	}
 }

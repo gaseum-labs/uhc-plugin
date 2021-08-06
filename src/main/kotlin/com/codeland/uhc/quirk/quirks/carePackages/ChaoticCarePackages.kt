@@ -4,6 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
@@ -41,16 +42,8 @@ class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
 		stopDropping()
 	}
 
-	override val representation: ItemStack
-		get() {
-			val itemStack = ItemStack(TIPPED_ARROW)
-
-			val meta = itemStack.itemMeta as PotionMeta
-			meta.basePotionData = PotionData(PotionType.INSTANT_HEAL)
-			itemStack.itemMeta = meta
-
-			return itemStack
-		}
+	override val representation = ItemCreator.fromType(TIPPED_ARROW)
+		.customMeta { meta -> (meta as PotionMeta).basePotionData = PotionData(PotionType.INSTANT_HEAL) }
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		when (phase.type) {

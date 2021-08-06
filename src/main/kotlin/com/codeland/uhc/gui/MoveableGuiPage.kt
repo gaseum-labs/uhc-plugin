@@ -1,17 +1,24 @@
 package com.codeland.uhc.gui
 
-import com.codeland.uhc.event.Packet
+import com.codeland.uhc.UHCPlugin
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction.*
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.persistence.PersistentDataHolder
+import org.bukkit.persistence.PersistentDataType
 
 abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, name) {
 	var moveableGuiItems = ArrayList<MoveableGuiItem>()
 	val savedIventory = arrayOfNulls<ItemStack>(36)
+
+	companion object {
+		val key = NamespacedKey(UHCPlugin.plugin, "gid")
+	}
 
 	abstract fun createMoveableGuiItems(): ArrayList<MoveableGuiItem>
 	abstract fun save()
@@ -28,14 +35,14 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 		/* generate the moveable gui items */
 		moveableGuiItems = createMoveableGuiItems()
 
-		moveableGuiItems.forEachIndexed { id, item ->
-			item.id = id
-			val stack = item.generate()
+		moveableGuiItems.forEachIndexed { index, moveable ->
+			moveable.id = index
+			val creator = moveable.generate().setData(key, index)
 
-			if (item.rawSlot < inventory.size) {
-				inventory.setItem(item.rawSlot, stack)
+			if (moveable.rawSlot < inventory.size) {
+				inventory.setItem(moveable.rawSlot, creator.create())
 			} else {
-				player.inventory.setItem(item.rawSlot - inventory.size, stack)
+				player.inventory.setItem(moveable.rawSlot - inventory.size, creator.create())
 			}
 		}
 	}
@@ -54,12 +61,10 @@ abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, na
 		}
 	}
 
-	fun getItem(itemStack: ItemStack?): MoveableGuiItem? {
-		if (itemStack?.type == Material.AIR) return null
+	fun getItem(stack: ItemStack?): MoveableGuiItem? {
+		if (stack == null || stack.type === Material.AIR) return null
 
-		val name = (itemStack?.itemMeta?.displayName() as? TextComponent)?.content() ?: return null
-
-		val id = Packet.nameToInt(name, 3) ?: return null
+		val id = ItemCreator.getData(key, stack) ?: return null
 
 		return moveableGuiItems[id]
 	}

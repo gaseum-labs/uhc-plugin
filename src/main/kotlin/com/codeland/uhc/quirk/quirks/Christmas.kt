@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
@@ -35,8 +36,7 @@ class Christmas(type: QuirkType) : Quirk(type) {
 		revokeSnowing()
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.SNOWBALL)
+	override val representation = ItemCreator.fromType(Material.SNOWBALL)
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) setSnowing()

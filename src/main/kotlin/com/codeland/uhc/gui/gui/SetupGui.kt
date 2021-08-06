@@ -3,6 +3,7 @@ package com.codeland.uhc.gui.gui
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.GuiPage
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.gui.guiItem.*
 import com.codeland.uhc.phase.PhaseType
@@ -28,7 +29,7 @@ class SetupGui : GuiPage(5, Util.gradientString("UHC Setup", TextColor.color(0x3
 
 	private val worldButton = object : GuiItem(coords(6, 4)) {
 		override fun onClick(player: Player, shift: Boolean) = WorldGenOption.worldGenGui.open(player)
-		override fun getStack() = name(ItemStack(Material.GOLD_ORE), "${ChatColor.GREEN}World Gen Options")
+		override fun getStack() = ItemCreator.fromType(Material.GOLD_ORE).name("${ChatColor.GREEN}World Gen Options").create()
 	}
 
 	private val resetButton = object : GuiItem(coords(7, 4)) {
@@ -47,7 +48,7 @@ class SetupGui : GuiPage(5, Util.gradientString("UHC Setup", TextColor.color(0x3
 			UHC.properties.forEach { it.reset() }
 		}
 
-		override fun getStack() = name(ItemStack(Material.MUSIC_DISC_WAIT), "${ChatColor.AQUA}Reset")
+		override fun getStack() = ItemCreator.fromType(Material.MUSIC_DISC_MALL).name("${ChatColor.AQUA}Reset").create()
 	}
 
 	private val cancelButton: GuiItem = CloseButton(coords(8, 4))

@@ -2,6 +2,7 @@ package com.codeland.uhc.quirk.quirks.carePackages
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.ItemUtil
@@ -69,8 +70,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 		onEnd()
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(CHEST_MINECART)
+	override val representation = ItemCreator.fromType(Material.CHEST_MINECART)
 
 	override fun onPhaseSwitch(phase: PhaseVariant) {
 		if (phase.type == PhaseType.GRACE) onStart()

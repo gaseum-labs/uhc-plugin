@@ -2,6 +2,7 @@ package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
@@ -38,14 +39,20 @@ class QueueJoiner(index: Int, val type: Int, queueProperty: UHCProperty<Int>) : 
 		return if (PvpQueue.enabled.get()) {
 			val inQueue = value == type
 
-			val stack = name(ItemStack(material), if (inQueue) "${ChatColor.GREEN}In $name Queue" else "${ChatColor.RED}Not in $name Queue")
-			lore(stack, if (inQueue) listOf(Component.text("Click to leave $name queue")) else listOf(Component.text("Click to join $name queue")))
-			if (inQueue) enchant(stack) else stack
+			ItemCreator.fromType(material)
+				.name(
+					if (inQueue) "${ChatColor.GREEN}In $name Queue"
+					else "${ChatColor.RED}Not in $name Queue"
+				).lore(
+					if (inQueue) "Click to leave $name queue"
+					else "Click to join $name queue"
+				).enchant(inQueue)
 
 		} else {
-			val stack = name(ItemStack(disabledMaterial), "${ChatColor.GRAY}Queue Disabled")
-			lore(stack, listOf(Component.text("Ask an admin to enable queue")))
-			stack
-		}
+			ItemCreator.fromType(disabledMaterial)
+				.name("${ChatColor.GRAY}Queue Disabled")
+				.lore("Ask an admin to enable queue")
+
+		}.create()
 	}
 }

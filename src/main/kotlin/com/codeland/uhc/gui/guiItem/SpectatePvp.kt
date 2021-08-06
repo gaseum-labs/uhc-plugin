@@ -1,6 +1,7 @@
 package com.codeland.uhc.gui.guiItem;
 
 import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.Arena
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.world.WorldManager
@@ -29,9 +30,9 @@ class SpectatePvp(index: Int): GuiItem(index) {
 	}
 
 	override fun getStack(): ItemStack {
-		return lore(
-			name(ItemStack(Material.HEART_OF_THE_SEA), "${ChatColor.BLUE}Spectate"),
-			listOf(Component.text("Click to spectate lobby pvp"))
-		)
+		return ItemCreator.fromType(Material.HEART_OF_THE_SEA)
+			.name("${ChatColor.BLUE}Spectate")
+			.lore("Click to spectate lobby pvp")
+			.create()
 	}
 }

@@ -8,6 +8,7 @@ import com.codeland.uhc.dropFix.DropFix
 import com.codeland.uhc.gui.GuiPage
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.GuiManager
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.util.ItemUtil
 import net.kyori.adventure.text.Component
@@ -74,7 +75,9 @@ abstract class Quirk(val type: QuirkType) {
 			}
 
 			override fun getStack(): ItemStack {
-				return name(ItemStack(Material.PRISMARINE_SHARD), Component.text("Back", NamedTextColor.BLUE))
+				return ItemCreator.fromType(Material.PRISMARINE_SHARD)
+					.name(Component.text("Back", NamedTextColor.BLUE))
+					.create()
 			}
 		})
 
@@ -91,7 +94,7 @@ abstract class Quirk(val type: QuirkType) {
 	abstract fun onEnable()
 	abstract fun onDisable()
 
-	abstract val representation: ItemStack
+	abstract val representation: ItemCreator
 
 	open fun onStart(uuid: UUID) {}
 	open fun onEnd(uuid: UUID) {}

@@ -3,7 +3,7 @@ package com.codeland.uhc.quirk.quirks
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.gui.GuiItem.Companion.enabledName
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -42,31 +42,31 @@ class Summoner(type: QuirkType) : Quirk(type) {
 		return false
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(MULE_SPAWN_EGG)
+	override val representation: ItemCreator
+		get() = ItemCreator.fromType(MULE_SPAWN_EGG)
 
 	var allowAggro = addProperty(UHCProperty(true))
 	var allowPassive = addProperty(UHCProperty(true))
 	var commander = addProperty(UHCProperty(true))
 
 	init {
-		gui.addItem(BoolToggle(11, allowAggro, {
-			GuiItem.name(ItemStack(CREEPER_SPAWN_EGG), enabledName("Aggro", true))
-		}, {
-			GuiItem.name(ItemStack(GUNPOWDER), enabledName("Aggro", false))
-		}))
+		gui.addItem(object : BoolToggle(11, allowAggro) {
+			override fun getStackProperty(value: Boolean): ItemStack {
+				return ItemCreator.fromType(if (value) CREEPER_SPAWN_EGG else GUNPOWDER).name(ItemCreator.enabledName("Aggro", value)).create()
+			}
+		})
 
-		gui.addItem(BoolToggle(15, allowPassive, {
-			GuiItem.name(ItemStack(CHICKEN_SPAWN_EGG), enabledName("Passive", true))
-		}, {
-			GuiItem.name(ItemStack(FEATHER), enabledName("Passive", false))
-		}))
+		gui.addItem(object : BoolToggle(15, allowPassive) {
+			override fun getStackProperty(value: Boolean): ItemStack {
+				return ItemCreator.fromType(if (value) CHICKEN_SPAWN_EGG else FEATHER).name(ItemCreator.enabledName("Passive", value)).create()
+			}
+		})
 
-		gui.addItem(BoolToggle(22, commander, {
-			GuiItem.name(ItemStack(NETHERITE_HELMET), enabledName("Commander", true))
-		}, {
-			GuiItem.name(ItemStack(LEATHER_HELMET), enabledName("Commander", false))
-		}))
+		gui.addItem(object : BoolToggle(22, commander) {
+			override fun getStackProperty(value: Boolean): ItemStack {
+				return ItemCreator.fromType(if (value) NETHERITE_HELMET else LEATHER_HELMET).name(ItemCreator.enabledName("Commander", value)).create()
+			}
+		})
 	}
 
 	fun getSpawnEgg(entity: EntityType): Material? {

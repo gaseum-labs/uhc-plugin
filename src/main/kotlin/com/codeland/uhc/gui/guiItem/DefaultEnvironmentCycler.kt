@@ -2,6 +2,7 @@ package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItemProperty
+import com.codeland.uhc.gui.ItemCreator
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.World
@@ -19,11 +20,15 @@ class DefaultEnvironmentCycler(index: Int) : GuiItemProperty<World.Environment>(
 	}
 
 	override fun getStackProperty(value: World.Environment): ItemStack {
-		val data = if (value === World.Environment.NORMAL)
-			Pair(Material.GRASS_BLOCK, "Normal")
-		else
-			Pair(Material.NETHERRACK, "Nether")
-
-		return lore(name(ItemStack(data.first), stateName("World", data.second)), listOf(Component.text("Which dimension the UHC starts in")))
+		return ItemCreator.fromType(
+				if (value === World.Environment.NORMAL) Material.GRASS_BLOCK
+				else Material.NETHERRACK
+			)
+			.name(ItemCreator.stateName("World",
+				if (value === World.Environment.NORMAL) "Normal"
+				else "Nether"
+			))
+			.lore("Which dimension the UHC starts in")
+			.create()
 	}
 }

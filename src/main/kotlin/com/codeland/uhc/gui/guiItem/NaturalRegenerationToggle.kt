@@ -3,6 +3,7 @@ package com.codeland.uhc.gui.guiItem
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.GuiItemProperty
+import com.codeland.uhc.gui.ItemCreator
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.World
@@ -15,12 +16,12 @@ class NaturalRegenerationToggle(index: Int) : GuiItemProperty <Boolean> (index, 
 	}
 
 	override fun getStackProperty(value: Boolean): ItemStack {
-		return lore(
-			name(
-				ItemStack(if (value) Material.BEEF else Material.ROTTEN_FLESH),
-				enabledName("Natural Regeneration", value)
-			),
-			listOf(Component.text("is natural regeneration allowed after grace?"))
-		)
+		return ItemCreator.fromType(
+			if (value) Material.BEEF else Material.ROTTEN_FLESH
+		).lore(
+			"Is natural regeneration allowed after grace?"
+		).name(
+			ItemCreator.enabledName("Natural Regeneration", value)
+		).create()
 	}
 }

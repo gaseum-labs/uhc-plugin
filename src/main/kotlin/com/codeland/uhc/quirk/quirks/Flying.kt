@@ -3,6 +3,7 @@ package com.codeland.uhc.quirk.quirks
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import net.kyori.adventure.text.Component
@@ -28,26 +29,21 @@ class Flying(type: QuirkType) : Quirk(type) {
 		GameRunner.playerAction(uuid) { player -> revokeItems(player) }
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.FIREWORK_ROCKET)
+	override val representation = ItemCreator.fromType(Material.FIREWORK_ROCKET)
 
 	init {
 		val rocketItem = object : GuiItemProperty <Int> (13, numRockets) {
 			override fun onClick(player: Player, shift: Boolean) {
-				if (shift)
-					numRockets.set((numRockets.get() - 1).coerceAtLeast(0))
-				else
-					numRockets.set((numRockets.get() + 1).coerceAtMost(MAX_ROCKETS))
+				if (shift) numRockets.set((numRockets.get() - 1).coerceAtLeast(0))
+				else numRockets.set((numRockets.get() + 1).coerceAtMost(MAX_ROCKETS))
 			}
 
 			override fun getStackProperty(value: Int): ItemStack {
-				return lore(
-					name(
-						ItemStack(if (value == 0) Material.GUNPOWDER else Material.FIREWORK_ROCKET, value.coerceAtLeast(1)),
-						stateName("Num rockets", "$value")
-					),
-					listOf(Component.text("click to add"), Component.text("shift click to subtract"))
-				)
+				return ItemCreator.fromType(if (value == 0) Material.GUNPOWDER else Material.FIREWORK_ROCKET)
+					.lore("click to add", "shift click to subtract")
+					.name(ItemCreator.stateName("Num rockets", "$value"))
+					.amount(value.coerceAtLeast(1))
+					.create()
 			}
 		}
 
@@ -60,25 +56,21 @@ class Flying(type: QuirkType) : Quirk(type) {
 		const val MAX_ROCKETS = 64
 
 		fun giveItems(player: Player, numRockets: Int) {
-			val elytra = ItemStack(Material.ELYTRA)
-			val meta = elytra.itemMeta
+			player.inventory.addItem(
+				ItemCreator.fromType(Material.ELYTRA)
+					.lore("Given from Flying Quirk")
+					.name("${ChatColor.GOLD}UHC Elytra")
+					.create()
+			)
 
-			meta.setDisplayName("${ChatColor.GOLD}UHC Elytra")
-			meta.lore = listOf("Given from Flying Quirk")
-
-			elytra.itemMeta = meta
-			player.inventory.addItem(elytra)
-
-			val rockets = ItemStack(Material.FIREWORK_ROCKET, numRockets)
-			val rocketMeta = rockets.itemMeta as FireworkMeta
-
-			rocketMeta.setDisplayName("${ChatColor.GOLD}UHC Rocket")
-			rocketMeta.lore = listOf("Given from Flying Quirk")
-			rocketMeta.power = 2
-
-			rockets.itemMeta = rocketMeta
-
-			player.inventory.addItem(ItemStack(rockets))
+			player.inventory.addItem(
+				ItemCreator.fromType(Material.FIREWORK_ROCKET)
+				.customMeta { meta -> (meta as FireworkMeta).power = 2 }
+				.lore("Given from Flying Quirk")
+				.name("${ChatColor.GOLD}UHC Rocket")
+				.amount(numRockets)
+				.create()
+			)
 		}
 
 		fun revokeItems(player: Player) {

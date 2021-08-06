@@ -2,6 +2,7 @@ package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.ArenaType
 import com.codeland.uhc.lobbyPvp.PvpQueue
@@ -27,6 +28,7 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) : GuiIte
 				property.set((property.get() + 1) % arenaList.size)
 			}
 		} else {
+			if (!PvpQueue.enabled.get()) return
 			if (property.get() == -1) return
 			if (ArenaManager.playersArena(player.uniqueId) != null) return
 
@@ -39,22 +41,18 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) : GuiIte
 
 	override fun getStackProperty(value: Int): ItemStack {
 		return if (value == -1) {
-			name(ItemStack(Material.OAK_PRESSURE_PLATE), "${ChatColor.GRAY}No parkour lobbies")
+			ItemCreator.fromType(Material.OAK_PRESSURE_PLATE).name("${ChatColor.GRAY}No parkour lobbies")
 
 		} else {
-			val arena = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)[property.get()]
-
-			val stack = ItemStack(Material.PLAYER_HEAD)
-			val meta = stack.itemMeta as SkullMeta
-
+			val arenaList = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)
+			val arena = arenaList[property.get()]
 			val player = Bukkit.getOfflinePlayer(arena.owner)
 
-			meta.owningPlayer = Bukkit.getOfflinePlayer(arena.owner)
-			meta.displayName(Component.text("${ChatColor.YELLOW}Join ${player.name}'s Parkour"))
-			meta.lore(listOf(Component.text("Shift click to see more arenas")))
+			ItemCreator.fromType(Material.PLAYER_HEAD)
+				.customMeta { meta -> (meta as SkullMeta).owningPlayer = player }
+				.name("${ChatColor.YELLOW}Join ${player.name}'s Parkour")
+				.lore(if (arenaList.size == 1) "" else "Shift click to see more arenas")
 
-			stack.itemMeta = meta
-			stack
-		}
+		}.create()
 	}
 }

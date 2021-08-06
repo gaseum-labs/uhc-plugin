@@ -5,6 +5,7 @@ import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.CommandItemType
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.Arena
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.ArenaType
@@ -16,11 +17,16 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, teams) {
+class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID): Arena(ArenaType.PARKOUR, teams) {
 	lateinit var start: Block
 
-	val checkpoints = HashMap<UUID, Block>()
-	var owner: UUID = if (teams[0].isEmpty()) UUID(0, 0) else teams[0][0]
+	data class ParkourData(var checkpoint: Block, var timer: Int, var timerGoing: Boolean)
+
+	private val parkourDataList = HashMap<UUID, ParkourData>()
+
+	fun getParkourData(uuid: UUID): ParkourData {
+		return parkourDataList.getOrPut(uuid) { ParkourData(start, 0, false) }
+	}
 
 	companion object {
 		fun playersParkour(uuid: UUID) = ArenaManager.ongoing.find { arena ->
@@ -38,10 +44,9 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 				null
 			} ?: return null
 
-			val arena = ParkourArena(arrayListOf(arrayListOf()))
+			val arena = ParkourArena(arrayListOf(arrayListOf()), uuid)
 
 			arena.start = world.getBlockAtKey(key)
-			arena.owner = uuid
 
 			return arena
 		}
@@ -73,7 +78,7 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 	}
 
 	fun playerLocation(player: Player): Location {
-		val location = (checkpoints[player.uniqueId] ?: start).location.add(0.5, 1.0, 0.5)
+		val location = getParkourData(player.uniqueId).checkpoint.location.add(0.5, 1.0, 0.5)
 		location.pitch = player.location.pitch
 		location.yaw = player.location.yaw
 		return location
@@ -96,8 +101,8 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>): Arena(ArenaType.PARKOUR, 
 		player.gameMode = GameMode.CREATIVE
 
 		/* give items */
-		player.inventory.addItem(GuiItem.name(ItemStack(Material.LAPIS_BLOCK), "${ChatColor.BLUE}Lapis (Parkour Start)"))
-		player.inventory.addItem(GuiItem.name(ItemStack(Material.GOLD_BLOCK), "${ChatColor.YELLOW}Gold (Checkpoint)"))
+		player.inventory.addItem(ItemCreator.fromType(Material.LAPIS_BLOCK).name("${ChatColor.BLUE}Lapis (Parkour Start)").create())
+		player.inventory.addItem(ItemCreator.fromType(Material.GOLD_BLOCK).name("${ChatColor.YELLOW}Gold (Checkpoint)").create())
 
 		player.sendTitle("${ChatColor.GOLD}BUILD", "", 0, 20, 10)
 	}

@@ -3,6 +3,7 @@ package com.codeland.uhc.quirk.quirks
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -27,8 +28,7 @@ class Pests(type: QuirkType) : Quirk(type) {
         }
     }
 
-    override val representation: ItemStack
-        get() = ItemStack(Material.LEATHER_CHESTPLATE)
+    override val representation = ItemCreator.fromType(Material.WOODEN_SWORD)
 
     override fun onStart(uuid: UUID) {
         GameRunner.playerAction(uuid) { player ->

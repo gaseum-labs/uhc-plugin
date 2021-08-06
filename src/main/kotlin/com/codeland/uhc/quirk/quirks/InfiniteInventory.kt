@@ -4,6 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.ItemUtil
@@ -202,6 +203,5 @@ class InfiniteInventory(type: QuirkType) : Quirk(type) {
 		storedMap.clear()
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.FEATHER)
+	override val representation = ItemCreator.fromType(Material.FEATHER)
 }

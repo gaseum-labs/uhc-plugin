@@ -3,6 +3,7 @@ package com.codeland.uhc.quirk.quirks
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.event.Chat
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
@@ -19,8 +20,7 @@ class Hotbar(type: QuirkType) : Quirk(type) {
 
 	override fun onDisable() {}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.BLACK_STAINED_GLASS_PANE)
+	override val representation = ItemCreator.fromType(Material.BLACK_STAINED_GLASS_PANE)
 
 	override fun onStart(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->

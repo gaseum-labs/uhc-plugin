@@ -2,6 +2,7 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
@@ -50,6 +51,5 @@ class SharedInventory(type: QuirkType) : Quirk(type) {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.KNOWLEDGE_BOOK)
+	override val representation = ItemCreator.fromType(Material.KNOWLEDGE_BOOK)
 }

@@ -5,6 +5,7 @@ import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.event.Chat
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -92,6 +93,5 @@ class HorseQuirk(type: QuirkType) : Quirk(type) {
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.SADDLE)
+	override val representation = ItemCreator.fromType(Material.SADDLE)
 }

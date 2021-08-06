@@ -3,6 +3,7 @@ package com.codeland.uhc.quirk.quirks.classes
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
@@ -200,8 +201,7 @@ class Classes(type: QuirkType) : Quirk(type) {
 		return message.toString()
 	}
 
-	override val representation: ItemStack
-		get() = ItemStack(Material.LEATHER_HELMET)
+	override val representation = ItemCreator.fromType(Material.LEATHER_HELMET)
 
 	override fun defaultData(): Any {
 		return QuirkClass.NO_CLASS

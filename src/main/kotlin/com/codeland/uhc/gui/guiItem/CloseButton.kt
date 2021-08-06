@@ -1,6 +1,7 @@
 package com.codeland.uhc.gui.guiItem;
 
 import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -12,6 +13,6 @@ class CloseButton(index: Int): GuiItem(index) {
 	}
 
 	override fun getStack(): ItemStack {
-		return name(ItemStack(Material.BARRIER), "${ChatColor.RED}Close")
+		return ItemCreator.fromType(Material.BARRIER).name("${ChatColor.RED}Close").create()
 	}
 }
