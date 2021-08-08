@@ -9,7 +9,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.phase.phases.Grace
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
@@ -143,7 +143,7 @@ class AdminCommands : BaseCommand() {
 
 		fun randomLocation(): Location? {
 			val world = UHC.getDefaultWorldGame()
-			return GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+			return Grace.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 		}
 
 		val teleportLocation = if (team == null) {
@@ -161,7 +161,7 @@ class AdminCommands : BaseCommand() {
 
 		} ?: return Commands.errorMessage(sender, "No teleport location found")
 
-		GraceDefault.startPlayer(offlinePlayer.uniqueId, teleportLocation)
+		Grace.startPlayer(offlinePlayer.uniqueId, teleportLocation)
 
 		GameRunner.sendGameMessage(sender, "Started player ${offlinePlayer.name} late")
 	}

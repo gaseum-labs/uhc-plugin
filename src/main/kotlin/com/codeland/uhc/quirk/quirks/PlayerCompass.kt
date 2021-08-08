@@ -31,7 +31,7 @@ class PlayerCompass(type: QuirkType) : Quirk(type) {
 		}
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
@@ -45,11 +45,11 @@ class PlayerCompass(type: QuirkType) : Quirk(type) {
 		}
 	}
 
-	override fun onStart(uuid: UUID) {
+	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player -> player.inventory.addItem(createCompass()) }
 	}
 
-	override fun onEnd(uuid: UUID) {
+	override fun onEndPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player -> revokeCompass(player) }
 	}
 

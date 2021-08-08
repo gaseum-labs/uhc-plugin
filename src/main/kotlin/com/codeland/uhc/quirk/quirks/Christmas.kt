@@ -32,7 +32,7 @@ class Christmas(type: QuirkType) : Quirk(type) {
 		if (UHC.currentPhase?.phaseType == PhaseType.GRACE) setSnowing()
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		revokeSnowing()
 	}
 

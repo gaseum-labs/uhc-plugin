@@ -17,7 +17,7 @@ import java.util.*
 class Pests(type: QuirkType) : Quirk(type) {
     override fun onEnable() {}
 
-    override fun onDisable() {
+    override fun customDestroy() {
         if (!(UHC.isPhase(PhaseType.WAITING) || UHC.isPhase(PhaseType.POSTGAME))) {
             /* remove all pests from the game */
             PlayerData.playerDataList.filter { (_, playerData) -> playerData.undead() }.forEach { (uuid, _) ->
@@ -30,7 +30,7 @@ class Pests(type: QuirkType) : Quirk(type) {
 
     override val representation = ItemCreator.fromType(Material.WOODEN_SWORD)
 
-    override fun onStart(uuid: UUID) {
+    override fun onStartPlayer(uuid: UUID) {
         GameRunner.playerAction(uuid) { player ->
             if (PlayerData.isUndead(player.uniqueId)) {
                 player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0

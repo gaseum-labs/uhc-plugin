@@ -1,115 +1,21 @@
 package com.codeland.uhc.phase
 
-import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.UHCBar
-import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.arena.PvpArena
-import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.WorldManager
-import net.minecraft.world.BossBattle
+import com.codeland.uhc.core.Game
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.World
+import kotlin.math.ceil
 
-abstract class Phase {
-	lateinit var phaseType: PhaseType
-	lateinit var phaseVariant: PhaseVariant
-	var length = 0
-	var currentTick = 0
-	var remainingSeconds = 0
+abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) {
+	var remainingTicks = length * 20
 
-	var taskID = -1
-
-	fun start(phaseType: PhaseType, phaseVariant: PhaseVariant, length: Int, onInject: (Phase) -> Unit) {
-		this.phaseType = phaseType
-		this.phaseVariant = phaseVariant
-		this.length = length
-		this.currentTick = 0
-		this.remainingSeconds = length
-
-		/* pre startup */
-		onInject(this)
-		customStart()
-
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
-			if (tick()) UHC.startNextPhase()
-		}, 0, 1)
-	}
+	fun remainingSeconds() = ceil(remainingTicks / 20.0f).toInt()
 
 	/**
 	 * @return if the phase should end and the next phase should start
 	 */
-	private fun tick(): Boolean {
-		currentTick = (currentTick + 1) % 20
-
-		if (currentTick == 0) {
-			if (length == 0) ++remainingSeconds else --remainingSeconds
-			if (phaseType.gameGoing) ++UHC.elapsedTime
-		}
-
-		/* update boss bars */
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			val player = Bukkit.getPlayer(uuid)
-
-			if (player != null) {
-				val game = ArenaManager.playersArena(uuid)
-
-				when {
-					game is PvpArena -> {
-						UHCBar.updateBossBar(
-							player,
-							if (game.isOver()) {
-								"${ChatColor.RED}Game Over"
-							} else {
-								"${ChatColor.RED}${PvpArena.typeName(game.matchType)} PVP" +
-								if (game.startTime >= 0) {
-									" | " + if (game.shouldGlow()) {
-										"${ChatColor.GOLD}Glowing"
-									} else {
-										"Glowing in ${Util.timeString(game.glowTimer)}"
-									}
-								} else {
-									""
-								}
-							},
-							if (game.isOver() || game.glowPeriod == 0 || game.glowTimer <= 0) {
-								1.0f
-						    } else if (game.startTime < 0) {
-						    	0.0f
-						    } else {
-								1.0f - (game.glowTimer.toFloat() / game.glowPeriod)
-				            },
-							BossBattle.BarColor.c
-						)
-					}
-					player.world.name == WorldManager.LOBBY_WORLD_NAME -> {
-						val phaseType = UHC.currentPhase?.phaseType ?: PhaseType.WAITING
-
-						UHCBar.updateBossBar(
-							player,
-							"${ChatColor.WHITE}Waiting Lobby" +
-							if (phaseType != PhaseType.WAITING) {
-								" | ${phaseType.chatColor}Game Ongoing: ${phaseType.prettyName}"
-							} else {
-								""
-							},
-							updateBarLength(remainingSeconds, currentTick),
-							BossBattle.BarColor.g
-						)
-					}
-					else -> {
-						UHCBar.updateBossBar(
-							player,
-							updateBarTitle(player.world, remainingSeconds, currentTick),
-							updateBarLength(remainingSeconds, currentTick),
-							phaseType.barColor
-						)
-					}
-				}
-			}
-		}
+	fun tick(currentTick: Int): Boolean {
+		if (length == 0) --remainingTicks
 
 		perTick(currentTick)
 
@@ -126,14 +32,14 @@ abstract class Phase {
 	private fun second(): Boolean {
 		/* phases without timer going */
 		if (length != 0) {
-			if (remainingSeconds == 0) return true
+			if (remainingTicks == 0) return true
 
-			if (remainingSeconds <= 3) Bukkit.getServer().onlinePlayers.forEach { player ->
-				player.sendTitle("${countDownColor(remainingSeconds)}${ChatColor.BOLD}$remainingSeconds", "${phaseType.chatColor}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
+			if (remainingTicks <= 3 * 20) Bukkit.getServer().onlinePlayers.forEach { player ->
+				player.sendTitle("${countDownColor(remainingSeconds())}${ChatColor.BOLD}${remainingSeconds()}", "${phaseType.chatColor}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
 			}
 		}
 
-		perSecond(remainingSeconds)
+		perSecond(remainingSeconds())
 
 		return false
 	}
@@ -147,31 +53,21 @@ abstract class Phase {
 		}
 	}
 
-	fun updateLength(newLength: Int) {
-		length = newLength + 1
-		currentTick = 0
-		remainingSeconds = newLength
-	}
-
-	fun onEnd() {
-		Bukkit.getScheduler().cancelTask(taskID)
-	}
-
 	/* bar helper functions */
 	protected fun barStatic(): String {
 		return "${phaseType.chatColor}${ChatColor.BOLD}${phaseType.prettyName}"
 	}
 
-	protected fun barLengthRemaining(remainingSeconds: Int, currentTick: Int): Float {
-		return (remainingSeconds - (currentTick / 20.0f)) / length.toFloat()
+	protected fun barLengthRemaining(remainingTicks: Int): Float {
+		return remainingTicks / (length * 20.0f)
 	}
 
 	/* abstract */
 
 	abstract fun customStart()
 
-	abstract fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float
-	abstract fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String
+	abstract fun updateBarTitle(world: World, remainingSeconds: Int): String
+	abstract fun updateBarLength(remainingTicks: Int): Float
 
 	abstract fun perTick(currentTick: Int)
 	abstract fun perSecond(remainingSeconds: Int)

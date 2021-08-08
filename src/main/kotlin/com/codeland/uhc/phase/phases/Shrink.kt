@@ -1,8 +1,10 @@
-package com.codeland.uhc.phase.phases.shrink
+package com.codeland.uhc.phase.phases
 
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.md_5.bungee.api.ChatColor.BOLD
@@ -12,18 +14,10 @@ import org.bukkit.World
 import org.bukkit.entity.Animals
 import kotlin.math.abs
 
-class ShrinkDefault : Phase() {
-	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
-		return if (world === UHC.getDefaultWorldGame())
-			"${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${UHC.endRadius()} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"
-		else
-			"${RESET}Dimension closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"	}
-
+class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 	override fun customStart() {
-		val world = UHC.getDefaultWorldGame()
-
-		world.worldBorder.setSize(UHC.endRadius() * 2 + 1.0, length.toLong())
-		world.worldBorder.damageBuffer = 0.0
+		game.world.worldBorder.setSize(game.config.endgameRadius.get() * 2 + 1.0, length.toLong())
+		game.world.worldBorder.damageBuffer = 0.0
 
 		Bukkit.getOnlinePlayers().forEach { player ->
 			GameRunner.sendGameMessage(player, "Grace period has ended!")
@@ -31,8 +25,14 @@ class ShrinkDefault : Phase() {
 		}
 	}
 
-	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float {
-		return barLengthRemaining(remainingSeconds, currentTick)
+	override fun updateBarTitle(world: World, remainingSeconds: Int): String {
+		return if (world === game.world)
+			"${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${game.config.endgameRadius.get()} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"
+		else
+			"${RESET}Dimension closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"	}
+
+	override fun updateBarLength(remainingTicks: Int): Float {
+		return barLengthRemaining(remainingTicks)
 	}
 
 	override fun perTick(currentTick: Int) {}

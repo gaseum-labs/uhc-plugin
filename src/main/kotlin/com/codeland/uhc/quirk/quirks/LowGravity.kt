@@ -56,7 +56,7 @@ class LowGravity(type: QuirkType) : Quirk(type) {
 		}, 1, 1)
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
 

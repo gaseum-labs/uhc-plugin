@@ -192,13 +192,13 @@ class InfiniteInventory(type: QuirkType) : Quirk(type) {
 		}, 1, 1)
 	}
 
-	override fun onStart(uuid: UUID) {
+	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->
 			addButtons(player)
 		}
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(storeTask)
 		storedMap.clear()
 	}

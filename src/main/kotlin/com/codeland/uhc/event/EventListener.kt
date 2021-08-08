@@ -8,7 +8,7 @@ import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.endgame.EndgameNaturalTerrain
+import com.codeland.uhc.phase.phases.Endgame
 import com.codeland.uhc.quirk.HorseQuirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
@@ -496,7 +496,7 @@ class EventListener : Listener {
 		val block = event.block
 		val phase = UHC.currentPhase
 
-		if (playerData.participating && phase is EndgameNaturalTerrain && block.y > phase.finalMax) {
+		if (playerData.participating && phase is Endgame && block.y > phase.finalMax) {
 			phase.addSkybaseBlock(block)
 		}
 	}
@@ -510,7 +510,7 @@ class EventListener : Listener {
 		/* things that affect players playing the game */
 		if (UHC.isGameGoing() && playerData.participating) {
 			/* trying to build above endgame top level */
-			if (phase is EndgameNaturalTerrain && event.blockPlaced.y > phase.finalMax) {
+			if (phase is Endgame && event.blockPlaced.y > phase.finalMax) {
 				phase.addSkybaseBlock(event.blockPlaced)
 
 			/* creative block replenishing */

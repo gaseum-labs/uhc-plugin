@@ -47,7 +47,7 @@ class SharedInventory(type: QuirkType) : Quirk(type) {
 		return Array(contents.size) { i -> contents[i]?.clone() }
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
 

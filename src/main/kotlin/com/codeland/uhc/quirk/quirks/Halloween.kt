@@ -21,7 +21,7 @@ class Halloween(type: QuirkType) : Quirk(type) {
 		hasGottenDiamonds = false
 	}
 
-	override fun onDisable() {}
+	override fun customDestroy() {}
 
 	override fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
 		if (entity is Monster) {

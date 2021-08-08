@@ -1,10 +1,14 @@
-package com.codeland.uhc.phase.phases.endgame
+package com.codeland.uhc.phase.phases
 
+import com.codeland.uhc.command.Commands
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
-import com.sun.jna.platform.win32.GL
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
 import net.minecraft.network.protocol.game.PacketPlayOutBlockBreakAnimation
@@ -17,10 +21,9 @@ import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import kotlin.math.ceil
-import kotlin.math.max
 import kotlin.math.roundToInt
 
-class EndgameNaturalTerrain : Endgame() {
+class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, game) {
 	var min = 0
 	var max = 0
 
@@ -58,11 +61,20 @@ class EndgameNaturalTerrain : Endgame() {
 	}
 
 	override fun customStart() {
-		super.customStart()
+		SchedulerUtil.nextTick {
+			PlayerData.playerDataList.forEach { (uuid, _) ->
+				val location = GameRunner.getPlayerLocation(uuid)
 
-		val world = UHC.getDefaultWorldGame()
+				if (location != null && location.world !== game.world) {
+					GameRunner.playerAction(uuid) { player -> Commands.errorMessage(player, "Failed to return to home dimension!") }
+					GameRunner.damagePlayer(uuid, 100000000000.0)
+				}
+			}
+		}
 
-		val (min, max) = determineMinMax(world, UHC.endRadius(), 100)
+		game.world.worldBorder.size = (game.config.endgameRadius.get() * 2 + 1).toDouble()
+
+		val (min, max) = determineMinMax(game.world, game.config.endgameRadius.get(), 100)
 		finalMin = min
 		finalMax = max
 		if (finalMax > 255) finalMax = 255
@@ -73,8 +85,23 @@ class EndgameNaturalTerrain : Endgame() {
 		timer = 0
 	}
 
+	override fun updateBarLength(remainingTicks: Int): Float {
+		return if (finished)
+			(timer / GLOWING_TIME.toFloat())
+		else
+			(max - finalMax).toFloat() / (255 - finalMax)
+	}
+
+	override fun updateBarTitle(world: World, remainingSeconds: Int): String {
+		return if (finished) {
+			"$GOLD${BOLD}Endgame $GOLD${BOLD}${min} - $max ${RESET}Glowing in $GOLD${BOLD}${Util.timeString(ceil((GLOWING_TIME - timer) / 20.0).toInt())}"
+		} else {
+			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${min.coerceAtLeast(0)} - $max ${RESET}Final: $GOLD${BOLD}${finalMin} - $finalMax"
+		}
+	}
+
 	fun fillBedrockLayer(world: World, layer: Int) {
-		val extrema = UHC.endRadius()
+		val extrema = game.config.endgameRadius.get()
 
 		for (x in -extrema..extrema) {
 			for (z in -extrema..extrema) {
@@ -91,7 +118,7 @@ class EndgameNaturalTerrain : Endgame() {
 	}
 
 	fun doUpperLayer(world: World, layer: Int) {
-		val extrema = UHC.endRadius()
+		val extrema = game.config.endgameRadius.get()
 
 		val ticks = skybaseTicks(layer)
 
@@ -107,23 +134,7 @@ class EndgameNaturalTerrain : Endgame() {
 		}
 	}
 
-	override fun updateBarLength(remainingSeconds: Int, currentTick: Int): Float {
-		return if (finished)
-			(timer / GLOWING_TIME.toFloat())
-		else
-			(max - finalMax).toFloat() / (255 - finalMax)
-	}
-
-	override fun updateBarTitle(world: World, remainingSeconds: Int, currentTick: Int): String {
-		return if (finished) {
-			"$GOLD${BOLD}Endgame $GOLD${BOLD}${min} - $max ${RESET}Glowing in $GOLD${BOLD}${Util.timeString(ceil((GLOWING_TIME - timer) / 20.0).toInt())}"
-		} else {
-			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${min.coerceAtLeast(0)} - $max ${RESET}Final: $GOLD${BOLD}${finalMin} - $finalMax"
-		}
-	}
-
 	override fun perTick(currentTick: Int) {
-		val world = UHC.getDefaultWorldGame()
 		++timer
 
 		if (finished) {
@@ -131,7 +142,7 @@ class EndgameNaturalTerrain : Endgame() {
 				timer = 0
 
 				/* glow all nonpest players every 15 seconds for 2 seconds */
-				PlayerData.playerDataList.filter { (_, it) -> it.alive }.forEach { (uuid, playerData) ->
+				PlayerData.playerDataList.filter { (_, it) -> it.alive }.forEach { (uuid, _) ->
 					GameRunner.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
 				}
 			}
@@ -158,14 +169,14 @@ class EndgameNaturalTerrain : Endgame() {
 				}
 
 				/* fill in with bedrock from below */
-				if (min > 0) fillBedrockLayer(world, min - 1)
+				if (min > 0) fillBedrockLayer(game.world, min - 1)
 			}
 
 			if (newMax != max) {
 				max = newMax
 
 				/* clear all blocks above the top level */
-				if (max < 255) doUpperLayer(world, max + 1)
+				if (max < 255) doUpperLayer(game.world, max + 1)
 			}
 
 			/* finish */
@@ -179,13 +190,13 @@ class EndgameNaturalTerrain : Endgame() {
 					.forEach { zombie ->
 					val x = zombie.location.blockX
 					val z = zombie.location.blockX
-					zombie.teleport(Location(UHC.getDefaultWorldGame(), x + 0.5, Util.topBlockY(world, x, z).toDouble(), z + 0.5))
+					zombie.teleport(Location(game.world, x + 0.5, Util.topBlockY(game.world, x, z).toDouble(), z + 0.5))
 				}
 			}
 		}
 
 		val skybasePlayers = Bukkit.getOnlinePlayers()
-			.filter { PlayerData.isParticipating(it.uniqueId) && it.location.world === world && it.location.block.y >= finalMax }
+			.filter { PlayerData.isParticipating(it.uniqueId) && it.location.world === game.world && it.location.block.y >= finalMax }
 
 		skybaseBlocks.removeIf { skybaseBlock ->
 			--skybaseBlock.ticks
@@ -223,4 +234,62 @@ class EndgameNaturalTerrain : Endgame() {
 	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun endPhrase() = ""
+
+	companion object {
+		val RANGE = 24
+
+		fun determineMinMax(world: World, radius: Int, maxHeight: Int): Pair<Int, Int> {
+			/* store every recorded height of every x z coordinate within the radius */
+			val heightList = ArrayList<Int>((radius * 2 + 1) * (radius * 2 + 1))
+
+			for (x in -radius..radius) {
+				for (z in -radius..radius) {
+					var solidCount = 0
+					var topLevel = 0
+					var foundLevel = false
+
+					/* start looking for solid blocks down from maxHeight */
+					for (y in maxHeight downTo 0) {
+						val solid = !world.getBlockAt(x, y, z).isPassable
+
+						/* the first solid block hit is recorded as the top level */
+						if (solidCount == 0) {
+							if (solid) {
+								topLevel = y
+								solidCount = 1
+							}
+							/* need a chain of 6 solid blocks below top level to count as ground */
+						} else {
+							if (solid) {
+								++solidCount
+								if (solidCount == 6) {
+									foundLevel = true
+									break
+								}
+							} else {
+								solidCount = 0
+							}
+						}
+					}
+
+					/* only record heights if ground was found at this coordinate */
+					if (foundLevel) heightList.add(topLevel)
+				}
+			}
+
+			/* order the height list to find percentiles */
+			heightList.sort()
+
+			val median60 = if (heightList.isEmpty()) {
+				62
+			} else {
+				heightList[(heightList.size * 0.60).roundToInt().coerceAtMost(heightList.lastIndex)]
+			}
+
+			val below = RANGE / 2
+			val above = RANGE - below
+
+			return Pair(median60 - below + 1, median60 + above)
+		}
+	}
 }

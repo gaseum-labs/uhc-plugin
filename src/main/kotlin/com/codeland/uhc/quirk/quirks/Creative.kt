@@ -8,7 +8,7 @@ import org.bukkit.Material.*
 class Creative(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
-	override fun onDisable() {}
+	override fun customDestroy() {}
 
 	override val representation = ItemCreator.fromType(BRICKS)
 

@@ -159,11 +159,11 @@ class Classes(type: QuirkType) : Quirk(type) {
 		}
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(timerId)
 	}
 
-	override fun onStart(uuid: UUID) {
+	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->
 			val quirkClass = getClass(uuid)
 
@@ -171,7 +171,7 @@ class Classes(type: QuirkType) : Quirk(type) {
 		}
 	}
 
-	override fun onEnd(uuid: UUID) {
+	override fun onEndPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player -> removeHead(player) }
 		val playerData = PlayerData.getPlayerData(uuid)
 

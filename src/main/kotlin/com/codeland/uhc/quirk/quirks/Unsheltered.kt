@@ -13,7 +13,7 @@ import org.bukkit.metadata.FixedMetadataValue
 class Unsheltered(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
-	override fun onDisable() {}
+	override fun customDestroy() {}
 
 	override val representation = ItemCreator.fromType(Material.SHULKER_SHELL)
 

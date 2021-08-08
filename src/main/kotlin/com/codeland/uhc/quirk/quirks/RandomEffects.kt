@@ -48,7 +48,7 @@ class RandomEffects(type: QuirkType) : Quirk(type) {
 			Bukkit.getScheduler().cancelTask(taskID)
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
 

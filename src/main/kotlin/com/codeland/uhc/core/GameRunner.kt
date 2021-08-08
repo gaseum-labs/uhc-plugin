@@ -3,7 +3,7 @@ package com.codeland.uhc.core
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.grace.GraceDefault
+import com.codeland.uhc.phase.phases.Grace
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.Team
@@ -175,7 +175,7 @@ object GameRunner {
 
 	fun respawnLocation(): Location {
 		val world = UHC.getDefaultWorldGame()
-		return GraceDefault.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+		return Grace.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 			?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
 	}
 

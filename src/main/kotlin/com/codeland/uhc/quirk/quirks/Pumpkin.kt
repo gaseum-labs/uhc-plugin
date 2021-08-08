@@ -13,11 +13,11 @@ import java.util.*
 class Pumpkin(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
-	override fun onDisable() {}
+	override fun customDestroy() {}
 
 	override val representation = ItemCreator.fromType(Material.CARVED_PUMPKIN)
 
-	override fun onStart(uuid: UUID) {
+	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->
 			val pumpkinItem = ItemStack(Material.CARVED_PUMPKIN)
 			val meta = pumpkinItem.itemMeta
@@ -28,7 +28,7 @@ class Pumpkin(type: QuirkType) : Quirk(type) {
 		}
 	}
 
-	override fun onEnd(uuid: UUID) {
+	override fun onEndPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->
 			player.inventory.helmet = null
 		}

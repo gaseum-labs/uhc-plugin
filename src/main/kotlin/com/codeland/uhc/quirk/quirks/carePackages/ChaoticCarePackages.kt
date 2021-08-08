@@ -38,7 +38,7 @@ class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
 		if (UHC.isGameGoing()) startDropping()
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		stopDropping()
 	}
 

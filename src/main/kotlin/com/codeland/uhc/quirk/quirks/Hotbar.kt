@@ -18,18 +18,18 @@ import java.util.*
 class Hotbar(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
-	override fun onDisable() {}
+	override fun customDestroy() {}
 
 	override val representation = ItemCreator.fromType(Material.BLACK_STAINED_GLASS_PANE)
 
-	override fun onStart(uuid: UUID) {
+	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->
 			for (slot in 9 until 36)
 				player.inventory.setItem(slot, createUnusableSlot())
 		}
 	}
 
-	override fun onEnd(uuid: UUID) {
+	override fun onEndPlayer(uuid: UUID) {
 		Util.log("ENDING FOR: ${uuid}")
 		GameRunner.playerAction(uuid) { player ->
 			for (slot in 9 until 36)

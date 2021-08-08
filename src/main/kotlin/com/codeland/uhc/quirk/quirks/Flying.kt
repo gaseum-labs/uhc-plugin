@@ -19,13 +19,13 @@ class Flying(type: QuirkType) : Quirk(type) {
 
 	override fun onEnable() {}
 
-	override fun onDisable() {}
+	override fun customDestroy() {}
 
-	override fun onStart(uuid: UUID) {
+	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player -> giveItems(player, numRockets.get()) }
 	}
 
-	override fun onEnd(uuid: UUID) {
+	override fun onEndPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player -> revokeItems(player) }
 	}
 

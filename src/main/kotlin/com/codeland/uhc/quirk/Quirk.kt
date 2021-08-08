@@ -1,63 +1,48 @@
 package com.codeland.uhc.quirk
 
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.UHCProperty
 import com.codeland.uhc.customSpawning.SpawnInfo
 import com.codeland.uhc.dropFix.DropFix
-import com.codeland.uhc.gui.GuiPage
-import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseVariant
-import com.codeland.uhc.util.ItemUtil
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.ChatColor
-import org.bukkit.Material
+import com.codeland.uhc.phase.Phase
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
-import kotlin.collections.ArrayList
 
-abstract class Quirk(val type: QuirkType) {
-	/* default value will be set upon init */
-	val enabled: UHCProperty<Boolean> = UHCProperty(false) { set ->
-		if (set) onEnable() else onDisable()
+abstract class Quirk(val type: QuirkType, val game: Game) {
+	/* when this quirk is created, start for all players already in the game */
+	init {
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			if (playerData.participating) {
+				PlayerData.getQuirkDataHolder(playerData, type).applied = true
+				onStartPlayer(uuid)
+			}
+		}
+	}
+
+	/* when this quirk is destroyed, end for all players still in the game */
+	fun onDestroy() {
+		customDestroy()
 
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (set) {
-				if (playerData.participating) {
-					PlayerData.getQuirkDataHolder(playerData, type).applied = true
-					onStart(uuid)
-				}
-			} else {
+			if (playerData.participating) {
 				val quirkDataHolder = PlayerData.getQuirkDataHolder(playerData, type)
 
 				if (quirkDataHolder.applied) {
-					onEnd(uuid)
+					onEndPlayer(uuid)
 					quirkDataHolder.applied = false
 				}
 			}
 		}
-
-		if (set) type.incompatibilities.forEach {
-			val other = UHC.getQuirk(it)
-			if (other.enabled.get()) other.enabled.set(false)
-		}
-
-		set
 	}
 
-	fun toggleEnabled() = enabled.set(!enabled.get())
-
+	//TEMPORARILY DISABLED
+	/*
 	private val properties = ArrayList<UHCProperty<*>>()
 
 	val gui: GuiPage = GuiManager.register(GuiPage(5, Component.text(type.prettyName)))
-
-	val customDrops = customDrops()
-	val spawnInfos = customSpawnInfos()
 
 	init {
 		val backgroundItem = ItemUtil.namedItem(Material.BLACK_STAINED_GLASS_PANE, "${ChatColor.RESET}${ChatColor.BLACK}_")
@@ -90,19 +75,23 @@ abstract class Quirk(val type: QuirkType) {
 	}
 
 	fun resetProperties() = properties.forEach { it.reset() }
+    */
 
-	abstract fun onEnable()
-	abstract fun onDisable()
+	abstract fun representation(): ItemCreator
 
-	abstract val representation: ItemCreator
+	open fun customDestroy() {}
 
-	open fun onStart(uuid: UUID) {}
-	open fun onEnd(uuid: UUID) {}
+	open fun onStartPlayer(uuid: UUID) {}
+	open fun onEndPlayer(uuid: UUID) {}
 
 	open fun defaultData(): Any = 0
-	open fun onPhaseSwitch(phase: PhaseVariant) {}
-	open fun customDrops(): Array<DropFix>? = null
-	open fun customSpawnInfos(): Array<SpawnInfo>? = null
+	open fun onPhaseSwitch(phase: Phase) {}
+
+	protected open fun customDrops(): Array<DropFix>? = null
+	protected open fun customSpawnInfos(): Array<SpawnInfo>? = null
+
+	val customDrops = customDrops()
+	val spawnInfos = customSpawnInfos()
 
 	/* event wrappers (makes them compatible with uhc event flow) */
 	/* more will be added */

@@ -25,7 +25,7 @@ class Deathswap(type: QuirkType) : Quirk(type) {
 		if (UHC.isGameGoing()) taskId = SchedulerUtil.everyTick(::runTask)
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
 

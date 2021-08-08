@@ -26,7 +26,7 @@ import org.bukkit.metadata.FixedMetadataValue
 class Summoner(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		/* remove commanded tag from all commanded mobs */
 		Bukkit.getWorlds().forEach { world ->
 			world.entities.forEach { entity ->

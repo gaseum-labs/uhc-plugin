@@ -1,14 +1,13 @@
 package com.codeland.uhc.quirk
 
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
-import com.codeland.uhc.quirk.quirks.Pumpkin
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import net.kyori.adventure.text.Component
 
-enum class QuirkType(val prettyName: String, val create: (QuirkType) -> Quirk, val description: List<Component>) {
+enum class QuirkType(val prettyName: String, val create: (QuirkType, Game) -> Quirk, val description: List<Component>) {
 	UNSHELTERED("Unsheltered", ::Unsheltered, listOf(
 		Component.text("Terrain cannot be modified"),
 		Component.text("You cannot place or mine blocks"),
@@ -93,11 +92,6 @@ enum class QuirkType(val prettyName: String, val create: (QuirkType) -> Quirk, v
 	CLASSES("Classes", ::Classes, listOf(
 		Component.text("Pick a class as the game begins"),
 		Component.text("Get cool abilities")
-	)),
-
-	HORSE("Horse", ::HorseQuirk, listOf(
-		Component.text("Horse"),
-		Component.text("Horse")
 	));
 
    	var incompatibilities = mutableSetOf<QuirkType>()
@@ -121,9 +115,9 @@ enum class QuirkType(val prettyName: String, val create: (QuirkType) -> Quirk, v
         incompatibilities.contains(other)
     }
 
-	fun createQuirk(): Quirk {
+	fun createQuirk(game: Game): Quirk {
 		/* quirk instance from quirk type */
-		val quirk = create(this)
+		val quirk = create(this, game)
 
 		/* give quirk instance to UHC */
 		return quirk

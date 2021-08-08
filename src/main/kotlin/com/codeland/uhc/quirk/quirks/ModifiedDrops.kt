@@ -28,7 +28,7 @@ import org.bukkit.inventory.ItemStack
 class ModifiedDrops(type: QuirkType) : Quirk(type) {
 	override fun onEnable() {}
 
-	override fun onDisable() {}
+	override fun customDestroy() {}
 
 	override val representation = ItemCreator.fromType(Material.STRING)
 

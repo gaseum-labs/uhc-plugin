@@ -1,5 +1,6 @@
 package com.codeland.uhc.world.gen
 
+import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldGenOption
@@ -137,15 +138,15 @@ object WorldGenManager {
 
 	    val (biomeManager, featureManager) = when (world.name) {
 	        WorldManager.GAME_WORLD_NAME -> {
-			    if (WorldGenOption.getEnabled(WorldGenOption.CHUNK_BIOMES)) {
+			    if (UHC.getConfig().isWorldGenEnabled(WorldGenOption.CHUNK_BIOMES)) {
 				    Pair(WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry), null)
 
 			    } else {
 			    	val manager = WorldChunkManagerOverworldGame(
 					    seed, biomeRegistry,
-					    BiomeNo.fromName(WorldGenOption.centerBiome?.name),
-					    UHC.startRadius(),
-					    UHC.endRadius(),
+					    BiomeNo.fromName(UHC.getConfig().centerBiome?.name),
+					    UHC.game?.initialRadius ?: 375,
+					    UHC.getConfig().endgameRadius.get(),
 					    false
 				    )
 				    Pair(manager, manager.withFeatures(true))
@@ -185,12 +186,12 @@ object WorldGenManager {
 			    chunkGenerator as ChunkGeneratorAbstract,
 			    biomeManager,
 			    if (world.name == WorldManager.GAME_WORLD_NAME) {
-				    WorldGenOption.getEnabled(WorldGenOption.AMPLIFIED)
+			    	UHC.getConfig().isWorldGenEnabled(WorldGenOption.AMPLIFIED)
 			    } else {
 				    false
 			    },
 			    world.name == WorldManager.PVP_WORLD_NAME,
-			    if (world.name == WorldManager.LOBBY_WORLD_NAME) Lobby.LOBBY_RADIUS / 2 else UHC.endRadius()
+			    if (world.name == WorldManager.LOBBY_WORLD_NAME) Lobby.LOBBY_RADIUS / 2 else UHC.getConfig().endgameRadius.get()
 		    )
 
 		    worldChunkManagerBField[chunkGenerator] = featureManager ?: biomeManager
