@@ -68,3 +68,5 @@ shadowJar {
     exclude 'paper-184.jar'
     exclude 'com.comphenix.*'
 }
+
+build.dependsOn shadowJar
