@@ -5,7 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.team.Team
@@ -22,7 +22,7 @@ import org.bukkit.command.CommandSender
 @Subcommand("team")
 class TeamCommands : BaseCommand() {
 	/* should the team commands add people to their discord channels */
-	private fun useDiscord() = UHC.isGameGoing() && UHC.usingBot.get()
+	private fun useDiscord() = UHC.game?.config?.usingBot?.get() == true
 
 	@Subcommand("clear")
 	@Description("remove all current teams")
@@ -32,7 +32,7 @@ class TeamCommands : BaseCommand() {
 		/* unstage everyone and remove teams */
 		TeamData.destroyTeam(null, useDiscord(), true) { PlayerData.setStaged(it, false) }
 
-		GameRunner.sendGameMessage(sender, "Cleared all teams")
+		Action.sendGameMessage(sender, "Cleared all teams")
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -42,7 +42,7 @@ class TeamCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		internalAddPlayersToTeam(sender, null, listOf(player), { list ->
-			GameRunner.sendGameMessage(sender, "Created a team for ${list.firstOrNull()?.name}")
+			Action.sendGameMessage(sender, "Created a team for ${list.firstOrNull()?.name}")
 		}, {
 			Commands.errorMessage(sender, "Could not create a team")
 		})
@@ -55,7 +55,7 @@ class TeamCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		internalAddPlayersToTeam(sender, null, listOf(player1, player2), { list ->
-			GameRunner.sendGameMessage(sender, "Created a team for ${list.mapNotNull { it.name }.joinToString(" and ")}")
+			Action.sendGameMessage(sender, "Created a team for ${list.mapNotNull { it.name }.joinToString(" and ")}")
 		}, {
 			Commands.errorMessage(sender, "Could not create a team")
 		})
@@ -71,7 +71,7 @@ class TeamCommands : BaseCommand() {
 			?: return Commands.errorMessage(sender, "${teamPlayer.name} is not on a team")
 
 		internalAddPlayersToTeam(sender, team, listOf(player), { list ->
-			GameRunner.sendGameMessage(sender, "Added ${list.mapNotNull { it.name }.joinToString(" and ")} to ${teamPlayer.name}'s team")
+			Action.sendGameMessage(sender, "Added ${list.mapNotNull { it.name }.joinToString(" and ")} to ${teamPlayer.name}'s team")
 		}, {
 			Commands.errorMessage(sender, "Could not add players to ${teamPlayer.name}'s team")
 		})
@@ -111,7 +111,7 @@ class TeamCommands : BaseCommand() {
 		TeamData.removeFromTeam(arrayListOf(player.uniqueId), useDiscord(), true, true)
 		PlayerData.setStaged(player.uniqueId, false)
 
-		GameRunner.sendGameMessage(sender, "Removed ${player.name} from their team")
+		Action.sendGameMessage(sender, "Removed ${player.name} from their team")
 	}
 
 	@Subcommand("random")
@@ -127,7 +127,7 @@ class TeamCommands : BaseCommand() {
 			TeamData.addToTeam(null, memberList.filterNotNull(), useDiscord(), true) { PlayerData.setStaged(it, true) }
 		}
 
-		GameRunner.sendGameMessage(sender, "Created ${memberLists.size} teams of size $teamSize")
+		Action.sendGameMessage(sender, "Created ${memberLists.size} teams of size $teamSize")
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
@@ -144,7 +144,7 @@ class TeamCommands : BaseCommand() {
 		TeamData.addToTeam(team2, listOf(player1.uniqueId), useDiscord(), false) {}
 		TeamData.addToTeam(team1, listOf(player2.uniqueId), useDiscord(), false) {}
 
-		GameRunner.sendGameMessage(sender, "Swapped teams of ${player1.name} and ${player2.name}")
+		Action.sendGameMessage(sender, "Swapped teams of ${player1.name} and ${player2.name}")
 	}
 
 	@Subcommand("list")

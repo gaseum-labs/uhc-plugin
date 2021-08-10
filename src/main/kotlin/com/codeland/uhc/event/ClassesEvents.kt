@@ -1,19 +1,16 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.quirk.quirks.Summoner
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.Classes.Companion.HUNTER_SPAWN_META
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
 import org.bukkit.*
-import org.bukkit.ChatColor.*
 import org.bukkit.ChatColor.*
 import org.bukkit.Location
 import org.bukkit.Material
@@ -66,43 +63,43 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun playerMove(event: PlayerMoveEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			val player = event.player
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-			when (Classes.getClass(player.uniqueId)) {
-				QuirkClass.LAVACASTER -> {
-					auraReplacer(player, Classes.obsidianifiedLava, Material.LAVA, Material.OBSIDIAN, 3, -2, -1, 3, { block ->
-						Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
-					}, {})
-				}
-				QuirkClass.ENCHANTER -> {
-					auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 0, -1, -1, 0, { it }, { block ->
-						val data = block.blockData as Grindstone
-						data.attachedFace = FaceAttachable.AttachedFace.FLOOR
-						block.setBlockData(data, false)
-					})
-				}
-				QuirkClass.DIVER -> {
-					if (player.world.environment != World.Environment.NETHER) {
-						val velocity = player.velocity.length()
+		val player = event.player
 
-						val motion = event.to.toVector().subtract(event.from.toVector())
-						val horz = motion.clone().setY(0)
+		when (classes.getClass(player.uniqueId)) {
+			QuirkClass.LAVACASTER -> {
+				auraReplacer(player, Classes.obsidianifiedLava, Material.LAVA, Material.OBSIDIAN, 3, -2, -1, 3, { block ->
+					Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
+				}, {})
+			}
+			QuirkClass.ENCHANTER -> {
+				auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 0, -1, -1, 0, { it }, { block ->
+					val data = block.blockData as Grindstone
+					data.attachedFace = FaceAttachable.AttachedFace.FLOOR
+					block.setBlockData(data, false)
+				})
+			}
+			QuirkClass.DIVER -> {
+				if (player.world.environment != World.Environment.NETHER) {
+					val velocity = player.velocity.length()
 
-						if (player.isSwimming) {
-							player.velocity = player.location.direction.multiply((1.5 - velocity) * 0.1 + velocity)
-						}
+					val motion = event.to.toVector().subtract(event.from.toVector())
+					val horz = motion.clone().setY(0)
 
-						val from = event.from.block.type
-						val to = event.to.block.type
+					if (player.isSwimming) {
+						player.velocity = player.location.direction.multiply((1.5 - velocity) * 0.1 + velocity)
+					}
 
-						if (from === Material.WATER && to.isAir) {
-							player.velocity = motion.clone().multiply(3)
+					val from = event.from.block.type
+					val to = event.to.block.type
 
-						} else if (from.isAir && to === Material.WATER) {
-							player.velocity = motion.clone().normalize().multiply(3).setY(motion.y)
-							player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 40, 2, false, false, false))
-						}
+					if (from === Material.WATER && to.isAir) {
+						player.velocity = motion.clone().multiply(3)
+
+					} else if (from.isAir && to === Material.WATER) {
+						player.velocity = motion.clone().normalize().multiply(3).setY(motion.y)
+						player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 40, 2, false, false, false))
 					}
 				}
 			}
@@ -111,112 +108,112 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun playerDamage(event: EntityDamageEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			val player = if (event.entity is Player) event.entity as Player else return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-			if (Classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
-				event.isCancelled = true
+		val player = if (event.entity is Player) event.entity as Player else return
 
-				val block = player.location.block
-				if (!block.type.isAir) block.breakNaturally()
+		if (classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
+			event.isCancelled = true
 
-				block.type = Material.WATER
-				block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
+			val block = player.location.block
+			if (!block.type.isAir) block.breakNaturally()
 
-				if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity = player.location.direction.multiply(2)
+			block.type = Material.WATER
+			block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
 
-				SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
-					if (block.type == Material.WATER) {
-						block.type = Material.AIR
-						block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
-					}
+			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity = player.location.direction.multiply(2)
+
+			SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
+				if (block.type == Material.WATER) {
+					block.type = Material.AIR
+					block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
 				}
 			}
+		}
 
-			if (Classes.getClass(player.uniqueId) == QuirkClass.TRAPPER && event.cause == EntityDamageEvent.DamageCause.FALL) {
-				event.isCancelled = true
-			}
+		if (classes.getClass(player.uniqueId) == QuirkClass.TRAPPER && event.cause == EntityDamageEvent.DamageCause.FALL) {
+			event.isCancelled = true
 		}
 	}
 
 	@EventHandler
 	fun entityDamageEntity(event: EntityDamageByEntityEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			val player = event.damager as? Player ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-			when (Classes.getClass(player.uniqueId)) {
-				QuirkClass.LAVACASTER -> {
-					event.entity.fireTicks = 80
+		val player = event.damager as? Player ?: return
+
+		when (classes.getClass(player.uniqueId)) {
+			QuirkClass.LAVACASTER -> {
+				event.entity.fireTicks = 80
+			}
+			QuirkClass.ENCHANTER -> {
+				val hurtPlayer = event.entity as? Player ?: return
+
+				val enchantColors = arrayOf(RED, GOLD, YELLOW, GREEN, AQUA, BLUE, LIGHT_PURPLE)
+				fun enchantColor(index: Int) = enchantColors[index % enchantColors.size]
+
+				fun tellItem(itemStack: ItemStack) {
+					val meta = itemStack.itemMeta
+
+					player.sendActionBar(
+						meta.enchants.asIterable().mapIndexed { index, (enchant, level) ->
+							"${enchantColor(index)}$BOLD${enchant.key.key} ${enchantColor(index)}$level"
+						}.joinToString(", ", "$WHITE${hurtPlayer.name}'s $WHITE$BOLD${itemStack.type.name.toLowerCase()}: ")
+					)
 				}
-				QuirkClass.ENCHANTER -> {
-					val hurtPlayer = event.entity as? Player ?: return
 
-					val enchantColors = arrayOf(RED, GOLD, YELLOW, GREEN, AQUA, BLUE, LIGHT_PURPLE)
-					fun enchantColor(index: Int) = enchantColors[index % enchantColors.size]
+				fun validItem(itemStack: ItemStack?) = itemStack != null &&
+					itemStack.itemMeta?.enchants?.isNotEmpty() == true
 
-					fun tellItem(itemStack: ItemStack) {
-						val meta = itemStack.itemMeta
+				fun tellSlot(slot: Int): Boolean {
+					val item = if (slot == 3)
+						hurtPlayer.inventory.itemInMainHand
+					else
+						hurtPlayer.inventory.armorContents[slot]
 
-						player.sendActionBar(
-							meta.enchants.asIterable().mapIndexed { index, (enchant, level) ->
-								"${enchantColor(index)}$BOLD${enchant.key.key} ${enchantColor(index)}$level"
-							}.joinToString(", ", "$WHITE${hurtPlayer.name}'s $WHITE$BOLD${itemStack.type.name.toLowerCase()}: ")
-						)
-					}
-
-					fun validItem(itemStack: ItemStack?) = itemStack != null &&
-						itemStack.itemMeta?.enchants?.isNotEmpty() == true
-
-					fun tellSlot(slot: Int): Boolean {
-						val item = if (slot == 3)
-							hurtPlayer.inventory.itemInMainHand
-						else
-							hurtPlayer.inventory.armorContents[slot]
-
-						return if (validItem(item)) {
-							tellItem(item); true
-						} else false
-					}
-
-					val offset = (Math.random() * 4).toInt()
-					(0..3).any { slot -> tellSlot((slot + offset) % 4) }
+					return if (validItem(item)) {
+						tellItem(item); true
+					} else false
 				}
+
+				val offset = (Math.random() * 4).toInt()
+				(0..3).any { slot -> tellSlot((slot + offset) % 4) }
 			}
 		}
 	}
 
 	@EventHandler
 	fun onXP(event: PlayerExpChangeEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			if (Classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER) {
-				event.amount = event.amount * 2
-			}
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER) {
+			event.amount = event.amount * 2
 		}
 	}
 
 	@EventHandler
 	fun onBlockDrop(event: BlockBreakEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			if (Classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER && event.block.type == Material.GRINDSTONE) {
-				event.isDropItems = false
-				event.block.world.dropItem(event.block.location.toCenterLocation(), ItemStack(Material.COBBLESTONE))
-			}
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER && event.block.type == Material.GRINDSTONE) {
+			event.isDropItems = false
+			event.block.world.dropItem(event.block.location.toCenterLocation(), ItemStack(Material.COBBLESTONE))
 		}
 	}
 
 	@EventHandler
 	fun onEnchant(event: EnchantItemEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			if (Classes.getClass(event.enchanter.uniqueId) == QuirkClass.ENCHANTER) {
-				val inventory = event.view.topInventory as EnchantingInventory
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-				val lapis = inventory.secondary
+		if (classes.getClass(event.enchanter.uniqueId) == QuirkClass.ENCHANTER) {
+			val inventory = event.view.topInventory as EnchantingInventory
 
-				if (lapis == null)
-					inventory.secondary = ItemStack(Material.LAPIS_LAZULI)
-				else
-					++lapis.amount
-			}
+			val lapis = inventory.secondary
+
+			if (lapis == null)
+				inventory.secondary = ItemStack(Material.LAPIS_LAZULI)
+			else
+				++lapis.amount
 		}
 	}
 
@@ -242,84 +239,84 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			if (Classes.getClass(event.whoClicked.uniqueId) == QuirkClass.ENCHANTER) {
-				val item = event.currentItem ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-				fun autoEnchant(materials: Array<Material>, enchant: Enchantment) =
-					if (materials.contains(item.type)) {
-						val meta = item.itemMeta
-						meta.addEnchant(enchant, 1, true)
-						item.itemMeta = meta
-						true
-					} else {
-						false
-					}
+		if (classes.getClass(event.whoClicked.uniqueId) == QuirkClass.ENCHANTER) {
+			val item = event.currentItem ?: return
 
-				autoEnchant(armors, Enchantment.PROTECTION_ENVIRONMENTAL) ||
-				autoEnchant(weapons, Enchantment.DAMAGE_ALL) ||
-				autoEnchant(pickaxes, Enchantment.DIG_SPEED) ||
-				autoEnchant(bows, Enchantment.ARROW_DAMAGE)
-			}
+			fun autoEnchant(materials: Array<Material>, enchant: Enchantment) =
+				if (materials.contains(item.type)) {
+					val meta = item.itemMeta
+					meta.addEnchant(enchant, 1, true)
+					item.itemMeta = meta
+					true
+				} else {
+					false
+				}
+
+			autoEnchant(armors, Enchantment.PROTECTION_ENVIRONMENTAL) ||
+			autoEnchant(weapons, Enchantment.DAMAGE_ALL) ||
+			autoEnchant(pickaxes, Enchantment.DIG_SPEED) ||
+			autoEnchant(bows, Enchantment.ARROW_DAMAGE)
 		}
 	}
 
 	@EventHandler
 	fun blockBreak(event: BlockBreakEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			if (Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
-				val logs = listOf(
-						Material.OAK_LOG,
-						Material.BIRCH_LOG,
-						Material.DARK_OAK_LOG,
-						Material.ACACIA_LOG,
-						Material.SPRUCE_LOG,
-						Material.JUNGLE_LOG)
-				if (event.block.type in logs) {
-					// breaks all blocks adjacent to this block of the same type, with a delay
-					fun breakRecursively(block: Block, type: Material) {
-						for (d in BlockFace.values().take(6)) {
-							val nextBlock = block.getRelative(d)
-							if (nextBlock.type == type) {
-								SchedulerUtil.later(1) {
-									// extra check to make sure the block hasn't changed
-									if (nextBlock.type == type) {
-										nextBlock.breakNaturally()
-                                        nextBlock.world.playSound(nextBlock.location, Sound.BLOCK_WOOD_BREAK, 1.0f, 1.0f)
-										breakRecursively(nextBlock, type)
-									}
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+			val logs = listOf(
+					Material.OAK_LOG,
+					Material.BIRCH_LOG,
+					Material.DARK_OAK_LOG,
+					Material.ACACIA_LOG,
+					Material.SPRUCE_LOG,
+					Material.JUNGLE_LOG)
+			if (event.block.type in logs) {
+				// breaks all blocks adjacent to this block of the same type, with a delay
+				fun breakRecursively(block: Block, type: Material) {
+					for (d in BlockFace.values().take(6)) {
+						val nextBlock = block.getRelative(d)
+						if (nextBlock.type == type) {
+							SchedulerUtil.later(1) {
+								// extra check to make sure the block hasn't changed
+								if (nextBlock.type == type) {
+									nextBlock.breakNaturally()
+                                    nextBlock.world.playSound(nextBlock.location, Sound.BLOCK_WOOD_BREAK, 1.0f, 1.0f)
+									breakRecursively(nextBlock, type)
 								}
 							}
 						}
 					}
-					breakRecursively(event.block, event.block.type)
 				}
-				if (event.block.type == Material.REDSTONE_ORE) {
-					// list of components with their relative frequency
-					val components = listOf(
-							Pair(10, Material.STONE_PRESSURE_PLATE),
-							Pair(10, Material.REDSTONE_TORCH),
-							Pair(10, Material.LEVER),
-							Pair(10, Material.REPEATER),
-							Pair(10, Material.COMPARATOR),
-							Pair(5, Material.DROPPER),
-							Pair(5, Material.DISPENSER),
-							Pair(5, Material.TRAPPED_CHEST),
-							Pair(5, Material.PISTON),
-							Pair(5, Material.OBSERVER),
-							Pair(1, Material.STICKY_PISTON),
-							Pair(1, Material.SLIME_BLOCK),
-							Pair(1, Material.TNT),
-					)
-					outer@ for (i in 1..5) {
-						var total = components.map { it.first }.sum()
-						for (c in components) {
-							if (Math.random() < c.first.toDouble() / total) {
-								event.block.world.dropItemNaturally(event.block.location, ItemStack(c.second))
-								continue@outer
-							} else {
-								total -= c.first
-							}
+				breakRecursively(event.block, event.block.type)
+			}
+			if (event.block.type == Material.REDSTONE_ORE) {
+				// list of components with their relative frequency
+				val components = listOf(
+						Pair(10, Material.STONE_PRESSURE_PLATE),
+						Pair(10, Material.REDSTONE_TORCH),
+						Pair(10, Material.LEVER),
+						Pair(10, Material.REPEATER),
+						Pair(10, Material.COMPARATOR),
+						Pair(5, Material.DROPPER),
+						Pair(5, Material.DISPENSER),
+						Pair(5, Material.TRAPPED_CHEST),
+						Pair(5, Material.PISTON),
+						Pair(5, Material.OBSERVER),
+						Pair(1, Material.STICKY_PISTON),
+						Pair(1, Material.SLIME_BLOCK),
+						Pair(1, Material.TNT),
+				)
+				outer@ for (i in 1..5) {
+					var total = components.map { it.first }.sum()
+					for (c in components) {
+						if (Math.random() < c.first.toDouble() / total) {
+							event.block.world.dropItemNaturally(event.block.location, ItemStack(c.second))
+							continue@outer
+						} else {
+							total -= c.first
 						}
 					}
 				}
@@ -329,101 +326,101 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun interactEvent(event: PlayerInteractEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			if (Classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
-				when (event.action) {
-					Action.LEFT_CLICK_BLOCK -> {
-						if (event.player.isSneaking && event.clickedBlock!!.type == Material.LEVER) {
-							val lever = event.clickedBlock!!
-							val existing = Classes.remoteControls.find { (_, block, _) ->
-								block == lever }
-							if (existing != null && event.player.inventory.contains(existing.item)) {
-								if (event.player.inventory.itemInMainHand != existing.item)
-									event.player.sendMessage("${RED}You already have a controller for this lever.")
-							} else {
-								val item = ItemStack(Material.REDSTONE_TORCH)
-								val control = Classes.RemoteControl(item, lever, "Remote Control")
-								Classes.remoteControls.add(control)
-								event.player.inventory.addItem(Classes.updateRemoteControl(control))
-							}
-						}
-					}
-					Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
-						val control = Classes.remoteControls.find { (item, _, _) ->
-							item == event.player.inventory.itemInMainHand }
-						if (control != null) {
-							event.isCancelled = true
-							val leverData = control.block.blockData as? Switch
-							if (leverData != null) {
-								leverData.isPowered = !leverData.isPowered
-								control.block.blockData = leverData
-								control.block.world.playSound(
-										control.block.location,
-										Sound.BLOCK_LEVER_CLICK,
-										1.0f,
-										// some attempt to preserve the difference in pitch of on and off
-										if (leverData.isPowered) 1.5f else 1.0f
-								)
-							}
-							event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+			when (event.action) {
+				Action.LEFT_CLICK_BLOCK -> {
+					if (event.player.isSneaking && event.clickedBlock!!.type == Material.LEVER) {
+						val lever = event.clickedBlock!!
+						val existing = Classes.remoteControls.find { (_, block, _) ->
+							block == lever }
+						if (existing != null && event.player.inventory.contains(existing.item)) {
+							if (event.player.inventory.itemInMainHand != existing.item)
+								event.player.sendMessage("${RED}You already have a controller for this lever.")
+						} else {
+							val item = ItemStack(Material.REDSTONE_TORCH)
+							val control = Classes.RemoteControl(item, lever, "Remote Control")
+							Classes.remoteControls.add(control)
+							event.player.inventory.addItem(Classes.updateRemoteControl(control))
 						}
 					}
 				}
+				Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
+					val control = Classes.remoteControls.find { (item, _, _) ->
+						item == event.player.inventory.itemInMainHand }
+					if (control != null) {
+						event.isCancelled = true
+						val leverData = control.block.blockData as? Switch
+						if (leverData != null) {
+							leverData.isPowered = !leverData.isPowered
+							control.block.blockData = leverData
+							control.block.world.playSound(
+									control.block.location,
+									Sound.BLOCK_LEVER_CLICK,
+									1.0f,
+									// some attempt to preserve the difference in pitch of on and off
+									if (leverData.isPowered) 1.5f else 1.0f
+							)
+						}
+						event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+					}
+				}
 			}
+		}
 
-			else if (
-				Classes.getClass(event.player.uniqueId) == QuirkClass.MINER &&
-				pickaxes.contains(event.player.inventory.itemInMainHand.type) &&
-				event.hand == EquipmentSlot.HAND
-			) {
-				if (event.action == Action.RIGHT_CLICK_BLOCK || event.action == Action.RIGHT_CLICK_AIR) {
-					val minerData = Classes.minerDatas[event.player.uniqueId]
+		else if (
+			classes.getClass(event.player.uniqueId) == QuirkClass.MINER &&
+			pickaxes.contains(event.player.inventory.itemInMainHand.type) &&
+			event.hand == EquipmentSlot.HAND
+		) {
+			if (event.action == Action.RIGHT_CLICK_BLOCK || event.action == Action.RIGHT_CLICK_AIR) {
+				val minerData = Classes.minerDatas[event.player.uniqueId]
 
-					if (minerData != null) {
-						val superBreakTimer = minerData.superBreakTimer
+				if (minerData != null) {
+					val superBreakTimer = minerData.superBreakTimer
 
-						if (superBreakTimer < 20 * 30) {
-							val timeLeftSeconds = 30 - (superBreakTimer / 20)
+					if (superBreakTimer < 20 * 30) {
+						val timeLeftSeconds = 30 - (superBreakTimer / 20)
 
-							return event.player.sendMessage("${RED}You can't use that yet. Try again in ${
-								when (timeLeftSeconds) {
-									0 -> "a moment"
-									1 -> "1 second"
-									else -> "$timeLeftSeconds seconds"
+						return event.player.sendMessage("${RED}You can't use that yet. Try again in ${
+							when (timeLeftSeconds) {
+								0 -> "a moment"
+								1 -> "1 second"
+								else -> "$timeLeftSeconds seconds"
+							}
+						}.")
+
+					} else {
+						fun superRecursive(x: Double, z: Double, dx: Double, dz: Double, y: Double, n: Int, limit: Int) {
+							if (n > limit) return
+
+							for (i in -1..1) for (j in 0..1) for (k in -1..1) {
+								val block = event.player.world.getBlockAt(x.toInt(), y.toInt(), z.toInt()).getRelative(i, j, k)
+
+								if (block.type != Material.BEDROCK && block.type != Material.OBSIDIAN) {
+									block.breakNaturally()
 								}
-							}.")
-
-						} else {
-							fun superRecursive(x: Double, z: Double, dx: Double, dz: Double, y: Double, n: Int, limit: Int) {
-								if (n > limit) return
-
-								for (i in -1..1) for (j in 0..1) for (k in -1..1) {
-									val block = event.player.world.getBlockAt(x.toInt(), y.toInt(), z.toInt()).getRelative(i, j, k)
-
-									if (block.type != Material.BEDROCK && block.type != Material.OBSIDIAN) {
-										block.breakNaturally()
-									}
-								}
-
-								event.player.world.playSound(Location(event.player.world, x, y, z), Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f)
-
-								SchedulerUtil.later(4) { superRecursive(x + dx, z + dz, dx, dz, y, n + 1, limit) }
 							}
 
-							val dir = event.player.location.direction.setY(0).normalize()
+							event.player.world.playSound(Location(event.player.world, x, y, z), Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f)
 
-							val numBlocks = when {
-								superBreakTimer < 30 * 20 -> superBreakTimer / 20 / 3.0
-								superBreakTimer < 60 * 20 -> 10 + (superBreakTimer - 30 * 20) / 20 / 1.5
-								else -> 30.0
-							}.toInt()
-
-							/* begin digging tunnel */
-							superRecursive(event.player.location.x, event.player.location.z, dir.x, dir.z, event.player.location.y, 0, numBlocks)
-
-							/* reset timer */
-							minerData.superBreakTimer = 0
+							SchedulerUtil.later(4) { superRecursive(x + dx, z + dz, dx, dz, y, n + 1, limit) }
 						}
+
+						val dir = event.player.location.direction.setY(0).normalize()
+
+						val numBlocks = when {
+							superBreakTimer < 30 * 20 -> superBreakTimer / 20 / 3.0
+							superBreakTimer < 60 * 20 -> 10 + (superBreakTimer - 30 * 20) / 20 / 1.5
+							else -> 30.0
+						}.toInt()
+
+						/* begin digging tunnel */
+						superRecursive(event.player.location.x, event.player.location.z, dir.x, dir.z, event.player.location.y, 0, numBlocks)
+
+						/* reset timer */
+						minerData.superBreakTimer = 0
 					}
 				}
 			}
@@ -432,10 +429,10 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun itemBreak(event: PlayerItemBreakEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			if (Classes.getClass(event.player.uniqueId) == QuirkClass.MINER && pickaxes.contains(event.brokenItem.type)) {
-				xray(event.player)
-			}
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+		if (classes.getClass(event.player.uniqueId) == QuirkClass.MINER && pickaxes.contains(event.brokenItem.type)) {
+			xray(event.player)
 		}
 	}
 
@@ -489,7 +486,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onMobSpawn(event: EntitySpawnEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
+		if (UHC.game?.quirkEnabled(QuirkType.CLASSES) == true) {
 			if (event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) {
 				event.entity.setMetadata(HUNTER_SPAWN_META, FixedMetadataValue(UHCPlugin.plugin, true))
 			}
@@ -498,60 +495,60 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			val player = event.target as? Player ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-			if (Classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
-				event.isCancelled = true
-			}
+		val player = event.target as? Player ?: return
+
+		if (classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
+			event.isCancelled = true
 		}
 	}
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		if (UHC.isEnabled(QuirkType.CLASSES)) {
-			val player = event.player
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-			if (Classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
-				if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
-					val item = event.item
+		val player = event.player
 
-					if (item != null && item.type == Material.COMPASS) {
-						fun onSameTeam(otherUUID: UUID): Boolean {
-							val team = TeamData.playersTeam(otherUUID)
-							return team != null && team.members.contains(player.uniqueId)
+		if (classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
+			if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
+				val item = event.item
+
+				if (item != null && item.type == Material.COMPASS) {
+					fun onSameTeam(otherUUID: UUID): Boolean {
+						val team = TeamData.playersTeam(otherUUID)
+						return team != null && team.members.contains(player.uniqueId)
+					}
+
+					/* get the nearest player's location to the player */
+					val trackLocation = PlayerData.playerDataList.asIterable().filter { (uuid, playerData) ->
+						/* don't find the hunter themselves and don't find their teammates, spectators */
+						playerData.participating && uuid != player.uniqueId && !onSameTeam(uuid)
+					}.mapNotNull { (uuid, _) ->
+						/* get the location of each other player */
+						com.codeland.uhc.util.Action.getPlayerLocation(uuid)
+					}.filter { otherLocation ->
+						/* prevent errors on .distance() */
+						otherLocation.world == player.world
+					}.map { otherLocation ->
+						/* associate each location with a distance to player */
+						Pair(otherLocation.distance(player.location), otherLocation)
+					}.minByOrNull { locationPair ->
+						/* sort by distance to find the nearest */
+						locationPair.first
+					}?.second
+
+					if (trackLocation == null) {
+						player.sendActionBar("${RED}No players found!")
+
+					} else {
+						val vector = trackLocation.subtract(player.location).toVector().normalize()
+
+						for (i in 0..64) {
+							player.spawnParticle(Particle.REDSTONE, player.location.clone().add(vector.clone().multiply(i * (1.0 / 3.0))).add(0.0, 1.0, 0.0), 3, 0.1, 0.1, 0.1, Particle.DustOptions(Color.RED, 1.0f))
 						}
 
-						/* get the nearest player's location to the player */
-						val trackLocation = PlayerData.playerDataList.asIterable().filter { (uuid, playerData) ->
-							/* don't find the hunter themselves and don't find their teammates, spectators */
-							playerData.participating && uuid != player.uniqueId && !onSameTeam(uuid)
-						}.mapNotNull { (uuid, _) ->
-							/* get the location of each other player */
-							GameRunner.getPlayerLocation(uuid)
-						}.filter { otherLocation ->
-							/* prevent errors on .distance() */
-							otherLocation.world == player.world
-						}.map { otherLocation ->
-							/* associate each location with a distance to player */
-							Pair(otherLocation.distance(player.location), otherLocation)
-						}.minByOrNull { locationPair ->
-							/* sort by distance to find the nearest */
-							locationPair.first
-						}?.second
-
-						if (trackLocation == null) {
-							player.sendActionBar("${RED}No players found!")
-
-						} else {
-							val vector = trackLocation.subtract(player.location).toVector().normalize()
-
-							for (i in 0..64) {
-								player.spawnParticle(Particle.REDSTONE, player.location.clone().add(vector.clone().multiply(i * (1.0 / 3.0))).add(0.0, 1.0, 0.0), 3, 0.1, 0.1, 0.1, Particle.DustOptions(Color.RED, 1.0f))
-							}
-
-							--item.amount
-						}
+						--item.amount
 					}
 				}
 			}

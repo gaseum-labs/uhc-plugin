@@ -1,21 +1,15 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.ItemCreator
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material
 import org.bukkit.block.Block
-import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
-class Unsheltered(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {}
-
-	override fun onDisable() {}
-
-	override val representation = ItemCreator.fromType(Material.SHULKER_SHELL)
+class Unsheltered(type: QuirkType, game: Game) : Quirk(type, game) {
+	override fun customDestroy() {}
 
 	companion object {
 		const val TAG_NAME = "unsh_b"

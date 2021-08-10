@@ -51,6 +51,11 @@ object WorldManager {
 		return existed0 || existed1
 	}
 
+	fun destroyGameWorlds() {
+		destroyWorld(GAME_WORLD_NAME)
+		destroyWorld(NETHER_WORLD_NAME)
+	}
+
 	fun getLobbyWorld(): World {
 		return Bukkit.getWorlds()[0]
 	}
@@ -163,44 +168,6 @@ object WorldManager {
 			refreshWorld(name, environment, structures)
 
 			false
-		}
-	}
-
-	fun pregen(player: Player) {
-		val world = UHC.getDefaultWorldGame()
-
-		val extrema = ceil(UHC.startRadius() / 16.0).toInt()
-		val sideLength = (extrema * 2 + 1)
-
-		val max = sideLength * sideLength
-		val tenPercent = max / 10
-		var along = 0
-
-		val perTick = 20
-
-		GameRunner.sendGameMessage(player, "Beginning pregen...")
-
-		/* load a new chunk every tick */
-		pregenTaskID = SchedulerUtil.everyTick {
-			for (i in 0 until perTick) {
-				val x = (along % sideLength) - extrema
-				val z = ((along / sideLength) % sideLength) - extrema
-
-				/* load */
-				val chunkTEST = world.getChunkAt(x, z)
-
-				val bt = chunkTEST.getBlock(0, 0, 0)
-
-				if (++along == max) {
-					Bukkit.getScheduler().cancelTask(pregenTaskID)
-					pregenTaskID = -1
-					GameRunner.sendGameMessage(player, "Pregen completed")
-					break
-
-				} else if (along % tenPercent == 0) {
-					GameRunner.sendGameMessage(player, "Pregen ${(along / tenPercent) * 10}% complete")
-				}
-			}
 		}
 	}
 }

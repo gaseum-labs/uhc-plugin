@@ -267,15 +267,20 @@ object Util {
 		return array
 	}
 
+	fun interpColor(along: Float, from: TextColor, to: TextColor): TextColor {
+		val red = ((  to.red() -   from.red()) * along +   from.red()).toInt()
+		val gre = ((to.green() - from.green()) * along + from.green()).toInt()
+		val blu = (( to.blue() -  from.blue()) * along +  from.blue()).toInt()
+		return TextColor.color(red, gre, blu)
+	}
+
 	fun gradientString(string: String, from: TextColor, to: TextColor): Component {
 		var component = Component.empty()
 
 		string.forEachIndexed { i, c ->
-			val along = i.toFloat() / (string.length - 1)
-			val red = ((to.red() - from.red()) * along + from.red()).toInt()
-			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
-			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
-			component = component.append(Component.text(c, TextColor.color(red, gre, blu)))
+			component = component.append(
+				Component.text(c, interpColor(i.toFloat() / (string.length - 1), from, to))
+			)
 		}
 
 		return component
@@ -309,6 +314,10 @@ object Util {
 		}
 
 		return component
+	}
+
+	fun coloredInGameMessage(string: String, color: ChatColor): String {
+		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
 	}
 }
 

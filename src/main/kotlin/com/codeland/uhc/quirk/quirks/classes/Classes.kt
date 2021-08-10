@@ -1,16 +1,12 @@
 package com.codeland.uhc.quirk.quirks.classes
 
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.Game
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Summoner
 import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -26,13 +22,10 @@ import org.bukkit.inventory.meta.Damageable
 import org.bukkit.inventory.meta.ItemMeta
 import java.util.*
 import kotlin.math.abs
-import kotlin.math.ceil
 import kotlin.math.floor
-import kotlin.math.min
-import kotlin.random.Random.Default.nextInt
 
-class Classes(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {
+class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
+	init {
 		var currentTick = 0
 
 		timerId = SchedulerUtil.everyTick {
@@ -159,34 +152,46 @@ class Classes(type: QuirkType) : Quirk(type) {
 		}
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(timerId)
+
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			setClass(uuid, QuirkClass.NO_CLASS)
+			Action.playerAction(uuid) { player ->
+				startAsClass(player, QuirkClass.NO_CLASS, getClass(playerData))
+			}
+		}
 	}
 
-	override fun onStart(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player ->
+	override fun onStartPlayer(uuid: UUID) {
+		Action.playerAction(uuid) { player ->
 			val quirkClass = getClass(uuid)
 
 			if (quirkClass != QuirkClass.NO_CLASS) startAsClass(player, quirkClass, QuirkClass.NO_CLASS)
 		}
 	}
 
-	override fun onEnd(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player -> removeHead(player) }
-		val playerData = PlayerData.getPlayerData(uuid)
-
-		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = QuirkClass.NO_CLASS
+	fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
+		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES, game).data = quirkClass
 	}
 
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.WAITING) {
-			PlayerData.playerDataList.forEach { (uuid, playerData) ->
-				setClass(uuid, QuirkClass.NO_CLASS)
-				GameRunner.playerAction(uuid) { player ->
-					startAsClass(player, QuirkClass.NO_CLASS, getClass(playerData))
-				}
-			}
-		}
+	fun setClass(uuid: UUID, quirkClass: QuirkClass) {
+		setClass(PlayerData.getPlayerData(uuid), quirkClass)
+	}
+
+	fun getClass(playerData: PlayerData): QuirkClass {
+		return PlayerData.getQuirkData(playerData, QuirkType.CLASSES, game)
+	}
+
+	fun getClass(uuid: UUID): QuirkClass {
+		return getClass(PlayerData.getPlayerData(uuid))
+	}
+
+	override fun onEndPlayer(uuid: UUID) {
+		Action.playerAction(uuid) { player -> removeHead(player) }
+		val playerData = PlayerData.getPlayerData(uuid)
+
+		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES, game).data = QuirkClass.NO_CLASS
 	}
 
 	private fun generateSuperbreakMessage(percent: Double, overflow: Boolean): String {
@@ -200,8 +205,6 @@ class Classes(type: QuirkType) : Quirk(type) {
 
 		return message.toString()
 	}
-
-	override val representation = ItemCreator.fromType(Material.LEATHER_HELMET)
 
 	override fun defaultData(): Any {
 		return QuirkClass.NO_CLASS
@@ -273,27 +276,11 @@ class Classes(type: QuirkType) : Quirk(type) {
 			return newItem
 		}
 
-		fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
-			PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = quirkClass
-		}
-
-		fun setClass(uuid: UUID, quirkClass: QuirkClass) {
-			setClass(PlayerData.getPlayerData(uuid), quirkClass)
-		}
-
 		fun startAsClass(player: Player, quirkClass: QuirkClass, oldClass: QuirkClass) {
 			oldClass.onEnd(player)
 
 			giveClassHead(player, quirkClass)
 			quirkClass.onStart(player)
-		}
-
-		fun getClass(playerData: PlayerData): QuirkClass {
-			return PlayerData.getQuirkData(playerData, QuirkType.CLASSES)
-		}
-
-		fun getClass(uuid: UUID): QuirkClass {
-			return getClass(PlayerData.getPlayerData(uuid))
 		}
 
 		fun giveClassHead(player: Player, quirkClass: QuirkClass) {

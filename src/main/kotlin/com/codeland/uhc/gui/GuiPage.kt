@@ -1,12 +1,11 @@
 package com.codeland.uhc.gui
 
+import com.codeland.uhc.gui.guiItem.GuiItem
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftHumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryType
 
 open class GuiPage(val height: Int, val name: Component) {
 	companion object {

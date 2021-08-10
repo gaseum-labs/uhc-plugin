@@ -1,16 +1,14 @@
 package com.codeland.uhc.gui
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextComponent
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction.*
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
-import org.bukkit.persistence.PersistentDataHolder
-import org.bukkit.persistence.PersistentDataType
 
 abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, name) {
 	var moveableGuiItems = ArrayList<MoveableGuiItem>()

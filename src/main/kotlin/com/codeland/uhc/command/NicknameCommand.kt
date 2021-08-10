@@ -5,14 +5,13 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.event.Chat
+import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor.*
-import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
-import org.bukkit.entity.Player
 
 @CommandAlias("nick")
 class NicknameCommand : BaseCommand() {
@@ -44,7 +43,7 @@ class NicknameCommand : BaseCommand() {
 
 		Chat.addNick(target.uniqueId, nickname)
 
-		GameRunner.sendGameMessage(sender, "${GameRunner.coloredInGameMessage(targetName, GRAY)} can now be called ${GameRunner.coloredInGameMessage(nickname, GRAY)}")
+		Action.sendGameMessage(sender, "${Util.coloredInGameMessage(targetName, GRAY)} can now be called ${Util.coloredInGameMessage(nickname, GRAY)}")
 	}
 
 	@Subcommand("remove")
@@ -54,7 +53,7 @@ class NicknameCommand : BaseCommand() {
 			?: return Commands.errorMessage(sender, "Cannot find player by the name ${Commands.coloredInError(targetName, GRAY)}")
 
 		if (Chat.removeNick(target.uniqueId, nickname))
-			GameRunner.sendGameMessage(sender, "${GameRunner.coloredInGameMessage(targetName, GRAY)} can no longer be called ${GameRunner.coloredInGameMessage(nickname, GRAY)}")
+			Action.sendGameMessage(sender, "${Util.coloredInGameMessage(targetName, GRAY)} can no longer be called ${Util.coloredInGameMessage(nickname, GRAY)}")
 		else
 			Commands.errorMessage(sender, "${Commands.coloredInError(nickname, GRAY)} is not one of ${Commands.coloredInError(targetName, GRAY)}'s nicknames")
 	}
@@ -69,9 +68,9 @@ class NicknameCommand : BaseCommand() {
 		val nickList = Chat.getNicks(target.uniqueId)
 
 		if (nickList.isEmpty()) {
-			GameRunner.sendGameMessage(sender, "This player has no nicknames.")
+			Action.sendGameMessage(sender, "This player has no nicknames.")
 		} else {
-			GameRunner.sendGameMessage(sender, "Nicknames for ${GameRunner.coloredInGameMessage(targetName, GRAY)}:")
+			Action.sendGameMessage(sender, "Nicknames for ${Util.coloredInGameMessage(targetName, GRAY)}:")
 			nickList.forEach { nickname -> sender.sendMessage("$GOLD- $nickname") }
 		}
 	}

@@ -10,13 +10,13 @@ import com.codeland.uhc.command.Commands.errorMessage
 import com.codeland.uhc.core.*
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
-import com.codeland.uhc.phase.PhaseType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
+import com.codeland.uhc.util.Action
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -30,10 +30,12 @@ class TestCommands : BaseCommand() {
 	fun testNext(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		if (UHC.isPhase(PhaseType.WAITING))
-			errorMessage(sender, "In waiting phase, use /start instead")
+		val game = UHC.game
+
+		if (game == null)
+			errorMessage(sender, "Game has not started")
 		else
-			UHC.startNextPhase()
+			game.nextPhase()
 	}
 
 	@Subcommand("fill")
@@ -70,7 +72,8 @@ class TestCommands : BaseCommand() {
 	@Subcommand("deathswap swap")
 	@Description("swap all players")
 	fun testDsSwap(sender: CommandSender) {
-		Deathswap.doSwaps()
+		val game = UHC.game ?: return errorMessage(sender, "Game has not started")
+		Deathswap.doSwaps(game)
 	}
 
 	@Subcommand("insomnia")
@@ -89,7 +92,7 @@ class TestCommands : BaseCommand() {
 		sender as Player
 
 		blockFixType.blockFix.getInfoString(sender) { info ->
-			GameRunner.sendGameMessage(sender, info)
+			Action.sendGameMessage(sender, info)
 		}
 	}
 
@@ -100,7 +103,7 @@ class TestCommands : BaseCommand() {
 
 		sender as Player
 
-		GameRunner.sendGameMessage(sender, "Elapsed time: ${UHC.elapsedTime}")
+		Action.sendGameMessage(sender, "Elapsed time: ${UHC.timer}")
 	}
 
 	@Subcommand("playerData")
@@ -108,12 +111,12 @@ class TestCommands : BaseCommand() {
 	fun testPlayerData(sender: CommandSender, player: OfflinePlayer) {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		GameRunner.sendGameMessage(sender, "PlayerData for ${player.name}:")
-		GameRunner.sendGameMessage(sender, "Staged: ${playerData.staged}")
-		GameRunner.sendGameMessage(sender, "Participating: ${playerData.participating}")
-		GameRunner.sendGameMessage(sender, "Alive: ${playerData.alive}")
-		GameRunner.sendGameMessage(sender, "Opting Out: ${playerData.optingOut}")
-		GameRunner.sendGameMessage(sender, "Last Played: ${playerData.lastPlayed}")
+		Action.sendGameMessage(sender, "PlayerData for ${player.name}:")
+		Action.sendGameMessage(sender, "Staged: ${playerData.staged}")
+		Action.sendGameMessage(sender, "Participating: ${playerData.participating}")
+		Action.sendGameMessage(sender, "Alive: ${playerData.alive}")
+		Action.sendGameMessage(sender, "Opting Out: ${playerData.optingOut}")
+		Action.sendGameMessage(sender, "Last Played: ${playerData.lastPlayed}")
 	}
 
 	@Subcommand("zombie")
@@ -126,7 +129,7 @@ class TestCommands : BaseCommand() {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 		playerData.createZombie(onlinePlayer)
 
-		GameRunner.sendGameMessage(sender, "Created a zombie for ${player.name}")
+		Action.sendGameMessage(sender, "Created a zombie for ${player.name}")
 	}
 
 	@Subcommand("drop")
@@ -134,9 +137,8 @@ class TestCommands : BaseCommand() {
 	fun testDrop(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		val carePackages = UHC.getQuirk(QuirkType.CARE_PACKAGES) as CarePackages
-
-		if (!carePackages.enabled.get()) return errorMessage(sender, "Care packages is not going!")
+		val carePackages = UHC.game?.getQuirk<CarePackages>(QuirkType.CARE_PACKAGES)
+			?: return errorMessage(sender, "Care packages is not going!")
 
 		val result = carePackages.forceDrop()
 
@@ -148,11 +150,11 @@ class TestCommands : BaseCommand() {
 	fun getMobCaps(sender: CommandSender) {
 		sender as Player
 
-		GameRunner.sendGameMessage(sender, "Monster spawn limit: ${sender.world.monsterSpawnLimit}")
-		GameRunner.sendGameMessage(sender, "Animal spawn limit: ${sender.world.animalSpawnLimit}")
-		GameRunner.sendGameMessage(sender, "Ambient spawn limit: ${sender.world.ambientSpawnLimit}")
-		GameRunner.sendGameMessage(sender, "Water animal spawn limit: ${sender.world.waterAnimalSpawnLimit}")
-		GameRunner.sendGameMessage(sender, "Water ambient spawn limit: ${sender.world.waterAmbientSpawnLimit}")
+		Action.sendGameMessage(sender, "Monster spawn limit: ${sender.world.monsterSpawnLimit}")
+		Action.sendGameMessage(sender, "Animal spawn limit: ${sender.world.animalSpawnLimit}")
+		Action.sendGameMessage(sender, "Ambient spawn limit: ${sender.world.ambientSpawnLimit}")
+		Action.sendGameMessage(sender, "Water animal spawn limit: ${sender.world.waterAnimalSpawnLimit}")
+		Action.sendGameMessage(sender, "Water ambient spawn limit: ${sender.world.waterAmbientSpawnLimit}")
 	}
 
 	@Subcommand("mobcap")
@@ -160,7 +162,7 @@ class TestCommands : BaseCommand() {
 	fun testMobCap(sender: CommandSender, player: Player, type: CustomSpawningType) {
 		val playerMobs = CustomSpawning.calcPlayerMobs(type, player)
 
-		GameRunner.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).spawningData[type.ordinal].mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
+		Action.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).spawningData[type.ordinal].mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
@@ -186,7 +188,7 @@ class TestCommands : BaseCommand() {
 			), PvpArena.TYPE_1V1)
 		)
 
-		GameRunner.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
+		Action.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
 	}
 
 	companion object {
@@ -197,6 +199,6 @@ class TestCommands : BaseCommand() {
 	@Description("test a player's individual mobcap")
 	fun testFlag(sender: CommandSender) {
 		flag = !flag
-		GameRunner.sendGameMessage(sender, "Set flag to $flag")
+		Action.sendGameMessage(sender, "Set flag to $flag")
 	}
 }

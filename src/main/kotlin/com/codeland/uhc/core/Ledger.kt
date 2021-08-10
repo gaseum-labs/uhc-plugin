@@ -17,7 +17,7 @@ import kotlin.collections.HashMap
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
-class Ledger {
+class Ledger(val worldSize: Int) {
 	val startDate = LocalDateTime.now()
 
 	class Entry(val username: String, val timeSurvived: Int, val killedBy: String, val winning: Boolean)
@@ -249,8 +249,8 @@ class Ledger {
 		writer.write(generateContents())
 		writer.close()
 
-		val image0 = generateImage(UHC.startRadius(), World.Environment.NORMAL, 4.0f)
-		val image1 = generateImage(UHC.startRadius(), World.Environment.NETHER, 4.0f)
+		val image0 = generateImage(worldSize, World.Environment.NORMAL, 4.0f)
+		val image1 = generateImage(worldSize, World.Environment.NETHER, 4.0f)
 
 		ImageIO.write(image0, "PNG", selectImagename(World.Environment.NORMAL))
 		ImageIO.write(image1, "PNG", selectImagename(World.Environment.NETHER))

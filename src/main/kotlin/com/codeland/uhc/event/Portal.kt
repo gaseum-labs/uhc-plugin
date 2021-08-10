@@ -5,7 +5,8 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.core.phase.phases.Endgame
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -203,10 +204,10 @@ class Portal : Listener {
 			if (pvpGame != null) {
 
 			/* prevent peeking the center during waiting */
-			} else if (!playerData.participating && UHC.isPhase(PhaseType.WAITING)) {
+			} else if (!playerData.participating && UHC.game == null) {
 
 			/* prevent going to the nether after nether closes */
-			} else if (UHC.isPhase(PhaseType.ENDGAME)) {
+			} else if (UHC.game?.phase is Endgame) {
 				val location = player.location
 				val world = location.world
 

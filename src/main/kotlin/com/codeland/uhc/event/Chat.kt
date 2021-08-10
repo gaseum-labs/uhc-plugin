@@ -1,14 +1,13 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.FancyText
-import com.codeland.uhc.util.Util
 import io.papermc.paper.event.player.AsyncChatEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
@@ -17,15 +16,10 @@ import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor
 import org.bukkit.GameMode
-import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import java.io.File
-import java.io.FileReader
-import java.io.FileWriter
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -34,24 +28,22 @@ class Chat : Listener {
 		fun addNick(player: UUID, nickname: String) {
 			getNicks(player).add(nickname)
 
-			val bot = GameRunner.bot ?: return
+			val bot = UHC.bot ?: return
 			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, DataManager.nicknames)
 		}
 
 		fun removeNick(player: UUID, nickname: String): Boolean {
-			val lowerNickname = nickname.toLowerCase()
+			val lowerNickname = nickname.lowercase()
 
-			val removed = getNicks(player).removeIf { it.toLowerCase() == lowerNickname }
+			val removed = getNicks(player).removeIf { it.lowercase() == lowerNickname }
 
-			val bot = GameRunner.bot ?: return removed
+			val bot = UHC.bot ?: return removed
 			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, DataManager.nicknames)
 
 			return removed
 		}
 
 		fun getNicks(uuid: UUID): ArrayList<String> {
-			val bot = GameRunner.bot ?: return ArrayList()
-
 			val playerIndex = DataManager.nicknames.minecraftIds.indexOf(uuid)
 
 			/* put into list for a new player*/
@@ -241,8 +233,6 @@ class Chat : Listener {
 		list.addAll(Bukkit.getOnlinePlayers().map { PlayerMention(it) })
 		list.addAll(TeamData.teams.map { TeamMention(it) })
 
-		val bot = GameRunner.bot ?: return ArrayList()
-
 		for (i in DataManager.nicknames.minecraftIds.indices) {
 			val player = Bukkit.getPlayer(DataManager.nicknames.minecraftIds[i])
 
@@ -283,7 +273,7 @@ class Chat : Listener {
 		/* if the sending player is on a team */
 		/* if the message does not start with a mention */
 		/* and the message does not start with ! */
-		} else if (UHC.isGameGoing() && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
+		} else if (UHC.game != null && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
 			val messageParts = divideMessage(message, collected, team.color2)
 
 			team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->

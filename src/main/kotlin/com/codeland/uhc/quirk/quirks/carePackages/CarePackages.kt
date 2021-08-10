@@ -1,14 +1,18 @@
 package com.codeland.uhc.quirk.quirks.carePackages
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.ItemCreator
+import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.core.phase.phases.Endgame
+import com.codeland.uhc.core.phase.phases.Grace
+import com.codeland.uhc.core.phase.phases.Postgame
+import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
-import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_COAL
@@ -28,7 +32,7 @@ import org.bukkit.inventory.ItemStack
 import kotlin.math.*
 import kotlin.random.Random
 
-class CarePackages(type: QuirkType) : Quirk(type) {
+class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 	val NUM_DROPS = 3
 
 	var taskID = -1
@@ -62,19 +66,17 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 	 * Awaiting
 	 */
 
-	override fun onEnable() {
-		if (UHC.currentPhase?.phaseType == PhaseType.GRACE || UHC.currentPhase?.phaseType == PhaseType.SHRINK) onStart()
+	init {
+		if (UHC.game?.phase is Grace || UHC.game?.phase is Shrink) onStart()
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		onEnd()
 	}
 
-	override val representation = ItemCreator.fromType(Material.CHEST_MINECART)
-
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE) onStart()
-		else if (phase.type == PhaseType.WAITING) onEnd()
+	override fun onPhaseSwitch(phase: Phase) {
+		if (phase is Grace) onStart()
+		else if (phase is Endgame || phase is Postgame) onEnd()
 	}
 
 	private fun onStart() {
@@ -107,18 +109,18 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 				val x = cos(initialAngle + angleAdance * i) * currentRadius / 2
 				val z = sin(initialAngle + angleAdance * i) * currentRadius / 2
 
-				Location(UHC.getDefaultWorldGame(), x, 0.0, z)
+				Location(game.world, x, 0.0, z)
 			}
 		}
 
 		/* find drop times */
-		if (UHC.isPhase(PhaseType.GRACE)) {
-			val remaining = UHC.currentPhase?.remainingSeconds ?: 0
+		if (game.phase is Grace) {
+			val remaining = game.phase.remainingSeconds()
 
 			/* distribute drops over shrinking phase so that if there were another, */
 			/* it would fall exactly at the end of shrinking phase */
 
-			val dropPeriod = UHC.phaseTime(PhaseType.SHRINK) * (NUM_DROPS / (NUM_DROPS + 1.0))
+			val dropPeriod = game.config.shrinkTime.get() * (NUM_DROPS / (NUM_DROPS + 1.0))
 			val dropInterval = (dropPeriod / NUM_DROPS).toInt()
 
 			/* all drops are equally spaced by dropInterval */
@@ -128,13 +130,13 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			dropTimes[0] += remaining
 
 			findLocations { i ->
-				UHC.startRadius() * (1 - ((dropInterval * i).toDouble() / UHC.phaseTime(PhaseType.SHRINK)))
+				game.initialRadius * (1 - ((dropInterval * i).toDouble() / game.config.shrinkTime.get()))
 			}
 
-		} else if (UHC.isPhase(PhaseType.SHRINK)) {
-			val elapsed = UHC.phaseTime(PhaseType.SHRINK) - (UHC.currentPhase?.remainingSeconds ?: 0)
+		} else if (game.phase is Shrink) {
+			val elapsed = game.config.shrinkTime.get() - game.phase.remainingSeconds()
 
-			val cutOff = UHC.phaseTime(PhaseType.SHRINK) * (NUM_DROPS / (NUM_DROPS + 1.0)).toInt()
+			val cutOff = game.config.shrinkTime.get() * (NUM_DROPS / (NUM_DROPS + 1.0)).toInt()
 
 			val available = (cutOff - elapsed)
 			val dropInterval = (available / NUM_DROPS)
@@ -144,7 +146,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			else return false
 
 			findLocations { i ->
-				UHC.startRadius() * (1 - ((elapsed + dropInterval * i).toDouble() / UHC.phaseTime(PhaseType.SHRINK)))
+				game.initialRadius * (1 - ((elapsed + dropInterval * i).toDouble() / game.config.shrinkTime.get()))
 			}
 		}
 
@@ -495,22 +497,6 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 			log("x: ${xz.x}, z: ${xz.z}")
 		}
 
-		fun findDropSpot(world: World, lastLocation: Location, timeUntil: Int, buffer: Int): Location {
-			/* helper classes and functions */
-			val makeLocation = { x: Int, z: Int ->
-				val y = Util.topBlockY(world, x, z) + 1
-				Location(world, x.toDouble(), y.toDouble(), z.toDouble())
-			}
-
-			val uhc = UHC
-			val phaseTime = uhc.phaseTime(PhaseType.SHRINK)
-			val remainingSeconds = uhc.currentPhase?.remainingSeconds ?: return Location(world, 0.0, 0.0, 0.0)
-
-			val xz = findDropXZ(lastLocation.blockX, lastLocation.blockZ, uhc.startRadius().toDouble(), uhc.endRadius().toDouble(), remainingSeconds, timeUntil, phaseTime, buffer)
-
-			return makeLocation(xz.x, xz.z)
-		}
-
 		fun dropTextColor(tier: Int): ChatColor {
 			return when (tier) {
 				0 -> GOLD
@@ -619,7 +605,7 @@ class CarePackages(type: QuirkType) : Quirk(type) {
 		}
 
 		fun generateDrop(tier: Int, location: Location) {
-			var world = location.world
+			val world = location.world
 
 			val radius = 30
 

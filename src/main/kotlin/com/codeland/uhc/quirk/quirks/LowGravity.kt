@@ -1,6 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
@@ -14,13 +15,13 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 
 
-class LowGravity(type: QuirkType) : Quirk(type) {
+class LowGravity(type: QuirkType, game: Game) : Quirk(type, game) {
 	companion object {
 		var taskId: Int = 0
 		var gravity: Double = 0.5
 	}
 
-	override fun onEnable() {
+	init {
 		taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
 			for (player in Bukkit.getOnlinePlayers()) {
 				val block = player.world.getBlockAt(player.location.subtract(0.0, 0.01, 0.0)).type
@@ -56,9 +57,7 @@ class LowGravity(type: QuirkType) : Quirk(type) {
 		}, 1, 1)
 	}
 
-	override fun onDisable() {
+	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
-
-	override val representation = ItemCreator.fromType(Material.CHORUS_FRUIT)
 }

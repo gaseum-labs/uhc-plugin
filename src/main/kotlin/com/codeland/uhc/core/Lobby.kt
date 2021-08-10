@@ -5,6 +5,7 @@ import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
@@ -54,9 +55,10 @@ object Lobby {
 		playerData.participating = false
 		playerData.alive = false
 
-		/* reset applied status for all active quirks */
-		UHC.quirks.forEach { quirk ->
-			if (quirk.enabled.get()) PlayerData.getQuirkDataHolder(playerData, quirk.type).applied = false
+		/* reset applied status for all active quirks, if the game is active */
+		val game = UHC.game
+		game?.quirks?.filterNotNull()?.forEach { quirk ->
+			PlayerData.getQuirkDataHolder(playerData, quirk.type, game).applied = false
 		}
 
 		CommandItemType.GUI_OPENER.giveItem(player.inventory)
@@ -66,9 +68,7 @@ object Lobby {
 		player.teleport(lobbyLocation(UHC))
 	}
 
-	fun isLinked(player: Player) = if (UHC.usingBot.get()) {
-		GameRunner.bot?.isLinked(player.uniqueId) ?: true
-	} else true
+	fun isLinked(player: Player) = UHC.bot?.isLinked(player.uniqueId) ?: true
 
 	fun lobbyTipsTick(subTick: Int) {
 		if (subTick % 20 == 0) {

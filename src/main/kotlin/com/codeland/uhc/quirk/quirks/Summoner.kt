@@ -1,8 +1,8 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.UHCProperty
-import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.core.Game
+import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
@@ -23,10 +23,8 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
-class Summoner(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {}
-
-	override fun onDisable() {
+class Summoner(type: QuirkType, game: Game) : Quirk(type, game) {
+	override fun customDestroy() {
 		/* remove commanded tag from all commanded mobs */
 		Bukkit.getWorlds().forEach { world ->
 			world.entities.forEach { entity ->
@@ -42,35 +40,8 @@ class Summoner(type: QuirkType) : Quirk(type) {
 		return false
 	}
 
-	override val representation: ItemCreator
-		get() = ItemCreator.fromType(MULE_SPAWN_EGG)
-
-	var allowAggro = addProperty(UHCProperty(true))
-	var allowPassive = addProperty(UHCProperty(true))
-	var commander = addProperty(UHCProperty(true))
-
-	init {
-		gui.addItem(object : BoolToggle(11, allowAggro) {
-			override fun getStackProperty(value: Boolean): ItemStack {
-				return ItemCreator.fromType(if (value) CREEPER_SPAWN_EGG else GUNPOWDER).name(ItemCreator.enabledName("Aggro", value)).create()
-			}
-		})
-
-		gui.addItem(object : BoolToggle(15, allowPassive) {
-			override fun getStackProperty(value: Boolean): ItemStack {
-				return ItemCreator.fromType(if (value) CHICKEN_SPAWN_EGG else FEATHER).name(ItemCreator.enabledName("Passive", value)).create()
-			}
-		})
-
-		gui.addItem(object : BoolToggle(22, commander) {
-			override fun getStackProperty(value: Boolean): ItemStack {
-				return ItemCreator.fromType(if (value) NETHERITE_HELMET else LEATHER_HELMET).name(ItemCreator.enabledName("Commander", value)).create()
-			}
-		})
-	}
-
 	fun getSpawnEgg(entity: EntityType): Material? {
-		return getSpawnEgg(entity, allowAggro.get(), allowPassive.get())
+		return getSpawnEgg(entity, true, true)
 	}
 
 	fun onSummon(event: PlayerInteractEvent): Boolean {
@@ -89,7 +60,7 @@ class Summoner(type: QuirkType) : Quirk(type) {
 		if (team != null) {
 			setCommandedBy(entity, team)
 			
-			if (commander.get()) entity.customName(team.apply("${team.gameName()} ${entity.name}"))
+			entity.customName(team.apply("${team.gameName()} ${entity.name}"))
 		}
 
 		--item.amount

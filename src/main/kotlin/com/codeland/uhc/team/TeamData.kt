@@ -1,8 +1,8 @@
 package com.codeland.uhc.team
 
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.util.Action
 import org.bukkit.Bukkit
-import org.bukkit.GameMode
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -46,7 +46,7 @@ object TeamData {
             removeFromTeam(players, false, destroyTeam, false)
 
 			/* add them to the team on discord */
-			if (discord) GameRunner.bot?.addToTeamChannel(newTeam, players)
+			if (discord) UHC.bot?.addToTeamChannel(newTeam, players)
 
 			/* add new team internally */
 			teams.add(newTeam)
@@ -76,12 +76,12 @@ object TeamData {
 
 		players.forEach { player ->
 			val team = playersTeam(player)
-			if (team != null) teamMap.getOrPut(team, { ArrayList() }).add(player)
+			if (team != null) teamMap.getOrPut(team) { ArrayList() }.add(player)
 		}
 
 		teamMap.forEach { (team, teamPlayers) ->
 			/* remove these players from the team channel */
-			if (discord) GameRunner.bot?.removeFromTeamChannel(team, team.members.size, teamPlayers)
+			if (discord) UHC.bot?.removeFromTeamChannel(team, team.members.size, teamPlayers)
 
 			/* remove these players from the team internally */
 			team.members.removeAll(teamPlayers)
@@ -105,7 +105,7 @@ object TeamData {
 				val oldMemberList = ArrayList(currentTeam.members)
 
 				/* destroy team channel on discord */
-				if (discord) GameRunner.bot?.destroyTeamChannel(currentTeam)
+				if (discord) UHC.bot?.destroyTeamChannel(currentTeam)
 
 				/* remove the internal representation of players from the team */
 				currentTeam.members.removeIf { onRemove(it); true }

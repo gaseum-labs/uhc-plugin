@@ -3,7 +3,6 @@ package com.codeland.uhc.lobbyPvp.arena
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.Arena
@@ -14,7 +13,6 @@ import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import java.util.*
 
 class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID): Arena(ArenaType.PARKOUR, teams) {

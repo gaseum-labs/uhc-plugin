@@ -1,104 +1,193 @@
 package com.codeland.uhc.quirk
 
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.Game
+import com.codeland.uhc.event.Brew
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
-import com.codeland.uhc.quirk.quirks.Pumpkin
 import com.codeland.uhc.quirk.quirks.classes.Classes
-import net.kyori.adventure.text.Component
+import org.bukkit.Material
+import org.bukkit.potion.PotionData
+import org.bukkit.potion.PotionType
 
-enum class QuirkType(val prettyName: String, val create: (QuirkType) -> Quirk, val description: List<Component>) {
-	UNSHELTERED("Unsheltered", ::Unsheltered, listOf(
-		Component.text("Terrain cannot be modified"),
-		Component.text("You cannot place or mine blocks"),
-		Component.text("But you still get the block loot")
-    )),
+enum class QuirkType(
+	val prettyName: String,
+	val create: (QuirkType, Game) -> Quirk,
+	val representation: () -> ItemCreator,
+	val description: Array<String>,
+) {
+	UNSHELTERED(
+		"Unsheltered",
+		::Unsheltered,
+		{ ItemCreator.fromType(Material.SHULKER_SHELL) },
+		arrayOf(
+			"Terrain cannot be modified",
+			"You cannot place or mine blocks",
+			"But you still get the block loot"
+        )
+	),
 
-    PESTS("Pests", ::Pests, listOf(
-		Component.text("Dead players come back to exact their revenge"),
-		Component.text("But they are weak and have no access to advanced tools")
-	)),
+    PESTS(
+	    "Pests",
+	    ::Pests,
+	    { ItemCreator.fromType(Material.WOODEN_SWORD) },
+	    arrayOf(
+			"Dead players come back to exact their revenge",
+			"But they are weak and have no access to advanced tools"
+		)
+    ),
 
-	MODIFIED_DROPS("Modified Drops", ::ModifiedDrops, listOf(
-		Component.text("Hostile mobs drop exceptional loot")
-	)),
+	MODIFIED_DROPS(
+		"Modified Drops",
+		::ModifiedDrops,
+		{ ItemCreator.fromType(Material.BONE) },
+		arrayOf(
+			"Hostile mobs drop exceptional loot"
+		)
+	),
 
-    CREATIVE("Creative", ::Creative, listOf(
-	    Component.text("you may place tough to get blocks without them emptying from your inventory")
-	)),
+    CREATIVE(
+	    "Creative",
+	    ::Creative,
+	    { ItemCreator.fromType(Material.BRICK) },
+	    arrayOf(
+	        "you may place tough to get blocks without them emptying from your inventory"
+		)
+    ),
 
-	SUMMONER("Summoner", ::Summoner, listOf(
-		Component.text("Mobs drop their spawn eggs when killed")
-	)),
+	SUMMONER(
+		"Summoner",
+		::Summoner,
+		{ ItemCreator.fromType(Material.DONKEY_SPAWN_EGG) },
+		arrayOf(
+			"Mobs drop their spawn eggs when killed"
+		)
+	),
 
-	RANDOM_EFFECTS("Random Effects", ::RandomEffects, listOf(
-		Component.text("Every 3 minutes,"),
-		Component.text("Everyone gets a random potion effect")
-	)),
+	RANDOM_EFFECTS(
+		"Random Effects",
+		::RandomEffects,
+		{ ItemCreator.fromType(Material.DRAGON_BREATH) },
+		arrayOf(
+			"Every 3 minutes,",
+			"Everyone gets a random potion effect"
+		)
+	),
 
-	SHARED_INVENTORY("Shared Inventory", ::SharedInventory, listOf(
-		Component.text("Everyone has one combined inventory")
-	)),
+	LOW_GRAVITY(
+		"Low Gravity",
+		::LowGravity,
+		{ ItemCreator.fromType(Material.CHORUS_FRUIT) },
+		arrayOf(
+			"Gravity is much lower than usual"
+		)
+	),
 
-	LOW_GRAVITY("Low Gravity", ::LowGravity, listOf(
-		Component.text("Gravity is much lower than usual")
-	)),
+	HOTBAR(
+		"Limited Inventory",
+		::Hotbar,
+		{ ItemCreator.fromType(Material.STRUCTURE_VOID) },
+		arrayOf(
+			"All players are limited to only",
+			"their hotbar to store items"
+  	    )
+	),
 
-	HOTBAR("Limited Inventory", ::Hotbar, listOf(
-		Component.text("All players are limited to only"),
-		Component.text("their hotbar to store items")
-  	)),
+	CARE_PACKAGES(
+		"Care Packages",
+		::CarePackages,
+		{ ItemCreator.fromType(Material.CHEST_MINECART) },
+		arrayOf(
+			"Chests periodically drop containing good loot",
+			"go there and you should expect a fight"
+		)
+	),
 
-	CARE_PACKAGES("Care Packages", ::CarePackages, listOf(
-		Component.text("Chests periodically drop containing good loot"),
-		Component.text("go there and you should expect a fight")
-	)),
+	CHAOTIC_CARE_PACKAGES(
+		"Chaotic Care Packages",
+		::ChaoticCarePackages,
+		{ ItemCreator.fromType(Material.CHORUS_FRUIT) },
+		arrayOf(
+			"Chests drop every 5 seconds",
+			"Wacky loot is inside"
+		)
+	),
 
-	CHAOTIC_CARE_PACKAGES("Chaotic Care Packages", ::ChaoticCarePackages, listOf(
-		Component.text("Chests drop every 5 seconds"),
-		Component.text("Wacky loot is inside")
-	)),
+	DEATHSWAP(
+		"Deathswap",
+		::Deathswap,
+		{ ItemCreator.fromType(Material.MAGENTA_GLAZED_TERRACOTTA) },
+		arrayOf(
+			"Players switch places with each other",
+			"at randomly chosen intervals"
+		)
+	),
 
-	DEATHSWAP("Deathswap", ::Deathswap, listOf(
-		Component.text("Players switch places with each other"),
-		Component.text("at randomly chosen intervals")
-	)),
+	HALLOWEEN(
+		"Halloween",
+		::Halloween,
+		{ ItemCreator.fromType(Material.PUMPKIN_PIE) },
+		arrayOf(
+			"Mobs drop candy",
+			"Witches?!"
+		)
+	),
 
-	HALLOWEEN("Halloween", ::Halloween, listOf(
-		Component.text("Mobs drop candy"),
-		Component.text("Witches?!")
-	)),
+	PUMPKIN(
+		"Pumpkin",
+		::Pumpkin,
+		{ ItemCreator.fromType(Material.PUMPKIN_SEEDS) },
+		arrayOf(
+			"You are forced to have a pumpkin on your head"
+		)
+	),
 
-	PUMPKIN("Pumpkin", ::Pumpkin, listOf(
-		Component.text("You are forced to have a pumpkin on your head")
-	)),
+	CHRISTMAS(
+		"Christmas",
+		::Christmas,
+		{ ItemCreator.fromType(Material.SNOWBALL) },
+		arrayOf(
+			"It's snowing all the time!"
+		)
+	),
 
-	CHRISTMAS("Christmas", ::Christmas, listOf(
-		Component.text("It's snowing all the time!")
-	)),
+	FLYING(
+		"Flying",
+		::Flying,
+		{ ItemCreator.fromType(Material.FIREWORK_ROCKET) },
+		arrayOf(
+			"Start with an elytra and rockets"
+		)
+	),
 
-	FLYING("Flying", ::Flying, listOf(
-		Component.text("Start with an elytra and rockets")
-	)),
+	PLAYER_COMPASS(
+		"Player Compasses",
+		::PlayerCompass,
+		{ ItemCreator.fromType(Material.COMPASS) },
+		arrayOf(
+			"Track down players with a special compass"
+		)
+	),
 
-	PLAYER_COMPASS("Player Compasses", ::PlayerCompass, listOf(
-		Component.text("Track down players with a special compass")
-	)),
+	INFINITE_INVENTORY(
+		"Infinite Inventory",
+		::InfiniteInventory,
+		{ ItemCreator.fromType(Material.FEATHER) },
+		arrayOf(
+			"Your inventory is unbounded in size"
+		)
+	),
 
-	INFINITE_INVENTORY("Infinite Inventory", ::InfiniteInventory, listOf(
-		Component.text("Your inventory is unbounded in size")
-	)),
-
-	CLASSES("Classes", ::Classes, listOf(
-		Component.text("Pick a class as the game begins"),
-		Component.text("Get cool abilities")
-	)),
-
-	HORSE("Horse", ::HorseQuirk, listOf(
-		Component.text("Horse"),
-		Component.text("Horse")
-	));
+	CLASSES(
+		"Classes",
+		::Classes,
+		{ ItemCreator.fromType(Material.IRON_HELMET) },
+		arrayOf(
+			"Pick a class as the game begins",
+			"Get cool abilities"
+		)
+	);
 
    	var incompatibilities = mutableSetOf<QuirkType>()
 
@@ -121,9 +210,9 @@ enum class QuirkType(val prettyName: String, val create: (QuirkType) -> Quirk, v
         incompatibilities.contains(other)
     }
 
-	fun createQuirk(): Quirk {
+	fun createQuirk(game: Game): Quirk {
 		/* quirk instance from quirk type */
-		val quirk = create(this)
+		val quirk = create(this, game)
 
 		/* give quirk instance to UHC */
 		return quirk

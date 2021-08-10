@@ -1,7 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -12,16 +12,11 @@ import org.bukkit.entity.*
 import org.bukkit.entity.EntityType.*
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.inventory.ItemStack
-import org.bukkit.metadata.FixedMetadataValue
 
-class Halloween(type: QuirkType) : Quirk(type) {
+class Halloween(type: QuirkType, game: Game) : Quirk(type, game) {
 	var hasGottenDiamonds = false
 
-	override fun onEnable() {
-		hasGottenDiamonds = false
-	}
-
-	override fun onDisable() {}
+	override fun customDestroy() {}
 
 	override fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
 		if (entity is Monster) {
@@ -45,8 +40,6 @@ class Halloween(type: QuirkType) : Quirk(type) {
 
 		return false
 	}
-
-	override val representation = ItemCreator.fromType(PUMPKIN_PIE)
 
 	companion object {
 		fun onEntitySpawn(entity: Entity) {
