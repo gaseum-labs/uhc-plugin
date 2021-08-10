@@ -1,4 +1,4 @@
-package com.codeland.uhc.command;
+package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
@@ -25,7 +25,7 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
-		UHC.gui.open(sender as Player)
+		UHC.getConfig().gui.open(sender as Player)
 	}
 
 	@Subcommand("pvp")
@@ -145,7 +145,7 @@ class ParticipantCommands : BaseCommand() {
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
 
-		val classes = game.getQuirk(QuirkType.CLASSES) as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes = game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (classes.getClass(sender.uniqueId) != QuirkClass.NO_CLASS) {
 			return Commands.errorMessage(sender, "You've already chosen a class")
@@ -172,7 +172,7 @@ class ParticipantCommands : BaseCommand() {
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
 
-		val classes = game.getQuirk(QuirkType.CLASSES) as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes = game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (classes.getClass(sender.uniqueId) != QuirkClass.TRAPPER) return Commands.errorMessage(sender, "Your class can't use this command.")
 

@@ -23,8 +23,8 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 	3,
 	Util.gradientString("Create Game", TextColor.color(0x0d5b61), TextColor.color(0x093c80))
 ) {
-	val quirkGui = QuirkGui(gameConfig, this)
-	val worldGenGui = WorldGenGui(gameConfig, this)
+	val quirkGui = GuiManager.register(QuirkGui(gameConfig, this))
+	val worldGenGui = GuiManager.register(WorldGenGui(gameConfig, this))
 
 	init {
 		/* row 1 */
@@ -80,27 +80,42 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 
 		addItem(object : GuiItemCounterF(coords(0, 1), gameConfig.scale, 0.5f, 2.0f, 0.1f) {
 			override fun getStackProperty(value: Float): ItemStack {
-				return ItemCreator.fromType(Material.WARPED_TRAPDOOR).name(ItemCreator.stateName("Scale", "%.2f".format(value))).create()
+				return ItemCreator.fromType(Material.WARPED_TRAPDOOR)
+					.enchant(value != property.default)
+					.name(ItemCreator.stateName("Scale", "%.2f".format(value)))
+					.create()
 			}
 		})
 		addItem(object : GuiItemCounter(coords(1, 1), gameConfig.endgameRadius, 10, 80, 5) {
 			override fun getStackProperty(value: Int): ItemStack {
-				return ItemCreator.fromType(Material.WARPED_DOOR).name(ItemCreator.stateName("Endgame Radius", "$value")).create()
+				return ItemCreator.fromType(Material.WARPED_DOOR)
+					.enchant(value != property.default)
+					.name(ItemCreator.stateName("Endgame Radius", "$value"))
+					.create()
 			}
 		})
 		addItem(object : GuiItemCounter(coords(2, 1), gameConfig.graceTime, 600, 2400, 60) {
 			override fun getStackProperty(value: Int): ItemStack {
-				return ItemCreator.fromType(Material.SUNFLOWER).name(ItemCreator.stateName("Grace Time", Util.timeString(value))).create()
+				return ItemCreator.fromType(Material.SUNFLOWER)
+					.enchant(value != property.default)
+					.name(ItemCreator.stateName("Grace Time", Util.timeString(value)))
+					.create()
 			}
 		})
 		addItem(object : GuiItemCounter(coords(3, 1), gameConfig.shrinkTime, 1200, 6000, 60) {
 			override fun getStackProperty(value: Int): ItemStack {
-				return ItemCreator.fromType(Material.BELL).name(ItemCreator.stateName("Shrink Time", Util.timeString(value))).create()
+				return ItemCreator.fromType(Material.BELL)
+					.enchant(value != property.default)
+					.name(ItemCreator.stateName("Shrink Time", Util.timeString(value)))
+					.create()
 			}
 		})
 		addItem(object : GuiItemCounter(coords(4, 1), gameConfig.collapseTime, 100, 1000, 30) {
 			override fun getStackProperty(value: Int): ItemStack {
-				return ItemCreator.fromType(Material.HORN_CORAL).name(ItemCreator.stateName("Collapse Time", Util.timeString(value))).create()
+				return ItemCreator.fromType(Material.HORN_CORAL)
+					.enchant(value != property.default)
+					.name(ItemCreator.stateName("Collapse Time", Util.timeString(value)))
+					.create()
 			}
 		})
 

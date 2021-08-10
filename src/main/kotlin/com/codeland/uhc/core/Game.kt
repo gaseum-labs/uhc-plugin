@@ -56,11 +56,11 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 
 	/* getters */
 
-	fun getQuirk(quirkType: QuirkType): Quirk? {
-		return quirks[quirkType.ordinal]
+	fun <T: Quirk> getQuirk(quirkType: QuirkType): T? {
+		return quirks[quirkType.ordinal] as T?
 	}
 	fun quirkEnabled(quirkType: QuirkType): Boolean {
-		return getQuirk(quirkType) != null
+		return getQuirk<Quirk>(quirkType) != null
 	}
 
 	fun isOver(): Boolean {

@@ -68,7 +68,7 @@ enum class QuirkType(
 	RANDOM_EFFECTS(
 		"Random Effects",
 		::RandomEffects,
-		{ Brew.createDefaultPotion(Material.POTION, PotionData(PotionType.STRENGTH)) },
+		{ ItemCreator.fromType(Material.DRAGON_BREATH) },
 		arrayOf(
 			"Every 3 minutes,",
 			"Everyone gets a random potion effect"
@@ -182,7 +182,7 @@ enum class QuirkType(
 	CLASSES(
 		"Classes",
 		::Classes,
-		{ ItemCreator.fromType(Material.NETHER_STAR) },
+		{ ItemCreator.fromType(Material.IRON_HELMET) },
 		arrayOf(
 			"Pick a class as the game begins",
 			"Get cool abilities"

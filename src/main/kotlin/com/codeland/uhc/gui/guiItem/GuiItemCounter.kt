@@ -7,9 +7,9 @@ abstract class GuiItemCounter(index: Int, property: UHCProperty<Int>, val low: I
 	override fun onClick(player: Player, shift: Boolean) {
 		property.set(
 			if (shift) {
-				(property.get() + increment).coerceAtMost(high)
-			} else {
 				(property.get() - increment).coerceAtLeast(low)
+			} else {
+				(property.get() + increment).coerceAtMost(high)
 			}
 		)
 	}
@@ -19,9 +19,9 @@ abstract class GuiItemCounterF(index: Int, property: UHCProperty<Float>, val low
 	override fun onClick(player: Player, shift: Boolean) {
 		property.set(
 			if (shift) {
-				(property.get() + increment).coerceAtMost(high)
-			} else {
 				(property.get() - increment).coerceAtLeast(low)
+			} else {
+				(property.get() + increment).coerceAtMost(high)
 			}
 		)
 	}

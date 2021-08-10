@@ -27,7 +27,7 @@ class WorldGenGui(val gameConfig: GameConfig, val createGameGui: CreateGameGui) 
 		})
 		addItem(object : GuiItem(coords(8, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = createGameGui.open(player)
-			override fun getStack() = ItemCreator.fromType(Material.PRISMARINE).name("${ChatColor.BLUE}Back").create()
+			override fun getStack() = ItemCreator.fromType(Material.PRISMARINE_SHARD).name("${ChatColor.BLUE}Back").create()
 		})
 	}
 }

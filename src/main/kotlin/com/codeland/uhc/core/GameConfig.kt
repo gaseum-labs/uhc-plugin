@@ -1,6 +1,8 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.gui.GuiManager
+import com.codeland.uhc.gui.gui.CreateGameGui
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.world.WorldGenOption
@@ -104,5 +106,13 @@ class GameConfig {
 			PhaseType.ENDGAME -> collapseTime.get()
 			PhaseType.POSTGAME -> 0
 		}
+	}
+
+	var gui = GuiManager.register(CreateGameGui(this))
+
+	fun destroy() {
+		GuiManager.destroy(gui.quirkGui)
+		GuiManager.destroy(gui.worldGenGui)
+		GuiManager.destroy(gui)
 	}
 }

@@ -63,7 +63,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun playerMove(event: PlayerMoveEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		val player = event.player
 
@@ -108,7 +108,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun playerDamage(event: EntityDamageEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		val player = if (event.entity is Player) event.entity as Player else return
 
@@ -138,7 +138,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun entityDamageEntity(event: EntityDamageByEntityEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		val player = event.damager as? Player ?: return
 
@@ -184,7 +184,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onXP(event: PlayerExpChangeEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER) {
 			event.amount = event.amount * 2
@@ -193,7 +193,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onBlockDrop(event: BlockBreakEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER && event.block.type == Material.GRINDSTONE) {
 			event.isDropItems = false
@@ -203,7 +203,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onEnchant(event: EnchantItemEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		if (classes.getClass(event.enchanter.uniqueId) == QuirkClass.ENCHANTER) {
 			val inventory = event.view.topInventory as EnchantingInventory
@@ -239,7 +239,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		if (classes.getClass(event.whoClicked.uniqueId) == QuirkClass.ENCHANTER) {
 			val item = event.currentItem ?: return
@@ -263,7 +263,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun blockBreak(event: BlockBreakEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
 			val logs = listOf(
@@ -326,7 +326,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun interactEvent(event: PlayerInteractEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
 			when (event.action) {
@@ -429,7 +429,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun itemBreak(event: PlayerItemBreakEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.MINER && pickaxes.contains(event.brokenItem.type)) {
 			xray(event.player)
@@ -495,7 +495,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		val player = event.target as? Player ?: return
 
@@ -506,7 +506,7 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		val classes = UHC.game?.getQuirk(QuirkType.CLASSES) as? Classes ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		val player = event.player
 

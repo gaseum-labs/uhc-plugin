@@ -32,7 +32,6 @@ import kotlin.math.sqrt
 
 object UHC {
 	private var preGameConfig: GameConfig = GameConfig()
-	var gui = CreateGameGui(preGameConfig)
 
 	var game: Game? = null
 	var timer = 0
@@ -302,8 +301,8 @@ object UHC {
 
 	fun destroyGame() {
 		game = null
+		preGameConfig.destroy()
 		preGameConfig = GameConfig()
-		gui = CreateGameGui(preGameConfig)
 
 		PlayerData.prune()
 		Bukkit.getOnlinePlayers().forEach { player -> Lobby.onSpawnLobby(player) }

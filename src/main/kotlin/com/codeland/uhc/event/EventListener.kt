@@ -11,6 +11,7 @@ import com.codeland.uhc.core.phase.phases.Endgame
 import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
+import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.team.HideManager
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
@@ -87,7 +88,7 @@ class EventListener : Listener {
 	fun onUseItem(event: PlayerInteractEvent) {
 		val stack = event.item ?: return
 
-		if ((UHC.game?.getQuirk(QuirkType.SUMMONER) as Summoner).onSummon(event)) {
+		if ((UHC.game?.getQuirk<Summoner>(QuirkType.SUMMONER))?.onSummon(event) == true) {
 			event.isCancelled = true
 
 		} else if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
@@ -151,9 +152,9 @@ class EventListener : Listener {
 			/* remove chc specific items from drops */
 			val game = UHC.game
 			if (game != null) {
-				(game.getQuirk(QuirkType.HOTBAR) as Hotbar?)?.filterDrops(event.drops)
-				(game.getQuirk(QuirkType.HOTBAR) as PlayerCompass?)?.filterDrops(event.drops)
-				(game.getQuirk(QuirkType.HOTBAR) as InfiniteInventory?)?.filterDrops(event.drops, player)
+				game.getQuirk<Hotbar>(QuirkType.HOTBAR)?.filterDrops(event.drops)
+				game.getQuirk<PlayerCompass>(QuirkType.HOTBAR)?.filterDrops(event.drops)
+				game.getQuirk<InfiniteInventory>(QuirkType.HOTBAR)?.filterDrops(event.drops, player)
 			}
 
 			/* drop items */
@@ -593,7 +594,7 @@ class EventListener : Listener {
 			event.isCancelled = true
 
 		} else {
-			val halloween = UHC.game?.getQuirk(QuirkType.HALLOWEEN) as Halloween? ?: return
+			val halloween = UHC.game?.getQuirk<Halloween>(QuirkType.HALLOWEEN) ?: return
 
 			if (
 				event.entityType === EntityType.PLAYER &&

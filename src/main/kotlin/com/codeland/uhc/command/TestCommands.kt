@@ -137,7 +137,7 @@ class TestCommands : BaseCommand() {
 	fun testDrop(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		val carePackages = UHC.game?.getQuirk(QuirkType.CARE_PACKAGES) as? CarePackages
+		val carePackages = UHC.game?.getQuirk<CarePackages>(QuirkType.CARE_PACKAGES)
 			?: return errorMessage(sender, "Care packages is not going!")
 
 		val result = carePackages.forceDrop()

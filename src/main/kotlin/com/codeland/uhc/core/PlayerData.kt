@@ -12,6 +12,7 @@ import com.codeland.uhc.lobbyPvp.Loadouts
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
+import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.UHCProperty
@@ -339,7 +340,7 @@ class PlayerData(val uuid: UUID) {
 		}
 
 		fun getQuirkDataHolder(playerData: PlayerData, type: QuirkType, game: Game): QuirkDataHolder {
-			return playerData.quirkDataList.getOrPut(type) { QuirkDataHolder(false, game.getQuirk(type)?.defaultData() ?: 0) }
+			return playerData.quirkDataList.getOrPut(type) { QuirkDataHolder(false, game.getQuirk<Quirk>(type)?.defaultData() ?: 0) }
 		}
 
 		fun <DataType> getQuirkData(uuid: UUID, type: QuirkType, game: Game): DataType {

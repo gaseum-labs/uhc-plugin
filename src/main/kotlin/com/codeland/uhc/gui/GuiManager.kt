@@ -1,18 +1,15 @@
 package com.codeland.uhc.gui
 
-import com.codeland.uhc.UHCPlugin
-import net.minecraft.data.worldgen.biome.BiomeRegistry
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityPickupItemEvent
-import org.bukkit.event.inventory.*
-import org.bukkit.event.inventory.InventoryAction.MOVE_TO_OTHER_INVENTORY
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryDragEvent
+import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class GuiManager : Listener {
 	companion object {
@@ -27,6 +24,14 @@ class GuiManager : Listener {
 		fun <G : GuiPage> registerPersonal(uuid: UUID, gui: G): G {
 			personalGuis.getOrPut(uuid) { ArrayList() }.add(gui)
 			return gui
+		}
+
+		fun destroy(gui: GuiPage) {
+			guis.removeIf { it === gui }
+		}
+
+		fun destroyPersonal(uuid: UUID, gui: GuiPage) {
+			personalGuis.get(uuid)?.removeIf { it === gui }
 		}
 
 		private fun findGui(inventory: Inventory, uuid: UUID): Pair<GuiPage?, Boolean> {
