@@ -40,26 +40,7 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 
 	var fakeEntityID = Int.MAX_VALUE
 
-	class SkybaseBlock(var ticks: Int, val block: Block, val update: Boolean, val fakeEntityID: Int)
-
-	fun skybaseTicks(y: Int): Int {
-		val distance = y - finalMax
-
-		return if (distance <= 0) {
-			-1
-		} else {
-			val result = MAX_DECAY - DECLINE * distance
-			return if (result < 0) 0 else result
-		}
-	}
-
-	private val skybaseBlocks = ArrayList<SkybaseBlock>()
-
-	fun addSkybaseBlock(block: Block) {
-		skybaseBlocks.add(SkybaseBlock(skybaseTicks(block.y), block, true, fakeEntityID--))
-	}
-
-	override fun customStart() {
+	init {
 		SchedulerUtil.nextTick {
 			PlayerData.playerDataList.forEach { (uuid, _) ->
 				val location = Action.getPlayerLocation(uuid)
@@ -82,6 +63,25 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 		this.min = 0
 
 		timer = 0
+	}
+
+	class SkybaseBlock(var ticks: Int, val block: Block, val update: Boolean, val fakeEntityID: Int)
+
+	fun skybaseTicks(y: Int): Int {
+		val distance = y - finalMax
+
+		return if (distance <= 0) {
+			-1
+		} else {
+			val result = MAX_DECAY - DECLINE * distance
+			return if (result < 0) 0 else result
+		}
+	}
+
+	private val skybaseBlocks = ArrayList<SkybaseBlock>()
+
+	fun addSkybaseBlock(block: Block) {
+		skybaseBlocks.add(SkybaseBlock(skybaseTicks(block.y), block, true, fakeEntityID--))
 	}
 
 	override fun updateBarLength(remainingTicks: Int): Float {

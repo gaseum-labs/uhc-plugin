@@ -66,6 +66,7 @@ class UHCPlugin : JavaPlugin() {
 
 		MixerBot.createMixerBot(address, {
 			UHC.bot = it
+			UHC.getConfig().usingBot.set(true)
 		}, {
 			Util.log("${ChatColor.RED}$it")
 			Util.log("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")

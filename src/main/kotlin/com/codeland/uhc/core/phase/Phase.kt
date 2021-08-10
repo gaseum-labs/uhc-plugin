@@ -15,7 +15,7 @@ abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) 
 	 * @return if the phase should end and the next phase should start
 	 */
 	fun tick(currentTick: Int): Boolean {
-		if (length == 0) --remainingTicks
+		if (length != 0) --remainingTicks
 
 		perTick(currentTick)
 
@@ -63,8 +63,6 @@ abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) 
 	}
 
 	/* abstract */
-
-	abstract fun customStart()
 
 	abstract fun updateBarTitle(world: World, remainingSeconds: Int): String
 	abstract fun updateBarLength(remainingTicks: Int): Float

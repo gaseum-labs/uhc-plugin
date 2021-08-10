@@ -11,8 +11,6 @@ class Postgame(game: Game) : Phase(PhaseType.POSTGAME, 0, game) {
         return ""
     }
 
-    override fun customStart() {}
-
     override fun updateBarLength(remainingTicks: Int): Float {
         return 1.0f
     }

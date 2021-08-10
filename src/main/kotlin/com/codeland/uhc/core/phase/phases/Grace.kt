@@ -7,8 +7,6 @@ import com.codeland.uhc.util.Util
 import org.bukkit.*
 
 class Grace(game: Game, time: Int) : Phase(PhaseType.GRACE, time, game) {
-	override fun customStart() {}
-
 	override fun updateBarLength(remainingTicks: Int): Float {
 		return barLengthRemaining(remainingTicks)
 	}

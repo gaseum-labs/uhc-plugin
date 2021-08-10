@@ -14,7 +14,7 @@ import org.bukkit.entity.Animals
 import kotlin.math.abs
 
 class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
-	override fun customStart() {
+	init {
 		game.world.worldBorder.setSize(game.config.endgameRadius.get() * 2 + 1.0, length.toLong())
 		game.world.worldBorder.damageBuffer = 0.0
 

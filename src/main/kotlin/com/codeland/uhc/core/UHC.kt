@@ -37,8 +37,8 @@ object UHC {
 	var timer = 0
 	var timerGoing = false
 
-	private var teleportGroups = HashMap<UUID, Location>()
-	private var worldRadius: Int = 0
+	var teleportGroups = HashMap<UUID, Location>()
+	var worldRadius: Int = 375
 
 	var bot: MixerBot? = null
 	lateinit var heartsObjective: Objective
@@ -104,8 +104,8 @@ object UHC {
 
 				if (timer < 0) {
 					val countdownTitle = Title.title(
-						Component.text("Game starts in"),
 						Component.text("${-timer}", countdownColor(-timer), TextDecoration.BOLD),
+						Component.text("Game starts in"),
 						Title.Times.of(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
 					)
 
@@ -222,7 +222,7 @@ object UHC {
 					val phase = game?.phase
 					if (phase != null) UHCBar.updateBossBar(
 						player,
-						phase.updateBarTitle(player.world, phase.remainingTicks),
+						phase.updateBarTitle(player.world, phase.remainingSeconds()),
 						phase.updateBarLength(phase.remainingTicks),
 						phase.phaseType.barColor
 					)
@@ -257,6 +257,8 @@ object UHC {
 
 		messageStream(false, "Creating game worlds")
 
+		worldRadius = radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer).roundToInt()
+
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
 
@@ -267,12 +269,10 @@ object UHC {
 			return false
 		}
 
-		worldRadius = radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer).roundToInt()
-
 		val tempTeleportLocations = PlayerSpreader.spreadPlayers(
 			world,
 			numGroups,
-			worldRadius - 10.0,
+			worldRadius - 16.0,
 			if (world.environment == World.Environment.NETHER) PlayerSpreader::findYMid else PlayerSpreader::findYTop
 		)
 
@@ -293,6 +293,7 @@ object UHC {
 
 		timer = -11
 		timerGoing = true
+		preGameConfig.lock = true
 
 		messageStream(false, "Starting UHC")
 
