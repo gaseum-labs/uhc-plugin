@@ -5,7 +5,6 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
-import net.kyori.adventure.text.Component
 import org.bukkit.World
 import org.bukkit.block.Biome
 
@@ -18,9 +17,9 @@ class GameConfig {
 	}
 
 	val naturalRegeneration = UHCProperty(false)
-	val killreward = UHCProperty(KillReward.REGENERATION)
-	val usingBot = UHCProperty(GameRunner.bot != null) { set ->
-		val bot = GameRunner.bot
+	val killReward = UHCProperty(KillReward.REGENERATION)
+	val usingBot = UHCProperty(UHC.bot != null) { set ->
+		val bot = UHC.bot
 
 		if (bot == null) {
 			false
@@ -71,7 +70,7 @@ class GameConfig {
 
 	fun reset() {
 		naturalRegeneration.reset()
-		killreward.reset()
+		killReward.reset()
 		defaultWorldEnvironment.reset()
 		usingBot.reset()
 		scale.reset()
@@ -94,7 +93,7 @@ class GameConfig {
 		}
 	}
 
-	fun isWorldGenEnabled(type: WorldGenOption): Boolean {
+	fun worldGenEnabled(type: WorldGenOption): Boolean {
 		return worldGenEnabled[type.ordinal].get()
 	}
 

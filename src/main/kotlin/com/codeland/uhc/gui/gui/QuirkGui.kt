@@ -1,12 +1,10 @@
 package com.codeland.uhc.gui.gui
 
 import com.codeland.uhc.core.GameConfig
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.GuiItem
-import com.codeland.uhc.gui.GuiItemToggle
+import com.codeland.uhc.gui.guiItem.GuiItem
+import com.codeland.uhc.gui.guiItem.GuiItemToggle
 import com.codeland.uhc.gui.GuiPage
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.gui.guiItem.QuirkToggle
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.format.TextColor

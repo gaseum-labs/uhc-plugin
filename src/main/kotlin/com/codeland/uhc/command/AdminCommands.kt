@@ -5,115 +5,30 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
-import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.core.phase.PhaseType
-import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.world.WorldGenOption
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
-import org.bukkit.block.Biome
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
-	@Subcommand("start")
-	@Description("start the UHC")
-	fun startGame(sender : CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		val (groups, locs) = UHC.canStartUHC { err, message ->
-			if (err) Commands.errorMessage(sender, message) else GameRunner.sendGameMessage(sender, message)
-		}
-
-		if (groups.isNotEmpty()) Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
-			UHC.startUHC(groups, locs)
-		}
-	}
-
-	@Subcommand("startAll")
-	@Description("start the UHC with no teams")
-	fun startGameAll(sender : CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		/* stage everyone who's online */
-		Bukkit.getOnlinePlayers().forEach { player ->
-			val playerData = PlayerData.getPlayerData(player.uniqueId)
-
-			if (!playerData.optingOut) playerData.staged = true
-		}
-
-		startGame(sender)
-	}
-
 	@Subcommand("reset")
 	@Description("reset things to the waiting stage")
 	fun testReset(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		UHC.startPhase(PhaseType.WAITING)
-	}
+		val game = UHC.game ?: return Commands.errorMessage(sender, "Game is not running")
 
-	@Subcommand("mobCoefficient")
-	@Description("change the mob spawn cap coefficient")
-	fun modifyMobCapCoefficient(sender : CommandSender, coefficient : Double) {
-		if (Commands.opGuard(sender)) return
+		UHC.destroyGame()
 
-		UHC.mobCapCoefficient = coefficient
-	}
-
-	@Subcommand("setLength")
-	@Description("set the length of a phase")
-	fun setPhaseLength(sender: CommandSender, type: PhaseType, length: Int) {
-		if (Commands.opGuard(sender)) return
-
-		if (UHC.isPhase(type)) return Commands.errorMessage(sender, "Cannot modify the phase you are in!")
-
-		if (!type.hasTimer) return Commands.errorMessage(sender, "${type.prettyName} does not have a timer")
-
-		UHC.updateSetup { it.withPhaseTime(type, length) }
-	}
-
-	@Subcommand("startRadius")
-	@Description("set the starting radius")
-	fun setStartRadius(sender: CommandSender, radius: Int) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		UHC.updateSetup { it.withStartRadius(radius) }
-	}
-
-	@Subcommand("endRadius")
-	@Description("set the final radius")
-	fun setEndRadius(sender: CommandSender, radius: Int) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		UHC.updateSetup { it.withEndRadius(radius) }
-	}
-
-	@Subcommand("preset")
-	@Description("set all details of the UHC")
-	fun modifyAll(sender: CommandSender, startRadius: Int, endRadius: Int, graceTime: Int, shrinkTime: Int) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		UHC.updateSetup { Setup.custom(startRadius, endRadius, graceTime, shrinkTime) }
-	}
-
-	@Subcommand("preset")
-	@Description("set all details of the UHC")
-	fun modifyAll(sender: CommandSender, preset: Preset) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		UHC.updateSetup { preset.setup }
+		Action.sendGameMessage(sender, "Game reset")
 	}
 
 	@Subcommand("stage")
@@ -126,7 +41,7 @@ class AdminCommands : BaseCommand() {
 
 		playerData.staged = true
 
-		GameRunner.sendGameMessage(sender, "${player.name} is staged for participating")
+		Action.sendGameMessage(sender, "${player.name} is staged for participating")
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -134,7 +49,8 @@ class AdminCommands : BaseCommand() {
 	@Description("adds a player to the game after it has already started")
 	fun addLate(sender: CommandSender, offlinePlayer: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
-		if (!UHC.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going")
+		val game = UHC.game ?: return Commands.errorMessage(sender, "Game needs to be going")
+
 		if (PlayerData.isOptingOut(offlinePlayer.uniqueId)) return Commands.errorMessage(sender, "${offlinePlayer.name} is opting out of participating")
 
 		/* teleport will be to an alive team member if player is on a team */
@@ -142,8 +58,7 @@ class AdminCommands : BaseCommand() {
 		val team = TeamData.playersTeam(offlinePlayer.uniqueId)
 
 		fun randomLocation(): Location? {
-			val world = UHC.getDefaultWorldGame()
-			return Grace.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
+			return PlayerSpreader.spreadSinglePlayer(game.world, (game.world.worldBorder.size / 2) - 5)
 		}
 
 		val teleportLocation = if (team == null) {
@@ -157,13 +72,13 @@ class AdminCommands : BaseCommand() {
 			if (teammate == null)
 				randomLocation()
 			else
-				GameRunner.getPlayerLocation(teammate) ?: randomLocation()
+				Action.getPlayerLocation(teammate) ?: randomLocation()
 
 		} ?: return Commands.errorMessage(sender, "No teleport location found")
 
-		Grace.startPlayer(offlinePlayer.uniqueId, teleportLocation)
+		game.startPlayer(offlinePlayer.uniqueId, teleportLocation)
 
-		GameRunner.sendGameMessage(sender, "Started player ${offlinePlayer.name} late")
+		Action.sendGameMessage(sender, "Started player ${offlinePlayer.name} late")
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -171,28 +86,14 @@ class AdminCommands : BaseCommand() {
 	@Description("kill a player and record it in the death ledger")
 	fun kill(sender: CommandSender, offlinePlayer: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
-		if (!UHC.isGameGoing()) return Commands.errorMessage(sender, "Game needs to be going")
+		val game = UHC.game ?: return Commands.errorMessage(sender, "Game needs to be going")
 
 		val playerData = PlayerData.getPlayerData(offlinePlayer.uniqueId)
 
 		if (!playerData.participating) return Commands.errorMessage(sender, "${offlinePlayer.name} is not in the game")
 		if (!playerData.alive) return Commands.errorMessage(sender, "${offlinePlayer.name} is already dead")
 
-		GameRunner.playerDeath(offlinePlayer.uniqueId, null, playerData, true)
-	}
-
-	@Subcommand("pregen")
-	@Description("Generates all chunks in the playable area")
-	fun pregen(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		if (WorldManager.getGameWorld() == null) {
-			Commands.errorMessage(sender, "World has not been loaded")
-		} else if (WorldManager.pregenTaskID != -1) {
-			Commands.errorMessage(sender, "Pregen has already started")
-		} else {
-			WorldManager.pregen(sender as Player)
-		}
+		game.playerDeath(offlinePlayer.uniqueId, null, playerData, true)
 	}
 
 	@Subcommand("pvpCycle")
@@ -203,78 +104,13 @@ class AdminCommands : BaseCommand() {
 
 		WorldManager.refreshWorld(WorldManager.PVP_WORLD_NAME, World.Environment.NORMAL, true)
 
-		GameRunner.sendGameMessage(sender, "Pvp world reset")
+		Action.sendGameMessage(sender, "Pvp world reset")
 	}
 
 	private fun moveAllToLobby() {
 		Bukkit.getOnlinePlayers().forEach { player ->
 			if (!WorldManager.isNonGameWorld(player.world)) Lobby.onSpawnLobby(player)
 		}
-	}
-
-	@Subcommand("worldDestroy")
-	@Description("Destroys the currently loaded game worlds")
-	fun worldDestroy(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		moveAllToLobby()
-
-		val destroyedGameWorld = WorldManager.destroyWorld(WorldManager.GAME_WORLD_NAME)
-		val destroyedNetherWorld = WorldManager.destroyWorld(WorldManager.NETHER_WORLD_NAME)
-
-		if (destroyedGameWorld == null && destroyedNetherWorld == null) {
-			Commands.errorMessage(sender, "Game worlds already unloaded")
-		} else {
-			GameRunner.sendGameMessage(sender, "Game worlds destroyed")
-		}
-	}
-
-	@Subcommand("worldRecover")
-	@Description("Try to initialize game world that already exist")
-	fun worldRecover(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		moveAllToLobby()
-
-		WorldGenOption.centerBiome = null
-		val existed = WorldManager.recoverGameWorlds()
-
-		if (existed) {
-			GameRunner.sendGameMessage(sender, "Recovered game worlds")
-		} else {
-			GameRunner.sendGameMessage(sender, "No existing game worlds found, created them")
-		}
-	}
-
-	@CommandCompletion("@biome")
-	@Subcommand("worldRefresh")
-	@Description("Initialize the game worlds")
-	fun worldCycle(sender: CommandSender) {
-		internalWorldCycle(sender, null)
-	}
-
-	@CommandCompletion("@biome")
-	@Subcommand("worldRefresh")
-	@Description("Initialize the game worlds")
-	fun worldCycleBiome(sender: CommandSender, biome: Biome) {
-		internalWorldCycle(sender, biome)
-	}
-
-	private fun internalWorldCycle(sender: CommandSender, biome: Biome?) {
-		if (Commands.opGuard(sender)) return
-		if (Commands.notGoingGuard(sender)) return
-
-		moveAllToLobby()
-
-		WorldManager.destroyWorld(WorldManager.GAME_WORLD_NAME)
-		WorldManager.destroyWorld(WorldManager.NETHER_WORLD_NAME)
-
-		WorldGenOption.centerBiome = biome
-		WorldManager.refreshGameWorlds()
-
-		GameRunner.sendGameMessage(sender, "Game worlds refreshed")
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -284,12 +120,12 @@ class AdminCommands : BaseCommand() {
 		sender as Player
 		if (Commands.opGuard(sender)) return
 
-		val location = GameRunner.getPlayerLocation(toPlayer.uniqueId)
+		val location = Action.getPlayerLocation(toPlayer.uniqueId)
 
 		if (location == null) {
 			Commands.errorMessage(sender, "Could not find that player!")
 		} else {
-			GameRunner.sendGameMessage(sender, "Teleported to ${toPlayer.name}")
+			Action.sendGameMessage(sender, "Teleported to ${toPlayer.name}")
 			sender.teleport(location)
 		}
 	}
@@ -301,9 +137,9 @@ class AdminCommands : BaseCommand() {
 		sender as Player
 		if (Commands.opGuard(sender)) return
 
-		GameRunner.teleportPlayer(toPlayer.uniqueId, sender.location)
+		Action.teleportPlayer(toPlayer.uniqueId, sender.location)
 
-		GameRunner.sendGameMessage(sender, "Teleported ${toPlayer.name} to you")
+		Action.sendGameMessage(sender, "Teleported ${toPlayer.name} to you")
 	}
 
 	@CommandCompletion("@uhcplayer @quirkclass")
@@ -314,20 +150,21 @@ class AdminCommands : BaseCommand() {
 
 		if (Commands.opGuard(sender)) return
 
-		if (!UHC.isEnabled(QuirkType.CLASSES)) return Commands.errorMessage(sender, "Classes are not enabled")
+		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
+		val classes = game.getQuirk(QuirkType.CLASSES) as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
 
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val oldClass = Classes.getClass(playerData)
+		val oldClass = classes.getClass(playerData)
 
-		Classes.setClass(player.uniqueId, quirkClass)
+		classes.setClass(player.uniqueId, quirkClass)
 
 		/* only start them if the game has already started */
-		if (UHC.isGameGoing() && playerData.participating) GameRunner.playerAction(player.uniqueId) { onlinePlayer ->
+		if (playerData.participating) Action.playerAction(player.uniqueId) { onlinePlayer ->
 			Classes.startAsClass(onlinePlayer, quirkClass, oldClass)
 		}
 
-		GameRunner.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
+		Action.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
 	}
 }

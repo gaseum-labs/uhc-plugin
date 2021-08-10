@@ -2,7 +2,7 @@ package com.codeland.uhc.core.phase.phases
 
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
@@ -62,11 +62,11 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 	override fun customStart() {
 		SchedulerUtil.nextTick {
 			PlayerData.playerDataList.forEach { (uuid, _) ->
-				val location = GameRunner.getPlayerLocation(uuid)
+				val location = Action.getPlayerLocation(uuid)
 
 				if (location != null && location.world !== game.world) {
-					GameRunner.playerAction(uuid) { player -> Commands.errorMessage(player, "Failed to return to home dimension!") }
-					GameRunner.damagePlayer(uuid, 100000000000.0)
+					Action.playerAction(uuid) { player -> Commands.errorMessage(player, "Failed to return to home dimension!") }
+					Action.damagePlayer(uuid, 100000000000.0)
 				}
 			}
 		}
@@ -142,7 +142,7 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 
 				/* glow all nonpest players every 15 seconds for 2 seconds */
 				PlayerData.playerDataList.filter { (_, it) -> it.alive }.forEach { (uuid, _) ->
-					GameRunner.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
+					Action.potionEffectPlayer(uuid, PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, true))
 				}
 			}
 
@@ -158,11 +158,11 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 				/* teleport players up so they don't fall out the world */
 				PlayerData.playerDataList.forEach { (uuid, playerData) ->
 					if (playerData.participating) {
-						val location = GameRunner.getPlayerLocation(uuid)
+						val location = Action.getPlayerLocation(uuid)
 
 						if (location != null && location.y < min) {
 							location.y = min.toDouble()
-							GameRunner.teleportPlayer(uuid, location)
+							Action.teleportPlayer(uuid, location)
 						}
 					}
 				}

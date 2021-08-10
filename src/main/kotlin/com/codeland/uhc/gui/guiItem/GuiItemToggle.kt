@@ -1,8 +1,7 @@
-package com.codeland.uhc.gui
+package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.util.UHCProperty
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 
 abstract class GuiItemToggle(index: Int, property: UHCProperty<Boolean>) : GuiItemProperty<Boolean>(index, property) {
 	override fun onClick(player: Player, shift: Boolean) {

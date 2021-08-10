@@ -2,7 +2,7 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -21,7 +21,7 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 			PlayerData.playerDataList
 				.filter { (_, data) -> data.participating}
 				.forEach { (uuid, _) ->
-					GameRunner.playerAction(uuid) { player ->
+					Action.playerAction(uuid) { player ->
 
 						val inventory = player.inventory
 						if (inventory.getItem(EMPTY_SLOT) != null) {
@@ -69,17 +69,6 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 			addButtons(player)
 		}
 
-		fun modifyDrops(drops: MutableList<ItemStack>, player: Player) {
-			drops.removeAll { itemStack ->
-				itemStack.type == BUTTON_MATERIAL && itemStack.itemMeta.hasDisplayName()
-				// todo: check that the display name is actually the one we're looking for.
-			}
-			drops.addAll(getInventory(player).getAllOtherItems())
-			getInventory(player).resetPages()
-			addButtons(player)
-		}
-
-
 		fun addButtons(player: Player) {
 			val inventory = player.inventory
 			val infinventory = getInventory(player)
@@ -96,6 +85,16 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 			forward.itemMeta = meta2
 			inventory.setItem(FORWARD_BUTTON, ItemStack(forward))
 		}
+	}
+
+	fun filterDrops(drops: MutableList<ItemStack>, player: Player) {
+		drops.removeAll { itemStack ->
+			itemStack.type == BUTTON_MATERIAL && itemStack.itemMeta.hasDisplayName()
+			// todo: check that the display name is actually the one we're looking for.
+		}
+		drops.addAll(getInventory(player).getAllOtherItems())
+		getInventory(player).resetPages()
+		addButtons(player)
 	}
 
 	class InfInventory(val player: Player) {
@@ -191,7 +190,7 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 	}
 
 	override fun onStartPlayer(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player ->
+		Action.playerAction(uuid) { player ->
 			addButtons(player)
 		}
 	}

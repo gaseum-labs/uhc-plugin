@@ -1,7 +1,6 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
@@ -233,7 +232,7 @@ object Packet {
 
 				/* teammate glowing */
 				} else if (
-					UHC.isGameGoing() &&
+					UHC.game != null &&
 					sentPlayer.entityId != metaPlayerID &&
 					sentPlayerTeam != null &&
 					sentPlayerTeam.members.contains(metaPlayer.uniqueId)
@@ -252,7 +251,7 @@ object Packet {
 		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.SCOREBOARD_SCORE) {
 			override fun onPacketSending(event: PacketEvent) {
 				val objectiveName = scoreboardObjectiveField[event.packet.handle] as String
-				if (objectiveName != GameRunner.heartsObjective.name) return
+				if (objectiveName != UHC.heartsObjective.name) return
 
 				val originalPlayerName = scoreboardPlayerField[event.packet.handle] as String
 				val player = Bukkit.getPlayer(originalPlayerName) ?: return
@@ -316,7 +315,7 @@ object Packet {
 					)
 				)
 
-				newPing.setFavicon(GameRunner.bot?.serverIcon ?: oldPing.d())
+				newPing.setFavicon(UHC.bot?.serverIcon ?: oldPing.d())
 
 				event.packet = PacketContainer.fromPacket(PacketStatusOutServerInfo(newPing))
 			}

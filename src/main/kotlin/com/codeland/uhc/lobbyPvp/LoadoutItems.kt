@@ -48,15 +48,15 @@ val pickaxeEnchants: Array<ItemOption> = arrayOf(
 )
 
 fun createSpeed(): ItemStack {
-	return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.SPEED, false, true))
+	return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.SPEED, false, true)).create()
 }
 
 fun createHealth(): ItemStack {
-	return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.INSTANT_HEAL, false, true))
+	return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.INSTANT_HEAL, false, true)).create()
 }
 
 fun createDamage(): ItemStack {
-	return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.INSTANT_DAMAGE, false, true))
+	return Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.INSTANT_DAMAGE, false, true)).create()
 }
 
 val arrowAmounts: Array<ItemOption> = arrayOf(

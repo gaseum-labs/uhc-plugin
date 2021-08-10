@@ -1,10 +1,10 @@
 package com.codeland.uhc.gui.gui
 
 import com.codeland.uhc.core.GameConfig
-import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.gui.GuiPage
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.gui.guiItem.WorldGenSetting
+import com.codeland.uhc.gui.guiItem.impl.WorldGenSetting
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenOption
 import net.kyori.adventure.text.format.TextColor

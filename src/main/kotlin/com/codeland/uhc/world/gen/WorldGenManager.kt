@@ -138,13 +138,13 @@ object WorldGenManager {
 
 	    val (biomeManager, featureManager) = when (world.name) {
 	        WorldManager.GAME_WORLD_NAME -> {
-			    if (UHC.getConfig().isWorldGenEnabled(WorldGenOption.CHUNK_BIOMES)) {
+			    if (UHC.getConfig().worldGenEnabled(WorldGenOption.CHUNK_BIOMES)) {
 				    Pair(WorldChunkManagerOverworldChunkBiomes(seed, biomeRegistry), null)
 
 			    } else {
 			    	val manager = WorldChunkManagerOverworldGame(
 					    seed, biomeRegistry,
-					    BiomeNo.fromName(UHC.getConfig().centerBiome?.name),
+					    BiomeNo.fromName(UHC.getConfig().centerBiome.get()?.name),
 					    UHC.game?.initialRadius ?: 375,
 					    UHC.getConfig().endgameRadius.get(),
 					    false
@@ -186,7 +186,7 @@ object WorldGenManager {
 			    chunkGenerator as ChunkGeneratorAbstract,
 			    biomeManager,
 			    if (world.name == WorldManager.GAME_WORLD_NAME) {
-			    	UHC.getConfig().isWorldGenEnabled(WorldGenOption.AMPLIFIED)
+			    	UHC.getConfig().worldGenEnabled(WorldGenOption.AMPLIFIED)
 			    } else {
 				    false
 			    },

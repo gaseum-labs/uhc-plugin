@@ -2,11 +2,8 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
@@ -27,11 +24,15 @@ class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 	}
 
 	override fun onStartPlayer(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player -> player.inventory.addItem(createCompass()) }
+		Action.playerAction(uuid) { player -> player.inventory.addItem(createCompass()) }
 	}
 
 	override fun onEndPlayer(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player -> revokeCompass(player) }
+		Action.playerAction(uuid) { player -> revokeCompass(player) }
+	}
+
+	fun filterDrops(drops: MutableList<ItemStack>) {
+		drops.removeAll { itemStack -> isCompass(itemStack) }
 	}
 
 	companion object {
@@ -57,10 +58,6 @@ class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 			player.inventory.contents.forEach { itemStack ->
 				if (isCompass(itemStack)) itemStack.amount = 0
 			}
-		}
-
-		fun filterDrops(drops: MutableList<ItemStack>) {
-			drops.removeAll { itemStack -> isCompass(itemStack) }
 		}
 
 		fun compassTick() {

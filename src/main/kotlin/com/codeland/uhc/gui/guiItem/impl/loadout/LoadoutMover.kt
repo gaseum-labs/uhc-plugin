@@ -1,9 +1,9 @@
-package com.codeland.uhc.gui.guiItem.loadout
+package com.codeland.uhc.gui.guiItem.impl.loadout
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.gui.MoveableGuiItem
+import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import com.codeland.uhc.gui.MoveableGuiPage
 import com.codeland.uhc.lobbyPvp.LoadoutItems
 import com.codeland.uhc.lobbyPvp.Loadouts

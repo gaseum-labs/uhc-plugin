@@ -1,4 +1,4 @@
-package com.codeland.uhc.gui
+package com.codeland.uhc.gui.guiItem
 
 import com.codeland.uhc.util.UHCProperty
 import org.bukkit.inventory.ItemStack

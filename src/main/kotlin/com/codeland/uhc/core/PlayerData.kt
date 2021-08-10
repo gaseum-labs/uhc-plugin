@@ -263,12 +263,12 @@ class PlayerData(val uuid: UUID) {
 			return true
 		}
 
-		fun zombieBorderTick(currentTick: Int) {
+		fun zombieBorderTick(currentTick: Int, game: Game) {
 			if (currentTick % 20 == 0) {
-				val borderWorld = UHC.getDefaultWorldGame()
+				val borderWorld = game.world
 				val borderRadius = borderWorld.worldBorder.size / 2.0
 
-				playerDataList.forEach { (uuid, playerData) ->
+				playerDataList.forEach { (_, playerData) ->
 					val zombie = playerData.offlineZombie
 
 					if (zombie != null && zombie.world === borderWorld) {
@@ -334,31 +334,20 @@ class PlayerData(val uuid: UUID) {
 
 		/* quirkData getters */
 
-		fun getQuirkDataHolder(uuid: UUID, type: QuirkType): QuirkDataHolder {
-			return getQuirkDataHolder(getPlayerData(uuid), type)
+		fun getQuirkDataHolder(uuid: UUID, type: QuirkType, game: Game): QuirkDataHolder {
+			return getQuirkDataHolder(getPlayerData(uuid), type, game)
 		}
 
-		fun getQuirkDataHolder(playerData: PlayerData, type: QuirkType): QuirkDataHolder {
-			val quirkDataList = playerData.quirkDataList
-			val value = quirkDataList[type]
-
-			return if (value == null) {
-				val defaultDataHolder = QuirkDataHolder(false, UHC.getQuirk(type).defaultData())
-				quirkDataList[type] = defaultDataHolder
-
-				defaultDataHolder
-
-			} else {
-				value
-			}
+		fun getQuirkDataHolder(playerData: PlayerData, type: QuirkType, game: Game): QuirkDataHolder {
+			return playerData.quirkDataList.getOrPut(type) { QuirkDataHolder(false, game.getQuirk(type)?.defaultData() ?: 0) }
 		}
 
-		fun <DataType> getQuirkData(uuid: UUID, type: QuirkType): DataType {
-			return getQuirkDataHolder(uuid, type).data as DataType
+		fun <DataType> getQuirkData(uuid: UUID, type: QuirkType, game: Game): DataType {
+			return getQuirkDataHolder(uuid, type, game).data as DataType
 		}
 
-		fun <DataType> getQuirkData(playerData: PlayerData, type: QuirkType): DataType {
-			return getQuirkDataHolder(playerData, type).data as DataType
+		fun <DataType> getQuirkData(playerData: PlayerData, type: QuirkType, game: Game): DataType {
+			return getQuirkDataHolder(playerData, type, game).data as DataType
 		}
 	}
 }

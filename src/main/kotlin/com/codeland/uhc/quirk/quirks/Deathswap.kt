@@ -1,12 +1,9 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.phase.Phase
-import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -15,7 +12,6 @@ import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
-import org.bukkit.Material
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayList
@@ -56,7 +52,7 @@ class Deathswap(type: QuirkType, game: Game) : Quirk(type, game) {
 				if (playerData.participating && playerData.alive) {
 					used.add(false)
 					players.add(uuid)
-					locations.add(GameRunner.getPlayerLocation(uuid) ?: game.spectatorSpawnLocation())
+					locations.add(Action.getPlayerLocation(uuid) ?: game.spectatorSpawnLocation())
 				}
 			}
 
@@ -67,7 +63,7 @@ class Deathswap(type: QuirkType, game: Game) : Quirk(type, game) {
 					while (used[index] || index == i) index = (index + 1) % used.size
 
 					used[index] = true
-					GameRunner.teleportPlayer(uuid, locations[index])
+					Action.teleportPlayer(uuid, locations[index])
 				}
 			}
 		}

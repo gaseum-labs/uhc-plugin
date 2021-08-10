@@ -1,6 +1,7 @@
 package com.codeland.uhc.customSpawning
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Util
@@ -21,7 +22,8 @@ object CustomSpawning {
 	fun getSpawnInfo(
 		type: CustomSpawningType,
 		player: Player,
-		spawningData: CustomSpawningType.SpawningPlayerData
+		spawningData: CustomSpawningType.SpawningPlayerData,
+		game: Game
 	): SpawnInfo? {
 		return when (player.world.name) {
 			WorldManager.GAME_WORLD_NAME -> {
@@ -29,8 +31,8 @@ object CustomSpawning {
 
 				val supplementalList = ArrayList<SpawnInfo>()
 				if (type === CustomSpawningType.HOSTILE) {
-					UHC.quirks.forEach { quirk ->
-						if (quirk.enabled.get() && quirk.spawnInfos != null) quirk.spawnInfos.forEach { spawnInfo ->
+					game.quirks.filterNotNull().forEach { quirk ->
+						if (quirk.spawnInfos != null) quirk.spawnInfos.forEach { spawnInfo ->
 							supplementalList.add(
 								spawnInfo
 							)
@@ -217,7 +219,7 @@ object CustomSpawning {
 		return Pair(playerMobCount, playerMobCapacity)
 	}
 
-	fun spawnTick(type: CustomSpawningType, currentTick: Int) {
+	fun spawnTick(type: CustomSpawningType, currentTick: Int, game: Game) {
 		if (currentTick % type.tryTime == type.ordinal) {
 			/* list of online players to collect from first pass */
 			val playerList = ArrayList<Player>()
@@ -283,7 +285,7 @@ object CustomSpawning {
 				var playerMobCapacity = calcPlayerMobs(type, player)
 
 				if (playerMobCapacity.second < 1.0) {
-					val spawnInfo = getSpawnInfo(type, player, data) ?: continue
+					val spawnInfo = getSpawnInfo(type, player, data, game) ?: continue
 
 					val (entityType, block) = getSpawnBlock(type, player, data, playerList, spawnInfo) ?: continue
 

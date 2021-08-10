@@ -1,7 +1,7 @@
-package com.codeland.uhc.gui.guiItem
+package com.codeland.uhc.gui.guiItem.impl
 
 import com.codeland.uhc.util.UHCProperty
-import com.codeland.uhc.gui.GuiItemProperty
+import com.codeland.uhc.gui.guiItem.GuiItemProperty
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.world.WorldGenOption
 import org.bukkit.entity.Player

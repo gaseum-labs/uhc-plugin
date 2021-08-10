@@ -1,7 +1,7 @@
 package com.codeland.uhc.core.phase.phases
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.util.Util
@@ -19,8 +19,8 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 		game.world.worldBorder.damageBuffer = 0.0
 
 		Bukkit.getOnlinePlayers().forEach { player ->
-			GameRunner.sendGameMessage(player, "Grace period has ended!")
-			GameRunner.sendGameMessage(player, "The border is now shrinking")
+			Action.sendGameMessage(player, "Grace period has ended!")
+			Action.sendGameMessage(player, "The border is now shrinking")
 		}
 	}
 

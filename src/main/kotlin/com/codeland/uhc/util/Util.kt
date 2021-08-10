@@ -315,6 +315,10 @@ object Util {
 
 		return component
 	}
+
+	fun coloredInGameMessage(string: String, color: ChatColor): String {
+		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
+	}
 }
 
 fun main() {

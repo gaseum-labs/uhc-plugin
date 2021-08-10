@@ -7,7 +7,10 @@ import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
+import com.codeland.uhc.discord.MixerBot
+import com.codeland.uhc.gui.gui.CreateGameGui
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
@@ -17,6 +20,9 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minecraft.world.BossBattle
 import org.bukkit.*
+import org.bukkit.scoreboard.DisplaySlot
+import org.bukkit.scoreboard.Objective
+import org.bukkit.scoreboard.RenderType
 import java.time.Duration
 import java.util.*
 import kotlin.collections.HashMap
@@ -26,12 +32,17 @@ import kotlin.math.sqrt
 
 object UHC {
 	private var preGameConfig: GameConfig = GameConfig()
+	var gui = CreateGameGui(preGameConfig)
+
 	var game: Game? = null
 	var timer = 0
 	var timerGoing = false
 
 	private var teleportGroups = HashMap<UUID, Location>()
 	private var worldRadius: Int = 0
+
+	var bot: MixerBot? = null
+	lateinit var heartsObjective: Objective
 
 	val areaPerPlayer = area(375.0f) / 8
 	fun area(radius: Float) = ((radius * 2) + 1).pow(2)
@@ -48,7 +59,19 @@ object UHC {
 	}
 
 	fun startLobby() {
-		PlayerData.prune()
+		/* register hearts objective */
+		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
+
+		val objective = scoreboard.getObjective("hp")
+			?: scoreboard.registerNewObjective("hp", "health", Component.text("hp"), RenderType.HEARTS)
+
+		objective.renderType = RenderType.HEARTS
+		objective.displayName(Component.text("hp"))
+		objective.displaySlot = DisplaySlot.PLAYER_LIST
+
+		heartsObjective = objective
+
+		/* clear residual teams */
 		TeamData.destroyTeam(null, true, true) {}
 		Bukkit.getServer().onlinePlayers.forEach { player -> Lobby.onSpawnLobby(player) }
 
@@ -62,11 +85,11 @@ object UHC {
 				currentGame.phase.tick(currentTick)
 
 				if (currentGame.phase is Grace || currentGame.phase is Shrink) {
-					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick)
-					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick)
+					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
+					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
 				}
 
-				PlayerData.zombieBorderTick(currentTick)
+				PlayerData.zombieBorderTick(currentTick, currentGame)
 
 				ledgerTrailTick(currentGame, currentTick)
 
@@ -114,7 +137,7 @@ object UHC {
 					/* add people to team vcs */
 					TeamData.teams.forEach { team ->
 						if (team.name == null) team.automaticName()
-						if (preGameConfig.usingBot.get()) GameRunner.bot?.addToTeamChannel(team, team.members)
+						if (preGameConfig.usingBot.get()) bot?.addToTeamChannel(team, team.members)
 					}
 
 					/* teleport and set playerData to current */
@@ -142,7 +165,7 @@ object UHC {
 			val player = Bukkit.getPlayer(uuid)
 
 			if (playerData.participating && (player == null || player.gameMode !== GameMode.SPECTATOR)) {
-				val block = GameRunner.getPlayerLocation(uuid)?.block
+				val block = Action.getPlayerLocation(uuid)?.block
 				if (block != null) game.ledger.addPlayerPosition(uuid, block)
 			}
 		}
@@ -280,6 +303,7 @@ object UHC {
 	fun destroyGame() {
 		game = null
 		preGameConfig = GameConfig()
+		gui = CreateGameGui(preGameConfig)
 
 		PlayerData.prune()
 		Bukkit.getOnlinePlayers().forEach { player -> Lobby.onSpawnLobby(player) }

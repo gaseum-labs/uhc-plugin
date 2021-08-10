@@ -1,7 +1,7 @@
-package com.codeland.uhc.gui.guiItem.loadout
+package com.codeland.uhc.gui.guiItem.impl.loadout
 
 import com.codeland.uhc.util.UHCProperty
-import com.codeland.uhc.gui.GuiItemProperty
+import com.codeland.uhc.gui.guiItem.GuiItemProperty
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.gui.ItemCreator.Companion.stateName
 import com.codeland.uhc.lobbyPvp.Loadouts

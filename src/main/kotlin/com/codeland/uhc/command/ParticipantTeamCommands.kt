@@ -3,7 +3,6 @@ package com.codeland.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import net.kyori.adventure.text.Component

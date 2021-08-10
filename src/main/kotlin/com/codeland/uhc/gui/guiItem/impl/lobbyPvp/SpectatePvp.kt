@@ -1,6 +1,6 @@
-package com.codeland.uhc.gui.guiItem.lobbyPvp;
+package com.codeland.uhc.gui.guiItem.impl.lobbyPvp;
 
-import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.Arena
 import com.codeland.uhc.lobbyPvp.ArenaManager

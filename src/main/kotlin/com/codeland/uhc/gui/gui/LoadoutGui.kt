@@ -1,14 +1,14 @@
 package com.codeland.uhc.gui.gui
 
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
-import com.codeland.uhc.gui.MoveableGuiItem
 import com.codeland.uhc.gui.MoveableGuiPage
-import com.codeland.uhc.gui.guiItem.CloseButton
-import com.codeland.uhc.gui.guiItem.loadout.CostCounter
-import com.codeland.uhc.gui.guiItem.loadout.LoadoutMover
+import com.codeland.uhc.gui.guiItem.MoveableGuiItem
+import com.codeland.uhc.gui.guiItem.impl.CloseButton
+import com.codeland.uhc.gui.guiItem.impl.loadout.CostCounter
+import com.codeland.uhc.gui.guiItem.impl.loadout.LoadoutMover
 import com.codeland.uhc.lobbyPvp.LoadoutItems
 import com.codeland.uhc.lobbyPvp.Loadouts
 import com.codeland.uhc.util.Util
@@ -63,7 +63,7 @@ MoveableGuiPage(
 
 	override fun save() {
 		if (++globalSaveCount % 5 == 0) {
-			val guild = GameRunner.bot?.guild() ?: return
+			val guild = UHC.bot?.guild() ?: return
 			DiscordFilesystem.loadoutsFile.save(guild, DataManager.loadouts)
 		}
 	}

@@ -1,8 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.gui.ItemCreator
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material
@@ -14,7 +13,7 @@ class Pumpkin(type: QuirkType, game: Game) : Quirk(type, game) {
 	override fun customDestroy() {}
 
 	override fun onStartPlayer(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player ->
+		Action.playerAction(uuid) { player ->
 			val pumpkinItem = ItemStack(Material.CARVED_PUMPKIN)
 			val meta = pumpkinItem.itemMeta
 			meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
@@ -25,7 +24,7 @@ class Pumpkin(type: QuirkType, game: Game) : Quirk(type, game) {
 	}
 
 	override fun onEndPlayer(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player ->
+		Action.playerAction(uuid) { player ->
 			player.inventory.helmet = null
 		}
 	}

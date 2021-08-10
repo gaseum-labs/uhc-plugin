@@ -1,11 +1,8 @@
 package com.codeland.uhc.quirk.quirks.classes
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.phase.Phase
-import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Summoner
@@ -160,25 +157,41 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
 			setClass(uuid, QuirkClass.NO_CLASS)
-			GameRunner.playerAction(uuid) { player ->
+			Action.playerAction(uuid) { player ->
 				startAsClass(player, QuirkClass.NO_CLASS, getClass(playerData))
 			}
 		}
 	}
 
 	override fun onStartPlayer(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player ->
+		Action.playerAction(uuid) { player ->
 			val quirkClass = getClass(uuid)
 
 			if (quirkClass != QuirkClass.NO_CLASS) startAsClass(player, quirkClass, QuirkClass.NO_CLASS)
 		}
 	}
 
+	fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
+		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES, game).data = quirkClass
+	}
+
+	fun setClass(uuid: UUID, quirkClass: QuirkClass) {
+		setClass(PlayerData.getPlayerData(uuid), quirkClass)
+	}
+
+	fun getClass(playerData: PlayerData): QuirkClass {
+		return PlayerData.getQuirkData(playerData, QuirkType.CLASSES, game)
+	}
+
+	fun getClass(uuid: UUID): QuirkClass {
+		return getClass(PlayerData.getPlayerData(uuid))
+	}
+
 	override fun onEndPlayer(uuid: UUID) {
-		GameRunner.playerAction(uuid) { player -> removeHead(player) }
+		Action.playerAction(uuid) { player -> removeHead(player) }
 		val playerData = PlayerData.getPlayerData(uuid)
 
-		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = QuirkClass.NO_CLASS
+		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES, game).data = QuirkClass.NO_CLASS
 	}
 
 	private fun generateSuperbreakMessage(percent: Double, overflow: Boolean): String {
@@ -263,27 +276,11 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 			return newItem
 		}
 
-		fun setClass(playerData: PlayerData, quirkClass: QuirkClass) {
-			PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = quirkClass
-		}
-
-		fun setClass(uuid: UUID, quirkClass: QuirkClass) {
-			setClass(PlayerData.getPlayerData(uuid), quirkClass)
-		}
-
 		fun startAsClass(player: Player, quirkClass: QuirkClass, oldClass: QuirkClass) {
 			oldClass.onEnd(player)
 
 			giveClassHead(player, quirkClass)
 			quirkClass.onStart(player)
-		}
-
-		fun getClass(playerData: PlayerData): QuirkClass {
-			return PlayerData.getQuirkData(playerData, QuirkType.CLASSES)
-		}
-
-		fun getClass(uuid: UUID): QuirkClass {
-			return getClass(PlayerData.getPlayerData(uuid))
 		}
 
 		fun giveClassHead(player: Player, quirkClass: QuirkClass) {

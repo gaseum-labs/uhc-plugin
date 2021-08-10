@@ -1,6 +1,6 @@
-package com.codeland.uhc.gui.guiItem;
+package com.codeland.uhc.gui.guiItem.impl;
 
-import com.codeland.uhc.gui.GuiItem
+import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.ChatColor
 import org.bukkit.Material

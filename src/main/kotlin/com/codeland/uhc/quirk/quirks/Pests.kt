@@ -1,11 +1,8 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
@@ -18,14 +15,14 @@ class Pests(type: QuirkType, game: Game) : Quirk(type, game) {
     override fun customDestroy() {
         /* remove all pests from the game */
         PlayerData.playerDataList.filter { (_, playerData) -> playerData.undead() }.forEach { (uuid, _) ->
-            GameRunner.playerAction(uuid) { player ->
+            Action.playerAction(uuid) { player ->
 	            player.gameMode = GameMode.SPECTATOR
             }
         }
     }
 
     override fun onStartPlayer(uuid: UUID) {
-        GameRunner.playerAction(uuid) { player ->
+        Action.playerAction(uuid) { player ->
             if (PlayerData.isUndead(player.uniqueId)) {
                 player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
             }

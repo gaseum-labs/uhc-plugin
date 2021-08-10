@@ -2,13 +2,11 @@ package com.codeland.uhc
 
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.*
-import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.core.phase.VariantList
 import com.codeland.uhc.util.GoogleDDNSUpdater
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WebAddress
@@ -57,8 +55,6 @@ class UHCPlugin : JavaPlugin() {
 
 		WorldGenManager.init(server)
 
-		VariantList.create()
-
 		val address = WebAddress.getLocalAddress()
 
 		try {
@@ -69,7 +65,7 @@ class UHCPlugin : JavaPlugin() {
 		}
 
 		MixerBot.createMixerBot(address, {
-			GameRunner.bot = it
+			UHC.bot = it
 		}, {
 			Util.log("${ChatColor.RED}$it")
 			Util.log("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
@@ -77,10 +73,7 @@ class UHCPlugin : JavaPlugin() {
 
 		server.scheduler.scheduleSyncDelayedTask(this) {
 			WorldManager.init()
-
-			GameRunner.registerHearts()
-
-			UHC.startWaiting()
+			UHC.startLobby()
 		}
 	}
 

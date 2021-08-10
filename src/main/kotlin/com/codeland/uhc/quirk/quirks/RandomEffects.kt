@@ -2,21 +2,13 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.GameRunner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.event.Brew
-import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
-import org.bukkit.Material
-import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import org.bukkit.potion.PotionType
-import java.util.*
 
 class RandomEffects(type: QuirkType, game: Game) : Quirk(type, game) {
 	var time = 180
@@ -59,7 +51,7 @@ class RandomEffects(type: QuirkType, game: Game) : Quirk(type, game) {
 			}
 
 			PlayerData.playerDataList.forEach { (uuid, playerData) ->
-				if (playerData.participating) GameRunner.playerAction(uuid) { player ->
+				if (playerData.participating) Action.playerAction(uuid) { player ->
 					player.addPotionEffect(PotionEffect(usingEffects[effectIndex], 3600, 0, false, true, true))
 				}
 			}

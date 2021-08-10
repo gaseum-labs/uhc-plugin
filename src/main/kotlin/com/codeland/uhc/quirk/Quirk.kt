@@ -16,7 +16,7 @@ abstract class Quirk(val type: QuirkType, val game: Game) {
 	init {
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
 			if (playerData.participating) {
-				PlayerData.getQuirkDataHolder(playerData, type).applied = true
+				PlayerData.getQuirkDataHolder(playerData, type, game).applied = true
 				onStartPlayer(uuid)
 			}
 		}
@@ -28,7 +28,7 @@ abstract class Quirk(val type: QuirkType, val game: Game) {
 
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
 			if (playerData.participating) {
-				val quirkDataHolder = PlayerData.getQuirkDataHolder(playerData, type)
+				val quirkDataHolder = PlayerData.getQuirkDataHolder(playerData, type, game)
 
 				if (quirkDataHolder.applied) {
 					onEndPlayer(uuid)
