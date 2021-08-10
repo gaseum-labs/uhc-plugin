@@ -2,8 +2,8 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.discord.MixerBot
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.Grace
+import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.Team

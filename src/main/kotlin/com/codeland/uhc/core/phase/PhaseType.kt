@@ -1,10 +1,10 @@
-package com.codeland.uhc.phase;
+package com.codeland.uhc.core.phase;
 
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.phases.Endgame
-import com.codeland.uhc.phase.phases.Grace
-import com.codeland.uhc.phase.phases.Postgame
-import com.codeland.uhc.phase.phases.Shrink
+import com.codeland.uhc.core.phase.phases.Endgame
+import com.codeland.uhc.core.phase.phases.Grace
+import com.codeland.uhc.core.phase.phases.Postgame
+import com.codeland.uhc.core.phase.phases.Shrink
 import net.minecraft.world.BossBattle
 import org.bukkit.ChatColor
 import org.bukkit.Material

@@ -1,15 +1,16 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.Endgame
-import com.codeland.uhc.phase.phases.Grace
-import com.codeland.uhc.phase.phases.Postgame
-import com.codeland.uhc.phase.phases.Shrink
+import com.codeland.uhc.core.phase.Phase
+import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.core.phase.phases.Endgame
+import com.codeland.uhc.core.phase.phases.Grace
+import com.codeland.uhc.core.phase.phases.Postgame
+import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.UHCProperty
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration

@@ -1,10 +1,11 @@
 package com.codeland.uhc.core
 
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.quirk.Quirk
+import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
+import net.kyori.adventure.text.Component
 import org.bukkit.World
 import org.bukkit.block.Biome
 

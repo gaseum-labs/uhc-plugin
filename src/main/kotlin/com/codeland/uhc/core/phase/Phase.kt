@@ -1,4 +1,4 @@
-package com.codeland.uhc.phase
+package com.codeland.uhc.core.phase
 
 import com.codeland.uhc.core.Game
 import org.bukkit.Bukkit

@@ -1,48 +1,29 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.ItemUtil
-import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
 import kotlin.collections.ArrayList
 
-class PlayerCompass(type: QuirkType) : Quirk(type) {
-	var taskID = 0
-
-	override fun onEnable() {
-		if (UHC.isGameGoing()) {
-			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
-		}
-	}
+class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
+	var taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
 
 	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskID)
-	}
-
-	override val representation = ItemCreator.fromType(Material.COMPASS)
-
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE) {
-			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
-		} else if (phase.type == PhaseType.POSTGAME || phase.type == PhaseType.WAITING) {
-			Bukkit.getScheduler().cancelTask(taskID)
-		}
 	}
 
 	override fun onStartPlayer(uuid: UUID) {

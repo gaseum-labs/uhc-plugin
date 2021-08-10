@@ -1,11 +1,13 @@
 package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.SchedulerUtil
@@ -14,32 +16,23 @@ import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.inventory.ItemStack
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayList
 import kotlin.math.ceil
 
-class Deathswap(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {
-		if (UHC.isGameGoing()) taskId = SchedulerUtil.everyTick(::runTask)
+class Deathswap(type: QuirkType, game: Game) : Quirk(type, game) {
+	init {
+		resetTimer()
+		taskId = SchedulerUtil.everyTick(::runTask)
 	}
 
 	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
 
-	override val representation = ItemCreator.fromType(Material.MAGENTA_GLAZED_TERRACOTTA)
-
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE) {
-			resetTimer()
-
-			taskId = SchedulerUtil.everyTick(::runTask)
-
-		} else if (phase.type == PhaseType.WAITING || phase.type == PhaseType.POSTGAME) {
-			Bukkit.getScheduler().cancelTask(taskId)
-		}
+	override fun onPhaseSwitch(phase: Phase) {
+		if (phase is Postgame) Bukkit.getScheduler().cancelTask(taskId)
 	}
 
 	companion object {
@@ -54,7 +47,7 @@ class Deathswap(type: QuirkType) : Quirk(type) {
 		const val MIN_TIME = 120
 		const val MAX_TIME = 300
 
-		fun doSwaps() {
+		fun doSwaps(game: Game) {
 			val used = ArrayList<Boolean>()
 			val players = ArrayList<UUID>()
 			val locations = ArrayList<Location>()
@@ -63,7 +56,7 @@ class Deathswap(type: QuirkType) : Quirk(type) {
 				if (playerData.participating && playerData.alive) {
 					used.add(false)
 					players.add(uuid)
-					locations.add(GameRunner.getPlayerLocation(uuid) ?: UHC.spectatorSpawnLocation())
+					locations.add(GameRunner.getPlayerLocation(uuid) ?: game.spectatorSpawnLocation())
 				}
 			}
 

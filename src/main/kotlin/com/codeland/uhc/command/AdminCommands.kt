@@ -8,8 +8,8 @@ import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.*
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.Grace
+import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass

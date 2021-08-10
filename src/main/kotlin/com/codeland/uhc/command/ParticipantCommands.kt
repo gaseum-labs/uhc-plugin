@@ -7,7 +7,7 @@ import co.aikar.commands.annotation.Description
 import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.ArenaManager

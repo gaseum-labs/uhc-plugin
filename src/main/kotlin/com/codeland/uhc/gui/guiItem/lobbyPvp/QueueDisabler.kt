@@ -1,6 +1,6 @@
-package com.codeland.uhc.gui.guiItem
+package com.codeland.uhc.gui.guiItem.lobbyPvp
 
-import com.codeland.uhc.core.UHCProperty
+import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
 import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.ChatColor

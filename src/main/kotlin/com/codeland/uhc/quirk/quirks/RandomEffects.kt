@@ -1,65 +1,39 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.event.Brew
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Bukkit
-import org.bukkit.GameMode
 import org.bukkit.Material
-import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.PotionMeta
-import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 import java.util.*
 
-class RandomEffects(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {
-		timer = time
+class RandomEffects(type: QuirkType, game: Game) : Quirk(type, game) {
+	var time = 180
+	var timer = 0
 
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
-			if (!UHC.isGameGoing()) return@scheduleSyncRepeatingTask
-
-			if (--timer == 0) {
-				timer = time
-				giveEffects()
-			}
-		}, 0, 20)
-
-		if (UHC.isGameGoing())
+	var taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
+		if (--timer <= 0) {
+			timer = time
 			giveEffects()
-	}
-
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE)
-			giveEffects()
-
-		else if (phase.type == PhaseType.POSTGAME || phase.type == PhaseType.WAITING)
-			Bukkit.getScheduler().cancelTask(taskID)
-	}
+		}
+	}, 0, 20)
 
 	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(taskID)
 	}
 
-	override val representation = ItemCreator.fromStack(Brew.createDefaultPotion(Material.POTION, PotionData(PotionType.WATER)))
-
-	var taskID = 0
-
 	companion object {
-		var time = 180
-		var timer = 0
-
 		var effects = arrayOf(
 			PotionEffectType.SPEED,
 			PotionEffectType.FAST_DIGGING,

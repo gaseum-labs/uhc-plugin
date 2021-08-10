@@ -1,16 +1,15 @@
 package com.codeland.uhc.quirk.quirks.classes
 
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Summoner
 import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -26,13 +25,10 @@ import org.bukkit.inventory.meta.Damageable
 import org.bukkit.inventory.meta.ItemMeta
 import java.util.*
 import kotlin.math.abs
-import kotlin.math.ceil
 import kotlin.math.floor
-import kotlin.math.min
-import kotlin.random.Random.Default.nextInt
 
-class Classes(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {
+class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
+	init {
 		var currentTick = 0
 
 		timerId = SchedulerUtil.everyTick {
@@ -161,6 +157,13 @@ class Classes(type: QuirkType) : Quirk(type) {
 
 	override fun customDestroy() {
 		Bukkit.getScheduler().cancelTask(timerId)
+
+		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+			setClass(uuid, QuirkClass.NO_CLASS)
+			GameRunner.playerAction(uuid) { player ->
+				startAsClass(player, QuirkClass.NO_CLASS, getClass(playerData))
+			}
+		}
 	}
 
 	override fun onStartPlayer(uuid: UUID) {
@@ -178,17 +181,6 @@ class Classes(type: QuirkType) : Quirk(type) {
 		PlayerData.getQuirkDataHolder(playerData, QuirkType.CLASSES).data = QuirkClass.NO_CLASS
 	}
 
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.WAITING) {
-			PlayerData.playerDataList.forEach { (uuid, playerData) ->
-				setClass(uuid, QuirkClass.NO_CLASS)
-				GameRunner.playerAction(uuid) { player ->
-					startAsClass(player, QuirkClass.NO_CLASS, getClass(playerData))
-				}
-			}
-		}
-	}
-
 	private fun generateSuperbreakMessage(percent: Double, overflow: Boolean): String {
 		val message = StringBuilder("${ChatColor.GRAY}Superbreak - ")
 
@@ -200,8 +192,6 @@ class Classes(type: QuirkType) : Quirk(type) {
 
 		return message.toString()
 	}
-
-	override val representation = ItemCreator.fromType(Material.LEATHER_HELMET)
 
 	override fun defaultData(): Any {
 		return QuirkClass.NO_CLASS

@@ -1,10 +1,9 @@
-package com.codeland.uhc.gui.guiItem
+package com.codeland.uhc.gui.guiItem.loadout
 
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHCProperty
+import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
 import com.codeland.uhc.gui.ItemCreator
-import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack

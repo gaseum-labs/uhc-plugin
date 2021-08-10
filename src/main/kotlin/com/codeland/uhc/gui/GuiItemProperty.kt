@@ -1,6 +1,6 @@
 package com.codeland.uhc.gui
 
-import com.codeland.uhc.core.UHCProperty
+import com.codeland.uhc.util.UHCProperty
 import org.bukkit.inventory.ItemStack
 
 abstract class GuiItemProperty <T> (index: Int, val property: UHCProperty<T>) : GuiItem(index) {

@@ -1,7 +1,7 @@
 package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
@@ -10,12 +10,8 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Pumpkin(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {}
-
+class Pumpkin(type: QuirkType, game: Game) : Quirk(type, game) {
 	override fun customDestroy() {}
-
-	override val representation = ItemCreator.fromType(Material.CARVED_PUMPKIN)
 
 	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->

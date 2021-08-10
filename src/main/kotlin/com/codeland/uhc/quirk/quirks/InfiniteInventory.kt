@@ -1,10 +1,9 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.ItemUtil
@@ -16,7 +15,28 @@ import org.bukkit.inventory.ItemStack
 import java.util.*
 import kotlin.collections.HashMap
 
-class InfiniteInventory(type: QuirkType) : Quirk(type) {
+class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
+	init {
+		storeTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
+			PlayerData.playerDataList
+				.filter { (_, data) -> data.participating}
+				.forEach { (uuid, _) ->
+					GameRunner.playerAction(uuid) { player ->
+
+						val inventory = player.inventory
+						if (inventory.getItem(EMPTY_SLOT) != null) {
+							getInventory(player).store(inventory.getItem(EMPTY_SLOT)!!)
+							inventory.setItem(EMPTY_SLOT, null)
+						}
+						if (
+							inventory.getItem(BACK_BUTTON)?.type != BUTTON_MATERIAL
+							|| inventory.getItem(FORWARD_BUTTON)?.type != BUTTON_MATERIAL) {
+							// this should almost never happen
+							addButtons(player)
+						}
+					}}
+		}, 1, 1)
+	}
 
 	// todo: dying doesn't drop blaze rods
 	// todo: dying drops all of your items
@@ -170,28 +190,6 @@ class InfiniteInventory(type: QuirkType) : Quirk(type) {
 		}
 	}
 
-	override fun onEnable() {
-		storeTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
-			PlayerData.playerDataList
-					.filter { (_, data) -> data.participating}
-					.forEach { (uuid, _) ->
-					GameRunner.playerAction(uuid) { player ->
-
-				val inventory = player.inventory
-				if (inventory.getItem(EMPTY_SLOT) != null) {
-					getInventory(player).store(inventory.getItem(EMPTY_SLOT)!!)
-					inventory.setItem(EMPTY_SLOT, null)
-				}
-				if (
-				   inventory.getItem(BACK_BUTTON)?.type != BUTTON_MATERIAL
-				|| inventory.getItem(FORWARD_BUTTON)?.type != BUTTON_MATERIAL) {
-					// this should almost never happen
-					addButtons(player)
-				}
-			}}
-		}, 1, 1)
-	}
-
 	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->
 			addButtons(player)
@@ -202,6 +200,4 @@ class InfiniteInventory(type: QuirkType) : Quirk(type) {
 		Bukkit.getScheduler().cancelTask(storeTask)
 		storedMap.clear()
 	}
-
-	override val representation = ItemCreator.fromType(Material.FEATHER)
 }

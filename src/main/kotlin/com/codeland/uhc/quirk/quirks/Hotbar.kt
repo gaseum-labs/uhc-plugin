@@ -1,26 +1,18 @@
 package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.event.Chat
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
-import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-class Hotbar(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {}
-
+class Hotbar(type: QuirkType, game: Game) : Quirk(type, game) {
 	override fun customDestroy() {}
-
-	override val representation = ItemCreator.fromType(Material.BLACK_STAINED_GLASS_PANE)
 
 	override fun onStartPlayer(uuid: UUID) {
 		GameRunner.playerAction(uuid) { player ->

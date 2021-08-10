@@ -7,8 +7,8 @@ import com.codeland.uhc.discord.filesystem.DiscordFilesystem
 import com.codeland.uhc.gui.MoveableGuiItem
 import com.codeland.uhc.gui.MoveableGuiPage
 import com.codeland.uhc.gui.guiItem.CloseButton
-import com.codeland.uhc.gui.guiItem.CostCounter
-import com.codeland.uhc.gui.guiItem.LoadoutMover
+import com.codeland.uhc.gui.guiItem.loadout.CostCounter
+import com.codeland.uhc.gui.guiItem.loadout.LoadoutMover
 import com.codeland.uhc.lobbyPvp.LoadoutItems
 import com.codeland.uhc.lobbyPvp.Loadouts
 import com.codeland.uhc.util.Util

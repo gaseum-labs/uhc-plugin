@@ -235,10 +235,11 @@ object CarePackageUtil {
 		val extended = assoc.potionType.isExtendable && (!assoc.potionType.isUpgradeable || random.nextBoolean())
 		val upgraded = assoc.potionType.isUpgradeable && !extended
 
-		return if (assoc.potionInfo != null)
+		return if (assoc.potionInfo != null) {
 			Brew.externalCreatePotion(assoc.bottleType, assoc.potionInfo, extended, upgraded)
-		else
+		} else {
 			Brew.createDefaultPotion(assoc.bottleType, PotionData(assoc.potionType, extended, upgraded))
+		}.create()
 	}
 
 	private val armorEnchantments = arrayOf(Enchantment.THORNS, Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_PROJECTILE, null)

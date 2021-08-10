@@ -1,4 +1,4 @@
-package com.codeland.uhc.core
+package com.codeland.uhc.util
 
 class UHCProperty <T> (val default: T, val onSet: (set: T) -> T? = { it }) {
 	private var value = default

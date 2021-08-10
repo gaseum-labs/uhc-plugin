@@ -1,16 +1,13 @@
 package com.codeland.uhc.quirk.quirks
 
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import org.bukkit.Material.*
 
-class Creative(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {}
-
+class Creative(type: QuirkType, game: Game) : Quirk(type, game) {
 	override fun customDestroy() {}
-
-	override val representation = ItemCreator.fromType(BRICKS)
 
 	companion object {
 		val blocks = arrayOf(

@@ -1,12 +1,16 @@
 package com.codeland.uhc.quirk.quirks.carePackages
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.core.phase.phases.Endgame
+import com.codeland.uhc.core.phase.phases.Grace
+import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Summoner
@@ -33,34 +37,27 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {
-		if (UHC.isGameGoing()) startDropping()
+class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
+	init {
+		if (game.phase.phaseType.ordinal < PhaseType.ENDGAME.ordinal) startDropping()
 	}
 
 	override fun customDestroy() {
 		stopDropping()
 	}
 
-	override val representation = ItemCreator.fromType(TIPPED_ARROW)
-		.customMeta { meta -> (meta as PotionMeta).basePotionData = PotionData(PotionType.INSTANT_HEAL) }
-
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		when (phase.type) {
-			PhaseType.GRACE -> startDropping()
-			PhaseType.ENDGAME -> stopDropping()
-			PhaseType.WAITING -> stopDropping()
-		}
+	override fun onPhaseSwitch(phase: Phase) {
+		if (phase is Endgame) stopDropping()
 	}
 
-	fun startDropping() {
+	private fun startDropping() {
 		timer = 0
 		dropNum = 0
-		random = Random(UHC.getDefaultWorldGame().seed)
+		random = Random(game.world.seed)
 		taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::onSecond, 0, 20)
 	}
 
-	fun stopDropping() {
+	private fun stopDropping() {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
 
@@ -76,17 +73,16 @@ class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
 		++timer
 
 		if (timer >= DROP_TIME) {
-			val world = UHC.getDefaultWorldGame()
-			val block = chaoticDropBlock(world)
+			val block = chaoticDropBlock(game.world)
 			val along = gameAlong()
 
 			/* drop a spire every 20 drops */
 			if (dropNum % 20 == 0) {
-				CarePackageUtil.generateSpire(world, block, 5f, 14, getSpire(random, along))
+				CarePackageUtil.generateSpire(game.world, block, 5f, 14, getSpire(random, along))
 
 			/* otherwise drop a care package */
 			} else {
-				val inventory = CarePackageUtil.generateChest(world, block, ChatColor.values()[random.nextInt(ChatColor.MAGIC.ordinal)])
+				val inventory = CarePackageUtil.generateChest(game.world, block, ChatColor.values()[random.nextInt(ChatColor.MAGIC.ordinal)])
 
 				fillChestInventory(inventory, 8, 14, along)
 			}
@@ -140,15 +136,14 @@ class ChaoticCarePackages(type: QuirkType) : Quirk(type) {
 	 * 1 is shrink just ended
 	 */
 	fun gameAlong(): Double {
-		val phase = UHC.currentPhase ?: return 0.0
-		val graceTime = UHC.phaseTime(PhaseType.GRACE)
-		val shrinkTime = UHC.phaseTime(PhaseType.SHRINK)
+		val graceTime = game.config.graceTime.get()
+		val shrinkTime = game.config.shrinkTime.get()
 
-		return when (phase.phaseType) {
+		return when (game.phase) {
 			/* time elapsed in grace out of grace time plus shrink time */
-			PhaseType.GRACE -> (graceTime - phase.remainingSeconds).toDouble() / (graceTime + shrinkTime)
+			is Grace -> (graceTime - game.phase.remainingSeconds()).toDouble() / (graceTime + shrinkTime)
 			/* time grace time plus time elapsed in shrink out of grace time plus shrink time */
-			PhaseType.SHRINK -> (graceTime + (shrinkTime - phase.remainingSeconds)).toDouble() / (graceTime + shrinkTime)
+			is Shrink -> (graceTime + (shrinkTime - game.phase.remainingSeconds())).toDouble() / (graceTime + shrinkTime)
 			else -> 1.0
 		}
 	}

@@ -1,10 +1,9 @@
-package com.codeland.uhc.phase.phases
+package com.codeland.uhc.core.phase.phases
 
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.GameRunner
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.core.phase.Phase
+import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.md_5.bungee.api.ChatColor.BOLD

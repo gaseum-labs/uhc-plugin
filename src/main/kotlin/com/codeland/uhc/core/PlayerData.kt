@@ -14,6 +14,7 @@ import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.util.UHCProperty
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Location

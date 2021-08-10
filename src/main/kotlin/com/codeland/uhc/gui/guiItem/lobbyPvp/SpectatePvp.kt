@@ -1,11 +1,10 @@
-package com.codeland.uhc.gui.guiItem;
+package com.codeland.uhc.gui.guiItem.lobbyPvp;
 
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.Arena
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.world.WorldManager
-import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
 import org.bukkit.Location

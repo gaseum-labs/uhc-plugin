@@ -1,7 +1,6 @@
 package com.codeland.uhc.quirk.quirks
 
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.dropFix.DropEntry
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.dropFix.DropEntry.Companion.arrayItem
 import com.codeland.uhc.dropFix.DropEntry.Companion.item
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootMulti
@@ -10,8 +9,7 @@ import com.codeland.uhc.dropFix.DropEntry.Companion.stackItem
 import com.codeland.uhc.dropFix.DropEntry.Companion.lootItem
 import com.codeland.uhc.dropFix.DropFix
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.PhaseVariant
+import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.ItemUtil
@@ -23,20 +21,13 @@ import org.bukkit.Material
 import org.bukkit.Statistic
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.EntityType
-import org.bukkit.inventory.ItemStack
 
-class ModifiedDrops(type: QuirkType) : Quirk(type) {
-	override fun onEnable() {}
-
+class ModifiedDrops(type: QuirkType, game: Game) : Quirk(type, game) {
 	override fun customDestroy() {}
 
-	override val representation = ItemCreator.fromType(Material.STRING)
-
-	override fun onPhaseSwitch(phase: PhaseVariant) {
-		if (phase.type == PhaseType.GRACE) {
-			Bukkit.getServer().onlinePlayers.forEach { player ->
-				player.setStatistic(Statistic.TIME_SINCE_REST, 72000)
-			}
+	init {
+		Bukkit.getServer().onlinePlayers.forEach { player ->
+			player.setStatistic(Statistic.TIME_SINCE_REST, 72000)
 		}
 	}
 

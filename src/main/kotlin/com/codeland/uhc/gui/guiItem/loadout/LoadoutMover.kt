@@ -1,4 +1,4 @@
-package com.codeland.uhc.gui.guiItem
+package com.codeland.uhc.gui.guiItem.loadout
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.discord.filesystem.DataManager

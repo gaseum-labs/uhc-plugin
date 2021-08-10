@@ -5,7 +5,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.customSpawning.SpawnInfo
 import com.codeland.uhc.dropFix.DropFix
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.core.phase.Phase
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -76,8 +76,6 @@ abstract class Quirk(val type: QuirkType, val game: Game) {
 
 	fun resetProperties() = properties.forEach { it.reset() }
     */
-
-	abstract fun representation(): ItemCreator
 
 	open fun customDestroy() {}
 

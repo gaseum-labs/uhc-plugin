@@ -1,6 +1,7 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
@@ -8,6 +9,7 @@ import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BrewingStand
+import org.bukkit.entity.Item
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.BrewEvent
@@ -25,46 +27,27 @@ import org.bukkit.potion.PotionType
 
 class Brew : Listener {
 	companion object {
-		fun createCustomPotion(potionType: PotionType, material: Material, name: String, duration: Int, amplifier: Int): ItemStack {
+		fun createCustomPotion(potionType: PotionType, material: Material, name: String, duration: Int, amplifier: Int): ItemCreator {
 			val effectType = potionType.effectType ?: PotionEffectType.POISON
 
-			val potion = ItemStack(material)
-
-			val meta = potion.itemMeta as PotionMeta
-
-			meta.setDisplayName("${ChatColor.RESET}Potion of $name")
-			meta.color = effectType.color
-			meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)
-
-			potion.itemMeta = meta
-
-			return potion
+			return ItemCreator.fromType(material).name("${ChatColor.RESET}Potion of $name").customMeta { meta ->
+				meta as PotionMeta
+				meta.color = effectType.color
+				meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)
+			}
 		}
 
-		fun externalCreatePotion(material: Material, info: PotionInfo, extended: Boolean, amplified: Boolean): ItemStack {
-			val effectType = info.type.effectType ?: PotionEffectType.POISON
-
-			val potion = ItemStack(material)
-
-			val meta = potion.itemMeta as PotionMeta
-
-			meta.setDisplayName("${ChatColor.RESET}Potion of ${info.name}")
-			meta.color = effectType.color
-			meta.addCustomEffect(PotionEffect(effectType, if (extended) info.extendedDuration else info.amplifiedDuration, if (amplified) 1 else 0), true)
-
-			potion.itemMeta = meta
-
-			return potion
+		fun externalCreatePotion(material: Material, info: PotionInfo, extended: Boolean, amplified: Boolean): ItemCreator {
+			return createCustomPotion(
+				info.type,
+				material,
+				info.name,
+				if (extended) info.extendedDuration else if (amplified) info.amplifiedDuration else info.baseDuration,
+				if (amplified) 1 else 0)
 		}
 
-		fun createDefaultPotion(material: Material, potionData: PotionData): ItemStack {
-			val potion = ItemStack(material)
-
-			val meta = potion.itemMeta as PotionMeta
-			meta.basePotionData = potionData
-			potion.itemMeta = meta
-
-			return potion
+		fun createDefaultPotion(material: Material, potionData: PotionData): ItemCreator {
+			return ItemCreator.fromType(material).customMeta { meta -> (meta as PotionMeta).basePotionData = potionData }
 		}
 
 		class PotionInfo(val type: PotionType, val name: String, val baseDuration: Int, val extendedDuration: Int, val amplifiedDuration: Int)
@@ -172,14 +155,14 @@ class Brew : Listener {
 		fun createCustomPath(ingredient: Material, affectedType: PotionType, info: PotionInfo, modifiers: Int): PotionPath {
 			return baseCreatePath(ingredient, affectedType, info.type, modifiers) { itemStack ->
 				val (extended, upgraded, splashed) = finalModifiers(itemStack, modifiers)
-				createCustomPotion(info.type, if (splashed) Material.SPLASH_POTION else Material.POTION, info.name, when { extended -> info.extendedDuration; upgraded -> info.amplifiedDuration; else -> info.baseDuration }, if (upgraded) 1 else 0)
+				createCustomPotion(info.type, if (splashed) Material.SPLASH_POTION else Material.POTION, info.name, when { extended -> info.extendedDuration; upgraded -> info.amplifiedDuration; else -> info.baseDuration }, if (upgraded) 1 else 0).create()
 			}
 		}
 
 		fun createDefaultPath(ingredient: Material, affectedType: PotionType, potionType: PotionType, modifiers: Int): PotionPath {
 			return baseCreatePath(ingredient, affectedType, potionType, modifiers) { itemStack ->
 				val (extended, upgraded, splashed) = finalModifiers(itemStack, modifiers)
-				createDefaultPotion(if (splashed) Material.SPLASH_POTION else Material.POTION, PotionData(potionType, extended, upgraded))
+				createDefaultPotion(if (splashed) Material.SPLASH_POTION else Material.POTION, PotionData(potionType, extended, upgraded)).create()
 			}
 		}
 

@@ -1,17 +1,15 @@
-package com.codeland.uhc.gui.guiItem
+package com.codeland.uhc.gui.guiItem.lobbyPvp
 
-import com.codeland.uhc.core.UHCProperty
+import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.gui.GuiItemProperty
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.ArenaType
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
-import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta

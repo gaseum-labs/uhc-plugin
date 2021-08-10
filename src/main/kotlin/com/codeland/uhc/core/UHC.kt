@@ -2,13 +2,11 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
-import com.codeland.uhc.phase.Phase
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.Grace
+import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
-import com.codeland.uhc.phase.phases.Postgame
-import com.codeland.uhc.phase.phases.Shrink
+import com.codeland.uhc.core.phase.phases.Postgame
+import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util

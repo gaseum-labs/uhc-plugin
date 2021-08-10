@@ -10,7 +10,7 @@ import com.codeland.uhc.command.Commands.errorMessage
 import com.codeland.uhc.core.*
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
-import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.QuirkType

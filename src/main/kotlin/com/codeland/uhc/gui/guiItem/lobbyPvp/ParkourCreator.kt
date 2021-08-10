@@ -1,4 +1,4 @@
-package com.codeland.uhc.gui.guiItem
+package com.codeland.uhc.gui.guiItem.lobbyPvp
 
 import com.codeland.uhc.gui.GuiItem
 import com.codeland.uhc.gui.ItemCreator

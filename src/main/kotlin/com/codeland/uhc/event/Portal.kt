@@ -5,7 +5,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.phase.PhaseType
+import com.codeland.uhc.core.phase.PhaseType
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace

@@ -4,13 +4,12 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.phase.Phase
+import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.phase.PhaseType
-import com.codeland.uhc.phase.phases.Endgame
-import com.codeland.uhc.phase.phases.Grace
-import com.codeland.uhc.phase.phases.Postgame
-import com.codeland.uhc.phase.phases.Shrink
+import com.codeland.uhc.core.phase.phases.Endgame
+import com.codeland.uhc.core.phase.phases.Grace
+import com.codeland.uhc.core.phase.phases.Postgame
+import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util.log
 import com.codeland.uhc.util.Util.randFromArray
@@ -74,8 +73,6 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 	override fun customDestroy() {
 		onEnd()
 	}
-
-	override fun representation() = ItemCreator.fromType(CHEST_MINECART)
 
 	override fun onPhaseSwitch(phase: Phase) {
 		if (phase is Grace) onStart()
