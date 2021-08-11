@@ -19,7 +19,7 @@ abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) 
 
 		perTick(currentTick)
 
-		return if (currentTick == 0) {
+		return if (currentTick % 20 == 0) {
 			second()
 		} else {
 			false
@@ -32,9 +32,9 @@ abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) 
 	private fun second(): Boolean {
 		/* phases without timer going */
 		if (length != 0) {
-			if (remainingTicks == 0) return true
+			if (remainingSeconds() == 0) return true
 
-			if (remainingTicks <= 3 * 20) Bukkit.getServer().onlinePlayers.forEach { player ->
+			if (remainingSeconds() <= 3) Bukkit.getServer().onlinePlayers.forEach { player ->
 				player.sendTitle("${countDownColor(remainingSeconds())}${ChatColor.BOLD}${remainingSeconds()}", "${phaseType.chatColor}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
 			}
 		}

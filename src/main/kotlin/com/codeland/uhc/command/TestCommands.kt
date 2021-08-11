@@ -16,6 +16,7 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
 import org.bukkit.*
 import org.bukkit.command.CommandSender
@@ -200,5 +201,14 @@ class TestCommands : BaseCommand() {
 	fun testFlag(sender: CommandSender) {
 		flag = !flag
 		Action.sendGameMessage(sender, "Set flag to $flag")
+	}
+
+	@Subcommand("killreward")
+	fun testKillReward(sender: CommandSender) {
+		sender as Player
+
+		val killReward = UHC.game?.config?.killReward?.get() ?: return errorMessage(sender, "Game is not going")
+
+		killReward.apply(sender.uniqueId, TeamData.playersTeam(sender.uniqueId)?.members ?: arrayListOf())
 	}
 }

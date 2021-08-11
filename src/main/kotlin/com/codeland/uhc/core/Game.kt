@@ -276,7 +276,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 			/* or does it keep going */
 		} else {
 			/* apply kill reward */
-			if (killer != null) config.killReward.get().applyReward(arrayListOf(killer))
+			if (killer != null) config.killReward.get().apply(killer.uniqueId, killerTeam?.members ?: arrayListOf())
 
 			/* tell player they died */
 			if (respawn) {

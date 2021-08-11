@@ -19,7 +19,7 @@ class GameConfig {
 	}
 
 	val naturalRegeneration = UHCProperty(false)
-	val killReward = UHCProperty(KillReward.REGENERATION)
+	val killReward = UHCProperty(KillReward.ABSORPTION)
 	val usingBot = UHCProperty(UHC.bot != null) { set ->
 		val bot = UHC.bot
 

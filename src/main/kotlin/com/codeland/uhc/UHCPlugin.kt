@@ -52,6 +52,7 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Parkour(), this)
 		server.pluginManager.registerEvents(Axe(), this)
 		server.pluginManager.registerEvents(Snowball(), this)
+		server.pluginManager.registerEvents(Fishing(), this)
 		Packet.init()
 
 		WorldGenManager.init(server)

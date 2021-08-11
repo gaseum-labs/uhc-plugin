@@ -44,7 +44,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 			override fun getStackProperty(value: KillReward): ItemStack {
 				return ItemCreator.fromType(value.representation)
 					.name(ItemCreator.stateName("Kill Reward", value.prettyName))
-					.lore(value.lore)
+					.lore(*value.lore)
 					.create()
 			}
 		})
@@ -94,7 +94,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 					.create()
 			}
 		})
-		addItem(object : GuiItemCounter(coords(2, 1), gameConfig.graceTime, 600, 2400, 60) {
+		addItem(object : GuiItemCounter(coords(2, 1), gameConfig.graceTime, 60, 2400, 60) {
 			override fun getStackProperty(value: Int): ItemStack {
 				return ItemCreator.fromType(Material.SUNFLOWER)
 					.enchant(value != property.default)

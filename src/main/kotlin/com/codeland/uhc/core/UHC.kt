@@ -9,6 +9,7 @@ import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.gui.gui.CreateGameGui
+import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.SchedulerUtil
@@ -81,7 +82,7 @@ object UHC {
 		SchedulerUtil.everyTick {
 			val currentGame = game
 			if (currentGame != null) {
-				currentGame.phase.tick(currentTick)
+				val switchResult = currentGame.phase.tick(currentTick)
 
 				if (currentGame.phase is Grace || currentGame.phase is Shrink) {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
@@ -97,6 +98,7 @@ object UHC {
 					containSpecs()
 				}
 
+				if (switchResult) currentGame.nextPhase()
 				if (currentGame.phase !is Postgame) ++timer
 
 			} else if (currentTick % 20 == 0 && timerGoing) {
@@ -200,6 +202,14 @@ object UHC {
 							1.0f - (arena.glowTimer.toFloat() / arena.glowPeriod)
 						},
 						BossBattle.BarColor.c
+					)
+				}
+				arena is ParkourArena -> {
+					UHCBar.updateBossBar(
+						player,
+						"Parkour",
+						1.0f,
+						BossBattle.BarColor.g
 					)
 				}
 				player.world.name == WorldManager.LOBBY_WORLD_NAME -> {
