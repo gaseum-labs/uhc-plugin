@@ -21,7 +21,8 @@ import org.bukkit.inventory.ItemStack
 
 class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 	3,
-	Util.gradientString("Create Game", TextColor.color(0x0d5b61), TextColor.color(0x093c80))
+	Util.gradientString("Create Game", TextColor.color(0x0d5b61), TextColor.color(0x093c80)),
+	GuiType.CREATE_GAME
 ) {
 	val quirkGui = GuiManager.register(QuirkGui(gameConfig, this))
 	val worldGenGui = GuiManager.register(WorldGenGui(gameConfig, this))

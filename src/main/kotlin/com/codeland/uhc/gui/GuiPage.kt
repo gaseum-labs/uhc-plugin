@@ -7,7 +7,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
 
-open class GuiPage(val height: Int, val name: Component) {
+open class GuiPage(val height: Int, val name: Component, val type: GuiType) {
 	companion object {
 		const val WIDTH = 9
 

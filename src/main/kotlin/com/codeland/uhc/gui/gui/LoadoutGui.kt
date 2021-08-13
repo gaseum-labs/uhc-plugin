@@ -4,6 +4,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.gui.GuiType
 import com.codeland.uhc.gui.MoveableGuiPage
 import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import com.codeland.uhc.gui.guiItem.impl.CloseButton
@@ -17,7 +18,8 @@ import net.kyori.adventure.text.format.TextColor
 class LoadoutGui(val playerData: PlayerData, val loadoutSlot: Int) :
 MoveableGuiPage(
 	4,
-	Util.gradientString("Edit Loadout ${loadoutSlot + 1}", TextColor.color(0x7d0580), TextColor.color(0x910d40))
+	Util.gradientString("Edit Loadout", TextColor.color(0x7d0580), TextColor.color(0x910d40)),
+	GuiType.PERSONAL
 ) {
 	val costCounter = addItem(CostCounter(coords(7, 3), playerData.slotCosts[loadoutSlot]))
 	val closeButton = addItem(CloseButton(coords(8, 3)))

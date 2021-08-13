@@ -3,6 +3,7 @@ package com.codeland.uhc.gui.gui
 import com.codeland.uhc.core.GameConfig
 import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.gui.GuiPage
+import com.codeland.uhc.gui.GuiType
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.gui.guiItem.impl.WorldGenSetting
 import com.codeland.uhc.util.Util
@@ -14,7 +15,8 @@ import org.bukkit.entity.Player
 
 class WorldGenGui(val gameConfig: GameConfig, val createGameGui: CreateGameGui) : GuiPage(
 	3,
-	Util.gradientString("World Gen Settings", TextColor.color(0x088756), TextColor.color(0x5a9615))
+	Util.gradientString("World Gen Settings", TextColor.color(0x088756), TextColor.color(0x5a9615)),
+	GuiType.WORLD_GEN
 ) {
 	init {
 		WorldGenOption.values().forEachIndexed { i, worldGenOption ->

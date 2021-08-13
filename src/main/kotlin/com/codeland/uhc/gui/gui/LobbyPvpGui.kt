@@ -2,6 +2,7 @@ package com.codeland.uhc.gui.gui
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.gui.GuiPage
+import com.codeland.uhc.gui.GuiType
 import com.codeland.uhc.gui.guiItem.impl.CloseButton
 import com.codeland.uhc.gui.guiItem.impl.loadout.LoadoutSlotPicker
 import com.codeland.uhc.gui.guiItem.impl.lobbyPvp.*
@@ -10,7 +11,7 @@ import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.format.TextColor
 
-class LobbyPvpGui(val playerData: PlayerData) : GuiPage(3, Util.gradientString("Lobby PVP", TextColor.color(0x380202), TextColor.color(0x332721))) {
+class LobbyPvpGui(val playerData: PlayerData) : GuiPage(3, Util.gradientString("Lobby PVP", TextColor.color(0x380202), TextColor.color(0x332721)), GuiType.PERSONAL) {
 	val queueEnabler1V1 = addItem(QueueJoiner(coords(3, 0), PvpArena.TYPE_1V1, playerData.inLobbyPvpQueue))
 	val queueEnabler2V2 = addItem(QueueJoiner(coords(5, 0), PvpArena.TYPE_2V2, playerData.inLobbyPvpQueue))
 

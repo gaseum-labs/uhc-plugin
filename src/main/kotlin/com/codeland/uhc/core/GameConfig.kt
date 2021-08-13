@@ -109,10 +109,4 @@ class GameConfig {
 	}
 
 	var gui = GuiManager.register(CreateGameGui(this))
-
-	fun destroy() {
-		GuiManager.destroy(gui.quirkGui)
-		GuiManager.destroy(gui.worldGenGui)
-		GuiManager.destroy(gui)
-	}
 }

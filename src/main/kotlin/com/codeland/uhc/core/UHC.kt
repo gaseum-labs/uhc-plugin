@@ -312,7 +312,6 @@ object UHC {
 
 	fun destroyGame() {
 		game = null
-		preGameConfig.destroy()
 		preGameConfig = GameConfig()
 
 		PlayerData.prune()

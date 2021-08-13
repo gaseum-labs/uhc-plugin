@@ -1,5 +1,6 @@
 package com.codeland.uhc.gui
 
+import com.codeland.uhc.core.PlayerData
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -14,31 +15,24 @@ import java.util.*
 class GuiManager : Listener {
 	companion object {
 		private val guis = ArrayList<GuiPage>()
-		private val personalGuis = HashMap<UUID, ArrayList<GuiPage>>()
 
 		fun <G : GuiPage> register(gui: G): G {
-			guis.add(gui)
+			val existingIndex = guis.indexOfFirst { it.type === gui.type }
+
+			if (existingIndex == -1) {
+				guis.add(gui)
+			} else {
+				guis[existingIndex] = gui
+			}
+
 			return gui
-		}
-
-		fun <G : GuiPage> registerPersonal(uuid: UUID, gui: G): G {
-			personalGuis.getOrPut(uuid) { ArrayList() }.add(gui)
-			return gui
-		}
-
-		fun destroy(gui: GuiPage) {
-			guis.removeIf { it === gui }
-		}
-
-		fun destroyPersonal(uuid: UUID, gui: GuiPage) {
-			personalGuis.get(uuid)?.removeIf { it === gui }
 		}
 
 		private fun findGui(inventory: Inventory, uuid: UUID): Pair<GuiPage?, Boolean> {
 			val gui = guis.find { it.inventory === inventory }
 			if (gui != null) return Pair(gui, true)
 
-			val personalGui = personalGuis[uuid]?.find { it.inventory === inventory }
+			val personalGui = PlayerData.getPlayerData(uuid).guis.find { it.inventory === inventory }
 			if (personalGui != null) return Pair(personalGui, false)
 
 			return Pair(null, false)

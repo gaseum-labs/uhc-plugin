@@ -10,7 +10,7 @@ import org.bukkit.event.inventory.InventoryAction.*
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 
-abstract class MoveableGuiPage(height: Int, name: Component): GuiPage(height, name) {
+abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType): GuiPage(height, name, type) {
 	var moveableGuiItems = ArrayList<MoveableGuiItem>()
 	val savedIventory = arrayOfNulls<ItemStack>(36)
 

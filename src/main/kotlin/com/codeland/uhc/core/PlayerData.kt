@@ -58,10 +58,10 @@ class PlayerData(val uuid: UUID) {
 		UHCProperty(0)
 	}
 	val parkourIndex = UHCProperty(-1)
-	var lobbyPvpGui = GuiManager.registerPersonal(uuid, LobbyPvpGui(this))
-	val slotGuis = Array(Loadouts.NUM_SLOTS) { i ->
-		GuiManager.registerPersonal(uuid, LoadoutGui(this, i))
-	}
+	var lobbyPvpGui = LobbyPvpGui(this)
+	val slotGuis = Array(Loadouts.NUM_SLOTS) { i -> LoadoutGui(this, i) }
+
+	val guis = arrayOf(lobbyPvpGui, *slotGuis)
 
 	init {
 		parkourIndex.set(ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR).lastIndex)

@@ -4,6 +4,7 @@ import com.codeland.uhc.core.GameConfig
 import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.gui.guiItem.GuiItemToggle
 import com.codeland.uhc.gui.GuiPage
+import com.codeland.uhc.gui.GuiType
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
@@ -15,7 +16,8 @@ import org.bukkit.inventory.ItemStack
 
 class QuirkGui(val gameConfig: GameConfig, val createGameGui: CreateGameGui) : GuiPage(
 	3,
-	Util.gradientString("Quirks", TextColor.color(0x9e089c), TextColor.color(0x141170))
+	Util.gradientString("Quirks", TextColor.color(0x9e089c), TextColor.color(0x141170)),
+	GuiType.QUIRK
 ) {
 	init {
 		QuirkType.values().forEachIndexed { i, quirkType ->

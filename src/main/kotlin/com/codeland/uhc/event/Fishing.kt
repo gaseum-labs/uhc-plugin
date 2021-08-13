@@ -17,10 +17,13 @@ class Fishing : Listener {
 	fun onFish(event: PlayerFishEvent) {
 		when (event.state) {
 			PlayerFishEvent.State.FISHING -> {
+				val lure = enchant(event.player, Enchantment.LURE).coerceAtMost(3)
 				val hook = event.hook
 
-				hook.minWaitTime = 15 * 20 + 1
-				hook.maxWaitTime = 15 * 20 + 1
+				hook.applyLure = false
+
+				hook.minWaitTime = 15 * 20 - lure * 50
+				hook.maxWaitTime = 15 * 20 - lure * 50
 			}
 			PlayerFishEvent.State.CAUGHT_FISH -> {
 				val luck = enchant(event.player, Enchantment.LUCK).coerceAtMost(3)

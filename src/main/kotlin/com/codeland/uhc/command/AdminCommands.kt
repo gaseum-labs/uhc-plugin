@@ -31,6 +31,7 @@ class AdminCommands : BaseCommand() {
 		Action.sendGameMessage(sender, "Game reset")
 	}
 
+	@CommandCompletion("@uhcplayer")
 	@Subcommand("stage")
 	@Description("adds a player to the game without adding them to a team")
 	fun participateCommand(sender: CommandSender, player: OfflinePlayer) {
