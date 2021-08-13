@@ -1,6 +1,7 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.command.Commands
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldManager
@@ -24,7 +25,7 @@ class Portal : Listener {
 
 		val PORTAL_TIME = 80
 
-		fun portalTick() {
+		fun portalTick(game: Game) {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				if (player.location.block.type === Material.NETHER_PORTAL) {
 					if (portalEntries.find { it.player === player } == null) {
@@ -39,7 +40,7 @@ class Portal : Listener {
 
 				} else {
 					if (--entry.time <= 0) {
-						onPlayerPortal(entry.player)
+						onPlayerPortal(entry.player, game)
 						true
 					} else {
 						false
@@ -196,18 +197,14 @@ class Portal : Listener {
 			}
 		}
 
-		fun onPlayerPortal(player: Player) {
-			val playerData = PlayerData.getPlayerData(player.uniqueId)
+		fun onPlayerPortal(player: Player, game: Game) {
 			val pvpGame = ArenaManager.playersArena(player.uniqueId)
 
-			/* lobby pvpers can't escape through the never */
+			/* lobby pvpers can't escape through the nether */
 			if (pvpGame != null) {
 
-			/* prevent peeking the center during waiting */
-			} else if (!playerData.participating && UHC.game == null) {
-
 			/* prevent going to the nether after nether closes */
-			} else if (UHC.game?.phase is Endgame) {
+			} else if (game.phase is Endgame) {
 				val location = player.location
 				val world = location.world
 

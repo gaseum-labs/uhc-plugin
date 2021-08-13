@@ -9,6 +9,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerFishEvent
+import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import org.bukkit.metadata.FixedMetadataValue
 import kotlin.random.Random
 
@@ -157,8 +158,9 @@ class Fishing : Listener {
 
 		fun bookEntry(random: Random): ItemCreator {
 			val (enchant, level) = bookEnchants[random.nextInt(bookEnchants.size)]
-			return ItemCreator.fromType(Material.ENCHANTED_BOOK, false)
-				.enchant(enchant, level)
+			return ItemCreator.fromType(Material.ENCHANTED_BOOK, false).customMeta { meta ->
+				(meta as EnchantmentStorageMeta).addStoredEnchant(enchant, level, true)
+			}
 		}
 
 		fun specialEntry(random: Random): ItemCreator {

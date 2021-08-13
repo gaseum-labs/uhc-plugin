@@ -11,7 +11,6 @@ import com.codeland.uhc.core.phase.phases.Endgame
 import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
-import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.team.HideManager
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
@@ -40,6 +39,10 @@ import org.bukkit.event.world.WorldSaveEvent
 import org.bukkit.inventory.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
+import org.bukkit.persistence.PersistentDataHolder
+import org.bukkit.persistence.PersistentDataType
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 
 class EventListener : Listener {
@@ -606,6 +609,28 @@ class EventListener : Listener {
 					halloween.hasGottenDiamonds = true
 				}
 			}
+		}
+	}
+
+	@EventHandler
+	fun onEat(event: PlayerItemConsumeEvent) {
+		if (
+			event.item.hasItemMeta() &&
+			(event.item.itemMeta as PersistentDataHolder)
+				.persistentDataContainer
+				.has(KillReward.uhcAppleKey, PersistentDataType.INTEGER)
+		) {
+			event.isCancelled = true
+
+			val findItem = event.item
+			val ateItem = event.player.inventory.find { it == findItem } ?: return
+			--ateItem.amount
+
+			event.player.saturation += 9.6f
+			event.player.foodLevel += 4
+
+			event.player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 100, 1, false, true, true))
+			event.player.addPotionEffect(PotionEffect(PotionEffectType.ABSORPTION, 2400, 2, false, true, true))
 		}
 	}
 }

@@ -40,12 +40,12 @@ object WorldManager {
 	}
 
 	fun refreshGameWorlds() {
-		refreshWorld(GAME_WORLD_NAME, World.Environment.NORMAL, true)
+		refreshWorld(GAME_WORLD_NAME, World.Environment.NORMAL, false)
 		refreshWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
 	}
 
 	fun recoverGameWorlds(): Boolean {
-		val existed0 = recoverWorld(GAME_WORLD_NAME, World.Environment.NORMAL, true)
+		val existed0 = recoverWorld(GAME_WORLD_NAME, World.Environment.NORMAL, false)
 		val existed1 = recoverWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
 
 		return existed0 || existed1

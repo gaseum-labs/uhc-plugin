@@ -8,6 +8,7 @@ import com.codeland.uhc.core.phase.phases.Endgame
 import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
+import com.codeland.uhc.lobbyPvp.goldenAppleAmounts
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Pests
@@ -275,8 +276,14 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 
 			/* or does it keep going */
 		} else {
-			/* apply kill reward */
-			if (killer != null) config.killReward.get().apply(killer.uniqueId, killerTeam?.members ?: arrayListOf())
+			/* apply kill reward (no team kills) */
+			if (killer != null && team !== killerTeam) {
+				config.killReward.get().apply(
+					killer.uniqueId,
+					killerTeam?.members ?: arrayListOf(),
+					Action.getPlayerLocation(uuid) ?: spectatorSpawnLocation()
+				)
+			}
 
 			/* tell player they died */
 			if (respawn) {

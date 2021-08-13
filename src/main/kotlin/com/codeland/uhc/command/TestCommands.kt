@@ -209,6 +209,6 @@ class TestCommands : BaseCommand() {
 
 		val killReward = UHC.game?.config?.killReward?.get() ?: return errorMessage(sender, "Game is not going")
 
-		killReward.apply(sender.uniqueId, TeamData.playersTeam(sender.uniqueId)?.members ?: arrayListOf())
+		killReward.apply(sender.uniqueId, TeamData.playersTeam(sender.uniqueId)?.members ?: arrayListOf(), sender.location)
 	}
 }
