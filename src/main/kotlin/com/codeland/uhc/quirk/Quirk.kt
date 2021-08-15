@@ -38,45 +38,6 @@ abstract class Quirk(val type: QuirkType, val game: Game) {
 		}
 	}
 
-	//TEMPORARILY DISABLED
-	/*
-	private val properties = ArrayList<UHCProperty<*>>()
-
-	val gui: GuiPage = GuiManager.register(GuiPage(5, Component.text(type.prettyName)))
-
-	init {
-		val backgroundItem = ItemUtil.namedItem(Material.BLACK_STAINED_GLASS_PANE, "${ChatColor.RESET}${ChatColor.BLACK}_")
-		val internal = gui.inventory
-		for (i in 0 until internal.size - 1) {
-			internal.setItem(i, backgroundItem)
-		}
-
-		gui.addItem(object : GuiItem(gui.inventory.size - 1) {
-			override fun onClick(player: Player, shift: Boolean) {
-				if (shift)
-					this@Quirk.gui.close(player)
-				else
-					UHC.setupGui.open(player)
-			}
-
-			override fun getStack(): ItemStack {
-				return ItemCreator.fromType(Material.PRISMARINE_SHARD)
-					.name(Component.text("Back", NamedTextColor.BLUE))
-					.create()
-			}
-		})
-
-		customDrops?.sortBy { dropFix -> dropFix.entityType }
-	}
-
-	protected fun <T> addProperty(property: UHCProperty<T>): UHCProperty<T> {
-		properties.add(property)
-		return property
-	}
-
-	fun resetProperties() = properties.forEach { it.reset() }
-    */
-
 	open fun customDestroy() {}
 
 	open fun onStartPlayer(uuid: UUID) {}

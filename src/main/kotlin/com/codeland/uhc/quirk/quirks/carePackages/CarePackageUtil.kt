@@ -3,6 +3,7 @@ package com.codeland.uhc.quirk.quirks.carePackages
 import com.codeland.uhc.event.Brew
 import com.codeland.uhc.event.Brew.Companion.POISON_INFO
 import com.codeland.uhc.event.Brew.Companion.REGEN_INFO
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.*
@@ -310,14 +311,14 @@ object CarePackageUtil {
 		null
 	)
 
-	private val swordEnchants = arrayOf(
+	private val swordEnchantsOld = arrayOf(
 		EnchantData(Enchantment.DAMAGE_ALL, 1),
 		EnchantData(Enchantment.LOOT_BONUS_MOBS, 1),
 		EnchantData(Enchantment.KNOCKBACK, 2),
 		null
 	)
 
-	private val axeEnchants = arrayOf(
+	private val axeEnchantsOld = arrayOf(
 		EnchantData(Enchantment.DAMAGE_ALL, 1),
 		EnchantData(Enchantment.DIG_SPEED, 3),
 		null
@@ -328,16 +329,16 @@ object CarePackageUtil {
 	}
 
 	fun randomSword(diamond: Boolean): ItemStack {
-		return enchantedTool(if (diamond) DIAMOND_SWORD else IRON_SWORD, swordEnchants)
+		return enchantedTool(if (diamond) DIAMOND_SWORD else IRON_SWORD, swordEnchantsOld)
 	}
 
 	fun randomAxe(diamond: Boolean): ItemStack {
-		return enchantedTool(if (diamond) DIAMOND_AXE else IRON_AXE, axeEnchants)
+		return enchantedTool(if (diamond) DIAMOND_AXE else IRON_AXE, axeEnchantsOld)
 	}
 
 	fun chaoticPick(type: ToolType) = enchantedTool(type.pick, pickEnchants)
-	fun chaoticSword(type: ToolType) = enchantedTool(type.sword, swordEnchants)
-	fun chaoticAxe(type: ToolType) = enchantedTool(type.axe, axeEnchants)
+	fun chaoticSword(type: ToolType) = enchantedTool(type.sword, swordEnchantsOld)
+	fun chaoticAxe(type: ToolType) = enchantedTool(type.axe, axeEnchantsOld)
 
 	fun powerBow(power: Int): ItemStack {
 		val bow = ItemStack(BOW)
@@ -448,5 +449,330 @@ object CarePackageUtil {
 		itemStack.itemMeta = meta
 
 		return itemStack
+	}
+
+	/* new chaotic */
+
+	class ItemReference(var remaining: Int, val min: Int, val max: Int, val create: ItemCreator) {
+		constructor(remaining: Int, create: ItemCreator) : this(remaining, 1, 1, create)
+	}
+
+	val toolEnchants = arrayOf(
+		Pair(Enchantment.DIG_SPEED, 3),
+		Pair(Enchantment.LOOT_BONUS_BLOCKS, 3),
+	)
+
+	val swordEnchants = arrayOf(
+		Pair(Enchantment.DAMAGE_ALL, 2),
+		Pair(Enchantment.FIRE_ASPECT, 1),
+		Pair(Enchantment.LOOT_BONUS_MOBS, 2),
+		Pair(Enchantment.KNOCKBACK, 2),
+	)
+
+	val axeEnchants = arrayOf(
+		Pair(Enchantment.DAMAGE_ALL, 2),
+		Pair(Enchantment.DIG_SPEED, 3),
+		Pair(Enchantment.LOOT_BONUS_BLOCKS, 3),
+	)
+
+	val armorEnchants = arrayOf(
+		Pair(Enchantment.PROTECTION_ENVIRONMENTAL, 2),
+		Pair(Enchantment.PROTECTION_PROJECTILE, 2),
+		Pair(Enchantment.THORNS, 1),
+	)
+
+	val tridentEnchants = arrayOf(
+		Pair(Enchantment.LOYALTY, 3),
+		Pair(Enchantment.RIPTIDE, 3),
+	)
+
+	val bowEnchants = arrayOf(
+		Pair(Enchantment.ARROW_DAMAGE, 2),
+		Pair(Enchantment.ARROW_KNOCKBACK, 2),
+	)
+
+	val crossbowEnchants = arrayOf(
+		Pair(Enchantment.PIERCING, 4),
+		Pair(Enchantment.MULTISHOT, 1),
+		Pair(Enchantment.QUICK_CHARGE, 2),
+	)
+
+	val bookEnchants = arrayOf(
+		*toolEnchants,
+		*swordEnchants,
+		*axeEnchants,
+		*armorEnchants,
+		*tridentEnchants,
+		*bowEnchants,
+		*crossbowEnchants
+	)
+
+	fun <T> randFrom(random: Random, arr: Array<T>): T {
+		return arr[random.nextInt(arr.size)]
+	}
+
+	fun genReferenceItems(random: Random): Array<ItemReference> {
+		return arrayOf(
+			ItemReference(324, 18, 64, ItemCreator.regular(IRON_NUGGET)),
+			ItemReference(36, 2, 5, ItemCreator.regular(IRON_INGOT)),
+			ItemReference(36, 2, 5, ItemCreator.regular(IRON_ORE)),
+			ItemReference(36, 2, 5, ItemCreator.regular(DEEPSLATE_IRON_ORE)),
+			ItemReference(4, ItemCreator.regular(IRON_BLOCK)),
+			ItemReference(4, ItemCreator.regular(RAW_IRON_BLOCK)),
+
+			ItemReference(2, ItemCreator.regular(IRON_HOE).enchant(randFrom(random, toolEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_SHOVEL).enchant(randFrom(random, toolEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_PICKAXE).enchant(randFrom(random, toolEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_SWORD).enchant(randFrom(random, swordEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_AXE).enchant(randFrom(random, axeEnchants))),
+
+			ItemReference(2, ItemCreator.regular(IRON_HELMET).enchant(randFrom(random, armorEnchants))),
+			ItemReference(
+				2,
+				ItemCreator.regular(IRON_CHESTPLATE).enchant(randFrom(random, armorEnchants))
+			),
+			ItemReference(
+				2,
+				ItemCreator.regular(IRON_LEGGINGS).enchant(randFrom(random, armorEnchants))
+			),
+			ItemReference(2, ItemCreator.regular(IRON_BOOTS).enchant(randFrom(random, armorEnchants))),
+
+			ItemReference(
+				2,
+				ItemCreator.regular(TURTLE_HELMET).enchant(randFrom(random, armorEnchants))
+			),
+
+			ItemReference(8, ItemCreator.regular(DIAMOND)),
+			ItemReference(8, ItemCreator.regular(DIAMOND_ORE)),
+			ItemReference(8, ItemCreator.regular(DEEPSLATE_DIAMOND_ORE)),
+
+			ItemReference(1, ItemCreator.regular(DIAMOND_HOE).enchant(randFrom(random, toolEnchants))),
+			ItemReference(
+				1,
+				ItemCreator.regular(DIAMOND_SHOVEL).enchant(randFrom(random, toolEnchants))
+			),
+			ItemReference(
+				1,
+				ItemCreator.regular(DIAMOND_PICKAXE).enchant(randFrom(random, toolEnchants))
+			),
+			ItemReference(
+				1,
+				ItemCreator.regular(DIAMOND_SWORD).enchant(randFrom(random, swordEnchants))
+			),
+			ItemReference(1, ItemCreator.regular(DIAMOND_AXE).enchant(randFrom(random, axeEnchants))),
+
+			ItemReference(
+				1,
+				ItemCreator.regular(DIAMOND_HELMET).enchant(randFrom(random, armorEnchants))
+			),
+			ItemReference(
+				1,
+				ItemCreator.regular(DIAMOND_CHESTPLATE).enchant(randFrom(random, armorEnchants))
+			),
+			ItemReference(
+				1,
+				ItemCreator.regular(DIAMOND_LEGGINGS).enchant(randFrom(random, armorEnchants))
+			),
+			ItemReference(
+				1,
+				ItemCreator.regular(DIAMOND_BOOTS).enchant(randFrom(random, armorEnchants))
+			),
+
+			ItemReference(162, 9, 64, ItemCreator.regular(GOLD_NUGGET)),
+			ItemReference(18, 1, 3, ItemCreator.regular(GOLD_INGOT)),
+			ItemReference(18, 1, 3, ItemCreator.regular(GOLD_ORE)),
+			ItemReference(18, 1, 3, ItemCreator.regular(DEEPSLATE_GOLD_ORE)),
+			ItemReference(2, ItemCreator.regular(GOLD_BLOCK)),
+			ItemReference(2, ItemCreator.regular(RAW_GOLD_BLOCK)),
+
+			ItemReference(8, ItemCreator.regular(ANCIENT_DEBRIS)),
+			ItemReference(8, ItemCreator.regular(NETHERITE_SCRAP)),
+
+			ItemReference(1, ItemCreator.regular(ELYTRA)),
+			ItemReference(1, ItemCreator.regular(NETHER_STAR)),
+			ItemReference(2, ItemCreator.regular(COBWEB)),
+			ItemReference(2, ItemCreator.regular(ENDER_EYE)),
+			ItemReference(4, ItemCreator.regular(TRIDENT).enchant(randFrom(random, tridentEnchants))),
+
+			ItemReference(96, 4, 8, ItemCreator.regular(COAL)),
+			ItemReference(96, 4, 8, ItemCreator.regular(CHARCOAL)),
+			ItemReference(10, 1, 2, ItemCreator.regular(COAL_BLOCK)),
+
+			ItemReference(64, 2, 9, ItemCreator.regular(EXPERIENCE_BOTTLE)),
+
+			ItemReference(64, 3, 5, ItemCreator.regular(JUNGLE_SAPLING)),
+			ItemReference(64, 3, 5, ItemCreator.regular(BONE_MEAL)),
+			ItemReference(32, 1, 3, ItemCreator.regular(BONE)),
+
+			ItemReference(10, 1, 2, ItemCreator.regular(GLASS)),
+			ItemReference(10, 1, 2, ItemCreator.regular(SAND)),
+			ItemReference(32, 2, 3, ItemCreator.regular(GLASS_BOTTLE)),
+			ItemReference(32, 2, 3, ItemCreator.regular(REDSTONE)),
+			ItemReference(32, 2, 3, ItemCreator.regular(GLOWSTONE_DUST)),
+			ItemReference(12, 1, 2, ItemCreator.regular(GLOWSTONE)),
+			ItemReference(32, 2, 3, ItemCreator.regular(GUNPOWDER)),
+			ItemReference(10, 1, 2, ItemCreator.regular(BLAZE_POWDER)),
+			ItemReference(10, 1, 2, ItemCreator.regular(BLAZE_ROD)),
+			ItemReference(20, 1, 2, ItemCreator.regular(NETHER_WART)),
+			ItemReference(8, ItemCreator.regular(GLISTERING_MELON_SLICE)),
+			ItemReference(4, ItemCreator.regular(MELON)),
+			ItemReference(4, ItemCreator.regular(MELON_SLICE)),
+			ItemReference(8, ItemCreator.regular(MAGMA_CREAM)),
+			ItemReference(8, ItemCreator.regular(GOLDEN_CARROT)),
+			ItemReference(8, ItemCreator.regular(FERMENTED_SPIDER_EYE)),
+			ItemReference(8, ItemCreator.regular(SPIDER_EYE)),
+			ItemReference(8, ItemCreator.regular(SUGAR)),
+			ItemReference(8, ItemCreator.regular(GHAST_TEAR)),
+
+			ItemReference(15, ItemCreator.regular(BOOKSHELF)),
+			ItemReference(30, 1, 3, ItemCreator.regular(BOOK)),
+			ItemReference(30, 1, 3, ItemCreator.regular(LEATHER)),
+			ItemReference(60, 3, 9, ItemCreator.regular(SUGAR_CANE)),
+			ItemReference(60, 3, 9, ItemCreator.regular(PAPER)),
+			ItemReference(64, 4, 6, ItemCreator.regular(OBSIDIAN)),
+			ItemReference(2, ItemCreator.regular(ENCHANTING_TABLE)),
+			ItemReference(2, ItemCreator.regular(GRINDSTONE)),
+			ItemReference(4, ItemCreator.regular(ANVIL)),
+
+			ItemReference(20, 1, 2, ItemCreator.regular(ENDER_PEARL)),
+
+			ItemReference(3, ItemCreator.regular(BUCKET)),
+			ItemReference(3, ItemCreator.regular(WATER_BUCKET)),
+			ItemReference(9, ItemCreator.regular(LAVA_BUCKET)),
+			ItemReference(3, ItemCreator.regular(POWDER_SNOW_BUCKET)),
+
+			ItemReference(3, 3, 3, ItemCreator.regular(MAGMA_CUBE_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(HOGLIN_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(EVOKER_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(ELDER_GUARDIAN_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(BLAZE_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(COW_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(WITHER_SKELETON_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(VINDICATOR_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(PIGLIN_BRUTE_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(VEX_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(WITCH_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(POLAR_BEAR_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(PANDA_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(HORSE_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(SHULKER_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(GUARDIAN_SPAWN_EGG)),
+			ItemReference(3, 3, 3, ItemCreator.regular(GHAST_SPAWN_EGG)),
+
+			ItemReference(3, ItemCreator.regular(ENDER_CHEST)),
+			ItemReference(3, ItemCreator.regular(CHEST)),
+			ItemReference(3, ItemCreator.regular(FURNACE)),
+			ItemReference(3, ItemCreator.regular(SMOKER)),
+			ItemReference(3, ItemCreator.regular(CRAFTING_TABLE)),
+			ItemReference(3, ItemCreator.regular(SMITHING_TABLE)),
+			ItemReference(3, ItemCreator.regular(BREWING_STAND)),
+			ItemReference(3, ItemCreator.regular(BLAST_FURNACE)),
+			ItemReference(3, ItemCreator.regular(HOPPER)),
+
+			ItemReference(32, 2, 6, ItemCreator.regular(TNT)),
+			ItemReference(5, ItemCreator.regular(TNT_MINECART)),
+			ItemReference(64, 16, 16, ItemCreator.regular(RAIL)),
+
+			ItemReference(3, ItemCreator.regular(SPYGLASS)),
+			ItemReference(3, ItemCreator.regular(SHEARS).enchant(Enchantment.DURABILITY, 1)),
+			ItemReference(3, ItemCreator.regular(FLINT_AND_STEEL)),
+			ItemReference(3, ItemCreator.regular(SADDLE)),
+			ItemReference(4, ItemCreator.regular(SHIELD)),
+			ItemReference(3, ItemCreator.regular(FISHING_ROD).enchant(Enchantment.LUCK, 3).enchant(Enchantment.LURE, 3)),
+
+			ItemReference(32, 2, 4, ItemCreator.regular(ARROW)),
+			ItemReference(32, 2, 4, ItemCreator.regular(SPECTRAL_ARROW)),
+			ItemReference(32, 2, 4, ItemCreator.regular(FLINT)),
+			ItemReference(32, 2, 4, ItemCreator.regular(STICK)),
+			ItemReference(32, 2, 4, ItemCreator.regular(FEATHER)),
+
+			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
+				.customMeta { meta ->
+					(meta as PotionMeta).basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false)
+				}
+			),
+			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
+				.customMeta { meta ->
+					(meta as PotionMeta).basePotionData = PotionData(PotionType.INSTANT_HEAL, false, true)
+				}
+			),
+			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
+				.customMeta { meta ->
+					(meta as PotionMeta).basePotionData = PotionData(PotionType.REGEN, true, false)
+				}
+			),
+			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
+				.customMeta { meta ->
+					(meta as PotionMeta).basePotionData = PotionData(PotionType.SLOWNESS, false, true)
+				}
+			),
+			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
+				.customMeta { meta ->
+					(meta as PotionMeta).basePotionData = PotionData(PotionType.WEAKNESS, false, false)
+				}
+			),
+
+			ItemReference(3, ItemCreator.regular(BOW).enchant(randFrom(random, bowEnchants))),
+			ItemReference(3, ItemCreator.regular(CROSSBOW).enchant(randFrom(random, crossbowEnchants))),
+			ItemReference(3, ItemCreator.regular(CROSSBOW)),
+			ItemReference(32, 2, 3, ItemCreator.regular(STRING)),
+
+			ItemReference(48, 3, 4, ItemCreator.regular(GUNPOWDER)),
+			ItemReference(48, 3, 4, ItemCreator.regular(PAPER)),
+			ItemReference(64, 3, 4, ItemCreator.regular(RED_DYE)),
+
+			ItemReference(2, ItemCreator.regular(OAK_BOAT)),
+			ItemReference(2, ItemCreator.regular(SPRUCE_BOAT)),
+			ItemReference(2, ItemCreator.regular(BIRCH_BOAT)),
+			ItemReference(2, ItemCreator.regular(JUNGLE_BOAT)),
+			ItemReference(2, ItemCreator.regular(DARK_OAK_BOAT)),
+			ItemReference(2, ItemCreator.regular(ACACIA_BOAT)),
+
+			ItemReference(32, 8, 16, ItemCreator.regular(SNOWBALL)),
+			ItemReference(32, 8, 16, ItemCreator.regular(EGG)),
+
+			ItemReference(128, 16, 64, ItemCreator.regular(COBBLESTONE)),
+			ItemReference(128, 16, 64, ItemCreator.regular(COBBLED_DEEPSLATE)),
+			ItemReference(128, 16, 64, ItemCreator.regular(BLACKSTONE)),
+
+			ItemReference(16, 1, 2, ItemCreator.regular(OXEYE_DAISY)),
+			ItemReference(16, 1, 2, ItemCreator.regular(RED_MUSHROOM)),
+			ItemReference(22, 1, 3, ItemCreator.regular(BROWN_MUSHROOM)),
+			ItemReference(3, 3, 3, ItemCreator.regular(BOWL)),
+			ItemReference(
+				5,
+				ItemCreator.regular(SUSPICIOUS_STEW).customMeta {
+					(it as SuspiciousStewMeta).addCustomEffect(
+						PotionEffect(
+							PotionEffectType.REGENERATION,
+							8 * 20,
+							0
+						), true
+					)
+				}),
+
+			ItemReference(64, 8, 10, ItemCreator.regular(OAK_PLANKS)),
+			ItemReference(64, 8, 10, ItemCreator.regular(SPRUCE_PLANKS)),
+			ItemReference(64, 8, 10, ItemCreator.regular(BIRCH_PLANKS)),
+			ItemReference(64, 8, 10, ItemCreator.regular(JUNGLE_PLANKS)),
+			ItemReference(64, 8, 10, ItemCreator.regular(ACACIA_PLANKS)),
+			ItemReference(64, 8, 10, ItemCreator.regular(DARK_OAK_PLANKS)),
+			ItemReference(64, 8, 10, ItemCreator.regular(CRIMSON_PLANKS)),
+			ItemReference(64, 8, 10, ItemCreator.regular(WARPED_PLANKS)),
+
+			ItemReference(32, 2, 6, ItemCreator.regular(PORKCHOP)),
+			ItemReference(32, 2, 6, ItemCreator.regular(COOKED_PORKCHOP)),
+			ItemReference(32, 2, 6, ItemCreator.regular(BEEF)),
+			ItemReference(32, 2, 6, ItemCreator.regular(COOKED_BEEF)),
+			ItemReference(8, ItemCreator.regular(CAKE)),
+			ItemReference(16, 1, 2, ItemCreator.regular(APPLE)),
+			ItemReference(8, ItemCreator.regular(GOLDEN_APPLE)),
+
+			ItemReference(3, ItemCreator.regular(LIGHT_BLUE_SHULKER_BOX)),
+			ItemReference(18, ItemCreator.regular(ENCHANTED_BOOK).customMeta {
+				val (enchant, level) = randFrom(random, bookEnchants)
+				(it as EnchantmentStorageMeta).addStoredEnchant(enchant, level, true)
+			})
+		)
 	}
 }

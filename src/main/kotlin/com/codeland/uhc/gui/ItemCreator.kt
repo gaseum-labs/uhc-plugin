@@ -68,6 +68,11 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 		return this
 	}
 
+	fun enchant(enchant: Pair<Enchantment, Int>): ItemCreator {
+		meta.addEnchant(enchant.first, enchant.second, true)
+		return this
+	}
+
 	fun setData(key: NamespacedKey, value: Int): ItemCreator {
 		(meta as PersistentDataHolder).persistentDataContainer.set(key, PersistentDataType.INTEGER, value)
 		return this
@@ -106,6 +111,10 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 
 		fun getData(key: NamespacedKey, stack: ItemStack): Int? {
 			return (stack.itemMeta as PersistentDataHolder).persistentDataContainer.get(key, PersistentDataType.INTEGER)
+		}
+
+		fun regular(type: Material): ItemCreator {
+			return ItemCreator(type, Bukkit.getItemFactory().getItemMeta(type), false)
 		}
 
 		fun fromType(type: Material, clean: Boolean = true): ItemCreator {

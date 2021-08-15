@@ -10,6 +10,7 @@ import com.codeland.uhc.quirk.quirks.classes.Classes
 import org.bukkit.Material
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
+import org.bukkit.inventory.meta.PotionMeta
 
 enum class QuirkType(
 	val prettyName: String,
@@ -107,9 +108,9 @@ enum class QuirkType(
 	CHAOTIC_CARE_PACKAGES(
 		"Chaotic Care Packages",
 		::ChaoticCarePackages,
-		{ ItemCreator.fromType(Material.CHORUS_FRUIT) },
+		{ ItemCreator.fromType(Material.TIPPED_ARROW).customMeta { (it as PotionMeta).basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false) } },
 		arrayOf(
-			"Chests drop every 5 seconds",
+			"Tons of chests drop throughout the world",
 			"Wacky loot is inside"
 		)
 	),

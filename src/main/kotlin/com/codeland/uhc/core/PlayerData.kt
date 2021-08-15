@@ -219,6 +219,18 @@ class PlayerData(val uuid: UUID) {
 		offlineZombie = null
 	}
 
+	fun setQuirkData(quirkType: QuirkType, data: Any): QuirkDataHolder {
+		val dataHolder = quirkDataList.getOrPut(quirkType) { QuirkDataHolder(false, 0) }
+
+		dataHolder.data = data
+
+		return dataHolder
+	}
+
+	fun getQuirkData(quirk: Quirk): Any {
+		return quirkDataList.getOrPut(quirk.type) { QuirkDataHolder(false, quirk.defaultData()) }.data
+	}
+
 	companion object {
 		const val INVENTORY_TAG = "_UHC_Zombie_inv"
 		const val XP_TAG = "_UHC_Zombie_xp"
