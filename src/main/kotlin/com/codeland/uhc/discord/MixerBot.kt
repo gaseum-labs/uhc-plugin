@@ -20,13 +20,12 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
-import org.bukkit.ChatColor
 import java.awt.RenderingHints
-import java.awt.geom.AffineTransform
-import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
-import java.io.*
-import java.lang.Exception
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
 import java.net.URI
 import java.net.URL
 import java.net.http.HttpClient
@@ -35,7 +34,6 @@ import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.imageio.ImageIO
-import kotlin.collections.ArrayList
 
 class MixerBot(
 	val jda: JDA,

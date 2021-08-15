@@ -20,17 +20,14 @@ class LinkCommand : MixerCommand(false) {
 		if (uuidResponse == null) {
 			event.channel.sendMessage("Something went wrong with the connection").queue()
 
-		} else if (!uuidResponse.isValid()) {
-			event.channel.sendMessage("That user does not exist!").queue()
-
 		} else {
+			val uuid = uuidResponse.convertUuid() ?: return event.channel.sendMessage("That Minecraft username does not exist!").queue()
+
 			/* save link data for this user */
 			val discordId = event.author.idLong
 			val userIndex = bot.getDiscordUserIndex(discordId)
 
 			try {
-				val uuid = UUID.fromString(uuidResponse.uuid)
-
 				val linkData = DataManager.linkData
 
 				if (userIndex == -1) {
@@ -43,7 +40,9 @@ class LinkCommand : MixerCommand(false) {
 				DiscordFilesystem.linkDataFile.save(event.guild, linkData)
 
 				event.channel.sendMessage("Successfully linked as ${uuidResponse.name}").queue()
-			} catch (ex: Exception) {}
+			} catch (ex: Exception) {
+				ex.printStackTrace()
+			}
 		}
 	}
 }
