@@ -3,16 +3,11 @@ package com.codeland.uhc.quirk.quirks.carePackages
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.core.phase.Phase
-import com.codeland.uhc.util.Util
 import com.codeland.uhc.core.phase.phases.Endgame
 import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
-import com.codeland.uhc.util.ItemUtil
-import com.codeland.uhc.util.Util.log
-import com.codeland.uhc.util.Util.randFromArray
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_COAL
@@ -21,9 +16,11 @@ import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_GOLD
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_IRON
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_LAPIS
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.pickOne
+import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.ScoreboardDisplay
-import org.bukkit.ChatColor.*
+import com.codeland.uhc.util.Util
 import org.bukkit.*
+import org.bukkit.ChatColor.*
 import org.bukkit.Material.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -47,6 +44,8 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 	lateinit var dropTimes: Array<Int>
 
 	var dropIndex = 0
+
+	val random = Random(game.world.seed)
 
 	/*
 	 * example scoreboard:
@@ -424,79 +423,6 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 
 		class XZReturn(val x: Int, val z: Int)
 
-		/**
-		 * unit testable
-		 *
-		 * does not interact with bukkit
-		 * @return where a care package should land in terms of x and z
-		 */
-		fun findDropXZ(lastX: Int, lastZ: Int, startRadius: Double, endRadius: Double, remainingSeconds: Int, timeUntil: Int, phaseLength: Int, buffer: Int): XZReturn {
-			class RangeReference(var value: Double = 0.0) {
-				fun intValue(): Int {
-					return value.toInt()
-				}
-			}
-
-			var speed = (startRadius - endRadius) / phaseLength.toDouble()
-			var invAlong = (remainingSeconds - timeUntil) / phaseLength.toDouble()
-
-			var finalRadius = ((startRadius - endRadius) * invAlong + endRadius) - buffer
-			if (finalRadius < endRadius) finalRadius = endRadius
-
-			/* the next care package can spawn in one of 8 squares */
-			/* around a square of the previous drop */
-
-			/* blockCoordinate can be the X or Z of the block */
-			val choosePlaceIndex = { blockCoordinate: Int, lower: RangeReference, upper: RangeReference ->
-				lower.value = blockCoordinate - (finalRadius / 2)
-				upper.value = blockCoordinate + (finalRadius / 2)
-
-				val allows = arrayOf((lower.value >= -finalRadius), (upper.value <= finalRadius))
-				var placeIndex = Util.randRange(0, 1)
-				if (!allows[placeIndex]) placeIndex = placeIndex.xor(1)
-
-				placeIndex
-			}
-
-			val lower = RangeReference()
-			val upper = RangeReference()
-
-			/* use ints for the block position based off the values we got */
-			val intRadius = finalRadius.toInt()
-
-			/* random decide whether the chest will spawn guaranteed */
-			/* to the left or right of the last chest */
-			/* r to the up or down of the last chest */
-			return if (Math.random() < 0.5) {
-				if (choosePlaceIndex(lastX, lower, upper) == 0)
-					XZReturn(Util.randRange(-intRadius, lower.intValue()), Util.randRange(-intRadius, intRadius))
-				else
-					XZReturn(Util.randRange(upper.intValue(), intRadius), Util.randRange(-intRadius, intRadius))
-			} else {
-				if (choosePlaceIndex(lastZ, lower, upper) == 0)
-					XZReturn(Util.randRange(-intRadius, intRadius), Util.randRange(-intRadius, lower.intValue()))
-				else
-					XZReturn(Util.randRange(-intRadius, intRadius), Util.randRange(upper.intValue(), intRadius))
-			}
-		}
-
-		fun testDropXZ() {
-			var xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
-			log("x: ${xz.x}, z: ${xz.z}")
-
-			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
-			log("x: ${xz.x}, z: ${xz.z}")
-
-			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
-			log("x: ${xz.x}, z: ${xz.z}")
-
-			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
-			log("x: ${xz.x}, z: ${xz.z}")
-
-			xz = findDropXZ(0, 0, 550.0, 25.0, 60, 900, 2700, 0)
-			log("x: ${xz.x}, z: ${xz.z}")
-		}
-
 		fun dropTextColor(tier: Int): ChatColor {
 			return when (tier) {
 				0 -> GOLD
@@ -550,8 +476,6 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 					block.type == PODZOL
 			}
 
-			val directions = arrayOf(BlockFace.WEST, BlockFace.EAST, BlockFace.NORTH, BlockFace.SOUTH)
-
 			for (y in 255 downTo 0) {
 				val block = world.getBlockAt(x, y, z)
 
@@ -565,7 +489,7 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 							!block.getRelative(BlockFace.NORTH).isPassable &&
 							!block.getRelative(BlockFace.SOUTH).isPassable
 						) {
-							val placeDirection = randFromArray(directions)
+							val placeDirection = BlockFace.values()[Random.nextInt(4)]
 
 							var baseBlock = block.getRelative(placeDirection)
 
@@ -593,11 +517,11 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 
 		fun sugarcanePlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, numSugarcane: Int) {
 			for (i in 0 until numSugarcane) {
-				val height = Util.randRange(1, 4)
+				val height = Random.nextInt(2, 5)
 
 				for (attempt in 0 until 10) {
-					val x = Util.randRange(centerX - placeRadius, centerX + placeRadius)
-					val z = Util.randRange(centerZ - placeRadius, centerZ + placeRadius)
+					val x = Random.nextInt(centerX - placeRadius, centerX + placeRadius + 1)
+					val z = Random.nextInt(centerZ - placeRadius, centerZ + placeRadius + 1)
 
 					if (placeSugarcane(world, x, z, height)) break
 				}

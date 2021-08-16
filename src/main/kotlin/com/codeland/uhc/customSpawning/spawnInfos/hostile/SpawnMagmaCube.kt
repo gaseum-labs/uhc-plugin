@@ -14,6 +14,6 @@ class SpawnMagmaCube : SpawnInfo() {
 	}
 
 	override fun onSpawn(block: Block, spawnCycle: Int, entity: LivingEntity) {
-		if (entity is MagmaCube) entity.size = Util.randRange(1, 2)
+		if (entity is MagmaCube) entity.size = (spawnCycle % 2) + 1
 	}
 }

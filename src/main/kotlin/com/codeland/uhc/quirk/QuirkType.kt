@@ -39,15 +39,6 @@ enum class QuirkType(
 		)
     ),
 
-	MODIFIED_DROPS(
-		"Modified Drops",
-		::ModifiedDrops,
-		{ ItemCreator.fromType(Material.BONE) },
-		arrayOf(
-			"Hostile mobs drop exceptional loot"
-		)
-	),
-
     CREATIVE(
 	    "Creative",
 	    ::Creative,
@@ -108,7 +99,7 @@ enum class QuirkType(
 	CHAOTIC_CARE_PACKAGES(
 		"Chaotic Care Packages",
 		::ChaoticCarePackages,
-		{ ItemCreator.fromType(Material.TIPPED_ARROW).customMeta { (it as PotionMeta).basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false) } },
+		{ ItemCreator.fromType(Material.TIPPED_ARROW).customMeta <PotionMeta> { it.basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false) } },
 		arrayOf(
 			"Tons of chests drop throughout the world",
 			"Wacky loot is inside"

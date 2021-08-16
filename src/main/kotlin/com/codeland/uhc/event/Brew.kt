@@ -30,8 +30,7 @@ class Brew : Listener {
 		fun createCustomPotion(potionType: PotionType, material: Material, name: String, duration: Int, amplifier: Int): ItemCreator {
 			val effectType = potionType.effectType ?: PotionEffectType.POISON
 
-			return ItemCreator.fromType(material).name("${ChatColor.RESET}Potion of $name").customMeta { meta ->
-				meta as PotionMeta
+			return ItemCreator.fromType(material).name("${ChatColor.RESET}Potion of $name").customMeta <PotionMeta> { meta ->
 				meta.color = effectType.color
 				meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)
 			}
@@ -47,7 +46,7 @@ class Brew : Listener {
 		}
 
 		fun createDefaultPotion(material: Material, potionData: PotionData): ItemCreator {
-			return ItemCreator.fromType(material).customMeta { meta -> (meta as PotionMeta).basePotionData = potionData }
+			return ItemCreator.fromType(material).customMeta <PotionMeta> { it.basePotionData = potionData }
 		}
 
 		class PotionInfo(val type: PotionType, val name: String, val baseDuration: Int, val extendedDuration: Int, val amplifiedDuration: Int)

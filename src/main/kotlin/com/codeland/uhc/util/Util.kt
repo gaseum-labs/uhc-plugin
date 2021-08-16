@@ -1,27 +1,15 @@
 package com.codeland.uhc.util
 
-import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
 import org.bukkit.ChatColor
 import org.bukkit.World
-import java.util.logging.Level
 import kotlin.math.acos
 import kotlin.math.floor
-import kotlin.math.pow
 import kotlin.math.sqrt
-import kotlin.random.Random
 
 object Util {
-	fun log(message: String) {
-		PaperPluginLogger.getGlobal().log(Level.INFO, message)
-	}
-
-	fun debug(message: String) {
-		PaperPluginLogger.getGlobal().log(Level.INFO, "${ChatColor.GREEN}$message")
-	}
-
 	/**
 	 * positive mod
 	 */
@@ -109,19 +97,7 @@ object Util {
 	}
 
 	fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
-		return binaryFind(value, array, { item -> item }) != null
-	}
-
-	fun randRange(low: Int, high: Int): Int {
-		return ((Math.random() * (high - low + 1)) + low).toInt()
-	}
-
-	fun lowBiasRandom(high: Int): Int {
-		return (Math.random().pow(3.0) * high).toInt()
-	}
-
-	fun randRange(low: Float, high: Float): Float {
-		return ((Math.random() * (high - low)) + low).toFloat()
+		return binaryFind(value, array) { it } != null
 	}
 
 	fun timeString(seconds: Int): String {
@@ -139,10 +115,6 @@ object Util {
 			"$seconds second${if (seconds == 1) "" else "s"}"
 
 		return "$minutesPart${if(minutesPart == "") "" else " "}$secondsPart"
-	}
-
-	fun <T>randFromArray(array: Array<T>): T {
-		return array[(Math.random() * array.size).toInt()]
 	}
 
 	fun interp(low: Float, high: Float, along: Float): Float {
@@ -174,31 +146,6 @@ object Util {
 
 	fun inverseSumToN(sum: Int) = ((1 + sqrt(1 + 8.0 * sum)) / 2).toInt()
 
-	val colorPrettyNames = arrayOf(
-		"Black",
-		"Dark Blue",
-		"Dark Green",
-		"Dark Aqua",
-		"Dark Red",
-		"Dark Purple",
-		"Gold",
-		"Gray",
-		"Dark Gray",
-		"Blue",
-		"Green",
-		"Aqua",
-		"Red",
-		"Light Purple",
-		"Yellow",
-		"White",
-		"Magic",
-		"Bold",
-		"Strike",
-		"Underline",
-		"Italic",
-		"Reset"
-	)
-
 	fun bilinear(array: Array<Float>, along: Float): Float {
 		val x = along * array.size
 
@@ -228,21 +175,6 @@ object Util {
 			   (array[maxY * width + maxX] * (1 - coefY) * (1 - coefX))
 	}
 
-	fun <T>pickTwo(array: Array<T>): Pair<T, T> {
-		var index0 = (Math.random() * array.size).toInt()
-		val index1 = (Math.random() * array.size).toInt()
-
-		if (index0 == index1) index0 = (index0 + 1) % array.size
-
-		return Pair(array[index0], array[index1])
-	}
-
-	fun <T>swap(array: Array<T>, index0: Int, index1: Int) {
-		val temp = array[index0]
-		array[index0] = array[index1]
-		array[index1] = temp
-	}
-
 	/* the area of the intersection of two circles with the same radius at a given distance of centers */
 	fun circleIntersection(r: Double, d: Double): Double {
 		if (d > r * 2) return 0.0
@@ -251,20 +183,6 @@ object Util {
 
 	fun levelIntersection(r: Double, d: Double): Double {
 		return (2 * r - d).coerceAtLeast(0.0)
-	}
-
-	fun <T>shuffleArray(array: Array<T>): Array<T> {
-		val random = Random((Math.random() * 7238201).toInt())
-
-		for (i in array.indices) {
-			val otherIndex = random.nextInt(0, array.size)
-
-			val temp = array[i]
-			array[i] = array[otherIndex]
-			array[otherIndex] = temp
-		}
-
-		return array
 	}
 
 	fun interpColor(along: Float, from: TextColor, to: TextColor): TextColor {

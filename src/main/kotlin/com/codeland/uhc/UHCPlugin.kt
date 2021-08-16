@@ -60,18 +60,18 @@ class UHCPlugin : JavaPlugin() {
 		val address = WebAddress.getLocalAddress()
 
 		try {
-			Util.log(GoogleDDNSUpdater.updateDomain(address))
+			println(GoogleDDNSUpdater.updateDomain(address))
 		} catch (ex: Exception) {
-			Util.log("$ex")
-			Util.log("${ChatColor.RED}DDNS FAILED | STARTING SERVER AT $address")
+			println("$ex")
+			println("${ChatColor.RED}DDNS FAILED | STARTING SERVER AT $address")
 		}
 
 		MixerBot.createMixerBot(address, {
 			UHC.bot = it
 			UHC.getConfig().usingBot.set(true)
 		}, {
-			Util.log("${ChatColor.RED}$it")
-			Util.log("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
+			println("${ChatColor.RED}$it")
+			println("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
 		})
 
 		server.scheduler.scheduleSyncDelayedTask(this) {

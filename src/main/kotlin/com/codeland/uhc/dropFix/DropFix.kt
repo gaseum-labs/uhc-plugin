@@ -10,13 +10,13 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
 class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>, val naturalDeath: Array<DropEntry> = arrayOf(DropEntry.nothing())) {
-	val metaIndexName = "Dfix_${entityType.name}_I"
-	val metaListName = "Dfix_${entityType.name}_L"
+	private val metaIndexName = "Dfix_${entityType.name}_I"
+	private val metaListName = "Dfix_${entityType.name}_L"
 
-	fun increaseIndex(player: Player): Int {
+	private fun increaseIndex(player: Player): Int {
 		val indexMeta = player.getMetadata(metaIndexName)
 
-		var oldIndex = (if (indexMeta.isEmpty())
+		val oldIndex = (if (indexMeta.isEmpty())
 			resetIndex(player)
 		else
 			indexMeta[0].asInt()
@@ -33,20 +33,21 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>
 		return oldIndex
 	}
 
-	fun resetIndex(player: Player): Int {
+	private fun resetIndex(player: Player): Int {
 		player.setMetadata(metaIndexName, FixedMetadataValue(UHCPlugin.plugin, 0))
 		return 0
 	}
 
-	fun resetListMeta(player: Player): Array<Int> {
-		val array = Util.shuffleArray(Array(dropCycle.size) { it })
+	private fun resetListMeta(player: Player): Array<Int> {
+		val array = Array(dropCycle.size) { it }
+		array.shuffle()
 
 		player.setMetadata(metaListName, FixedMetadataValue(UHCPlugin.plugin, array))
 
 		return array
 	}
 
-	fun getDrops(player: Player): Array<DropEntry> {
+	private fun getDrops(player: Player): Array<DropEntry> {
 		val listMeta = player.getMetadata(metaListName)
 
 		val list = if (listMeta.isEmpty()) {

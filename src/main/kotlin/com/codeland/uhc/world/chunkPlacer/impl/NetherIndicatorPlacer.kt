@@ -7,6 +7,7 @@ import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Biome
+import kotlin.random.Random
 
 class NetherIndicatorPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
@@ -14,9 +15,9 @@ class NetherIndicatorPlacer(size: Int) : ImmediateChunkPlacer(size) {
 			val netherChunk = WorldManager.getNetherWorld()?.getChunkAt(chunk.x, chunk.z) ?: return@nextTick
 
 			for (i in 0..20) {
-				val x = Util.randRange(0, 15)
-				val y = Util.randRange(5, 14)
-				val z = Util.randRange(0, 15)
+				val x = Random.nextInt(0, 16)
+				val y = Random.nextInt(5, 15)
+				val z = Random.nextInt(0, 16)
 
 				val block = chunk.getBlock(x, y, z)
 

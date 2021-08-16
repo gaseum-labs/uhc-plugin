@@ -12,6 +12,7 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.banner.Pattern
 import org.bukkit.block.banner.PatternType
 import org.bukkit.block.data.Directional
+import kotlin.random.Random
 
 class BannerPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
@@ -28,7 +29,7 @@ class BannerPlacer(size: Int) : DelayedChunkPlacer(size) {
 		randomPosition(chunk, 20, 80) { block, x, y, z ->
 			fun tryBanner(facing: BlockFace): Boolean {
 				return if (Util.binarySearch(block.getRelative(facing).type, validBlocks)) {
-					makeBanner(chunk.world, Util.randFromArray(bannerList), facing.oppositeFace, block)
+					makeBanner(chunk.world, bannerList[Random.nextInt(bannerList.size)], facing.oppositeFace, block)
 					true
 				} else {
 					false

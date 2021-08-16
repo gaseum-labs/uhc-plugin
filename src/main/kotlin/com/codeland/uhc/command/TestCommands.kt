@@ -74,7 +74,7 @@ class TestCommands : BaseCommand() {
 	@Description("swap all players")
 	fun testDsSwap(sender: CommandSender) {
 		val game = UHC.game ?: return errorMessage(sender, "Game has not started")
-		Deathswap.doSwaps(game)
+		game.getQuirk<Deathswap>(QuirkType.DEATHSWAP)?.doSwaps()
 	}
 
 	@Subcommand("insomnia")

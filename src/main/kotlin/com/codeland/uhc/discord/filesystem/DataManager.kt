@@ -34,7 +34,7 @@ object DataManager {
 			return future
 		}
 
-		fun printErr(name: String) = { msg: String -> Util.log("${ChatColor.RED}Error loading $name file | $msg") }
+		fun printErr(name: String) = { msg: String -> println("${ChatColor.RED}Error loading $name file | $msg") }
 
 		DiscordFilesystem.idsFile.load(category, printErr("ids")).thenAccept { ids ->
 			this.ids = ids

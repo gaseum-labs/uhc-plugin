@@ -35,7 +35,7 @@ class Flying(type: QuirkType, game: Game) : Quirk(type, game) {
 
 			player.inventory.addItem(
 				ItemCreator.fromType(Material.FIREWORK_ROCKET)
-				.customMeta { meta -> (meta as FireworkMeta).power = 2 }
+				.customMeta <FireworkMeta> { it.power = 2 }
 				.lore("Given from Flying Quirk")
 				.name("${ChatColor.GOLD}UHC Rocket")
 				.amount(numRockets)

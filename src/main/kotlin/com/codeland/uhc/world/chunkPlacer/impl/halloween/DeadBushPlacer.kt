@@ -1,17 +1,17 @@
 package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
-import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
+import kotlin.random.Random
 
 class DeadBushPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
-		val numBushes = Util.randRange(0, 3)
+		val numBushes = Random.nextInt(0, 4)
 
 		for (i in 0 until numBushes) {
-			val x = Util.randRange(0, 15)
-			val z = Util.randRange(0, 15)
+			val x = Random.nextInt(0, 16)
+			val z = Random.nextInt(0, 16)
 			val y = findBushY(chunk, x, z)
 
 			if (y != -1) {
