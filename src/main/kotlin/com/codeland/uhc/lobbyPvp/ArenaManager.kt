@@ -35,8 +35,8 @@ object ArenaManager {
 			arena.z = spiral.getZ()
 			spiral.next()
 		} else {
-			arena.x = coords?.first
-			arena.z = coords?.second
+			arena.x = coords.first
+			arena.z = coords.second
 		}
 
 		/* set last played against for players */

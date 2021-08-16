@@ -17,9 +17,13 @@ import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
+import net.kyori.adventure.key.Key
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.Material
 import org.bukkit.Particle
@@ -238,6 +242,18 @@ class EventListener : Listener {
 		/* prevent pest crafting */
 		if (UHC.game?.quirkEnabled(QuirkType.PESTS) == true && PlayerData.isUndead(player.uniqueId)) {
 			if (Util.binarySearch(event.recipe.result.type, Pests.banList)) event.isCancelled = true
+
+		} else if (
+			PlayerData.isParticipating(player.uniqueId) && (
+			event.recipe.result.type === Material.END_CRYSTAL ||
+			event.recipe.result.type === Material.RESPAWN_ANCHOR
+		)) {
+			event.isCancelled = true
+			event.inventory.matrix.forEach { it.amount = 0 }
+
+			player.closeInventory()
+			player.showTitle(Title.title(Component.text("BRUH", TextColor.color(0x791ee8)), Component.empty()))
+			player.playSound(Sound.sound(Sound.Type { Key.key("entity.ghast.death") }, Sound.Source.MASTER, 2.0f, 0.5f), Sound.Emitter.self())
 		}
 	}
 

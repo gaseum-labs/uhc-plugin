@@ -253,21 +253,20 @@ object UHC {
 			return false
 		}
 
-		val numPlayers = PlayerData.playerDataList.filter { (_, playerData) -> playerData.staged }.size
-
 		/* compile a list of all individuals that will play */
 		val individuals = PlayerData.playerDataList
 			.filter { (uuid, playerData) -> playerData.staged && !TeamData.isOnTeam(uuid) }
 			.map { (uuid, _) -> uuid }
 
 		val numGroups = TeamData.teams.size + individuals.size
+		val numPlayers = TeamData.teams.fold(0) { acc, team -> acc + team.members.size } + individuals.size
 
 		if (numGroups == 0) {
 			messageStream(true, "No one is playing")
 			return false
 		}
 
-		messageStream(false, "Creating game worlds")
+		messageStream(false, "Creating game worlds for $numPlayers players")
 
 		worldRadius = radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer).roundToInt()
 

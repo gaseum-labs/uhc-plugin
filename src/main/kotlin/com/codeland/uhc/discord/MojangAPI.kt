@@ -20,13 +20,12 @@ object MojangAPI {
 
 		companion object {
 			fun strToLong(hexStr: String, start: Int): Long? {
-				val ret = 0L
+				var ret = 0L
 
 				for (i in 0 until 16) {
 					val char = hexStr[i + start].lowercaseChar()
 					val digit = if (char in '0'..'9') char - '0' else if (char in 'a'..'f') char - 'a' + 10 else return null
-
-					ret.or(digit.toLong().shl((15 - i) * 4))
+					ret = digit + ret * 16
 				}
 
 				return ret

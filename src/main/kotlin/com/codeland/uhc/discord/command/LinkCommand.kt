@@ -35,6 +35,7 @@ class LinkCommand : MixerCommand(false) {
 					linkData.minecraftIds.add(uuid)
 				} else {
 					linkData.minecraftIds[userIndex] = uuid
+					println(uuid)
 				}
 
 				DiscordFilesystem.linkDataFile.save(event.guild, linkData)

@@ -36,7 +36,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(Are
 
 	private fun endNaturally(winners: List<Player>) {
 		this.winners = winners.map { it.uniqueId }
-		startTime = -10
+		pvpTimer = -10
 
 		val winnerString = if (winners.size == 1) {
 			"${ChatColor.RED}${winners.first().name} wins!"
