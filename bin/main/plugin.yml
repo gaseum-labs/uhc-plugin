@@ -1,0 +1,13 @@
+name: UHCPlugin
+version: 1.5.1
+authors:
+  - Balduvian
+  - Sumdumdude
+  - C1fr1
+  - Rewind
+  - roobley
+load: STARTUP
+main: com.codeland.uhc.UHCPlugin
+api-version: 1.16
+depend:
+  - ProtocolLib

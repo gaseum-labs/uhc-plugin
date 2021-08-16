@@ -1,0 +1,32 @@
+package com.codeland.uhc.customSpawning.spawnInfos.passive
+
+import com.codeland.uhc.customSpawning.SpawnInfo
+import org.bukkit.block.Block
+import org.bukkit.entity.Ageable
+import org.bukkit.entity.EntityType
+import org.bukkit.entity.LivingEntity
+
+class SpawnChicken : SpawnInfo() {
+	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
+		if (!animalAllowSpawn(block, 1, 1, 1)) return null
+
+		return when {
+			mountains(block.biome) -> reg(when(spawnCycle % 2) {
+				0 -> EntityType.LLAMA
+				else -> EntityType.CHICKEN
+			})
+			desert(block.biome) -> reg(EntityType.RABBIT)
+			jungle(block.biome) -> reg(when (spawnCycle % 4) {
+				0 -> EntityType.PARROT
+				1 -> EntityType.PARROT
+				2 -> EntityType.PARROT
+				else -> EntityType.CHICKEN
+			})
+			else -> reg(EntityType.CHICKEN)
+		}
+	}
+
+	override fun onSpawn(block: Block, spawnCycle: Int, entity: LivingEntity) {
+		(entity as Ageable).setAdult()
+	}
+}
