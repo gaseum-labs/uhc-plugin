@@ -1,19 +1,12 @@
 package com.codeland.uhc.world.gen
 
-import com.codeland.uhc.world.gen.layer.*
+import com.codeland.uhc.world.gen.layer.GenLayerExpandNether
+import com.codeland.uhc.world.gen.layer.LayerNetherBase
 import com.codeland.uhc.world.gen.layer.game2.*
-import com.codeland.uhc.world.gen.layer.lobby.GenLayerOceanDeepener
-import com.codeland.uhc.world.gen.layer.lobby.GenLayerOceanRiser
-import com.codeland.uhc.world.gen.layer.lobby.GenLayerShatteredIsland
-import com.codeland.uhc.world.gen.layer.lobby.LayerOceanNoise
 import com.codeland.uhc.world.gen.layer.pvp.LayerPvp
 import net.minecraft.world.level.newbiome.area.Area
-import net.minecraft.world.level.newbiome.area.AreaFactory
-import net.minecraft.world.level.newbiome.context.AreaContextTransformed
 import net.minecraft.world.level.newbiome.context.WorldGenContextArea
-import net.minecraft.world.level.newbiome.layer.GenLayer
 import net.minecraft.world.level.newbiome.layer.GenLayerZoom
-import java.util.function.LongFunction
 
 object CustomGenLayers {
 	fun createAreaNether(seed: Long): Area {
@@ -31,27 +24,6 @@ object CustomGenLayers {
 		return baseLayer.make()
 	}
 
-	private fun <T : Area, C : AreaContextTransformed<T>> createAreaFactoryLobby(
-		seed: LongFunction<C>,
-	): AreaFactory<T> {
-		var baseLayer = LayerOceanNoise().a(seed.apply(12L))
-		baseLayer = GenLayerOceanDeepener().a(seed.apply(32401L), baseLayer)
-
-		baseLayer = GenLayerZoom.ar.a(seed.apply(24L), baseLayer)
-		baseLayer = GenLayerZoom.a.a(seed.apply(48L), baseLayer)
-
-		baseLayer = GenLayerShatteredIsland().a(seed.apply(96L), baseLayer)
-
-		baseLayer = GenLayerZoom.ar.a(seed.apply(192L), baseLayer)
-
-		baseLayer = GenLayerOceanRiser().a(seed.apply(3242L), baseLayer)
-
-		baseLayer = GenLayerZoom.a.a(seed.apply(222L), baseLayer)
-		baseLayer = GenLayerZoom.a.a(seed.apply(333L), baseLayer)
-
-		return baseLayer
-	}
-
 	fun createAreaGame2(seed: Long, border: Int): Area {
 		val noise = { s: Long -> WorldGenContextArea(25, seed, s) }
 
@@ -63,7 +35,7 @@ object CustomGenLayers {
 		baseLayer = GenLayerCohere().a(noise(8081L), baseLayer)
 		baseLayer = GenLayerSeparate().a(noise(8082L), baseLayer)
 		baseLayer = GenLayerRegion().a(noise(8083L), baseLayer)
-		baseLayer = GenLayerOcean(border, 4).a(noise(8084L), baseLayer)
+		baseLayer = GenLayerOcean(border - 16, 4).a(noise(8084L), baseLayer)
 
 		baseLayer = GenLayerZoom.a.a(noise(1002L), baseLayer)
 		baseLayer = GenLayerZoom.a.a(noise(1003L), baseLayer)
@@ -97,9 +69,5 @@ object CustomGenLayers {
 		baseLayer = GenLayerZoom.ar.a(noise(1004L), baseLayer)
 
 		return baseLayer.make() as Area
-	}
-
-	fun createGenLayerLobby(seed: Long): GenLayer {
-		return GenLayer(createAreaFactoryLobby { WorldGenContextArea(25, seed, it) })
 	}
 }

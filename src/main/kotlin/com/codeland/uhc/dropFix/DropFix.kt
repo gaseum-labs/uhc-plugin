@@ -9,7 +9,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 
-class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>, val naturalDeath: Array<DropEntry> = arrayOf(DropEntry.nothing())) {
+class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>) {
 	private val metaIndexName = "Dfix_${entityType.name}_I"
 	private val metaListName = "Dfix_${entityType.name}_L"
 
@@ -60,13 +60,15 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>
 	}
 
 	fun onDeath(entity: Entity, killer: Player?, drops: MutableList<ItemStack>) {
+		drops.clear()
+
 		val looting = killer?.inventory?.itemInMainHand?.itemMeta?.enchants?.asIterable()?.firstOrNull { enchant ->
 			enchant.key == Enchantment.LOOT_BONUS_MOBS
 		}?.value ?: 0
 
-		drops.clear()
+		val nearestPlayer = killer ?: entity.world.players.minByOrNull { entity.location.distance(it.location) }
 
-		(if (killer == null) naturalDeath else getDrops(killer)).forEach { entry ->
+		if (nearestPlayer != null) getDrops(nearestPlayer).forEach { entry ->
 			drops.addAll(entry.onDrop(entity, looting).filterNotNull().filter { it.amount > 0 })
 		}
 	}

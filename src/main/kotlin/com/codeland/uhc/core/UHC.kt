@@ -28,6 +28,7 @@ import org.bukkit.scoreboard.RenderType
 import java.time.Duration
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.math.ceil
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -259,7 +260,7 @@ object UHC {
 			.map { (uuid, _) -> uuid }
 
 		val numGroups = TeamData.teams.size + individuals.size
-		val numPlayers = TeamData.teams.fold(0) { acc, team -> acc + team.members.size } + individuals.size
+		val numPlayers = 7//TeamData.teams.fold(0) { acc, team -> acc + team.members.size } + individuals.size
 
 		if (numGroups == 0) {
 			messageStream(true, "No one is playing")
@@ -268,7 +269,7 @@ object UHC {
 
 		messageStream(false, "Creating game worlds for $numPlayers players")
 
-		worldRadius = radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer).roundToInt()
+		worldRadius = (ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / 16.0) * 16.0).toInt()
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
