@@ -260,7 +260,7 @@ object UHC {
 			.map { (uuid, _) -> uuid }
 
 		val numGroups = TeamData.teams.size + individuals.size
-		val numPlayers = 7//TeamData.teams.fold(0) { acc, team -> acc + team.members.size } + individuals.size
+		val numPlayers = TeamData.teams.fold(0) { acc, team -> acc + team.members.size } + individuals.size
 
 		if (numGroups == 0) {
 			messageStream(true, "No one is playing")
