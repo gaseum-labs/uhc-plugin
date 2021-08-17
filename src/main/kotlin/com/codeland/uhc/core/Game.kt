@@ -346,8 +346,8 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 		var spawnModifier = borderRadius / 128.0
 		if (spawnModifier > 1.0) spawnModifier = 1.0
 
-		world.     monsterSpawnLimit = (0 * 70 * spawnModifier).roundToInt()
-		world.      animalSpawnLimit = (0 * 10 * spawnModifier).roundToInt()
+		world.     monsterSpawnLimit = 0
+		world.      animalSpawnLimit = 0
 		world.     ambientSpawnLimit = (    15 * spawnModifier).roundToInt().coerceAtLeast(1)
 		world. waterAnimalSpawnLimit = (     5 * spawnModifier).roundToInt().coerceAtLeast(1)
 		world.waterAmbientSpawnLimit = (    20 * spawnModifier).roundToInt().coerceAtLeast(1)

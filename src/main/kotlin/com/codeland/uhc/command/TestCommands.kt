@@ -23,6 +23,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
+import kotlin.math.ceil
 
 @CommandAlias("uhct")
 class TestCommands : BaseCommand() {
@@ -146,7 +147,7 @@ class TestCommands : BaseCommand() {
 		if (!result) return errorMessage(sender, "All care packages have been dropped!")
 	}
 
-	@Subcommand("mobcaps")
+	@Subcommand("minecraftmobcaps")
 	@Description("query the current spawn limit coefficient")
 	fun getMobCaps(sender: CommandSender) {
 		sender as Player
@@ -159,11 +160,17 @@ class TestCommands : BaseCommand() {
 	}
 
 	@Subcommand("mobcap")
+	@CommandCompletion("@uhcplayer")
 	@Description("test a player's individual mobcap")
-	fun testMobCap(sender: CommandSender, player: Player, type: CustomSpawningType) {
-		val playerMobs = CustomSpawning.calcPlayerMobs(type, player)
+	fun testMobCap(sender: CommandSender, offlinePlayer: OfflinePlayer, type: CustomSpawningType) {
+		val testPlayer = Bukkit.getPlayer(offlinePlayer.uniqueId)
+			?: return errorMessage(sender, "${offlinePlayer.name} is not online")
 
-		Action.sendGameMessage(sender, "${player.name}'s mobcap: ${PlayerData.getPlayerData(player.uniqueId).spawningData[type.ordinal].mobcap} | filled with ${playerMobs.first} representing ${playerMobs.second} of the total")
+		val number = CustomSpawning.calcPlayerMobs(type, testPlayer)
+
+		Action.sendGameMessage(sender, "${testPlayer.name}'s ${type.name.lowercase()} mobcap: $number out of ${
+			PlayerData.getPlayerData(testPlayer.uniqueId).spawningData[type.ordinal].getMobCap()
+		}")
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
@@ -197,7 +204,7 @@ class TestCommands : BaseCommand() {
 	}
 
 	@Subcommand("flag")
-	@Description("test a player's individual mobcap")
+	@Description("set the global debug flag")
 	fun testFlag(sender: CommandSender) {
 		flag = !flag
 		Action.sendGameMessage(sender, "Set flag to $flag")

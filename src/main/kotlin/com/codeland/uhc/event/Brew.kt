@@ -53,7 +53,8 @@ class Brew : Listener {
 
 		val POISON_INFO = PotionInfo(PotionType.POISON, "Poison", 150, 325, 144)
 		val REGEN_INFO = PotionInfo(PotionType.REGEN, "Regeneration", 250, 500, 225)
-		val STRENGTH_INFO = PotionInfo(PotionType.STRENGTH, "Strength", 1800, 3600, 600)
+		val STRENGTH_INFO = PotionInfo(PotionType.STRENGTH, "Strength", 0, 0, 0)
+		val WEAKNESS_INFO = PotionInfo(PotionType.WEAKNESS, "Weakness", 600, 1200, 0)
 
 		fun isExtended(itemStack: ItemStack): Boolean {
 			val meta = itemStack.itemMeta as PotionMeta
@@ -92,7 +93,7 @@ class Brew : Listener {
 			else meta.basePotionData.type == type
 		}
 
-		val potionInfoList = arrayOf(POISON_INFO, REGEN_INFO, STRENGTH_INFO)
+		val potionInfoList = arrayOf(POISON_INFO, REGEN_INFO, STRENGTH_INFO, WEAKNESS_INFO)
 
 		val PATH_EXTEND = 1
 		val PATH_UPGRADE = 2
@@ -179,7 +180,11 @@ class Brew : Listener {
 
 			createCustomPath(      Material.REDSTONE,  PotionType.REGEN,  REGEN_INFO,  PATH_EXTEND),
 			createCustomPath(Material.GLOWSTONE_DUST,  PotionType.REGEN,  REGEN_INFO, PATH_UPGRADE),
-			createCustomPath(     Material.GUNPOWDER,  PotionType.REGEN,  REGEN_INFO,  PATH_SPLASH)
+			createCustomPath(     Material.GUNPOWDER,  PotionType.REGEN,  REGEN_INFO,  PATH_SPLASH),
+
+			createCustomPath(Material.FERMENTED_SPIDER_EYE, PotionType.WATER, WEAKNESS_INFO, 0),
+			createCustomPath(      Material.REDSTONE, PotionType.WEAKNESS, WEAKNESS_INFO, PATH_EXTEND),
+			createCustomPath(     Material.GUNPOWDER, PotionType.WEAKNESS, WEAKNESS_INFO,  PATH_SPLASH),
 		)
 
 		val bannedPaths = arrayOf(

@@ -3,12 +3,10 @@ package com.codeland.uhc.customSpawning
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
-import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.block.Biome
 import org.bukkit.block.Block
@@ -172,51 +170,23 @@ object CustomSpawning {
 		return player.location.y > 57
 	}
 
-	data class SpawnTagData(val uuid: UUID, val fraction: Double)
-
-	fun makePlayerMob(type: CustomSpawningType, entity: LivingEntity, player: Player, data: CustomSpawningType.SpawningPlayerData) {
-		var mobFraction = (1 / data.mobcap).coerceAtLeast(0.0)
-
-		if (entity.location.world.environment === World.Environment.NETHER && entity.location.block.y <= SpawnInfo.NETHER_CAVE_Y) mobFraction /= 2
-
-		if (entity.location.block.biome === Biome.SOUL_SAND_VALLEY || (type === CustomSpawningType.HOSTILE && playerOnSurface(player))) mobFraction *= 2
-
-		entity.setMetadata(type.spawnTag, FixedMetadataValue(UHCPlugin.plugin, SpawnTagData(player.uniqueId, mobFraction)))
-
+	fun makePlayerMob(type: CustomSpawningType, entity: LivingEntity, player: Player) {
+		entity.setMetadata(type.spawnTag, FixedMetadataValue(UHCPlugin.plugin, player.uniqueId))
 		entity.removeWhenFarAway = true
 	}
 
-	fun mobPercentage(type: CustomSpawningType, entity: Entity, player: Player): Double {
-		if (entity !is LivingEntity) return 0.0
+	fun isPlayerMob(type: CustomSpawningType, entity: Entity, player: Player): Int {
+		if (entity !is LivingEntity) return 0
 		/* if an entity becomes persistent it is no longer part of your cap */
-		if (!entity.removeWhenFarAway) return 0.0
+		if (!entity.removeWhenFarAway) return 0
 
 		val meta = entity.getMetadata(type.spawnTag)
 
-		return if (meta.isNotEmpty()) {
-			val spawnTagData = meta[0].value() as SpawnTagData
-
-			if (spawnTagData.uuid == player.uniqueId) spawnTagData.fraction.coerceAtLeast(0.0)
-			else 0.0
-
-		} else {
-			0.0
-		}
+		return if (meta.isNotEmpty() && meta[0].value() as UUID == player.uniqueId) 1 else 0
 	}
 
-	fun calcPlayerMobs(type: CustomSpawningType, player: Player): Pair<Int, Double> {
-		var playerMobCount = 0
-		var playerMobCapacity = 0.0
-
-		player.world.entities.forEach { entity ->
-			val capacity = mobPercentage(type, entity, player)
-			if (capacity != 0.0) {
-				++playerMobCount
-				playerMobCapacity += capacity
-			}
-		}
-
-		return Pair(playerMobCount, playerMobCapacity)
+	fun calcPlayerMobs(type: CustomSpawningType, player: Player): Int {
+		return player.world.entities.fold(0) { acc, entity -> acc + isPlayerMob(type, entity, player) }
 	}
 
 	fun spawnTick(type: CustomSpawningType, currentTick: Int, game: Game) {
@@ -237,8 +207,21 @@ object CustomSpawning {
 			}
 
 			/* first reset all mobcaps */
-			for (i in playerList.indices) {
-				spawningDataList[i].mobcap = type.mobcap.toDouble()
+			spawningDataList.forEachIndexed { i, data ->
+				data.cap = type.mobcap.toDouble()
+
+				val player = playerList[i]
+
+				when (player.world.environment) {
+					World.Environment.NORMAL -> {
+						if (type === CustomSpawningType.HOSTILE && playerOnSurface(player)) data.cap /= 2
+					}
+					World.Environment.NETHER -> {
+						if (player.location.block.y <= SpawnInfo.NETHER_CAVE_Y) data.cap *= 2
+						if (player.location.block.biome === Biome.SOUL_SAND_VALLEY) data.cap /= 2
+					}
+					else -> {}
+				}
 			}
 
 			/* calculate caps for all players relative to each other */
@@ -268,11 +251,11 @@ object CustomSpawning {
 							)
 						val percentIntersected = intersection / totalArea
 
-						data.mobcap -= type.mobcap * percentIntersected / 2
-						otherData.mobcap -= type.mobcap * percentIntersected / 2
+						data.cap -= type.mobcap * percentIntersected / 2
+						otherData.cap -= type.mobcap * percentIntersected / 2
 
-						if (data.mobcap < 1) data.mobcap = 1.0
-						if (otherData.mobcap < 1) otherData.mobcap = 1.0
+						if (data.cap < 1) data.cap = 1.0
+						if (otherData.cap < 1) otherData.cap = 1.0
 					}
 				}
 			}
@@ -282,15 +265,15 @@ object CustomSpawning {
 				val player = playerList[i]
 				val data = spawningDataList[i]
 
-				var playerMobCapacity = calcPlayerMobs(type, player)
+				val playerMobCount = calcPlayerMobs(type, player)
 
-				if (playerMobCapacity.second < 1.0) {
+				if (playerMobCount < data.getMobCap()) {
 					val spawnInfo = getSpawnInfo(type, player, data, game) ?: continue
 
 					val (entityType, block) = getSpawnBlock(type, player, data, playerList, spawnInfo) ?: continue
 
 					val entity = player.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType) as LivingEntity
-					makePlayerMob(type, entity, player, data)
+					makePlayerMob(type, entity, player)
 					spawnInfo.onSpawn(block, data.cycle, entity)
 
 					++data.index
