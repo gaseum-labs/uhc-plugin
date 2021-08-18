@@ -16,9 +16,7 @@ jobs:
               uses: actions/setup-java@v1
               with:
                   java-version: 16
-            - name: Grant execute permission for gradlew
-              run: chmod +x gradlew
             - name: Create user.gradle file
               run: touch user.gradle
             - name: Build with Gradle
-              run: ./gradlew build
+              run: gradle build

@@ -35,16 +35,17 @@ object CustomGenLayers {
 		baseLayer = GenLayerCohere().a(noise(8081L), baseLayer)
 		baseLayer = GenLayerSeparate().a(noise(8082L), baseLayer)
 		baseLayer = GenLayerRegion().a(noise(8083L), baseLayer)
-		baseLayer = GenLayerOcean(border - 16, 4).a(noise(8084L), baseLayer)
+		baseLayer = GenLayerOcean(border - 16, 5).a(noise(8084L), baseLayer)
 
 		baseLayer = GenLayerZoom.a.a(noise(1002L), baseLayer)
 		baseLayer = GenLayerZoom.a.a(noise(1003L), baseLayer)
+		baseLayer = GenLayerZoom.a.a(noise(1004L), baseLayer)
 
 		baseLayer = GenLayerBorder().a(noise(7070L), baseLayer)
 		baseLayer = GenLayerSplit().a(noise(7071L), baseLayer)
 
-		baseLayer = GenLayerZoom.a.a(noise(1004L), baseLayer)
 		baseLayer = GenLayerZoom.a.a(noise(1005L), baseLayer)
+		baseLayer = GenLayerZoom.a.a(noise(1006L), baseLayer)
 
 		var riverLayer = LayerNoise().a(noise(1000L))
 		riverLayer = GenLayerZoom.a.a(noise(1001L), riverLayer)
@@ -52,6 +53,7 @@ object CustomGenLayers {
 		riverLayer = GenLayerZoom.a.a(noise(1003L), riverLayer)
 		riverLayer = GenLayerZoom.a.a(noise(1004L), riverLayer)
 		riverLayer = GenLayerZoom.a.a(noise(1005L), riverLayer)
+		riverLayer = GenLayerZoom.a.a(noise(1006L), riverLayer)
 		riverLayer = GenLayerEdge(BiomeNo.RIVER).a(noise(9090L), riverLayer)
 
 		baseLayer = GenLayerRiverApply().a(noise(9091L), baseLayer, riverLayer)
