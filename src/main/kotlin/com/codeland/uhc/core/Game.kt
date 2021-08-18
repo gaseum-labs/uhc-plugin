@@ -340,7 +340,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 		return Location(world, 0.5, 100.0, 0.5)
 	}
 
-	fun updateMobCaps() {
+	fun updateMobCaps(world: World) {
 		val borderRadius = world.worldBorder.size / 2
 
 		var spawnModifier = borderRadius / 128.0

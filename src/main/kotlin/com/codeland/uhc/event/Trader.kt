@@ -1,7 +1,6 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.Action
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -10,7 +9,6 @@ import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.Item
 import org.bukkit.entity.WanderingTrader
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.MerchantRecipe
@@ -30,7 +28,7 @@ object Trader {
 		}, 0, 200)
 	}
 
-	fun findTraderLocation(center: Block): Block? {
+	private fun findTraderLocation(center: Block): Block? {
 		for (i in -1..1) for (j in -1..1) if (i != 0 && j != 0) {
 			for (x in i * 5 - 2..i * 5 + 2) {
 				for (z in j * 5 - 2..j * 5 + 2) {
@@ -49,13 +47,13 @@ object Trader {
 		return null
 	}
 
-	fun createTrade(cost: Int, result: ItemStack, max: Int): MerchantRecipe {
+	private fun createTrade(cost: Int, result: ItemStack, max: Int): MerchantRecipe {
 		val trade = MerchantRecipe(result, 0, max, true, cost * 100, 1.0f)
 		trade.addIngredient(ItemStack(Material.EMERALD, cost))
 		return trade
 	}
 
-	fun createTrader(block: Block) {
+	private fun createTrader(block: Block) {
 		val trader = block.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), EntityType.WANDERING_TRADER) as WanderingTrader
 
 		trader.setRecipe(0, createTrade(1, ItemStack(      Material.OXEYE_DAISY), 4))
@@ -66,7 +64,7 @@ object Trader {
 		trader.setRecipe(5, createTrade(3, ItemStack(      Material.MELON_SLICE), 2))
 	}
 
-	fun spawnTrader(uuid: UUID): Boolean {
+	private fun spawnTrader(uuid: UUID): Boolean {
 		val playerLocation = Action.getPlayerLocation(uuid)?.block
 		if (playerLocation != null) {
 			val traderLocation = findTraderLocation(playerLocation)

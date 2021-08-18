@@ -103,7 +103,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 					.create()
 			}
 		})
-		addItem(object : GuiItemCounter(coords(3, 1), gameConfig.shrinkTime, 1200, 6000, 60) {
+		addItem(object : GuiItemCounter(coords(3, 1), gameConfig.shrinkTime, 60, 6000, 60) {
 			override fun getStackProperty(value: Int): ItemStack {
 				return ItemCreator.fromType(Material.BELL)
 					.enchant(value != property.default)
