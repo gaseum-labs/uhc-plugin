@@ -19,8 +19,7 @@ jobs:
             - name: Create user.gradle file
               run: touch user.gradle
             - name: Build with Gradle
-              run: gradle build
+              run: gradle shadowJar
             - uses: actions/upload-artifact@v2
               with:
-                name: Package
-                path: build/libs
+                path: build/libs/UHC Plugin-all.jar
