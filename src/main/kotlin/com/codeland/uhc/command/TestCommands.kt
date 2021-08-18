@@ -10,6 +10,7 @@ import com.codeland.uhc.command.Commands.errorMessage
 import com.codeland.uhc.core.*
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
+import com.codeland.uhc.event.Trader
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.QuirkType
@@ -217,5 +218,11 @@ class TestCommands : BaseCommand() {
 		val killReward = UHC.game?.config?.killReward?.get() ?: return errorMessage(sender, "Game is not going")
 
 		killReward.apply(sender.uniqueId, TeamData.playersTeam(sender.uniqueId)?.members ?: arrayListOf(), sender.location)
+	}
+
+	@Subcommand("trader")
+	fun testTrader(sender: CommandSender) {
+		if (sender !is Player) return
+		Trader.spawnTraderForPlayer(sender.uniqueId)
 	}
 }
