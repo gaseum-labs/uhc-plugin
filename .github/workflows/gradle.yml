@@ -1,25 +1,48 @@
-name: Build
+name: Upload
 
 on:
-    push:
-        branches: [master]
-    pull_request:
-        branches: [master]
+  push:
+    branches: [master]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    name: Upload
+    runs-on: ubuntu-latest
+    steps:
 
-        steps:
-            - uses: actions/checkout@v2
-            - name: Set up JDK 16
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 16
-            - name: Create user.gradle file
-              run: touch user.gradle
-            - name: Build with Gradle
-              run: gradle shadowJar
-            - uses: actions/upload-artifact@v2
-              with:
-                path: build/libs/uhc-plugin-all.jar
+      # build the plugin jar
+      - uses: actions/checkout@v2
+      - name: Set up JDK 16
+        uses: actions/setup-java@v1
+        with:
+          java-version: 16
+      - name: Create user.gradle file
+        run: touch user.gradle
+      - name: Build with Gradle
+        run: gradle shadowJar
+
+      # create release
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.head_ref }}
+          release_name: Automatic Release ${{ github.head_ref }}
+          draft: false
+          prerelease: true
+
+      # upload plugin jar to release
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/libs/uhc-plugin-all.jar
+          asset_name: uhc-plugin-all.jar
+          asset_content_type: application/jar
