@@ -35,6 +35,14 @@ jobs:
           draft: false
           prerelease: true
 
+      # explore ig uhhhh not finding my build file
+      - name: Uhhhhh
+        run: ls
+      - name: Uhhhhh2
+        run: cd build/libs
+      - name: Uhhhhh3
+        run: ls
+
       # upload plugin jar to release
       - name: Upload Release Asset
         id: upload-release-asset
