@@ -35,6 +35,8 @@ jobs:
         uses: joutvhu/get-release@v1.0.0
         with:
           tag_name: auto
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # upload plugin jar to release
       - name: Upload Release Asset
