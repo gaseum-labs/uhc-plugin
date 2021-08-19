@@ -21,27 +21,20 @@ jobs:
       - name: Build with Gradle
         run: gradle shadowJar
 
-      # create release
-      #- name: Checkout code
-      #  uses: actions/checkout@v2
-      #- name: Create Release
-      #  id: create_release
-      #  uses: actions/create-release@v1
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #  with:
-      #    tag_name: auto
-      #    release_name: Automatic Release
-      #    draft: false
-      #    prerelease: true
-
       # explore ig uhhhh not finding my build file
       - name: Uhhhhh
         run: ls
       - name: Uhhhhh2
-        run: cd build/libs
+        run: cd build && ls
       - name: Uhhhhh3
-        run: ls
+        run: cd build/libs && ls
+
+      # get the release to upload to
+      - name: Get Release
+        id: get-release
+        uses: joutvhu/get-release@v1.0.0
+        with:
+          tag_name: auto
 
       # upload plugin jar to release
       - name: Upload Release Asset
@@ -50,7 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: https://github.com/Codeland473/uhc-plugin/releases/auto
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: build/libs/uhc-plugin-all.jar
           asset_name: uhc-plugin-all.jar
           asset_content_type: application/jar
