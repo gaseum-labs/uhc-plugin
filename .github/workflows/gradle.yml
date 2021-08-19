@@ -30,8 +30,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.head_ref }}
-          release_name: Automatic Release ${{ github.head_ref }}
+          tag_name: auto
+          release_name: Automatic Release
           draft: false
           prerelease: true
 
