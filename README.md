@@ -5,20 +5,42 @@
 
 A Minecraft 1.17 UHC plugin built in Kotlin for PaperMC
 
-UHC Plugin modifies many aspects of the server and is meant to be run by itself without other plugins.
+**UHC Plugin is built exclusively for private games and is not general-purpose. It is probably not what you are looking for**
 
-## Requirements
+## Continuous Beta Releases!
+
+Check out the [Automatic Release](https://github.com/Codeland473/uhc-plugin/releases/tag/auto) for the latest version of the Plugin Jar
+
+**WARNING:** Releases are not guaranteed to work and bugs are expected
+
+### Hosting the Plugin Yourself
+
+1. Set up a 1.17.1 [PaperMC server](https://papermc.io/downloads#Paper-1.17)
+2. Download the latest [UHC Plugin Jar](https://github.com/Codeland473/uhc-plugin/releases/download/auto/uhc-plugin-all.jar)
+3. Also download the latest [Protocollib Plugin Jar](https://github.com/dmulloy2/ProtocolLib)
+4. Place both plugin jars into the `plugins/` directory in your Server
+
+### Starting A Game
+
+1. Add yourself and other players to teams using the `/uhca team random [team size]` command
+2. Right click while holding the `Open UHC Settings` item in your inventory 
+3. Click on the `Start Game` item in the opened inventory
+
+## For Developers
+### Requirements
 
 * Kotlin 1.5
 * Java 16
-* [PaperMC 1.17](https://papermc.io/)
-* [Protocollib 4.7.0](https://github.com/dmulloy2/ProtocolLib) 
+* [PaperMC 1.17.1](https://papermc.io/downloads#Paper-1.17)
+* [Protocollib 4.7.0](https://github.com/dmulloy2/ProtocolLib)
 
-## Setting up the Project *(outdated)*
+### Setting up the Project
 
 Clone the repo: `git clone https://github.com/Codeland473/uhc-plugin`
 
 Create the file `user.gradle` in the project directory
+
+Then...
 
 ### In IntelliJ
 
@@ -38,28 +60,4 @@ Now you can run the configuration to build the jar
 
 ### In the command line
 
-Navigate to the directory of the project and run `gradle build`
-
-## Setting up the Server
-
-Copy the jar built by the project into the `plugins` directory for your paper server
-
-Also copy the Protocollib jar into the directory
-
-### Generated Files in Server Directory
-
-* `discordData.txt` - Optional, Discord bot token and Discord server id
-* `ddns.properties` - Optional, API data for Google Domains
-* `summaries/` - Directory containing game summaries
-
-## Starting a game
-
-When players join the server, they will be placed in a lobby where they can build in creative or join the lobby PVP arena.
-
-Right clicking the item called `Open UHC Settings` will open up a menu where ops can change game settings like enabling quirks or setting the game length. 
-
-Once all players are in the server, an op can run the `/uhca team create [player]` and `/uhca team join [team player] [added player]` to create teams. A quicker way is to run the `/uhca team random [team size]` command to automatically add all players to random teams of a certain size.
-
-Then the game world must be loaded with the `/uhca worldRefresh` command
-
-Then the `/uhca start` command will start the game.
+Navigate to the directory of the project and run `gradle shadowJar`
