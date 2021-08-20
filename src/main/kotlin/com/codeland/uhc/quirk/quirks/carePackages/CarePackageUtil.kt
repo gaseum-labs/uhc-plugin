@@ -3,6 +3,7 @@ package com.codeland.uhc.quirk.quirks.carePackages
 import com.codeland.uhc.event.Brew
 import com.codeland.uhc.event.Brew.Companion.POISON_INFO
 import com.codeland.uhc.event.Brew.Companion.REGEN_INFO
+import com.codeland.uhc.extensions.MiscExtensions.nextFloat
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
@@ -35,10 +36,10 @@ object CarePackageUtil {
 	val SPIRE_DIAMOND = SpireData(DIAMOND_ORE, DIAMOND_ORE)
 
 	fun generateSpire(world: World, block: Block, maxRadius: Float, height: Int, spireData: SpireData) {
-		val magnitudeField = Array(9) { (Math.random() * 0.2 + 0.9).toFloat() }
+		val magnitudeField = Array(9) { Random.nextFloat(0.9f, 0.11f) }
 
 		fun fillBlock(block: Block) {
-			val random = Math.random()
+			val random = Random.nextDouble()
 
 			block.setType(when {
 				random < 1 / 16.0 -> spireData.ore
@@ -188,7 +189,7 @@ object CarePackageUtil {
 
 	fun randomBucket(): ItemStack {
 		return when {
-			Math.random() < 0.5 -> ItemStack(LAVA_BUCKET)
+			Random.nextBoolean() -> ItemStack(LAVA_BUCKET)
 			else -> ItemStack(WATER_BUCKET)
 		}
 	}

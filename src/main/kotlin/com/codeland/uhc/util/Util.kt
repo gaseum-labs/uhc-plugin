@@ -1,5 +1,7 @@
 package com.codeland.uhc.util
 
+import com.codeland.uhc.extensions.MiscExtensions.nextFloat
+import com.destroystokyo.paper.utils.PaperPluginLogger
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
@@ -97,7 +99,19 @@ object Util {
 	}
 
 	fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
-		return binaryFind(value, array) { it } != null
+		return binaryFind(value, array, { item -> item }) != null
+	}
+
+	fun randRange(low: Int, high: Int): Int {
+		return Random.nextInt(high + 1)
+	}
+
+	fun lowBiasRandom(high: Int): Int {
+		return (Math.random().pow(3.0) * high).toInt()
+	}
+
+	fun randRange(low: Float, high: Float): Float {
+		return Random.nextFloat(low, high)
 	}
 
 	fun timeString(seconds: Int): String {

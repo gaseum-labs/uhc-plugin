@@ -32,11 +32,11 @@ class PumpkinPlacer(size: Int) : DelayedChunkPlacer(size) {
 				val numPumpkins = Random.nextInt(3, 7)
 
 				for (j in 0 until numPumpkins) {
-					var offX = Random.nextInt(1, 8)
-					if (Math.random() < 0.5) offX = -offX
+					var offX = Util.randRange(1, 7)
+					if (Random.nextBoolean()) offX = -offX
 
-					var offZ = Random.nextInt(1, 8)
-					if (Math.random() < 0.5) offZ = -offZ
+					var offZ = Util.randRange(1, 7)
+					if (Random.nextBoolean()) offZ = -offZ
 
 					val y = findPumpkinY(chunk.world, x + offX, z + offZ)
 
@@ -51,7 +51,7 @@ class PumpkinPlacer(size: Int) : DelayedChunkPlacer(size) {
 	fun placePumpkin(world: World, x: Int, y: Int, z: Int) {
 		val block = world.getBlockAt(x, y, z)
 
-		block.setType(if (Math.random() < 0.5) Material.PUMPKIN else Material.CARVED_PUMPKIN, false)
+		block.setType(if (Random.nextBoolean()) Material.PUMPKIN else Material.CARVED_PUMPKIN, false)
 
 		if (block.type == Material.CARVED_PUMPKIN) {
 			val data = block.blockData as Directional

@@ -423,6 +423,79 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 
 		class XZReturn(val x: Int, val z: Int)
 
+		/**
+		 * unit testable
+		 *
+		 * does not interact with bukkit
+		 * @return where a care package should land in terms of x and z
+		 */
+		fun findDropXZ(lastX: Int, lastZ: Int, startRadius: Double, endRadius: Double, remainingSeconds: Int, timeUntil: Int, phaseLength: Int, buffer: Int): XZReturn {
+			class RangeReference(var value: Double = 0.0) {
+				fun intValue(): Int {
+					return value.toInt()
+				}
+			}
+
+			var speed = (startRadius - endRadius) / phaseLength.toDouble()
+			var invAlong = (remainingSeconds - timeUntil) / phaseLength.toDouble()
+
+			var finalRadius = ((startRadius - endRadius) * invAlong + endRadius) - buffer
+			if (finalRadius < endRadius) finalRadius = endRadius
+
+			/* the next care package can spawn in one of 8 squares */
+			/* around a square of the previous drop */
+
+			/* blockCoordinate can be the X or Z of the block */
+			val choosePlaceIndex = { blockCoordinate: Int, lower: RangeReference, upper: RangeReference ->
+				lower.value = blockCoordinate - (finalRadius / 2)
+				upper.value = blockCoordinate + (finalRadius / 2)
+
+				val allows = arrayOf((lower.value >= -finalRadius), (upper.value <= finalRadius))
+				var placeIndex = Util.randRange(0, 1)
+				if (!allows[placeIndex]) placeIndex = placeIndex.xor(1)
+
+				placeIndex
+			}
+
+			val lower = RangeReference()
+			val upper = RangeReference()
+
+			/* use ints for the block position based off the values we got */
+			val intRadius = finalRadius.toInt()
+
+			/* random decide whether the chest will spawn guaranteed */
+			/* to the left or right of the last chest */
+			/* r to the up or down of the last chest */
+			return if (Random.nextBoolean()) {
+				if (choosePlaceIndex(lastX, lower, upper) == 0)
+					XZReturn(Util.randRange(-intRadius, lower.intValue()), Util.randRange(-intRadius, intRadius))
+				else
+					XZReturn(Util.randRange(upper.intValue(), intRadius), Util.randRange(-intRadius, intRadius))
+			} else {
+				if (choosePlaceIndex(lastZ, lower, upper) == 0)
+					XZReturn(Util.randRange(-intRadius, intRadius), Util.randRange(-intRadius, lower.intValue()))
+				else
+					XZReturn(Util.randRange(-intRadius, intRadius), Util.randRange(upper.intValue(), intRadius))
+			}
+		}
+
+		fun testDropXZ() {
+			var xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+
+			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+
+			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+
+			xz = findDropXZ(0, 0, 550.0, 25.0, 120, 60, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+
+			xz = findDropXZ(0, 0, 550.0, 25.0, 60, 900, 2700, 0)
+			log("x: ${xz.x}, z: ${xz.z}")
+		}
+
 		fun dropTextColor(tier: Int): ChatColor {
 			return when (tier) {
 				0 -> GOLD

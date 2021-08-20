@@ -39,7 +39,7 @@ class LanternPlacer(size: Int) : ImmediateChunkPlacer(size) {
 					}
 
 					val lanternBlock = chunk.getBlock(x, y - chainSize - 1, z)
-					lanternBlock.setType(if (Math.random() < 0.5) Material.LANTERN else Material.SOUL_LANTERN, false)
+					lanternBlock.setType(if (Random.nextBoolean()) Material.LANTERN else Material.SOUL_LANTERN, false)
 
 					val lanternData = lanternBlock.blockData as Lantern
 					lanternData.isHanging = true

@@ -12,6 +12,7 @@ import org.bukkit.entity.*
 import org.bukkit.entity.EntityType.*
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.inventory.ItemStack
+import kotlin.random.Random
 
 class Halloween(type: QuirkType, game: Game) : Quirk(type, game) {
 	var hasGottenDiamonds = false
@@ -44,7 +45,7 @@ class Halloween(type: QuirkType, game: Game) : Quirk(type, game) {
 	companion object {
 		fun onEntitySpawn(entity: Entity) {
 			if (entity as? LivingEntity != null) {
-				entity.equipment?.helmet = ItemStack(if (Math.random() < 0.5) CARVED_PUMPKIN else JACK_O_LANTERN)
+				entity.equipment?.helmet = ItemStack(if (Random.nextBoolean()) CARVED_PUMPKIN else JACK_O_LANTERN)
 				entity.equipment?.helmetDropChance = 0.25f
 			}
 		}
