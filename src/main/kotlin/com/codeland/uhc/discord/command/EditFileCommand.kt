@@ -44,7 +44,7 @@ class EditFileCommand : MixerCommand(true) {
 
 			/* report on any defects in the given data */
 			} else {
-				Util.log("${ChatColor.RED}Invalid data sent")
+				println("${ChatColor.RED}Invalid data sent")
 				errorMessage(event, if (errorMessage == "") "Unknown error" else errorMessage)
 			}
 

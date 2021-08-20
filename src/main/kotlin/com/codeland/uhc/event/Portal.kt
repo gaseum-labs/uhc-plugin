@@ -16,35 +16,25 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerPortalEvent
+import java.util.*
+import kotlin.collections.HashMap
 
 class Portal : Listener {
 	companion object {
-		data class PortalEntry(val player: Player, var time: Int)
+		data class PortalEntry(var time: Int)
 
-		var portalEntries = ArrayList<PortalEntry>()
+		var portalEntries = HashMap<UUID, PortalEntry>()
 
 		val PORTAL_TIME = 80
 
 		fun portalTick(game: Game) {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				if (player.location.block.type === Material.NETHER_PORTAL) {
-					if (portalEntries.find { it.player === player } == null) {
-						portalEntries.add(PortalEntry(player, PORTAL_TIME))
-					}
-				}
-			}
-
-			portalEntries.removeIf { entry ->
-				if (entry.player.location.block.type !== Material.NETHER_PORTAL) {
-					true
+					val entry = portalEntries.getOrPut(player.uniqueId) { PortalEntry(PORTAL_TIME + 1) }
+					if (--entry.time == 0) onPlayerPortal(player, game)
 
 				} else {
-					if (--entry.time <= 0) {
-						onPlayerPortal(entry.player, game)
-						true
-					} else {
-						false
-					}
+					portalEntries.remove(player.uniqueId)
 				}
 			}
 		}

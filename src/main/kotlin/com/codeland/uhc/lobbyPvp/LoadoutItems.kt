@@ -5,7 +5,7 @@ import com.codeland.uhc.event.Brew
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.AmountOption
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.EnchantOption
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.ItemOption
-import com.codeland.uhc.util.ItemUtil
+import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
@@ -101,9 +101,9 @@ enum class LoadoutItems(val cost: Int, val enchantOptions: Array<ItemOption>, va
 	IRON_AXE          (1, axeEnchants,   { Axe.ironAxe() }),
 	DIAMOND_AXE       (3, axeEnchants,   { Axe.diamondAxe() }),
 	BOW               (2, bowEnchants,   { ItemStack(Material.BOW) }),
-	CROSSBOW          (2, emptyArray(),  { ItemUtil.enchantThing(ItemStack(Material.CROSSBOW), Enchantment.PIERCING, 1) }),
+	CROSSBOW          (2, emptyArray(),  { ItemCreator.regular(Material.CROSSBOW).enchant(Enchantment.PIERCING, 1).create() }),
 	SHIELD            (2, emptyArray(),  { ItemStack(Material.SHIELD) }),
-	PICKAXE           (1, pickaxeEnchants,  { ItemUtil.enchantThing(ItemStack(Material.DIAMOND_PICKAXE), Enchantment.DIG_SPEED, 2) }),
+	PICKAXE           (1, pickaxeEnchants,  { ItemCreator.regular(Material.DIAMOND_PICKAXE).enchant(Enchantment.DIG_SPEED, 2).create() }),
 
 	ARROWS            (1, arrowAmounts,  { ItemStack(Material.ARROW, 16) }),
 	/* UNUSED */ ARROWS_2_UNUSED (1, emptyArray(), { ItemStack(Material.ARROW) }),
@@ -125,7 +125,7 @@ enum class LoadoutItems(val cost: Int, val enchantOptions: Array<ItemOption>, va
 	DAMAGE_POTION     (2, emptyArray(),  ::createDamage),
 	DAMAGE_POTION_2   (2, emptyArray(),  ::createDamage),
 
-	CROSSBOW_2        (2, emptyArray(),  { ItemUtil.enchantThing(ItemStack(Material.CROSSBOW), Enchantment.PIERCING, 1) });
+	CROSSBOW_2        (2, emptyArray(),  { ItemCreator.regular(Material.CROSSBOW).enchant(Enchantment.PIERCING, 1).create() });
 
 	companion object {
 		abstract class ItemOption(val addCost: Int)

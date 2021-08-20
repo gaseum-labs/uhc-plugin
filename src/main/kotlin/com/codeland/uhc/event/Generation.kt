@@ -79,10 +79,6 @@ class Generation : Listener {
 					SugarCaneFix.highSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (game.config.worldGenEnabled(DUNGEON_FIX)) {
-					DungeonFix.dungeonChestReplacer.onGenerate(chunk, world.seed.toInt())
-				}
-
 				if (game.config.worldGenEnabled(HALLOWEEN)) {
 					HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt())
 					HalloweenWorld.deadBushPlacer.onGenerate(chunk, world.seed.toInt())

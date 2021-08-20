@@ -93,8 +93,11 @@ class Loadout(
 					val option = loadoutItem.enchantOptions[optionIndex]
 
 					when (option) {
-						is LoadoutItems.Companion.EnchantOption ->
-							ItemUtil.enchantThing(stack, option.enchant, option.level)
+						is LoadoutItems.Companion.EnchantOption -> {
+							val meta = stack.itemMeta
+							meta.addEnchant(option.enchant, option.level, true)
+							stack.itemMeta = meta
+						}
 
 						is LoadoutItems.Companion.AmountOption ->
 							stack.amount += option.addAmount

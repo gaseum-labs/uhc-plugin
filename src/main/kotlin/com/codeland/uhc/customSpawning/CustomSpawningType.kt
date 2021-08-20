@@ -1,5 +1,7 @@
 package com.codeland.uhc.customSpawning
 
+import kotlin.math.roundToInt
+
 enum class CustomSpawningType(
 	val minRadius: Int,
 	val maxRadius: Int,
@@ -28,7 +30,6 @@ enum class CustomSpawningType(
 		SpawnInfoType.COW.spawnInfo,
 		SpawnInfoType.USELESS_ANIMAL.spawnInfo,
 		SpawnInfoType.COW.spawnInfo,
-		SpawnInfoType.USELESS_ANIMAL.spawnInfo,
 		SpawnInfoType.CHICKEN.spawnInfo
 	), emptyArray());
 
@@ -37,8 +38,12 @@ enum class CustomSpawningType(
 	data class SpawningPlayerData(
 		var index: Int,
 		var cycle: Int,
-		var mobcap: Double
+		var cap: Double
 	) {
 		constructor() : this(0, 0, 0.0)
+
+		fun getMobCap(): Int {
+			return cap.roundToInt().coerceAtLeast(1)
+		}
 	}
 }

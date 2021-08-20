@@ -47,7 +47,7 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) : GuiIte
 			val player = Bukkit.getOfflinePlayer(arena.owner)
 
 			ItemCreator.fromType(Material.PLAYER_HEAD)
-				.customMeta { meta -> (meta as SkullMeta).owningPlayer = player }
+				.customMeta <SkullMeta> { it.owningPlayer = player }
 				.name("${ChatColor.YELLOW}Join ${player.name}'s Parkour")
 				.lore(if (arenaList.size == 1) "" else "Shift click to see more arenas")
 

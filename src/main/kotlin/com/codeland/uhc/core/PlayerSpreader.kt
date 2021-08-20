@@ -6,6 +6,7 @@ import org.bukkit.World
 import kotlin.math.cos
 import kotlin.math.round
 import kotlin.math.sin
+import kotlin.random.Random
 
 object PlayerSpreader {
 	fun findLocation(world: World, angle: Double, angleDeviation: Double, spreadRadius: Double, findY: (World, Int, Int) -> Int): Location? {
@@ -112,7 +113,7 @@ object PlayerSpreader {
 		val high = 100
 		val height = high - low
 
-		val offset = Util.randRange(0, height)
+		val offset = Random(world.seed + x + z).nextInt(0, height + 1)
 
 		for (y in 0..height) {
 			val usingY = (y + offset) % height + low

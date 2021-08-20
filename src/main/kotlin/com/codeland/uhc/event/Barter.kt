@@ -2,8 +2,8 @@ package com.codeland.uhc.event;
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.Util
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Piglin
@@ -19,91 +19,59 @@ import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
 
 class Barter : Listener {
-	fun createPotion(material: Material, potionData: PotionData): ItemStack {
-		val potion = ItemStack(material)
-		val meta = potion.itemMeta as PotionMeta
-		meta.basePotionData = potionData
-		potion.itemMeta = meta
-		return potion
-	}
-
 	val barterItemList = arrayOf(
-		{
-			val book = ItemStack(Material.ENCHANTED_BOOK)
-			val meta = book.itemMeta as EnchantmentStorageMeta
-			meta.addStoredEnchant(Enchantment.SOUL_SPEED, 2, true)
-			book.itemMeta = meta
-			book
-		}, {
-			val boots = ItemStack(Material.IRON_BOOTS)
-			val meta = boots.itemMeta
-			meta.addEnchant(Enchantment.SOUL_SPEED, 2, true)
-			boots.itemMeta = meta
-			boots
-		}, {
-			createPotion(Material.SPLASH_POTION, PotionData(PotionType.FIRE_RESISTANCE, false, false))
-	    }, {
-			createPotion(Material.POTION, PotionData(PotionType.FIRE_RESISTANCE, false, false))
-		}, {
-			createPotion(Material.POTION, PotionData(PotionType.WATER, false, false))
-		}, {
-			ItemStack(Material.IRON_NUGGET, 27)
-		}, {
-			ItemStack(Material.ENDER_PEARL, 3)
-		}, {
-			ItemStack(Material.STRING, 6)
-		}, {
-			ItemStack(Material.QUARTZ, 8)
-		}, {
-			ItemStack(Material.OBSIDIAN)
-		}, {
-			ItemStack(Material.CRYING_OBSIDIAN, 2)
-		}, {
-			ItemStack(Material.FIRE_CHARGE)
-		}, {
-			ItemStack(Material.LEATHER, 3)
-		}, {
-			ItemStack(Material.SOUL_SAND, 6)
-		}, {
-			ItemStack(Material.NETHER_BRICK, 8)
-		}, {
-			ItemStack(Material.SPECTRAL_ARROW, 9)
-		}, {
-			ItemStack(Material.GRAVEL, 12)
-		}, {
-			ItemStack(Material.BLACKSTONE, 12)
-		}
+		ItemCreator.regular(Material.ENCHANTED_BOOK).customMeta<EnchantmentStorageMeta> {
+			it.addStoredEnchant(Enchantment.SOUL_SPEED, 2, true)
+		},
+		ItemCreator.regular(Material.IRON_BOOTS).enchant(Enchantment.SOUL_SPEED, 2),
+		Brew.createDefaultPotion(Material.SPLASH_POTION, PotionData(PotionType.FIRE_RESISTANCE, false, false)),
+		Brew.createDefaultPotion(Material.POTION, PotionData(PotionType.FIRE_RESISTANCE, false, false)),
+		Brew.createDefaultPotion(Material.POTION, PotionData(PotionType.WATER, false, false)),
+		ItemCreator.regular(Material.IRON_NUGGET).amount(27),
+		ItemCreator.regular(Material.ENDER_PEARL).amount(3),
+		ItemCreator.regular(Material.STRING).amount(6),
+		ItemCreator.regular(Material.QUARTZ).amount(8),
+		ItemCreator.regular(Material.OBSIDIAN),
+		ItemCreator.regular(Material.CRYING_OBSIDIAN).amount(2),
+		ItemCreator.regular(Material.FIRE_CHARGE),
+		ItemCreator.regular(Material.LEATHER).amount(3),
+		ItemCreator.regular(Material.SOUL_SAND).amount(6),
+		ItemCreator.regular(Material.NETHER_BRICK).amount(8),
+		ItemCreator.regular(Material.SPECTRAL_ARROW).amount(9),
+		ItemCreator.regular(Material.GRAVEL).amount(12),
+		ItemCreator.regular(Material.BLACKSTONE).amount(12),
 	)
 
 	val META_TAG = "_UHC_BARTER"
 
-	data class BarterInfo(var index: Int, var indexList: Array<Int>)
+	inner class BarterInfo {
+		var index = 1
 
-	fun genIndexList(): Array<Int> {
-		val ret = Array(barterItemList.size) { i -> i }
-
-		Util.shuffleArray(ret)
-
-		return ret
+		val indexList = Array(barterItemList.size) { it }
+		init { indexList.shuffle() }
 	}
 
-	fun getIndex(player: Player): Int {
+	private fun getIndex(player: Player): Int {
 		val meta = player.getMetadata(META_TAG)
 
+		/* returns the index found before function was called */
+		/* modifies the index to be +1 of that after function exits */
 		return if (meta.size == 0) {
-			val indexList = genIndexList()
-			player.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin, BarterInfo(0, indexList)))
-			indexList[0]
+			val barterInfo = BarterInfo()
+			player.setMetadata(META_TAG, FixedMetadataValue(UHCPlugin.plugin, barterInfo))
+
+			barterInfo.indexList[0]
 
 		} else {
 			val barterInfo = meta[0].value() as BarterInfo
+			val ret = barterInfo.indexList[barterInfo.index]
 
-			if (++barterInfo.index == barterInfo.indexList.size) {
+			if (++barterInfo.index >= barterInfo.indexList.size) {
 				barterInfo.index = 0
-				Util.shuffleArray(barterInfo.indexList)
+				barterInfo.indexList.shuffle()
 			}
 
-			barterInfo.indexList[barterInfo.index]
+			ret
 		}
 	}
 
@@ -134,6 +102,6 @@ class Barter : Listener {
 
 		/* replace bartered item */
 		val droppedItem = event.itemDrop
-		droppedItem.itemStack = barterItemList[getIndex(foundPlayer)]()
+		droppedItem.itemStack = barterItemList[getIndex(foundPlayer)].create()
 	}
 }

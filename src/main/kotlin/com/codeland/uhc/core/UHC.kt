@@ -9,6 +9,7 @@ import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.Portal
+import com.codeland.uhc.event.Trader
 import com.codeland.uhc.gui.gui.CreateGameGui
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.team.TeamData
@@ -28,6 +29,7 @@ import org.bukkit.scoreboard.RenderType
 import java.time.Duration
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.math.ceil
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -96,8 +98,20 @@ object UHC {
 				ledgerTrailTick(currentGame, currentTick)
 
 				if (currentTick % 20 == 0) {
-					currentGame.updateMobCaps()
+					currentGame.updateMobCaps(WorldManager.getGameWorldGame())
+					currentGame.updateMobCaps(WorldManager.getNetherWorldGame())
 					containSpecs()
+				}
+
+				/* half way through the game */
+				if (timer == (currentGame.config.graceTime.get() + currentGame.config.shrinkTime.get()) * 20 / 2) {
+					TeamData.teams.forEach { team ->
+						val teamPlayer = team.members.firstOrNull { PlayerData.isParticipating(it) }
+						if (teamPlayer != null) Trader.spawnTraderForPlayer(teamPlayer)
+					}
+					PlayerData.playerDataList.forEach { (uuid, playerData) ->
+						if (!TeamData.isOnTeam(uuid) && playerData.participating) Trader.spawnTraderForPlayer(uuid)
+					}
 				}
 
 				if (switchResult) currentGame.nextPhase()
@@ -268,7 +282,7 @@ object UHC {
 
 		messageStream(false, "Creating game worlds for $numPlayers players")
 
-		worldRadius = radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer).roundToInt()
+		worldRadius = (ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / 16.0) * 16.0).toInt()
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()

@@ -22,6 +22,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
+import kotlin.random.Random
 
 class Summoner(type: QuirkType, game: Game) : Quirk(type, game) {
 	override fun customDestroy() {
@@ -173,14 +174,6 @@ class Summoner(type: QuirkType, game: Game) : Quirk(type, game) {
 				ret = Util.binaryFind(egg, inversePassiveSummons) { summon -> summon.egg }
 
 			return ret?.type
-		}
-
-		fun randomPassiveEgg(amount: Int): ItemStack {
-			return ItemStack(Util.randFromArray(passiveSummons).egg, amount)
-		}
-
-		fun randomAggroEgg(amount: Int): ItemStack {
-			return ItemStack(Util.randFromArray(aggroSummons).egg, amount)
 		}
 
 		/* COMMADNER */

@@ -8,6 +8,7 @@ import org.bukkit.Material
 import org.bukkit.block.Biome
 import org.bukkit.block.data.Orientable
 import org.bukkit.block.data.type.Lantern
+import kotlin.random.Random
 
 class LanternPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
@@ -26,7 +27,7 @@ class LanternPlacer(size: Int) : ImmediateChunkPlacer(size) {
 				}
 
 				if (maxDepth >= 4) {
-					val chainSize = Util.randRange(1, maxDepth - 2)
+					val chainSize = Random.nextInt(1, maxDepth - 1)
 
 					for (yOffset in 1..chainSize) {
 						val downBlock = chunk.getBlock(x, y - yOffset, z)

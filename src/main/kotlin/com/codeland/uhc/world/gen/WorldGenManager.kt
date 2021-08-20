@@ -77,8 +77,7 @@ object WorldGenManager {
 	    /* replace worlds hashmap on server */
 	    serverWorldsField[server] = object : HashMap<String, World>() {
 		    override fun put(key: String, value: World): World? {
-			    onWorldAdded(value)
-			    return super.put(key, value)
+			    return if (onWorldAdded(value)) super.put(key, value) else null
 		    }
 	    }
     }
@@ -117,7 +116,9 @@ object WorldGenManager {
 		Biomes.an
 	)
 
-    private fun onWorldAdded(world: World) {
+    private fun onWorldAdded(world: World): Boolean {
+	    if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return false
+
         val worldServer = worldServerField[world] as WorldServer
         val chunkProviderServer = chunkProviderServerField[worldServer] as ChunkProviderServer
         val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGenerator
@@ -134,7 +135,7 @@ object WorldGenManager {
 	    }
 
 	    /* the old world chunk manager is of a nonsupported type */
-	    if (seed == null || biomeRegistry == null) return
+	    if (seed == null || biomeRegistry == null) return false
 
 	    val (biomeManager, featureManager) = when (world.name) {
 	        WorldManager.GAME_WORLD_NAME -> {
@@ -182,7 +183,7 @@ object WorldGenManager {
 			    gField[chunkGenerator] = Supplier<GeneratorSettingBase> { customGeneratorSettings }
 		    }
 
-		    NoiseSamplerUHC.inject(
+		    if (world.name != WorldManager.NETHER_WORLD_NAME) NoiseSamplerUHC.inject(
 			    chunkGenerator as ChunkGeneratorAbstract,
 			    biomeManager,
 			    if (world.name == WorldManager.GAME_WORLD_NAME) {
@@ -197,5 +198,7 @@ object WorldGenManager {
 		    worldChunkManagerBField[chunkGenerator] = featureManager ?: biomeManager
 		    worldChunkManagerCField[chunkGenerator] = biomeManager
 	    }
+
+	    return true
     }
 }

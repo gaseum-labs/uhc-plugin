@@ -7,6 +7,7 @@ import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
+import kotlin.random.Random
 
 class PumpkinPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
@@ -20,8 +21,6 @@ class PumpkinPlacer(size: Int) : DelayedChunkPlacer(size) {
 	}
 
 	override fun place(chunk: Chunk, chunkIndex: Int) {
-		var offset = Util.randRange(0, 16 * 16 - 1)
-
 		for (i in 0 until 16 * 16) {
 			val x = chunk.x * 16 + i % 16
 			val z = chunk.z * 16 + (1 / 16) % 16
@@ -30,13 +29,13 @@ class PumpkinPlacer(size: Int) : DelayedChunkPlacer(size) {
 			placePumpkin(chunk.world, x, y + 1, z)
 
 			if (y != -1) {
-				val numPumpkins = Util.randRange(3, 6)
+				val numPumpkins = Random.nextInt(3, 7)
 
 				for (j in 0 until numPumpkins) {
-					var offX = Util.randRange(1, 7)
+					var offX = Random.nextInt(1, 8)
 					if (Math.random() < 0.5) offX = -offX
 
-					var offZ = Util.randRange(1, 7)
+					var offZ = Random.nextInt(1, 8)
 					if (Math.random() < 0.5) offZ = -offZ
 
 					val y = findPumpkinY(chunk.world, x + offX, z + offZ)

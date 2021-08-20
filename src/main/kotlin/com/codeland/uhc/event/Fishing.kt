@@ -158,8 +158,8 @@ class Fishing : Listener {
 
 		fun bookEntry(random: Random): ItemCreator {
 			val (enchant, level) = bookEnchants[random.nextInt(bookEnchants.size)]
-			return ItemCreator.fromType(Material.ENCHANTED_BOOK, false).customMeta { meta ->
-				(meta as EnchantmentStorageMeta).addStoredEnchant(enchant, level, true)
+			return ItemCreator.fromType(Material.ENCHANTED_BOOK, false).customMeta <EnchantmentStorageMeta> { meta ->
+				meta.addStoredEnchant(enchant, level, true)
 			}
 		}
 

@@ -144,7 +144,7 @@ class DropEntry(val onDrop: (entity: Entity, looting: Int) -> Array<ItemStack?>)
 		}
 
 		fun lootMulti(base: Int): (Int) -> Int {
-			return { looting -> looting + base }
+			return { it + base }
 		}
 
 		fun material(material: Material): (Entity) -> Material? {
@@ -153,7 +153,7 @@ class DropEntry(val onDrop: (entity: Entity, looting: Int) -> Array<ItemStack?>)
 
 		fun onFire(unCooked: Material, cooked: Material): (Entity) -> Material? {
 			return { entity ->
-				if (entity.fireTicks == -1) unCooked else cooked
+				if (entity.fireTicks > -1) cooked else unCooked
 			}
 		}
 

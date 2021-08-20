@@ -48,8 +48,8 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 		return this
 	}
 
-	fun customMeta(edit: (ItemMeta) -> Unit): ItemCreator {
-		edit(meta)
+	fun <M : ItemMeta> customMeta(edit: (M) -> Unit): ItemCreator {
+		edit(meta as M)
 		return this
 	}
 

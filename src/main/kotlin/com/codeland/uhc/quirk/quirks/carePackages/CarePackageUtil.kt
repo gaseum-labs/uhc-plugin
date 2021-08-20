@@ -132,17 +132,21 @@ object CarePackageUtil {
 
 	/* items */
 
+	//TODO all of this sucks, care packages needs to be reworked
+
 	data class ItemPossibilities(val materials: Array<Material>, val amounts: Array<Array<Int>>)
 
 	fun randomItem(possibilities: ItemPossibilities): ItemStack {
-		val materialIndex = Util.randRange(0, possibilities.materials.lastIndex)
-		return ItemStack(possibilities.materials[materialIndex], Util.randFromArray(possibilities.amounts[materialIndex]))
+		val materialIndex = Random.nextInt(possibilities.materials.size)
+		val amounts = possibilities.amounts[materialIndex]
+
+		return ItemStack(possibilities.materials[materialIndex], amounts[Random.nextInt(0, amounts.size)])
 	}
 
 	fun randomItem(items: Array<Material>, vararg amounts: Array<Int>): ItemStack {
 		val index = (Math.random() * items.size).toInt()
 
-		return ItemStack(items[index], Util.randFromArray(amounts[index]))
+		return ItemStack(items[index], amounts[index][Random.nextInt(0, amounts[index].size)])
 	}
 
 	fun randomItem(material: Material, vararg amounts: Int): ItemStack {
@@ -169,7 +173,7 @@ object CarePackageUtil {
 	)
 
 	fun randomBrewingIngredient(): ItemStack {
-		return randomItem(Util.randFromArray(ingredientPossibilities))
+		return randomItem(ingredientPossibilities[Random.nextInt(ingredientPossibilities.size)])
 	}
 
 	fun regenerationStew(): ItemStack {
@@ -204,8 +208,8 @@ object CarePackageUtil {
 	fun randomEnchantedBook(twoEnchants: Boolean): ItemStack {
 		val book = ItemStack(ENCHANTED_BOOK)
 
-		val index0 = Util.randRange(0, enchantedBooks.lastIndex)
-		var index1 = Util.randRange(0, enchantedBooks.lastIndex)
+		val index0 = Random.nextInt(enchantedBooks.size)
+		var index1 = Random.nextInt(enchantedBooks.size)
 
 		if (index0 == index1) index1 = (index1 + 1) % enchantedBooks.size
 
@@ -248,9 +252,10 @@ object CarePackageUtil {
 	private val ironArmor = arrayOf(IRON_HELMET, IRON_CHESTPLATE, IRON_LEGGINGS, IRON_BOOTS)
 
 	fun randomArmor(diamond: Boolean): ItemStack {
-		val item = ItemStack(Util.randFromArray(if (diamond) diamondArmor else ironArmor))
+		val armorArray = if (diamond) diamondArmor else ironArmor
+		val item = ItemStack(armorArray[Random.nextInt(armorArray.size)])
 
-		val enchantment = Util.randFromArray(armorEnchantments)
+		val enchantment = armorEnchantments[Random.nextInt(armorEnchantments.size)]
 
 		val meta = item.itemMeta
 		if (enchantment != null) meta.addEnchant(enchantment, 1, true)
@@ -265,34 +270,6 @@ object CarePackageUtil {
 		CHAIN(CHAINMAIL_BOOTS, CHAINMAIL_LEGGINGS, CHAINMAIL_CHESTPLATE, CHAINMAIL_HELMET),
 		IRON(IRON_BOOTS, IRON_LEGGINGS, IRON_CHESTPLATE, IRON_HELMET),
 		DIAMOND(DIAMOND_BOOTS, DIAMOND_LEGGINGS, DIAMOND_CHESTPLATE, DIAMOND_HELMET)
-	}
-
-	fun chaoticArmor(random: Random, type: ArmorType): ItemStack {
-		val itemStack = ItemStack(type.items[random.nextInt(0, 4)])
-
-		val enchantment = Util.randFromArray(armorEnchantments)
-
-		if (enchantment != null) {
-			val meta = itemStack.itemMeta
-			meta.addEnchant(enchantment, 1, true)
-			itemStack.itemMeta = meta
-		}
-
-		return itemStack
-	}
-
-	fun turtleShell(random: Random): ItemStack {
-		val itemStack = ItemStack(TURTLE_HELMET)
-
-		val enchantment = Util.randFromArray(armorEnchantments)
-
-		if (enchantment != null) {
-			val meta = itemStack.itemMeta
-			meta.addEnchant(enchantment, 1, true)
-			itemStack.itemMeta = meta
-		}
-
-		return itemStack
 	}
 
 	enum class ToolType(val pick: Material, val sword: Material, val axe: Material) {
@@ -373,7 +350,7 @@ object CarePackageUtil {
 	private fun enchantedTool(tool: Material, enchantList: Array<EnchantData?>): ItemStack {
 		val item = ItemStack(tool)
 
-		val enchantData = Util.randFromArray(enchantList)
+		val enchantData = enchantList[Random.nextInt(enchantList.size)]
 
 		if (enchantData != null) {
 			val meta = item.itemMeta
@@ -424,7 +401,7 @@ object CarePackageUtil {
 	val boats = arrayOf(OAK_BOAT, ACACIA_BOAT, JUNGLE_BOAT, SPRUCE_BOAT, DARK_OAK_BOAT, BIRCH_BOAT)
 
 	fun randomBoat(): ItemStack {
-		return ItemStack(Util.randFromArray(boats))
+		return ItemStack(boats[Random.nextInt(boats.size)])
 	}
 
 	fun chaoticTippedArrow(random: Random, low: Int, high: Int): ItemStack {
@@ -687,28 +664,28 @@ object CarePackageUtil {
 			ItemReference(32, 2, 4, ItemCreator.regular(FEATHER)),
 
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta { meta ->
-					(meta as PotionMeta).basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false)
+				.customMeta <PotionMeta> { meta ->
+					meta.basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false)
 				}
 			),
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta { meta ->
-					(meta as PotionMeta).basePotionData = PotionData(PotionType.INSTANT_HEAL, false, true)
+				.customMeta <PotionMeta> { meta ->
+					meta.basePotionData = PotionData(PotionType.INSTANT_HEAL, false, true)
 				}
 			),
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta { meta ->
-					(meta as PotionMeta).basePotionData = PotionData(PotionType.REGEN, true, false)
+				.customMeta <PotionMeta> { meta ->
+					meta.basePotionData = PotionData(PotionType.REGEN, true, false)
 				}
 			),
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta { meta ->
-					(meta as PotionMeta).basePotionData = PotionData(PotionType.SLOWNESS, false, true)
+				.customMeta <PotionMeta> { meta ->
+					meta.basePotionData = PotionData(PotionType.SLOWNESS, false, true)
 				}
 			),
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta { meta ->
-					(meta as PotionMeta).basePotionData = PotionData(PotionType.WEAKNESS, false, false)
+				.customMeta <PotionMeta> { meta ->
+					meta.basePotionData = PotionData(PotionType.WEAKNESS, false, false)
 				}
 			),
 
@@ -740,16 +717,10 @@ object CarePackageUtil {
 			ItemReference(22, 1, 3, ItemCreator.regular(BROWN_MUSHROOM)),
 			ItemReference(3, 3, 3, ItemCreator.regular(BOWL)),
 			ItemReference(
-				5,
-				ItemCreator.regular(SUSPICIOUS_STEW).customMeta {
-					(it as SuspiciousStewMeta).addCustomEffect(
-						PotionEffect(
-							PotionEffectType.REGENERATION,
-							8 * 20,
-							0
-						), true
-					)
-				}),
+				5, ItemCreator.regular(SUSPICIOUS_STEW).customMeta <SuspiciousStewMeta> {
+					it.addCustomEffect(PotionEffect(PotionEffectType.REGENERATION, 8 * 20, 0), true)
+				}
+			),
 
 			ItemReference(64, 8, 10, ItemCreator.regular(OAK_PLANKS)),
 			ItemReference(64, 8, 10, ItemCreator.regular(SPRUCE_PLANKS)),
@@ -769,9 +740,9 @@ object CarePackageUtil {
 			ItemReference(8, ItemCreator.regular(GOLDEN_APPLE)),
 
 			ItemReference(3, ItemCreator.regular(LIGHT_BLUE_SHULKER_BOX)),
-			ItemReference(18, ItemCreator.regular(ENCHANTED_BOOK).customMeta {
+			ItemReference(18, ItemCreator.regular(ENCHANTED_BOOK).customMeta <EnchantmentStorageMeta> {
 				val (enchant, level) = randFrom(random, bookEnchants)
-				(it as EnchantmentStorageMeta).addStoredEnchant(enchant, level, true)
+				it.addStoredEnchant(enchant, level, true)
 			})
 		)
 	}

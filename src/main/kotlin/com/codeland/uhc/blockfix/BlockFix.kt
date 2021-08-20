@@ -9,6 +9,7 @@ import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
+import kotlin.random.Random
 
 typealias Drop = (Material, MutableList<ItemStack>) -> ItemStack?
 
@@ -36,6 +37,8 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 			}
 		}
 	}
+
+	val random = Random(prettyName.hashCode())
 
 	abstract fun isBlock(material: Material): Boolean
 	abstract fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean
@@ -93,7 +96,7 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 	 * @return the new index
 	 */
 	fun resetIndex(player: Player, range: Range): Int {
-		val index = Util.randRange(1, range.size)
+		val index = random.nextInt(0, range.size) + 1
 
 		player.setMetadata(range.indexMeta, FixedMetadataValue(UHCPlugin.plugin, index))
 

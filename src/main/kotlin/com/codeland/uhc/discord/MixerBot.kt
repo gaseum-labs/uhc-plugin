@@ -292,7 +292,7 @@ class MixerBot(
 		channel.sendMessage(EmbedBuilder()
 			.setColor(0xe7c93c)
 			.setTitle("Summary of UHC #$gameNumber on $month/$day/$year")
-			.setDescription("Lasted ${Util.timeString(matchTime)}")
+			.setDescription("Lasted ${Util.timeString(matchTime / 20)}")
 			.addField("Winners", if (winners.isEmpty()) "No winners" else winners.fold("") { accum, winner -> accum + "${winner.place}: ${winner.name}\n" }, false)
 			.addField("Losers", if (losers.isEmpty()) "No losers" else losers.foldIndexed("") { index, accum, loser -> accum + "${loser.place}: ${loser.name} | killed by ${loser.killedBy}\n"}, false)
 			.build()

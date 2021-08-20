@@ -189,7 +189,10 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onEntitySpawn(event: EntitySpawnEvent) {
-		if (event.entity.world.name == WorldManager.LOBBY_WORLD_NAME) {
+		if (event.entity.entitySpawnReason === CreatureSpawnEvent.SpawnReason.REINFORCEMENTS) {
+			event.isCancelled = true
+
+		} else if (event.entity.world.name == WorldManager.LOBBY_WORLD_NAME) {
 			event.isCancelled = true
 
 		/* witch poison nerf */

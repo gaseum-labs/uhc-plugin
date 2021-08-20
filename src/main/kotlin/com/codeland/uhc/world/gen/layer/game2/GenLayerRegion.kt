@@ -8,8 +8,11 @@ class GenLayerRegion : AreaTransformer4 {
 		return Region.pack(when (p5) {
 			0 -> coldRegions[context.a(coldRegions.size)]
 			1 -> hotRegions[context.a(hotRegions.size)]
-			2 -> temperateRegions[context.a(temperateRegions.size)]
-			else -> Region.GIANT_TAIGA
+
+			3 -> badlandsRegions[context.a(badlandsRegions.size)]
+			4 -> Region.GIANT_TAIGA
+
+			else -> temperateRegions[context.a(temperateRegions.size)]
 		}, context.a(4) == 0)
 	}
 
@@ -27,11 +30,16 @@ class GenLayerRegion : AreaTransformer4 {
 	val hotRegions = arrayOf(
 		Region.SAVANNA,
 		Region.DESERT,
-		Region.BADLANDS
+		Region.PLAINS
 	)
 
 	val coldRegions = arrayOf(
 		Region.SNOWY,
 		Region.SNOWY_TAIGA
+	)
+
+	val badlandsRegions = arrayOf(
+		Region.BADLANDS,
+		Region.BADLANDS_PLATEAU
 	)
 }

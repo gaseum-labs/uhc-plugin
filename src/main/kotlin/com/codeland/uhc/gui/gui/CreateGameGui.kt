@@ -79,7 +79,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 
 		/* row 2 */
 
-		addItem(object : GuiItemCounterF(coords(0, 1), gameConfig.scale, 0.5f, 2.0f, 0.1f) {
+		addItem(object : GuiItemCounterF(coords(0, 1), gameConfig.scale, 0.5f, 6.0f, 0.1f) {
 			override fun getStackProperty(value: Float): ItemStack {
 				return ItemCreator.fromType(Material.WARPED_TRAPDOOR)
 					.enchant(value != property.default)
@@ -103,7 +103,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 					.create()
 			}
 		})
-		addItem(object : GuiItemCounter(coords(3, 1), gameConfig.shrinkTime, 1200, 6000, 60) {
+		addItem(object : GuiItemCounter(coords(3, 1), gameConfig.shrinkTime, 60, 6000, 60) {
 			override fun getStackProperty(value: Int): ItemStack {
 				return ItemCreator.fromType(Material.BELL)
 					.enchant(value != property.default)
