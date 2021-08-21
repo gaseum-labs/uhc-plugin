@@ -21,7 +21,7 @@ class Generation : Listener {
 			val world = event.world
 			val chunk = event.chunk
 
-			val game = UHC.game ?: return@scheduleSyncDelayedTask
+			val config = UHC.getConfig()
 
 			if (world.name == WorldManager.GAME_WORLD_NAME) {
 				/* no chunk animals */
@@ -31,16 +31,16 @@ class Generation : Listener {
 
 				OreFix.amethystPlacer.onGenerate(chunk, world.seed.toInt())
 
-				if (game.config.worldGenEnabled(CAVE_INDICATORS)) {
+				if (config.worldGenEnabled(CAVE_INDICATORS)) {
 					OreFix.removeMinerals(chunk)
 					OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (game.config.worldGenEnabled(ORE_FIX) || game.config.worldGenEnabled(REVERSE_ORE_FIX)) {
+				if (config.worldGenEnabled(ORE_FIX) || config.worldGenEnabled(REVERSE_ORE_FIX)) {
 					OreFix.removeOres(chunk)
 				}
 
-				if (game.config.worldGenEnabled(REVERSE_ORE_FIX)) {
+				if (config.worldGenEnabled(REVERSE_ORE_FIX)) {
 					OreFix.reverseCoalPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.reverseIronPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.reverseRedstonePlacer.onGenerate(chunk, world.seed.toInt())
@@ -49,17 +49,17 @@ class Generation : Listener {
 					OreFix.reverseLapisPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.reverseDiamondPlacer.onGenerate(chunk, world.seed.toInt())
 
-				} else if (game.config.worldGenEnabled(ORE_FIX)) {
+				} else if (config.worldGenEnabled(ORE_FIX)) {
 					OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (game.config.worldGenEnabled(NETHER_INDICATORS)) {
+				if (config.worldGenEnabled(NETHER_INDICATORS)) {
 					NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (game.config.worldGenEnabled(MUSHROOM_FIX)) {
+				if (config.worldGenEnabled(MUSHROOM_FIX)) {
 					OxeyePlacer.removeOxeye(chunk)
 					MushroomOxeyeFix.oxeyePlacer.onGenerate(chunk, world.seed.toInt())
 
@@ -67,19 +67,19 @@ class Generation : Listener {
 					MushroomOxeyeFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (game.config.worldGenEnabled(MELON_FIX)) {
+				if (config.worldGenEnabled(MELON_FIX)) {
 					MelonFix.removeMelons(chunk)
 					MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (game.config.worldGenEnabled(SUGAR_CANE_FIX)) {
+				if (config.worldGenEnabled(SUGAR_CANE_FIX)) {
 					SugarCanePlacer.removeSugarCane(chunk)
 					SugarCaneFix.deepSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
 					SugarCaneFix.lowSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
 					SugarCaneFix.highSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (game.config.worldGenEnabled(HALLOWEEN)) {
+				if (config.worldGenEnabled(HALLOWEEN)) {
 					HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt())
 					HalloweenWorld.deadBushPlacer.onGenerate(chunk, world.seed.toInt())
 
@@ -89,12 +89,12 @@ class Generation : Listener {
 					HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (game.config.worldGenEnabled(CHRISTMAS)) {
+				if (config.worldGenEnabled(CHRISTMAS)) {
 					ChristmasWorld.snowPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
 			} else if (world.name == WorldManager.NETHER_WORLD_NAME) {
-				if (game.config.worldGenEnabled(NETHER_FIX)) {
+				if (config.worldGenEnabled(NETHER_FIX)) {
 					NetherFix.blackstonePlacer.onGenerate(chunk, world.seed.toInt())
 					NetherFix.magmaPlacer.onGenerate(chunk, world.seed.toInt())
 					NetherFix.lavaStreamPlacer.onGenerate(chunk, world.seed.toInt())

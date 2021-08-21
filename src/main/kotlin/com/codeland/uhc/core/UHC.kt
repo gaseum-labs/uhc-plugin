@@ -298,7 +298,7 @@ object UHC {
 			world,
 			numGroups,
 			worldRadius - 16.0,
-			if (world.environment == World.Environment.NETHER) PlayerSpreader::findYMid else PlayerSpreader::findYTop
+			if (world.environment === World.Environment.NETHER) PlayerSpreader::findYMid else PlayerSpreader::findYTop
 		)
 
 		if (tempTeleportLocations.isEmpty()) {
