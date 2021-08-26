@@ -16,6 +16,7 @@ import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -650,6 +651,29 @@ class EventListener : Listener {
 
 			event.player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 100, 1, false, true, true))
 			event.player.addPotionEffect(PotionEffect(PotionEffectType.ABSORPTION, 2400, 2, false, true, true))
+		}
+	}
+
+	@EventHandler
+	fun onGrow(event: BlockGrowEvent) {
+		if (
+			event.newState.type === Material.SUGAR_CANE &&
+			WorldManager.isGameWorld(event.newState.world) &&
+			UHC.getConfig().worldGenEnabled(WorldGenOption.SUGAR_CANE_REGEN)
+		) {
+			event.isCancelled = true
+		}
+	}
+
+	@EventHandler
+	fun onDrinkPotion(event: EntityPotionEffectEvent) {
+		/* this shit doesn't work */
+		if (
+			event.entityType === EntityType.WANDERING_TRADER &&
+			event.newEffect === PotionEffectType.INVISIBILITY
+		) {
+			println("YOOOOOOOOOO")
+			event.isCancelled = true
 		}
 	}
 }

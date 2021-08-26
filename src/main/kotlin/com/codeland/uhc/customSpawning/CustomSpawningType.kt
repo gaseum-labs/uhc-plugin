@@ -11,7 +11,7 @@ enum class CustomSpawningType(
 	val gameSpawnInfoList: Array<SpawnInfo>,
 	val netherSpawnInfoList: Array<SpawnInfo>,
 ) {
-	HOSTILE(32, 86, 10, 25, 20, arrayOf(
+	HOSTILE(32, 86, 10, 20, 40, arrayOf(
 		SpawnInfoType.ZOMBIE.spawnInfo,
 		SpawnInfoType.SKELETON.spawnInfo,
 		SpawnInfoType.CREEPER.spawnInfo,
@@ -25,10 +25,9 @@ enum class CustomSpawningType(
 		SpawnInfoType.PIGLIN.spawnInfo
 	)),
 
-	PASSIVE(78, 120, 45, 25, 20, arrayOf(
-		SpawnInfoType.USELESS_ANIMAL.spawnInfo,
-		SpawnInfoType.COW.spawnInfo,
-		SpawnInfoType.USELESS_ANIMAL.spawnInfo,
+	PASSIVE(64, 112, 40, 25, 20, arrayOf(
+		SpawnInfoType.SHEEP.spawnInfo,
+		SpawnInfoType.PIG.spawnInfo,
 		SpawnInfoType.COW.spawnInfo,
 		SpawnInfoType.CHICKEN.spawnInfo
 	), emptyArray());

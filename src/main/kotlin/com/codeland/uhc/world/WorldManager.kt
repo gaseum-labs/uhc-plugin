@@ -100,6 +100,8 @@ object WorldManager {
 		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
 		world.setGameRule(GameRule.DO_TRADER_SPAWNING, false)
 		world.difficulty = Difficulty.NORMAL
+		world.animalSpawnLimit = 0
+		world.monsterSpawnLimit = 0
 
 		if (world.name == GAME_WORLD_NAME) {
 			ChunkPlacerHolderType.resetAll(world.seed)

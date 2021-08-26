@@ -14,6 +14,6 @@ class SugarCaneFix : ChunkPlacerHolder() {
 	override fun list(): Array<AbstractChunkPlacer> = arrayOf(
 		deepSugarCanePlacer,
 		lowSugarCanePlacer,
-		highSugarCanePlacer
+		highSugarCanePlacer,
 	)
 }

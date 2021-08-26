@@ -53,6 +53,7 @@ class Generation : Listener {
 					OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt())
 					OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt())
+					OreFix.emeraldPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
 				if (config.worldGenEnabled(NETHER_INDICATORS)) {
@@ -62,7 +63,6 @@ class Generation : Listener {
 				if (config.worldGenEnabled(MUSHROOM_FIX)) {
 					OxeyePlacer.removeOxeye(chunk)
 					MushroomOxeyeFix.oxeyePlacer.onGenerate(chunk, world.seed.toInt())
-
 					MushroomOxeyeFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt())
 					MushroomOxeyeFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt())
 				}
@@ -72,8 +72,11 @@ class Generation : Listener {
 					MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
-				if (config.worldGenEnabled(SUGAR_CANE_FIX)) {
+				if (config.worldGenEnabled(SUGAR_CANE_FIX) || config.worldGenEnabled(SUGAR_CANE_REGEN)) {
 					SugarCanePlacer.removeSugarCane(chunk)
+				}
+
+				if (config.worldGenEnabled(SUGAR_CANE_FIX)) {
 					SugarCaneFix.deepSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
 					SugarCaneFix.lowSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
 					SugarCaneFix.highSugarCanePlacer.onGenerate(chunk, world.seed.toInt())

@@ -94,7 +94,7 @@ object UHC {
 
 				Portal.portalTick(currentGame)
 				PlayerData.zombieBorderTick(currentTick, currentGame)
-
+				currentGame.sugarCaneRegen.tick()
 				ledgerTrailTick(currentGame, currentTick)
 
 				if (currentTick % 20 == 0) {
@@ -105,6 +105,7 @@ object UHC {
 
 				/* half way through the game */
 				if (timer == (currentGame.config.graceTime.get() + currentGame.config.shrinkTime.get()) * 20 / 2) {
+					Bukkit.getOnlinePlayers().forEach { Action.sendGameMessage(it, "Wandering Trader Appeared") }
 					TeamData.teams.forEach { team ->
 						val teamPlayer = team.members.firstOrNull { PlayerData.isParticipating(it) }
 						if (teamPlayer != null) Trader.spawnTraderForPlayer(teamPlayer)

@@ -75,7 +75,9 @@ abstract class SpawnInfo {
 			biome === Biome.GIANT_TREE_TAIGA ||
 			biome === Biome.SNOWY_TAIGA ||
 			biome === Biome.SNOWY_TAIGA_MOUNTAINS ||
-			biome === Biome.TAIGA
+			biome === Biome.TAIGA ||
+			biome === Biome.TAIGA_HILLS ||
+			biome === Biome.TAIGA_MOUNTAINS
 
 		fun jungle(biome: Biome) = biome === Biome.JUNGLE ||
 			biome === Biome.JUNGLE_EDGE ||

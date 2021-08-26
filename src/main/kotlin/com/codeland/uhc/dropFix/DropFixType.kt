@@ -120,7 +120,7 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(item(RABBIT_HIDE, ::lootItem), item(onFire(Material.RABBIT, COOKED_RABBIT), ::lootItem), item(RABBIT_FOOT, lootMulti(1)))
 	))),
 
-	PARROT(DropFix(EntityType.RABBIT, arrayOf(
+	PARROT(DropFix(EntityType.PARROT, arrayOf(
 		arrayOf(item(FEATHER, lootMulti(2)))
 	))),
 

@@ -50,7 +50,12 @@ abstract class AbstractChunkPlacer(val size: Int) {
 		private val xPos = Array(16) { it }
 		private val zPos = Array(16) { it }
 
-		fun randomPosition(chunk: Chunk, low: Int, high: Int, placeBlock: (block: Block, x: Int, y: Int, z: Int) -> Boolean) {
+		fun randomPosition(
+			chunk: Chunk,
+			low: Int,
+			high: Int,
+			placeBlock: (block: Block, x: Int, y: Int, z: Int) -> Boolean
+		): Block? {
 			xPos.shuffle()
 			zPos.shuffle()
 
@@ -66,10 +71,13 @@ abstract class AbstractChunkPlacer(val size: Int) {
 						val z = zPos[j]
 						val x = xPos[i]
 
-						if (placeBlock(chunk.getBlock(x, y, z), x, y, z)) return
+						val block = chunk.getBlock(x, y, z)
+						if (placeBlock(block, x, y, z)) return block
 					}
 				}
 			}
+
+			return null
 		}
 	}
 }

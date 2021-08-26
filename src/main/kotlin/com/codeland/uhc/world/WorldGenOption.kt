@@ -27,7 +27,11 @@ enum class WorldGenOption(
 		Component.text("Melons are hidden in jungles")
 	), Material.MELON_SLICE),
 
-	SUGAR_CANE_FIX("Sugar Cane Fix", true, listOf(
+	SUGAR_CANE_REGEN("Sugar Cane Regen", true, listOf(
+		Component.text("Sugar cane generates as the game goes on"),
+	), Material.SUGAR),
+
+	SUGAR_CANE_FIX("Sugar Cane Fix", false, listOf(
 		Component.text("Sugar cane generate is spread out"),
 		Component.text("Sugar cane always generates 3 at a time")
 	), Material.SUGAR_CANE),

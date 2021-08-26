@@ -32,7 +32,7 @@ object Trader {
 		for (i in -1..1) for (j in -1..1) if (i != 0 && j != 0) {
 			for (x in i * 5 - 2..i * 5 + 2) {
 				for (z in j * 5 - 2..j * 5 + 2) {
-					for (y in 2..2) {
+					for (y in -3..3) {
 						val spawnBlock = center.getRelative(x, y, z)
 						if (
 							spawnBlock.type.isAir &&

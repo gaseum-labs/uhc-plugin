@@ -24,6 +24,7 @@ class OreFix : ChunkPlacerHolder() {
 		val goldPlacer = OrePlacer(3, 6, 32, 5, Material.GOLD_ORE, Material.DEEPSLATE_GOLD_ORE)
 		val lapisPlacer = OrePlacer(4, 6, 32, 4, Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE)
 		val diamondPlacer = OrePlacer(5, 6, 16, 3, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)
+		val emeraldPlacer = OrePlacer(6, 6, 32, 1, Material.EMERALD_ORE, Material.DEEPSLATE_EMERALD_ORE)
 
 		val reverseCoalPlacer =     OrePlacer(1, 63,  240, 6, Material.COAL_ORE, Material.DEEPSLATE_COAL_ORE)
 		val reverseIronPlacer =     OrePlacer(1, 63,  240, 6, Material.IRON_ORE, Material.DEEPSLATE_IRON_ORE)
@@ -94,6 +95,7 @@ class OreFix : ChunkPlacerHolder() {
 		goldPlacer,
 		lapisPlacer,
 		diamondPlacer,
+		emeraldPlacer,
 		reverseCoalPlacer,
 		reverseIronPlacer,
 		reverseRedstonePlacer,
