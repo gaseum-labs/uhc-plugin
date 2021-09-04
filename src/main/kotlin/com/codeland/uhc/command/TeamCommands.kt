@@ -29,8 +29,8 @@ class TeamCommands : BaseCommand() {
 	fun clearTeamsCommand(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		/* unstage everyone and remove teams */
-		TeamData.destroyTeam(null, useDiscord(), true) { PlayerData.setStaged(it, false) }
+		/* destroy all teams */
+		TeamData.destroyTeam(null, useDiscord(), true) {}
 
 		Action.sendGameMessage(sender, "Cleared all teams")
 	}
@@ -93,9 +93,9 @@ class TeamCommands : BaseCommand() {
 			}
 		}
 
-		val team = TeamData.addToTeam(team, addedPlayers.map { it.uniqueId }, useDiscord(), true) { PlayerData.setStaged(it, true) }
+		val addedTeam = TeamData.addToTeam(team, addedPlayers.map { it.uniqueId }, useDiscord(), true) {}
 
-		if (team == null) onFail() else onSuccess(addedPlayers)
+		if (addedTeam == null) onFail() else onSuccess(addedPlayers)
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -109,7 +109,6 @@ class TeamCommands : BaseCommand() {
 
 		/* unstage and remove player from team */
 		TeamData.removeFromTeam(arrayListOf(player.uniqueId), useDiscord(), true, true)
-		PlayerData.setStaged(player.uniqueId, false)
 
 		Action.sendGameMessage(sender, "Removed ${player.name} from their team")
 	}
@@ -124,7 +123,7 @@ class TeamCommands : BaseCommand() {
 		}.map { it.uniqueId }, teamSize)
 
 		memberLists.forEach { memberList ->
-			TeamData.addToTeam(null, memberList.filterNotNull(), useDiscord(), true) { PlayerData.setStaged(it, true) }
+			TeamData.addToTeam(null, memberList.filterNotNull(), useDiscord(), true) {}
 		}
 
 		Action.sendGameMessage(sender, "Created ${memberLists.size} teams of size $teamSize")
@@ -163,19 +162,8 @@ class TeamCommands : BaseCommand() {
 						?: "NULL")))
 				}
 			}
-		}
-
-		val individualPlayers = PlayerData.playerDataList.filter { (uuid, playerData) -> (playerData.participating || playerData.staged) && !TeamData.isOnTeam(uuid) }
-
-		if (individualPlayers.isNotEmpty()) {
-			sender.sendMessage(Component.text("Individual players:", NamedTextColor.GRAY, TextDecoration.BOLD))
-
-			individualPlayers.forEach { (uuid, playerData) ->
-				sender.sendMessage(Component.text("- ").append(Component.text(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
-			}
-		}
-
-		if (teams.isEmpty() && individualPlayers.isEmpty())
+		} else {
 			sender.sendMessage(Component.text("There are no teams", NamedTextColor.GRAY, TextDecoration.BOLD))
+		}
 	}
 }

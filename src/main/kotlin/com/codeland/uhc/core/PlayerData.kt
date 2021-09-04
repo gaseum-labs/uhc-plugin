@@ -35,8 +35,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 class PlayerData(val uuid: UUID) {
-	/* the main 4 */
-	var staged = false
+	/* the main 3 */
 	var participating = false
 	var alive = false
 	var optingOut = false
@@ -297,10 +296,6 @@ class PlayerData(val uuid: UUID) {
 
 		/* access operations for player data list */
 
-		fun isStaged(uuid: UUID): Boolean {
-			return getPlayerData(uuid).staged
-		}
-
 		fun isParticipating(uuid: UUID): Boolean {
 			return getPlayerData(uuid).participating
 		}
@@ -324,10 +319,6 @@ class PlayerData(val uuid: UUID) {
 		}
 
 		/* setter operations for player data list */
-
-		fun setStaged(uuid: UUID, staged: Boolean) {
-			getPlayerData(uuid).staged = staged
-		}
 
 		fun setAlive(uuid: UUID, alive: Boolean) {
 			getPlayerData(uuid).alive = alive

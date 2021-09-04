@@ -54,7 +54,6 @@ class ParticipantCommands : BaseCommand() {
 
 		} else {
 			playerData.optingOut = true
-			playerData.staged = false
 
 			TeamData.removeFromTeam(arrayListOf(sender.uniqueId), true, true, true)
 

@@ -51,7 +51,6 @@ object Lobby {
 
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-		playerData.staged = false
 		playerData.participating = false
 		playerData.alive = false
 

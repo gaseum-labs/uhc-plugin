@@ -128,11 +128,9 @@ object UHC {
 						Title.Times.of(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
 					)
 
-					Bukkit.getOnlinePlayers().forEach { player ->
-						if (PlayerData.getPlayerData(player.uniqueId).staged) {
-							player.showTitle(countdownTitle)
-						}
-					}
+					TeamData.teams.forEach { it.members.forEach { member ->
+						Bukkit.getPlayer(member)?.showTitle(countdownTitle)
+					}}
 
 				} else if (timer == 0) {
 					val newGame = Game(
@@ -268,20 +266,13 @@ object UHC {
 			return false
 		}
 
-		/* compile a list of all individuals that will play */
-		val individuals = PlayerData.playerDataList
-			.filter { (uuid, playerData) -> playerData.staged && !TeamData.isOnTeam(uuid) }
-			.map { (uuid, _) -> uuid }
-
-		val numGroups = TeamData.teams.size + individuals.size
-		val numPlayers = TeamData.teams.fold(0) { acc, team -> acc + team.members.size } + individuals.size
-
-		if (numGroups == 0) {
+		val numPlayers = TeamData.teams.fold(0) { acc, team -> acc + team.members.size }
+		if (numPlayers == 0) {
 			messageStream(true, "No one is playing")
 			return false
 		}
 
-		messageStream(false, "Creating game worlds for $numPlayers players")
+		messageStream(false, "Creating game worlds for $numPlayers player${if (numPlayers == 1) "" else "s"}")
 
 		worldRadius = (ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / 16.0) * 16.0).toInt()
 
@@ -297,7 +288,7 @@ object UHC {
 
 		val tempTeleportLocations = PlayerSpreader.spreadPlayers(
 			world,
-			numGroups,
+			TeamData.teams.size,
 			worldRadius - 16.0,
 			if (world.environment === World.Environment.NETHER) PlayerSpreader::findYMid else PlayerSpreader::findYTop
 		)
@@ -310,10 +301,9 @@ object UHC {
 		/* create the master map of teleport locations */
 		teleportGroups = HashMap()
 
-		individuals.forEachIndexed { i, uuid -> teleportGroups[uuid] = tempTeleportLocations[i] }
 		TeamData.teams.forEachIndexed { i, team ->
 			team.members.forEach { uuid ->
-				teleportGroups[uuid] = tempTeleportLocations[i + individuals.size]
+				teleportGroups[uuid] = tempTeleportLocations[i]
 			}
 		}
 

@@ -77,7 +77,6 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 		val playerData = PlayerData.getPlayerData(uuid)
 
 		playerData.lifeNo = 0
-		playerData.staged = false
 		playerData.alive = true
 		playerData.participating = true
 

@@ -72,11 +72,6 @@ class SugarCaneRegen(val game: Game) {
 				)
 			}
 
-			if (block != null) {
-				block.setType(Material.SUGAR_CANE, false)
-				println("CANE PLACED AT ${block.x} ${block.y} ${block.z}")
-			}
-
 			block?.setType(Material.SUGAR_CANE, false)
 
 			return block != null
@@ -99,8 +94,6 @@ class SugarCaneRegen(val game: Game) {
 
 		val placeSpaces = Array(size(chunkRadius)) { it }
 		placeSpaces.shuffle(random)
-
-		println("TIMER to $timer with $numValidTeams TEAMS")
 
 		return PlaceInfo(
 			timer,

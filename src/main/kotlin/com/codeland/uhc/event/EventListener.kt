@@ -580,7 +580,7 @@ class EventListener : Listener {
 	@EventHandler
 	fun onInteract(event: PlayerInteractEvent) {
 		val block = event.clickedBlock ?: return
-		if (block.type === Material.RESPAWN_ANCHOR && block.world.name == WorldManager.LOBBY_WORLD_NAME) {
+		if (event.action === Action.RIGHT_CLICK_BLOCK && block.type === Material.RESPAWN_ANCHOR && block.world.name == WorldManager.LOBBY_WORLD_NAME) {
 			event.isCancelled = true
 		}
 	}

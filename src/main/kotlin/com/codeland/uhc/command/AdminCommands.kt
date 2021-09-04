@@ -32,20 +32,6 @@ class AdminCommands : BaseCommand() {
 	}
 
 	@CommandCompletion("@uhcplayer")
-	@Subcommand("stage")
-	@Description("adds a player to the game without adding them to a team")
-	fun participateCommand(sender: CommandSender, player: OfflinePlayer) {
-		if (Commands.opGuard(sender)) return
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-
-		if (playerData.optingOut) return Commands.errorMessage(sender, "${player.name} has opted out of participating!")
-
-		playerData.staged = true
-
-		Action.sendGameMessage(sender, "${player.name} is staged for participating")
-	}
-
-	@CommandCompletion("@uhcplayer")
 	@Subcommand("addLate")
 	@Description("adds a player to the game after it has already started")
 	fun addLate(sender: CommandSender, offlinePlayer: OfflinePlayer) {

@@ -115,7 +115,6 @@ class TestCommands : BaseCommand() {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		Action.sendGameMessage(sender, "PlayerData for ${player.name}:")
-		Action.sendGameMessage(sender, "Staged: ${playerData.staged}")
 		Action.sendGameMessage(sender, "Participating: ${playerData.participating}")
 		Action.sendGameMessage(sender, "Alive: ${playerData.alive}")
 		Action.sendGameMessage(sender, "Opting Out: ${playerData.optingOut}")
