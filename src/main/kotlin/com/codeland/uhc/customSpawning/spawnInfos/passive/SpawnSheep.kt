@@ -27,10 +27,7 @@ class SpawnSheep : SpawnInfo() {
 				1 -> EntityType.WOLF
 				else -> EntityType.SHEEP
 			}
-			mountains(block.biome) -> when (spawnCycle % 2) {
-				0 -> EntityType.GOAT
-				else -> EntityType.LLAMA
-			}
+			mountains(block.biome) -> EntityType.GOAT
 			desert(block.biome) -> EntityType.RABBIT
 			block.biome === Biome.BEACH -> EntityType.TURTLE
 			else -> EntityType.SHEEP

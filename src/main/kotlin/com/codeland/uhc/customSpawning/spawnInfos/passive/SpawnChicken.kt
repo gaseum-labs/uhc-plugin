@@ -11,10 +11,6 @@ class SpawnChicken : SpawnInfo() {
 		if (!animalAllowSpawn(block, 1, 1, 1)) return null
 
 		return when {
-			mountains(block.biome) -> reg(when(spawnCycle % 2) {
-				0 -> EntityType.LLAMA
-				else -> EntityType.CHICKEN
-			})
 			desert(block.biome) -> reg(EntityType.RABBIT)
 			jungle(block.biome) -> reg(when (spawnCycle % 4) {
 				0 -> EntityType.PARROT

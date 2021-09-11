@@ -95,6 +95,7 @@ object UHC {
 				Portal.portalTick(currentGame)
 				PlayerData.zombieBorderTick(currentTick, currentGame)
 				currentGame.sugarCaneRegen.tick()
+				currentGame.leatherRegen.tick()
 				ledgerTrailTick(currentGame, currentTick)
 
 				if (currentTick % 20 == 0) {

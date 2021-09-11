@@ -2,7 +2,6 @@ package com.codeland.uhc.customSpawning
 
 import com.codeland.uhc.customSpawning.spawnInfos.hostile.*
 import com.codeland.uhc.customSpawning.spawnInfos.passive.SpawnChicken
-import com.codeland.uhc.customSpawning.spawnInfos.passive.SpawnCow
 import com.codeland.uhc.customSpawning.spawnInfos.passive.SpawnPig
 import com.codeland.uhc.customSpawning.spawnInfos.passive.SpawnSheep
 
@@ -24,7 +23,6 @@ enum class SpawnInfoType(val spawnInfo: SpawnInfo) {
 	NETHER_SPECIAL(NetherSpecialSpawn()),
 
 	CHICKEN(SpawnChicken()),
-	COW(SpawnCow()),
 	SHEEP(SpawnSheep()),
 	PIG(SpawnPig());
 }

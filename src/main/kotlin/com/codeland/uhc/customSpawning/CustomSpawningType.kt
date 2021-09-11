@@ -25,10 +25,9 @@ enum class CustomSpawningType(
 		SpawnInfoType.PIGLIN.spawnInfo
 	)),
 
-	PASSIVE(32, 86, 48, 25, 20, arrayOf(
+	PASSIVE(32, 86, 48, 20, 40, arrayOf(
 		SpawnInfoType.SHEEP.spawnInfo,
 		SpawnInfoType.PIG.spawnInfo,
-		SpawnInfoType.COW.spawnInfo,
 		SpawnInfoType.CHICKEN.spawnInfo
 	), emptyArray());
 

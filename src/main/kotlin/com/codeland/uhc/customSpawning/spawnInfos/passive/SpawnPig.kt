@@ -27,10 +27,6 @@ class SpawnPig : SpawnInfo() {
 				1 -> EntityType.RABBIT
 				else -> EntityType.PIG
 			}
-			mountains(block.biome) -> when (spawnCycle % 2) {
-				0 -> EntityType.PIG
-				else -> EntityType.LLAMA
-			}
 			desert(block.biome) -> EntityType.RABBIT
 			block.biome === Biome.BEACH -> EntityType.TURTLE
 			else -> EntityType.PIG
