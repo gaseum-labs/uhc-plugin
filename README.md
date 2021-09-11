@@ -1,8 +1,6 @@
 <img src="uhc icon.png" alt="UHC Enchanting Table Icon" width="200"/> 
-<h1>
-    UHC Plugin 
-</h1>
 
+# UHC Plugin
 A Minecraft 1.17 UHC plugin built in Kotlin for PaperMC
 
 **UHC Plugin is built exclusively for private games and is not general-purpose. It is probably not what you are looking for**
@@ -17,7 +15,7 @@ Check out the [Automatic Release](https://github.com/Codeland473/uhc-plugin/rele
 
 1. Set up a 1.17.1 [PaperMC server](https://papermc.io/downloads#Paper-1.17)
 2. Download the latest [UHC Plugin Jar](https://github.com/Codeland473/uhc-plugin/releases/download/auto/uhc-plugin-all.jar)
-3. Also download the latest [Protocollib Plugin Jar](https://github.com/dmulloy2/ProtocolLib)
+3. Also download the latest [Protocollib Plugin Jar](https://github.com/dmulloy2/ProtocolLib/releases)
 4. Place both plugin jars into the `plugins/` directory in your Server
 
 ### Starting A Game
@@ -31,8 +29,10 @@ Check out the [Automatic Release](https://github.com/Codeland473/uhc-plugin/rele
 
 * Kotlin 1.5
 * Java 16
+* Gradle 7.0
 * [PaperMC 1.17.1](https://papermc.io/downloads#Paper-1.17)
-* [Protocollib 4.7.0](https://github.com/dmulloy2/ProtocolLib)
+* [Protocollib 4.7.0](https://github.com/dmulloy2/ProtocolLib/releases)
+* [Spigot 1.17.1 BuildTools](https://www.spigotmc.org/wiki/buildtools)
 
 ### Setting up the Project
 
@@ -40,9 +40,11 @@ Clone the repo: `git clone https://github.com/Codeland473/uhc-plugin`
 
 Create the file `user.gradle` in the project directory
 
-Then...
+### Building
 
-### In IntelliJ
+The two main ways of building the project are through an IntelliJ configuration or using `gradle` in the command line. In either case, the built jar will be located at `build/libs/uhc-plugin-all.jar`.
+
+#### In IntelliJ
 
 Open the project directory in Intellij IDEA
 
@@ -58,6 +60,6 @@ Click Apply
 
 Now you can run the configuration to build the jar
 
-### In the command line
+#### In the command line
 
-Navigate to the directory of the project and run `gradle shadowJar`
+Navigate to the directory of the project and run `gradle build`
