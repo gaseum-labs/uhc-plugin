@@ -19,6 +19,11 @@ import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
+import com.codeland.uhc.util.Util
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -110,15 +115,21 @@ class TestCommands : BaseCommand() {
 	}
 
 	@Subcommand("playerData")
+	@CommandCompletion("@uhcplayer")
 	@Description("get this player's playerData")
 	fun testPlayerData(sender: CommandSender, player: OfflinePlayer) {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val team = TeamData.playersTeam(player.uniqueId)
 
 		Action.sendGameMessage(sender, "PlayerData for ${player.name}:")
 		Action.sendGameMessage(sender, "Participating: ${playerData.participating}")
 		Action.sendGameMessage(sender, "Alive: ${playerData.alive}")
 		Action.sendGameMessage(sender, "Opting Out: ${playerData.optingOut}")
 		Action.sendGameMessage(sender, "Last Played: ${playerData.lastPlayed}")
+		Action.sendGameMessage(sender, "Arena: ${ArenaManager.playersArena(player.uniqueId)}")
+		sender.sendMessage(Component.text("Team: ", NamedTextColor.GOLD, TextDecoration.BOLD).append(
+			team?.apply(team.name ?: "[Unnamed]") ?: Component.text("[Not on a team]", NamedTextColor.RED)
+		))
 	}
 
 	@Subcommand("zombie")

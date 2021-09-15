@@ -74,7 +74,7 @@ abstract class Regen(val game: Game, val ticksPerTeam: Int) {
 			i
 		}
 
-		if (--info.timer <= 0 && info.chunkRadius >= 0 && (game.phase is Grace || game.phase is Shrink)) {
+		if (--info.timer <= 0 && info.chunkRadius >= 0) {
 			val (chunkX, chunkZ) = spaceFromIndex(info.placeSpaces[info.placeIndex], info.chunkRadius)
 
 			if (

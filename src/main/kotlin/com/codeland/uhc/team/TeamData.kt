@@ -112,7 +112,7 @@ object TeamData {
 
 				/* the names will be updated as if they were not on the team */
 				if (updateNames) updateMemberNames(oldMemberList)
-				teamColor.removeTeam(currentTeam.color1, currentTeam.color2)
+				teamColor.removeTeam(currentTeam.colors)
 
 				true
 			} else {

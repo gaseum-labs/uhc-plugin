@@ -5,9 +5,11 @@ import org.bukkit.Bukkit
 import org.bukkit.ChatColor.BOLD
 import org.bukkit.ChatColor.GOLD
 import org.bukkit.Location
+import org.bukkit.NamespacedKey
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import java.util.*
 
@@ -80,15 +82,19 @@ object Action {
 		}
 	}
 
-	fun setPlayerRiding(uuid: UUID, entity: Entity) {
-		val onlinePlayer = Bukkit.getPlayer(uuid)
+	fun playerInventory(uuid: UUID): Array<ItemStack?>? {
+		val player = Bukkit.getPlayer(uuid)
 
-		if (onlinePlayer == null) {
-			val zombie = PlayerData.getPlayerData(uuid).offlineZombie
-			if (zombie != null) entity.addPassenger(zombie)
-
+		return if (player == null) {
+			PlayerData.getPlayerData(uuid).getZombieInventory()
 		} else {
-			entity.addPassenger(onlinePlayer)
+			player.inventory.contents
 		}
+	}
+
+	fun awardAdvancement(player: Player, name: String) {
+		val advancement = Bukkit.getServer().getAdvancement(NamespacedKey.minecraft(name)) ?: return
+		val progress = player.getAdvancementProgress(advancement)
+		progress.remainingCriteria.forEach { progress.awardCriteria(it) }
 	}
 }

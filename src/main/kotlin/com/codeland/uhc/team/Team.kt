@@ -8,8 +8,9 @@ import org.bukkit.Bukkit
 import java.util.*
 import kotlin.collections.ArrayList
 
-class Team(val id: Int, var color1: TextColor, var color2: TextColor, val members: ArrayList<UUID>) {
+class Team(val id: Int, color1: TextColor, color2: TextColor, val members: ArrayList<UUID>) {
 	var name: String? = null
+	val colors = arrayOf(color1, color2)
 
 	/**
 	 * call this during the game when
@@ -22,7 +23,7 @@ class Team(val id: Int, var color1: TextColor, var color2: TextColor, val member
 	}
 
 	fun apply(string: String): Component {
-		return Util.gradientString(string, color1, color2)
+		return Util.gradientString(string, colors[0], colors[1])
 	}
 
 	companion object {

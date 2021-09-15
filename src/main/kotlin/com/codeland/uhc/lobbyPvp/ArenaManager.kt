@@ -164,7 +164,13 @@ object ArenaManager {
 	}
 
 	fun destroyArena(arena: Arena) {
-		arena.online().forEach { removePlayer(it.uniqueId, it) }
+		arena.online().forEach { player ->
+			removePlayer(player.uniqueId)
+
+			val playerData = PlayerData.getPlayerData(player.uniqueId)
+			Lobby.onSpawnLobby(player)
+			player.inventory.contents = playerData.lobbyInventory
+		}
 
 		val typeList = typeList<Arena>(arena.type)
 		typeList.removeIf { it === arena }
@@ -181,18 +187,9 @@ object ArenaManager {
 		}
 	}
 
-	fun removePlayer(uuid: UUID, player: Player? = null) {
+	fun removePlayer(uuid: UUID) {
 		val game = playersArena(uuid)
 		game?.teams?.any { team -> team.removeIf { it == uuid } }
-
-		/* if the player is online */
-		val player = player ?: (Bukkit.getPlayer(uuid) ?: return)
-
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-
-		Lobby.onSpawnLobby(player)
-
-		player.inventory.contents = playerData.lobbyInventory
 	}
 
 	fun destroyStore(world: World, x: Int, z: Int) {

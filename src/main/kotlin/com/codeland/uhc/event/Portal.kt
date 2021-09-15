@@ -3,15 +3,15 @@ package com.codeland.uhc.event
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.core.phase.phases.Endgame
+import com.codeland.uhc.util.Action
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Orientable
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -130,7 +130,7 @@ class Portal : Listener {
 			return Pair(exitWorld.getBlockAt(x, idealPortalY(exitWorld, x, z), z), true)
 		}
 
-		fun teleportToPortal(player: Player, exitPortalBlock: Block) {
+		fun teleportToPortal(player: Entity, exitPortalBlock: Block) {
 			player.teleport(findPortalCenter(exitPortalBlock))
 		}
 
@@ -204,43 +204,44 @@ class Portal : Listener {
 
 				/* portal coordinate fix */
 			} else {
-				/* override default portal creation behavior */
-
-				/* going to the nether if in the game world */
-				/* going to the game world if in nether */
-				val exitWorld = if (player.world.name == WorldManager.GAME_WORLD_NAME)
-					WorldManager.getNetherWorldGame()
-				else
-					WorldManager.getGameWorldGame()
-
-				val entrancePortalBlock = findPlayersPortal(player.world, player.location)
-
-				val (exitPortalX, exitPortalZ) = setWithinBorder(exitWorld.worldBorder, entrancePortalBlock.x, entrancePortalBlock.z)
-
-				val (exitPortalBlock, needCreatePortal) = getExitPortalPosition(
-					exitWorld,
-					exitPortalX,
-					exitPortalZ,
-					if (exitWorld.environment == World.Environment.NORMAL)
-						::idealPortalYOverworld
-					else
-						::idealPortalYNether
-				)
-
-				if (needCreatePortal) buildPortal(exitPortalBlock)
-
-				teleportToPortal(player, exitPortalBlock)
-
-				/* nether achievement fix */
-				if (exitWorld.name == WorldManager.NETHER_WORLD_NAME) {
-					val weNeedToGoDeeper = Bukkit.getServer().getAdvancement(NamespacedKey.minecraft("story/enter_the_nether"))
-
-					if (weNeedToGoDeeper != null) {
-						val progress = player.getAdvancementProgress(weNeedToGoDeeper)
-						progress.remainingCriteria.forEach { progress.awardCriteria(it) }
-					}
-				}
+				sendThroughPortal(player.uniqueId, player)
 			}
+		}
+
+		fun sendThroughPortal(uuid: UUID, player: Player?): Boolean {
+			val entity = player ?: PlayerData.getPlayerData(uuid).offlineZombie ?: return false
+
+			/* override default portal creation behavior */
+
+			/* going to the nether if in the game world */
+			/* going to the game world if in nether */
+			val exitWorld = if (entity.world.name == WorldManager.GAME_WORLD_NAME)
+				WorldManager.getNetherWorldGame()
+			else
+				WorldManager.getGameWorldGame()
+
+			val entrancePortalBlock = findPlayersPortal(entity.world, entity.location)
+
+			val (exitPortalX, exitPortalZ) = setWithinBorder(exitWorld.worldBorder, entrancePortalBlock.x, entrancePortalBlock.z)
+
+			val (exitPortalBlock, needCreatePortal) = getExitPortalPosition(
+				exitWorld,
+				exitPortalX,
+				exitPortalZ,
+				if (exitWorld.environment == World.Environment.NORMAL)
+					::idealPortalYOverworld
+				else
+					::idealPortalYNether
+			)
+
+			if (needCreatePortal) buildPortal(exitPortalBlock)
+
+			teleportToPortal(entity, exitPortalBlock)
+
+			/* nether advancement is required to be manually added with new nether */
+			if (player != null) Action.awardAdvancement(player, "story/enter_the_nether")
+
+			return true
 		}
 
 		fun concentricSquare(centerX: Int, centerZ: Int, radius: Int, onBlock: (Int, Int) -> Int): Int {

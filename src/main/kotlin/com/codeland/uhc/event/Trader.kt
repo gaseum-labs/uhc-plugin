@@ -1,6 +1,8 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -86,5 +88,22 @@ object Trader {
 		}
 
 		return false
+	}
+
+	fun deployTraders() {
+		TeamData.teams.forEach { team ->
+			/* count number of emeralds to determine who gets the trader */
+			val emeraldPlayer = team.members.filter { PlayerData.isParticipating(it) }.shuffled().maxByOrNull { uuid ->
+				val inventory = Action.playerInventory(uuid) ?: return@maxByOrNull -1
+				inventory.fold(0) { acc, item -> acc + if (item != null && item.type === Material.EMERALD) item.amount else 0 }
+			}
+
+			if (emeraldPlayer != null) spawnTraderForPlayer(emeraldPlayer)
+
+			team.members.forEach { uuid ->
+				val player = Bukkit.getPlayer(uuid)
+				if (player != null) Action.sendGameMessage(player, "Wandering Trader Appeared")
+			}
+		}
 	}
 }

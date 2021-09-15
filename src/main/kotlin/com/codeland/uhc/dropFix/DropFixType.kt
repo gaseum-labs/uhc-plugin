@@ -18,16 +18,43 @@ import org.bukkit.Material.*
 import org.bukkit.entity.EntityType
 import org.bukkit.potion.PotionType
 
+private fun zombieTemplate(entityType: EntityType): DropFix {
+	return DropFix(
+		entityType,
+		arrayOf(
+			arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory()),
+		),
+		arrayOf(
+			Pair(8, item(IRON_INGOT)),
+			Pair(8, item(CARROT)),
+			Pair(8, item(POTATO)),
+		)
+	)
+}
+
+private fun horseTemplate(entityType: EntityType): DropFix {
+	return DropFix(
+		entityType,
+		arrayOf(
+			arrayOf(DropEntry.horseInventory(), item(noBaby { LEATHER }, ::lootItem))
+		)
+	)
+}
+
 enum class DropFixType(val dropFix: DropFix) {
 	BLAZE(DropFix(EntityType.BLAZE, arrayOf(
 		arrayOf(item(BLAZE_ROD, ::lootItem))
 	))),
 
-	SPIDER(DropFix(EntityType.SPIDER, arrayOf(
-		arrayOf(item(STRING, ::lootItem), item(SPIDER_EYE, lootMulti(-1))),
-		arrayOf(item(STRING, ::lootItem), item(SPIDER_EYE, lootMulti( 0))),
-		arrayOf(item(STRING, ::lootItem), item(SPIDER_EYE, lootMulti( 1)))
-	))),
+	SPIDER(DropFix(
+		EntityType.SPIDER,
+		arrayOf(
+			arrayOf(item(STRING, ::lootItem)),
+		),
+		arrayOf(
+			Pair(3, item(SPIDER_EYE))
+		)
+	)),
 
 	SKELETON(DropFix(EntityType.SKELETON, arrayOf(
 		arrayOf(item(BONE, ::lootItem), item(ARROW, ::lootItem), mobArmor())
@@ -37,34 +64,35 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(item(noBaby { LEATHER }, ::lootItem), item(noBaby(onFire(BEEF, COOKED_BEEF)), lootMulti(2)))
 	))),
 
-	HORSE(DropFix(EntityType.HORSE, arrayOf(
-		arrayOf(DropEntry.horseInventory(), item(noBaby { LEATHER }, ::lootItem))
-	))),
+	HORSE(horseTemplate(EntityType.HORSE)),
+	MULE(horseTemplate(EntityType.MULE)),
+	DONKEY(horseTemplate(EntityType.DONKEY)),
 
 	LLAMA(DropFix(EntityType.LLAMA, arrayOf(
 		arrayOf(item(noBaby { LEATHER }, ::lootItem))
 	))),
 
-	MULE(DropFix(EntityType.MULE, arrayOf(
-		arrayOf(DropEntry.horseInventory(), item(noBaby { LEATHER }, ::lootItem))
-	))),
-
-	DONKEY(DropFix(EntityType.DONKEY, arrayOf(
-		arrayOf(DropEntry.horseInventory(), item(noBaby { LEATHER }, ::lootItem))
-	))),
-
-	CHICKEN(DropFix(EntityType.CHICKEN, arrayOf(
-		arrayOf(item(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem), item(noBaby { FEATHER }, ::lootItem)),
-	))),
+	CHICKEN(DropFix(
+		EntityType.CHICKEN,
+		arrayOf(
+			arrayOf(item(noBaby(onFire(Material.CHICKEN, COOKED_CHICKEN)), ::lootItem)),
+		),
+		arrayOf(
+			Pair(2, item(noBaby { FEATHER }, ::lootItem))
+		)
+	)),
 
 	ENDERMAN(DropFix(EntityType.ENDERMAN, arrayOf(
 		arrayOf(item(ENDER_PEARL, ::lootItem), endermanHolding())
 	))),
 
-	MAGMA_CUBE(DropFix(EntityType.MAGMA_CUBE, arrayOf(
-		arrayOf(nothing()),
-		arrayOf(item(isSize(MAGMA_CREAM, 1), ::lootItem))
-	))),
+	MAGMA_CUBE(DropFix(
+		EntityType.MAGMA_CUBE,
+		emptyArray(),
+		arrayOf(
+			Pair(2, item(isSize(MAGMA_CREAM, 1), ::lootItem))
+		)
+	)),
 
 	GHAST(DropFix(EntityType.GHAST, arrayOf(
 		arrayOf(item(GUNPOWDER, ::lootItem), item(GHAST_TEAR, ::lootItem))
@@ -79,7 +107,7 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	DROWNED(DropFix(EntityType.DROWNED, arrayOf(
-		arrayOf(mobInventory(), item(ROTTEN_FLESH, ::lootItem), item(GOLD_INGOT, ::lootItem)),
+		arrayOf(mobInventory(), item(ROTTEN_FLESH, ::lootItem), item(GOLD_INGOT)),
 	))),
 
 	WITCH(DropFix(EntityType.WITCH, arrayOf(
@@ -88,26 +116,12 @@ enum class DropFixType(val dropFix: DropFix) {
 		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.SPEED))
 	))),
 
-	ZOMBIE(DropFix(EntityType.ZOMBIE, arrayOf(
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(0))),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(IRON_INGOT, lootMulti(1))),
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory(), item(CARROT)),
-	))),
-
-	ZOMBIE_VILLAGER(DropFix(EntityType.ZOMBIE_VILLAGER, arrayOf(
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory()),
-	))),
+	ZOMBIE(zombieTemplate(EntityType.ZOMBIE)),
+	ZOMBIE_VILLAGER(zombieTemplate(EntityType.ZOMBIE_VILLAGER)),
+	HUSK(zombieTemplate(EntityType.HUSK)),
 
 	STRAY(DropFix(EntityType.STRAY, arrayOf(
 		arrayOf(item(BONE, ::lootItem), slownessArrow(), mobArmor())
-	))),
-
-	HUSK(DropFix(EntityType.HUSK, arrayOf(
-		arrayOf(item(ROTTEN_FLESH, ::lootItem), mobInventory())
 	))),
 
 	PIGLIN(DropFix(EntityType.PIGLIN, arrayOf(
@@ -115,13 +129,13 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	RABBIT(DropFix(EntityType.RABBIT, arrayOf(
-		arrayOf(item(RABBIT_HIDE, ::lootItem), item(onFire(Material.RABBIT, COOKED_RABBIT), ::lootItem), item(RABBIT_FOOT, lootMulti(-1))),
-		arrayOf(item(RABBIT_HIDE, ::lootItem), item(onFire(Material.RABBIT, COOKED_RABBIT), ::lootItem), item(RABBIT_FOOT, lootMulti(0))),
-		arrayOf(item(RABBIT_HIDE, ::lootItem), item(onFire(Material.RABBIT, COOKED_RABBIT), ::lootItem), item(RABBIT_FOOT, lootMulti(1)))
+		arrayOf(item(RABBIT_HIDE, ::lootItem), item(onFire(Material.RABBIT, COOKED_RABBIT), ::lootItem)),
+	), arrayOf(
+		Pair(3, item(RABBIT_FOOT, ::lootItem))
 	))),
 
 	PARROT(DropFix(EntityType.PARROT, arrayOf(
-		arrayOf(item(FEATHER, lootMulti(2)))
+		arrayOf(item(FEATHER, ::lootItem))
 	))),
 
 	HOGLIN(DropFix(EntityType.HOGLIN, arrayOf(

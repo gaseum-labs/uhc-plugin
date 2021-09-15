@@ -6,6 +6,7 @@ import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.event.Portal
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
@@ -41,13 +42,19 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 	var fakeEntityID = Int.MAX_VALUE
 
 	init {
+		/* send players in nether back to the overworld */
 		SchedulerUtil.nextTick {
-			PlayerData.playerDataList.forEach { (uuid, _) ->
-				val location = Action.getPlayerLocation(uuid)
+			PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				if (playerData.participating && Action.getPlayerLocation(uuid)?.world !== game.world) {
+					val player = Bukkit.getPlayer(uuid)
 
-				if (location != null && location.world !== game.world) {
-					Action.playerAction(uuid) { player -> Commands.errorMessage(player, "Failed to return to home dimension!") }
-					Action.damagePlayer(uuid, 100000000000.0)
+					if (player != null) {
+						Action.sendGameMessage(player, "Returned to Home Dimension")
+					}
+
+					if (!Portal.sendThroughPortal(uuid, player)) {
+						game.playerDeath(uuid, null, playerData, true)
+					}
 				}
 			}
 		}

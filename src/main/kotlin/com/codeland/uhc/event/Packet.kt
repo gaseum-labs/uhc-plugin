@@ -129,7 +129,7 @@ object Packet {
 			val scoreboardTeam = ScoreboardTeam(Scoreboard(), name)
 			scoreboardTeam.color = if (isOnTeam) EnumChatFormat.l else EnumChatFormat.m
 			scoreboardTeam.prefix = if (uhcTeam != null) {
-				Util.nmsGradientString(oldName, uhcTeam.color1, uhcTeam.color2)
+				Util.nmsGradientString(oldName, uhcTeam.colors[0], uhcTeam.colors[1])
 			} else {
 				ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.p))
 			}
@@ -269,34 +269,14 @@ object Packet {
 				newPing.setServerInfo(ServerPing.ServerData("UHC ${Bukkit.getMinecraftVersion()}", oldPing.serverData.protocolVersion))
 				newPing.setPlayerSample(oldPing.b())
 
-				val random = Random(event.hashCode())
+				val length = 48
 
-				val us = arrayOf(
-					0x1200, 0x1201,
-					0x1205, 0x1206,
-					0x1207,
-				)
-
-				val hs = arrayOf(
-					0x12d8, 0x12d9,
-					0x12da, 0x12db,
-					0x12dc, 0x12dd,
-					0x12de, 0x12df,
-					0x12e0, 0x12e1,
-					0x12e2, 0x12e3,
-					0x12e4, 0x12e5,
-					0x12e6, 0x12e7,
-				)
-
-				val cs = arrayOf(
-					0x122d, 0x122e
-				)
-
-				fun createStrip() = CharArray(46) { i -> if (i == 45) '\n' else when (i % 3) {
-					0 -> us[random.nextInt(us.size)]
-					1 -> hs[random.nextInt(hs.size)]
-					else -> cs[random.nextInt(cs.size)]
-				}.toChar() } //ff35 2588
+				fun createStrip() = CharArray(length + 1) { i -> if (i == length) '\n' else when (i % 4) {
+					0 -> 'U'
+					1 -> 'H'
+					2 -> 'C'
+					else -> ' '
+				}.toChar() }
 
 				val topStrip = createStrip()
 				val bottomStrip = createStrip()

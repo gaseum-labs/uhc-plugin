@@ -274,7 +274,7 @@ class Chat : Listener {
 		/* if the message does not start with a mention */
 		/* and the message does not start with ! */
 		} else if (UHC.game != null && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
-			val messageParts = divideMessage(message, collected, team.color2)
+			val messageParts = divideMessage(message, collected, team.colors.last())
 
 			team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
 				player.sendMessage(playerComponent.append(messageForPlayer(player, collected, messageParts)))

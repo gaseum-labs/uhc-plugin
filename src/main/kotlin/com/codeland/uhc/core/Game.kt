@@ -82,7 +82,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 		playerData.participating = true
 
 		playerData.inLobbyPvpQueue.set(0)
-		if (ArenaManager.playersArena(uuid) != null) ArenaManager.removePlayer(uuid)
+		ArenaManager.removePlayer(uuid)
 
 		Action.teleportPlayer(uuid, location)
 

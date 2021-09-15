@@ -1,62 +1,61 @@
 package com.codeland.uhc.dropFix
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.util.Util
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
+import kotlin.random.Random
 
-class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>) {
-	private val metaIndexName = "Dfix_${entityType.name}_I"
-	private val metaListName = "Dfix_${entityType.name}_L"
+class DropFix(
+	val entityType: EntityType,
+	val dropCycle: Array<Array<DropEntry>>,
+	val rares: Array<Pair<Int, DropEntry>> = emptyArray()
+) {
+	private val META_NAME = "Df_${entityType.name}"
 
-	private fun increaseIndex(player: Player): Int {
-		val indexMeta = player.getMetadata(metaIndexName)
+	internal class DropFixData(val size: Int, val rareSizes: List<Int>) {
+		var count = 0
+		var cycleIndices = Array(size) { it }
+		var rareIndices = Array(rareSizes.size) { 0 }
 
-		val oldIndex = (if (indexMeta.isEmpty())
-			resetIndex(player)
-		else
-			indexMeta[0].asInt()
-		)
+		fun get(onCycle: (Int) -> Unit, onRare: (Int) -> Unit) {
+			if (size != 0) {
+				onCycle(cycleIndices[count % size])
+				if ((count + 1) % size == 0) cycleIndices.shuffle()
+			}
 
-		val nextIndex = if (oldIndex + 1 >= dropCycle.size) {
-			resetListMeta(player); 0
-		} else {
-			oldIndex + 1
+			for (i in rareIndices.indices) {
+				if (count % rareSizes[i] == rareIndices[i]) onRare(i)
+				if ((count + 1) % rareSizes[i] == 0) rareIndices[i] = Random.nextInt(rareSizes[i])
+			}
+			++count
 		}
 
-		player.setMetadata(metaIndexName, FixedMetadataValue(UHCPlugin.plugin, nextIndex))
-
-		return oldIndex
+		init {
+			cycleIndices.shuffle()
+			for (i in rareIndices.indices) rareIndices[i] = Random.nextInt(rareSizes[i])
+		}
 	}
 
-	private fun resetIndex(player: Player): Int {
-		player.setMetadata(metaIndexName, FixedMetadataValue(UHCPlugin.plugin, 0))
-		return 0
-	}
+	private fun getDrops(player: Player, onDrop: (DropEntry) -> Unit) {
+		val meta = player.getMetadata(META_NAME)
 
-	private fun resetListMeta(player: Player): Array<Int> {
-		val array = Array(dropCycle.size) { it }
-		array.shuffle()
-
-		player.setMetadata(metaListName, FixedMetadataValue(UHCPlugin.plugin, array))
-
-		return array
-	}
-
-	private fun getDrops(player: Player): Array<DropEntry> {
-		val listMeta = player.getMetadata(metaListName)
-
-		val list = if (listMeta.isEmpty()) {
-			resetListMeta(player)
+		val data = if (meta.isEmpty()) {
+			val ret = DropFixData(dropCycle.size, rares.map { it.first })
+			player.setMetadata(META_NAME, FixedMetadataValue(UHCPlugin.plugin, ret))
+			ret
 		} else {
-			listMeta[0].value() as Array<Int>
+			meta[0].value() as DropFixData
 		}
 
-		return dropCycle[list[increaseIndex(player) % list.size] % dropCycle.size]
+		data.get({ i ->
+			dropCycle[i].forEach { onDrop(it) }
+		}, { i ->
+			onDrop(rares[i].second)
+		})
 	}
 
 	fun onDeath(entity: Entity, killer: Player?, drops: MutableList<ItemStack>) {
@@ -68,7 +67,7 @@ class DropFix(val entityType: EntityType, val dropCycle: Array<Array<DropEntry>>
 
 		val nearestPlayer = killer ?: entity.world.players.minByOrNull { entity.location.distance(it.location) }
 
-		if (nearestPlayer != null) getDrops(nearestPlayer).forEach { entry ->
+		if (nearestPlayer != null) getDrops(nearestPlayer) { entry ->
 			drops.addAll(entry.onDrop(entity, looting).filterNotNull().filter { it.amount > 0 })
 		}
 	}

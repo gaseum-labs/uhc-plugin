@@ -1,6 +1,5 @@
 package com.codeland.uhc.dropFix
 
-import com.codeland.uhc.util.Util
 import org.bukkit.Material
 import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack

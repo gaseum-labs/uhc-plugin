@@ -150,6 +150,14 @@ class PlayerData(val uuid: UUID) {
 		return zombie
 	}
 
+	fun getZombieInventory(): Array<ItemStack?>? {
+		val zombie = offlineZombie ?: return null
+
+		val inventoryMeta = zombie.getMetadata(INVENTORY_TAG)
+		if (inventoryMeta.isEmpty()) return null
+		return inventoryMeta[0].value() as Array<ItemStack?>
+	}
+
 	/**
 	 * @param player the online player right before they log out
 	 * @return a zombie that represents the player when offline

@@ -11,7 +11,7 @@ class GenLayerOcean(borderRadius: Int, zoomsAfter: Int)  : AreaTransformer2, Are
 	val limit = borderRadius / (4 * 2.0f.pow(zoomsAfter).toInt())
 
 	override fun a(p0: AreaContextTransformed<*>, area: Area, x: Int, z: Int): Int {
-		return if (abs(x) > limit || abs(z) > limit) {
+		return if (abs(x) >= limit || abs(z) >= limit) {
 			Region.pack(Region.OCEAN, false)
 		} else {
 			area.a(x, z)

@@ -78,7 +78,7 @@ class EventListener : Listener {
 		val pvpGame = ArenaManager.playersArena(player.uniqueId)
 
 		if (pvpGame != null) {
-			ArenaManager.removePlayer(player.uniqueId, player)
+			ArenaManager.removePlayer(player.uniqueId)
 
 		} else if (playerData.participating && player.gameMode != GameMode.SPECTATOR) {
 			playerData.offlineZombie = playerData.createZombie(player)
@@ -541,9 +541,10 @@ class EventListener : Listener {
 			/* trying to build above endgame top level */
 			if (phase is Endgame && event.blockPlaced.y > phase.finalMax) {
 				phase.addSkybaseBlock(event.blockPlaced)
+			}
 
 			/* creative block replenishing */
-			} else if (UHC.game?.quirkEnabled(QuirkType.CREATIVE) == true) {
+			if (UHC.game?.quirkEnabled(QuirkType.CREATIVE) == true) {
 				val material = event.itemInHand.type
 
 				/* replace these blocks */
@@ -669,8 +670,7 @@ class EventListener : Listener {
 	fun onDrinkPotion(event: EntityPotionEffectEvent) {
 		/* this shit doesn't work */
 		if (
-			event.entityType === EntityType.WANDERING_TRADER &&
-			event.newEffect === PotionEffectType.INVISIBILITY
+			event.entityType === EntityType.WANDERING_TRADER
 		) {
 			println("YOOOOOOOOOO")
 			event.isCancelled = true
