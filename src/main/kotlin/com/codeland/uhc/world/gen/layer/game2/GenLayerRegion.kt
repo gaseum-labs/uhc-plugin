@@ -6,11 +6,10 @@ import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer4
 class GenLayerRegion : AreaTransformer4 {
 	override fun a(context: WorldGenContext, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int): Int {
 		return Region.pack(when (p5) {
-			0 -> coldRegions[context.a(coldRegions.size)]
-			1 -> hotRegions[context.a(hotRegions.size)]
-
-			3 -> badlandsRegions[context.a(badlandsRegions.size)]
-			4 -> Region.GIANT_TAIGA
+			Temperature.COLD.ordinal -> coldRegions[context.a(coldRegions.size)]
+			Temperature.HOT.ordinal -> hotRegions[context.a(hotRegions.size)]
+			Temperature.BADLANDS.ordinal -> badlandsRegions[context.a(badlandsRegions.size)]
+			Temperature.MEGA.ordinal -> Region.GIANT_TAIGA
 
 			else -> temperateRegions[context.a(temperateRegions.size)]
 		}, context.a(4) == 0)

@@ -24,41 +24,36 @@ object CustomGenLayers {
 		return baseLayer.make()
 	}
 
-	fun createAreaGame2(seed: Long, border: Int): Area {
+	const val BORDER_INCREMENT = 96
+	const val OCEAN_BUFFER = 16
+
+	fun createAreaGame2(seed: Long, borderRadius: Int): Area {
 		val noise = { s: Long -> WorldGenContextArea(25, seed, s) }
 
-		var baseLayer = LayerUnique().a(noise(0L))
+		var baseLayer = LayerTemperature(seed, (borderRadius - OCEAN_BUFFER) / BORDER_INCREMENT).a(noise(0L))  /* 4X */
 
-		baseLayer = GenLayerHole().a(noise(8080L), baseLayer)
-		baseLayer = GenLayerCohere().a(noise(8081L), baseLayer)
-		baseLayer = GenLayerSeparate().a(noise(8082L), baseLayer)
-		baseLayer = GenLayerRegion().a(noise(8083L), baseLayer)
-
-		baseLayer = GenLayerShiftZZoom(3).a(noise(1L), baseLayer) /* 3X */
-		baseLayer =     GenLayerShiftX(3).a(noise(1L), baseLayer)
-
-		baseLayer = GenLayerOcean(border, 3).a(noise(8084L), baseLayer)
-
-		baseLayer =    GenLayerCombiner().a(noise(1L), baseLayer) /* 2X */
+		baseLayer = GenLayerShiftZZoom(seed, 3).a(noise(1L), baseLayer)   /* 3X */
+		baseLayer =     GenLayerShiftX(seed, 3).a(noise(1L), baseLayer)
+		baseLayer =          GenLayerCombiner().a(noise(1L), baseLayer)   /* 2X */
 
 		baseLayer = GenLayerBorder().a(noise(7070L), baseLayer)
 		baseLayer = GenLayerSplit().a(noise(7071L), baseLayer)
 
-		baseLayer = GenLayerShiftZZoom(2).a(noise(1L), baseLayer) /* 2X */
-		baseLayer =     GenLayerShiftX(2).a(noise(1L), baseLayer)
-		baseLayer =    GenLayerCombiner().a(noise(1L), baseLayer) /* 2X */
+		baseLayer = GenLayerShiftZZoom(seed, 2).a(noise(1L), baseLayer)   /* 2X */
+		baseLayer =     GenLayerShiftX(seed, 2).a(noise(1L), baseLayer)
+		baseLayer =          GenLayerCombiner().a(noise(1L), baseLayer)   /* 2X */
 
-		/* ---------------------------------------------- */
+		/* -------------------------------------------------------------------- */
 
-		var riverLayer = LayerNoise().a(noise(0L))
+		var riverLayer = LayerNoise().a(noise(0L))                        /* 4X */
 
-		riverLayer = GenLayerShiftZZoom(3).a(noise(1L), riverLayer) /* 3X */
-		riverLayer =     GenLayerShiftX(3).a(noise(1L), riverLayer)
-		riverLayer =    GenLayerCombiner().a(noise(1L), riverLayer) /* 2X */
-		riverLayer = GenLayerShiftZZoom(2).a(noise(1L), riverLayer) /* 2X */
-		riverLayer =     GenLayerShiftX(2).a(noise(1L), riverLayer)
-		riverLayer =    GenLayerCombiner().a(noise(1L), riverLayer) /* 2X */
-		riverLayer =        GenLayerZoom.a.a(noise(1L), riverLayer) /* 2X (extra) */
+		riverLayer = GenLayerShiftZZoom(seed, 3).a(noise(1L), riverLayer) /* 3X */
+		riverLayer =     GenLayerShiftX(seed, 3).a(noise(1L), riverLayer)
+		riverLayer =          GenLayerCombiner().a(noise(1L), riverLayer) /* 2X */
+		riverLayer = GenLayerShiftZZoom(seed, 2).a(noise(1L), riverLayer) /* 2X */
+		riverLayer =     GenLayerShiftX(seed, 2).a(noise(1L), riverLayer)
+		riverLayer =          GenLayerCombiner().a(noise(1L), riverLayer) /* 2X */
+		riverLayer =          GenLayerCombiner().a(noise(1L), riverLayer) /* 2X (extra) */
 
 		riverLayer = GenLayerEdge(BiomeNo.RIVER).a(noise(9090L), riverLayer)
 

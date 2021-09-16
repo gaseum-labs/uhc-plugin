@@ -21,6 +21,10 @@ object Util {
 		return ((a % b) + b) % b
 	}
 
+	fun coordPack(x: Int, z: Int, seed: Long): Long {
+		return x.toLong().shl(32).or(z.toLong().and(0xffff)).xor(seed)
+	}
+
 	fun topBlockY(world: World, x: Int, z: Int): Int {
 		for (y in 255 downTo 0) {
 			var block = world.getBlockAt(x, y, z)

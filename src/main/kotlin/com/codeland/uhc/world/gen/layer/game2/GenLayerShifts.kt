@@ -12,35 +12,32 @@ fun zoom(a: Int, scale: Int): Int {
 	return floor(a / scale.toFloat()).toInt()
 }
 
-class GenLayerShiftZZoom(val scale: Int) : AreaTransformer2, AreaTransformerIdentity {
+class GenLayerShiftZZoom(val seed: Long, val scale: Int) : AreaTransformer2, AreaTransformerIdentity {
 	override fun a(p0: AreaContextTransformed<*>, area: Area, x: Int, z: Int): Int {
 		val shiftZ = if (Util.mod(x, 2) == 0) {
 			0
 		} else {
-			Random(zoom(x, scale).toLong()).nextInt(2) * 2 - 1
+			Random(Util.coordPack(zoom(x, scale), 0, seed)).nextInt(2) * 2 - 1
 		}
 
 		return area.a(zoom(x, scale), zoom(z + shiftZ, scale))
 	}
 }
 
-class GenLayerShiftX(val scale: Int) : AreaTransformer2, AreaTransformerIdentity {
+class GenLayerShiftX(val seed: Long, val scale: Int) : AreaTransformer2, AreaTransformerIdentity {
 	override fun a(p0: AreaContextTransformed<*>, area: Area, x: Int, z: Int): Int {
 		val shiftX = if (Util.mod(z, 2) == 0) {
 			0
 		} else {
-			Random(zoom(z, scale).toLong()).nextInt(2) * 2 - 1
+			Random(Util.coordPack(0, zoom(z, scale), seed)).nextInt(2) * 2 - 1
 		}
 
 		return area.a(x + shiftX, z)
 	}
 }
 
-class GenLayerCombiner() : AreaTransformer2, AreaTransformerIdentity {
+class GenLayerCombiner : AreaTransformer2, AreaTransformerIdentity {
 	override fun a(p0: AreaContextTransformed<*>, area: Area, x: Int, z: Int): Int {
-		val baseX = zoom(x, 2)
-		val baseZ = zoom(z, 2)
-
 		val subX = Util.mod(Util.mod(x, 2) - 1, 2)
 		val subZ = Util.mod(Util.mod(z, 2) - 1, 2)
 

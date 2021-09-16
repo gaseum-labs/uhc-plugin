@@ -18,6 +18,8 @@ import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
+import com.codeland.uhc.world.gen.CustomGenLayers.BORDER_INCREMENT
+import com.codeland.uhc.world.gen.CustomGenLayers.OCEAN_BUFFER
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -36,8 +38,6 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 object UHC {
-	const val BORDER_INCREMENT = 64
-
 	private var preGameConfig: GameConfig = GameConfig()
 
 	var game: Game? = null
@@ -274,7 +274,7 @@ object UHC {
 
 		messageStream(false, "Creating game worlds for $numPlayers player${if (numPlayers == 1) "" else "s"}")
 
-		worldRadius = (ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / BORDER_INCREMENT) * BORDER_INCREMENT).toInt()
+		worldRadius = (ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / BORDER_INCREMENT) * BORDER_INCREMENT).toInt() + OCEAN_BUFFER
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
