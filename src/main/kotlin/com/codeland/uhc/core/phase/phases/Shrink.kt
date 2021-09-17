@@ -6,8 +6,7 @@ import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
-import net.md_5.bungee.api.ChatColor.BOLD
-import net.md_5.bungee.api.ChatColor.RESET
+import net.md_5.bungee.api.ChatColor.*
 import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.entity.Animals
@@ -25,10 +24,18 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int): String {
-		return if (world === game.world)
-			"${RESET}Border radius: ${phaseType.chatColor}${BOLD}${(world.worldBorder.size / 2).toInt()} ${RESET}reaching ${phaseType.chatColor}${BOLD}${game.config.endgameRadius.get()} ${RESET}in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"
-		else
-			"${RESET}Dimension closes in ${phaseType.chatColor}${BOLD}${Util.timeString(remainingSeconds)}"	}
+		return if ((remainingSeconds / 10) % 3 > 0) {
+			val borderRadius = ((game.world.worldBorder.size - 1) / 2).toInt()
+
+			if (world === game.world) {
+				"${RESET}Border Radius: ${RED}${BOLD}${borderRadius} ${RESET}Reaching ${RED}${BOLD}${game.config.endgameRadius.get()} ${RESET}in ${RED}${BOLD}${Util.timeString(remainingSeconds)}"
+			} else {
+				"${RESET}Overworld Border Radius: ${RED}${BOLD}${borderRadius} ${RESET}Dimension Closes in ${RED}${BOLD}${Util.timeString(remainingSeconds)}"
+			}
+		} else {
+			"${RESET}Endgame Y Range: ${phaseType.chatColor}${BOLD}${game.endgameLowY} - ${game.endgameHighY}"
+		}
+	}
 
 	override fun updateBarLength(remainingTicks: Int): Float {
 		return barLengthRemaining(remainingTicks)

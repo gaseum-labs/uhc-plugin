@@ -11,7 +11,8 @@ enum class ChunkPlacerHolderType(val chunkPlacerHolder: ChunkPlacerHolder) {
 	NETHER_FIX(NetherFix()),
 	NETHER_INDICATORS(NetherIndicators()),
 	ORE_FIX(OreFix()),
-	SUGAR_CANE_FIX(SugarCaneFix());
+	SUGAR_CANE_FIX(SugarCaneFix()),
+	STRUCTURES(StructuresWorld());
 
 	companion object {
 		fun resetAll(seed: Long) {

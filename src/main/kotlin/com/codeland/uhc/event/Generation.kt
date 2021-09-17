@@ -96,6 +96,10 @@ class Generation : Listener {
 					ChristmasWorld.snowPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
+				if (config.worldGenEnabled(TOWERS)) {
+					StructuresWorld.towerPlacer.onGenerate(chunk, world.seed.toInt())
+				}
+
 			} else if (world.name == WorldManager.NETHER_WORLD_NAME) {
 				if (config.worldGenEnabled(NETHER_FIX)) {
 					NetherFix.blackstonePlacer.onGenerate(chunk, world.seed.toInt())

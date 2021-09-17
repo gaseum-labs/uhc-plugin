@@ -27,21 +27,7 @@ object Util {
 
 	fun topBlockY(world: World, x: Int, z: Int): Int {
 		for (y in 255 downTo 0) {
-			var block = world.getBlockAt(x, y, z)
-
-			if (!block.isPassable)
-				return y
-		}
-
-		return 0
-	}
-
-	fun topBlockYTop(world: World, top: Int, x: Int, z: Int): Int {
-		for (y in top downTo 0) {
-			var block = world.getBlockAt(x, y, z)
-
-			if (!block.isPassable)
-				return y
+			if (!world.getBlockAt(x, y, z).isPassable) return y
 		}
 
 		return 0
@@ -49,23 +35,7 @@ object Util {
 
 	fun topLiquidSolidY(world: World, x: Int, z: Int): Pair<Int, Int> {
 		for (y in 255 downTo 0) {
-			var block = world.getBlockAt(x, y, z)
-
-			if (block.isLiquid) {
-				return Pair(y, -1)
-			}
-
-			if (!block.isPassable) {
-				return Pair(-1, y)
-			}
-		}
-
-		return Pair(-1, -1)
-	}
-
-	fun topLiquidSolidYTop(world: World, top: Int, x: Int, z: Int): Pair<Int, Int> {
-		for (y in top downTo 0) {
-			var block = world.getBlockAt(x, y, z)
+			val block = world.getBlockAt(x, y, z)
 
 			if (block.isLiquid) {
 				return Pair(y, -1)

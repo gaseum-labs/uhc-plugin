@@ -1,19 +1,21 @@
 package com.codeland.uhc.core.phase.phases
 
-import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.event.Portal
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
 import net.minecraft.network.protocol.game.PacketPlayOutBlockBreakAnimation
-import org.bukkit.*
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor.BOLD
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.TileState
 import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlock
@@ -25,10 +27,7 @@ import kotlin.math.roundToInt
 
 class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, game) {
 	var min = 0
-	var max = 0
-
-	var finalMin = 0
-	var finalMax = 0
+	var max = 255
 
 	val GLOWING_TIME = 20 * 20
 	val CLEAR_TIME = 5 * 60 * 20
@@ -61,21 +60,15 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 
 		game.world.worldBorder.size = (game.config.endgameRadius.get() * 2 + 1).toDouble()
 
-		val (min, max) = determineMinMax(game.world, game.config.endgameRadius.get(), 100)
-		finalMin = min
-		finalMax = max
-		if (finalMax > 255) finalMax = 255
-
-		this.max = 255
-		this.min = 0
-
 		timer = 0
 	}
 
-	class SkybaseBlock(var ticks: Int, val block: Block, val update: Boolean, val fakeEntityID: Int)
+	class SkybaseBlock(val time: Int, val block: Block, val updateOnDestroy: Boolean, val fakeEntityID: Int) {
+		var timer = 0
+	}
 
 	fun skybaseTicks(y: Int): Int {
-		val distance = y - finalMax
+		val distance = y - game.endgameHighY
 
 		return if (distance <= 0) {
 			-1
@@ -95,47 +88,25 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 		return if (finished)
 			(timer / GLOWING_TIME.toFloat())
 		else
-			(max - finalMax).toFloat() / (255 - finalMax)
+			(max - game.endgameHighY).toFloat() / (255 - game.endgameHighY)
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int): String {
 		return if (finished) {
 			"$GOLD${BOLD}Endgame $GOLD${BOLD}${min} - $max ${RESET}Glowing in $GOLD${BOLD}${Util.timeString(ceil((GLOWING_TIME - timer) / 20.0).toInt())}"
 		} else {
-			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${min.coerceAtLeast(0)} - $max ${RESET}Final: $GOLD${BOLD}${finalMin} - $finalMax"
+			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${min.coerceAtLeast(0)} - $max ${RESET}Final: $GOLD${BOLD}${game.endgameLowY} - ${game.endgameHighY}"
 		}
 	}
 
-	fun fillBedrockLayer(world: World, layer: Int) {
+	fun fillLayer(world: World, layer: Int, type: Material) {
 		val extrema = game.config.endgameRadius.get()
 
 		for (x in -extrema..extrema) {
 			for (z in -extrema..extrema) {
 				val block = world.getBlockAt(x, layer, z)
-				val state = block.getState(false)
-
-				if (state is TileState) {
-					block.breakNaturally()
-				} else {
-					block.setType(Material.BEDROCK, false)
-				}
-			}
-		}
-	}
-
-	fun doUpperLayer(world: World, layer: Int) {
-		val extrema = game.config.endgameRadius.get()
-
-		val ticks = skybaseTicks(layer)
-
-		if (ticks != -1) for (x in -extrema..extrema) {
-			for (z in -extrema..extrema) {
-				val block = world.getBlockAt(x, layer, z)
-
-				if (ticks == 0)
-					block.setType(Material.AIR, false)
-				else
-					if (!block.type.isAir) skybaseBlocks.add(SkybaseBlock(ticks, block, false, 0))
+				if (block.getState(false) is TileState) block.breakNaturally()
+				block.setType(type, false)
 			}
 		}
 	}
@@ -154,10 +125,10 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 			}
 
 		} else {
-			val along = timer / CLEAR_TIME.toDouble()
+			val along = timer / CLEAR_TIME.toFloat()
 
-			val newMin = (finalMin * along).toInt()
-			val newMax = ((255 - finalMax) * (1 - along) + finalMax).toInt()
+			val newMin = Util.interp(0.0f, game.endgameLowY.toFloat(), along).toInt()
+			val newMax = Util.interp(255.0f, game.endgameHighY.toFloat(), along).toInt()
 
 			if (newMin != min) {
 				min = newMin
@@ -175,14 +146,14 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 				}
 
 				/* fill in with bedrock from below */
-				if (min > 0) fillBedrockLayer(game.world, min - 1)
+				if (min > 0) fillLayer(game.world, min - 1, Material.BEDROCK)
 			}
 
 			if (newMax != max) {
 				max = newMax
 
 				/* clear all blocks above the top level */
-				if (max < 255) doUpperLayer(game.world, max + 1)
+				if (max < 255) fillLayer(game.world, max + 1, Material.AIR)
 			}
 
 			/* finish */
@@ -201,25 +172,22 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 			}
 		}
 
-		val skybasePlayers = Bukkit.getOnlinePlayers()
-			.filter { PlayerData.isParticipating(it.uniqueId) && it.location.world === game.world && it.location.block.y >= finalMax }
+		val animationPlayers = Bukkit.getOnlinePlayers().filter { it.location.world === game.world }
 
 		skybaseBlocks.removeIf { skybaseBlock ->
-			--skybaseBlock.ticks
+			if (++skybaseBlock.timer >= skybaseBlock.time || skybaseBlock.block.type.isAir) {
+				skybaseBlock.block.setType(Material.AIR, skybaseBlock.updateOnDestroy)
 
-			if (skybaseBlock.ticks <= 0 || skybaseBlock.block.type.isAir) {
-				skybaseBlock.block.setType(Material.AIR, skybaseBlock.update)
-
-				if (skybaseBlock.update) {
+				if (skybaseBlock.updateOnDestroy) {
 					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, 10)
-					skybasePlayers.forEach { (it as CraftPlayer).handle.b.sendPacket(packet) }
+					animationPlayers.forEach { (it as CraftPlayer).handle.b.sendPacket(packet) }
 				}
 
 				true
 			} else {
-				if (skybaseBlock.ticks <= 40 && skybaseBlock.update) {
-					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, ticksLeftToAnim(skybaseBlock.ticks))
-					skybasePlayers.forEach { (it as CraftPlayer).handle.b.sendPacket(packet) }
+				if (skybaseBlock.updateOnDestroy) {
+					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, ticksLeftToAnim(skybaseBlock))
+					animationPlayers.forEach { (it as CraftPlayer).handle.b.sendPacket(packet) }
 				}
 
 				false
@@ -227,14 +195,8 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 		}
 	}
 
-	private fun ticksLeftToAnim(ticks: Int): Int {
-		val along = 40 - ticks
-
-		return if (along < 0) {
-			10
-		} else {
-			((along / 40.0) * 9).roundToInt()
-		}
+	private fun ticksLeftToAnim(skybaseBlock: SkybaseBlock): Int {
+		return Util.interp(0.0f, 9.0f, skybaseBlock.timer / skybaseBlock.time.toFloat()).roundToInt()
 	}
 
 	override fun perSecond(remainingSeconds: Int) {}

@@ -59,6 +59,14 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 	val sugarCaneRegen = SugarCaneRegen(this)
 	val leatherRegen = LeatherRegen(this)
 
+	val endgameLowY: Int
+	val endgameHighY: Int
+	init {
+		val (low, high) = Endgame.determineMinMax(world, config.endgameRadius.get(), 100)
+		endgameLowY = low
+		endgameHighY = high
+	}
+
 	/* getters */
 
 	fun <T: Quirk> getQuirk(quirkType: QuirkType): T? {

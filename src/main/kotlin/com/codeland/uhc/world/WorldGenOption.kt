@@ -67,5 +67,9 @@ enum class WorldGenOption(
 
 	REVERSE_ORE_FIX("Reverse Ore Fix", false, listOf(
 	Component.text("Ores generate at the top of the world")
-	), Material.GOLD_INGOT);
+	), Material.GOLD_INGOT),
+
+	TOWERS("Towers", false, listOf(
+		Component.text("Tall dungeons generate across the world")
+	), Material.IRON_BARS);
 }

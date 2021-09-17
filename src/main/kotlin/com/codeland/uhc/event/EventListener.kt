@@ -520,26 +520,26 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onBucket(event: PlayerBucketEmptyEvent) {
-		val phase = UHC.game?.phase ?: return
-		val player = event.player
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val game = UHC.game ?: return
+		val phase = game.phase as? Endgame ?: return
 		val block = event.block
 
-		if (playerData.participating && phase is Endgame && block.y > phase.finalMax) {
+		if (PlayerData.getPlayerData(event.player.uniqueId).participating && block.y > phase.max) {
 			phase.addSkybaseBlock(block)
 		}
 	}
 
 	@EventHandler
 	fun onPlaceBlock(event: BlockPlaceEvent) {
-		val phase = UHC.game?.phase
+		val game = UHC.game
 		val player = event.player
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		/* things that affect players playing the game */
-		if (phase != null && playerData.participating) {
+		if (game != null && playerData.participating) {
 			/* trying to build above endgame top level */
-			if (phase is Endgame && event.blockPlaced.y > phase.finalMax) {
+			val phase = game.phase
+			if (phase is Endgame && event.blockPlaced.y > phase.max) {
 				phase.addSkybaseBlock(event.blockPlaced)
 			}
 
@@ -672,7 +672,6 @@ class EventListener : Listener {
 		if (
 			event.entityType === EntityType.WANDERING_TRADER
 		) {
-			println("YOOOOOOOOOO")
 			event.isCancelled = true
 		}
 	}
