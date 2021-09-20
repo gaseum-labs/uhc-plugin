@@ -192,6 +192,19 @@ object ArenaManager {
 		game?.teams?.any { team -> team.removeIf { it == uuid } }
 	}
 
+	/* saving arena data */
+
+	fun encodeArenaLocations(arenas: List<Arena>): String {
+		return arenas.joinToString("|") { arena -> "${arena.x},${arena.z}" }
+	}
+
+	fun decodeArenaLocations(data: String): List<Pair<Int, Int>> {
+		return data.split('|').map { str ->
+			val parts = str.split(',')
+			Pair(parts[0].toInt(), parts[1].toInt())
+		}
+	}
+
 	fun destroyStore(world: World, x: Int, z: Int) {
 		val infoBlock = world.getBlockAt(x, 0, z)
 		infoBlock.setType(Material.BEDROCK, false)
@@ -218,17 +231,17 @@ object ArenaManager {
 
 	fun saveWorldInfo(world: World) {
 		storeBlock(world, 1, 1, spiral.toMetadata())
-		ongoing.forEach { arena -> arena.save(world) }
+		storeBlock(world, 2, 2, encodeArenaLocations(ongoing.filter { arena -> arena.save(world) }))
 	}
 
 	fun loadWorldInfo(world: World) {
 		val spiralData = loadBlock(world, 1, 1) ?: return
+		spiral.fromMetadata(spiralData)
 
-		if(spiral.fromMetadata(spiralData)) {
-			for (x in spiral.minX()..spiral.maxX()) for (z in spiral.minZ()..spiral.maxZ()) {
-				val loadedArena = Arena.load(world, x, z)
-				if (loadedArena != null) addArena(loadedArena, Pair(x, z))
-			}
+		val arenaLocationsData = loadBlock(world, 2, 2) ?: return
+		decodeArenaLocations(arenaLocationsData).forEach { (x, z) ->
+			val loadedArena = Arena.load(world, x, z)
+			if (loadedArena != null) addArena(loadedArena, Pair(x, z))
 		}
 	}
 }

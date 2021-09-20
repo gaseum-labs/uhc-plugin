@@ -1,9 +1,6 @@
-package com.codeland.uhc.extensions
+package com.codeland.uhc.util.extensions
 
-import com.codeland.uhc.gui.ItemCreator
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.NamedTextColor.*
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 

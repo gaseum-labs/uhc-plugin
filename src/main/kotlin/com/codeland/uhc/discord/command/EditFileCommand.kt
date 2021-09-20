@@ -11,6 +11,8 @@ import java.io.InputStreamReader
 
 class EditFileCommand : MixerCommand(true) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
+		if (!bot.production) return false
+
 		val message = event.message
 
 		/* message has a file to replace the discord file contents with */

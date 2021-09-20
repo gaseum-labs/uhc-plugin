@@ -1,5 +1,6 @@
 package com.codeland.uhc.discord.command
 
+import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.MixerCommand
 import com.codeland.uhc.discord.filesystem.DataManager
@@ -9,7 +10,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class GeneralCommand : MixerCommand(true) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
-		return content.startsWith("%general")
+		return content.startsWith("${prefix(bot.production)}general")
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
@@ -24,7 +25,7 @@ class GeneralCommand : MixerCommand(true) {
 
 		/* save channel ids */
 		bot.guildId = message.guild.idLong
-		bot.saveDiscordData()
+		ConfigFile.save(bot.production, bot.token, bot.guildId.toString())
 
 		val ids = DataManager.ids
 

@@ -1,4 +1,4 @@
-package com.codeland.uhc.extensions
+package com.codeland.uhc.util.extensions
 
 import org.bukkit.block.BlockFace
 

@@ -7,9 +7,9 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class SummaryCommand : MixerCommand(true) {
+class SummaryCommand : MixerCommand(false) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
-		return content.startsWith("%summary")
+		return content.startsWith("${prefix(bot.production)}summary")
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {

@@ -108,13 +108,24 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		player.handle.b.sendPacket(ClientboundSetBorderSizePacket(border))
 	}
 
-	fun save(world: World) {
-		ArenaManager.storeBlock(
-			world,
-			x * ArenaManager.ARENA_STRIDE,
-			z * ArenaManager.ARENA_STRIDE,
-			"${type.name}|${customSave()}"
-		)
+	/**
+	 * @return if this arena is saveable
+	 */
+	fun save(world: World): Boolean {
+		val saveData = customSave()
+
+		return if (saveData != null) {
+			ArenaManager.storeBlock(
+				world,
+				x * ArenaManager.ARENA_STRIDE,
+				z * ArenaManager.ARENA_STRIDE,
+				"${type.name}|${saveData}"
+			)
+
+			true
+		} else {
+			false
+		}
 	}
 
 	abstract fun customPerSecond(): Boolean
@@ -129,7 +140,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 	abstract fun shutdownOnLeave(): Boolean
 
-	abstract fun customSave(): String
+	abstract fun customSave(): String?
 
 	/* utility */
 

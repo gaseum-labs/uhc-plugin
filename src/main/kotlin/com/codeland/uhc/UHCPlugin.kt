@@ -2,6 +2,7 @@ package com.codeland.uhc
 
 import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.*
+import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
@@ -57,16 +58,16 @@ class UHCPlugin : JavaPlugin() {
 
 		WorldGenManager.init(server)
 
+		val configFile = ConfigFile.load()
 		val address = WebAddress.getLocalAddress()
 
-		try {
-			println(GoogleDDNSUpdater.updateDomain(address))
+		if (configFile.production) println(try {
+			GoogleDDNSUpdater.updateDomain(address)
 		} catch (ex: Exception) {
-			println("$ex")
-			println("${ChatColor.RED}DDNS FAILED | STARTING SERVER AT $address")
-		}
+			"${ex}\n${ChatColor.RED}DDNS FAILED"
+		})
 
-		MixerBot.createMixerBot(address, {
+		MixerBot.createMixerBot(configFile, address, {
 			UHC.bot = it
 			UHC.getConfig().usingBot.set(true)
 		}, {

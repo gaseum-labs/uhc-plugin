@@ -172,7 +172,5 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(Are
 
 	override fun shutdownOnLeave() = true
 
-	override fun customSave(): String {
-		return ""
-	}
+	override fun customSave(): String? = null
 }

@@ -1,5 +1,6 @@
 package com.codeland.uhc.discord
 
+import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.discord.command.EditFileCommand
 import com.codeland.uhc.discord.command.GeneralCommand
 import com.codeland.uhc.discord.command.LinkCommand
@@ -37,69 +38,37 @@ import javax.imageio.ImageIO
 
 class MixerBot(
 	val jda: JDA,
+	val production: Boolean,
 	val token: String,
 	var guildId: Long,
 	ip: String
 ) : ListenerAdapter() {
 	companion object {
-		const val DISCORD_DATA_PATH = "./discordData.txt"
+		fun createMixerBot(configFile: ConfigFile, ip: String, onMixerBot: (MixerBot) -> Unit, onError: (String) -> Unit) {
+			try {
+				val jda = JDABuilder.createDefault(configFile.botToken).enableIntents(
+					GatewayIntent.GUILD_MESSAGES,
+					GatewayIntent.GUILD_VOICE_STATES,
+					GatewayIntent.GUILD_MEMBERS,
+					GatewayIntent.GUILD_EMOJIS,
+					GatewayIntent.GUILD_MESSAGE_REACTIONS
+				).build()
 
-		fun createMixerBot(ip: String, onMixerBot: (MixerBot) -> Unit, onError: (String) -> Unit) {
-			val discordDataFile = File(DISCORD_DATA_PATH)
+				/* temporary event listener just for the ready */
+				jda.addEventListener(object : ListenerAdapter() {
+					override fun onReady(event: ReadyEvent) {
+						/* create the bot once jda is ready */
+						onMixerBot(MixerBot(jda, configFile.production, configFile.botToken, configFile.serverId, ip))
 
-			/* load the bot token and UHC Server Id from disk */
-			if (discordDataFile.exists()) {
-				try {
-					val reader = BufferedReader(FileReader(discordDataFile))
-
-					val token = if (reader.ready()) reader.readLine() else null
-					val guildID = (if (reader.ready()) reader.readLine() else null)?.toLongOrNull()
-
-					reader.close()
-
-					if (token == null || guildID == null) {
-						writeDummyDiscordData(token)
-						return onError("No token found in $DISCORD_DATA_PATH")
-					}
-
-					val jda = JDABuilder.createDefault(token).enableIntents(
-						GatewayIntent.GUILD_MESSAGES,
-						GatewayIntent.GUILD_VOICE_STATES,
-						GatewayIntent.GUILD_MEMBERS,
-						GatewayIntent.GUILD_EMOJIS,
-						GatewayIntent.GUILD_MESSAGE_REACTIONS
-					).build()
-
-					/* temporary event listener just for the ready */
-					jda.addEventListener(object : ListenerAdapter() {
-						override fun onReady(event: ReadyEvent) {
-							/* create the bot once jda is ready */
-							onMixerBot(MixerBot(jda, token, guildID, ip))
-
-							/* data manager requires the bot to be ready */
-							DataManager.createDataManager(jda, guildID).exceptionally {
-								onError("Data manager could not be created | ${it.message}").void()
-							}
+						/* data manager requires the bot to be ready */
+						DataManager.createDataManager(jda, configFile.serverId).exceptionally {
+							onError("Data manager could not be created | ${it.message}").void()
 						}
-					})
-				} catch (ex: Exception) {
-					onError(ex.message ?: "Unknown Error")
-				}
-			} else {
-				writeDummyDiscordData()
-				onError("No Discord Data file found, created the template file, $DISCORD_DATA_PATH")
+					}
+				})
+			} catch (ex: Exception) {
+				onError(ex.message ?: "Unknown Error")
 			}
-		}
-
-		private fun writeDummyDiscordData(token: String? = null) {
-			val writer = FileWriter(File(DISCORD_DATA_PATH), false)
-
-			writer.write(
-				"${token ?: "BOT TOKEN GOES ON THIS LINE"}\n" +
-				"GUILD ID ON THIS LINE\n"
-			)
-
-			writer.close()
 		}
 	}
 
@@ -113,7 +82,7 @@ class MixerBot(
 	var serverIcon: String? = null
 
 	init {
-		jda.presence.activity = Activity.playing("UHC at $ip")
+		if (production) jda.presence.activity = Activity.playing("UHC at $ip")
 		jda.addEventListener(this)
 
 		clearTeamVCs()
@@ -166,16 +135,6 @@ class MixerBot(
 				false
 			}
 		}
-	}
-
-	/* disk data reading writing */
-
-	fun saveDiscordData() {
-		val writer = FileWriter(File(DISCORD_DATA_PATH), false)
-
-		writer.write("${token}\n${guildId}")
-
-		writer.close()
 	}
 
 	private class Awaiter(val num: Int, val onComplete: () -> Unit) {

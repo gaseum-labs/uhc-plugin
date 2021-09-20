@@ -10,7 +10,7 @@ import java.util.*
 
 class LinkCommand : MixerCommand(false) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
-		return content.startsWith("%link ")
+		return content.startsWith("${prefix(bot.production)}link ")
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
