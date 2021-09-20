@@ -156,11 +156,16 @@ object ArenaManager {
 		}
 	}
 
-	fun destroyArenas() {
+	fun destroyArenas(world: World) {
 		ongoing.removeIf { game ->
 			destroyArena(game)
 			true
 		}
+
+		destroyStore(world, 1, 1)
+		destroyStore(world, 2, 2)
+
+		spiral.reset()
 	}
 
 	fun destroyArena(arena: Arena) {

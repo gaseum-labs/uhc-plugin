@@ -87,7 +87,7 @@ class AdminCommands : BaseCommand() {
 	fun lobbyCycle(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		ArenaManager.destroyArenas()
+		ArenaManager.destroyArenas(WorldManager.getPVPWorld())
 
 		WorldManager.refreshWorld(WorldManager.PVP_WORLD_NAME, World.Environment.NORMAL, true)
 

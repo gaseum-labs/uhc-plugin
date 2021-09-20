@@ -83,5 +83,6 @@ class UHCPlugin : JavaPlugin() {
 
 	override fun onDisable() {
 		ArenaManager.saveWorldInfo(WorldManager.getPVPWorld())
+		UHC.bot?.stop()
 	}
 }

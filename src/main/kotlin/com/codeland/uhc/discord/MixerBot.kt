@@ -145,6 +145,10 @@ class MixerBot(
 		}
 	}
 
+	fun stop() {
+		jda.shutdownNow()
+	}
+
 	/* ---------------------------- */
 	/*         TEAM UTILITY         */
 	/* ---------------------------- */

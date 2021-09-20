@@ -3,8 +3,9 @@ package com.codeland.uhc.lobbyPvp
 import kotlin.math.abs
 
 class Spiral {
+	/* positive x, positive z, negative x, negative z */
 	var currentDir = 0
-
+	/* x, z */
 	val axes = arrayOf(0, 0)
 	/* positive x, positive z, negative x, negative z */
 	val maxes = arrayOf(0, 0, 0, 0)
@@ -43,20 +44,22 @@ class Spiral {
 	}
 
 	fun toMetadata(): String {
-		return "${axes[0]},${axes[1]},${maxes[0]},${maxes[1]},${maxes[2]},${maxes[3]}"
+		return "${currentDir},${axes[0]},${axes[1]},${maxes[0]},${maxes[1]},${maxes[2]},${maxes[3]}"
 	}
 
 	fun fromMetadata(metadata: String): Boolean {
 		val parts = metadata.split(',')
-		if (parts.size != 6) return false
+		if (parts.size != 7) return false
 
-		val x = parts[0].toIntOrNull() ?: return false
-		val z = parts[1].toIntOrNull() ?: return false
-		val maxX = parts[2].toIntOrNull() ?: return false
-		val maxZ = parts[3].toIntOrNull() ?: return false
-		val minX = parts[4].toIntOrNull() ?: return false
-		val minZ = parts[5].toIntOrNull() ?: return false
+		val currentDir = parts[0].toIntOrNull() ?: return false
+		val x = parts[1].toIntOrNull() ?: return false
+		val z = parts[2].toIntOrNull() ?: return false
+		val maxX = parts[3].toIntOrNull() ?: return false
+		val maxZ = parts[4].toIntOrNull() ?: return false
+		val minX = parts[5].toIntOrNull() ?: return false
+		val minZ = parts[6].toIntOrNull() ?: return false
 
+		this.currentDir = currentDir
 		axes[0] = x
 		axes[1] = z
 		maxes[0] = maxX
@@ -65,6 +68,16 @@ class Spiral {
 		maxes[3] = minZ
 
 		return true
+	}
+
+	fun reset() {
+		currentDir = 0
+		axes[0] = 0
+		axes[1] = 0
+		maxes[0] = 0
+		maxes[1] = 0
+		maxes[2] = 0
+		maxes[3] = 0
 	}
 
 	/* internal */
