@@ -84,11 +84,9 @@ class PlayerData(val uuid: UUID) {
 	var lifeNo = 0
 
 	/* enchant fix */
+	var enchantEventFired = false
 	var enchantCycle: Int = 0
-	var storedOffers: Array<EnchantmentOffer?> = arrayOf(null, null, null)
-	var storedType: Enchant.EnchantType = Enchant.EnchantType.ARMOR
-	var storedShelves: Int = 0
-	var storedHash: Int = 0
+	var storedOffers: List<EnchantmentOffer?> = emptyList()
 
 	var offlineZombie: Zombie? = null
 	set(value) {

@@ -9,6 +9,7 @@ import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.event.Enchant
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
@@ -16,6 +17,7 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.*
+import net.kyori.adventure.text.Component
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -233,5 +235,27 @@ class ParticipantCommands : BaseCommand() {
 		data.timer = 0
 		data.timerGoing = false
 		arena.enterPlayer(sender, true, true)
+	}
+
+	@Subcommand("enchantFix")
+	fun enchantFixHelp(sender: CommandSender, enchantFixType: Enchant.EnchantType) {
+		val names = enchantFixType.options.map { it.enchantment.key.key }
+
+		sender.sendMessage("${ChatColor.GOLD}<< Enchants for ${ChatColor.GOLD}${ChatColor.BOLD}${enchantFixType.name} ${ChatColor.GOLD}>>")
+
+		sender.sendMessage("${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}0  1  3  5  7  9  11 13 15 ${ChatColor.WHITE}| ${ChatColor.WHITE}Shelves")
+		sender.sendMessage("")
+		enchantFixType.options.forEachIndexed { i, option ->
+			sender.sendMessage("${option.levels.joinToString("  ") {
+				"${when (it) {
+					0 -> ChatColor.BLACK
+					1 -> ChatColor.RED
+					2 -> ChatColor.GOLD
+					3 -> ChatColor.YELLOW
+					4 -> ChatColor.GREEN
+					else -> ChatColor.AQUA
+				}}${ChatColor.BOLD}${it}"
+			}} ${ChatColor.WHITE}| ${ChatColor.BLUE}${names[i]}")
+		}
 	}
 }

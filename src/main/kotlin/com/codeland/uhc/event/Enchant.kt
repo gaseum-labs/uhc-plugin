@@ -1,120 +1,209 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.core.PlayerData
+import net.minecraft.network.protocol.game.PacketPlayOutWindowData
 import org.bukkit.Material
+import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftInventoryView
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.EnchantmentOffer
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent
+import org.bukkit.event.inventory.*
+import org.bukkit.inventory.EnchantingInventory
 import org.bukkit.inventory.ItemStack
-import kotlin.math.floor
-import kotlin.math.roundToInt
-import kotlin.random.Random
 
 class Enchant : Listener {
 	@EventHandler
-	fun onGiveEnchants(event: PrepareItemEnchantEvent) {
-		val bonus = event.enchantmentBonus.coerceAtMost(15)
-
-		val playerData = PlayerData.getPlayerData(event.enchanter.uniqueId)
-		val offerReturn = createOffers(event.item, bonus, playerData.enchantCycle)
-
-		if (offerReturn == null) {
-			playerData.storedOffers[0] = null
-			playerData.storedOffers[1] = null
-			playerData.storedOffers[2] = null
-
-		} else {
-			val (generatedOffers, type, hash) = offerReturn
-
-			for (i in 0..2) {
-				playerData.storedOffers[i] = generatedOffers[i]
-				(event.offers as Array<EnchantmentOffer?>)[i] = generatedOffers[i]
-			}
-
-			playerData.storedType = type
-			playerData.storedShelves = bonus
-			playerData.storedHash = hash
+	fun openEnchantingInventory(event: InventoryOpenEvent) {
+		if (event.inventory.type === InventoryType.ENCHANTING) {
+			val playerData = PlayerData.getPlayerData(event.player.uniqueId)
+			playerData.storedOffers = emptyList()
+			playerData.enchantEventFired = false
 		}
 	}
 
 	@EventHandler
-	fun onEnchant(event: EnchantItemEvent) {
+	fun onItemDragToEnchanting(event: InventoryDragEvent) {
+		if (event.inventory.type === InventoryType.ENCHANTING && event.rawSlots.contains(0)) {
+			val playerData = PlayerData.getPlayerData(event.whoClicked.uniqueId)
+			playerData.storedOffers = emptyList()
+			playerData.enchantEventFired = false
+		}
+	}
+
+	@EventHandler
+	fun onMoveItemToEnchanting(event: InventoryClickEvent) {
+		if (event.inventory.type !== InventoryType.ENCHANTING) return
+		val item = event.cursor ?: return
+
+		/* putting item into the enchantment slot */
+		/* taking item out of the enchantment table */
+		if (
+			(
+				(
+					event.action === InventoryAction.PLACE_ALL ||
+					event.action === InventoryAction.PLACE_ONE ||
+					event.action === InventoryAction.PLACE_SOME ||
+					event.action === InventoryAction.SWAP_WITH_CURSOR
+				) && (
+					event.rawSlot == 0
+				)
+			) || (
+				event.action === InventoryAction.MOVE_TO_OTHER_INVENTORY &&
+				event.rawSlot >= 2 &&
+				item.type !== Material.LAPIS_LAZULI
+			) || (
+				(
+					event.action === InventoryAction.MOVE_TO_OTHER_INVENTORY ||
+					event.action === InventoryAction.PICKUP_ALL ||
+					event.action === InventoryAction.PICKUP_HALF ||
+					event.action === InventoryAction.PICKUP_ONE ||
+					event.action === InventoryAction.PICKUP_SOME
+				) && event.rawSlot == 0
+			)
+		) {
+			val playerData = PlayerData.getPlayerData(event.whoClicked.uniqueId)
+			playerData.storedOffers = emptyList()
+			playerData.enchantEventFired = false
+		}
+	}
+
+	@EventHandler
+	fun onPrepareEnchant(event: PrepareItemEnchantEvent) {
 		val playerData = PlayerData.getPlayerData(event.enchanter.uniqueId)
 
-		val offer = playerData.storedOffers[event.whichButton()]
+		if (!playerData.enchantEventFired) ++playerData.enchantCycle
 
-		if (offer != null) {
+		val generatedOffers = createOffers(event.item, event.enchantmentBonus, playerData.enchantCycle)
+
+		if (generatedOffers == null) {
+			playerData.storedOffers = emptyList()
+		} else {
+			for (i in 0..2) {
+				(event.offers as Array<EnchantmentOffer?>)[i] = generatedOffers[i]
+			}
+
+			playerData.storedOffers = generatedOffers
+		}
+
+		playerData.enchantEventFired = true
+	}
+
+	@EventHandler
+	fun onGiveEnchants(event: EnchantItemEvent) {
+		val playerData = PlayerData.getPlayerData(event.enchanter.uniqueId)
+
+		if (playerData.storedOffers.isNotEmpty()) {
+			val offer = playerData.storedOffers[event.whichButton()] ?: return
+
 			event.enchantsToAdd.clear()
-
-			val type = playerData.storedType
-			val shelves = playerData.storedShelves
-			val random = random(playerData.enchantCycle, type.ordinal, shelves, playerData.storedHash)
-
-			val customAddEnchants = arrayListOf(Pair(offer.enchantment, offer.enchantmentLevel))
-
-			for (i in 1..2) {
-				val extra = grabExtraEnchant(type, customAddEnchants, shelves - (i * 4), random)
-				if (extra != null) customAddEnchants.add(extra)
-			}
-
-			customAddEnchants.forEach { (enchantment, level) -> event.enchantsToAdd[enchantment] = level }
-		}
-
-		++playerData.enchantCycle
-	}
-
-	fun random(cycle: Int, typeNo: Int, bonus: Int, hash: Int): Random {
-		return Random(
-			(cycle * EnchantType.TYPE_SIZE * EnchantType.SHELVES_SIZE * EnchantType.ITEMS_SIZE) +
-				(typeNo * EnchantType.SHELVES_SIZE * EnchantType.ITEMS_SIZE) +
-				(bonus * EnchantType.ITEMS_SIZE) +
-				hash
-		)
-	}
-
-	fun grabExtraEnchant(type: EnchantType, exclude: ArrayList<Pair<Enchantment, Int>>, bonus: Int, random: Random): Pair<Enchantment, Int>? {		if (bonus < 0) return null
-		return type.options.map { option ->
-			Pair(option.enchantment, option.getLevel(bonus))
-
-		}.shuffled(random).firstOrNull { pair ->
-			pair.second > 0 && exclude.none { already ->
-				pair.first === already.first || pair.first.conflictsWith(already.first)
-			}
+			event.enchantsToAdd[offer.enchantment] = offer.enchantmentLevel
 		}
 	}
 
-	private fun createOffers(item: ItemStack, bonus: Int, cycle: Int): Triple<List<EnchantmentOffer?>, EnchantType, Int>? {
-		val (type, hash) = EnchantType.get(item.type)
+	private fun createOffers(item: ItemStack, bonus: Int, cycle: Int): List<EnchantmentOffer?>? {
+		val (type, _) = EnchantType.get(item.type)
 		if (type == null) return null
 
-		val random = random(cycle, type.ordinal, bonus, hash)
-		val options = type.options.toMutableList()
+		return arrayOf(
+			tier(bonus) - 2,
+			tier(bonus) - 1,
+			tier(bonus),
+		).mapIndexed { i, tier ->
+			if (tier >= 0) {
+				val optionsList = type.options.filter { it.getLevel(tier) > 0 }
 
-		val availables = arrayOf(
-			Pair((bonus - 8).coerceAtLeast(1), (bonus - 8).coerceAtLeast(1)),
-			Pair((bonus - 4).coerceAtLeast(2), (bonus - 4).coerceAtLeast(2)),
-			Pair((bonus    ).coerceAtLeast(3), (bonus    ).coerceAtLeast(3)),
-		).map { (bonus, cost) ->
-			options.shuffled(random).mapNotNull {
-				val level = it.getLevel(bonus)
-				if (level > 0) {
-					EnchantmentOffer(it.enchantment, level, cost)
-				} else {
+				if (optionsList.isEmpty()) {
 					null
-				}
-			}
-		}.map { it.firstOrNull() }
 
-		return Triple(availables, type, hash)
+				} else {
+					val option = optionsList[(cycle + i) % optionsList.size]
+
+					EnchantmentOffer(option.enchantment, option.getLevel(tier), tierCost(tier))
+				}
+			} else {
+				null
+			}
+		}
+	}
+
+	fun tier(bonus: Int): Int {
+		return (bonus + 1) / 2
+	}
+
+	fun tierCost(tier: Int):  Int {
+		return ((2 * tier) - 1).coerceAtLeast(1)
 	}
 
 	data class EnchantOption(val enchantment: Enchantment, val levels: Array<Int>) {
-		fun getLevel(shelves: Int): Int {
-			return levels[shelves / 2]
+		fun getLevel(tier: Int): Int {
+			return levels[tier]
 		}
+	}
+
+	companion object {
+		val ENCHANT_OPTIONS_TOOL = arrayOf(
+			EnchantOption(Enchantment.DURABILITY,        arrayOf(1, 1, 2, 2, 3, 3, 3, 3, 3)),
+			EnchantOption(Enchantment.DIG_SPEED,         arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 5)),
+			EnchantOption(Enchantment.LOOT_BONUS_BLOCKS, arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
+		)
+
+		val ENCHANT_OPTIONS_ARMOR = arrayOf(
+			EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, arrayOf(1, 1, 1, 2, 2, 3, 3, 4, 4)),
+			EnchantOption(Enchantment.PROTECTION_PROJECTILE,    arrayOf(1, 1, 1, 2, 2, 3, 3, 4, 4)),
+			EnchantOption(Enchantment.PROTECTION_FIRE,          arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 4)),
+			EnchantOption(Enchantment.PROTECTION_EXPLOSIONS,    arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 4)),
+			EnchantOption(Enchantment.THORNS,                   arrayOf(0, 0, 0, 0, 1, 2, 2, 3, 3))
+		)
+
+		/**
+		 * IMPORTANT! do not reorder
+		 * https://wiki.vg/Protocol#Window_Property
+		 */
+		val packetEnchantmentIds = arrayOf(
+			Enchantment.PROTECTION_ENVIRONMENTAL,
+			Enchantment.PROTECTION_FIRE,
+			Enchantment.PROTECTION_FALL,
+			Enchantment.PROTECTION_EXPLOSIONS,
+			Enchantment.PROTECTION_PROJECTILE,
+			Enchantment.OXYGEN,
+			Enchantment.WATER_WORKER,
+			Enchantment.THORNS,
+			Enchantment.DEPTH_STRIDER,
+			Enchantment.FROST_WALKER,
+			Enchantment.BINDING_CURSE,
+			Enchantment.SOUL_SPEED,
+			Enchantment.DAMAGE_ALL,
+			Enchantment.DAMAGE_UNDEAD,
+			Enchantment.DAMAGE_ARTHROPODS,
+			Enchantment.KNOCKBACK,
+			Enchantment.FIRE_ASPECT,
+			Enchantment.LOOT_BONUS_MOBS,
+			Enchantment.SWEEPING_EDGE,
+			Enchantment.DIG_SPEED,
+			Enchantment.SILK_TOUCH,
+			Enchantment.DURABILITY,
+			Enchantment.LOOT_BONUS_BLOCKS,
+			Enchantment.ARROW_DAMAGE,
+			Enchantment.ARROW_KNOCKBACK,
+			Enchantment.ARROW_FIRE,
+			Enchantment.ARROW_INFINITE,
+			Enchantment.LUCK,
+			Enchantment.LURE,
+			Enchantment.LOYALTY,
+			Enchantment.IMPALING,
+			Enchantment.CHANNELING,
+			Enchantment.MULTISHOT,
+			Enchantment.QUICK_CHARGE,
+			Enchantment.PIERCING,
+			Enchantment.MENDING,
+			Enchantment.VANISHING_CURSE,
+		)
 	}
 
 	enum class EnchantType(val items: Array<Material>, val options: Array<EnchantOption>) {
@@ -123,22 +212,19 @@ class Enchant : Listener {
 			Material.DIAMOND_SWORD,
 			Material.NETHERITE_SWORD
 		), arrayOf(
-			EnchantOption(Enchantment.DURABILITY,      arrayOf(1, 2, 3, 0, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.SWEEPING_EDGE,   arrayOf(1, 2, 3, 0, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.KNOCKBACK,       arrayOf(1, 1, 2, 2, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.DAMAGE_ALL,      arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.LOOT_BONUS_MOBS, arrayOf(0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.FIRE_ASPECT,     arrayOf(0, 0, 0, 0, 1, 1, 2, 2))
+			EnchantOption(Enchantment.SWEEPING_EDGE,   arrayOf(1, 2, 3, 3, 3, 3, 3, 3, 3)),
+			EnchantOption(Enchantment.KNOCKBACK,       arrayOf(1, 1, 1, 2, 2, 2, 2, 2, 2)),
+			EnchantOption(Enchantment.DAMAGE_ALL,      arrayOf(1, 1, 2, 2, 2, 3, 3, 3, 4)),
+			EnchantOption(Enchantment.LOOT_BONUS_MOBS, arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
+			EnchantOption(Enchantment.FIRE_ASPECT,     arrayOf(0, 0, 0, 0, 1, 1, 2, 2, 2))
 		)),
 		AXE(arrayOf(
 			Material.IRON_AXE,
 			Material.DIAMOND_AXE,
 			Material.NETHERITE_AXE
 		), arrayOf(
-			EnchantOption(Enchantment.DURABILITY,        arrayOf(1, 2, 3, 0, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.DIG_SPEED,         arrayOf(1, 2, 3, 4, 5, 5, 5, 5)),
-			EnchantOption(Enchantment.LOOT_BONUS_BLOCKS, arrayOf(0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.DAMAGE_ALL,        arrayOf(0, 0, 0, 0, 1, 2, 3, 4))
+			*ENCHANT_OPTIONS_TOOL,
+			EnchantOption(Enchantment.DAMAGE_ALL,        arrayOf(0, 0, 0, 0, 0, 1, 2, 3, 4))
 		)),
 		TOOL(arrayOf(
 			Material.IRON_SHOVEL,
@@ -147,71 +233,69 @@ class Enchant : Listener {
 			Material.IRON_PICKAXE,
 			Material.DIAMOND_PICKAXE,
 			Material.NETHERITE_PICKAXE
-		), arrayOf(
-			EnchantOption(Enchantment.DURABILITY,        arrayOf(1, 2, 3, 0, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.DIG_SPEED,         arrayOf(1, 2, 3, 4, 5, 5, 5, 5)),
-			EnchantOption(Enchantment.LOOT_BONUS_BLOCKS, arrayOf(0, 0, 1, 1, 2, 2, 3, 3))
-		)),
+		), ENCHANT_OPTIONS_TOOL),
 		BOW(arrayOf(
 			Material.BOW
 		), arrayOf(
-			EnchantOption(Enchantment.DURABILITY,      arrayOf(1, 2, 3, 0, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.ARROW_DAMAGE,    arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.ARROW_KNOCKBACK, arrayOf(1, 1, 2, 2, 2, 2, 2, 2)),
-			EnchantOption(Enchantment.ARROW_INFINITE,  arrayOf(0, 0, 0, 0, 0, 0, 1, 1)),
-			EnchantOption(Enchantment.ARROW_FIRE,      arrayOf(0, 0, 0, 0, 0, 0, 1, 1))
+			EnchantOption(Enchantment.ARROW_DAMAGE,    arrayOf(1, 1, 1, 2, 2, 3, 3, 3, 4)),
+			EnchantOption(Enchantment.ARROW_KNOCKBACK, arrayOf(1, 1, 1, 2, 2, 2, 2, 2, 2)),
+			EnchantOption(Enchantment.ARROW_INFINITE,  arrayOf(0, 0, 0, 0, 0, 0, 0, 1, 1)),
+			EnchantOption(Enchantment.ARROW_FIRE,      arrayOf(0, 0, 0, 0, 0, 0, 0, 1, 1))
 		)),
 		CROSSBOW(arrayOf(
 			Material.CROSSBOW
 		), arrayOf(
-			EnchantOption(Enchantment.DURABILITY,   arrayOf(1, 2, 3, 0, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.PIERCING,     arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.QUICK_CHARGE, arrayOf(0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.MULTISHOT,    arrayOf(0, 0, 0, 0, 1, 1, 1, 1))
+			EnchantOption(Enchantment.PIERCING,     arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 4)),
+			EnchantOption(Enchantment.QUICK_CHARGE, arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
+			EnchantOption(Enchantment.MULTISHOT,    arrayOf(0, 0, 0, 0, 1, 1, 1, 1, 1))
 		)),
 		TRIDENT(arrayOf(
 			Material.TRIDENT
 		), arrayOf(
-			EnchantOption(Enchantment.DURABILITY, arrayOf(1, 2, 3, 0, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.LOYALTY,    arrayOf(1, 1, 2, 2, 3, 3, 3, 3)),
-			EnchantOption(Enchantment.RIPTIDE,    arrayOf(0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.CHANNELING, arrayOf(0, 0, 1, 1, 1, 1, 1, 1))
+			EnchantOption(Enchantment.LOYALTY,    arrayOf(1, 1, 1, 2, 2, 2, 3, 3, 3)),
+			EnchantOption(Enchantment.RIPTIDE,    arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
+			EnchantOption(Enchantment.CHANNELING, arrayOf(0, 0, 0, 1, 1, 1, 1, 1, 1))
 		)),
-		ARMOR(arrayOf(
-			Material.IRON_HELMET,
+		CHESTPLATE_LEGGINGS(arrayOf(
 			Material.IRON_CHESTPLATE,
 			Material.IRON_LEGGINGS,
-			Material.IRON_BOOTS,
-			Material.DIAMOND_HELMET,
 			Material.DIAMOND_CHESTPLATE,
 			Material.DIAMOND_LEGGINGS,
-			Material.DIAMOND_BOOTS,
-			Material.NETHERITE_HELMET,
 			Material.NETHERITE_CHESTPLATE,
 			Material.NETHERITE_LEGGINGS,
-			Material.NETHERITE_BOOTS,
+		), ENCHANT_OPTIONS_ARMOR),
+		HELMET(arrayOf(
+			Material.IRON_HELMET,
+			Material.DIAMOND_HELMET,
+			Material.NETHERITE_HELMET,
 		), arrayOf(
-			EnchantOption(Enchantment.DURABILITY,               arrayOf(1, 2, 3, 0, 0, 0, 0, 0)),
-			EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.PROTECTION_PROJECTILE,    arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.PROTECTION_FIRE,          arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.THORNS,                   arrayOf(0, 0, 1, 1, 2, 2, 3, 3))
+			*ENCHANT_OPTIONS_ARMOR,
+			EnchantOption(Enchantment.WATER_WORKER, arrayOf(1, 2, 3, 3, 3, 3, 3, 3, 3)),
+			EnchantOption(Enchantment.OXYGEN,       arrayOf(1, 2, 3, 3, 3, 3, 3, 3, 3)),
+		)),
+		BOOTS(arrayOf(
+			Material.IRON_BOOTS,
+			Material.IRON_BOOTS,
+			Material.IRON_BOOTS,
+		), arrayOf(
+			*ENCHANT_OPTIONS_ARMOR,
+			EnchantOption(Enchantment.DEPTH_STRIDER,   arrayOf(1, 2, 3, 3, 3, 3, 3, 3, 3)),
+			EnchantOption(Enchantment.PROTECTION_FALL, arrayOf(1, 2, 3, 4, 4, 4, 4, 4, 4)),
 		)),
 		BOOK(arrayOf(
 			Material.BOOK
 		), arrayOf(
-			EnchantOption(Enchantment.DIG_SPEED,                arrayOf(1, 2, 3, 4, 5, 5, 5, 5)),
-			EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.PROTECTION_PROJECTILE,    arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.PROTECTION_FIRE,          arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.ARROW_DAMAGE,             arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.DAMAGE_ALL,               arrayOf(1, 1, 2, 2, 3, 3, 4, 4)),
-			EnchantOption(Enchantment.LOYALTY,                  arrayOf(1, 1, 2, 2, 3, 3, 3, 3)),
-			EnchantOption(Enchantment.LOOT_BONUS_BLOCKS,        arrayOf(0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.LOOT_BONUS_MOBS,          arrayOf(0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.THORNS,                   arrayOf(0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.RIPTIDE,                  arrayOf(0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.QUICK_CHARGE,             arrayOf(0, 0, 1, 1, 2, 2, 3, 3))
+			EnchantOption(Enchantment.DIG_SPEED,                arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 5)),
+			EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, arrayOf(1, 1, 1, 2, 2, 3, 3, 4, 4)),
+			EnchantOption(Enchantment.PROTECTION_PROJECTILE,    arrayOf(1, 1, 1, 2, 2, 3, 3, 4, 4)),
+			EnchantOption(Enchantment.ARROW_DAMAGE,             arrayOf(1, 1, 1, 2, 2, 3, 3, 3, 4)),
+			EnchantOption(Enchantment.DAMAGE_ALL,               arrayOf(1, 1, 2, 2, 2, 3, 3, 3, 4)),
+			EnchantOption(Enchantment.LOYALTY,                  arrayOf(1, 1, 1, 2, 2, 2, 3, 3, 3)),
+			EnchantOption(Enchantment.LOOT_BONUS_BLOCKS,        arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
+			EnchantOption(Enchantment.LOOT_BONUS_MOBS,          arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
+			EnchantOption(Enchantment.THORNS,                   arrayOf(0, 0, 0, 0, 1, 2, 2, 3, 3)),
+			EnchantOption(Enchantment.RIPTIDE,                  arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
+			EnchantOption(Enchantment.QUICK_CHARGE,             arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3))
 		));
 
 		companion object {

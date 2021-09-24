@@ -1,6 +1,7 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
@@ -12,6 +13,7 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.*
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.EnumChatFormat
 import net.minecraft.network.chat.ChatComponentText
@@ -22,6 +24,7 @@ import net.minecraft.network.protocol.status.ServerPing
 import net.minecraft.network.syncher.DataWatcher
 import net.minecraft.network.syncher.DataWatcherObject
 import net.minecraft.network.syncher.DataWatcherRegistry
+import net.minecraft.world.inventory.Containers
 import net.minecraft.world.scores.Scoreboard
 import net.minecraft.world.scores.ScoreboardTeam
 import org.bukkit.Bukkit
@@ -29,6 +32,7 @@ import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.InventoryType
 import java.util.*
 import kotlin.experimental.or
 import kotlin.random.Random
@@ -300,5 +304,49 @@ object Packet {
 				event.packet = PacketContainer.fromPacket(PacketStatusOutServerInfo(newPing))
 			}
 		})
+
+		/* set the name of every enchanting table gui */
+		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.OPEN_WINDOW) {
+			override fun onPacketSending(event: PacketEvent) {
+				val packet = event.packet.handle as PacketPlayOutOpenWindow
+
+				if (packet.c() === Containers.m) {
+					event.packet = PacketContainer.fromPacket(
+						PacketPlayOutOpenWindow(
+							packet.b(),
+							Containers.m,
+							Util.nmsGradientString("Replace Item to Cycle Enchants", TextColor.color(0xc40a0a), TextColor.color(0x820874))
+						)
+					)
+				}
+			}
+		})
+
+		///* enchanting table button updates */
+		//protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.WINDOW_DATA) {
+		//	override fun onPacketSending(event: PacketEvent) {
+		//		val packet = event.packet.handle as PacketPlayOutWindowData
+		//		val option = packet.c()
+//
+		//		val playerData = PlayerData.getPlayerData(event.player.uniqueId)
+//
+		//		val openInventory = event.player.openInventory
+		//		val itemInTable = openInventory.getItem(0)
+		//		event.player.sendMessage(Component.text("${itemInTable?.type}"))
+//
+		//		if (playerData.storedOffers.size == 3) {
+		//			val newValue = when (option) {
+		//				in 0..2 -> playerData.storedOffers[option]?.cost
+		//				in 4..6 -> Enchant.packetEnchantmentIds.indexOf(playerData.storedOffers[option - 4]?.enchantment)
+		//				in 7..9 -> playerData.storedOffers[option - 7]?.enchantmentLevel
+		//				else -> null
+		//			}
+//
+		//			if (newValue != null) {
+		//				event.packet = PacketContainer.fromPacket(PacketPlayOutWindowData(packet.b(), packet.c(), newValue))
+		//			}
+		//		}
+		//	}
+		//})
 	}
 }
