@@ -23,7 +23,8 @@ class LeatherRegen(game: Game): Regen(game, 510) {
 		return block.type === Material.GRASS_BLOCK ||
 			block.type === Material.DIRT ||
 			block.type === Material.COARSE_DIRT ||
-			block.type === Material.PODZOL
+			block.type === Material.PODZOL ||
+			block.type === Material.GRAVEL
 	}
 
 	fun spawnIn(block: Block): Boolean {
@@ -31,7 +32,11 @@ class LeatherRegen(game: Game): Regen(game, 510) {
 		block.type === Material.GRASS ||
 		block.type === Material.TALL_GRASS ||
 		block.type === Material.FERN ||
-		block.type === Material.LARGE_FERN
+		block.type === Material.LARGE_FERN ||
+		block.type === Material.SUGAR_CANE ||
+		block.type === Material.POPPY ||
+		block.type === Material.DANDELION ||
+		block.type === Material.SNOW
 	}
 
 	override fun place(chunk: Chunk): Boolean {
