@@ -275,8 +275,8 @@ class Enchant : Listener {
 		)),
 		BOOTS(arrayOf(
 			Material.IRON_BOOTS,
-			Material.IRON_BOOTS,
-			Material.IRON_BOOTS,
+			Material.DIAMOND_BOOTS,
+			Material.NETHERITE_BOOTS,
 		), arrayOf(
 			*ENCHANT_OPTIONS_ARMOR,
 			EnchantOption(Enchantment.DEPTH_STRIDER,   arrayOf(1, 2, 3, 3, 3, 3, 3, 3, 3)),
