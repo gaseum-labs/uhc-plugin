@@ -14,7 +14,6 @@ class SpawnPiglin : SpawnInfo() {
 
 	override fun onSpawn(block: Block, spawnCycle: Int, entity: LivingEntity) {
 		entity as Piglin
-
 		entity.setAdult()
 		entity.canPickupItems = true
 	}

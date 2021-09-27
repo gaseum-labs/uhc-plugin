@@ -2,6 +2,7 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.customSpawning.CustomSpawningType
+import com.codeland.uhc.customSpawning.SpawningPlayerData
 import com.codeland.uhc.event.Enchant
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.LoadoutGui
@@ -68,7 +69,7 @@ class PlayerData(val uuid: UUID) {
 
 	/* custom spawning */
 	val spawningData = CustomSpawningType.values().map {
-		CustomSpawningType.SpawningPlayerData()
+		SpawningPlayerData()
 	}
 
 	/* other stuff */

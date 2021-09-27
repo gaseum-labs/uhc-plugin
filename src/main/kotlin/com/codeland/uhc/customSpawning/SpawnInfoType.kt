@@ -14,10 +14,11 @@ enum class SpawnInfoType(val spawnInfo: SpawnInfo) {
 
 	ZOMBIE_PIGLIN(SpawnZombiePiglin()),
 	PIGLIN(SpawnPiglin()),
-	BLAZE(SpawnBlaze()),
 	MAGMA_CUBE(SpawnMagmaCube()),
 	HOGLIN(SpawnHoglin()),
 	GHAST(SpawnGhast()),
+
+	BLAZE(SpawnBlaze()),
 
 	NETHER_DEFAULT(NetherDefaultSpawn()),
 	NETHER_SPECIAL(NetherSpecialSpawn()),

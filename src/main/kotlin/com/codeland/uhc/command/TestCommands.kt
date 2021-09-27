@@ -19,17 +19,14 @@ import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
-import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
-import kotlin.math.ceil
 
 @CommandAlias("uhct")
 class TestCommands : BaseCommand() {
@@ -180,7 +177,7 @@ class TestCommands : BaseCommand() {
 		val number = CustomSpawning.calcPlayerMobs(type, testPlayer)
 
 		Action.sendGameMessage(sender, "${testPlayer.name}'s ${type.name.lowercase()} mobcap: $number out of ${
-			PlayerData.getPlayerData(testPlayer.uniqueId).spawningData[type.ordinal].getMobCap()
+			PlayerData.getPlayerData(testPlayer.uniqueId).spawningData[type.ordinal].intCap()
 		}")
 	}
 
