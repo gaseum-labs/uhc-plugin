@@ -163,8 +163,8 @@ object CustomSpawning {
 		spawnPlayers.forEach { (player, data) -> data.cap = type.getCap(player) }
 
 		spawnPlayers.forEachIndexed { i, (player, data) ->
-			for (j in 0 until i) {
-				val (otherPlayer, otherData) = spawnPlayers[i]
+			for (j in i + 1 until spawnPlayers.size) {
+				val (otherPlayer, otherData) = spawnPlayers[j]
 
 				val location1 = player.location
 				val location2 = otherPlayer.location
@@ -184,6 +184,9 @@ object CustomSpawning {
 
 					data.cap -= type.getCap(otherPlayer) * percentIntersected / 2
 					otherData.cap -= type.getCap(player) * percentIntersected / 2
+
+					if (data.cap < 0.0) data.cap = 0.0
+					if (otherData.cap < 0.0) otherData.cap = 0.0
 				}
 			}
 		}
