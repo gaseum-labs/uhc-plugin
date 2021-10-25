@@ -30,7 +30,7 @@ import java.time.Duration
 import java.util.*
 import kotlin.math.roundToInt
 
-class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
+class Game(val config: GameConfig, val initialRadius: Int, val world: World, val otherWorld: World) {
 	var phase = getPhase(PhaseType.GRACE)
 
 	var naturalRegeneration = UHCProperty(false)
@@ -336,6 +336,14 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World) {
 	private fun respawnLocation(): Location {
 		return PlayerSpreader.spreadSinglePlayer(world, (world.worldBorder.size / 2) - 5)
 			?: Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
+	}
+
+	fun getOverworld(): World {
+		return if (world.environment === World.Environment.NORMAL) world else otherWorld
+	}
+
+	fun getNetherWorld(): World {
+		return if (world.environment === World.Environment.NETHER) world else otherWorld
 	}
 
 	/* other */

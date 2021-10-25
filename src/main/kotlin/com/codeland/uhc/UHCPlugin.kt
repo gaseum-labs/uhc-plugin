@@ -9,12 +9,12 @@ import com.codeland.uhc.event.*
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.util.GoogleDDNSUpdater
-import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.WorldGenManager
 import org.bukkit.ChatColor
 import org.bukkit.plugin.java.JavaPlugin
+import kotlin.system.exitProcess
 
 class UHCPlugin : JavaPlugin() {
 	init {
@@ -77,13 +77,18 @@ class UHCPlugin : JavaPlugin() {
 		})
 
 		server.scheduler.scheduleSyncDelayedTask(this) {
-			WorldManager.init()
+			val initError = WorldManager.init()
+			if (initError != null) {
+				println(initError)
+				exitProcess(3)
+			}
+
 			UHC.startLobby()
 		}
 	}
 
 	override fun onDisable() {
-		ArenaManager.saveWorldInfo(WorldManager.getPVPWorld())
+		ArenaManager.saveWorldInfo(WorldManager.pvpWorld)
 		UHC.bot?.stop()
 	}
 }

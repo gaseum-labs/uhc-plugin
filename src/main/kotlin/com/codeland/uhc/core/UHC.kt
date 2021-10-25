@@ -4,15 +4,11 @@ import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
 import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.Portal
 import com.codeland.uhc.event.Trader
-import com.codeland.uhc.gui.gui.CreateGameGui
-import com.codeland.uhc.lobbyPvp.Arena
-import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.SchedulerUtil
@@ -24,7 +20,6 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
-import net.minecraft.world.BossBattle
 import org.bukkit.*
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
@@ -34,7 +29,6 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.math.ceil
 import kotlin.math.pow
-import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 object UHC {
@@ -42,7 +36,7 @@ object UHC {
 
 	var game: Game? = null
 	var timer = 0
-	var timerGoing = false
+	var countdownTimerGoing = false
 
 	var teleportGroups = HashMap<UUID, Location>()
 	var worldRadius: Int = 375
@@ -101,8 +95,8 @@ object UHC {
 				ledgerTrailTick(currentGame, currentTick)
 
 				if (currentTick % 20 == 0) {
-					currentGame.updateMobCaps(WorldManager.getGameWorldGame())
-					currentGame.updateMobCaps(WorldManager.getNetherWorldGame())
+					currentGame.updateMobCaps(currentGame.world)
+					currentGame.updateMobCaps(currentGame.otherWorld)
 					containSpecs()
 				}
 
@@ -119,7 +113,7 @@ object UHC {
 				if (switchResult) currentGame.nextPhase()
 				if (currentGame.phase !is Postgame) ++timer
 
-			} else if (currentTick % 20 == 0 && timerGoing) {
+			} else if (currentTick % 20 == 0 && countdownTimerGoing) {
 				++timer
 
 				if (timer < 0) {
@@ -134,14 +128,20 @@ object UHC {
 					}}
 
 				} else if (timer == 0) {
+					countdownTimerGoing = false
+
+					val (gameWorld, netherWorld) = preGameConfig.getWorlds()
+					if (gameWorld == null || netherWorld == null) return@everyTick
+
 					val newGame = Game(
 						preGameConfig,
 						worldRadius,
-						preGameConfig.getWorld()!!
+						gameWorld,
+						netherWorld
 					)
 
 					/* set border in each game dimension */
-					listOf(WorldManager.getGameWorldGame(), WorldManager.getNetherWorldGame()).forEach { world ->
+					listOf(gameWorld, netherWorld).forEach { world ->
 						world.worldBorder.setCenter(0.5, 0.5)
 						world.worldBorder.size = worldRadius * 2 + 1.0
 
@@ -215,17 +215,21 @@ object UHC {
 		WorldManager.refreshGameWorlds()
 
 		/* get where players are teleporting */
-		val world = preGameConfig.getWorld()
-		if (world == null) {
+		val (defaultWorld, otherWorld) = preGameConfig.getWorlds()
+		if (defaultWorld == null || otherWorld == null) {
 			messageStream(true, "Worlds did not initialize")
 			return false
 		}
 
 		val tempTeleportLocations = PlayerSpreader.spreadPlayers(
-			world,
+			defaultWorld,
 			TeamData.teams.size,
 			worldRadius - 16.0,
-			if (world.environment === World.Environment.NETHER) PlayerSpreader::findYMid else PlayerSpreader::findYTop
+			if (defaultWorld.environment === World.Environment.NETHER) {
+				PlayerSpreader::findYMid
+			} else {
+				PlayerSpreader::findYTop
+			}
 		)
 
 		if (tempTeleportLocations.isEmpty()) {
@@ -243,7 +247,7 @@ object UHC {
 		}
 
 		timer = -11
-		timerGoing = true
+		countdownTimerGoing = true
 		preGameConfig.lock = true
 
 		messageStream(false, "Starting UHC")
@@ -262,30 +266,30 @@ object UHC {
 	}
 
 	fun containSpecs() {
-		val radius = game?.initialRadius ?: return
+		val currentGame = game ?: return
+		val radius = currentGame.initialRadius
 
-		val gameWorld = WorldManager.getGameWorld()
-		val netherWorld = WorldManager.getNetherWorld()
+		Bukkit.getOnlinePlayers()
+			.filter { it.world === currentGame.world || it.world === currentGame.otherWorld }
+			.forEach { player ->
+				if (player.gameMode == GameMode.SPECTATOR) {
+					val locX = player.location.blockX.toDouble()
+					val locZ = player.location.blockZ.toDouble()
 
-		Bukkit.getOnlinePlayers().filter { it.world === gameWorld || it.world === netherWorld }.forEach { player ->
-			if (player.gameMode == GameMode.SPECTATOR) {
-				val locX = player.location.blockX.toDouble()
-				val locZ = player.location.blockZ.toDouble()
+					val x = when {
+						locX > radius -> radius.toDouble()
+						locX < -radius -> -radius.toDouble()
+						else -> locX
+					}
 
-				val x = when {
-					locX > radius -> radius.toDouble()
-					locX < -radius -> -radius.toDouble()
-					else -> locX
+					val z = when {
+						locZ > radius -> radius.toDouble()
+						locZ < -radius -> -radius.toDouble()
+						else -> locZ
+					}
+
+					if (x != locX || z != locZ) player.teleport(player.location.set(x + 0.5, player.location.y, z + 0.5))
 				}
-
-				val z = when {
-					locZ > radius -> radius.toDouble()
-					locZ < -radius -> -radius.toDouble()
-					else -> locZ
-				}
-
-				if (x != locX || z != locZ) player.teleport(player.location.set(x + 0.5, player.location.y, z + 0.5))
 			}
-		}
 	}
 }

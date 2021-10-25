@@ -50,7 +50,7 @@ object ArenaManager {
 			}
 		}
 
-		if (coords == null) arena.prepareArena(WorldManager.getPVPWorld())
+		if (coords == null) arena.prepareArena(WorldManager.pvpWorld)
 
 		ongoing.add(arena)
 		typeList<Arena>(arena.type).add(arena)
@@ -79,7 +79,7 @@ object ArenaManager {
 
 	fun perTick(currentTick: Int) {
 		if (currentTick % 4 == 0) {
-			WorldManager.getPVPWorld().entities.forEach { entity ->
+			WorldManager.pvpWorld.entities.forEach { entity ->
 				if (
 					entity is AbstractArrow &&
 					onEdge(entity.location.blockX, entity.location.blockZ)
@@ -107,8 +107,7 @@ object ArenaManager {
 			/* contain spectators */
 			Bukkit.getOnlinePlayers()
 				.filter {
-					it.gameMode == GameMode.SPECTATOR &&
-					it.world.name == WorldManager.PVP_WORLD_NAME
+					it.gameMode == GameMode.SPECTATOR && it.world === WorldManager.pvpWorld
 				}.forEach { player ->
 					teleportIn(player,
 						contain(
@@ -127,8 +126,7 @@ object ArenaManager {
 			/* contain creatives */
 			Bukkit.getOnlinePlayers()
 				.filter {
-					it.gameMode == GameMode.CREATIVE &&
-					it.world.name == WorldManager.PVP_WORLD_NAME
+					it.gameMode == GameMode.CREATIVE && it.world === WorldManager.pvpWorld
 				}.forEach { player ->
 					val arena = playersArena(player.uniqueId) ?: return@forEach
 
@@ -180,7 +178,7 @@ object ArenaManager {
 		val typeList = typeList<Arena>(arena.type)
 		typeList.removeIf { it === arena }
 
-		destroyStore(WorldManager.getPVPWorld(), arena.x * ARENA_STRIDE, arena.z * ARENA_STRIDE)
+		destroyStore(WorldManager.pvpWorld, arena.x * ARENA_STRIDE, arena.z * ARENA_STRIDE)
 
 		if (arena.type === ArenaType.PARKOUR) {
 			typeList as ArrayList<ParkourArena>

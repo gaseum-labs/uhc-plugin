@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.core.phase.phases.Endgame
@@ -209,16 +210,18 @@ class Portal : Listener {
 		}
 
 		fun sendThroughPortal(uuid: UUID, player: Player?): Boolean {
+			val game = UHC.game ?: return false
 			val entity = player ?: PlayerData.getPlayerData(uuid).offlineZombie ?: return false
 
 			/* override default portal creation behavior */
 
 			/* going to the nether if in the game world */
 			/* going to the game world if in nether */
-			val exitWorld = if (entity.world.name == WorldManager.GAME_WORLD_NAME)
-				WorldManager.getNetherWorldGame()
-			else
-				WorldManager.getGameWorldGame()
+			val exitWorld = if (entity.world === game.getOverworld()) {
+				game.getNetherWorld()
+			} else {
+				game.getOverworld()
+			}
 
 			val entrancePortalBlock = findPlayersPortal(entity.world, entity.location)
 

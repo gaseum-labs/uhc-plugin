@@ -43,7 +43,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 				true
 
 			} else {
-				val world = WorldManager.getPVPWorld()
+				val world = WorldManager.pvpWorld
 
 				val positions = startingPositions(teams)
 
@@ -98,7 +98,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 		/* fake border */
 		val border = WorldBorder()
-		border.world = (WorldManager.getPVPWorld() as CraftWorld).handle
+		border.world = (WorldManager.pvpWorld as CraftWorld).handle
 		val (centerX, centerZ) = getCenter()
 		border.setCenter(centerX.toDouble(), centerZ.toDouble())
 		border.size = ArenaManager.BORDER.toDouble()
@@ -162,13 +162,12 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 	}
 
 	fun playerIsAlive(player: Player): Boolean {
-		return player.location.world.name == WorldManager.PVP_WORLD_NAME &&
-			player.gameMode != GameMode.SPECTATOR
+		return player.location.world === WorldManager.pvpWorld &&
+			player.gameMode !== GameMode.SPECTATOR
 	}
 
 	fun playerIsParticipating(uuid: UUID): Boolean {
-		val player = Bukkit.getPlayer(uuid) ?: return false
-		return player.location.world.name == WorldManager.PVP_WORLD_NAME
+		return Bukkit.getPlayer(uuid)?.location?.world === WorldManager.pvpWorld
 	}
 
 	fun getCenter(): Pair<Int, Int> = Companion.getCenter(x, z)

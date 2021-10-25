@@ -1,8 +1,8 @@
 
 plugins {
     id 'idea'
-    id 'com.github.johnrengelman.shadow' version '7.0.0'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.10'
+    id 'com.github.johnrengelman.shadow' version '7.1.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
 }
 
 idea {
@@ -13,9 +13,8 @@ idea {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "16"
-    kotlinOptions.javaParameters = true
     kotlinOptions {
+        jvmTarget = "16"
         languageVersion = "1.5"
         apiVersion = "1.5"
     }

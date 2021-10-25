@@ -9,6 +9,7 @@ import net.minecraft.network.chat.ChatComponentText
 import net.minecraft.network.protocol.game.PacketPlayOutBoss
 import net.minecraft.world.BossBattle
 import org.bukkit.ChatColor
+import org.bukkit.World
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 
@@ -81,7 +82,7 @@ object UHCBar {
 					BossBattle.BarColor.g
 				)
 			}
-			player.world.name == WorldManager.LOBBY_WORLD_NAME -> {
+			player.world === WorldManager.lobbyWorld -> {
 				val phase = UHC.game?.phase
 				val phaseType = phase?.phaseType
 

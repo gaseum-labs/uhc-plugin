@@ -1,9 +1,9 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
-import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import org.bukkit.Bukkit
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Biome
@@ -12,7 +12,7 @@ import kotlin.random.Random
 class NetherIndicatorPlacer(size: Int) : ImmediateChunkPlacer(size) {
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		SchedulerUtil.nextTick {
-			val netherChunk = WorldManager.getNetherWorld()?.getChunkAt(chunk.x, chunk.z) ?: return@nextTick
+			val netherChunk = Bukkit.getWorld(WorldManager.NETHER_WORLD_NAME)?.getChunkAt(chunk.x, chunk.z) ?: return@nextTick
 
 			for (i in 0..20) {
 				val x = Random.nextInt(0, 16)

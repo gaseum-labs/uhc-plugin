@@ -87,7 +87,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onSave(event: WorldSaveEvent) {
-		if (event.world.name == WorldManager.PVP_WORLD_NAME) {
+		if (event.world === WorldManager.pvpWorld) {
 			ArenaManager.saveWorldInfo(event.world)
 		}
 	}
@@ -193,7 +193,7 @@ class EventListener : Listener {
 		if (event.entity.entitySpawnReason === CreatureSpawnEvent.SpawnReason.REINFORCEMENTS) {
 			event.isCancelled = true
 
-		} else if (event.entity.world.name == WorldManager.LOBBY_WORLD_NAME) {
+		} else if (event.entity.world === WorldManager.lobbyWorld) {
 			event.isCancelled = true
 
 		/* witch poison nerf */
@@ -581,14 +581,18 @@ class EventListener : Listener {
 	@EventHandler
 	fun onInteract(event: PlayerInteractEvent) {
 		val block = event.clickedBlock ?: return
-		if (event.action === Action.RIGHT_CLICK_BLOCK && block.type === Material.RESPAWN_ANCHOR && block.world.name == WorldManager.LOBBY_WORLD_NAME) {
+		if (
+			event.action === Action.RIGHT_CLICK_BLOCK &&
+			block.type === Material.RESPAWN_ANCHOR &&
+			block.world === WorldManager.lobbyWorld
+		) {
 			event.isCancelled = true
 		}
 	}
 
 	@EventHandler
 	fun onVehiclePlace(event: VehicleCreateEvent) {
-		if (event.vehicle.world.name == WorldManager.LOBBY_WORLD_NAME) event.isCancelled = true
+		if (event.vehicle.world === WorldManager.lobbyWorld) event.isCancelled = true
 	}
 
 	@EventHandler

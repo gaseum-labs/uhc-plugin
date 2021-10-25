@@ -20,8 +20,12 @@ object Lobby {
 	val LOBBY_RADIUS = 96
 
 	fun lobbyLocation(uhc: UHC): Location {
-		val world = WorldManager.getLobbyWorld()
-		return Location(world, 0.5, Util.topBlockY(world, 0, 0) + 1.0, 0.5)
+		return Location(
+			WorldManager.lobbyWorld,
+			0.5,
+			Util.topBlockY(WorldManager.lobbyWorld, 0, 0) + 1.0,
+			0.5
+		)
 	}
 
 	fun resetPlayerStats(player: Player) {

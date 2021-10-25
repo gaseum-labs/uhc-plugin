@@ -1,6 +1,5 @@
 package com.codeland.uhc.core
 
-import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.CreateGameGui
 import com.codeland.uhc.quirk.QuirkType
@@ -87,11 +86,11 @@ class GameConfig {
 
 	/* getters */
 
-	fun getWorld(): World? {
+	fun getWorlds(): Pair<World?, World?> {
 		return if (defaultWorldEnvironment.get() === World.Environment.NORMAL) {
-			WorldManager.getGameWorld()
+			Pair(WorldManager.gameWorld, WorldManager.netherWorld)
 		} else {
-			WorldManager.getNetherWorld()
+			Pair(WorldManager.netherWorld, WorldManager.gameWorld)
 		}
 	}
 
@@ -99,14 +98,14 @@ class GameConfig {
 		return worldGenEnabled[type.ordinal].get()
 	}
 
-	fun phaseTime(phaseType: PhaseType): Int {
-		return when (phaseType) {
-			PhaseType.GRACE -> graceTime.get()
-			PhaseType.SHRINK -> shrinkTime.get()
-			PhaseType.ENDGAME -> collapseTime.get()
-			PhaseType.POSTGAME -> 0
-		}
-	}
+	//fun phaseTime(phaseType: PhaseType): Int {
+	//	return when (phaseType) {
+	//		PhaseType.GRACE -> graceTime.get()
+	//		PhaseType.SHRINK -> shrinkTime.get()
+	//		PhaseType.ENDGAME -> collapseTime.get()
+	//		PhaseType.POSTGAME -> 0
+	//	}
+	//}
 
 	var gui = GuiManager.register(CreateGameGui(this))
 }

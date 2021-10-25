@@ -45,9 +45,9 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 
 	override fun perSecond(remainingSeconds: Int) {
 		/* delete animals outside the border so new ones can spawn */
-		val overworld = WorldManager.getGameWorld() ?: return
+		val overworld = game.getOverworld()
 
-		val killRadius = (overworld.worldBorder.size / 2) + 8
+		val killRadius = (game.world.worldBorder.size / 2) + 8
 
 		overworld.entities.forEach { entity ->
 			if (

@@ -21,73 +21,55 @@ object WorldManager {
 	const val BAD_NETHER_WORLD_NAME = "world_nether"
 	const val END_WORLD_NAME = "world_the_end"
 
-	var pregenTaskID = -1
+	/* cached worlds */
 
-	fun init() {
-		if (existsUnloaded(PVP_WORLD_NAME)) {
-			recoverWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
-		} else {
-			refreshWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
-		}
+	lateinit var lobbyWorld: World
+	private set
+	lateinit var pvpWorld: World
+	private set
+	var gameWorld: World? = null
+	private set
+	var netherWorld: World? = null
+	private set
+
+	/* */
+
+	fun init(): String? {
+		pvpWorld = recoverWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
+			?: return "PVP world could not be loaded"
 
 		Bukkit.unloadWorld(END_WORLD_NAME, false)
 		Bukkit.unloadWorld(BAD_NETHER_WORLD_NAME, false)
-
 		Bukkit.unloadWorld(GAME_WORLD_NAME, true)
 		Bukkit.unloadWorld(NETHER_WORLD_NAME, true)
 
-		prepareWorld(getLobbyWorld())
+		lobbyWorld = Bukkit.getWorld(LOBBY_WORLD_NAME)
+			?: return "Lobby world could not be loaded"
+
+		prepareWorld(lobbyWorld)
+
+		return null
 	}
 
 	fun refreshGameWorlds() {
-		refreshWorld(GAME_WORLD_NAME, World.Environment.NORMAL, false)
-		refreshWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
-	}
-
-	fun recoverGameWorlds(): Boolean {
-		val existed0 = recoverWorld(GAME_WORLD_NAME, World.Environment.NORMAL, false)
-		val existed1 = recoverWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
-
-		return existed0 || existed1
+		gameWorld = refreshWorld(GAME_WORLD_NAME, World.Environment.NORMAL, false)
+		netherWorld = refreshWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
 	}
 
 	fun destroyGameWorlds() {
 		destroyWorld(GAME_WORLD_NAME)
 		destroyWorld(NETHER_WORLD_NAME)
-	}
 
-	fun getLobbyWorld(): World {
-		return Bukkit.getWorlds()[0]
-	}
-
-	fun getPVPWorld(): World {
-		return Bukkit.getWorld(PVP_WORLD_NAME) ?: Bukkit.getWorlds()[0]
-	}
-
-	fun getGameWorld(): World? {
-		return Bukkit.getWorld(GAME_WORLD_NAME)
-	}
-
-	fun getNetherWorld(): World? {
-		return Bukkit.getWorld(NETHER_WORLD_NAME)
-	}
-
-	/* unsafe versions that should only be used during the game */
-
-	fun getGameWorldGame(): World {
-		return Bukkit.getWorld(GAME_WORLD_NAME)!!
-	}
-
-	fun getNetherWorldGame(): World {
-		return Bukkit.getWorld(NETHER_WORLD_NAME)!!
+		gameWorld = null
+		netherWorld = null
 	}
 
 	fun isNonGameWorld(world: World): Boolean {
-		return world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME
+		return world === lobbyWorld || world === pvpWorld
 	}
 
 	fun isGameWorld(world: World): Boolean {
-		return world.name == GAME_WORLD_NAME || world.name == NETHER_WORLD_NAME
+		return world === gameWorld || world === netherWorld
 	}
 
 	fun existsUnloaded(name: String): Boolean {
@@ -106,7 +88,7 @@ object WorldManager {
 		if (world.name == GAME_WORLD_NAME) {
 			ChunkPlacerHolderType.resetAll(world.seed)
 
-		} else if (isNonGameWorld(world)) {
+		} else if (world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME) {
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
 			world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
 			world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
@@ -148,7 +130,7 @@ object WorldManager {
 		return oldWorld
 	}
 
-	fun refreshWorld(name: String, environment: World.Environment, structures: Boolean) {
+	fun refreshWorld(name: String, environment: World.Environment, structures: Boolean): World? {
 		destroyWorld(name)
 
 		val creator = WorldCreator(name).environment(environment).generateStructures(structures)
@@ -156,20 +138,20 @@ object WorldManager {
 		val world = creator.createWorld()
 
 		if (world != null) prepareWorld(world)
+
+		return world
 	}
 
-	fun recoverWorld(name: String, environment: World.Environment, structures: Boolean): Boolean {
+	fun recoverWorld(name: String, environment: World.Environment, structures: Boolean): World? {
 		return if (existsUnloaded(name)) {
 			val world = WorldCreator(name).createWorld()
 
 			if (world != null) prepareWorld(world)
 
-			true
+			world
 
 		} else {
 			refreshWorld(name, environment, structures)
-
-			false
 		}
 	}
 }

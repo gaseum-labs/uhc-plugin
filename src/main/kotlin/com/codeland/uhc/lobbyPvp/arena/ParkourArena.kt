@@ -106,7 +106,7 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID): Arena(Ar
 	}
 
 	fun defaultStart(): Block {
-		val world = WorldManager.getPVPWorld()
+		val world = WorldManager.pvpWorld
 		val (centerX, centerZ) = getCenter()
 
 		return world.getBlockAt(centerX, Util.topBlockY(world, centerX, centerZ), centerZ)

@@ -21,8 +21,8 @@ object CustomSpawning {
 		spawningData: SpawningPlayerData,
 		game: Game
 	): SpawnInfo? {
-		return when (player.world.name) {
-			WorldManager.GAME_WORLD_NAME -> {
+		return when (player.world) {
+			WorldManager.gameWorld -> {
 				if (type.gameSpawnInfoList.isEmpty()) return null
 
 				val supplementalList = ArrayList<SpawnInfo>()
@@ -47,7 +47,7 @@ object CustomSpawning {
 				else
 					type.gameSpawnInfoList[spawningData.index]
 			}
-			WorldManager.NETHER_WORLD_NAME -> {
+			WorldManager.netherWorld -> {
 				if (type.netherSpawnInfoList.isEmpty()) return null
 
 				/* wrap spawn index */

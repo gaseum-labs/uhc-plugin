@@ -20,7 +20,7 @@ class SpectatePvp(index: Int): GuiItem(index) {
 
 			player.gameMode = GameMode.SPECTATOR
 			player.teleport(Location(
-				WorldManager.getPVPWorld(),
+				WorldManager.pvpWorld,
 				center.first.toDouble(),
 				128.0,
 				center.second.toDouble()
