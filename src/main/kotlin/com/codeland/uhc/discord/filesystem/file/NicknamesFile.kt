@@ -1,12 +1,15 @@
 package com.codeland.uhc.discord.filesystem.file
 
-import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.discord.filesystem.DiscordFile
-import com.google.gson.*
+import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Result
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.*
-import kotlin.collections.ArrayList
 
 class NicknamesFile(header: String, channelName: String) : DiscordFile<NicknamesFile.Companion.Nicknames>(header, channelName) {
 	companion object {
@@ -16,7 +19,7 @@ class NicknamesFile(header: String, channelName: String) : DiscordFile<Nicknames
 		)
 	}
 
-	override fun fromStream(stream: InputStream, onError: (String) -> Unit): Nicknames? {
+	override fun fromStream(stream: InputStream): Result<Nicknames> {
 		val minecraftIds = ArrayList<UUID>()
 		val nicknames = ArrayList<ArrayList<String>>()
 
@@ -24,14 +27,14 @@ class NicknamesFile(header: String, channelName: String) : DiscordFile<Nicknames
 			val gson = Gson().fromJson(InputStreamReader(stream), ArrayList::class.java) as ArrayList<Map<String, Any>>
 
 			gson.forEach { element ->
-				minecraftIds.add(UUID.fromString(element["id"] as String))
-				nicknames.add(element["names"] as ArrayList<String>)
+				minecraftIds.add(UUID.fromString(element["id"] as? String ?: return DiscordFilesystem.fieldError("id", "string")))
+				nicknames.add(element["names"] as? ArrayList<String> ?: return DiscordFilesystem.fieldError("names", "array"))
 			}
 
-			Nicknames(minecraftIds, nicknames)
+			Good(Nicknames(minecraftIds, nicknames))
 
 		} catch (ex: Exception) {
-			onError(ex.message ?: "Unknown JSON error").void()
+			Bad(ex.message ?: "Unknown JSON error")
 		}
 	}
 

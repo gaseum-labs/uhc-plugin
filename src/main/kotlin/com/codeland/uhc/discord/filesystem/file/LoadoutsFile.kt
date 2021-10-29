@@ -2,8 +2,12 @@ package com.codeland.uhc.discord.filesystem.file
 
 import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.discord.filesystem.DiscordFile
+import com.codeland.uhc.discord.filesystem.DiscordFilesystem
 import com.codeland.uhc.lobbyPvp.Loadout
 import com.codeland.uhc.lobbyPvp.Loadouts
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Result
 import com.google.gson.*
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -19,7 +23,7 @@ class LoadoutsFile(header: String, channelName: String): DiscordFile<Loadouts>(h
 	/* ids will be omitted if they are -1 */
 	/* ids are encoded as ascii characters from ' ' (0) to '}' (105)*/
 	/* options will be omitted if they are -1 */
-	/* options are encoded as ascii characters from ' ' (0) fto '}' (105)*/
+	/* options are encoded as ascii characters from ' ' (0) to '}' (105)*/
 
 	private fun loadoutToString(loadout: Loadout): String {
 		val builder = StringBuilder(Loadout.LOADOUT_SIZE * 2)
@@ -69,41 +73,41 @@ class LoadoutsFile(header: String, channelName: String): DiscordFile<Loadouts>(h
 		return loadout
 	}
 
-	override fun fromStream(stream: InputStream, onError: (String) -> Unit): Loadouts? {
+	override fun fromStream(stream: InputStream): Result<Loadouts> {
 		val uuids = ArrayList<UUID>()
 		val loadouts = ArrayList<Array<Loadout>>()
 
 		return try {
-			val array = Gson().fromJson(InputStreamReader(stream), ArrayList::class.java) as ArrayList<Map<String, Any>>
+			val array = Gson().fromJson(InputStreamReader(stream), ArrayList::class.java) as ArrayList<Map<String, *>>
 
 			array.forEach { element ->
-				uuids.add(UUID.fromString(element["id"] as String))
+				uuids.add(UUID.fromString(element["id"] as? String ?: return DiscordFilesystem.fieldError("id", "string")))
 
-				val slotsElement = element["slots"] as ArrayList<String>
-				if (slotsElement.size != Loadouts.NUM_SLOTS) return onError("There must be ${Loadouts.NUM_SLOTS} slots").void()
+				val slotsElement = element["slots"] as? ArrayList<String> ?: return DiscordFilesystem.fieldError("slots", "array")
+				if (slotsElement.size != Loadouts.NUM_SLOTS) return Bad("There must be ${Loadouts.NUM_SLOTS} slots")
 
 				val slots = Array(Loadouts.NUM_SLOTS) { i ->
 					stringToLoadout(slotsElement[i])
 				}
 
 				slots.forEach {
-					if (!it.validate()) return onError("Invalid loadout parsed").void()
+					if (!it.validate()) return Bad("Invalid loadout parsed")
 				}
 
 				loadouts.add(slots)
 			}
 
-			Loadouts(uuids, loadouts)
+			Good(Loadouts(uuids, loadouts))
 
 		} catch (ex: Exception) {
-			onError(ex.message ?: "Unknown JSON error").void()
+			Bad(ex.message ?: "Unknown JSON error")
 		}
 	}
 
 	override fun write(data: Loadouts): ByteArray {
 		val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
 
-		val array = ArrayList<Map<String, Any>>(data.uuids.size)
+		val array = ArrayList<Map<String, *>>(data.uuids.size)
 
 		data.uuids.indices.forEach { i ->
 			val slots = ArrayList<String>(Loadouts.NUM_SLOTS)

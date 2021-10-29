@@ -4,10 +4,8 @@ import com.codeland.uhc.discord.filesystem.file.IdsFile
 import com.codeland.uhc.discord.filesystem.file.LinkDataFile
 import com.codeland.uhc.discord.filesystem.file.NicknamesFile
 import com.codeland.uhc.lobbyPvp.Loadouts
-import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.JDA
 import org.bukkit.ChatColor
-import java.lang.Exception
 import java.util.concurrent.CompletableFuture
 
 object DataManager {
@@ -34,23 +32,12 @@ object DataManager {
 			return future
 		}
 
-		fun printErr(name: String) = { msg: String -> println("${ChatColor.RED}Error loading $name file | $msg") }
+		fun printErr(name: String) = { ex: Throwable -> println("${ChatColor.RED}Error loading $name file | ${ex.message}").void() }
 
-		DiscordFilesystem.idsFile.load(category, printErr("ids")).thenAccept { ids ->
-			this.ids = ids
-		}
-
-		DiscordFilesystem.linkDataFile.load(category, printErr("link data")).thenAccept { linkData ->
-			this.linkData = linkData
-		}
-
-		DiscordFilesystem.nicknamesFile.load(category, printErr("nicknames")).thenAccept { nicknames ->
-			this.nicknames = nicknames
-		}
-
-		DiscordFilesystem.loadoutsFile.load(category, printErr("loadouts")).thenAccept { loadouts ->
-			this.loadouts = loadouts
-		}
+		DiscordFilesystem.idsFile.load(category).thenAccept { ids = it }.exceptionally(printErr("ids"))
+		DiscordFilesystem.linkDataFile.load(category).thenAccept { linkData = it }.exceptionally(printErr("link data"))
+		DiscordFilesystem.nicknamesFile.load(category).thenAccept { nicknames = it }.exceptionally(printErr("nicknames"))
+		DiscordFilesystem.loadoutsFile.load(category).thenAccept { loadouts = it }.exceptionally(printErr("loadouts"))
 
 		return future
 	}

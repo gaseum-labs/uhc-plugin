@@ -1,6 +1,7 @@
 package com.codeland.uhc.discord
 
 import com.codeland.uhc.core.stats.Summary
+import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
 import com.codeland.uhc.util.Util
@@ -55,8 +56,8 @@ class SummaryManager(val bot: MixerBot) {
 		}
 	}
 
-	fun sendStagedSummary(summary: Summary) {
-		getStagingChannel()?.sendFile(summary.write().toByteArray(), "summary_${UUID.randomUUID()}.json")
+	fun stageSummary(summary: Summary) {
+		getStagingChannel()?.sendFile(summary.write().toByteArray(), "summary_${UUID.randomUUID()}.json")?.queue()
 	}
 
 	fun sendFinalSummary(season: Int, game: Int, summary: Summary, event: GuildMessageReceivedEvent) {
@@ -74,14 +75,15 @@ class SummaryManager(val bot: MixerBot) {
 			?: return MixerCommand.errorMessage(event, "No summaries channel found")
 
 		if (icon != null) {
-			summaryChannel.sendFile(icon, "logo.png").embed(summaryToEmbed(season, game, summary))
+			summaryChannel.sendFile(icon, "logo.png").embed(summaryToEmbed(season, game, summary)).queue()
 		} else {
-			summaryChannel.sendMessage(summaryToEmbed(season, game, summary))
+			summaryChannel.sendMessage(summaryToEmbed(season, game, summary)).queue()
 		}
+
+		event.message.delete().queue()
 	}
 
 	fun summaryToEmbed(season: Int, game: Int, summary: Summary): MessageEmbed {
-		LocalDateTime.now().toString()
 		val builder = EmbedBuilder()
 
 		builder.setColor(summary.gameType.color)
@@ -97,7 +99,7 @@ class SummaryManager(val bot: MixerBot) {
 			val kills = summary.numKills(uuid)
 
 			builder.addField(
-				"$place. $name${if (killedBy == null) "" else "⚔️ ${nameMap[killedBy]}"}",
+				"$place. $name${if (killedBy == null) "" else " ⚔️ ${nameMap[killedBy]}"}",
 				"$kills kill${if (kills == 1) "" else "s"}",
 				false
 			)

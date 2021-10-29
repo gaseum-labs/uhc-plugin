@@ -2,6 +2,10 @@ package com.codeland.uhc.discord.filesystem.file
 
 import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.discord.filesystem.DiscordFile
+import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Result
 import com.google.gson.*
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -17,7 +21,7 @@ class LinkDataFile(header: String, channelName: String) : DiscordFile<LinkDataFi
 		)
 	}
 
-	override fun fromStream(stream: InputStream, onError: (String) -> Unit): LinkData? {
+	override fun fromStream(stream: InputStream): Result<LinkData> {
 		val minecraftIds = ArrayList<UUID>()
 		val discordIds = ArrayList<Long>()
 
@@ -25,14 +29,14 @@ class LinkDataFile(header: String, channelName: String) : DiscordFile<LinkDataFi
 			val gson = Gson().fromJson(InputStreamReader(stream), ArrayList::class.java) as ArrayList<Map<String, String>>
 
 			gson.forEach { element ->
-				minecraftIds.add(UUID.fromString(element["minecraftId"]))
-				discordIds.add(element["discordId"]!!.toLong())
+				minecraftIds.add(UUID.fromString(element["minecraftId"] ?: return DiscordFilesystem.fieldError("minecraftId", "string")))
+				discordIds.add((element["discordId"] ?: return DiscordFilesystem.fieldError("discordId", "string")).toLong())
 			}
 
-			LinkData(minecraftIds, discordIds)
+			Good(LinkData(minecraftIds, discordIds))
 
 		} catch (ex: Exception) {
-			onError(ex.message ?: "Unknown JSON error").void()
+			Bad(ex.message ?: "Unknown JSON error")
 		}
 	}
 

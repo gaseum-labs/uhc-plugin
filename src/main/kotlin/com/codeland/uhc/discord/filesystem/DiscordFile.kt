@@ -1,6 +1,9 @@
 package com.codeland.uhc.discord.filesystem
 
 import com.codeland.uhc.discord.filesystem.DataManager.void
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Result
 import net.dv8tion.jda.api.entities.Category
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
@@ -10,7 +13,7 @@ import java.util.concurrent.CompletableFuture
 abstract class DiscordFile <D> (val header: String, val channelName: String) {
 	var cachedMessageId: Long? = null
 
-	fun load(category: Category, onError: (String) -> Unit): CompletableFuture<D> {
+	fun load(category: Category): CompletableFuture<D> {
 		val future = CompletableFuture<D>()
 
 		val message = getMessage(category)
@@ -19,24 +22,21 @@ abstract class DiscordFile <D> (val header: String, val channelName: String) {
 			/* when there is no message to load create default */
 			DiscordFilesystem.getChannel(category, channelName)
 				?.sendFile(write(defaultData()), DiscordFilesystem.filename(header))
-				?.complete()
-
-			onError("No message for $header was found, creating dummy")
+				?.queue()
 
 			future.complete(defaultData())
 
 		} else {
 			DiscordFilesystem.messageStream(message).thenAccept { stream ->
-				val data = fromStream(stream, onError)
+				when (val r = fromStream(stream)) {
+					is Good -> future.complete(r.value)
+					is Bad -> future.completeExceptionally(Exception(r.error))
+				}
+
 				stream.close()
 
-				if (data == null)
-					future.completeExceptionally(Exception("Data was parsed incorrectly"))
-				else
-					future.complete(data)
-
-			}.exceptionally {
-				future.completeExceptionally(it).void()
+			}.exceptionally { ex ->
+				future.completeExceptionally(ex).void()
 			}
 		}
 
@@ -80,7 +80,7 @@ abstract class DiscordFile <D> (val header: String, val channelName: String) {
 		return message
 	}
 
-	abstract fun fromStream(stream: InputStream, onError: (String) -> Unit): D?
+	abstract fun fromStream(stream: InputStream): Result<D>
 	abstract fun write(data: D): ByteArray
 	abstract fun defaultData(): D
 }

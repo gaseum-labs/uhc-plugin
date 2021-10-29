@@ -6,6 +6,7 @@ import org.bukkit.World
 import java.io.File
 import java.io.FileWriter
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.*
 import javax.imageio.ImageIO
 
@@ -27,7 +28,7 @@ class Ledger(val worldSize: Int) {
 	 * they are followed by everyone who has died on the ledger
 	 * if two times survived are the same, the places are combined
 	 */
-	fun toSummary(startDate: LocalDateTime, gameType: GameType, winners: List<UUID>): Summary {
+	fun toSummary(startDate: ZonedDateTime, gameType: GameType, winners: List<UUID>): Summary {
 		/* first procedurally assign places */
 		val entries = ArrayList<Summary.SummaryEntry>(playerList.size + winners.size)
 		val losers = playerList.sortedByDescending { (_, time) -> time }
@@ -36,7 +37,7 @@ class Ledger(val worldSize: Int) {
 			val (uuid, time, killedBy) = losers[i]
 
 			entries.add(Summary.SummaryEntry(
-				if (i > 0 && losers[i - 1].timeSurvived == time) entries.last().place else i,
+				if (i > 0 && losers[i - 1].timeSurvived == time) entries.last().place else i + winners.size + 1,
 				uuid,
 				Bukkit.getOfflinePlayer(uuid).name ?: "Unknown",
 				time,
@@ -59,19 +60,19 @@ class Ledger(val worldSize: Int) {
 	}
 
 	private fun selectSummaryFile(matchNumber: Int = 0): Pair<File, Int> {
-		val file = File("./summaries/summary_$matchNumber")
+		val file = File("./summaries/summary_$matchNumber.json")
 		return if (file.exists()) selectSummaryFile(matchNumber + 1) else Pair(file, matchNumber)
 	}
 
 	private fun imageFile(environment: World.Environment, matchNumber: Int): File {
-		return File("./summaries/${environment.name.lowercase()}_$matchNumber")
+		return File("./summaries/summary_${matchNumber}_${environment.name.lowercase()}.png")
 	}
 
 	/**
 	 * saves a local copy of the summary
 	 * also pushes to the bot
 	 */
-	fun publish(startDate: LocalDateTime, gameType: GameType, winners: List<UUID>) {
+	fun publish(startDate: ZonedDateTime, gameType: GameType, winners: List<UUID>) {
 		/* get or create summaries directory */
 		val directory = File("./summaries")
 		if (!directory.exists()) directory.mkdir()
@@ -96,6 +97,6 @@ class Ledger(val worldSize: Int) {
 			imageFile(World.Environment.NETHER, summaryNo)
 		)
 
-		UHC.bot?.SummaryManager?.sendStagedSummary(summary)
+		UHC.bot?.SummaryManager?.stageSummary(summary)
 	}
 }

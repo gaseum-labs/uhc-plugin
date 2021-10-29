@@ -29,6 +29,7 @@ import org.bukkit.*
 import org.bukkit.entity.Player
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -56,7 +57,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 		}
 	}
 
-	val startDate = LocalDateTime.now()
+	val startDate = ZonedDateTime.now()
 
 	val ledger = Ledger(initialRadius)
 
@@ -262,13 +263,15 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 		val color0 = TextColor.color(0xf0e118)
 		val color1 = TextColor.color(0x912f2f)
 
-		val hasBeenEliminated = Util.gradientString(" has been eliminated!", color0, color1).decorate(TextDecoration.BOLD)
-
 		return listOfNotNull(
-			playerTeam.apply(playerName).decorate(TextDecoration.BOLD).append(hasBeenEliminated),
+			Component.empty()
+				.append(playerTeam.apply(playerName).decorate(TextDecoration.BOLD))
+				.append(Util.gradientString(" has been eliminated!", color0, color1)),
 
 			if (!teamIsAlive) {
-				playerTeam.apply(playerTeam.gameName()).decorate(TextDecoration.BOLD).append(hasBeenEliminated)
+				Util.gradientString("All members of ", color0, color1)
+					.append(playerTeam.apply(playerTeam.gameName()).decorate(TextDecoration.BOLD))
+					.append(Util.gradientString(" have been eliminated!", color0, color1))
 			} else null,
 
 			if (!teamIsAlive) {
@@ -278,7 +281,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 					} else {
 						"$numRemaining teams remain"
 					}, color0, color1
-				).decorate(TextDecoration.BOLD)
+				)
 			} else null
 		)
 	}

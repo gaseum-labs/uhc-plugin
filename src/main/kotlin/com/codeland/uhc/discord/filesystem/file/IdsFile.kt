@@ -1,8 +1,12 @@
 package com.codeland.uhc.discord.filesystem.file
 
-import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.discord.filesystem.DiscordFile
-import com.google.gson.*
+import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Result
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import java.io.InputStream
 import java.io.InputStreamReader
 
@@ -27,7 +31,7 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 		)
 	}
 
-	override fun fromStream(stream: InputStream, onError: (String) -> Unit): Ids? {
+	override fun fromStream(stream: InputStream): Result<Ids> {
 		val fieldValues = Array(fieldNames.size) { -1L }
 
 		return try {
@@ -38,13 +42,13 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 			}
 
 			for (i in fieldNames.indices) {
-				if (fieldValues[i] == -1L) return onError("No value for ${fieldNames[i]} found").void()
+				if (fieldValues[i] == -1L) return DiscordFilesystem.fieldError(fieldNames[i], "string")
 			}
 
-			Ids(fieldValues[0], fieldValues[1], fieldValues[2], fieldValues[3], fieldValues[4], fieldValues[5])
+			Good(Ids(fieldValues[0], fieldValues[1], fieldValues[2], fieldValues[3], fieldValues[4], fieldValues[5]))
 
 		} catch (ex: Exception) {
-			onError(ex.message ?: "Unknown JSON error").void()
+			Bad(ex.message ?: "Unknown JSON error")
 		}
 	}
 

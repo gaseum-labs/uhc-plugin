@@ -1,22 +1,25 @@
 package com.codeland.uhc.core.stats
 
+import com.codeland.uhc.discord.filesystem.DiscordFilesystem.fieldError
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Result
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.internal.LinkedTreeMap
 import it.unimi.dsi.fastutil.Hash
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class Summary(
 	val gameType: GameType,
-	val date: LocalDateTime,
+	val date: ZonedDateTime,
 	val gameLength: Int,
 	val players: List<SummaryEntry>
 ) {
@@ -33,21 +36,21 @@ class Summary(
 				Pair("uuid", uuid.toString()),
 				Pair("name", name),
 				Pair("timeSurvived", timeSurvived),
-				Pair("killedBy", killedBy?.toString() ?: "null")
+				Pair("killedBy", killedBy?.toString())
 			)
 		}
 
 		companion object {
-			fun deserialize(map: HashMap<String, *>): Result<SummaryEntry> {
-				val place = map["place"] as? Int ?: return Bad(fieldError("place", "int"))
+			fun deserialize(map: AbstractMap<String, *>): Result<SummaryEntry> {
+				val place = (map["place"] as? Double ?: return fieldError("place", "int")).toInt()
 
 				val uuid = try {
-					UUID.fromString(map["uuid"] as? String ?: return Bad(fieldError("uuid", "string")))
+					UUID.fromString(map["uuid"] as? String ?: return fieldError("uuid", "string"))
 				} catch (ex: Exception) { return Bad(ex.message ?: "Unknown UUID error") }
 
-				val name = map["name"] as? String ?: return Bad(fieldError("name", "string"))
+				val name = map["name"] as? String ?: return fieldError("name", "string")
 
-				val timeSurvived = map["timeSurvived"] as? Int ?: return Bad(fieldError("timeSurvived", "int"))
+				val timeSurvived = (map["timeSurvived"] as? Double ?: return fieldError("timeSurvived", "int")).toInt()
 
 				val killedByUuid = try {
 					val killedBy = map["killedBy"] as? String?
@@ -89,31 +92,27 @@ class Summary(
 	}
 
 	companion object {
-		private fun fieldError(name: String, type: String): String {
-			return "No value for \"${name}\" <${type}> found"
-		}
-
-		fun readSummary(filename: String, inputStream: InputStream): Result<Summary> {
+		fun readSummary(inputStream: InputStream): Result<Summary> {
 			val gson = try {
 				Gson().fromJson(InputStreamReader(inputStream), HashMap::class.java) as HashMap<String, *>
 			} catch (ex: Exception) { return Bad(ex.message ?: "Unknown JSON error") }
 
 			val gameType = when(
-				val res = GameType.fromString(gson["gameType"] as? String ?: return Bad(fieldError("gameType", "string")))
+				val res = GameType.fromString(gson["gameType"] as? String ?: return fieldError("gameType", "string"))
 			) {
 				is Good -> res.value
 				is Bad -> return res.forward()
 			}
 
 			val date = try {
-				LocalDateTime.parse(gson["date"] as? String ?: return Bad(fieldError("date", "string")))
+				ZonedDateTime.parse(gson["date"] as? String ?: return fieldError("date", "string"))
 			} catch (ex: Exception) { return Bad(ex.message ?: "Unknown date error") }
 
-			val gameLength = gson["gameLength"] as? Int ?: return Bad(fieldError("gameLength", "int"))
+			val gameLength = (gson["gameLength"] as? Double ?: return fieldError("gameLength", "int")).toInt()
 
 			val players = (
-				gson["players"] as? ArrayList<HashMap<String, *>>
-					?: return Bad(fieldError("players", "array"))
+				gson["players"] as? ArrayList<AbstractMap<String, *>>
+					?: return fieldError("players", "array")
 			).map {
 				when (val r = SummaryEntry.deserialize(it)) {
 					is Good -> r.value

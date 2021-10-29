@@ -2,6 +2,7 @@ package com.codeland.uhc.discord
 
 import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.discord.command.*
+import com.codeland.uhc.discord.command.commands.*
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.team.Team
@@ -20,12 +21,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileReader
-import java.io.FileWriter
 import java.net.URI
-import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -70,10 +66,11 @@ class MixerBot(
 	}
 
 	val commands = arrayOf(
-		GeneralCommand(),
 		LinkCommand(),
+		GeneralCommand(),
 		EditFileCommand(),
-		EditSummaryCommand()
+		EditSummaryCommand(),
+		PublishSummaryCommand()
 	)
 
 	var serverIcon: String? = null

@@ -5,6 +5,9 @@ import com.codeland.uhc.discord.filesystem.file.LinkDataFile
 import com.codeland.uhc.discord.filesystem.file.LoadoutsFile
 import com.codeland.uhc.discord.filesystem.file.NicknamesFile
 import com.codeland.uhc.lobbyPvp.Loadouts
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Result
 import net.dv8tion.jda.api.entities.Category
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
@@ -115,23 +118,21 @@ object DiscordFilesystem {
 		}
 	}
 
-	fun updateMessage(header: String, stream: InputStream, onError: (String) -> Unit): Boolean {
-		files.forEach { file ->
-			if (file.header == header) {
-				val data = file.fromStream(stream, onError) ?: return false
+	fun updateMessage(header: String, stream: InputStream): Result<Unit> {
+		val file = files.find { it.header == header } ?: return Bad("No file with header \"${header}\" found")
 
-				when (header) {
-					IDS_HEADER -> DataManager.ids = data as IdsFile.Companion.Ids
-					LINK_DATA_HEADER -> DataManager.linkData = data as LinkDataFile.Companion.LinkData
-					NICKNAMES_HEADER -> DataManager.nicknames = data as NicknamesFile.Companion.Nicknames
-					LOADOUTS_HEADER -> DataManager.loadouts = data as Loadouts
-				}
-
-				return true
+		return when (val r = file.fromStream(stream)) {
+			is Good -> {
+				Good(when (file) {
+					is IdsFile -> DataManager.ids = r.value as IdsFile.Companion.Ids
+					is LinkDataFile -> DataManager.linkData = r.value as LinkDataFile.Companion.LinkData
+					is LoadoutsFile -> DataManager.nicknames = r.value as NicknamesFile.Companion.Nicknames
+					is NicknamesFile ->  DataManager.loadouts = r.value as Loadouts
+					else -> Unit
+				})
 			}
+			is Bad -> return r.forward()
 		}
-
-		return false
 	}
 
 	fun isDataChannel(channel: TextChannel): Boolean {
@@ -140,5 +141,9 @@ object DiscordFilesystem {
 
 	fun isSummaryStagingChannel(channel: TextChannel): Boolean {
 		return channel.idLong == DataManager.ids.summaryStagingChannelId
+	}
+
+	fun <B> fieldError(name: String, type: String): Bad<B> {
+		return Bad("No value for \"${name}\" <${type}> found")
 	}
 }
