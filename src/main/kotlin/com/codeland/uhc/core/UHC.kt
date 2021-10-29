@@ -186,7 +186,7 @@ object UHC {
 
 			if (playerData.participating && (player == null || player.gameMode !== GameMode.SPECTATOR)) {
 				val block = Action.getPlayerLocation(uuid)?.block
-				if (block != null) game.ledger.addPlayerPosition(uuid, block)
+				if (block != null) game.ledger.tracker.addPlayerPosition(uuid, block)
 			}
 		}
 	}

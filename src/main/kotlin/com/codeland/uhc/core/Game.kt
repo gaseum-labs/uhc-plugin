@@ -8,6 +8,7 @@ import com.codeland.uhc.core.phase.phases.Endgame
 import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
+import com.codeland.uhc.core.stats.Ledger
 import com.codeland.uhc.customSpawning.regeneration.LeatherRegen
 import com.codeland.uhc.customSpawning.regeneration.SugarCaneRegen
 import com.codeland.uhc.quirk.Quirk
@@ -21,12 +22,13 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.entity.Player
 import java.time.Duration
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -53,6 +55,8 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 			}
 		}
 	}
+
+	val startDate = LocalDateTime.now()
 
 	val ledger = Ledger(initialRadius)
 
@@ -129,49 +133,20 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 		)
 	}
 
-	fun end(winners: List<UUID>) {
-		/* if someone won */
-		val title = if (winners.isNotEmpty()) {
-			val winningTeam = TeamData.playersTeam(winners[0])
-
-			val topMessage: Component
-			val bottomMessage: Component
-
-			if (winningTeam == null) {
-				val winningPlayer = Bukkit.getPlayer(winners[0])
-
-				topMessage = Component.text("${winningPlayer?.name} has won!", NamedTextColor.GOLD, TextDecoration.BOLD)
-				bottomMessage = Component.empty()
-
-				ledger.addEntry(winningPlayer?.name ?: "NULL", UHC.timer, "winning", true)
-
-			} else {
-				topMessage = winningTeam.apply("${winningTeam.gameName()} has won!")
-
-				val playerString = winners.joinToString(" ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }
-				winners.forEach { ledger.addEntry(Bukkit.getOfflinePlayer(it).name ?: "NULL", UHC.timer, "winning", true) }
-
-				bottomMessage = winningTeam.apply(playerString)
-			}
-
-			Title.title(topMessage, bottomMessage, Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2)))
-
-			/* no one won the game */
-		} else {
-			Title.title(
-				Component.text("No one wins?", NamedTextColor.GOLD, TextDecoration.BOLD), Component.empty(), Title.Times.of(
-					Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2)))
+	fun end(winningTeam: Team?) {
+		/* game summary */
+		if (winningTeam != null) {
+			ledger.publish(startDate, config.gameType.get(), winningTeam.members.filter { PlayerData.isAlive(it) })
 		}
 
-		ledger.createFile()
+		val endTitle = createEndTitle(winningTeam)
+		Bukkit.getServer().onlinePlayers.forEach { player -> player.showTitle(endTitle) }
 
-		Bukkit.getServer().onlinePlayers.forEach { player -> player.showTitle(title) }
-
-		/* remove all teams */
-		TeamData.destroyTeam(null, true, true) {}
+		/* put everyone back in the general channel */
+		UHC.bot?.clearTeamVCs()
 
 		/* reset all player data states */
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
+		PlayerData.playerDataList.forEach { (_, playerData) ->
 			playerData.participating = false
 			playerData.alive = false
 		}
@@ -185,52 +160,47 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 		setPhase(PhaseType.POSTGAME)
 	}
 
+	fun createEndTitle(winningTeam: Team?): Title {
+		return if (winningTeam == null) {
+			Title.title(
+				Component.text("No one wins?", NamedTextColor.GOLD, TextDecoration.BOLD),
+				Component.empty(),
+				Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
+			)
+		} else {
+			Title.title(
+				winningTeam.apply("${winningTeam.gameName()} has won!"),
+				winningTeam.apply(winningTeam.members.filter { PlayerData.isAlive(it) }.joinToString(", ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }),
+				Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
+			)
+		}
+	}
+
 	/* death */
 
-	data class RemainingTeamsReturn(val remaining: Int, val lastAlive: List<UUID>?, val teamAlive: Boolean)
-
-	/**
-	 * returns both the number of remaining teams
-	 * and the last remaining team if there is exactly 1
-	 */
-	private fun remainingTeams(focusTeam: Team?) : RemainingTeamsReturn {
-		val remainingTeams = TeamData.teams.filter { teamIsAlive(it) }
-
-		val remainingIndividuals = PlayerData.playerDataList.filter { (uuid, playerData) ->
-			playerData.alive && TeamData.playersTeam(uuid) == null
-		}.map { (uuid, _) -> uuid }
-
-		val remainingCount = remainingTeams.size + remainingIndividuals.size
-
-		val lastAlive = remainingTeams.firstOrNull()?.members ?: remainingIndividuals
-
-		/* lastAlive is only set if only one group of players remains */
-		return RemainingTeamsReturn(
-			remainingCount,
-			if (remainingCount == 1) lastAlive else null,
-			remainingTeams.any { it === focusTeam }
-		)
-	}
-
-	private fun teamIsAlive(team: Team) = team.members.any { member -> PlayerData.isAlive(member) }
-
-	/**
-	 * @param group the last remaining group of players, can be null for no last remaining group
-	 * @return all the uuids of currently alive players in the group
-	 */
-	private fun constructAliveList(group: List<UUID>?): List<UUID> {
-		return group?.map { Pair(it, PlayerData.getPlayerData(it)) }
-			?.filter { (_, playerData) -> playerData.alive }
-			?.map { (uuid, _) -> uuid }
-			?: emptyList()
-	}
-
-	fun playerDeath(uuid: UUID, killer: Player?, playerData: PlayerData, force: Boolean) {
-		if (shouldRespawn(playerData) && !force) {
+	fun playerDeath(uuid: UUID, killer: Player?, playerData: PlayerData, forcePermaDeath: Boolean) {
+		if (!forcePermaDeath && shouldRespawn(playerData)) {
 			playerRespawn(uuid)
 		} else {
 			playerPermaDeath(uuid, killer, respawn = quirkEnabled(QuirkType.PESTS)) { Pests.onBecomePest(it) }
 		}
+	}
+
+	private data class RemainingTeamsReturn(val numRemaining: Int, val lastTeamAlive: Team?, val teamAlive: Boolean)
+
+	/**
+	 * @return the number of remaining teams,
+	 * the last remaining team if there is exactly 1 else null,
+	 * and if a provided team is among the remaining
+	 */
+	private fun remainingTeamsFocusOn(focusTeam: Team?) : RemainingTeamsReturn {
+		val remainingTeams = TeamData.teams.filter { it.members.any { member -> PlayerData.isAlive(member) } }
+
+		return RemainingTeamsReturn(
+			remainingTeams.size,
+			if (remainingTeams.size == 1) remainingTeams.firstOrNull() else null,
+			remainingTeams.any { it === focusTeam }
+		)
 	}
 
 	private fun shouldRespawn(playerData: PlayerData): Boolean {
@@ -239,56 +209,33 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 
 	private fun playerPermaDeath(uuid: UUID, killer: Player?, respawn: Boolean, setupRespawn: (UUID) -> Unit) {
 		val playerData = PlayerData.getPlayerData(uuid)
+		val playerTeam = TeamData.playersTeam(uuid)
+		val killerTeam = if (killer == null) null else TeamData.playersTeam(killer.uniqueId)
+
+		/* make them dead */
 		playerData.alive = false
 		playerData.participating = respawn
 
-		val team = TeamData.playersTeam(uuid)
-		val (remainingTeams, lastRemaining, teamIsAlive) = remainingTeams(team)
+		val (numRemaining, lastTeamAlive, teamIsAlive) = remainingTeamsFocusOn(playerTeam)
 
-		val killerTeam = if (killer == null) null else TeamData.playersTeam(killer.uniqueId)
-
-		val killerName = when {
-			killer == null -> null
-			killer.uniqueId == uuid -> "self"
-			team === killerTeam -> "teammate"
-			else -> killer.name
+		/* broadcast elimination */
+		val eliminationMessages = eliminationMessages(uuid, playerTeam, numRemaining, teamIsAlive)
+		Bukkit.getOnlinePlayers().filter { WorldManager.isGameWorld(it.world) }.forEach { player ->
+			eliminationMessages.forEach { player.sendMessage(it) }
 		}
 
 		/* add to ledger */
-		val deadPlayerName = Bukkit.getOfflinePlayer(uuid).name ?: "NULL"
-		ledger.addEntry(deadPlayerName, UHC.timer, killerName)
-
-		val hasBeenEliminated = Component.text(" has been eliminated!", NamedTextColor.GOLD, TextDecoration.BOLD)
-
-		val elimMessage1: Component
-		val elimMessage2: Component
-
-		/* full team elimination */
-		if (team == null || !teamIsAlive) {
-			elimMessage1 = team?.apply(team.gameName())?.style(Style.style(TextDecoration.BOLD))?.append(hasBeenEliminated)
-				?: Component.text(deadPlayerName, NamedTextColor.GRAY, TextDecoration.BOLD).append(hasBeenEliminated)
-
-			elimMessage2 = Component.text("$remainingTeams teams remain", NamedTextColor.GOLD, TextDecoration.BOLD)
-			/* team member elimination */
-		} else {
-			elimMessage1 = team.apply(deadPlayerName).style(Style.style(TextDecoration.BOLD)).append(hasBeenEliminated)
-			elimMessage2 = Component.empty()
-		}
-
-		Bukkit.getServer().onlinePlayers.filter { WorldManager.isGameWorld(it.world) }.forEach { player ->
-			player.sendMessage(elimMessage1)
-			player.sendMessage(elimMessage2)
-		}
+		ledger.addEntry(uuid, UHC.timer, killer?.uniqueId)
 
 		/* does the UHC end here? */
-		if (remainingTeams <= 1) {
+		if (numRemaining <= 1) {
 			Action.playerAction(uuid) { it.gameMode = GameMode.SPECTATOR }
-			end(constructAliveList(lastRemaining))
+			end(lastTeamAlive)
 
-			/* or does it keep going */
+		/* or does it keep going */
 		} else {
 			/* apply kill reward (no team kills) */
-			if (killer != null && team !== killerTeam) {
+			if (killer != null && playerTeam !== killerTeam) {
 				config.killReward.get().apply(
 					killer.uniqueId,
 					killerTeam?.members ?: arrayListOf(),
@@ -304,6 +251,36 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 				Action.playerAction(uuid) { deathTitle(it, killer, false) }
 			}
 		}
+	}
+
+	private fun eliminationMessages(uuid: UUID, playerTeam: Team?, numRemaining: Int, teamIsAlive: Boolean): List<Component> {
+		val playerName = Bukkit.getOfflinePlayer(uuid).name ?: "Unknown"
+
+		/* should never happen */
+		if (playerTeam == null) return listOf(Component.text(playerName, NamedTextColor.GRAY, TextDecoration.BOLD))
+
+		val color0 = TextColor.color(0xf0e118)
+		val color1 = TextColor.color(0x912f2f)
+
+		val hasBeenEliminated = Util.gradientString(" has been eliminated!", color0, color1).decorate(TextDecoration.BOLD)
+
+		return listOfNotNull(
+			playerTeam.apply(playerName).decorate(TextDecoration.BOLD).append(hasBeenEliminated),
+
+			if (!teamIsAlive) {
+				playerTeam.apply(playerTeam.gameName()).decorate(TextDecoration.BOLD).append(hasBeenEliminated)
+			} else null,
+
+			if (!teamIsAlive) {
+				Util.gradientString(
+					if (numRemaining == 1) {
+						"Final team remains"
+					} else {
+						"$numRemaining teams remain"
+					}, color0, color1
+				).decorate(TextDecoration.BOLD)
+			} else null
+		)
 	}
 
 	private fun playerRespawn(uuid: UUID) {

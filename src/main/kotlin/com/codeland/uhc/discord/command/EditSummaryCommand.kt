@@ -11,9 +11,9 @@ import org.bukkit.ChatColor
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class EditFileCommand : MixerCommand(true) {
+class EditSummaryCommand : MixerCommand(true) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
-		return optionalDebugFilter(content, bot) && replyingToDataFilter(event, DiscordFilesystem::isDataChannel)
+		return optionalDebugFilter(content, bot) && replyingToDataFilter(event, DiscordFilesystem::isSummaryStagingChannel)
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {

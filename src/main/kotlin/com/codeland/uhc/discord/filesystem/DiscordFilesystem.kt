@@ -133,4 +133,12 @@ object DiscordFilesystem {
 
 		return false
 	}
+
+	fun isDataChannel(channel: TextChannel): Boolean {
+		return channel.parent?.name == CATEGORY_NAME && channel.name == DATA_CHANNEL_NAME
+	}
+
+	fun isSummaryStagingChannel(channel: TextChannel): Boolean {
+		return channel.idLong == DataManager.ids.summaryStagingChannelId
+	}
 }

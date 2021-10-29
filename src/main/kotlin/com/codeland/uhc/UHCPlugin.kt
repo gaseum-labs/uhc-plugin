@@ -4,6 +4,7 @@ import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.command.*
 import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.stats.Tracker
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
 import com.codeland.uhc.gui.GuiManager
@@ -75,6 +76,8 @@ class UHCPlugin : JavaPlugin() {
 			println("${ChatColor.RED}$it")
 			println("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
 		})
+
+		Tracker.loadCharacters()
 
 		server.scheduler.scheduleSyncDelayedTask(this) {
 			val initError = WorldManager.init()

@@ -4,6 +4,7 @@ import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.GameConfig
 import com.codeland.uhc.core.KillReward
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.stats.GameType
 import com.codeland.uhc.gui.*
 import com.codeland.uhc.gui.guiItem.*
 import com.codeland.uhc.gui.guiItem.impl.CloseButton
@@ -74,6 +75,14 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 					if (UHC.bot == null) Component.text("Bot is not running", NamedTextColor.RED, TextDecoration.BOLD)
 					else ItemCreator.enabledName("Bot VCs", value)
 				).create()
+			}
+		})
+		addItem(object : GuiItemCycler<GameType>(coords(4, 0), gameConfig.gameType, arrayOf(GameType.UHC, GameType.CHC)) {
+			override fun getStackProperty(value: GameType): ItemStack {
+				return ItemCreator.fromType(value.representation)
+					.name(ItemCreator.stateName("Game Type", value.name))
+					.lore("For record keeping purposes")
+					.create()
 			}
 		})
 

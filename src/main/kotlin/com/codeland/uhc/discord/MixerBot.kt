@@ -1,10 +1,7 @@
 package com.codeland.uhc.discord
 
 import com.codeland.uhc.core.ConfigFile
-import com.codeland.uhc.discord.command.EditFileCommand
-import com.codeland.uhc.discord.command.GeneralCommand
-import com.codeland.uhc.discord.command.LinkCommand
-import com.codeland.uhc.discord.command.SummaryCommand
+import com.codeland.uhc.discord.command.*
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DataManager.void
 import com.codeland.uhc.team.Team
@@ -75,11 +72,13 @@ class MixerBot(
 	val commands = arrayOf(
 		GeneralCommand(),
 		LinkCommand(),
-		SummaryCommand(),
-		EditFileCommand()
+		EditFileCommand(),
+		EditSummaryCommand()
 	)
 
 	var serverIcon: String? = null
+
+	val SummaryManager: SummaryManager = SummaryManager(this)
 
 	init {
 		if (production) jda.presence.activity = Activity.playing("UHC at $ip")
@@ -91,7 +90,7 @@ class MixerBot(
 		if (iconUrl != null) {
 			val request = HttpRequest.newBuilder(URI(iconUrl)).GET().build()
 			val client = HttpClient.newHttpClient()
-			ImageIO.read(URL(iconUrl))
+
 			client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).thenAccept { response ->
 				val bytebuf = Unpooled.buffer()
 

@@ -1,5 +1,6 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.core.stats.GameType
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.CreateGameGui
 import com.codeland.uhc.quirk.QuirkType
@@ -17,6 +18,7 @@ class GameConfig {
 		return if (lock) null else set
 	}
 
+	val gameType = UHCProperty(GameType.UHC)
 	val naturalRegeneration = UHCProperty(false)
 	val killReward = UHCProperty(KillReward.APPLE)
 	val usingBot = UHCProperty(UHC.bot != null) { set ->

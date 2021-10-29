@@ -12,7 +12,9 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 			"voiceCategory",
 			"generalVoiceChannel",
 			"summaryChannel",
-			"adminRole"
+			"adminRole",
+			"summaryStagingChannel",
+			"summariesChannel"
 		)
 
 		data class Ids(
@@ -20,6 +22,8 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 			var generalVoiceChannelId: Long = -1L,
 			var summaryChannelId: Long = -1L,
 			var adminRoleId: Long = -1L,
+			var summaryStagingChannelId: Long = -1L,
+			var summariesChannelId: Long = -1L,
 		)
 	}
 
@@ -37,7 +41,7 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 				if (fieldValues[i] == -1L) return onError("No value for ${fieldNames[i]} found").void()
 			}
 
-			Ids(fieldValues[0], fieldValues[1], fieldValues[2], fieldValues[3])
+			Ids(fieldValues[0], fieldValues[1], fieldValues[2], fieldValues[3], fieldValues[4], fieldValues[5])
 
 		} catch (ex: Exception) {
 			onError(ex.message ?: "Unknown JSON error").void()
@@ -53,7 +57,9 @@ class IdsFile(header: String, channelName: String) : DiscordFile<IdsFile.Compani
 			data.voiceCategoryId,
 			data.generalVoiceChannelId,
 			data.summaryChannelId,
-			data.adminRoleId
+			data.adminRoleId,
+			data.summaryStagingChannelId,
+			data.summariesChannelId
 		).forEachIndexed { i, d ->
 			map[fieldNames[i]] = d.toString()
 		}
