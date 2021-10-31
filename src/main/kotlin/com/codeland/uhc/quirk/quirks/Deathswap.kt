@@ -10,17 +10,14 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.Location
 import java.util.UUID
-import java.util.concurrent.ThreadLocalRandom
-import kotlin.collections.ArrayList
 import kotlin.math.ceil
 import kotlin.random.Random
 
 class Deathswap(type: QuirkType, game: Game) : Quirk(type, game) {
 	init {
 		resetTimer()
-		taskId = SchedulerUtil.everyTick(::runTask)
+		taskId = SchedulerUtil.everyN(20, ::runTask)
 	}
 
 	override fun customDestroy() {
@@ -31,53 +28,45 @@ class Deathswap(type: QuirkType, game: Game) : Quirk(type, game) {
 		if (phase is Postgame) Bukkit.getScheduler().cancelTask(taskId)
 	}
 
-	val random = Random(game.world.seed)
-
 	fun doSwaps() {
-		val used = ArrayList<Boolean>()
-		val players = ArrayList<UUID>()
-		val locations = ArrayList<Location>()
-
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.participating && playerData.alive) {
-				used.add(false)
-				players.add(uuid)
-				locations.add(Action.getPlayerLocation(uuid) ?: game.spectatorSpawnLocation())
-			}
-		}
-
-		if (players.size > 1) {
-			players.forEachIndexed { i, uuid ->
-				var index = random.nextInt(0, locations.lastIndex)
-
-				while (used[index] || index == i) index = (index + 1) % used.size
-
-				used[index] = true
-				Action.teleportPlayer(uuid, locations[index])
-			}
-		}
+		val players = PlayerData.playerDataList
+				.filter { it.value.participating && it.value.alive }
+				.keys.toList()
+		if (players.size < 2) return
+		var playersShuffled: List<UUID>
+		// make sure everyone teleports to a different location
+		// takes on average 2.71 (e?) trials to ensure this
+		do {
+			playersShuffled = players.shuffled()
+		} while (players.zip(playersShuffled).any { it.first == it.second })
+		players
+				.zip(playersShuffled.map { Action.getPlayerLocation(it) ?: game.spectatorSpawnLocation() })
+				.forEach { (uuid, location) -> Action.teleportPlayer(uuid, location)
+        }
 	}
 
 	fun resetTimer() {
-		swapTime = ((ThreadLocalRandom.current().nextInt() % (MAX_TIME - MIN_TIME + 1) + MIN_TIME) * 20 + IMMUNITY)
+		untilNextSequence = Random.nextInt(MIN_TIME, MAX_TIME) + IMMUNITY
+		swapped = false
 	}
 
 	private fun runTask() {
-		--swapTime
+		--untilNextSequence
 
 		when {
-			swapTime <= 0 -> {
+			untilNextSequence <= 0 -> {
 				resetTimer()
 				sendAll("${ChatColor.GOLD}You are no longer immune.", false)
 			}
-			swapTime < IMMUNITY -> {
-				sendAll(generateImmunity(swapTime / IMMUNITY.toFloat()), false)
+			untilNextSequence <= IMMUNITY -> {
+				if (!swapped) {
+					doSwaps()
+					swapped = true
+				}
+				sendAll(generateImmunity(untilNextSequence / IMMUNITY.toFloat()), false)
 			}
-			swapTime < IMMUNITY + WARNING -> {
-				sendAll("${ChatColor.GOLD}Swapping in ${ChatColor.BLUE}${ceil((swapTime - IMMUNITY) / 20.0).toInt()}...", true)
-			}
-			else -> {
-				sendAll("${ChatColor.GOLD}(d3bug) Swapping in ${ChatColor.BLUE}${ceil((swapTime - IMMUNITY) / 20.0).toInt()}...", true)
+			untilNextSequence <= IMMUNITY + WARNING -> {
+				sendAll("${ChatColor.GOLD}Swapping in ${ChatColor.BLUE}${untilNextSequence - IMMUNITY}...", true)
 			}
 		}
 	}
@@ -89,24 +78,24 @@ class Deathswap(type: QuirkType, game: Game) : Quirk(type, game) {
 		}
 	}
 
+	// TODO: componentize
 	private fun generateImmunity(percent: Float): String {
-		val message = StringBuilder("${ChatColor.GOLD}Immune ${ChatColor.GRAY}- ")
+		val bars = "▮".repeat(10)
+		val nGold = ceil(percent * 10).toInt()
+		val coloredBars =
+				ChatColor.GOLD.toString() + bars.subSequence(0, nGold) +
+			  	ChatColor.GRAY.toString() + bars.subSequence(nGold, bars.length)
 
-		for (i in 0 until ceil(10 * percent).toInt())
-			message.append(ChatColor.GOLD.toString() + "▮")
-
-		for (i in 0 until 10 - ceil(10 * percent).toInt())
-			message.append(ChatColor.GRAY.toString() + "▮")
-
-		return message.toString()
+		return "${ChatColor.GOLD}Immune ${ChatColor.GRAY}- $coloredBars"
 	}
 
 	companion object {
-		var WARNING = 10 * 20
-		var IMMUNITY = 10 * 20
+		const val WARNING = 5
+		const val IMMUNITY = 10
 
 		var taskId = 0
-		var swapTime = 0
+		var untilNextSequence = 0
+		var swapped = false
 
 		const val MIN_TIME = 120
 		const val MAX_TIME = 300

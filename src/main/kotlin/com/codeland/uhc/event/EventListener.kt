@@ -384,7 +384,7 @@ class EventListener : Listener {
 			if (UHC.game?.quirkEnabled(QuirkType.LOW_GRAVITY) == true && event.cause == EntityDamageEvent.DamageCause.FALL) {
 				event.isCancelled = true
 
-			} else if (event.entity is Player && UHC.game?.quirkEnabled(QuirkType.DEATHSWAP) == true && Deathswap.swapTime < Deathswap.IMMUNITY) {
+			} else if (event.entity is Player && UHC.game?.quirkEnabled(QuirkType.DEATHSWAP) == true && Deathswap.untilNextSequence < Deathswap.IMMUNITY) {
 				event.isCancelled = true
 			}
 

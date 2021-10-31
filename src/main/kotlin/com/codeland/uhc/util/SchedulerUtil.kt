@@ -15,6 +15,10 @@ object SchedulerUtil {
 		return Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, runnable, 0, 1)
 	}
 
+	fun everyN(n: Long, runnable: () -> Unit): Int {
+        return Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, runnable, 0, n)
+    }
+
 	fun later(ticks: Long, runnable: () -> Unit): Int {
 		return Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable, ticks)
 	}
