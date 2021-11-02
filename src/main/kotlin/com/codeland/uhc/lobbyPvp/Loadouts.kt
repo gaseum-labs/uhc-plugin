@@ -4,8 +4,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class Loadouts(
-	val uuids: ArrayList<UUID> = ArrayList(),
-	val loadouts: ArrayList<Array<Loadout>> = ArrayList()
+	val loadouts: Map<UUID, Array<Loadout>>
 ) {
 	companion object {
 		const val NUM_SLOTS = 3

@@ -1,44 +1,50 @@
 package com.codeland.uhc.discord.filesystem
 
-import com.codeland.uhc.discord.filesystem.file.IdsFile
-import com.codeland.uhc.discord.filesystem.file.LinkDataFile
-import com.codeland.uhc.discord.filesystem.file.NicknamesFile
+import com.codeland.uhc.discord.sql.DatabaseFile
+import com.codeland.uhc.discord.sql.file.IdsFile
+import com.codeland.uhc.discord.sql.file.LinkDataFile
+import com.codeland.uhc.discord.sql.file.LoadoutsFile
+import com.codeland.uhc.discord.sql.file.NicknamesFile
 import com.codeland.uhc.lobbyPvp.Loadouts
-import net.dv8tion.jda.api.JDA
-import org.bukkit.ChatColor
-import java.util.concurrent.CompletableFuture
+import com.codeland.uhc.util.MixedResult
+import com.codeland.uhc.util.PreMixedResult
+import java.sql.Connection
 
-object DataManager {
-	var ids = IdsFile.Companion.Ids()
-	var linkData = LinkDataFile.Companion.LinkData()
-	var nicknames = NicknamesFile.Companion.Nicknames()
-	var loadouts = Loadouts()
+class DataManager(
+	var ids: IdsFile.Ids,
+	var linkData: LinkDataFile.LinkData,
+	var loadouts: Loadouts,
+	var nicknames: NicknamesFile.Nicknames
+) {
+	companion object {
+		val idsFile = IdsFile()
+		val linkDataFile = LinkDataFile()
+		val loadoutsFile = LoadoutsFile()
+		val nicknamesFile = NicknamesFile()
 
-	fun Any?.void() = null
-	fun Any?.bool(b: Boolean) = b
+		fun createDataManager(connection: Connection): MixedResult<DataManager> {
+			val result = PreMixedResult()
+			val statement = connection.createStatement()
 
-	fun createDataManager(jda: JDA, guildId: Long): CompletableFuture<DataManager> {
-		val future = CompletableFuture<DataManager>()
+			fun <T> load(file: DatabaseFile<T, *>): T {
+				return try {
+					file.parseResults(statement.executeQuery(idsFile.query()))
+				} catch (ex: Exception) {
+					result.error(ex.message)
+					file.defaultData()
+				}
+			}
 
-		val guild = jda.getGuildById(guildId)
-		if (guild == null) {
-			future.completeExceptionally(Exception("Guild by id $guildId could not be found"))
-			return future
+			val ids = load(idsFile)
+			val linkData = load(linkDataFile)
+			val loadouts = load(loadoutsFile)
+			val nicknames = load(nicknamesFile)
+
+			return MixedResult(DataManager(ids, linkData, loadouts, nicknames), result)
 		}
 
-		val category = DiscordFilesystem.getBotCategory(guild)
-		if (category == null) {
-			future.completeExceptionally(Exception("Bot Category could not be created"))
-			return future
+		fun offlineDataManager(): DataManager {
+			return DataManager(idsFile.defaultData(), linkDataFile.defaultData(), loadoutsFile.defaultData(), nicknamesFile.defaultData())
 		}
-
-		fun printErr(name: String) = { ex: Throwable -> println("${ChatColor.RED}Error loading $name file | ${ex.message}").void() }
-
-		DiscordFilesystem.idsFile.load(category).thenAccept { ids = it }.exceptionally(printErr("ids"))
-		DiscordFilesystem.linkDataFile.load(category).thenAccept { linkData = it }.exceptionally(printErr("link data"))
-		DiscordFilesystem.nicknamesFile.load(category).thenAccept { nicknames = it }.exceptionally(printErr("nicknames"))
-		DiscordFilesystem.loadoutsFile.load(category).thenAccept { loadouts = it }.exceptionally(printErr("loadouts"))
-
-		return future
 	}
 }

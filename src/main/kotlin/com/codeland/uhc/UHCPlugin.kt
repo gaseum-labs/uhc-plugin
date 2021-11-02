@@ -61,20 +61,18 @@ class UHCPlugin : JavaPlugin() {
 		WorldGenManager.init(server)
 
 		val configFile = ConfigFile.load()
-		val address = WebAddress.getLocalAddress()
 
 		if (configFile.production) println(try {
-			GoogleDDNSUpdater.updateDomain(address)
+			GoogleDDNSUpdater.updateDomain(WebAddress.getLocalAddress())
 		} catch (ex: Exception) {
 			"${ex}\n${ChatColor.RED}DDNS FAILED"
 		})
 
-		MixerBot.createMixerBot(configFile, address, {
+		MixerBot.createMixerBot(configFile, {
 			UHC.bot = it
 			UHC.getConfig().usingBot.set(true)
 		}, {
 			println("${ChatColor.RED}$it")
-			println("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
 		})
 
 		Tracker.loadCharacters()

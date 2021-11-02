@@ -5,10 +5,22 @@ import java.net.URL
 
 class WebAddress {
 	companion object {
+		var cachedAddress: String? = null
+		var cacheTime: Long = 0L
+
 		fun getLocalAddress(): String {
-			val niceWebsite = URL("http://checkip.amazonaws.com")
-			val `in` = BufferedReader(InputStreamReader(niceWebsite.openStream()))
-			return `in`.readLine().trim { it <= ' ' }		
+			val time = System.currentTimeMillis()
+
+			/* 10 minutes */
+			return if (time - cacheTime >= 600000) {
+				val ip = BufferedReader(InputStreamReader(URL("http://checkip.amazonaws.com").openStream())).readLine().trim { it <= ' ' }
+				cachedAddress = ip
+				cacheTime = time
+				ip
+
+			} else {
+				cachedAddress ?: "unknown ip"
+			}
 		}
 	}
 }

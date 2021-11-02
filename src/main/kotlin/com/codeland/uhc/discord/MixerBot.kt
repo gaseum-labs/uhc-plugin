@@ -4,9 +4,13 @@ import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.discord.command.*
 import com.codeland.uhc.discord.command.commands.*
 import com.codeland.uhc.discord.filesystem.DataManager
-import com.codeland.uhc.discord.filesystem.DataManager.void
+import com.codeland.uhc.discord.sql.DatabaseConnection
 import com.codeland.uhc.team.Team
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.Util.void
+import com.codeland.uhc.util.WebAddress
 import io.netty.buffer.ByteBufOutputStream
 import io.netty.buffer.Unpooled
 import net.dv8tion.jda.api.EmbedBuilder
@@ -26,18 +30,20 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
+import java.sql.Connection
 import java.util.*
 import javax.imageio.ImageIO
 
 class MixerBot(
 	val jda: JDA,
+	val guild: Guild,
 	val production: Boolean,
 	val token: String,
-	var guildId: Long,
-	ip: String
+	var connection: Connection?,
+	val dataManager: DataManager
 ) : ListenerAdapter() {
 	companion object {
-		fun createMixerBot(configFile: ConfigFile, ip: String, onMixerBot: (MixerBot) -> Unit, onError: (String) -> Unit) {
+		fun createMixerBot(configFile: ConfigFile, onMixerBot: (MixerBot) -> Unit, onError: (String) -> Unit) {
 			try {
 				val jda = JDABuilder.createDefault(configFile.botToken).enableIntents(
 					GatewayIntent.GUILD_MESSAGES,
@@ -50,12 +56,33 @@ class MixerBot(
 				/* temporary event listener just for the ready */
 				jda.addEventListener(object : ListenerAdapter() {
 					override fun onReady(event: ReadyEvent) {
-						/* create the bot once jda is ready */
-						onMixerBot(MixerBot(jda, configFile.production, configFile.botToken, configFile.serverId, ip))
+						val connection = when (val r = DatabaseConnection.connect(configFile)) {
+							is Good -> r.value
+							is Bad -> onError(r.error).void()
+						}
 
-						/* data manager requires the bot to be ready */
-						DataManager.createDataManager(jda, configFile.serverId).exceptionally {
-							onError("Data manager could not be created | ${it.message}").void()
+						val dataManager = if (connection != null) {
+							val (result, errors) = DataManager.createDataManager(connection)
+							errors.forEach(onError)
+							result
+						} else {
+							DataManager.offlineDataManager()
+						}
+
+						val guild = jda.getGuildById(configFile.serverId)
+						if (guild == null) {
+							onError("Could not find the guild by id ${configFile.serverId}")
+
+						} else {
+							/* create the bot once jda is ready */
+							onMixerBot(MixerBot(
+								jda,
+								guild,
+								configFile.production,
+								configFile.botToken,
+								connection,
+								dataManager
+							))
 						}
 					}
 				})
@@ -78,12 +105,14 @@ class MixerBot(
 	val SummaryManager: SummaryManager = SummaryManager(this)
 
 	init {
+		val ip = WebAddress.getLocalAddress()
+
 		if (production) jda.presence.activity = Activity.playing("UHC at $ip")
 		jda.addEventListener(this)
 
 		clearTeamVCs()
 
-		val iconUrl = guild()?.iconUrl
+		val iconUrl = guild.iconUrl
 		if (iconUrl != null) {
 			val request = HttpRequest.newBuilder(URI(iconUrl)).GET().build()
 			val client = HttpClient.newHttpClient()
@@ -150,8 +179,6 @@ class MixerBot(
 	/* ---------------------------- */
 
 	fun destroyTeamChannel(team: Team) {
-		val guild = guild() ?: return
-
 		getTeamChannel(team.id) { teamChannel ->
 			destroyTeamChannel(guild, teamChannel)
 		}
@@ -164,7 +191,6 @@ class MixerBot(
 	 * @param players a list of player UUIDs on the team to move to general
 	 */
 	fun removeFromTeamChannel(team: Team, teamSize: Int, players: ArrayList<UUID>) {
-		val guild = guild() ?: return
 		val voiceChannel = generalVoiceChannel() ?: return
 
 		/* should never be above but just in case */
@@ -181,8 +207,6 @@ class MixerBot(
 	}
 
 	fun addToTeamChannel(team: Team, players: ArrayList<UUID>) {
-		val guild = guild() ?: return
-
 		getTeamChannel(team.id) { teamChannel ->
 			voiceMembersFromPlayers(guild, players).forEach { member ->
 				guild.moveVoiceMember(member, teamChannel).queue()
@@ -230,7 +254,6 @@ class MixerBot(
 	fun clearTeamVCs() {
 		val voiceCategory = voiceCategory() ?: return
 		val voiceChannel = generalVoiceChannel() ?: return
-		val guild = guild() ?: return
 
 		val channels = voiceCategory.voiceChannels
 
@@ -241,9 +264,8 @@ class MixerBot(
 
 	/* utility */
 
-	fun guild(): Guild? = jda.getGuildById(guildId)
-	fun voiceCategory(): Category? = jda.getCategoryById(DataManager.ids.voiceCategoryId)
-	fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(DataManager.ids.generalVoiceChannelId)
+	fun voiceCategory(): Category? = jda.getCategoryById(dataManager.ids.voiceCategory)
+	fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(dataManager.ids.generalVoiceChannel)
 
 	class SummaryEntry(val place: String, val name: String, val killedBy: String)
 
@@ -258,20 +280,15 @@ class MixerBot(
 		).queue()
 	}
 
-	fun getDiscordUserIndex(discordID: Long) = DataManager.linkData.discordIds.indexOf(discordID)
-
-	private fun getMinecraftUserIndex(uuid: UUID) = DataManager.linkData.minecraftIds.indexOf(uuid)
-
-	fun isLinked(uuid: UUID) = DataManager.linkData.minecraftIds.contains(uuid)
+	fun isLinked(uuid: UUID) = dataManager.linkData.minecraftToDiscord.containsKey(uuid)
 
 	private fun voiceMembersFromPlayers(guild: Guild, players: ArrayList<UUID>): List<Member> {
-		return players.map { getMinecraftUserIndex(it) }
-			.filter { it != -1 }
-			.mapNotNull { guild.getMemberById(DataManager.linkData.discordIds[it]) }
+		return players.mapNotNull { dataManager.linkData.minecraftToDiscord[it] }
+			.mapNotNull { guild.getMemberById(it) }
 			.filter { it.voiceState?.inVoiceChannel() == true }
 	}
 
 	fun isAdmin(member: Member): Boolean {
-		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == DataManager.ids.adminRoleId }
+		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == dataManager.ids.adminRole }
 	}
 }
