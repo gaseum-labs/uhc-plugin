@@ -3,7 +3,7 @@ package com.codeland.uhc.team
 import net.kyori.adventure.text.format.TextColor
 import kotlin.random.Random
 
-class TeamColor(val subdivisions: Int) {
+class ColorCube(val subdivisions: Int) {
 	private val cube = Array(subdivisions * subdivisions * subdivisions) { defaultTaken(it) }
 
 	private val subSize = 256 / subdivisions

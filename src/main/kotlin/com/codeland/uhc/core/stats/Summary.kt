@@ -1,11 +1,11 @@
 package com.codeland.uhc.core.stats
 
-import com.codeland.uhc.discord.filesystem.DiscordFilesystem.fieldError
-import com.codeland.uhc.discord.sql.DatabaseFile
+import com.codeland.uhc.discord.database.DatabaseFile
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Result
+import com.codeland.uhc.util.Util.fieldError
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import java.io.InputStream

@@ -1,11 +1,9 @@
 package com.codeland.uhc.discord
 
 import com.codeland.uhc.core.ConfigFile
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.command.*
 import com.codeland.uhc.discord.command.commands.*
-import com.codeland.uhc.discord.filesystem.DataManager
-import com.codeland.uhc.discord.sql.DatabaseConnection
-import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Util
@@ -30,7 +28,6 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
-import java.sql.Connection
 import java.util.*
 import javax.imageio.ImageIO
 
@@ -39,8 +36,6 @@ class MixerBot(
 	val guild: Guild,
 	val production: Boolean,
 	val token: String,
-	var connection: Connection?,
-	val dataManager: DataManager
 ) : ListenerAdapter() {
 	companion object {
 		fun createMixerBot(configFile: ConfigFile, onMixerBot: (MixerBot) -> Unit, onError: (String) -> Unit) {
@@ -56,19 +51,6 @@ class MixerBot(
 				/* temporary event listener just for the ready */
 				jda.addEventListener(object : ListenerAdapter() {
 					override fun onReady(event: ReadyEvent) {
-						val connection = when (val r = DatabaseConnection.connect(configFile)) {
-							is Good -> r.value
-							is Bad -> onError(r.error).void()
-						}
-
-						val dataManager = if (connection != null) {
-							val (result, errors) = DataManager.createDataManager(connection)
-							errors.forEach(onError)
-							result
-						} else {
-							DataManager.offlineDataManager()
-						}
-
 						val guild = jda.getGuildById(configFile.serverId)
 						if (guild == null) {
 							onError("Could not find the guild by id ${configFile.serverId}")
@@ -80,8 +62,6 @@ class MixerBot(
 								guild,
 								configFile.production,
 								configFile.botToken,
-								connection,
-								dataManager
 							))
 						}
 					}
@@ -264,31 +244,19 @@ class MixerBot(
 
 	/* utility */
 
-	fun voiceCategory(): Category? = jda.getCategoryById(dataManager.ids.voiceCategory)
-	fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(dataManager.ids.generalVoiceChannel)
+	fun isLinked(uuid: UUID) = if (UHC.dataManager.isOnline()) UHC.dataManager.linkData.minecraftToDiscord.containsKey(uuid) else true
 
-	class SummaryEntry(val place: String, val name: String, val killedBy: String)
+	private fun voiceCategory(): Category? = jda.getCategoryById(UHC.dataManager.ids.voiceCategory)
 
-	fun sendGameSummary(channel: MessageChannel, gameNumber: Int, day: Int, month: Int, year: Int, matchTime: Int, winners: ArrayList<SummaryEntry>, losers: ArrayList<SummaryEntry>) {
-		channel.sendMessage(EmbedBuilder()
-			.setColor(0xe7c93c)
-			.setTitle("Summary of UHC #$gameNumber on $month/$day/$year")
-			.setDescription("Lasted ${Util.timeString(matchTime / 20)}")
-			.addField("Winners", if (winners.isEmpty()) "No winners" else winners.fold("") { accum, winner -> accum + "${winner.place}: ${winner.name}\n" }, false)
-			.addField("Losers", if (losers.isEmpty()) "No losers" else losers.foldIndexed("") { index, accum, loser -> accum + "${loser.place}: ${loser.name} | killed by ${loser.killedBy}\n"}, false)
-			.build()
-		).queue()
-	}
-
-	fun isLinked(uuid: UUID) = dataManager.linkData.minecraftToDiscord.containsKey(uuid)
+	private fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(UHC.dataManager.ids.generalVoiceChannel)
 
 	private fun voiceMembersFromPlayers(guild: Guild, players: List<UUID>): List<Member> {
-		return players.mapNotNull { dataManager.linkData.minecraftToDiscord[it] }
+		return players.mapNotNull { UHC.dataManager.linkData.minecraftToDiscord[it] }
 			.mapNotNull { guild.getMemberById(it) }
 			.filter { it.voiceState?.inVoiceChannel() == true }
 	}
 
-	fun isAdmin(member: Member): Boolean {
-		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == dataManager.ids.adminRole }
+	private fun isAdmin(member: Member): Boolean {
+		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == UHC.dataManager.ids.adminRole }
 	}
 }

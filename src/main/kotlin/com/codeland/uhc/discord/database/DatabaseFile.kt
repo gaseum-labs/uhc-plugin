@@ -1,4 +1,4 @@
-package com.codeland.uhc.discord.sql
+package com.codeland.uhc.discord.database
 
 import java.sql.Connection
 import java.sql.ResultSet
@@ -12,16 +12,14 @@ abstract class DatabaseFile <Data, Entry> {
 
 	abstract fun pushQuery(entry: Entry): String
 
+	abstract fun removeQuery(entry: Entry): String?
+
 	fun push(connection: Connection, entry: Entry) {
-		val statement = connection.createStatement()
+		sqlQuery(connection, pushQuery(entry))
+	}
 
-		try {
-			statement.executeQuery(pushQuery(entry))
-		} catch (ex: Exception) {
-			ex.printStackTrace()
-		}
-
-		statement.close()
+	fun remove(connection: Connection, entry: Entry) {
+		sqlQuery(connection, removeQuery(entry) ?: return)
 	}
 
 	companion object {
@@ -35,6 +33,18 @@ abstract class DatabaseFile <Data, Entry> {
 
 		fun sqlNull(obj: Any?): String {
 			return obj?.toString() ?: "NULL"
+		}
+
+		private fun sqlQuery(connection: Connection, query: String) {
+			val statement = connection.createStatement()
+
+			try {
+				statement.executeQuery(query)
+			} catch (ex: Exception) {
+				ex.printStackTrace()
+			}
+
+			statement.close()
 		}
 	}
 }

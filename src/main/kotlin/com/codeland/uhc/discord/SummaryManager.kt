@@ -2,9 +2,7 @@ package com.codeland.uhc.discord
 
 import com.codeland.uhc.core.stats.Summary
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.filesystem.DataManager
-import com.codeland.uhc.discord.filesystem.DiscordFilesystem
-import com.codeland.uhc.discord.sql.file.IdsFile
+import com.codeland.uhc.discord.database.file.IdsFile
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -14,7 +12,6 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.time.LocalDateTime
 import java.util.*
 
 class SummaryManager(val bot: MixerBot) {

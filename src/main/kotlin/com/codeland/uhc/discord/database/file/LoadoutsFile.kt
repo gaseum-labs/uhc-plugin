@@ -1,6 +1,6 @@
-package com.codeland.uhc.discord.sql.file
+package com.codeland.uhc.discord.database.file
 
-import com.codeland.uhc.discord.sql.DatabaseFile
+import com.codeland.uhc.discord.database.DatabaseFile
 import com.codeland.uhc.lobbyPvp.Loadout
 import com.codeland.uhc.lobbyPvp.Loadouts
 import java.lang.StringBuilder
@@ -47,6 +47,10 @@ class LoadoutsFile : DatabaseFile<Loadouts, LoadoutsFile.LoadoutEntry>() {
 	override fun pushQuery(entry: LoadoutEntry): String {
 		//language=sql
 		return "EXECUTE updateLoadout ${sqlString(entry.uuid)}, ${entry.slot}, ${sqlString(loadoutToString(entry.loadout))};"
+	}
+
+	override fun removeQuery(entry: LoadoutEntry): String? {
+		return null
 	}
 
 	companion object {

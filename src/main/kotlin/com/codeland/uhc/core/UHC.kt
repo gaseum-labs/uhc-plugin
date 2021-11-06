@@ -6,6 +6,7 @@ import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
+import com.codeland.uhc.discord.DataManager
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.Portal
 import com.codeland.uhc.event.Trader
@@ -41,7 +42,9 @@ object UHC {
 	var teleportGroups = HashMap<UUID, Location>()
 	var worldRadius: Int = 375
 
+	var dataManager: DataManager = DataManager.offlineDataManager()
 	var bot: MixerBot? = null
+
 	lateinit var heartsObjective: Objective
 
 	val areaPerPlayer = area(375.0f) / 8
@@ -71,8 +74,6 @@ object UHC {
 
 		heartsObjective = objective
 
-		/* clear residual teams */
-		TeamData.destroyTeam(null, true, true) {}
 		Bukkit.getServer().onlinePlayers.forEach { player -> Lobby.onSpawnLobby(player) }
 
 		/* begin global ticking task */
@@ -123,7 +124,7 @@ object UHC {
 						Title.Times.of(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
 					)
 
-					TeamData.teams.forEach { it.members.forEach { member ->
+					TeamData.gameTeams().forEach { it.members.forEach { member ->
 						Bukkit.getPlayer(member)?.showTitle(countdownTitle)
 					}}
 
@@ -150,12 +151,8 @@ object UHC {
 						world.setStorm(false)
 					}
 
-					/* give all teams that don't have names a name */
 					/* add people to team vcs */
-					TeamData.teams.forEach { team ->
-						if (team.name == null) team.automaticName()
-						if (preGameConfig.usingBot.get()) bot?.addToTeamChannel(team, team.members)
-					}
+					TeamData.convertPreTeamsToTeams(preGameConfig.usingBot.get())
 
 					/* teleport and set playerData to current */
 					teleportGroups.forEach { (uuid, location) ->
@@ -201,7 +198,7 @@ object UHC {
 			return false
 		}
 
-		val numPlayers = TeamData.teams.fold(0) { acc, team -> acc + team.members.size }
+		val numPlayers = TeamData.gameTeams().fold(0) { acc, team -> acc + team.members.size }
 		if (numPlayers == 0) {
 			messageStream(true, "No one is playing")
 			return false
@@ -240,7 +237,7 @@ object UHC {
 		/* create the master map of teleport locations */
 		teleportGroups = HashMap()
 
-		TeamData.teams.forEachIndexed { i, team ->
+		TeamData.gameTeams().forEachIndexed { i, team ->
 			team.members.forEach { uuid ->
 				teleportGroups[uuid] = tempTeleportLocations[i]
 			}

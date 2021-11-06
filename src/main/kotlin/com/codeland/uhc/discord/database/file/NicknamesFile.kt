@@ -1,8 +1,6 @@
-package com.codeland.uhc.discord.sql.file
+package com.codeland.uhc.discord.database.file
 
-import com.codeland.uhc.discord.sql.DatabaseFile
-import com.codeland.uhc.lobbyPvp.Loadout
-import com.codeland.uhc.lobbyPvp.Loadouts
+import com.codeland.uhc.discord.database.DatabaseFile
 import java.sql.ResultSet
 import java.util.*
 import kotlin.collections.ArrayList
@@ -38,5 +36,10 @@ class NicknamesFile : DatabaseFile<NicknamesFile.Nicknames, NicknamesFile.Nickna
 	override fun pushQuery(entry: NicknameEntry): String {
 		//language=sql
 		return "EXECUTE updateNickname ${sqlString(entry.uuid)}, ${sqlString(entry.nickname)};"
+	}
+
+	override fun removeQuery(entry: NicknameEntry): String {
+		//language=sql
+		return "DELETE FROM Nickname WHERE uuid = ${sqlString(entry.uuid)} AND nickname = ${sqlString(entry.nickname)};"
 	}
 }

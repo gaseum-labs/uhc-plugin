@@ -71,7 +71,7 @@ object Lobby {
 		player.teleport(lobbyLocation(UHC))
 	}
 
-	fun isLinked(player: Player) = UHC.bot?.isLinked(player.uniqueId) ?: true
+	private fun isLinked(player: Player) = UHC.bot?.isLinked(player.uniqueId) ?: true
 
 	fun lobbyTipsTick(subTick: Int) {
 		if (subTick % 20 == 0) {

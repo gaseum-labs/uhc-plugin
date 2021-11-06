@@ -207,4 +207,8 @@ object Util {
 	fun coloredInGameMessage(string: String, color: ChatColor): String {
 		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
 	}
+
+	fun <B> fieldError(name: String, type: String): Bad<B> {
+		return Bad("No value for \"${name}\" <${type}> found")
+	}
 }

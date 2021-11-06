@@ -1,7 +1,7 @@
 package com.codeland.uhc.lobbyPvp.arena
 
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.discord.DataManager
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.lobbyPvp.Arena
 import com.codeland.uhc.lobbyPvp.ArenaManager

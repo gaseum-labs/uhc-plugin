@@ -6,11 +6,13 @@ class PreMixedResult {
 	fun error(error: String?) {
 		errors.add(error ?: "Unknown Error")
 	}
+
+	fun <T> complete(value: T): MixedResult<T> {
+		return MixedResult(value, errors)
+	}
 }
 
-class MixedResult<T>(val value: T, preMixedResult: PreMixedResult) {
-	val errors = preMixedResult.errors
-
+class MixedResult<T>(val value: T, val errors: ArrayList<String>) {
 	operator fun component1(): T {
 		return value
 	}

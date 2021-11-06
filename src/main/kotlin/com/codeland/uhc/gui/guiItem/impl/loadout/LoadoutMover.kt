@@ -1,7 +1,7 @@
 package com.codeland.uhc.gui.guiItem.impl.loadout
 
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.discord.DataManager
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import com.codeland.uhc.gui.MoveableGuiPage

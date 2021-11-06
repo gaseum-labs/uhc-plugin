@@ -1,6 +1,6 @@
-package com.codeland.uhc.discord.sql.file
+package com.codeland.uhc.discord.database.file
 
-import com.codeland.uhc.discord.sql.DatabaseFile
+import com.codeland.uhc.discord.database.DatabaseFile
 import java.sql.ResultSet
 
 class IdsFile : DatabaseFile<IdsFile.Ids, IdsFile.IdsEntry>() {
@@ -53,5 +53,9 @@ class IdsFile : DatabaseFile<IdsFile.Ids, IdsFile.IdsEntry>() {
 			"${sqlNullString(entry.summaryStagingChannel)}," +
 			"${sqlNullString(entry.summaryChannel)}," +
 			"${sqlNullString(entry.adminRole)};"
+	}
+
+	override fun removeQuery(entry: IdsEntry): String? {
+		return null
 	}
 }

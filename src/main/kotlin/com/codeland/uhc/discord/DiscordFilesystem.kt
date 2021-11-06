@@ -1,7 +1,5 @@
-package com.codeland.uhc.discord.filesystem
+package com.codeland.uhc.discord
 
-import com.codeland.uhc.discord.MixerBot
-import com.codeland.uhc.util.Bad
 import net.dv8tion.jda.api.entities.Category
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
@@ -41,9 +39,5 @@ object DiscordFilesystem {
 
 	fun isSummaryStagingChannel(bot: MixerBot, channel: TextChannel): Boolean {
 		return channel.idLong == bot.dataManager.ids.summaryStagingChannel
-	}
-
-	fun <B> fieldError(name: String, type: String): Bad<B> {
-		return Bad("No value for \"${name}\" <${type}> found")
 	}
 }

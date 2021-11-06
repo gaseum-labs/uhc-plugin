@@ -3,11 +3,9 @@ package com.codeland.uhc.discord.command.commands
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.MojangAPI
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.filesystem.DataManager
-import com.codeland.uhc.discord.filesystem.DiscordFilesystem
-import com.codeland.uhc.discord.sql.file.LinkDataFile
+import com.codeland.uhc.discord.DataManager
+import com.codeland.uhc.discord.database.file.LinkDataFile
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import java.util.*
 
 class LinkCommand : MixerCommand(false) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {

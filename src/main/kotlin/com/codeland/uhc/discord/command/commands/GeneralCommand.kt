@@ -2,8 +2,8 @@ package com.codeland.uhc.discord.command.commands
 
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.filesystem.DataManager
-import com.codeland.uhc.discord.sql.file.IdsFile
+import com.codeland.uhc.discord.DataManager
+import com.codeland.uhc.discord.database.file.IdsFile
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class GeneralCommand : MixerCommand(true) {

@@ -2,7 +2,7 @@ package com.codeland.uhc.discord.command.commands
 
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.discord.DiscordFilesystem
 import com.codeland.uhc.util.Bad
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 

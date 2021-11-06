@@ -1,6 +1,6 @@
-package com.codeland.uhc.discord.sql.file
+package com.codeland.uhc.discord.database.file
 
-import com.codeland.uhc.discord.sql.DatabaseFile
+import com.codeland.uhc.discord.database.DatabaseFile
 import java.sql.ResultSet
 import java.util.*
 import kotlin.collections.HashMap
@@ -40,5 +40,9 @@ class LinkDataFile : DatabaseFile<LinkDataFile.LinkData, LinkDataFile.LinkEntry>
 	override fun pushQuery(entry: LinkEntry): String {
 		//language=sql
 		return "EXECUTE updatePlayer ${sqlString(entry.uuid)}, ${sqlNullString(entry.name)}, ${sqlNull(entry.discordId)};"
+	}
+
+	override fun removeQuery(entry: LinkEntry): String? {
+		return null
 	}
 }
