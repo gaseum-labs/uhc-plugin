@@ -178,8 +178,8 @@ class MixerBot(
 	/*         TEAM UTILITY         */
 	/* ---------------------------- */
 
-	fun destroyTeamChannel(team: Team) {
-		getTeamChannel(team.id) { teamChannel ->
+	fun destroyTeamChannel(teamId: Int) {
+		getTeamChannel(teamId) { teamChannel ->
 			destroyTeamChannel(guild, teamChannel)
 		}
 	}
@@ -190,13 +190,13 @@ class MixerBot(
 	 * @param teamSize the number of players on this team before removal
 	 * @param players a list of player UUIDs on the team to move to general
 	 */
-	fun removeFromTeamChannel(team: Team, teamSize: Int, players: ArrayList<UUID>) {
+	fun removeFromTeamChannel(teamId: Int, teamSize: Int, players: List<UUID>) {
 		val voiceChannel = generalVoiceChannel() ?: return
 
 		/* should never be above but just in case */
 		/* remove everyone, delete channel */
 		if (players.size >= teamSize) {
-			destroyTeamChannel(team)
+			destroyTeamChannel(teamId)
 
 		/* remove only certain players, don't delete channel */
 		} else {
@@ -206,8 +206,8 @@ class MixerBot(
 		}
 	}
 
-	fun addToTeamChannel(team: Team, players: ArrayList<UUID>) {
-		getTeamChannel(team.id) { teamChannel ->
+	fun addToTeamChannel(teamId: Int, players: List<UUID>) {
+		getTeamChannel(teamId) { teamChannel ->
 			voiceMembersFromPlayers(guild, players).forEach { member ->
 				guild.moveVoiceMember(member, teamChannel).queue()
 			}
@@ -223,9 +223,9 @@ class MixerBot(
 	 * the voiceChannel is passed into onVoiceChannel
 	 * callback is not called if there was an error
 	 */
-	private fun getTeamChannel(id: Int, onVoiceChannel: (VoiceChannel) -> Unit) {
+	private fun getTeamChannel(teamdId: Int, onVoiceChannel: (VoiceChannel) -> Unit) {
 		val category = voiceCategory() ?: return
-		val teamChannelName = "Team $id"
+		val teamChannelName = "Team $teamdId"
 
 		val existingChannel = category.voiceChannels.find { channel -> channel.name == teamChannelName }
 
@@ -282,7 +282,7 @@ class MixerBot(
 
 	fun isLinked(uuid: UUID) = dataManager.linkData.minecraftToDiscord.containsKey(uuid)
 
-	private fun voiceMembersFromPlayers(guild: Guild, players: ArrayList<UUID>): List<Member> {
+	private fun voiceMembersFromPlayers(guild: Guild, players: List<UUID>): List<Member> {
 		return players.mapNotNull { dataManager.linkData.minecraftToDiscord[it] }
 			.mapNotNull { guild.getMemberById(it) }
 			.filter { it.voiceState?.inVoiceChannel() == true }

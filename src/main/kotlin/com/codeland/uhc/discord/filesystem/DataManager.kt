@@ -35,6 +35,8 @@ class DataManager(
 				}
 			}
 
+			statement.close()
+
 			val ids = load(idsFile)
 			val linkData = load(linkDataFile)
 			val loadouts = load(loadoutsFile)

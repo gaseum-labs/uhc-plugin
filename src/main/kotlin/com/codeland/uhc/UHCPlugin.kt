@@ -24,6 +24,7 @@ class UHCPlugin : JavaPlugin() {
 
 	companion object {
 		lateinit var plugin: JavaPlugin
+		val configFile = ConfigFile.load()
 	}
 
 	override fun onEnable() {
@@ -59,8 +60,6 @@ class UHCPlugin : JavaPlugin() {
 		Packet.init()
 
 		WorldGenManager.init(server)
-
-		val configFile = ConfigFile.load()
 
 		if (configFile.production) println(try {
 			GoogleDDNSUpdater.updateDomain(WebAddress.getLocalAddress())

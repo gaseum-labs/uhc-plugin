@@ -4,23 +4,28 @@ import com.codeland.uhc.discord.sql.DatabaseFile
 import java.sql.ResultSet
 
 class IdsFile : DatabaseFile<IdsFile.Ids, IdsFile.IdsEntry>() {
+	companion object {
+		const val INVALID_ID = 0L
+	}
+
 	class Ids(
-		val voiceCategory: Long,
-		val generalVoiceChannel: Long,
-		val summaryStagingChannel: Long,
-		val summaryChannel: Long,
-		val adminRole: Long,
+		var voiceCategory: Long,
+		var generalVoiceChannel: Long,
+		var summaryStagingChannel: Long,
+		var summaryChannel: Long,
+		var adminRole: Long,
 	)
 
 	data class IdsEntry(
-		val voiceCategory: Long?,
-		val generalVoiceChannel: Long?,
-		val summaryStagingChannel: Long?,
-		val summaryChannel: Long?,
-		val adminRole: Long?,
+		val voiceCategory: Long? = null,
+		val generalVoiceChannel: Long? = null,
+		val summaryStagingChannel: Long? = null,
+		val summaryChannel: Long? = null,
+		val adminRole: Long? = null,
 	)
 
 	override fun query(): String {
+		//language=sql
 		return "SELECT TOP 1 voiceCategory, generalVoiceChannel, summaryStagingChannel, summaryChannel, adminRole FROM DiscordData"
 	}
 
@@ -37,21 +42,16 @@ class IdsFile : DatabaseFile<IdsFile.Ids, IdsFile.IdsEntry>() {
 	}
 
 	override fun defaultData(): Ids {
-		return Ids(0L, 0L, 0L, 0L, 0L)
+		return Ids(INVALID_ID, INVALID_ID, INVALID_ID, INVALID_ID, INVALID_ID)
 	}
 
 	override fun pushQuery(entry: IdsEntry): String {
-		val (f0, f1, f2, f3, f4) = entry
-
-		return if (f0 == null && f1 == null && f2 == null && f3 == null && f4 == null) {
-			";"
-		} else {
-			"UPDATE DiscordData SET \n" +
-				if (f0 != null) "voiceCategory = $f0,\n" else "" +
-				if (f1 != null) "generalVoiceChannel = $f1,\n" else ""+
-				if (f2 != null) "summaryStagingChannel = $f2,\n" else ""+
-				if (f3 != null) "summaryChannel = $f3,\n" else "" +
-				if (f4 != null) "adminRole = $f4;" else ";"
-		}
+		//language=sql
+		return "EXECUTE updateDiscordData " +
+			"${sqlNullString(entry.voiceCategory)}," +
+			"${sqlNullString(entry.generalVoiceChannel)}," +
+			"${sqlNullString(entry.summaryStagingChannel)}," +
+			"${sqlNullString(entry.summaryChannel)}," +
+			"${sqlNullString(entry.adminRole)};"
 	}
 }

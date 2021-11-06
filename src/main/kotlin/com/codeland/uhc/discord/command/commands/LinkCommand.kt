@@ -5,7 +5,9 @@ import com.codeland.uhc.discord.MojangAPI
 import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.discord.sql.file.LinkDataFile
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import java.util.*
 
 class LinkCommand : MixerCommand(false) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
@@ -20,29 +22,20 @@ class LinkCommand : MixerCommand(false) {
 			event.channel.sendMessage("Something went wrong with the connection").queue()
 
 		} else {
+			val discordId = event.author.idLong
 			val uuid = uuidResponse.convertUuid() ?: return event.channel.sendMessage("That Minecraft username does not exist!").queue()
 
-			/* save link data for this user */
-			val discordId = event.author.idLong
-			val userIndex = bot.getDiscordUserIndex(discordId)
+			val linkData = bot.dataManager.linkData
 
-			try {
-				val linkData = DataManager.linkData
+			linkData.minecraftToDiscord[uuid] = discordId
+			linkData.discordToMinecraft[discordId] = uuid
 
-				if (userIndex == -1) {
-					linkData.discordIds.add(discordId)
-					linkData.minecraftIds.add(uuid)
-				} else {
-					linkData.minecraftIds[userIndex] = uuid
-					println(uuid)
-				}
-
-				DiscordFilesystem.linkDataFile.save(event.guild, linkData)
-
-				event.channel.sendMessage("Successfully linked as ${uuidResponse.name}").queue()
-			} catch (ex: Exception) {
-				ex.printStackTrace()
+			val connection = bot.connection
+			if (connection != null) {
+				DataManager.linkDataFile.push(connection, LinkDataFile.LinkEntry(uuid, uuidResponse.name, discordId))
 			}
+
+			event.channel.sendMessage("Successfully linked as ${uuidResponse.name}").queue()
 		}
 	}
 }

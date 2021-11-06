@@ -12,6 +12,7 @@ class LoadoutsFile : DatabaseFile<Loadouts, LoadoutsFile.LoadoutEntry>() {
 	class LoadoutEntry(val uuid: UUID, val slot: Int, val loadout: Loadout)
 
 	override fun query(): String {
+		//language=sql
 		return "SELECT DISTINCT p.uuid, slot0, slot1, slot2 FROM PvpLoadout p\n" +
 			"INNER JOIN (SELECT uuid, slot, loadoutData AS slot0 FROM PvpLoadout) p0 ON p.uuid = p0.uuid AND p0.slot = 0\n" +
 			"INNER JOIN (SELECT uuid, slot, loadoutData AS slot1 FROM PvpLoadout) p1 ON p.uuid = p1.uuid AND p1.slot = 1\n" +
@@ -44,18 +45,8 @@ class LoadoutsFile : DatabaseFile<Loadouts, LoadoutsFile.LoadoutEntry>() {
 	}
 
 	override fun pushQuery(entry: LoadoutEntry): String {
-		return """
-			DECLARE @uuid UNIQUEIDENTIFIER = '${entry.uuid}';
-			DECLARE @slot INT = ${entry.slot};
-			DECLARE @data VARCHAR(MAX) = '${loadoutToString(entry.loadout)}';
-
-			IF EXISTS (SELECT uuid, slot FROM PvpLoadout WHERE uuid = @uuid AND slot = @slot) BEGIN
-			    UPDATE PvpLoadout SET loadoutData = @data WHERE uuid = @uuid AND slot = @slot;
-			END
-			ELSE BEGIN
-			    INSERT INTO PvpLoadout (uuid, slot, loadoutData) VALUES (@uuid, @slot, @data);
-			END
-		""".trimIndent()
+		//language=sql
+		return "EXECUTE updateLoadout ${sqlString(entry.uuid)}, ${entry.slot}, ${sqlString(loadoutToString(entry.loadout))};"
 	}
 
 	companion object {

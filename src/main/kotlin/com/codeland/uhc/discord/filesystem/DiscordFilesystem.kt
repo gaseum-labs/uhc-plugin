@@ -11,7 +11,6 @@ import java.util.concurrent.CompletableFuture
 
 object DiscordFilesystem {
 	const val CATEGORY_NAME = "bot"
-	const val DATA_CHANNEL_NAME = "data"
 
 	fun getBotCategory(guild: Guild): Category? {
 		val categories = guild.getCategoriesByName(CATEGORY_NAME, true)
@@ -38,10 +37,6 @@ object DiscordFilesystem {
 		} else {
 			attachment.retrieveInputStream()
 		}
-	}
-
-	fun isDataChannel(channel: TextChannel): Boolean {
-		return channel.parent?.name == CATEGORY_NAME && channel.name == DATA_CHANNEL_NAME
 	}
 
 	fun isSummaryStagingChannel(bot: MixerBot, channel: TextChannel): Boolean {

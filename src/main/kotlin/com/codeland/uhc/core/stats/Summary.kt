@@ -1,27 +1,25 @@
 package com.codeland.uhc.core.stats
 
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem.fieldError
+import com.codeland.uhc.discord.sql.DatabaseFile
+import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Result
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.gson.internal.LinkedTreeMap
-import it.unimi.dsi.fastutil.Hash
-import org.apache.commons.collections4.multimap.HashSetValuedHashMap
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.time.LocalDateTime
+import java.sql.Connection
 import java.time.ZonedDateTime
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class Summary(
 	val gameType: GameType,
 	val date: ZonedDateTime,
 	val gameLength: Int,
-	val players: List<SummaryEntry>
+	val teams: List<Team>,
+	val players: List<SummaryEntry>,
 ) {
 	data class SummaryEntry(
 		val place: Int,
@@ -62,15 +60,19 @@ class Summary(
 		}
 	}
 
-	fun write(): String {
-		return GsonBuilder()
-			.setPrettyPrinting()
+	fun write(pretty: Boolean): String {
+		val builder = GsonBuilder()
+
+		if (pretty) builder.setPrettyPrinting()
+
+		return builder
 			.disableHtmlEscaping()
 			.create()
 			.toJson(hashMapOf(
 				Pair("gameType", gameType.name),
 				Pair("date", date.toString()),
 				Pair("gameLength", gameLength),
+				Pair("teams", teams.map { it.serialize() }),
 				Pair("players", players.map { it.serialize() }),
 			))
 	}
@@ -89,6 +91,12 @@ class Summary(
 
 	fun nameMap(): Map<UUID, String> {
 		return players.associate { (_, uuid, name) -> Pair(uuid, name) }
+	}
+
+	fun pushToDatabase(connection: Connection) {
+		val statement = connection.createStatement()
+		//language=sql
+		statement.executeQuery("EXECUTE uploadSummary ${DatabaseFile.sqlString(write(false))};")
 	}
 
 	companion object {
@@ -110,6 +118,16 @@ class Summary(
 
 			val gameLength = (gson["gameLength"] as? Double ?: return fieldError("gameLength", "int")).toInt()
 
+			val teams = (
+				gson["teams"] as? ArrayList<AbstractMap<String, *>>
+					?: return fieldError("teams", "array")
+			).map {
+				when (val r = Team.deserialize(it)) {
+					is Good -> r.value
+					is Bad -> return r.forward()
+				}
+			}
+
 			val players = (
 				gson["players"] as? ArrayList<AbstractMap<String, *>>
 					?: return fieldError("players", "array")
@@ -120,7 +138,7 @@ class Summary(
 				}
 			}
 
-			return Good(Summary(gameType, date, gameLength, players))
+			return Good(Summary(gameType, date, gameLength, teams, players))
 		}
 	}
 }

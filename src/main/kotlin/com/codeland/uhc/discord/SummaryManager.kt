@@ -4,6 +4,7 @@ import com.codeland.uhc.core.stats.Summary
 import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.filesystem.DataManager
 import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.discord.sql.file.IdsFile
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -18,16 +19,21 @@ import java.util.*
 
 class SummaryManager(val bot: MixerBot) {
 	fun getSummariesChannel(): TextChannel? {
-		val guild = bot.guild() ?: return null
+		val ids = bot.dataManager.ids
+		if (ids.summaryChannel == IdsFile.INVALID_ID) return null
 
-		val channel = guild.getGuildChannelById(DataManager.ids.summariesChannelId)
+		val channel = bot.guild.getGuildChannelById(ids.summaryChannel)
 
 		return if (channel == null) {
-			val createdChannel = guild.createTextChannel("summaries").complete()
+			val createdChannel = bot.guild.createTextChannel("summaries").complete()
 
 			/* update the summary channel id with the created channel's id */
-			DataManager.ids.summariesChannelId = createdChannel.idLong
-			DiscordFilesystem.idsFile.save(guild, DataManager.ids)
+			ids.summaryChannel = createdChannel.idLong
+
+			val connection = bot.connection
+			if (connection != null) {
+				DataManager.idsFile.push(connection, IdsFile.IdsEntry(summaryChannel = createdChannel.idLong))
+			}
 
 			createdChannel
 
@@ -37,17 +43,22 @@ class SummaryManager(val bot: MixerBot) {
 	}
 
 	fun getStagingChannel(): TextChannel? {
-		val guild = bot.guild() ?: return null
+		val ids = bot.dataManager.ids
+		if (ids.summaryStagingChannel == IdsFile.INVALID_ID) return null
 
-		val channel = guild.getGuildChannelById(DataManager.ids.summaryStagingChannelId)
+		val channel = bot.guild.getGuildChannelById(ids.summaryStagingChannel)
 
 		return if (channel == null) {
-			val category = DiscordFilesystem.getBotCategory(guild) ?: return null
+			val category = DiscordFilesystem.getBotCategory(bot.guild) ?: return null
 			val createdChannel = category.createTextChannel("summary-staging").complete()
 
 			/* update the staging channel id with the created channel's id */
-			DataManager.ids.summaryStagingChannelId = createdChannel.idLong
-			DiscordFilesystem.idsFile.save(guild, DataManager.ids)
+			ids.summaryStagingChannel = createdChannel.idLong
+
+			val connection = bot.connection
+			if (connection != null) {
+				DataManager.idsFile.push(connection, IdsFile.IdsEntry(summaryStagingChannel = createdChannel.idLong))
+			}
 
 			createdChannel
 
@@ -57,7 +68,7 @@ class SummaryManager(val bot: MixerBot) {
 	}
 
 	fun stageSummary(summary: Summary) {
-		getStagingChannel()?.sendFile(summary.write().toByteArray(), "summary_${UUID.randomUUID()}.json")?.queue()
+		getStagingChannel()?.sendFile(summary.write(true).toByteArray(), "summary_${UUID.randomUUID()}.json")?.queue()
 	}
 
 	fun sendFinalSummary(season: Int, game: Int, summary: Summary, event: GuildMessageReceivedEvent) {

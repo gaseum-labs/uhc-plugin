@@ -1,10 +1,9 @@
 package com.codeland.uhc.discord.command.commands
 
-import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.filesystem.DataManager
-import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.discord.sql.file.IdsFile
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class GeneralCommand : MixerCommand(true) {
@@ -22,16 +21,16 @@ class GeneralCommand : MixerCommand(true) {
 		val category = voiceChannel.parent
 			?: return event.channel.sendMessage("Voice channel ${voiceChannel.name} must be in a category!").queue().unit()
 
-		/* save channel ids */
-		bot.guildId = message.guild.idLong
-		ConfigFile.save(bot.production, bot.token, bot.guildId.toString())
 
-		val ids = DataManager.ids
+		val ids = bot.dataManager.ids
 
-		ids.voiceCategoryId = category.idLong
-		ids.generalVoiceChannelId = voiceChannel.idLong
+		ids.voiceCategory = category.idLong
+		ids.generalVoiceChannel = voiceChannel.idLong
 
-		DiscordFilesystem.idsFile.save(event.guild, ids)
+		val connection = bot.connection
+		if (connection != null) {
+			DataManager.idsFile.push(connection, IdsFile.IdsEntry(voiceCategory = ids.voiceCategory, generalVoiceChannel = ids.generalVoiceChannel))
+		}
 
 		event.channel.sendMessage("${voiceChannel.name} successfully set as general channel!").queue().void()
 	}

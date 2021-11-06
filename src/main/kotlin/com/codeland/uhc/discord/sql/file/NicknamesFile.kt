@@ -14,6 +14,7 @@ class NicknamesFile : DatabaseFile<NicknamesFile.Nicknames, NicknamesFile.Nickna
 	class NicknameEntry(val uuid: UUID, val nickname: String)
 
 	override fun query(): String {
+		//language=sql
 		return "SELECT uuid, nickname FROM Nickname"
 	}
 
@@ -35,11 +36,7 @@ class NicknamesFile : DatabaseFile<NicknamesFile.Nicknames, NicknamesFile.Nickna
 	}
 
 	override fun pushQuery(entry: NicknameEntry): String {
-		return """
-			DECLARE @uuid UNIQUEIDENTIFIER = '${entry.uuid}';
-			DECLARE @nickname VARCHAR(MAX) = '${entry.nickname}';
-
-			INSERT INTO Nickname (uuid, nickname) VALUES (@uuid, @nickname); 
-		""".trimIndent()
+		//language=sql
+		return "EXECUTE updateNickname ${sqlString(entry.uuid)}, ${sqlString(entry.nickname)};"
 	}
 }
