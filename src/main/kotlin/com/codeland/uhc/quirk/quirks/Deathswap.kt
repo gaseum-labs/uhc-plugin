@@ -7,7 +7,10 @@ import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.team.Team
+import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import java.util.UUID
@@ -28,21 +31,53 @@ class Deathswap(type: QuirkType, game: Game) : Quirk(type, game) {
 		if (phase is Postgame) Bukkit.getScheduler().cancelTask(taskId)
 	}
 
-	fun doSwaps() {
-		val players = PlayerData.playerDataList
-				.filter { it.value.participating && it.value.alive }
-				.keys.toList()
-		if (players.size < 2) return
-		var playersShuffled: List<UUID>
-		// make sure everyone teleports to a different location
-		// takes on average 2.71 (e?) trials to ensure this
+	/**
+	 * Return a random permutation of the given list with the property
+	 * that no element is in the same position as it was before.
+	 */
+	fun <T> derangement(list: List<T>): List<T> {
+		if (list.size < 2) throw IllegalArgumentException("The list can't have one or zero elements.")
+        var res: List<T>
 		do {
-			playersShuffled = players.shuffled()
-		} while (players.zip(playersShuffled).any { it.first == it.second })
-		players
-				.zip(playersShuffled.map { Action.getPlayerLocation(it) ?: game.spectatorSpawnLocation() })
-				.forEach { (uuid, location) -> Action.teleportPlayer(uuid, location)
-        }
+			res = list.shuffled()
+		} while(res.zip(list).any { it.first == it.second })
+		return res
+    }
+
+	/**
+	 * Zip two lists with duplicate elements used if necessary.
+	 *
+	 * For example, `unbalancedZip(listOf(1, 2, 3), listOf(4, 5)) == listOf((1, 4), (2, 5), (3, 4))`
+	 *
+	 * @see List.zip
+	 */
+	fun <T, R> unbalancedZip(list1: List<T>, list2: List<R>): List<Pair<T, R>> {
+		return if (list1.size <= list2.size) {
+			list1.zip(list2)
+		} else {
+			unbalancedZip(list1, list2.plus(list2))
+		}
+	}
+
+	fun doSwaps() {
+		val teams = TeamData.teams
+		if (teams.size < 2) return
+		val shuffledTeams = derangement(teams)
+		teams.zip(shuffledTeams).forEach {
+			fun getSwapPositions(team: List<UUID>)
+				= team.map(Action::getPlayerLocation).map { it ?: game.spectatorSpawnLocation() }
+			val team1 = it.first.members
+			val team2 = it.second.members
+			val team1Locations = getSwapPositions(team1)
+			val team2Locations = getSwapPositions(team2)
+
+			unbalancedZip(team1.shuffled(), team2Locations.shuffled()).forEach {
+				(player, location) -> Action.teleportPlayer(player, location)
+			}
+			unbalancedZip(team2.shuffled(), team1Locations.shuffled()).forEach {
+				(player, location) -> Action.teleportPlayer(player, location)
+			}
+		}
 	}
 
 	fun resetTimer() {
