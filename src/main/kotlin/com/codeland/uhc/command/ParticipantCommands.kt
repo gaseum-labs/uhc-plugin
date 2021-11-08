@@ -17,7 +17,6 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.*
-import net.kyori.adventure.text.Component
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -175,7 +174,7 @@ class ParticipantCommands : BaseCommand() {
 
 		val classes = game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
-		if (classes.getClass(sender.uniqueId) != QuirkClass.TRAPPER) return Commands.errorMessage(sender, "Your class can't use this command.")
+		if (classes.getClass(sender.uniqueId) != QuirkClass.ENGINEER) return Commands.errorMessage(sender, "Your class can't use this command.")
 
 		val control = Classes.remoteControls.find { (item, _, _) ->
 			item == sender.inventory.itemInMainHand }

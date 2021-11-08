@@ -23,6 +23,7 @@ import org.bukkit.inventory.meta.ItemMeta
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.random.Random
 
 class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 	init {
@@ -73,7 +74,12 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 					val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 					if (getClass(playerData) == QuirkClass.ENCHANTER) {
-						val slot = (Math.random() * 5).toInt()
+						if (!player.inventory.contains(Material.GRINDSTONE)
+						  && player.inventory.contents.any { it == null }) {
+							player.inventory.addItem(ItemStack(Material.GRINDSTONE))
+						}
+
+						val slot = Random.nextInt(5)
 
 						if (slot < 4)
 							regenDurability(player.inventory.armorContents[slot])

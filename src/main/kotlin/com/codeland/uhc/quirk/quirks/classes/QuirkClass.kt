@@ -7,11 +7,19 @@ import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
-enum class QuirkClass(val prettyName: String, val headBlock: Material, val onStart: (Player) -> Unit, val headMeta: (ItemMeta) -> Unit, val onEnd: (Player) -> Unit) {
-	NO_CLASS("", Material.DIRT, {}, {}, {}),
+enum class QuirkClass(val prettyName: String, val headBlock: Material,
+					  val onStart: (Player) -> Unit = {},
+					  val headMeta: (ItemMeta) -> Unit = {},
+					  val onEnd: (Player) -> Unit = {},
+) {
+
+	NO_CLASS("", Material.DIRT),
 
 	LAVACASTER("Lavacaster", Material.MAGMA_BLOCK, { player ->
-		player.addPotionEffect(PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false, true))
+		player.addPotionEffect(PotionEffect(
+				PotionEffectType.FIRE_RESISTANCE,
+				Integer.MAX_VALUE, 0,
+				false, false, true))
 	}, {}, { player ->
 		player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE)
 	}),
@@ -22,17 +30,20 @@ enum class QuirkClass(val prettyName: String, val headBlock: Material, val onSta
 		Classes.minerDatas.remove(player.uniqueId)
 	}),
 
-	HUNTER("Hunter", Material.SPAWNER, {}, {}, {}),
+	HUNTER("Hunter", Material.SPAWNER),
 
-	ENCHANTER("Enchanter", Material.ENCHANTING_TABLE, {}, {}, {}),
+	ENCHANTER("Enchanter", Material.ENCHANTING_TABLE),
 
 	DIVER("Diver", Material.PRISMARINE_BRICKS, { player ->
-		player.addPotionEffect(PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false, true))
+		player.addPotionEffect(PotionEffect(
+				PotionEffectType.WATER_BREATHING,
+				Integer.MAX_VALUE, 0,
+				false, false, true))
 	}, { itemMeta ->
 		itemMeta.addEnchant(Enchantment.WATER_WORKER, 1, true)
 	}, { player ->
 		player.removePotionEffect(PotionEffectType.WATER_BREATHING)
 	}),
 
-	TRAPPER("Trapper", Material.PISTON, {}, {}, {})
+	ENGINEER("Engineer", Material.PISTON)
 }

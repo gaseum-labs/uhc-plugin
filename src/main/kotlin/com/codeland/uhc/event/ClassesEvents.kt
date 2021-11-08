@@ -1,7 +1,6 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.QuirkType
@@ -10,6 +9,7 @@ import com.codeland.uhc.quirk.quirks.classes.Classes.Companion.HUNTER_SPAWN_META
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.extensions.VectorExtensions.plus
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.Location
@@ -18,9 +18,7 @@ import org.bukkit.Sound
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import org.bukkit.block.data.FaceAttachable
 import org.bukkit.block.data.Levelled
-import org.bukkit.block.data.type.Grindstone
 import org.bukkit.block.data.type.Switch
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
@@ -28,6 +26,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
@@ -39,6 +38,7 @@ import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.bukkit.util.Vector
 
 class ClassesEvents : Listener {
 	private fun surface(block: Block): Boolean {
@@ -72,13 +72,6 @@ class ClassesEvents : Listener {
 				auraReplacer(player, Classes.obsidianifiedLava, Material.LAVA, Material.OBSIDIAN, 3, -2, -1, 3, { block ->
 					Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
 				}, {})
-			}
-			QuirkClass.ENCHANTER -> {
-				auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 0, -1, -1, 0, { it }, { block ->
-					val data = block.blockData as Grindstone
-					data.attachedFace = FaceAttachable.AttachedFace.FLOOR
-					block.setBlockData(data, false)
-				})
 			}
 			QuirkClass.DIVER -> {
 				if (player.world.environment != World.Environment.NETHER) {
@@ -131,7 +124,7 @@ class ClassesEvents : Listener {
 			}
 		}
 
-		if (classes.getClass(player.uniqueId) == QuirkClass.TRAPPER && event.cause == EntityDamageEvent.DamageCause.FALL) {
+		if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER && event.cause == EntityDamageEvent.DamageCause.FALL) {
 			event.isCancelled = true
 		}
 	}
@@ -265,7 +258,7 @@ class ClassesEvents : Listener {
 	fun blockBreak(event: BlockBreakEvent) {
 		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENGINEER) {
 			val logs = listOf(
 					Material.OAK_LOG,
 					Material.BIRCH_LOG,
@@ -328,7 +321,7 @@ class ClassesEvents : Listener {
 	fun interactEvent(event: PlayerInteractEvent) {
 		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENGINEER) {
 			when (event.action) {
 				Action.LEFT_CLICK_BLOCK -> {
 					if (event.player.isSneaking && event.clickedBlock!!.type == Material.LEVER) {
@@ -554,4 +547,27 @@ class ClassesEvents : Listener {
 			}
 		}
 	}
+
+	@EventHandler
+	fun onBlockPlace(event: BlockPlaceEvent) {
+        val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+        val player = event.player
+
+        if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER) {
+            when (event.block.type) {
+				Material.LIGHT_WEIGHTED_PRESSURE_PLATE -> {
+					for (x in -1..1) for (y in 0..7) for (z in -1..1) {
+						if (player.location.block.getRelative(x, y, z).type.isSolid) {
+							event.isCancelled = true
+							com.codeland.uhc.util.Action.sendGameMessage(player, "You can't use that here. Get to a more open area.")
+                            return
+						}
+					}
+					player.velocity += Vector(0.0, 0.5, 0.0) // fine tune
+
+				}
+			}
+        }
+    }
 }
