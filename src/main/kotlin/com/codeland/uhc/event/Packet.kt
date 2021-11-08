@@ -1,19 +1,19 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
-import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.team.AbstractTeam
 import com.codeland.uhc.util.Util
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.events.*
+import com.comphenix.protocol.events.ListenerPriority
+import com.comphenix.protocol.events.PacketAdapter
+import com.comphenix.protocol.events.PacketContainer
+import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.EnumChatFormat
 import net.minecraft.network.chat.ChatComponentText
@@ -32,10 +32,8 @@ import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
-import org.bukkit.event.inventory.InventoryType
 import java.util.*
 import kotlin.experimental.or
-import kotlin.random.Random
 
 object Packet {
 	val playerNames = arrayListOf<UUID>()
@@ -113,7 +111,7 @@ object Packet {
 
 	fun updateTeamColor(
 		teamPlayer: Player,
-		uhcTeam: Team?,
+		uhcTeam: AbstractTeam?,
 		newName: String,
 		sentPlayer: Player
 	) {
@@ -213,7 +211,8 @@ object Packet {
 
 				val metaPlayerID = packetEntityIdField.getInt(event.packet.handle)
 				val metaPlayer = Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
-				val sentPlayerTeam = TeamData.playersTeam(sentPlayer.uniqueId)
+				/* only set when the game is going */
+				val sentPlayerTeam = UHC.game?.teams?.playersTeam(sentPlayer.uniqueId)
 				val metaPlayersArena = ArenaManager.playersArena(metaPlayer.uniqueId)
 
 				/* begin modifying packet */

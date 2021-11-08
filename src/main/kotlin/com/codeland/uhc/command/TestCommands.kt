@@ -17,7 +17,6 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -116,7 +115,7 @@ class TestCommands : BaseCommand() {
 	@Description("get this player's playerData")
 	fun testPlayerData(sender: CommandSender, player: OfflinePlayer) {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val team = TeamData.playersTeam(player.uniqueId)
+		val team = UHC.getTeams().playersTeam(player.uniqueId)
 
 		Action.sendGameMessage(sender, "PlayerData for ${player.name}:")
 		Action.sendGameMessage(sender, "Participating: ${playerData.participating}")
@@ -125,7 +124,7 @@ class TestCommands : BaseCommand() {
 		Action.sendGameMessage(sender, "Last Played: ${playerData.lastPlayed}")
 		Action.sendGameMessage(sender, "Arena: ${ArenaManager.playersArena(player.uniqueId)}")
 		sender.sendMessage(Component.text("Team: ", NamedTextColor.GOLD, TextDecoration.BOLD).append(
-			team?.apply(team.name ?: "[Unnamed]") ?: Component.text("[Not on a team]", NamedTextColor.RED)
+			team?.apply(team.grabName()) ?: Component.text("[Not on a team]", NamedTextColor.RED)
 		))
 	}
 
@@ -222,9 +221,10 @@ class TestCommands : BaseCommand() {
 	fun testKillReward(sender: CommandSender) {
 		sender as Player
 
-		val killReward = UHC.game?.config?.killReward?.get() ?: return errorMessage(sender, "Game is not going")
+		val game = UHC.game ?: return errorMessage(sender, "Game is not going")
+		val killReward = game.config.killReward.get()
 
-		killReward.apply(sender.uniqueId, TeamData.playersTeam(sender.uniqueId)?.members ?: arrayListOf(), sender.location)
+		killReward.apply(sender.uniqueId, game.teams.playersTeam(sender.uniqueId)?.members ?: arrayListOf(), sender.location)
 	}
 
 	@Subcommand("trader")

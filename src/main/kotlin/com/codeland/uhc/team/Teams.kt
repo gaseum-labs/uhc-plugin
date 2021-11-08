@@ -2,30 +2,41 @@ package com.codeland.uhc.team
 
 import com.codeland.uhc.util.extensions.ArrayListExtensions.removeFirst
 import org.bukkit.Bukkit
+import org.bukkit.OfflinePlayer
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.ceil
 import kotlin.random.Random
 
-abstract class Teams <T: AbstractTeam> (val onPlayerMovement: (uuids: List<UUID>, teamId: Int?) -> Unit) {
-	val teams = ArrayList<Pair<T, Int>>()
+class Teams <T: AbstractTeam> (
+	val onPlayerMovement: (action: MoveAction) -> Unit,
+	val teamCleanup: (team: T) -> Unit
+) {
+	sealed class MoveAction(val uuids: List<UUID>, val team: AbstractTeam?)
+	class ClearAction  (uuids: List<UUID>) : MoveAction(uuids, null)
+	class AddAction    (val id: Int, uuids: List<UUID>, team: AbstractTeam?) : MoveAction(uuids, team)
+	class RemoveAction (val size: Int, val id: Int, uuids: List<UUID>) : MoveAction(uuids, null)
+
+	private val teams = ArrayList<Pair<T, Int>>()
+
+	fun teams(): List<T> {
+		return teams.map { it.first }
+	}
 
 	fun playersTeam(uuid: UUID): T? {
-		return teams.find { (team, _) ->
-			team.members.contains(uuid)
-		}?.first
+		return teams.find { (team) -> team.members.contains(uuid) }?.first
+	}
+
+	fun isOnTeam(uuid: UUID): Boolean {
+		return playersTeam(uuid) != null
 	}
 
 	fun playersTeamId(uuid: UUID): Pair<T, Int>? {
-		return teams.find { (team, _) ->
-			team.members.contains(uuid)
-		}
+		return teams.find { (team) -> team.members.contains(uuid) }
 	}
 
 	fun teamsId(team: T): Int? {
-		return teams.find { (t, _) ->
-			t === team
-		}?.second
+		return teams.find { (t) -> t === team }?.second
 	}
 
 	/* major operations */
@@ -40,55 +51,69 @@ abstract class Teams <T: AbstractTeam> (val onPlayerMovement: (uuids: List<UUID>
 
 		teams.add(id, Pair(team, id))
 
-		onPlayerMovement(team.members, id)
+		onPlayerMovement(AddAction(id, team.members, team))
 
 		return id
 	}
 
-	fun removeTeam(team: T)  {
-		teams.removeFirst { it.first === team }
+	fun removeTeam(team: T) {
+		val (removedTeam, removedId) = teams.removeFirst { it.first === team } ?: return
 
-		onPlayerMovement(team.members, null)
+		teamCleanup(team)
+
+		onPlayerMovement(RemoveAction(0, removedId, removedTeam.members))
 	}
 
 	fun clearTeams() {
 		val allPlayers = teams.flatMap { it.first.members }
 
+		teams.forEach { (team) -> teamCleanup(team) }
 		teams.clear()
 
-		onPlayerMovement(allPlayers, null)
+		onPlayerMovement(ClearAction(allPlayers))
 	}
 
 	fun joinTeam(uuid: UUID, team: T) {
+		val newTeamId = teamsId(team) ?: return
+
 		internalRemoveFromTeam(uuid)
 
 		team.members.add(uuid)
 
-		onPlayerMovement(listOf(uuid), teamsId(team) ?: return)
+		onPlayerMovement(AddAction(newTeamId, listOf(uuid), team))
 	}
 
-	fun leaveTeam(uuid: UUID) {
-		internalRemoveFromTeam(uuid)
+	fun leaveTeam(uuid: UUID): Boolean {
+		val (team, id) = internalRemoveFromTeam(uuid) ?: return false
 
-		onPlayerMovement(listOf(uuid), null)
+		onPlayerMovement(RemoveAction(id, team.members.size, listOf(uuid)))
+
+		return true
 	}
 
 	fun swapTeams(uuid0: UUID, uuid1: UUID): Boolean {
-		val (team0, id0) = playersTeamId(uuid0) ?: Pair(null, null)
-		val (team1, id1) = playersTeamId(uuid1) ?: Pair(null, null)
+		val (team0, id0) = playersTeamId(uuid0) ?: return false
+		val (team1, id1) = playersTeamId(uuid1) ?: return false
 
 		if (team0 === team1) return false
 
-		team0?.members?.remove(uuid0)
-		team1?.members?.remove(uuid1)
+		team0.members.remove(uuid0)
+		team1.members.remove(uuid1)
 
-		team0?.members?.add(uuid1)
-		team1?.members?.add(uuid0)
+		team0.members.add(uuid1)
+		team1.members.add(uuid0)
 
-		onPlayerMovement(listOf(uuid0), id1)
-		onPlayerMovement(listOf(uuid1), id0)
+		onPlayerMovement(AddAction(id1, listOf(uuid0), team1))
+		onPlayerMovement(AddAction(id0, listOf(uuid1), team0))
 
 		return true
+	}
+
+	fun <R : AbstractTeam> transfer(otherTeams: Teams<R>, convert: (T) -> R) {
+		teams.removeIf { (team, _) ->
+			otherTeams.addTeam(convert(team))
+			true
+		}
 	}
 
 	/* internal */
@@ -103,21 +128,24 @@ abstract class Teams <T: AbstractTeam> (val onPlayerMovement: (uuids: List<UUID>
 		return teams.size
 	}
 
-	private fun internalRemoveFromTeam(uuid: UUID) {
-		val team = playersTeam(uuid) ?: return
+	private fun internalRemoveFromTeam(uuid: UUID): Pair<T, Int>? {
+		val (team, id) = playersTeamId(uuid) ?: return null
 		team.members.remove(uuid)
 
 		if (team.members.isEmpty()) {
 			teams.removeFirst { it.first === team }
+			teamCleanup(team)
 		}
+
+		return Pair(team, id)
 	}
 
 	companion object {
-		fun updateNames(uuids: List<UUID>) {
-			uuids.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateName(it) }
+		fun updateNames(uuids: List<UUID>, team: AbstractTeam?) {
+			uuids.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateName(it, team) }
 		}
 
-		fun generateMemberLists(players: List<UUID>, teamSize: Int): Array<List<UUID?>> {
+		fun randomMemberLists(players: List<OfflinePlayer>, teamSize: Int): Array<List<OfflinePlayer?>> {
 			val used = Array(players.size) { false }
 
 			val numTeams = ceil(players.size / teamSize.toDouble()).toInt()

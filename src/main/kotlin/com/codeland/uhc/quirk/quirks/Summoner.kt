@@ -2,13 +2,9 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.util.UHCProperty
-import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.quirk.BoolToggle
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -22,7 +18,6 @@ import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
-import kotlin.random.Random
 
 class Summoner(type: QuirkType, game: Game) : Quirk(type, game) {
 	override fun customDestroy() {
@@ -57,11 +52,11 @@ class Summoner(type: QuirkType, game: Game) : Quirk(type, game) {
 		val location = block.location.add(event.blockFace.direction).toCenterLocation()
 		val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)
 
-		val team = TeamData.playersTeam(event.player.uniqueId)
+		val team = game.teams.playersTeam(event.player.uniqueId)
 		if (team != null) {
 			setCommandedBy(entity, team)
 			
-			entity.customName(team.apply("${team.gameName()} ${entity.name}"))
+			entity.customName(team.apply("${team.name} ${entity.name}"))
 		}
 
 		--item.amount

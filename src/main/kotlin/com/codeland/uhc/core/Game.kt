@@ -1,7 +1,6 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.core.phase.phases.Endgame
@@ -11,11 +10,11 @@ import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.core.stats.Ledger
 import com.codeland.uhc.customSpawning.regeneration.LeatherRegen
 import com.codeland.uhc.customSpawning.regeneration.SugarCaneRegen
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.quirk.quirks.Pests
 import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.team.Teams
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.util.Util
@@ -28,12 +27,17 @@ import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.entity.Player
 import java.time.Duration
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
-class Game(val config: GameConfig, val initialRadius: Int, val world: World, val otherWorld: World) {
+class Game(
+	val config: GameConfig,
+	val teams: Teams<Team>,
+	val initialRadius: Int,
+	val world: World,
+	val otherWorld: World,
+) {
 	var phase = getPhase(PhaseType.GRACE)
 
 	var naturalRegeneration = UHCProperty(false)
@@ -45,6 +49,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 			null
 		}
 	}
+
 	init {
 		config.quirksEnabled.forEachIndexed { i, property ->
 			property.watch {
@@ -137,7 +142,11 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 	fun end(winningTeam: Team?) {
 		/* game summary */
 		if (winningTeam != null) {
-			ledger.publish(startDate, config.gameType.get(), winningTeam.members.filter { PlayerData.isAlive(it) })
+			ledger.publish(startDate,
+				config.gameType.get(),
+				teams.teams(),
+				winningTeam.members.filter { PlayerData.isAlive(it) }
+			)
 		}
 
 		val endTitle = createEndTitle(winningTeam)
@@ -170,7 +179,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 			)
 		} else {
 			Title.title(
-				winningTeam.apply("${winningTeam.gameName()} has won!"),
+				winningTeam.apply("${winningTeam.name} has won!"),
 				winningTeam.apply(winningTeam.members.filter { PlayerData.isAlive(it) }.joinToString(", ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }),
 				Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
 			)
@@ -183,7 +192,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 		if (!forcePermaDeath && shouldRespawn(playerData)) {
 			playerRespawn(uuid)
 		} else {
-			playerPermaDeath(uuid, killer, respawn = quirkEnabled(QuirkType.PESTS)) { Pests.onBecomePest(it) }
+			playerPermaDeath(uuid, killer, respawn = quirkEnabled(QuirkType.PESTS)) { teams.leaveTeam(uuid) }
 		}
 	}
 
@@ -195,7 +204,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 	 * and if a provided team is among the remaining
 	 */
 	private fun remainingTeamsFocusOn(focusTeam: Team?) : RemainingTeamsReturn {
-		val remainingTeams = TeamData.teams.filter { it.members.any { member -> PlayerData.isAlive(member) } }
+		val remainingTeams = teams.teams().filter { it.members.any { member -> PlayerData.isAlive(member) } }
 
 		return RemainingTeamsReturn(
 			remainingTeams.size,
@@ -210,8 +219,8 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 
 	private fun playerPermaDeath(uuid: UUID, killer: Player?, respawn: Boolean, setupRespawn: (UUID) -> Unit) {
 		val playerData = PlayerData.getPlayerData(uuid)
-		val playerTeam = TeamData.playersTeam(uuid)
-		val killerTeam = if (killer == null) null else TeamData.playersTeam(killer.uniqueId)
+		val playerTeam = teams.playersTeam(uuid)
+		val killerTeam = if (killer == null) null else teams.playersTeam(killer.uniqueId)
 
 		/* make them dead */
 		playerData.alive = false
@@ -261,7 +270,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 		if (playerTeam == null) return listOf(Component.text(playerName, NamedTextColor.GRAY, TextDecoration.BOLD))
 
 		val color0 = TextColor.color(0xf0e118)
-		val color1 = TextColor.color(0x912f2f)
+		val color1 = TextColor.color(0xedd42f)
 
 		return listOfNotNull(
 			Component.empty()
@@ -270,7 +279,7 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 
 			if (!teamIsAlive) {
 				Util.gradientString("All members of ", color0, color1)
-					.append(playerTeam.apply(playerTeam.gameName()).decorate(TextDecoration.BOLD))
+					.append(playerTeam.apply(playerTeam.name).decorate(TextDecoration.BOLD))
 					.append(Util.gradientString(" have been eliminated!", color0, color1))
 			} else null,
 
@@ -306,8 +315,10 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 
 		player.sendTitle(
 			"${ChatColor.RED}You died!",
-			"${ChatColor.DARK_RED}${if (respawn) "Prepare to respawn" else {
-				if (killer == null) "Killed by environment" else "Killed by ${killer.name}"
+			"${ChatColor.DARK_RED}${when {
+				respawn -> "Prepare to respawn"
+				killer != null -> "killed by ${killer.name}"
+				else -> ""
 			}}",
 			0, 80, 20
 		)
@@ -347,8 +358,8 @@ class Game(val config: GameConfig, val initialRadius: Int, val world: World, val
 
 		world.     monsterSpawnLimit = 0
 		world.      animalSpawnLimit = 0
-		world.     ambientSpawnLimit = (    15 * spawnModifier).roundToInt().coerceAtLeast(1)
-		world. waterAnimalSpawnLimit = (     5 * spawnModifier).roundToInt().coerceAtLeast(1)
-		world.waterAmbientSpawnLimit = (    20 * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.     ambientSpawnLimit = (15 * spawnModifier).roundToInt().coerceAtLeast(1)
+		world. waterAnimalSpawnLimit = ( 5 * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.waterAmbientSpawnLimit = (20 * spawnModifier).roundToInt().coerceAtLeast(1)
 	}
 }

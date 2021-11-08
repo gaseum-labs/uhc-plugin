@@ -8,7 +8,7 @@ import net.kyori.adventure.text.format.TextColor
 import java.util.*
 
 class Team(
-	val name: String,
+	var name: String,
 	color0: TextColor,
 	color1: TextColor,
 	members: ArrayList<UUID>
@@ -23,6 +23,14 @@ class Team(
 			Pair("color1", colors[1].value()),
 			Pair("members", members.map { it.toString() }),
 		)
+	}
+
+	override fun grabName(): String {
+		return name
+	}
+
+	override fun giveName(name: String) {
+		this.name = name
 	}
 
 	companion object {

@@ -6,6 +6,7 @@ import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.DiscordFilesystem
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Util.void
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class EditSummaryCommand : MixerCommand(true) {

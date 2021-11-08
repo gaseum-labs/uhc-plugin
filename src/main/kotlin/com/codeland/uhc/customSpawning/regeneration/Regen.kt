@@ -1,16 +1,9 @@
 package com.codeland.uhc.customSpawning.regeneration
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.phase.phases.Grace
-import com.codeland.uhc.core.phase.phases.Shrink
-import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
 import org.bukkit.Bukkit
 import org.bukkit.Chunk
-import org.bukkit.Material
 import org.bukkit.World
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
 import kotlin.math.ceil
 import kotlin.random.Random
 
@@ -36,7 +29,7 @@ abstract class Regen(val game: Game, val ticksPerTeam: Int) {
 	fun reset(world: World): PlaceInfo {
 		val radius = ((world.worldBorder.size.coerceAtMost(2000.0) - 1) / 2).coerceAtLeast(1.0).toInt()
 
-		val numValidTeams = TeamData.teams.filter { team -> team.members.any {
+		val numValidTeams = game.teams.teams().filter { team -> team.members.any {
 			val player = Bukkit.getPlayer(it)
 			player?.world === world && player.location.y >= 58
 		} }.size

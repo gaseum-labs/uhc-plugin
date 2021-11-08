@@ -1,10 +1,8 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.DataManager
-import com.codeland.uhc.discord.DiscordFilesystem
 import com.codeland.uhc.discord.database.file.NicknamesFile
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.FancyText
@@ -21,7 +19,6 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import java.util.*
-import kotlin.collections.ArrayList
 
 class Chat : Listener {
 	companion object {
@@ -89,21 +86,14 @@ class Chat : Listener {
 		class PlayerMention(val player: Player) : Mention {
 			override fun matches() = player.name
 			override fun includes(player: Player) = this.player === player
-			override fun generate(string: String) = TeamData.playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
-			override fun needsOp() = false
-		}
-
-		class TeamMention(val team: Team) : Mention {
-			override fun matches() = team.name
-			override fun includes(player: Player) = team.members.contains(player.uniqueId)
-			override fun generate(string: String) = team.apply(string)
+			override fun generate(string: String) = UHC.getTeams().playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
 			override fun needsOp() = false
 		}
 
 		class NickMention(val player: Player, val nickname: String) : Mention {
 			override fun matches() = nickname
 			override fun includes(player: Player) = this.player === player
-			override fun generate(string: String) = TeamData.playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
+			override fun generate(string: String) = UHC.getTeams().playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
 			override fun needsOp() = false
 		}
 	}
@@ -219,7 +209,6 @@ class Chat : Listener {
 		)
 
 		list.addAll(Bukkit.getOnlinePlayers().map { PlayerMention(it) })
-		list.addAll(TeamData.gameTeams().map { TeamMention(it) })
 
 		UHC.dataManager.nicknames.map.forEach { (uuid, nicknames) ->
 			val player = Bukkit.getPlayer(uuid)
@@ -243,8 +232,8 @@ class Chat : Listener {
 
 		val message = (event.message() as? TextComponent)?.content() ?: return
 
-		val team = TeamData.playersTeam(event.player.uniqueId)
-		val playerComponent = playerComponent(team, event.player)
+		val gameTeam = UHC.game?.teams?.playersTeam(event.player.uniqueId)
+		val playerComponent = playerComponent(gameTeam, event.player)
 
 		val collected = collectMentions(message, generateMentions())
 
@@ -260,10 +249,10 @@ class Chat : Listener {
 		/* if the sending player is on a team */
 		/* if the message does not start with a mention */
 		/* and the message does not start with ! */
-		} else if (UHC.game != null && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
-			val messageParts = divideMessage(message, collected, team.colors.last())
+		} else if (gameTeam != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
+			val messageParts = divideMessage(message, collected, gameTeam.colors.last())
 
-			team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
+			gameTeam.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
 				player.sendMessage(playerComponent.append(messageForPlayer(player, collected, messageParts)))
 			}
 

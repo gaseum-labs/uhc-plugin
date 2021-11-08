@@ -1,8 +1,9 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Action
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -90,8 +91,8 @@ object Trader {
 		return false
 	}
 
-	fun deployTraders() {
-		TeamData.teams.forEach { team ->
+	fun deployTraders(game: Game) {
+		game.teams.teams().forEach { team ->
 			/* count number of emeralds to determine who gets the trader */
 			val emeraldPlayer = team.members.filter { PlayerData.isParticipating(it) }.shuffled().maxByOrNull { uuid ->
 				val inventory = Action.playerInventory(uuid) ?: return@maxByOrNull -1

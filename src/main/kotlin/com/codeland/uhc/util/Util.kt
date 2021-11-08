@@ -10,6 +10,7 @@ import kotlin.math.floor
 import kotlin.math.sqrt
 
 object Util {
+	fun Any?.unit() = Unit
 	fun Any?.void() = null
 	fun Any?.bool(b: Boolean) = b
 

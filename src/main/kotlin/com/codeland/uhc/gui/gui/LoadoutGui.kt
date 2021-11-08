@@ -4,6 +4,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.DataManager
 import com.codeland.uhc.discord.DiscordFilesystem
+import com.codeland.uhc.discord.database.file.LoadoutsFile
 import com.codeland.uhc.gui.GuiType
 import com.codeland.uhc.gui.MoveableGuiPage
 import com.codeland.uhc.gui.guiItem.MoveableGuiItem
@@ -27,7 +28,7 @@ MoveableGuiPage(
 	override fun createMoveableGuiItems(): ArrayList<MoveableGuiItem> {
 		var list = ArrayList<MoveableGuiItem>()
 
-		val loadout = DataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot]
+		val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot]
 
 		/* keep track of which ones have been put in the inventory */
 		val used = Array(LoadoutItems.values().size) { false }
@@ -64,9 +65,12 @@ MoveableGuiPage(
 	}
 
 	override fun save() {
-		if (++globalSaveCount % 5 == 0) {
-			val guild = UHC.bot?.guild() ?: return
-			DiscordFilesystem.loadoutsFile.save(guild, DataManager.loadouts)
+		val connection = UHC.dataManager.connection
+		if (connection != null) {
+			DataManager.loadoutsFile.push(
+				connection,
+				LoadoutsFile.LoadoutEntry(playerData.uuid, loadoutSlot, UHC.dataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot])
+			)
 		}
 	}
 }

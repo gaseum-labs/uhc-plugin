@@ -1,5 +1,6 @@
 package com.codeland.uhc.discord
 
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.stats.Summary
 import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.database.file.IdsFile
@@ -16,7 +17,7 @@ import java.util.*
 
 class SummaryManager(val bot: MixerBot) {
 	fun getSummariesChannel(): TextChannel? {
-		val ids = bot.dataManager.ids
+		val ids = UHC.dataManager.ids
 		if (ids.summaryChannel == IdsFile.INVALID_ID) return null
 
 		val channel = bot.guild.getGuildChannelById(ids.summaryChannel)
@@ -27,7 +28,7 @@ class SummaryManager(val bot: MixerBot) {
 			/* update the summary channel id with the created channel's id */
 			ids.summaryChannel = createdChannel.idLong
 
-			val connection = bot.connection
+			val connection = UHC.dataManager.connection
 			if (connection != null) {
 				DataManager.idsFile.push(connection, IdsFile.IdsEntry(summaryChannel = createdChannel.idLong))
 			}
@@ -40,7 +41,7 @@ class SummaryManager(val bot: MixerBot) {
 	}
 
 	fun getStagingChannel(): TextChannel? {
-		val ids = bot.dataManager.ids
+		val ids = UHC.dataManager.ids
 		if (ids.summaryStagingChannel == IdsFile.INVALID_ID) return null
 
 		val channel = bot.guild.getGuildChannelById(ids.summaryStagingChannel)
@@ -52,7 +53,7 @@ class SummaryManager(val bot: MixerBot) {
 			/* update the staging channel id with the created channel's id */
 			ids.summaryStagingChannel = createdChannel.idLong
 
-			val connection = bot.connection
+			val connection = UHC.dataManager.connection
 			if (connection != null) {
 				DataManager.idsFile.push(connection, IdsFile.IdsEntry(summaryStagingChannel = createdChannel.idLong))
 			}

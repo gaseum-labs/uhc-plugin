@@ -1,5 +1,6 @@
 package com.codeland.uhc.discord.command.commands
 
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.MojangAPI
 import com.codeland.uhc.discord.command.MixerCommand
@@ -23,12 +24,12 @@ class LinkCommand : MixerCommand(false) {
 			val discordId = event.author.idLong
 			val uuid = uuidResponse.convertUuid() ?: return event.channel.sendMessage("That Minecraft username does not exist!").queue()
 
-			val linkData = bot.dataManager.linkData
+			val linkData = UHC.dataManager.linkData
 
 			linkData.minecraftToDiscord[uuid] = discordId
 			linkData.discordToMinecraft[discordId] = uuid
 
-			val connection = bot.connection
+			val connection = UHC.dataManager.connection
 			if (connection != null) {
 				DataManager.linkDataFile.push(connection, LinkDataFile.LinkEntry(uuid, uuidResponse.name, discordId))
 			}

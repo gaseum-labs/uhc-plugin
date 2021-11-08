@@ -5,7 +5,6 @@ import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.team.TeamData
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.attribute.Attribute
@@ -30,10 +29,6 @@ class Pests(type: QuirkType, game: Game) : Quirk(type, game) {
     }
 
     companion object {
-        fun onBecomePest(uuid: UUID) {
-	        TeamData.removeFromTeam(arrayListOf(uuid), true, true, true)
-        }
-
         val banList = arrayOf(
 	        Material.BOW,
 	        Material.DIAMOND_PICKAXE,

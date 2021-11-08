@@ -4,16 +4,20 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.ItemUtil
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
+import javax.swing.text.Style
 import kotlin.collections.ArrayList
 
 class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
@@ -35,6 +39,39 @@ class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 		drops.removeAll { itemStack -> isCompass(itemStack) }
 	}
 
+	fun compassTick() {
+		val players = ArrayList<Player>()
+
+		/* grab all players that will have their compass updated */
+		PlayerData.playerDataList.forEach { (uuid, data) ->
+			val player = Bukkit.getPlayer(uuid)
+
+			/* only care about players that are currently online and playing */
+			if (player != null && data.alive && data.participating) players.add(player)
+		}
+
+		players.forEachIndexed { i, player ->
+			var leastDistance = Double.MAX_VALUE
+			var leastPlayer = null as Player?
+
+			val team = game.teams.playersTeam(player.uniqueId)
+
+			players.forEachIndexed { j, otherPlayer ->
+				if (j != i && otherPlayer.world == player.world && (team == null || team != game.teams.playersTeam(otherPlayer.uniqueId))) {
+					val distance = player.location.distance(otherPlayer.location)
+
+					if (distance < leastDistance) {
+						leastDistance = distance
+						leastPlayer = otherPlayer
+					}
+				}
+			}
+
+			val targetPlayer = leastPlayer
+			if (targetPlayer != null) player.compassTarget = targetPlayer.location
+		}
+	}
+
 	companion object {
 		fun isCompass(itemStack: ItemStack?): Boolean {
 			return itemStack != null &&
@@ -44,52 +81,16 @@ class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 		}
 
 		fun createCompass(): ItemStack {
-			val compass = ItemStack(Material.COMPASS)
-			val meta = compass.itemMeta
-			meta.setDisplayName("${ChatColor.RESET}${ChatColor.GOLD}Player Compass")
-			meta.lore = listOf("From Player Compasses CHC", "${ChatColor.BLACK}${UUID.randomUUID()}")
-			meta.addEnchant(ItemUtil.fakeEnchantment, 0, true)
-			compass.itemMeta = meta
-
-			return compass
+			return ItemCreator.fromType(Material.COMPASS, false)
+				.name("${ChatColor.RESET}${ChatColor.GOLD}Player Compass")
+				.lore("From Player Compasses CHC", "${ChatColor.BLACK}${UUID.randomUUID()}")
+				.enchant()
+				.create()
 		}
 
 		fun revokeCompass(player: Player) {
 			player.inventory.contents.forEach { itemStack ->
 				if (isCompass(itemStack)) itemStack.amount = 0
-			}
-		}
-
-		fun compassTick() {
-			val players = ArrayList<Player>()
-
-			/* grab all players that will have their compass updated */
-			PlayerData.playerDataList.forEach { (uuid, data) ->
-				val player = Bukkit.getPlayer(uuid)
-
-				/* only care about players that are currently online and playing */
-				if (player != null && data.alive && data.participating) players.add(player)
-			}
-
-			players.forEachIndexed { i, player ->
-				var leastDistance = Double.MAX_VALUE
-				var leastPlayer = null as Player?
-
-				val team = TeamData.playersTeam(player.uniqueId)
-
-				players.forEachIndexed { j, otherPlayer ->
-					if (j != i && otherPlayer.world == player.world && (team == null || team != TeamData.playersTeam(otherPlayer.uniqueId))) {
-						val distance = player.location.distance(otherPlayer.location)
-
-						if (distance < leastDistance) {
-							leastDistance = distance
-							leastPlayer = otherPlayer
-						}
-					}
-				}
-
-				val targetPlayer = leastPlayer
-				if (targetPlayer != null) player.compassTarget = targetPlayer.location
 			}
 		}
 	}

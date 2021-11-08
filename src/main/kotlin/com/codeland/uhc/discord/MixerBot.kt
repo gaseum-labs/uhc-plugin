@@ -75,7 +75,6 @@ class MixerBot(
 	val commands = arrayOf(
 		LinkCommand(),
 		GeneralCommand(),
-		EditFileCommand(),
 		EditSummaryCommand(),
 		PublishSummaryCommand()
 	)
@@ -167,15 +166,14 @@ class MixerBot(
 	/**
 	 * removes an arbitrary amount of players from a team channel,
 	 * will delete the team channel if everyone is removed
-	 * @param teamSize the number of players on this team before removal
+	 * @param teamSize the number of players on this team after removal
 	 * @param players a list of player UUIDs on the team to move to general
 	 */
 	fun removeFromTeamChannel(teamId: Int, teamSize: Int, players: List<UUID>) {
 		val voiceChannel = generalVoiceChannel() ?: return
 
-		/* should never be above but just in case */
 		/* remove everyone, delete channel */
-		if (players.size >= teamSize) {
+		if (teamSize <= 0) {
 			destroyTeamChannel(teamId)
 
 		/* remove only certain players, don't delete channel */

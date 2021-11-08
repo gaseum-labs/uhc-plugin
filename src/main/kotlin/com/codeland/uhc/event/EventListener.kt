@@ -13,7 +13,6 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.team.HideManager
 import com.codeland.uhc.team.NameManager
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenOption
@@ -57,7 +56,7 @@ class EventListener : Listener {
 			val player = event.player
 			val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-			NameManager.updateName(event.player)
+			NameManager.updateName(event.player, UHC.getTeams().playersTeam(player.uniqueId))
 
 			/* lobby spawn */
 			if (!playerData.participating) {
@@ -219,15 +218,16 @@ class EventListener : Listener {
 			event.isCancelled = true
 
 		} else if (target is Player) {
-			if (UHC.game?.quirkEnabled(QuirkType.SUMMONER) == true) {
-				val team = TeamData.playersTeam(target.uniqueId)
+			val game = UHC.game
+			if (game?.quirkEnabled(QuirkType.SUMMONER) == true) {
+				val team = game.teams.playersTeam(target.uniqueId)
 
 				if (team != null && Summoner.isCommandedBy(event.entity, team)) {
 					event.isCancelled = true
 				}
 			}
 
-			if (UHC.game?.quirkEnabled(QuirkType.PESTS) == true && PlayerData.isUndead(target.uniqueId)) {
+			if (game?.quirkEnabled(QuirkType.PESTS) == true && PlayerData.isUndead(target.uniqueId)) {
 				event.isCancelled = true
 			}
 

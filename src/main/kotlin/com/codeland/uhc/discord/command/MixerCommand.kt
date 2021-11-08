@@ -6,9 +6,6 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import java.util.concurrent.TimeUnit
 
 abstract class MixerCommand(val requiresAdmin: Boolean) {
-	fun Any?.unit() = Unit
-	fun Any?.void() = null
-
 	abstract fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean
 	abstract fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot)
 

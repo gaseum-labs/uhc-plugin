@@ -1,14 +1,12 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.Classes.Companion.HUNTER_SPAWN_META
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.*
 import org.bukkit.ChatColor.*
@@ -506,7 +504,8 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+		val game = UHC.game ?: return
+		val classes = game.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
 		val player = event.player
 
@@ -516,7 +515,7 @@ class ClassesEvents : Listener {
 
 				if (item != null && item.type == Material.COMPASS) {
 					fun onSameTeam(otherUUID: UUID): Boolean {
-						val team = TeamData.playersTeam(otherUUID)
+						val team = game.teams.playersTeam(otherUUID)
 						return team != null && team.members.contains(player.uniqueId)
 					}
 

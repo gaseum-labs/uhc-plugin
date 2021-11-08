@@ -16,19 +16,24 @@ class PreTeam(
 
 	fun toTeam(): Team {
 		return Team(
-			name ?: nameParts.random(),
+			name ?: randomName(),
 			colors[0],
 			colors[1],
 			members
 		)
 	}
 
+	override fun grabName(): String {
+		return name ?: "[Name not chosen]"
+	}
+
+	override fun giveName(name: String) {
+		this.name = name
+	}
+
 	companion object {
-		fun internalAutomaticName(names: List<String>): String {
-			return names.mapIndexed { i, name -> name.substring(
-				(i * (name.length.toDouble() / names.size)).toInt(),
-				((i + 1) * (name.length.toDouble() / names.size)).toInt(),
-			)}.joinToString("")
+		fun randomName(): String {
+			return nameParts.random()
 		}
 
 		val nameParts = Material.values()

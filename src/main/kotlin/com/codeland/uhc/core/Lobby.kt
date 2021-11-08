@@ -4,8 +4,6 @@ import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
-import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
@@ -86,11 +84,12 @@ object Lobby {
 
 			Bukkit.getOnlinePlayers().forEach { player ->
 				val playerData = PlayerData.getPlayerData(player.uniqueId)
-				val team = TeamData.playersTeam(player.uniqueId)
-				val queueTime = PvpQueue.queueTime(player.uniqueId)
 				val game = ArenaManager.playersArena(player.uniqueId)
 
 				if (!playerData.participating && game == null) {
+					val team = UHC.preGameTeams.playersTeam(player.uniqueId)
+					val queueTime = PvpQueue.queueTime(player.uniqueId)
+
 					if (queueTime != null) {
 						val queueType = playerData.inLobbyPvpQueue.get()
 

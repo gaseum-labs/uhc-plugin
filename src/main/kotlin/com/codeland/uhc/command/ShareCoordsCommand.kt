@@ -5,7 +5,6 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.team.TeamData
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor.*
@@ -18,14 +17,17 @@ class ShareCoordsCommand : BaseCommand() {
 	fun shareCoords(sender : CommandSender) {
 		sender as Player
 
+		val game = UHC.game ?: return Commands.errorMessage(sender, "Game is not going")
+
 		/* sharecoords command can only be used when playing */
 		if (!PlayerData.isParticipating(sender.uniqueId))
 			return Commands.errorMessage(sender, "You are not participating in the game")
 
-		val team = TeamData.playersTeam(sender.uniqueId)
+		val team = game.teams.playersTeam(sender.uniqueId)
 		val location = sender.location
 
 		/* different message based on teams or no teams */
+		/* should never happen */
 		if (team == null) {
 		   sender.sendMessage("${GOLD}You are at ${location.blockX}, ${location.blockY}, ${location.blockZ}")
 

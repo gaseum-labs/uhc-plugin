@@ -3,6 +3,7 @@ package com.codeland.uhc.lobbyPvp
 import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
@@ -93,7 +94,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 		customStartPlayer(player, playerData)
 
-		NameManager.updateName(player)
+		NameManager.updateName(player, UHC.getTeams().playersTeam(player.uniqueId))
 		player.teleport(location)
 
 		/* fake border */

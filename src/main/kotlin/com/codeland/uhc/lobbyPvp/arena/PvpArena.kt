@@ -1,6 +1,7 @@
 package com.codeland.uhc.lobbyPvp.arena
 
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.DataManager
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.lobbyPvp.Arena
@@ -143,7 +144,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(Are
 		player.gameMode = GameMode.SURVIVAL
 
 		/* give items */
-		val loadout = DataManager.loadouts.getPlayersLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
+		val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
 		loadout.fillInventory(player.inventory)
 
 		player.sendTitle("${ChatColor.GOLD}FIGHT", "", 0, 20, 10)

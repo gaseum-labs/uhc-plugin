@@ -9,4 +9,8 @@ abstract class AbstractTeam(val colors: Array<TextColor>, val members: ArrayList
 	fun apply(string: String): Component {
 		return Util.gradientString(string, colors[0], colors[1])
 	}
+
+	abstract fun grabName(): String
+
+	abstract fun giveName(name: String)
 }
