@@ -32,14 +32,14 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 		val borderChunk = ((world.worldBorder.size / 2).toInt() / 16) - 1
 
 		/* only spawn for one eligible teammate per team chosen at random */
-		return TeamData.teams.map { team ->
+		return TeamData.teams.mapNotNull { team ->
 			team.members.filter {
 				PlayerData.isParticipating(it)
 			}.mapNotNull {
 				Action.getPlayerLocation(it)
 			}.filter {
 				it.world === world && it.y >= 58
-			}.random()
+			}.randomOrNull()
 		}.map { location ->
 			val cx = floor(location.blockX / 16.0).toInt()
 			val cz = floor(location.blockZ / 16.0).toInt()

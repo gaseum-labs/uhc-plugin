@@ -15,7 +15,7 @@ enum class CustomSpawningType(
 	val getCap: (Player) -> Double,
 	val onSpawn: (Player, Entity) -> Unit,
 ) {
-	HOSTILE(32, 86, 10, 30, arrayOf(
+	HOSTILE(32, 86, 10, 20, arrayOf(
 		SpawnInfoType.ZOMBIE.spawnInfo,
 		SpawnInfoType.SKELETON.spawnInfo,
 		SpawnInfoType.CREEPER.spawnInfo,
@@ -31,13 +31,13 @@ enum class CustomSpawningType(
 	), { player ->
 		when (player.world.environment) {
 			World.Environment.NORMAL -> {
-				if (player.location.world.isDayTime && player.location.y >= 58) 10.0 else 20.0
+				if (player.location.world.isDayTime && player.location.y >= 58) 10.0 else 30.0
 			}
 			World.Environment.NETHER -> {
 				20.0 * (if (player.location.block.y <= SpawnInfo.NETHER_CAVE_Y) 2.0 else 1.0) /
 					(if (player.location.block.biome === Biome.SOUL_SAND_VALLEY) 2.0 else 1.0)
 			}
-			else -> 20.0
+			else -> 30.0
 		}
 	}, { _, _ -> }),
 
@@ -47,11 +47,11 @@ enum class CustomSpawningType(
 		SpawnInfoType.CHICKEN.spawnInfo
 	),
 		emptyArray(),
-		{ 40.0 },
+		{ 20.0 },
 		{ _, _ -> }
 	),
 
-	BLAZE(32, 64, 9, 3600, emptyArray(), arrayOf(
+	BLAZE(32, 64, 10, 3600, emptyArray(), arrayOf(
 		SpawnInfoType.BLAZE.spawnInfo
 	), { player ->
 		if (player.location.block.y <= SpawnInfo.NETHER_CAVE_Y) 0.0 else 1.0
