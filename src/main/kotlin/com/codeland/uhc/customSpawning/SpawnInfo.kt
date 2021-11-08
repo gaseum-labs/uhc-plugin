@@ -110,7 +110,7 @@ abstract class SpawnInfo {
 			return spawnFloor(block.getRelative(BlockFace.DOWN)) && spawnBox(block, xBox, yHeight, zBox)
 		}
 
-		fun spawnBox(block: Block, xBox: Int, yHeight: Int, zBox: Int): Boolean {
+		fun spawnBox(centerBlock: Block, xBox: Int, yHeight: Int, zBox: Int): Boolean {
 			val xRadius = (xBox - 1) / 2
 			val zRadius = (zBox - 1) / 2
 
@@ -118,7 +118,7 @@ abstract class SpawnInfo {
 			for (x in -xRadius..xRadius)
 				for (z in -zRadius..zRadius)
 					for (y in 0 until yHeight) {
-						val block = block.world.getBlockAt(block.x + x, block.y + y, block.z + z)
+						val block = centerBlock.getRelative(x, y, z)
 						if (spawnObstacle(block) || isWater(block)) return false
 					}
 

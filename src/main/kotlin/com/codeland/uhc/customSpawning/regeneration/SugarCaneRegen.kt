@@ -15,7 +15,7 @@ import org.bukkit.block.BlockFace
 import kotlin.math.ceil
 import kotlin.random.Random
 
-class SugarCaneRegen(game: Game): Regen(game, 170) {
+class SugarCaneRegen(game: Game): Regen(game, 5, 180) {
 	fun findCane(chunk: Chunk): Block? {
 		val caneBlock = AbstractChunkPlacer.randomPosition(chunk, 58, 70) { block, _, _, _ ->
 			block.type === Material.SUGAR_CANE

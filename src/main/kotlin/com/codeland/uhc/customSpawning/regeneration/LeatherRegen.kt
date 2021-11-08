@@ -1,25 +1,19 @@
 package com.codeland.uhc.customSpawning.regeneration
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.phase.phases.Grace
-import com.codeland.uhc.core.phase.phases.Shrink
-import com.codeland.uhc.customSpawning.SpawnInfo.Companion.isWater
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.customSpawning.SpawnInfo
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
-import org.bukkit.Bukkit
 import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.World
 import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Ageable
 import org.bukkit.entity.EntityType
-import kotlin.math.ceil
 import kotlin.random.Random
 
-class LeatherRegen(game: Game): Regen(game, 510) {
-	fun spawnOn(block: Block): Boolean {
+class LeatherRegen(game: Game): Regen(game, 5, 540) {
+	private fun spawnOn(block: Block): Boolean {
 		return block.type === Material.GRASS_BLOCK ||
 			block.type === Material.DIRT ||
 			block.type === Material.COARSE_DIRT ||
@@ -27,39 +21,35 @@ class LeatherRegen(game: Game): Regen(game, 510) {
 			block.type === Material.GRAVEL
 	}
 
-	fun spawnIn(block: Block): Boolean {
-		return block.type.isAir ||
-		block.type === Material.GRASS ||
-		block.type === Material.TALL_GRASS ||
-		block.type === Material.FERN ||
-		block.type === Material.LARGE_FERN ||
-		block.type === Material.SUGAR_CANE ||
-		block.type === Material.POPPY ||
-		block.type === Material.DANDELION ||
-		block.type === Material.SNOW
+	private fun entityType(block: Block): EntityType {
+		return when (block.biome) {
+			Biome.MOUNTAINS,
+			Biome.WOODED_MOUNTAINS,
+			Biome.GRAVELLY_MOUNTAINS,
+			Biome.MODIFIED_GRAVELLY_MOUNTAINS -> EntityType.LLAMA
+			Biome.PLAINS,
+			Biome.SUNFLOWER_PLAINS -> if (Random(block.blockKey).nextBoolean()) EntityType.HORSE else EntityType.DONKEY
+			else -> EntityType.COW
+		}
+	}
+
+	private fun spawnBox(block: Block, type: EntityType): Boolean {
+		return when (type) {
+			EntityType.HORSE,
+			EntityType.DONKEY -> SpawnInfo.spawnBox(block, 3, 2, 3)
+			else -> SpawnInfo.spawnBox(block, 1, 2, 1)
+		}
 	}
 
 	override fun place(chunk: Chunk): Boolean {
-		val block = AbstractChunkPlacer.randomPosition(chunk, 58, 70) { block, _, _, _ ->
-			spawnIn(block) && spawnIn(block.getRelative(BlockFace.UP)) && spawnOn(block.getRelative(BlockFace.DOWN))
+		val floor = AbstractChunkPlacer.randomPosition(chunk, 58, 70) { floor, _, _, _ ->
+			spawnOn(floor) && spawnBox(floor.getRelative(BlockFace.UP), entityType(floor))
 		}
 
-		if (block != null) {
-			val entity = chunk.world.spawnEntity(block.location.add(0.5, 0.0, 0.5),
-				when (block.biome) {
-					Biome.MOUNTAINS,
-					Biome.WOODED_MOUNTAINS,
-					Biome.GRAVELLY_MOUNTAINS,
-					Biome.MODIFIED_GRAVELLY_MOUNTAINS -> EntityType.LLAMA
-					Biome.PLAINS,
-					Biome.SUNFLOWER_PLAINS -> if (Random.nextBoolean()) EntityType.HORSE else EntityType.DONKEY
-					else -> EntityType.COW
-				}
-			)
-
-			(entity as Ageable).setAdult()
+		if (floor != null) {
+			(floor.world.spawnEntity(floor.location.add(0.5, 1.0, 0.5), entityType(floor)) as Ageable).setAdult()
 		}
 
-		return block != null
+		return floor != null
 	}
 }

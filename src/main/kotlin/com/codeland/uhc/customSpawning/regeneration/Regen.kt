@@ -1,20 +1,15 @@
 package com.codeland.uhc.customSpawning.regeneration
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.phase.phases.Grace
-import com.codeland.uhc.core.phase.phases.Shrink
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
-import org.bukkit.Bukkit
+import com.codeland.uhc.util.Action
 import org.bukkit.Chunk
-import org.bukkit.Material
 import org.bukkit.World
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
-import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.random.Random
 
-abstract class Regen(val game: Game, val ticksPerTeam: Int) {
+abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate: Int) {
 	companion object {
 		fun length(radius: Int): Int {
 			return radius * 2 + 1
@@ -33,58 +28,63 @@ abstract class Regen(val game: Game, val ticksPerTeam: Int) {
 
 	abstract fun place(chunk: Chunk): Boolean
 
-	fun reset(world: World): PlaceInfo {
-		val radius = ((world.worldBorder.size.coerceAtMost(2000.0) - 1) / 2).coerceAtLeast(1.0).toInt()
+	fun getPlayerChunks(world: World): ArrayList<Array<Pair<Int, Int>>> {
+		val borderChunk = ((world.worldBorder.size / 2).toInt() / 16) - 1
 
-		val numValidTeams = TeamData.teams.filter { team -> team.members.any {
-			val player = Bukkit.getPlayer(it)
-			player?.world === world && player.location.y >= 58
-		} }.size
+		/* only spawn for one eligible teammate per team chosen at random */
+		return TeamData.teams.map { team ->
+			team.members.filter {
+				PlayerData.isParticipating(it)
+			}.mapNotNull {
+				Action.getPlayerLocation(it)
+			}.filter {
+				it.world === world && it.y >= 58
+			}.random()
+		}.map { location ->
+			val cx = floor(location.blockX / 16.0).toInt()
+			val cz = floor(location.blockZ / 16.0).toInt()
 
-		val timer = ceil(ticksPerTeam.toFloat() / numValidTeams.coerceAtLeast(1)).toInt()
+			val left = (cx - chunkRadius).coerceAtLeast(-borderChunk)
+			val right = (cx + chunkRadius).coerceAtMost(borderChunk)
+			val up = (cz - chunkRadius).coerceAtLeast(-borderChunk)
+			val down = (cz + chunkRadius).coerceAtMost(borderChunk)
 
-		val chunkRadius = (radius / 16) - 1
+			val width = (right - left + 1)
+			val height = (down - up + 1)
 
-		val placeSpaces = Array(size(chunkRadius)) { it }
-		placeSpaces.shuffle(random)
+			val list = Array(width * height) { i ->
+				Pair(left + (i % width), up + (i / width))
+			}
 
-		return PlaceInfo(
-			timer,
-			numValidTeams > 0,
-			chunkRadius,
-			placeSpaces,
-			0
-		)
+			list.shuffle()
+
+			list
+		} as ArrayList<Array<Pair<Int, Int>>>
 	}
 
-	data class PlaceInfo(
-		var timer: Int,
-		var doPlace: Boolean,
-		var chunkRadius: Int,
-		var placeSpaces: Array<Int>,
-		var placeIndex: Int
-	)
-
-	var placeInfo: PlaceInfo? = null
+	var playerChunks: ArrayList<Array<Pair<Int, Int>>> = ArrayList()
+	var timer = 0
+	var tryIndex = 0
 
 	fun tick() {
-		val info = placeInfo ?: run {
-			val i = reset(game.world)
-			placeInfo = i
-			i
+		if (--timer <= 0) {
+			playerChunks = getPlayerChunks(game.getOverworld())
+			timer = ticksPerGenerate
+			tryIndex = 0
 		}
 
-		if (--info.timer <= 0 && info.chunkRadius >= 0) {
-			val (chunkX, chunkZ) = spaceFromIndex(info.placeSpaces[info.placeIndex], info.chunkRadius)
+		playerChunks.removeIf { chunkList ->
+			if (tryIndex < chunkList.size) {
+				val (chunkX, chunkZ) = chunkList[tryIndex]
+				val chunk = game.world.getChunkAt(chunkX, chunkZ)
 
-			if (
-				!info.doPlace || (
-					place(game.world.getChunkAt(chunkX, chunkZ)) ||
-					++info.placeIndex >= size(info.chunkRadius)
-				)
-			) {
-				placeInfo = reset(game.world)
+				place(chunk)
+
+			} else {
+				true
 			}
 		}
+
+		++tryIndex
 	}
 }
