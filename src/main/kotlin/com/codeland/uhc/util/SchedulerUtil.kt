@@ -22,4 +22,13 @@ object SchedulerUtil {
 	fun later(ticks: Long, runnable: () -> Unit): Int {
 		return Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable, ticks)
 	}
+
+	fun delayedFor(ticks: Long, range: Iterable<Int>, runnable: (Int) -> Unit) {
+		if (!range.none()) {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, {
+				runnable(range.first())
+				delayedFor(ticks, range.drop(1), runnable)
+			}, ticks)
+		}
+    }
 }

@@ -9,6 +9,8 @@ import com.codeland.uhc.quirk.quirks.classes.Classes.Companion.HUNTER_SPAWN_META
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.extensions.LocationExtensions.minus
+import com.codeland.uhc.util.extensions.LocationExtensions.plus
 import com.codeland.uhc.util.extensions.VectorExtensions.plus
 import org.bukkit.*
 import org.bukkit.ChatColor.*
@@ -19,7 +21,9 @@ import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Levelled
+import org.bukkit.block.data.type.Stairs
 import org.bukkit.block.data.type.Switch
+import org.bukkit.block.data.type.Wall
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -39,6 +43,7 @@ import java.util.*
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
+import kotlin.math.abs
 
 class ClassesEvents : Listener {
 	private fun surface(block: Block): Boolean {
@@ -557,16 +562,62 @@ class ClassesEvents : Listener {
         if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER) {
             when (event.block.type) {
 				Material.LIGHT_WEIGHTED_PRESSURE_PLATE -> {
-					for (x in -1..1) for (y in 0..7) for (z in -1..1) {
+					for (x in -1..1) for (y in 1..7) for (z in -1..1) {
 						if (player.location.block.getRelative(x, y, z).type.isSolid) {
 							event.isCancelled = true
 							com.codeland.uhc.util.Action.sendGameMessage(player, "You can't use that here. Get to a more open area.")
                             return
 						}
 					}
-					player.velocity += Vector(0.0, 0.5, 0.0) // fine tune
-
+					val location = event.blockPlaced.location + Vector(0.0, 5.0, 0.0)
+					player.velocity = Vector(0.0, 1.2, 0.0) // fine tune
+					SchedulerUtil.later(10) {
+						SchedulerUtil.delayedFor(1, 0..3) { i ->
+							for (dx in -i..i) for (dz in -i..i) {
+								val block = location.block.getRelative(dx, 0, dz)
+								if (block.type == Material.AIR) {
+									block.type = Material.COBBLESTONE
+								}
+							}
+						}
+					}
 				}
+				Material.STONE_BRICK_WALL -> {
+					val location = event.blockPlaced.location.clone()
+					val difference = location - player.location
+					val facingX = (event.player.getTargetBlockFace(10) ?: return).ordinal % 2 != 0
+					SchedulerUtil.delayedFor(1, 0 until 5) { i ->
+						for (dl in -2..2) {
+							if (facingX) event.blockPlaced.getRelative(0, i, dl).type = Material.STONE
+                            else event.blockPlaced.getRelative(dl, i, 0).type = Material.STONE
+						}
+                    }
+				}
+				Material.POLISHED_GRANITE_STAIRS -> {
+					val location = event.blockPlaced.location.clone()
+					val difference = location - player.location
+					val direction = (event.blockPlaced.blockData as Stairs).facing
+					event.blockPlaced.type = Material.COBBLESTONE_STAIRS
+					SchedulerUtil.delayedFor(1, 0..8) { i ->
+                        for (dl in -1..1) {
+							val block = when (direction) {
+								BlockFace.EAST -> event.blockPlaced.getRelative(i, i, dl)
+								BlockFace.WEST -> event.blockPlaced.getRelative(-i, i, dl)
+								BlockFace.SOUTH -> event.blockPlaced.getRelative(dl, i, i)
+								BlockFace.NORTH -> event.blockPlaced.getRelative(dl, i, -i)
+								else -> throw Exception("can't")
+							}
+							if (block.type == Material.AIR) block.type = Material.COBBLESTONE_STAIRS
+							val stairData: Stairs = block.blockData as Stairs
+							stairData.facing = direction
+							block.blockData = stairData
+
+							val below = block.getRelative(0, -1, 0)
+							if (below.type == Material.AIR) below.type = Material.COBBLESTONE
+						}
+                    }
+				}
+				else -> {}
 			}
         }
     }
