@@ -18,6 +18,7 @@ import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
+import org.bukkit.attribute.Attribute
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Levelled
@@ -131,6 +132,17 @@ class ClassesEvents : Listener {
 
 		if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER && event.cause == EntityDamageEvent.DamageCause.FALL) {
 			event.isCancelled = true
+		}
+
+		if (classes.getClass(player.uniqueId) == QuirkClass.ENCHANTER) {
+			if (event.damage > player.health && player.level > 0) {
+				event.isCancelled = true
+				val excess = event.damage - player.health
+				player.absorptionAmount += player.level
+				player.level = 0
+				player.health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH)!!.value
+				player.damage(excess)
+			}
 		}
 	}
 
