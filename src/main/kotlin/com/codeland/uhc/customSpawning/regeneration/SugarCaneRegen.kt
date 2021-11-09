@@ -41,19 +41,19 @@ class SugarCaneRegen(game: Game): Regen(game, 5, 180) {
 
 			(
 				block.type.isAir || block.type == Material.GRASS
-				) && (
+			) && (
 				down.type === Material.GRASS_BLOCK ||
 					down.type === Material.DIRT        ||
 					down.type === Material.SAND        ||
 					down.type === Material.PODZOL      ||
 					down.type === Material.RED_SAND    ||
 					down.type === Material.COARSE_DIRT
-				) && (
+			) && (
 				isWater(down.getRelative(BlockFace.WEST))  ||
 					isWater(down.getRelative(BlockFace.EAST))  ||
 					isWater(down.getRelative(BlockFace.NORTH)) ||
 					isWater(down.getRelative(BlockFace.SOUTH))
-				)
+			)
 		}
 
 		block?.setType(Material.SUGAR_CANE, false)

@@ -1,11 +1,14 @@
-package com.codeland.uhc.blockfix
+package com.codeland.uhc.blockfix.blockfix
 
+import com.codeland.uhc.blockfix.BlockFix
+import com.codeland.uhc.blockfix.SingleRange
 import org.bukkit.Material
-import org.bukkit.enchantments.Enchantment
+import org.bukkit.block.Block
+import org.bukkit.block.BlockState
 import org.bukkit.inventory.ItemStack
 
 class GildedFix : BlockFix("Gilded", arrayOf(
-	Range.nonCountRange { _, _ -> ItemStack(Material.GOLD_NUGGET, 4) }
+	SingleRange("Nuggets") { _, _, fortune -> ItemStack(Material.GOLD_NUGGET, 4 + fortune) }
 )) {
 	override fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean {
 		return isSilkTouch(tool)
@@ -23,7 +26,7 @@ class GildedFix : BlockFix("Gilded", arrayOf(
 		}
 	}
 
-	override fun isBlock(material: Material): Boolean {
-		return material === Material.NETHER_GOLD_ORE || material === Material.GILDED_BLACKSTONE
+	override fun isBlock(blockState: BlockState): Boolean {
+		return blockState.type === Material.NETHER_GOLD_ORE || blockState.type === Material.GILDED_BLACKSTONE
 	}
 }

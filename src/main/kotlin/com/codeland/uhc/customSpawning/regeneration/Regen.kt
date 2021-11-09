@@ -10,20 +10,6 @@ import kotlin.math.floor
 import kotlin.random.Random
 
 abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate: Int) {
-	companion object {
-		fun length(radius: Int): Int {
-			return radius * 2 + 1
-		}
-
-		fun size(radius: Int): Int {
-			return length(radius) * length(radius)
-		}
-
-		fun spaceFromIndex(index: Int, radius: Int): Pair<Int, Int> {
-			return Pair((index / length(radius)) - radius, (index % length(radius)) - radius)
-		}
-	}
-
 	val random = Random(game.world.seed)
 
 	abstract fun place(chunk: Chunk): Boolean

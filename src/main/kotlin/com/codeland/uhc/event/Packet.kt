@@ -72,7 +72,6 @@ object Packet {
 		return int
 	}
 
-
 	fun playersIndex(uuid: UUID): Int {
 		var nameIndex = playerNames.indexOf(uuid)
 
@@ -288,13 +287,13 @@ object Packet {
 				newPing.setMOTD(
 					Util.nmsGradientString(
 						String(topStrip),
-						TextColor.color(0x1042e6),
-						TextColor.color(0x0af6fa)
+						TextColor.color(0x37c4d3),
+						TextColor.color(0x2eac79)
 					).addSibling(
 						Util.nmsGradientString(
 							String(bottomStrip),
-							TextColor.color(0x1042e6),
-							TextColor.color(0x0af6fa)
+							TextColor.color(0x37c4d3),
+							TextColor.color(0x2eac79)
 						)
 					)
 				)

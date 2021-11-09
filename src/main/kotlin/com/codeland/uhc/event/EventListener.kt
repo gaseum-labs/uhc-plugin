@@ -442,7 +442,6 @@ class EventListener : Listener {
 	fun onBlockDrop(event: BlockDropItemEvent) {
 		val blockState = event.blockState
 		val block = event.block
-		val type = blockState.type
 
 		val player = event.player
 		val drops = event.items
@@ -450,7 +449,7 @@ class EventListener : Listener {
 		/* creative mode does not cause blocks to drop */
 		if (event.player.gameMode != GameMode.CREATIVE) {
 			BlockFixType.values().any { blockFixType ->
-				blockFixType.blockFix.onBreakBlock(type, drops, player) { drop ->
+				blockFixType.blockFix.onBreakBlock(blockState, drops, player) { drop ->
 					if (drop != null) block.world.dropItemNaturally(block.location, drop)
 				}
 			}
@@ -501,8 +500,6 @@ class EventListener : Listener {
 	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
 		/* prevent default drops */
-		val leavesType = event.block.type
-
 		event.isCancelled = true
 		event.block.type = Material.AIR
 
@@ -513,7 +510,7 @@ class EventListener : Listener {
 		}
 
 		/* apply applefix to this leaves block for the nearest player */
-		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(leavesType, mutableListOf(), dropPlayer) { drop ->
+		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(event.block.state, mutableListOf(), dropPlayer) { drop ->
 			if (drop != null) leavesLocation.world.dropItemNaturally(event.block.location, drop)
 		}
 	}

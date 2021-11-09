@@ -1,26 +1,43 @@
-package com.codeland.uhc.blockfix
+package com.codeland.uhc.blockfix.blockfix
 
+import com.codeland.uhc.blockfix.BlockFix
+import com.codeland.uhc.blockfix.CountingRange
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.Util.binarySearch
 import org.bukkit.Material
+import org.bukkit.block.Block
+import org.bukkit.block.BlockState
 import org.bukkit.inventory.ItemStack
 
 class LeavesFix : BlockFix("Leaves", arrayOf(
-	Range.countOffRange("Apple", 200, { _, _ -> ItemStack(Material.APPLE) }, { _, drops ->
-		val drop = drops.firstOrNull()
-		if (drop != null && isLeaves(drop.type)) drop else null
-	}),
-	Range.countRange("Stick", 50) { _, _ -> ItemStack(Material.STICK) },
-	Range.countRange("Sapling", 20) { leaves, _ ->
-		ItemStack(Util.binaryFind(leaves, leavesInfo) { info -> info.leaves }?.sapling ?: Material.OAK_SAPLING)
-	}
+	CountingRange(
+		"Apple",
+		200,
+		{ _, _ -> ItemStack(Material.APPLE) },
+		{ _, drops ->
+			val drop = drops.firstOrNull()
+			if (drop != null && isLeaves(drop.type)) drop else null
+		}
+	),
+	CountingRange(
+		"Stick",
+		50,
+		{ _, _ -> ItemStack(Material.STICK) },
+		{ _, _ -> null }
+	),
+	CountingRange(
+		"Sapling",
+		20,
+		{ leaves, _ -> ItemStack(Util.binaryFind(leaves, leavesInfo) { info -> info.leaves }?.sapling ?: Material.OAK_SAPLING) },
+		{ _, _ -> null }
+	)
 )) {
 	init {
 		leavesInfo.sortBy { info -> info.leaves }
 	}
 
-	override fun isBlock(material: Material): Boolean {
-		return isLeaves(material)
+	override fun isBlock(blockState: BlockState): Boolean {
+		return isLeaves(blockState.type)
 	}
 
 	override fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean {
