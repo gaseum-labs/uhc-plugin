@@ -37,7 +37,7 @@ class PreTeam(
 		}
 
 		val nameParts = Material.values()
-			.filter { !it.name.startsWith("LEGACY_") }
+			.filter { !it.name.startsWith("LEGACY_") && it.name.length <= 20 }
 			.map { material -> material.name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() } }
 	}
 }

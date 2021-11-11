@@ -93,10 +93,16 @@ class Summary(
 		return players.associate { (_, uuid, name) -> Pair(uuid, name) }
 	}
 
+	fun playersTeam(uuid: UUID): Team? {
+		return teams.find { team -> team.members.contains(uuid) }
+	}
+
 	fun pushToDatabase(connection: Connection) {
 		val statement = connection.createStatement()
 		//language=sql
 		statement.executeQuery("EXECUTE uploadSummary ${DatabaseFile.sqlString(write(false))};")
+
+		statement.close()
 	}
 
 	companion object {

@@ -17,13 +17,19 @@ class ParticipantTeamCommands : BaseCommand() {
 	@CommandAlias("teamName")
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
+		val filteredName = newName.trim().filter { it in ' '..'~' }
+
+		if (filteredName.length > 20) {
+			return Commands.errorMessage(sender, "Maximum name length is 20, you entered ${filteredName.length}")
+		}
+
 		val team = UHC.getTeams().playersTeam((sender as Player).uniqueId)
 			?: return Commands.errorMessage(sender, "You are not on a team")
 
-		team.giveName(newName)
+		team.giveName(filteredName)
 
 		/* broadcast change to all teammates */
-		val message = Component.text("Your team name has been changed to ").append(team.apply(newName))
+		val message = Component.text("Your team name has been changed to ").append(team.apply(filteredName))
 		team.members.forEach { uuid -> Bukkit.getPlayer(uuid)?.sendMessage(message) }
 	}
 

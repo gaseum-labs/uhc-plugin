@@ -1,6 +1,8 @@
 package com.codeland.uhc.discord.storage
 
 import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Util.void
 import net.dv8tion.jda.api.entities.Guild
 
 enum class DiscordStorage(val entry: DiscordStorageEntry<*>) {
@@ -22,29 +24,34 @@ enum class DiscordStorage(val entry: DiscordStorageEntry<*>) {
 				guild,
 				Channels.DATA_CATEGORY_NAME,
 				Channels.DATA_CHANNEL_NAME
-			).thenAccept { (category, channel) ->
+			).thenAccept { (_, channel) ->
 				Channels.allChannelMessages(channel) { message ->
 					val text = message.contentRaw
-					if (!text.startsWith("```") || !text.endsWith("```")) return@allChannelMessages
-					val codeBlock = text.substring(3, text.length - 3).trim()
+					if (text.startsWith("```") && text.endsWith("```")) {
+						val codeBlock = text.substring(3, text.length - 3).trim()
 
-					values().any { (entry) ->
-						if (entry.isThis(codeBlock)) {
-							when (val r = entry.setData(codeBlock)) {
-								is Bad -> channel.sendMessage("Error while reading data for ${entry.name}\n${r.error}").queue()
+						values().any { (entry) ->
+							if (entry.isThis(codeBlock)) {
+								when (val r = entry.setData(codeBlock)) {
+									is Bad -> channel.sendMessage("Error while reading data for ${entry.name}\n${r.error}").queue()
+								}
+								true
+							} else {
+								false
 							}
-							true
-						} else {
-							false
 						}
 					}
 				}
 
 				values().forEach { (entry) ->
 					if (entry.value == null) {
-						channel.sendMessage("```${entry.name}=PLEASE INPUT DATA```")
+						channel.sendMessage("```${entry.name}=PLEASE INPUT DATA```").queue()
+					} else {
+						println("${entry.name} | ${entry.value}")
 					}
 				}
+			}.exceptionally { ex: Throwable ->
+				println("Error while reading data\n${ex.message}").void()
 			}
 		}
 	}

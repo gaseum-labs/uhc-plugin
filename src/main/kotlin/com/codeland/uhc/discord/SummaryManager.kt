@@ -67,12 +67,25 @@ class SummaryManager(val bot: MixerBot) {
 
 		val nameMap = summary.nameMap()
 
+		fun formatName(uuid: UUID, name: String): String {
+			val team = summary.playersTeam(uuid)
+			return if (team == null) {
+				name
+			} else {
+				"$name *[${team.name}]*"
+			}
+		}
+
 		summary.players.forEach { (place, uuid, name, _, killedBy) ->
 			val kills = summary.numKills(uuid)
 
 			builder.addField(
-				"$place. $name${if (killedBy == null) "" else " ⚔️ ${nameMap[killedBy]}"}",
-				"$kills kill${if (kills == 1) "" else "s"}",
+				"$place. ${formatName(uuid, name)} ${if (kills == 0) "" else "($kills kill${if ((kills) == 1) "" else "s"})"}",
+				if (place == 1) {
+					"Winner"
+				} else {
+					"killed by ${if (killedBy == null) "environment" else "**${nameMap[killedBy] ?: "Unknown"}**"}"
+				},
 				false
 			)
 		}

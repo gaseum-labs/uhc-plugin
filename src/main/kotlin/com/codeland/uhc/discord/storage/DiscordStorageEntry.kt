@@ -63,7 +63,7 @@ class DiscordStorageEntryString(name: String, default: String) : DiscordStorageE
 	override fun parse(dataPart: String): Result<String> {
 		val firstQuote = dataPart.indexOf('"')
 		if (firstQuote == -1) return Bad("bad string quoting")
-		val lastQuote = dataPart.lastIndexOf('"', firstQuote + 1)
+		val lastQuote = dataPart.lastIndexOf('"')
 		if (lastQuote == -1) return Bad("bad string quoting")
 
 		return Good(dataPart.substring(firstQuote + 1 until lastQuote))

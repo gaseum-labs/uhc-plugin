@@ -2,6 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.discord.storage.DiscordStorage
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.team.AbstractTeam
@@ -266,6 +267,11 @@ object Packet {
 
 		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Status.Server.SERVER_INFO) {
 			override fun onPacketSending(event: PacketEvent) {
+				/* do not attempt to modify MOTD if discordstorage is not set */
+				val splashText = DiscordStorage.splashText ?: return
+				val color0 = TextColor.color(DiscordStorage.color0 ?: return)
+				val color1 = TextColor.color(DiscordStorage.color1 ?: return)
+
 				val oldPing = (event.packet.handle as PacketStatusOutServerInfo).b()
 
 				val newPing = ServerPing()
@@ -273,29 +279,9 @@ object Packet {
 				newPing.setPlayerSample(oldPing.b())
 
 				val length = 48
-
-				fun createStrip() = CharArray(length + 1) { i -> if (i == length) '\n' else when (i % 4) {
-					0 -> 'U'
-					1 -> 'H'
-					2 -> 'C'
-					else -> ' '
-				}.toChar() }
-
-				val topStrip = createStrip()
-				val bottomStrip = createStrip()
-
+				val strip = String(CharArray(length + 1) { i -> if (i == length) '\n' else splashText[i % splashText.length] })
 				newPing.setMOTD(
-					Util.nmsGradientString(
-						String(topStrip),
-						TextColor.color(0x1042e6),
-						TextColor.color(0x0af6fa)
-					).addSibling(
-						Util.nmsGradientString(
-							String(bottomStrip),
-							TextColor.color(0x1042e6),
-							TextColor.color(0x0af6fa)
-						)
-					)
+					Util.nmsGradientString(strip, color0, color1).addSibling(Util.nmsGradientString(strip, color0, color1))
 				)
 
 				newPing.setFavicon(UHC.bot?.serverIcon ?: oldPing.d())
@@ -320,32 +306,5 @@ object Packet {
 				}
 			}
 		})
-
-		///* enchanting table button updates */
-		//protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.WINDOW_DATA) {
-		//	override fun onPacketSending(event: PacketEvent) {
-		//		val packet = event.packet.handle as PacketPlayOutWindowData
-		//		val option = packet.c()
-//
-		//		val playerData = PlayerData.getPlayerData(event.player.uniqueId)
-//
-		//		val openInventory = event.player.openInventory
-		//		val itemInTable = openInventory.getItem(0)
-		//		event.player.sendMessage(Component.text("${itemInTable?.type}"))
-//
-		//		if (playerData.storedOffers.size == 3) {
-		//			val newValue = when (option) {
-		//				in 0..2 -> playerData.storedOffers[option]?.cost
-		//				in 4..6 -> Enchant.packetEnchantmentIds.indexOf(playerData.storedOffers[option - 4]?.enchantment)
-		//				in 7..9 -> playerData.storedOffers[option - 7]?.enchantmentLevel
-		//				else -> null
-		//			}
-//
-		//			if (newValue != null) {
-		//				event.packet = PacketContainer.fromPacket(PacketPlayOutWindowData(packet.b(), packet.c(), newValue))
-		//			}
-		//		}
-		//	}
-		//})
 	}
 }
