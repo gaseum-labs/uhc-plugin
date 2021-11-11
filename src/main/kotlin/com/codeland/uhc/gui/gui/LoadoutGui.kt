@@ -3,7 +3,6 @@ package com.codeland.uhc.gui.gui
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.DataManager
-import com.codeland.uhc.discord.DiscordFilesystem
 import com.codeland.uhc.discord.database.file.LoadoutsFile
 import com.codeland.uhc.gui.GuiType
 import com.codeland.uhc.gui.MoveableGuiPage

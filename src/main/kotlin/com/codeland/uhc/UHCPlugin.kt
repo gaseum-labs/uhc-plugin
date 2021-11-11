@@ -10,6 +10,7 @@ import com.codeland.uhc.event.*
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.util.GoogleDDNSUpdater
+import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.WorldGenManager
@@ -61,18 +62,21 @@ class UHCPlugin : JavaPlugin() {
 
 		WorldGenManager.init(server)
 
-		if (configFile.production) println(try {
-			GoogleDDNSUpdater.updateDomain(WebAddress.getLocalAddress())
-		} catch (ex: Exception) {
-			"${ex}\n${ChatColor.RED}DDNS FAILED"
-		})
+		GoogleDDNSUpdater.updateDomain(configFile)
+			.thenAccept(::println)
+			.exceptionally { ex ->
+				println("${ChatColor.RED}DDNS Failed")
+				println(ex.message).void()
+			}
 
-		MixerBot.createMixerBot(configFile, {
-			UHC.bot = it
-			UHC.getConfig().usingBot.set(true)
-		}, {
-			println("${ChatColor.RED}$it")
-		})
+		MixerBot.createMixerBot(configFile)
+			.thenAccept { bot ->
+				UHC.bot = bot
+				UHC.getConfig().usingBot.set(true)
+			}.exceptionally { ex ->
+				println("${ChatColor.RED}Bot setup failed")
+				println(ex.message).void()
+			}
 
 		Tracker.loadCharacters()
 

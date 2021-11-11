@@ -10,7 +10,17 @@ package com.codeland.uhc.util
  *     is Bad -> {}
  * }
  */
-sealed class Result<T>
+sealed class Result<T> {
+	companion object {
+		fun <T> maybe(throwing: () -> T): Result<T> {
+			return try {
+				Good(throwing())
+			} catch (ex: Exception) {
+				Bad(ex.message)
+			}
+		}
+	}
+}
 
 class Good<T>(val value: T): Result<T>()
 

@@ -4,11 +4,15 @@ import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.command.*
 import com.codeland.uhc.discord.command.commands.*
+import com.codeland.uhc.discord.storage.Channels
+import com.codeland.uhc.discord.storage.DiscordStorage
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.util.WebAddress
+import com.codeland.uhc.util.extensions.RestActionExtensions
+import com.codeland.uhc.util.extensions.RestActionExtensions.submitAsync
 import io.netty.buffer.ByteBufOutputStream
 import io.netty.buffer.Unpooled
 import net.dv8tion.jda.api.EmbedBuilder
@@ -29,52 +33,37 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import javax.imageio.ImageIO
 
-class MixerBot(
-	val jda: JDA,
-	val guild: Guild,
-	val production: Boolean,
-	val token: String,
-) : ListenerAdapter() {
+class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 	companion object {
-		fun createMixerBot(configFile: ConfigFile, onMixerBot: (MixerBot) -> Unit, onError: (String) -> Unit) {
-			try {
-				val jda = JDABuilder.createDefault(configFile.botToken).enableIntents(
+		fun createMixerBot(configFile: ConfigFile): CompletableFuture<MixerBot> {
+			return CompletableFuture.supplyAsync {
+				val serverId = configFile.serverId ?: throw Exception("No serverId in config file")
+				val botToken = configFile.botToken ?: throw Exception("No botToken in config file")
+
+				val jda = JDABuilder.createDefault(botToken).enableIntents(
 					GatewayIntent.GUILD_MESSAGES,
 					GatewayIntent.GUILD_VOICE_STATES,
 					GatewayIntent.GUILD_MEMBERS,
 					GatewayIntent.GUILD_EMOJIS,
 					GatewayIntent.GUILD_MESSAGE_REACTIONS
-				).build()
+				).build().awaitReady()
 
-				/* temporary event listener just for the ready */
-				jda.addEventListener(object : ListenerAdapter() {
-					override fun onReady(event: ReadyEvent) {
-						val guild = jda.getGuildById(configFile.serverId)
-						if (guild == null) {
-							onError("Could not find the guild by id ${configFile.serverId}")
+				val guild = jda.getGuildById(serverId)
 
-						} else {
-							/* create the bot once jda is ready */
-							onMixerBot(MixerBot(
-								jda,
-								guild,
-								configFile.production,
-								configFile.botToken,
-							))
-						}
-					}
-				})
-			} catch (ex: Exception) {
-				onError(ex.message ?: "Unknown Error")
+				if (guild == null) {
+					throw Exception("Could not find the guild by id ${configFile.serverId}")
+				} else {
+					MixerBot(jda, guild)
+				}
 			}
 		}
 	}
 
 	val commands = arrayOf(
 		LinkCommand(),
-		GeneralCommand(),
 		EditSummaryCommand(),
 		PublishSummaryCommand()
 	)
@@ -86,8 +75,10 @@ class MixerBot(
 	init {
 		val ip = WebAddress.getLocalAddress()
 
-		if (production) jda.presence.activity = Activity.playing("UHC at $ip")
+		jda.presence.activity = Activity.playing("UHC at $ip")
 		jda.addEventListener(this)
+
+		DiscordStorage.load(guild)
 
 		clearTeamVCs()
 
@@ -141,14 +132,6 @@ class MixerBot(
 		}
 	}
 
-	private class Awaiter(val num: Int, val onComplete: () -> Unit) {
-		var completed = 0
-
-		fun queue(action: RestAction<Void>) {
-			action.queue({ if (++completed == num) onComplete() }, { if (++completed == num) onComplete() })
-		}
-	}
-
 	fun stop() {
 		jda.shutdownNow()
 	}
@@ -157,12 +140,6 @@ class MixerBot(
 	/*         TEAM UTILITY         */
 	/* ---------------------------- */
 
-	fun destroyTeamChannel(teamId: Int) {
-		getTeamChannel(teamId) { teamChannel ->
-			destroyTeamChannel(guild, teamChannel)
-		}
-	}
-
 	/**
 	 * removes an arbitrary amount of players from a team channel,
 	 * will delete the team channel if everyone is removed
@@ -170,83 +147,73 @@ class MixerBot(
 	 * @param players a list of player UUIDs on the team to move to general
 	 */
 	fun removeFromTeamChannel(teamId: Int, teamSize: Int, players: List<UUID>) {
-		val voiceChannel = generalVoiceChannel() ?: return
+		Channels.getCategoryVoiceChannel(guild, Channels.VOICE_CATEGORY_NAME, Channels.GENERAL_VOICE_CHANNEL_NAME)
+			.thenAccept { (category, general) ->
+				/* remove everyone, delete channel */
+				if (teamSize <= 0) {
+					getTeamChannel(category, teamId).thenAccept { teamChannel ->
+						destroyTeamChannel(guild, teamChannel, general)
+					}
 
-		/* remove everyone, delete channel */
-		if (teamSize <= 0) {
-			destroyTeamChannel(teamId)
-
-		/* remove only certain players, don't delete channel */
-		} else {
-			voiceMembersFromPlayers(guild, players).forEach { member ->
-				guild.moveVoiceMember(member, voiceChannel).queue()
+				/* remove only certain players, don't delete channel */
+				} else {
+					voiceMembersFromPlayers(guild, players).forEach { member ->
+						guild.moveVoiceMember(member, general).queue()
+					}
+				}
 			}
-		}
 	}
 
 	fun addToTeamChannel(teamId: Int, players: List<UUID>) {
-		getTeamChannel(teamId) { teamChannel ->
+		getTeamChannel(teamId).thenAccept { teamChannel ->
 			voiceMembersFromPlayers(guild, players).forEach { member ->
 				guild.moveVoiceMember(member, teamChannel).queue()
 			}
 		}
 	}
 
-	/* --------------------------------------------------------------- */
-
-	/**
-	 * will create a new voice channel for
-	 * the team if none currently exists
-	 *
-	 * the voiceChannel is passed into onVoiceChannel
-	 * callback is not called if there was an error
-	 */
-	private fun getTeamChannel(teamdId: Int, onVoiceChannel: (VoiceChannel) -> Unit) {
-		val category = voiceCategory() ?: return
-		val teamChannelName = "Team $teamdId"
-
-		val existingChannel = category.voiceChannels.find { channel -> channel.name == teamChannelName }
-
-		if (existingChannel != null)
-			onVoiceChannel(existingChannel)
-		else
-			category.createVoiceChannel(teamChannelName).queue { onVoiceChannel(it) }
+	fun clearTeamVCs() {
+		Channels.getCategoryVoiceChannel(guild, Channels.VOICE_CATEGORY_NAME, Channels.GENERAL_VOICE_CHANNEL_NAME)
+			.thenAccept { (category, general) ->
+				category.voiceChannels.forEach { channel ->
+					if (channel.idLong != general.idLong)  {
+						destroyTeamChannel(guild, channel, general)
+					}
+				}
+			}
 	}
 
-	private fun destroyTeamChannel(guild: Guild, teamChannel: VoiceChannel) {
+	/* --------------------------------------------------------------- */
+
+	private fun teamChannelName(teamId: Int): String {
+		return "Team $teamId"
+	}
+
+	private fun getTeamChannel(category: Category, teamdId: Int): CompletableFuture<VoiceChannel> {
+		return Channels.getVoiceChannel(category, teamChannelName(teamdId))
+	}
+
+	private fun getTeamChannel(teamdId: Int): CompletableFuture<VoiceChannel> {
+		return Channels.getCategoryVoiceChannel(guild, Channels.VOICE_CATEGORY_NAME, "Team $teamdId")
+			.thenApply { (_, channel) -> channel }
+	}
+
+	private fun destroyTeamChannel(guild: Guild, teamChannel: VoiceChannel, generalChannel: VoiceChannel) {
 		if (teamChannel.members.isEmpty()) {
 			teamChannel.delete().queue()
 
 		} else {
-			val awaiter = Awaiter(teamChannel.members.size) {
+			RestActionExtensions.allOf(
+				teamChannel.members.map { member -> guild.moveVoiceMember(member, generalChannel).submitAsync() }
+			).thenAccept {
 				teamChannel.delete().queue()
 			}
-
-			/* move members to general before deleting team channel */
-			teamChannel.members.forEach { member ->
-				awaiter.queue(guild.moveVoiceMember(member, generalVoiceChannel()))
-			}
-		}
-	}
-
-	fun clearTeamVCs() {
-		val voiceCategory = voiceCategory() ?: return
-		val voiceChannel = generalVoiceChannel() ?: return
-
-		val channels = voiceCategory.voiceChannels
-
-		channels.forEach { channel ->
-			if (channel != voiceChannel) destroyTeamChannel(guild, channel)
 		}
 	}
 
 	/* utility */
 
 	fun isLinked(uuid: UUID) = if (UHC.dataManager.isOnline()) UHC.dataManager.linkData.minecraftToDiscord.containsKey(uuid) else true
-
-	private fun voiceCategory(): Category? = jda.getCategoryById(UHC.dataManager.ids.voiceCategory)
-
-	private fun generalVoiceChannel(): VoiceChannel? = jda.getVoiceChannelById(UHC.dataManager.ids.generalVoiceChannel)
 
 	private fun voiceMembersFromPlayers(guild: Guild, players: List<UUID>): List<Member> {
 		return players.mapNotNull { UHC.dataManager.linkData.minecraftToDiscord[it] }
@@ -255,6 +222,6 @@ class MixerBot(
 	}
 
 	private fun isAdmin(member: Member): Boolean {
-		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == UHC.dataManager.ids.adminRole }
+		return member.hasPermission(Permission.ADMINISTRATOR) || member.roles.any { it.idLong == DiscordStorage.adminRole }
 	}
 }

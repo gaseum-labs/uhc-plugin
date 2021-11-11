@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class LinkCommand : MixerCommand(false) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
-		return keywordFilter(content, bot, "link")
+		return keywordFilter(content, "link")
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {

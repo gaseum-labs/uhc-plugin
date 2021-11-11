@@ -10,27 +10,15 @@ abstract class MixerCommand(val requiresAdmin: Boolean) {
 	abstract fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot)
 
 	companion object {
+		const val prefix = "%"
+
 		fun errorMessage(event: GuildMessageReceivedEvent, text: String?) {
 			event.channel.sendMessage(text ?: "Unknown error").queue { sent -> sent.delete().queueAfter(5, TimeUnit.SECONDS) }
 			event.message.delete().queueAfter(10, TimeUnit.SECONDS)
 		}
 
-		fun prefix(production: Boolean): String {
-			return if (production) "%" else "$%"
-		}
-
-		fun keywordFilter(content: String, bot: MixerBot, keyword: String): Boolean {
-			return content.startsWith("${prefix(bot.production)}${keyword}")
-		}
-
-		fun optionalDebugFilter(content: String, bot: MixerBot): Boolean {
-			val startsWithDebug = content.startsWith(prefix(false))
-
-			return if (bot.production) {
-				!startsWithDebug
-			} else {
-				startsWithDebug
-			}
+		fun keywordFilter(content: String, keyword: String): Boolean {
+			return content.startsWith(prefix + keyword)
 		}
 
 		fun replyingToDataFilter(event: GuildMessageReceivedEvent, needsReplacement: Boolean, isChannel: (TextChannel) -> Boolean): Boolean {

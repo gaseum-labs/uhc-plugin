@@ -2,7 +2,6 @@ package com.codeland.uhc.discord
 
 import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.discord.database.DatabaseFile
-import com.codeland.uhc.discord.database.file.IdsFile
 import com.codeland.uhc.discord.database.file.LinkDataFile
 import com.codeland.uhc.discord.database.file.LoadoutsFile
 import com.codeland.uhc.discord.database.file.NicknamesFile
@@ -14,7 +13,6 @@ import java.sql.DriverManager
 
 class DataManager(
 	var connection: Connection?,
-	var ids: IdsFile.Ids,
 	var linkData: LinkDataFile.LinkData,
 	var loadouts: Loadouts,
 	var nicknames: NicknamesFile.Nicknames
@@ -24,7 +22,6 @@ class DataManager(
 	}
 
 	companion object {
-		val idsFile = IdsFile()
 		val linkDataFile = LinkDataFile()
 		val loadoutsFile = LoadoutsFile()
 		val nicknamesFile = NicknamesFile()
@@ -59,7 +56,7 @@ class DataManager(
 
 			fun <T> load(file: DatabaseFile<T, *>): T {
 				return try {
-					file.parseResults(statement.executeQuery(idsFile.query()))
+					file.parseResults(statement.executeQuery(file.query()))
 				} catch (ex: Exception) {
 					result.error(ex.message)
 					file.defaultData()
@@ -68,15 +65,15 @@ class DataManager(
 
 			statement.close()
 
-			val ids = load(idsFile)
 			val linkData = load(linkDataFile)
 			val loadouts = load(loadoutsFile)
 			val nicknames = load(nicknamesFile)
 
-			return result.complete(DataManager(connection, ids, linkData, loadouts, nicknames))
+			return result.complete(DataManager(connection, linkData, loadouts, nicknames))
 		}
 
 		fun offlineDataManager(): DataManager {
-			return DataManager(null, idsFile.defaultData(), linkDataFile.defaultData(), loadoutsFile.defaultData(), nicknamesFile.defaultData())		}
+			return DataManager(null, linkDataFile.defaultData(), loadoutsFile.defaultData(), nicknamesFile.defaultData())
+		}
 	}
 }
