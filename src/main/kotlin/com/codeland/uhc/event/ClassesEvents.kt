@@ -9,6 +9,8 @@ import com.codeland.uhc.quirk.quirks.classes.Classes.Companion.HUNTER_SPAWN_META
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.Util.materialRange
 import com.codeland.uhc.util.extensions.LocationExtensions.minus
 import com.codeland.uhc.util.extensions.LocationExtensions.plus
 import com.codeland.uhc.util.extensions.VectorExtensions.plus
@@ -19,6 +21,7 @@ import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
 import org.bukkit.attribute.Attribute
+import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Levelled
@@ -45,6 +48,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
 import kotlin.math.abs
+import kotlin.random.Random
 
 class ClassesEvents : Listener {
 	private fun surface(block: Block): Boolean {
@@ -65,6 +69,50 @@ class ClassesEvents : Listener {
 						modify(block)
 					}
 				}
+	}
+
+	@EventHandler
+	fun playerDamage(event: EntityDamageEvent) {
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+		val player = if (event.entity is Player) event.entity as Player else return
+
+		if (classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
+			event.isCancelled = true
+
+			val block = player.location.block
+			if (!block.type.isAir) block.breakNaturally()
+
+			block.type = Material.WATER
+			block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
+
+			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity = player.location.direction.multiply(2)
+
+			SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
+				if (block.type == Material.WATER) {
+					block.type = Material.AIR
+					block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
+				}
+			}
+		}
+
+		if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER && event.cause == EntityDamageEvent.DamageCause.FALL) {
+			event.isCancelled = true
+		}
+
+		if (classes.getClass(player.uniqueId) == QuirkClass.ENCHANTER) {
+			if (event.damage > player.health
+					&& player.level > 0
+					&& event.damage <= player.health + player.level) {
+				event.isCancelled = true
+				val health = player.health + player.level
+				player.level = 0
+				player.health = if (health > player.maxHealth) player.maxHealth else health
+				if (health > player.maxHealth) {
+					player.absorptionAmount += health - player.maxHealth
+				}
+			}
+		}
 	}
 
 	@EventHandler
@@ -101,47 +149,6 @@ class ClassesEvents : Listener {
 						player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 40, 2, false, false, false))
 					}
 				}
-			}
-		}
-	}
-
-	@EventHandler
-	fun playerDamage(event: EntityDamageEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
-		val player = if (event.entity is Player) event.entity as Player else return
-
-		if (classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
-			event.isCancelled = true
-
-			val block = player.location.block
-			if (!block.type.isAir) block.breakNaturally()
-
-			block.type = Material.WATER
-			block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
-
-			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity = player.location.direction.multiply(2)
-
-			SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
-				if (block.type == Material.WATER) {
-					block.type = Material.AIR
-					block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
-				}
-			}
-		}
-
-		if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER && event.cause == EntityDamageEvent.DamageCause.FALL) {
-			event.isCancelled = true
-		}
-
-		if (classes.getClass(player.uniqueId) == QuirkClass.ENCHANTER) {
-			if (event.damage > player.health && player.level > 0) {
-				event.isCancelled = true
-				val excess = event.damage - player.health
-				player.absorptionAmount += player.level
-				player.level = 0
-				player.health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH)!!.value
-				player.damage(excess)
 			}
 		}
 	}
@@ -338,13 +345,14 @@ class ClassesEvents : Listener {
 	fun interactEvent(event: PlayerInteractEvent) {
 		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENGINEER) {
-			when (event.action) {
-				Action.LEFT_CLICK_BLOCK -> {
+		when (event.action) {
+			Action.LEFT_CLICK_BLOCK -> {
+				if (classes.getClass(event.player.uniqueId) == QuirkClass.ENGINEER) {
 					if (event.player.isSneaking && event.clickedBlock!!.type == Material.LEVER) {
 						val lever = event.clickedBlock!!
 						val existing = Classes.remoteControls.find { (_, block, _) ->
-							block == lever }
+							block == lever
+						}
 						if (existing != null && event.player.inventory.contains(existing.item)) {
 							if (event.player.inventory.itemInMainHand != existing.item)
 								event.player.sendMessage("${RED}You already have a controller for this lever.")
@@ -356,30 +364,30 @@ class ClassesEvents : Listener {
 						}
 					}
 				}
-				Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
-					val control = Classes.remoteControls.find { (item, _, _) ->
-						item == event.player.inventory.itemInMainHand }
-					if (control != null) {
-						event.isCancelled = true
-						val leverData = control.block.blockData as? Switch
-						if (leverData != null) {
-							leverData.isPowered = !leverData.isPowered
-							control.block.blockData = leverData
-							control.block.world.playSound(
-									control.block.location,
-									Sound.BLOCK_LEVER_CLICK,
-									1.0f,
-									// some attempt to preserve the difference in pitch of on and off
-									if (leverData.isPowered) 1.5f else 1.0f
-							)
-						}
-						event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+			}
+			Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
+				val control = Classes.remoteControls.find { (item, _, _) ->
+					item == event.player.inventory.itemInMainHand }
+				if (control != null) {
+					event.isCancelled = true
+					val leverData = control.block.blockData as? Switch
+					if (leverData != null) {
+						leverData.isPowered = !leverData.isPowered
+						control.block.blockData = leverData
+						control.block.world.playSound(
+								control.block.location,
+								Sound.BLOCK_LEVER_CLICK,
+								1.0f,
+								// some attempt to preserve the difference in pitch of on and off
+								if (leverData.isPowered) 1.5f else 1.0f
+						)
 					}
+					event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
 				}
 			}
 		}
 
-		else if (
+		if (
 			classes.getClass(event.player.uniqueId) == QuirkClass.MINER &&
 			pickaxes.contains(event.player.inventory.itemInMainHand.type) &&
 			event.hand == EquipmentSlot.HAND

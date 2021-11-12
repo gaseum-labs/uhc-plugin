@@ -9,6 +9,7 @@ import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.event.ClassesEvents
 import com.codeland.uhc.event.Enchant
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
@@ -17,9 +18,13 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.*
+import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.Util
 import org.bukkit.*
+import org.bukkit.block.Biome
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import kotlin.random.Random
 
 @CommandAlias("uhc")
 class ParticipantCommands : BaseCommand() {
@@ -256,5 +261,62 @@ class ParticipantCommands : BaseCommand() {
 				}}${ChatColor.BOLD}${it}"
 			}} ${ChatColor.WHITE}| ${ChatColor.BLUE}${names[i]}")
 		}
+	}
+
+	/**
+	 * Map for determining the substitutions made in the lavacaster
+	 * scorch ability. Each key represents the blocks being changed,
+	 * and the value is a list of possible replacements, chosen
+	 * randomly.
+	 */
+	val scorchSubstitution: Map<List<Material>, List<Material>> = mapOf(
+			listOf(Material.GRASS_BLOCK, Material.DIRT)
+					to listOf(Material.MAGMA_BLOCK, Material.NETHERRACK, Material.NETHERRACK, Material.NETHERRACK),
+
+			listOf(Material.SAND, Material.SANDSTONE, Material.GRAVEL)
+					to listOf(Material.SOUL_SAND, Material.SOUL_SAND, Material.SOUL_SAND, Material.MAGMA_BLOCK),
+
+			Util.materialRange(Material.OAK_LOG, Material.STRIPPED_DARK_OAK_LOG)
+					to listOf(Material.WARPED_STEM),
+
+			Util.materialRange(Material.OAK_LEAVES, Material.DARK_OAK_LEAVES)
+					to listOf(Material.AZALEA_LEAVES),
+
+			listOf(Material.WATER) to listOf(Material.LAVA),
+	)
+
+
+	fun scorch(player: Player) {
+		val location = player.location.clone()
+		SchedulerUtil.delayedFor(2, 0 until 10) { r ->
+			fun replaceBlocks(x: Int, z: Int) {
+				for (y in 0 until 256) {
+					val block = player.world.getBlockAt(x, y, z)
+					val sub = scorchSubstitution.keys.find { block.type in it }
+					if (sub != null) {
+                        val replacement = scorchSubstitution[sub]!!.random()
+                        block.type = replacement
+                    }
+				}
+				if (Random.nextDouble() < 0.2) {
+					player.world
+							.getBlockAt(x, Util.topBlockY(player.world, x, z), z)
+							.type = Material.FIRE
+				}
+				player.location.block.biome = Biome.NETHER_WASTES
+			}
+			for (x in -r..r) replaceBlocks(location.blockX + x, location.blockZ + r)
+			if (r != 0) {
+				for (x in -r..r) replaceBlocks(location.blockX + x, location.blockZ + -r)
+				for (z in -r..r) replaceBlocks(location.blockX + r, location.blockZ + z)
+				for (z in -r..r) replaceBlocks(location.blockX + -r, location.blockZ + z)
+			}
+		}
+	}
+
+	@Subcommand("scorch")
+	fun scorchCommand(sender: CommandSender) {
+		println("Testing")
+		scorch(sender as Player)
 	}
 }
