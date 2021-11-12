@@ -263,47 +263,77 @@ class ParticipantCommands : BaseCommand() {
 		}
 	}
 
-	/**
-	 * Map for determining the substitutions made in the lavacaster
-	 * scorch ability. Each key represents the blocks being changed,
-	 * and the value is a list of possible replacements, chosen
-	 * randomly.
-	 */
-	val scorchSubstitution: Map<List<Material>, List<Material>> = mapOf(
-			listOf(Material.GRASS_BLOCK, Material.DIRT)
-					to listOf(Material.MAGMA_BLOCK, Material.NETHERRACK, Material.NETHERRACK, Material.NETHERRACK),
-
-			listOf(Material.SAND, Material.SANDSTONE, Material.GRAVEL)
-					to listOf(Material.SOUL_SAND, Material.SOUL_SAND, Material.SOUL_SAND, Material.MAGMA_BLOCK),
-
-			Util.materialRange(Material.OAK_LOG, Material.STRIPPED_DARK_OAK_LOG)
-					to listOf(Material.WARPED_STEM),
-
-			Util.materialRange(Material.OAK_LEAVES, Material.DARK_OAK_LEAVES)
-					to listOf(Material.AZALEA_LEAVES),
-
+	val commonSubs: List<Pair<List<Material>, List<Material>>> = listOf(
+			listOf(Material.STONE) to listOf(Material.BLACKSTONE, Material.BLACKSTONE, Material.MAGMA_BLOCK),
 			listOf(Material.WATER) to listOf(Material.LAVA),
+			listOf(Material.SAND, Material.GRAVEL, Material.SANDSTONE, Material.RED_SAND, Material.RED_SANDSTONE)
+				to listOf(Material.SOUL_SAND, Material.SOUL_SAND, Material.MAGMA_BLOCK),
 	)
 
+	val warpedSubs: List<Pair<List<Material>, List<Material>>> = listOf(
+			Util.materialRange(Material.OAK_LOG, Material.STRIPPED_DARK_OAK_WOOD)
+					to listOf(Material.WARPED_STEM),
+
+			listOf(Material.GRASS_BLOCK, Material.PODZOL, Material.DIRT, Material.COARSE_DIRT, Material.ROOTED_DIRT)
+					to listOf(Material.WARPED_NYLIUM, Material.WARPED_NYLIUM, Material.MAGMA_BLOCK),
+
+			Util.materialRange(Material.OAK_LEAVES, Material.DARK_OAK_LEAVES)
+					to listOf(Material.WARPED_WART_BLOCK),
+
+			Util.materialRange(Material.GRASS, Material.SEAGRASS).plus(Util.materialRange(Material.SUNFLOWER, Material.LARGE_FERN))
+                    to listOf(Material.WARPED_FUNGUS),
+	)
+
+	val crimsonSubs: List<Pair<List<Material>, List<Material>>> = listOf(
+			Util.materialRange(Material.OAK_LOG, Material.STRIPPED_DARK_OAK_WOOD)
+					to listOf(Material.CRIMSON_STEM),
+
+			listOf(Material.GRASS_BLOCK, Material.PODZOL, Material.DIRT, Material.COARSE_DIRT, Material.ROOTED_DIRT)
+					to listOf(Material.CRIMSON_NYLIUM, Material.CRIMSON_NYLIUM, Material.MAGMA_BLOCK),
+
+			Util.materialRange(Material.OAK_LEAVES, Material.DARK_OAK_LEAVES)
+					to listOf(Material.NETHER_WART_BLOCK),
+
+			Util.materialRange(Material.GRASS, Material.SEAGRASS)
+					to listOf(Material.CRIMSON_FUNGUS),
+	)
+
+	val blackstoneSubs: List<Pair<List<Material>, List<Material>>> = listOf(
+			Util.materialRange(Material.OAK_LOG, Material.STRIPPED_DARK_OAK_WOOD)
+					to listOf(Material.POLISHED_BASALT),
+
+			listOf(Material.GRASS_BLOCK, Material.PODZOL, Material.DIRT, Material.COARSE_DIRT, Material.ROOTED_DIRT)
+					to listOf(Material.BASALT, Material.BASALT, Material.MAGMA_BLOCK),
+
+			Util.materialRange(Material.OAK_LEAVES, Material.DARK_OAK_LEAVES)
+					to listOf(Material.SMOOTH_BASALT),
+
+			Util.materialRange(Material.GRASS, Material.SEAGRASS)
+					to listOf(Material.BROWN_MUSHROOM, Material.RED_MUSHROOM),
+	)
 
 	fun scorch(player: Player) {
+		val subs = listOf(
+                warpedSubs,
+                crimsonSubs,
+                blackstoneSubs,
+        ).random()
 		val location = player.location.clone()
-		SchedulerUtil.delayedFor(2, 0 until 10) { r ->
+		SchedulerUtil.delayedFor(2, 0 until 20) { r ->
 			fun replaceBlocks(x: Int, z: Int) {
 				for (y in 0 until 256) {
 					val block = player.world.getBlockAt(x, y, z)
-					val sub = scorchSubstitution.keys.find { block.type in it }
+					val sub = subs.find { it.first.contains(block.type) }?.second?.random()
+							?: commonSubs.find { it.first.contains(block.type) }?.second?.random()
 					if (sub != null) {
-                        val replacement = scorchSubstitution[sub]!!.random()
-                        block.type = replacement
+                        block.type = sub
                     }
 				}
-				if (Random.nextDouble() < 0.2) {
+				if (Random.nextDouble() < 0.03) {
 					player.world
-							.getBlockAt(x, Util.topBlockY(player.world, x, z), z)
+							.getBlockAt(x, Util.topBlockY(player.world, x, z) + 1, z)
 							.type = Material.FIRE
 				}
-				player.location.block.biome = Biome.NETHER_WASTES
 			}
 			for (x in -r..r) replaceBlocks(location.blockX + x, location.blockZ + r)
 			if (r != 0) {
@@ -316,7 +346,6 @@ class ParticipantCommands : BaseCommand() {
 
 	@Subcommand("scorch")
 	fun scorchCommand(sender: CommandSender) {
-		println("Testing")
 		scorch(sender as Player)
 	}
 }
