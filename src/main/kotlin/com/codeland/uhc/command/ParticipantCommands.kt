@@ -9,7 +9,6 @@ import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.event.ClassesEvents
 import com.codeland.uhc.event.Enchant
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
@@ -20,10 +19,15 @@ import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.team.*
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.extensions.LocationExtensions.minus
 import org.bukkit.*
-import org.bukkit.block.Biome
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Entity
+import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
+import org.bukkit.util.Vector
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 @CommandAlias("uhc")
@@ -274,8 +278,10 @@ class ParticipantCommands : BaseCommand() {
 			Util.materialRange(Material.OAK_LOG, Material.STRIPPED_DARK_OAK_WOOD)
 					to listOf(Material.WARPED_STEM),
 
-			listOf(Material.GRASS_BLOCK, Material.PODZOL, Material.DIRT, Material.COARSE_DIRT, Material.ROOTED_DIRT)
+			listOf(Material.GRASS_BLOCK, Material.PODZOL, Material.COARSE_DIRT)
 					to listOf(Material.WARPED_NYLIUM, Material.WARPED_NYLIUM, Material.MAGMA_BLOCK),
+
+			listOf(Material.DIRT) to listOf(Material.NETHERRACK),
 
 			Util.materialRange(Material.OAK_LEAVES, Material.DARK_OAK_LEAVES)
 					to listOf(Material.WARPED_WART_BLOCK),
@@ -288,8 +294,10 @@ class ParticipantCommands : BaseCommand() {
 			Util.materialRange(Material.OAK_LOG, Material.STRIPPED_DARK_OAK_WOOD)
 					to listOf(Material.CRIMSON_STEM),
 
-			listOf(Material.GRASS_BLOCK, Material.PODZOL, Material.DIRT, Material.COARSE_DIRT, Material.ROOTED_DIRT)
+			listOf(Material.GRASS_BLOCK, Material.PODZOL, Material.COARSE_DIRT)
 					to listOf(Material.CRIMSON_NYLIUM, Material.CRIMSON_NYLIUM, Material.MAGMA_BLOCK),
+
+			listOf(Material.DIRT) to listOf(Material.NETHERRACK),
 
 			Util.materialRange(Material.OAK_LEAVES, Material.DARK_OAK_LEAVES)
 					to listOf(Material.NETHER_WART_BLOCK),
@@ -312,6 +320,16 @@ class ParticipantCommands : BaseCommand() {
 					to listOf(Material.BROWN_MUSHROOM, Material.RED_MUSHROOM),
 	)
 
+	val mobSubs: List<Pair<List<EntityType>, List<EntityType>>> = listOf(
+			listOf(EntityType.PIG) to listOf(EntityType.ZOMBIFIED_PIGLIN),
+			listOf(EntityType.SHEEP, EntityType.COW, EntityType.HORSE, EntityType.LLAMA)
+					to listOf(EntityType.HOGLIN),
+			listOf(EntityType.CHICKEN, EntityType.RABBIT, EntityType.FOX)
+                    to listOf(EntityType.SLIME),
+			listOf(EntityType.SQUID, EntityType.DOLPHIN)
+                    to listOf(EntityType.STRIDER),
+	)
+
 	fun scorch(player: Player) {
 		val subs = listOf(
                 warpedSubs,
@@ -319,28 +337,48 @@ class ParticipantCommands : BaseCommand() {
                 blackstoneSubs,
         ).random()
 		val location = player.location.clone()
-		SchedulerUtil.delayedFor(2, 0 until 20) { r ->
-			fun replaceBlocks(x: Int, z: Int) {
-				for (y in 0 until 256) {
+		val blockPartition: MutableMap<Int, MutableList<Pair<Int, Int>>> = mutableMapOf()
+		val mobPartition: MutableMap<Int, MutableList<Entity>> = mutableMapOf()
+		val radius = 15
+		val mobs = player.location.world.getNearbyEntities(location, radius.toDouble(), radius.toDouble(), radius.toDouble())
+		for (x in -radius..radius) for (z in -radius..radius) {
+			blockPartition.getOrPut(sqrt(x * x + z * z.toDouble()).roundToInt()) { mutableListOf() }.add(x to z)
+		}
+		for (mob in mobs) {
+			val relativeLocation = mob.location.subtract(location)
+			mobPartition.getOrPut(sqrt(relativeLocation.x * relativeLocation.x + relativeLocation.z * relativeLocation.z).roundToInt()) { mutableListOf() }.add(mob)
+		}
+		SchedulerUtil.delayedFor(2, blockPartition.keys.sorted().filter { it <= radius }) { r ->
+			fun replaceBlocks(pair: Pair<Int, Int>) {
+				val (x, z) = pair
+				for (y in 255 downTo 0) {
 					val block = player.world.getBlockAt(x, y, z)
 					val sub = subs.find { it.first.contains(block.type) }?.second?.random()
 							?: commonSubs.find { it.first.contains(block.type) }?.second?.random()
 					if (sub != null) {
-                        block.type = sub
+                        block.setType(sub, false)
                     }
 				}
 				if (Random.nextDouble() < 0.03) {
 					player.world
 							.getBlockAt(x, Util.topBlockY(player.world, x, z) + 1, z)
-							.type = Material.FIRE
+							.setType(Material.FIRE, false)
 				}
 			}
-			for (x in -r..r) replaceBlocks(location.blockX + x, location.blockZ + r)
-			if (r != 0) {
-				for (x in -r..r) replaceBlocks(location.blockX + x, location.blockZ + -r)
-				for (z in -r..r) replaceBlocks(location.blockX + r, location.blockZ + z)
-				for (z in -r..r) replaceBlocks(location.blockX + -r, location.blockZ + z)
-			}
+			fun transformMob(entity: Entity) {
+				val type = entity.type
+				val sub = mobSubs.find { it.first.contains(type) }?.second?.random()
+				if (sub != null) {
+					val newEntity = location.world.spawnEntity(entity.location, sub)
+					newEntity.location.direction = entity.location.direction
+					entity.remove()
+				}
+            }
+			blockPartition[r]!!
+					.map { (x, z) -> Pair(location.blockX + x, location.blockZ + z) }
+					.forEach(::replaceBlocks)
+			mobPartition[r]
+					?.forEach(::transformMob)
 		}
 	}
 
