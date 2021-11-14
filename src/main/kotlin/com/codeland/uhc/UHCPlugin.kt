@@ -5,6 +5,7 @@ import com.codeland.uhc.command.*
 import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.stats.Tracker
+import com.codeland.uhc.database.DataManager
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
 import com.codeland.uhc.gui.GuiManager
@@ -66,7 +67,7 @@ class UHCPlugin : JavaPlugin() {
 			.thenAccept(::println)
 			.exceptionally { ex ->
 				println("${ChatColor.RED}DDNS Failed")
-				println(ex.message).void()
+				println("${ChatColor.RED}${ex.message}").void()
 			}
 
 		MixerBot.createMixerBot(configFile)
@@ -75,7 +76,15 @@ class UHCPlugin : JavaPlugin() {
 				UHC.getConfig().usingBot.set(true)
 			}.exceptionally { ex ->
 				println("${ChatColor.RED}Bot setup failed")
-				println(ex.message).void()
+				println("${ChatColor.RED}${ex.message}").void()
+			}
+
+		DataManager.createDataManager(configFile)
+			.thenAccept { dataManager ->
+				UHC.dataManager = dataManager
+			}.exceptionally { ex ->
+				println("${ChatColor.RED}Database connection failed")
+				println("${ChatColor.RED}${ex.message}").void()
 			}
 
 		Tracker.loadCharacters()

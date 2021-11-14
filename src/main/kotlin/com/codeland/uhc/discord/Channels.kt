@@ -1,4 +1,4 @@
-package com.codeland.uhc.discord.storage
+package com.codeland.uhc.discord
 
 import net.dv8tion.jda.api.entities.*
 import java.io.InputStream

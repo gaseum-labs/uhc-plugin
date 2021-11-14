@@ -1,5 +1,6 @@
-package com.codeland.uhc.discord.database
+package com.codeland.uhc.database
 
+import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.ResultSet
 
@@ -10,12 +11,23 @@ abstract class DatabaseFile <Data, Entry> {
 
 	abstract fun defaultData(): Data
 
-	abstract fun pushQuery(entry: Entry): String
+	abstract fun pushProcedure(): String
+	abstract fun pushParams(statement: CallableStatement, entry: Entry)
 
 	abstract fun removeQuery(entry: Entry): String?
 
 	fun push(connection: Connection, entry: Entry) {
-		sqlQuery(connection, pushQuery(entry))
+		val callable = connection.prepareCall(pushProcedure())
+
+		pushParams(callable, entry)
+
+		try {
+			callable.execute()
+		} catch (ex: Exception) {
+			ex.printStackTrace()
+		}
+
+		callable.close()
 	}
 
 	fun remove(connection: Connection, entry: Entry) {

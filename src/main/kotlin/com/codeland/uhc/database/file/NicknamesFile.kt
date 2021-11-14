@@ -1,6 +1,7 @@
-package com.codeland.uhc.discord.database.file
+package com.codeland.uhc.database.file
 
-import com.codeland.uhc.discord.database.DatabaseFile
+import com.codeland.uhc.database.DatabaseFile
+import java.sql.CallableStatement
 import java.sql.ResultSet
 import java.util.*
 import kotlin.collections.ArrayList
@@ -20,8 +21,8 @@ class NicknamesFile : DatabaseFile<NicknamesFile.Nicknames, NicknamesFile.Nickna
 		val map = HashMap<UUID, ArrayList<String>>()
 
 		while (results.next()) {
-			val uuid = UUID.fromString(results.getString(0))
-			val name = results.getNString(1)
+			val uuid = UUID.fromString(results.getString(1))
+			val name = results.getNString(2)
 
 			map.getOrPut(uuid) { ArrayList() }.add(name)
 		}
@@ -33,9 +34,13 @@ class NicknamesFile : DatabaseFile<NicknamesFile.Nicknames, NicknamesFile.Nickna
 		return Nicknames(HashMap())
 	}
 
-	override fun pushQuery(entry: NicknameEntry): String {
-		//language=sql
-		return "EXECUTE updateNickname ${sqlString(entry.uuid)}, ${sqlString(entry.nickname)};"
+	override fun pushProcedure(): String {
+		return "EXECUTE updateNickname ?, ?;"
+	}
+
+	override fun pushParams(statement: CallableStatement, entry: NicknameEntry) {
+		statement.setString(1, entry.uuid.toString())
+		statement.setString(2, entry.nickname)
 	}
 
 	override fun removeQuery(entry: NicknameEntry): String {

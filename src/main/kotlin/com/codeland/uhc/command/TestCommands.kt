@@ -10,6 +10,7 @@ import com.codeland.uhc.command.Commands.errorMessage
 import com.codeland.uhc.core.*
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
+import com.codeland.uhc.event.Portal
 import com.codeland.uhc.event.Trader
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
@@ -213,12 +214,15 @@ class TestCommands : BaseCommand() {
 	@Subcommand("flag")
 	@Description("set the global debug flag")
 	fun testFlag(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
 		flag = !flag
 		Action.sendGameMessage(sender, "Set flag to $flag")
 	}
 
 	@Subcommand("killreward")
 	fun testKillReward(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
 		sender as Player
 
 		val game = UHC.game ?: return errorMessage(sender, "Game is not going")
@@ -229,7 +233,35 @@ class TestCommands : BaseCommand() {
 
 	@Subcommand("trader")
 	fun testTrader(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
 		if (sender !is Player) return
 		Trader.spawnTraderForPlayer(sender.uniqueId)
+	}
+
+	@Subcommand("link")
+	fun linkTest(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		val (discordToMinecraft, inverse) = UHC.dataManager.linkData.maps()
+
+		discordToMinecraft.forEach { (discordId, uuid) ->
+			sender.sendMessage("$discordId -> $uuid")
+		}
+
+		sender.sendMessage("--------------")
+
+		inverse.forEach { (uuid, discordId) ->
+			sender.sendMessage("$uuid -> $discordId")
+		}
+	}
+
+	@Subcommand("portal")
+	fun testPortal(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		val player = sender as? Player ?: return
+
+		val game = UHC.game ?: return errorMessage(player, "Game is not going")
+		Portal.onPlayerPortal(player, game)
 	}
 }

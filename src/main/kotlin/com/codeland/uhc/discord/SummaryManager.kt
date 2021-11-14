@@ -1,9 +1,6 @@
 package com.codeland.uhc.discord
 
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.stats.Summary
-import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.storage.Channels
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed

@@ -4,8 +4,8 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.MojangAPI
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.DataManager
-import com.codeland.uhc.discord.database.file.LinkDataFile
+import com.codeland.uhc.database.DataManager
+import com.codeland.uhc.database.file.LinkDataFile
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class LinkCommand : MixerCommand(false) {
@@ -14,8 +14,8 @@ class LinkCommand : MixerCommand(false) {
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
-		val username = content.substring(1 + content.lastIndexOf(' '))
-		val uuidResponse = MojangAPI.getUUIDFromUsername(username)
+		val inputUsername = content.substring(1 + content.lastIndexOf(' '))
+		val uuidResponse = MojangAPI.getUUIDFromUsername(inputUsername)
 
 		if (uuidResponse == null) {
 			event.channel.sendMessage("Something went wrong with the connection").queue()
@@ -23,18 +23,21 @@ class LinkCommand : MixerCommand(false) {
 		} else {
 			val discordId = event.author.idLong
 			val uuid = uuidResponse.convertUuid() ?: return event.channel.sendMessage("That Minecraft username does not exist!").queue()
+			val name = uuidResponse.name
 
 			val linkData = UHC.dataManager.linkData
 
-			linkData.minecraftToDiscord[uuid] = discordId
-			linkData.discordToMinecraft[discordId] = uuid
+			if (linkData.addLink(uuid, discordId)) {
+				val connection = UHC.dataManager.connection
+				if (connection != null) {
+					DataManager.linkDataFile.push(connection, LinkDataFile.LinkEntry(uuid, name, discordId))
+				}
 
-			val connection = UHC.dataManager.connection
-			if (connection != null) {
-				DataManager.linkDataFile.push(connection, LinkDataFile.LinkEntry(uuid, uuidResponse.name, discordId))
+				event.channel.sendMessage("Successfully linked as $name").queue()
+
+			} else {
+				event.channel.sendMessage("Someone else has already linked as $name").queue()
 			}
-
-			event.channel.sendMessage("Successfully linked as ${uuidResponse.name}").queue()
 		}
 	}
 }

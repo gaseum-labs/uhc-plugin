@@ -3,7 +3,7 @@ package com.codeland.uhc.discord.command.commands
 import com.codeland.uhc.core.stats.Summary
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.storage.Channels
+import com.codeland.uhc.discord.Channels
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Util.void

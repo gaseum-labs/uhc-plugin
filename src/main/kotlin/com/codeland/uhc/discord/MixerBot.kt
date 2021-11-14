@@ -4,27 +4,19 @@ import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.command.*
 import com.codeland.uhc.discord.command.commands.*
-import com.codeland.uhc.discord.storage.Channels
 import com.codeland.uhc.discord.storage.DiscordStorage
-import com.codeland.uhc.util.Bad
-import com.codeland.uhc.util.Good
-import com.codeland.uhc.util.Util
-import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.util.extensions.RestActionExtensions
 import com.codeland.uhc.util.extensions.RestActionExtensions.submitAsync
 import io.netty.buffer.ByteBufOutputStream
 import io.netty.buffer.Unpooled
-import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
-import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
-import net.dv8tion.jda.api.requests.RestAction
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.net.URI
@@ -213,10 +205,8 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 
 	/* utility */
 
-	fun isLinked(uuid: UUID) = if (UHC.dataManager.isOnline()) UHC.dataManager.linkData.minecraftToDiscord.containsKey(uuid) else true
-
 	private fun voiceMembersFromPlayers(guild: Guild, players: List<UUID>): List<Member> {
-		return players.mapNotNull { UHC.dataManager.linkData.minecraftToDiscord[it] }
+		return players.mapNotNull { UHC.dataManager.linkData.inverseMap[it] }
 			.mapNotNull { guild.getMemberById(it) }
 			.filter { it.voiceState?.inVoiceChannel() == true }
 	}

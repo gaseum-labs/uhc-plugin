@@ -1,6 +1,6 @@
 package com.codeland.uhc.core.stats
 
-import com.codeland.uhc.discord.database.DatabaseFile
+import com.codeland.uhc.database.DatabaseFile
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good

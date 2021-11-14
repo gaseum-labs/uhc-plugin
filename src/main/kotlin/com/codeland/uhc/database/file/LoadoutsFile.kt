@@ -1,9 +1,10 @@
-package com.codeland.uhc.discord.database.file
+package com.codeland.uhc.database.file
 
-import com.codeland.uhc.discord.database.DatabaseFile
+import com.codeland.uhc.database.DatabaseFile
 import com.codeland.uhc.lobbyPvp.Loadout
 import com.codeland.uhc.lobbyPvp.Loadouts
 import java.lang.StringBuilder
+import java.sql.CallableStatement
 import java.sql.ResultSet
 import java.util.*
 import kotlin.collections.HashMap
@@ -25,10 +26,10 @@ class LoadoutsFile : DatabaseFile<Loadouts, LoadoutsFile.LoadoutEntry>() {
 		val map = HashMap<UUID, Array<Loadout>>()
 
 		while (results.next()) {
-			val uuid = UUID.fromString(results.getString(0))
-			val slot0 = results.getNString(1)
-			val slot1 = results.getNString(2)
-			val slot2 = results.getNString(3)
+			val uuid = UUID.fromString(results.getString(1))
+			val slot0 = results.getNString(2)
+			val slot1 = results.getNString(3)
+			val slot2 = results.getNString(4)
 
 			map[uuid] = arrayOf(
 				if (slot0 == null) Loadout.genDefault() else stringToLoadout(slot0),
@@ -44,9 +45,14 @@ class LoadoutsFile : DatabaseFile<Loadouts, LoadoutsFile.LoadoutEntry>() {
 		return Loadouts(HashMap())
 	}
 
-	override fun pushQuery(entry: LoadoutEntry): String {
-		//language=sql
-		return "EXECUTE updateLoadout ${sqlString(entry.uuid)}, ${entry.slot}, ${sqlString(loadoutToString(entry.loadout))};"
+	override fun pushProcedure(): String {
+		return "EXECUTE updateLoadout ?, ?, ?;"
+	}
+
+	override fun pushParams(statement: CallableStatement, entry: LoadoutEntry) {
+		statement.setString(1, entry.uuid.toString())
+		statement.setInt(2, entry.slot)
+		statement.setString(3, loadoutToString(entry.loadout))
 	}
 
 	override fun removeQuery(entry: LoadoutEntry): String? {

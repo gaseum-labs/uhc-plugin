@@ -6,7 +6,7 @@ import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
-import com.codeland.uhc.discord.DataManager
+import com.codeland.uhc.database.DataManager
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.Portal
 import com.codeland.uhc.event.Trader

@@ -2,8 +2,8 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.discord.DataManager
-import com.codeland.uhc.discord.database.file.NicknamesFile
+import com.codeland.uhc.database.DataManager
+import com.codeland.uhc.database.file.NicknamesFile
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.FancyText
 import io.papermc.paper.event.player.AsyncChatEvent
