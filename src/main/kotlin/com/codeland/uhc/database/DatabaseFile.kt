@@ -16,18 +16,20 @@ abstract class DatabaseFile <Data, Entry> {
 
 	abstract fun removeQuery(entry: Entry): String?
 
-	fun push(connection: Connection, entry: Entry) {
+	fun push(connection: Connection, entry: Entry): Boolean {
 		val callable = connection.prepareCall(pushProcedure())
 
 		pushParams(callable, entry)
 
-		try {
+		return try {
 			callable.execute()
+			true
 		} catch (ex: Exception) {
 			ex.printStackTrace()
+			false
+		} finally {
+			callable.close()
 		}
-
-		callable.close()
 	}
 
 	fun remove(connection: Connection, entry: Entry) {

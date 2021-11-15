@@ -56,6 +56,7 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 
 	val commands = arrayOf(
 		LinkCommand(),
+		UnlinkCommand(),
 		EditSummaryCommand(),
 		PublishSummaryCommand()
 	)
@@ -206,7 +207,7 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 	/* utility */
 
 	private fun voiceMembersFromPlayers(guild: Guild, players: List<UUID>): List<Member> {
-		return players.mapNotNull { UHC.dataManager.linkData.inverseMap[it] }
+		return players.mapNotNull { UHC.dataManager.linkData.getDiscordId(it) }
 			.mapNotNull { guild.getMemberById(it) }
 			.filter { it.voiceState?.inVoiceChannel() == true }
 	}

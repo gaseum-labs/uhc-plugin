@@ -13,13 +13,22 @@ class LinkDataFile : DatabaseFile<LinkDataFile.LinkData, LinkDataFile.LinkEntry>
 		private val discordToMinecraft: HashMap<Long, UUID>,
 		private val inverseMap: HashMap<UUID, Long>,
 	) {
+		enum class LinkStatus {
+			ALREADY_LINKED,
+			TAKEN,
+			SUCCESSFUL
+		}
+
 		/**
-		 * @return if this link was allowed
-		 * will be rejected if the uuid is already taken by some other discordId
+		 * @return if the link was successful
+		 *
+		 * can reject if the uuid has already been taken
+		 * or if the discordId is already linked to the uuid
 		 */
-		fun addLink(uuid: UUID, discordId: Long): Boolean {
-			/* this uuid is already taken */
-			if (discordToMinecraft.containsValue(uuid)) return false
+		fun addLink(discordId: Long, uuid: UUID): LinkStatus {
+			val existingLinker = inverseMap[uuid]
+			if (existingLinker == discordId) return LinkStatus.ALREADY_LINKED
+			else if (existingLinker != null) return LinkStatus.TAKEN
 
 			val oldUuid = discordToMinecraft[discordId]
 			discordToMinecraft[discordId] = uuid
@@ -27,23 +36,25 @@ class LinkDataFile : DatabaseFile<LinkDataFile.LinkData, LinkDataFile.LinkEntry>
 			if (oldUuid != null) inverseMap.remove(oldUuid)
 			inverseMap[uuid] = discordId
 
-			return true
+			return LinkStatus.SUCCESSFUL
 		}
 
 		/**
 		 * @return if the discordId was linked
 		 */
-		fun revokeLink(discordId: Long): Boolean {
-			val oldUuid = discordToMinecraft[discordId]
+		fun revokeLink(discordId: Long): UUID? {
+			val oldUuid = discordToMinecraft.remove(discordId) ?: return null
+			inverseMap.remove(oldUuid)
+			return oldUuid
+		}
 
-			return if (oldUuid != null) {
-				discordToMinecraft.remove(discordId)
-				inverseMap.remove(oldUuid)
-				true
-
-			} else {
-				false
-			}
+		/**
+		 * @return if the uuid was linked
+		 */
+		fun revokeLink(uuid: UUID): Long? {
+			val oldDiscordId = inverseMap.remove(uuid) ?: return null
+			discordToMinecraft.remove(oldDiscordId)
+			return oldDiscordId
 		}
 
 		fun getUuid(discordId: Long): UUID? {
@@ -64,10 +75,9 @@ class LinkDataFile : DatabaseFile<LinkDataFile.LinkData, LinkDataFile.LinkEntry>
 		}
 	}
 
-	class LinkEntry(val uuid: UUID, val name: String?, val discordId: Long?)
+	class LinkEntry(val uuid: UUID?, val name: String?, val discordId: Long?)
 
 	override fun query(): String {
-		//language=sql
 		return "SELECT uuid, discordId FROM Player;"
 	}
 
@@ -93,13 +103,13 @@ class LinkDataFile : DatabaseFile<LinkDataFile.LinkData, LinkDataFile.LinkEntry>
 	}
 
 	override fun pushProcedure(): String {
-		return "EXECUTE updatePlayer ?, ?, ?;"
+		return "EXECUTE updateLink ?, ?, ?;"
 	}
 
 	override fun pushParams(statement: CallableStatement, entry: LinkEntry) {
-		statement.setString(1, entry.uuid.toString())
-		statement.setString(2, entry.name)
-		statement.setLongNull(3, entry.discordId)
+		statement.setLongNull(1, entry.discordId)
+		statement.setString(2, entry.uuid?.toString())
+		statement.setString(3, entry.name)
 	}
 
 	override fun removeQuery(entry: LinkEntry): String? {

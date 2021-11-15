@@ -26,6 +26,10 @@ class DataManager(
 		return if (isOnline()) linkData.isLinked(uuid) else true
 	}
 
+	fun <T> push(file: DatabaseFile<*, T>, entry: T): Boolean {
+		return file.push(connection ?: return false, entry)
+	}
+
 	companion object {
 		val linkDataFile = LinkDataFile()
 		val loadoutsFile = LoadoutsFile()

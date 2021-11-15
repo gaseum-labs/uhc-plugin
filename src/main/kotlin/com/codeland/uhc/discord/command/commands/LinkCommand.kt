@@ -6,6 +6,9 @@ import com.codeland.uhc.discord.MojangAPI
 import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.database.DataManager
 import com.codeland.uhc.database.file.LinkDataFile
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Util.void
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class LinkCommand : MixerCommand(false) {
@@ -14,30 +17,32 @@ class LinkCommand : MixerCommand(false) {
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
-		val inputUsername = content.substring(1 + content.lastIndexOf(' '))
-		val uuidResponse = MojangAPI.getUUIDFromUsername(inputUsername)
+		fun message(message: String) = event.channel.sendMessage(message).queue()
 
-		if (uuidResponse == null) {
-			event.channel.sendMessage("Something went wrong with the connection").queue()
+		val inputUsername = content.split(' ').filter { it.isNotEmpty() }.getOrNull(1)
+			?: return message("Please provide a Minecraft username")
 
-		} else {
-			val discordId = event.author.idLong
-			val uuid = uuidResponse.convertUuid() ?: return event.channel.sendMessage("That Minecraft username does not exist!").queue()
-			val name = uuidResponse.name
+		MojangAPI.getUUIDFromUsername(inputUsername).thenAccept { result ->
+			when (result) {
+				is Good -> {
+					val (uuid, name) = result.value
+					val discordId = event.author.idLong
 
-			val linkData = UHC.dataManager.linkData
-
-			if (linkData.addLink(uuid, discordId)) {
-				val connection = UHC.dataManager.connection
-				if (connection != null) {
-					DataManager.linkDataFile.push(connection, LinkDataFile.LinkEntry(uuid, name, discordId))
+					when (UHC.dataManager.linkData.addLink(discordId, uuid)) {
+						LinkDataFile.LinkData.LinkStatus.SUCCESSFUL -> {
+							UHC.dataManager.push(DataManager.linkDataFile, LinkDataFile.LinkEntry(uuid, name, discordId))
+							message("Successfully linked as $name")
+						}
+						LinkDataFile.LinkData.LinkStatus.TAKEN -> {
+							message("Someone else has already linked as $name")
+						}
+						LinkDataFile.LinkData.LinkStatus.ALREADY_LINKED -> {
+							message("You are already linked as $name")
+						}
+					}
 				}
-
-				event.channel.sendMessage("Successfully linked as $name").queue()
-
-			} else {
-				event.channel.sendMessage("Someone else has already linked as $name").queue()
+				is Bad -> message(result.error)
 			}
-		}
+		}.exceptionally { message("An error occurred").void() }
 	}
 }

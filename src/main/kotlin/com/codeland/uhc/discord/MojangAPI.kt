@@ -1,77 +1,61 @@
 package com.codeland.uhc.discord
 
-import org.json.simple.JSONArray
-import org.json.simple.JSONObject
-import org.json.simple.parser.JSONParser
-import java.net.HttpURLConnection
-import java.net.URL
+import com.codeland.uhc.util.Bad
+import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Result
+import com.google.gson.GsonBuilder
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 object MojangAPI {
-	class UUIDResponse(val uuid: String, val name: String) {
-		fun convertUuid(): UUID? {
-			if (uuid.length != 32) return null
+	class ApiResponse(val name: String, val id: String)
 
-			val mostSignificant = strToLong(uuid, 0) ?: return null
-			val leastSignificant = strToLong(uuid, 16) ?: return null
+	fun subString16ToLong(hexStr: String, startIndex: Int): Long? {
+		var ret = 0L
 
-			return UUID(mostSignificant, leastSignificant)
+		for (i in 0 until 16) {
+			val char = hexStr[i + startIndex].lowercaseChar()
+			val digit = if (char in '0'..'9') char - '0' else if (char in 'a'..'f') char - 'a' + 10 else return null
+			ret = digit + ret * 16
 		}
 
-		companion object {
-			fun strToLong(hexStr: String, start: Int): Long? {
-				var ret = 0L
-
-				for (i in 0 until 16) {
-					val char = hexStr[i + start].lowercaseChar()
-					val digit = if (char in '0'..'9') char - '0' else if (char in 'a'..'f') char - 'a' + 10 else return null
-					ret = digit + ret * 16
-				}
-
-				return ret
-			}
-		}
+		return ret
 	}
 
-	/**
-	 * string will be null if request could not be made
-	 *
-	 * string will be blank if the username is invalid
-	 *
-	 * string will be a uuid otherwise
-	 */
-	fun getUUIDFromUsername(inputUsername: String): UUIDResponse? {
-		val url = URL("https://api.mojang.com/profiles/minecraft")
-		val connection = url.openConnection() as HttpURLConnection
+	fun uuidFromCompact(string: String): UUID? {
+		if (string.length != 32) return null
 
-		connection.requestMethod = "POST"
-		connection.doInput = true
-		connection.doOutput = true
-		connection.setRequestProperty("Content-Type", "application/json")
-		connection.setChunkedStreamingMode(0)
-		connection.connect()
-		connection.outputStream.write("\"$inputUsername\"".toByteArray())
+		val mostSignificant = subString16ToLong(string, 0) ?: return null
+		val leastSignificant = subString16ToLong(string, 16) ?: return null
 
-		if (connection.responseCode == 200) {
-			val response = String(connection.inputStream.readBytes())
+		return UUID(mostSignificant, leastSignificant)
+	}
 
-			val parser = JSONParser()
-			val UUIDarray = parser.parse(response) as JSONArray
+	fun getUUIDFromUsername(inputUsername: String): CompletableFuture<Result<Pair<UUID, String>>> {
+		return HttpClient.newBuilder()
+			.version(HttpClient.Version.HTTP_2)
+			.followRedirects(HttpClient.Redirect.NORMAL)
+			.build()
+			.sendAsync(
+				HttpRequest.newBuilder()
+					.uri(URI.create("https://api.mojang.com/users/profiles/minecraft/${inputUsername}"))
+					.GET().build(),
+				HttpResponse.BodyHandlers.ofString()
+			).thenApply { response ->
+				if (response.statusCode() == 204) return@thenApply Bad("No such player exists")
+				if (response.statusCode() != 200) throw Exception()
 
-			if (UUIDarray.isEmpty()) {
-				return UUIDResponse("", "")
+				val responseObject = try {
+					GsonBuilder().create().fromJson(response.body(), ApiResponse::class.java)
+				} catch (ex: Exception) {
+					throw Exception()
+				}
 
-			} else {
-				val userObject = UUIDarray[0] as? JSONObject ?: return null
-
-				val uuid = userObject["id"] as String?
-				val name = userObject["name"] as String?
-
-				return UUIDResponse(uuid ?: "", name ?: "")
+				Good(Pair(uuidFromCompact(responseObject.id) ?: throw Exception(), responseObject.name))
 			}
-
-		} else {
-			return null
-		}
 	}
 }
