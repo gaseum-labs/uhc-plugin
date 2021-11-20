@@ -59,17 +59,10 @@ MoveableGuiPage(
 		return list
 	}
 
-	companion object {
-		var globalSaveCount = 0
-	}
-
 	override fun save() {
-		val connection = UHC.dataManager.connection
-		if (connection != null) {
-			DataManager.loadoutsFile.push(
-				connection,
-				LoadoutsFile.LoadoutEntry(playerData.uuid, loadoutSlot, UHC.dataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot])
-			)
-		}
+		UHC.dataManager.push(
+			DataManager.loadoutsFile,
+			LoadoutsFile.LoadoutEntry(playerData.uuid, loadoutSlot, UHC.dataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot])
+		)
 	}
 }

@@ -8,12 +8,32 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class NicknamesFile : DatabaseFile<NicknamesFile.Nicknames, NicknamesFile.NicknameEntry>() {
-	class Nicknames(val map: HashMap<UUID, ArrayList<String>>)
+	class Nicknames(private val map: HashMap<UUID, ArrayList<String>>) {
+		fun addNick(uuid: UUID, nickname: String): Boolean {
+			val list = map.getOrPut(uuid) { ArrayList() }
+
+			if (list.contains(nickname)) return false
+
+			list.add(nickname)
+			return true
+		}
+
+		fun removeNick(uuid: UUID, nickname: String): Boolean {
+			return map[uuid]?.remove(nickname) ?: false
+		}
+
+		fun getNicks(uuid: UUID): ArrayList<String> {
+			return map[uuid] ?: ArrayList()
+		}
+
+		fun allNicks(): Iterable<Map.Entry<UUID, ArrayList<String>>> {
+			return map.asIterable()
+		}
+	}
 
 	class NicknameEntry(val uuid: UUID, val nickname: String)
 
 	override fun query(): String {
-		//language=sql
 		return "SELECT uuid, nickname FROM Nickname"
 	}
 
@@ -38,13 +58,12 @@ class NicknamesFile : DatabaseFile<NicknamesFile.Nicknames, NicknamesFile.Nickna
 		return "EXECUTE updateNickname ?, ?;"
 	}
 
-	override fun pushParams(statement: CallableStatement, entry: NicknameEntry) {
-		statement.setString(1, entry.uuid.toString())
-		statement.setString(2, entry.nickname)
+	override fun removeProcedure(): String {
+		return "EXECUTE removeNickname ?, ?;"
 	}
 
-	override fun removeQuery(entry: NicknameEntry): String {
-		//language=sql
-		return "DELETE FROM Nickname WHERE uuid = ${sqlString(entry.uuid)} AND nickname = ${sqlString(entry.nickname)};"
+	override fun giveParams(statement: CallableStatement, entry: NicknameEntry) {
+		statement.setString(1, entry.uuid.toString())
+		statement.setString(2, entry.nickname)
 	}
 }

@@ -6,20 +6,26 @@ import java.sql.ResultSet
 
 abstract class DatabaseFile <Data, Entry> {
 	abstract fun query(): String
-
 	abstract fun parseResults(results: ResultSet): Data
 
 	abstract fun defaultData(): Data
 
 	abstract fun pushProcedure(): String
-	abstract fun pushParams(statement: CallableStatement, entry: Entry)
+	abstract fun giveParams(statement: CallableStatement, entry: Entry)
 
-	abstract fun removeQuery(entry: Entry): String?
+	/* some files do not support remove operation */
+	open fun removeProcedure(): String? = null
 
 	fun push(connection: Connection, entry: Entry): Boolean {
-		val callable = connection.prepareCall(pushProcedure())
+		return sqlQuery(connection.prepareCall(pushProcedure()), entry)
+	}
 
-		pushParams(callable, entry)
+	fun remove(connection: Connection, entry: Entry): Boolean {
+		return sqlQuery(connection.prepareCall(removeProcedure() ?: return false), entry)
+	}
+
+	private fun sqlQuery(callable: CallableStatement, entry: Entry): Boolean {
+		giveParams(callable, entry)
 
 		return try {
 			callable.execute()
@@ -29,36 +35,6 @@ abstract class DatabaseFile <Data, Entry> {
 			false
 		} finally {
 			callable.close()
-		}
-	}
-
-	fun remove(connection: Connection, entry: Entry) {
-		sqlQuery(connection, removeQuery(entry) ?: return)
-	}
-
-	companion object {
-		fun sqlString(obj: Any): String {
-			return "'${obj}'"
-		}
-
-		fun sqlNullString(obj: Any?): String {
-			return if (obj == null) "NULL" else sqlString(obj)
-		}
-
-		fun sqlNull(obj: Any?): String {
-			return obj?.toString() ?: "NULL"
-		}
-
-		private fun sqlQuery(connection: Connection, query: String) {
-			val statement = connection.createStatement()
-
-			try {
-				statement.executeQuery(query)
-			} catch (ex: Exception) {
-				ex.printStackTrace()
-			}
-
-			statement.close()
 		}
 	}
 }

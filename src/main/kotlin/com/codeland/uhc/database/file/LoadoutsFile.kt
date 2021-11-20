@@ -13,11 +13,10 @@ class LoadoutsFile : DatabaseFile<Loadouts, LoadoutsFile.LoadoutEntry>() {
 	class LoadoutEntry(val uuid: UUID, val slot: Int, val loadout: Loadout)
 
 	override fun query(): String {
-		//language=sql
 		return "SELECT DISTINCT p.uuid, slot0, slot1, slot2 FROM PvpLoadout p\n" +
-			"INNER JOIN (SELECT uuid, slot, loadoutData AS slot0 FROM PvpLoadout) p0 ON p.uuid = p0.uuid AND p0.slot = 0\n" +
-			"INNER JOIN (SELECT uuid, slot, loadoutData AS slot1 FROM PvpLoadout) p1 ON p.uuid = p1.uuid AND p1.slot = 1\n" +
-			"INNER JOIN (SELECT uuid, slot, loadoutData AS slot2 FROM PvpLoadout) p2 ON p.uuid = p2.uuid AND p2.slot = 2;"
+			"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot0 FROM PvpLoadout) p0 ON p.uuid = p0.uuid AND p0.slot = 0\n" +
+			"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot1 FROM PvpLoadout) p1 ON p.uuid = p1.uuid AND p1.slot = 1\n" +
+			"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot2 FROM PvpLoadout) p2 ON p.uuid = p2.uuid AND p2.slot = 2;"
 	}
 
 	override fun parseResults(results: ResultSet): Loadouts {
@@ -49,14 +48,10 @@ class LoadoutsFile : DatabaseFile<Loadouts, LoadoutsFile.LoadoutEntry>() {
 		return "EXECUTE updateLoadout ?, ?, ?;"
 	}
 
-	override fun pushParams(statement: CallableStatement, entry: LoadoutEntry) {
+	override fun giveParams(statement: CallableStatement, entry: LoadoutEntry) {
 		statement.setString(1, entry.uuid.toString())
 		statement.setInt(2, entry.slot)
 		statement.setString(3, loadoutToString(entry.loadout))
-	}
-
-	override fun removeQuery(entry: LoadoutEntry): String? {
-		return null
 	}
 
 	companion object {

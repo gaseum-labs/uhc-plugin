@@ -106,13 +106,9 @@ class LinkDataFile : DatabaseFile<LinkDataFile.LinkData, LinkDataFile.LinkEntry>
 		return "EXECUTE updateLink ?, ?, ?;"
 	}
 
-	override fun pushParams(statement: CallableStatement, entry: LinkEntry) {
+	override fun giveParams(statement: CallableStatement, entry: LinkEntry) {
 		statement.setLongNull(1, entry.discordId)
 		statement.setString(2, entry.uuid?.toString())
 		statement.setString(3, entry.name)
-	}
-
-	override fun removeQuery(entry: LinkEntry): String? {
-		return null
 	}
 }

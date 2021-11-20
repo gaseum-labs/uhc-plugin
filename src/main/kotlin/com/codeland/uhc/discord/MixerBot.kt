@@ -58,7 +58,8 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 		LinkCommand(),
 		UnlinkCommand(),
 		EditSummaryCommand(),
-		PublishSummaryCommand()
+		PublishSummaryCommand(),
+		SeasonCommand()
 	)
 
 	var serverIcon: String? = null

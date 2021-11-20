@@ -26,8 +26,12 @@ class DataManager(
 		return if (isOnline()) linkData.isLinked(uuid) else true
 	}
 
-	fun <T> push(file: DatabaseFile<*, T>, entry: T): Boolean {
-		return file.push(connection ?: return false, entry)
+	fun <T> push(file: DatabaseFile<*, T>, entry: T): CompletableFuture<Boolean> {
+		return CompletableFuture.supplyAsync { file.push(connection ?: return@supplyAsync false, entry) }
+	}
+
+	fun <T> remove(file: DatabaseFile<*, T>, entry: T): CompletableFuture<Boolean> {
+		return CompletableFuture.supplyAsync { file.remove(connection ?: return@supplyAsync false, entry) }
 	}
 
 	companion object {

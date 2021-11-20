@@ -13,12 +13,15 @@ abstract class MixerCommand(val requiresAdmin: Boolean) {
 		const val prefix = "%"
 
 		fun errorMessage(event: GuildMessageReceivedEvent, text: String?) {
-			event.channel.sendMessage(text ?: "Unknown error").queue { sent -> sent.delete().queueAfter(5, TimeUnit.SECONDS) }
-			event.message.delete().queueAfter(10, TimeUnit.SECONDS)
+			event.channel.sendMessage(text ?: "Unknown error").queue()
 		}
 
 		fun keywordFilter(content: String, keyword: String): Boolean {
-			return content.startsWith(prefix + keyword)
+			return content.startsWith(prefix + keyword, true)
+		}
+
+		fun afterKeyword(content: String, keyword: String): String {
+			return content.substring(prefix.length + keyword.length).trimStart()
 		}
 
 		fun replyingToDataFilter(event: GuildMessageReceivedEvent, needsReplacement: Boolean, isChannel: (TextChannel) -> Boolean): Boolean {

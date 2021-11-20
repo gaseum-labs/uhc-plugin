@@ -98,11 +98,13 @@ class Summary(
 	}
 
 	fun pushToDatabase(connection: Connection) {
-		val statement = connection.createStatement()
-		//language=sql
-		statement.executeQuery("EXECUTE uploadSummary ${DatabaseFile.sqlString(write(false))};")
-
-		statement.close()
+		//val statement = connection.prepareCall("EXECUTE uploadSummary ?;")
+//
+		////language=sql
+		//statement.executeQuery("EXECUTE uploadSummary ${DatabaseFile.sqlString(write(false))};")
+//
+		//statement.close()
+		//TODO
 	}
 
 	companion object {

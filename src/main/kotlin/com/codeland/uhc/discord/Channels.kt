@@ -70,6 +70,11 @@ object Channels {
 			CompletableFuture.failedFuture(Exception("Message does not have an attachment"))
 	}
 
+	fun messageStreamOptional(message: Message): CompletableFuture<InputStream?> {
+		return message.attachments.firstOrNull()?.retrieveInputStream() ?:
+		CompletableFuture.completedFuture(null)
+	}
+
 	fun allChannelMessages(channel: TextChannel, onMessage: (Message) -> Unit) {
 		val history = channel.history
 

@@ -5,14 +5,14 @@ import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Util.void
 import net.dv8tion.jda.api.entities.Guild
 
-enum class DiscordStorage(val entry: DiscordStorageEntry<*>) {
-	ADMIN_ROLE(DiscordStorageEntryLong("adminRole", 0)),
-	COLOR0(DiscordStorageEntryHex("color0", 0xffffff)),
-	COLOR1(DiscordStorageEntryHex("color1", 0xffffff)),
-	SPLASH_TEXT(DiscordStorageEntryString("splashText", "..."));
+enum class DiscordStorage(val entry: StorageEntry<*>) {
+	ADMIN_ROLE(StorageEntryLong("adminRole")),
+	COLOR0(StorageEntryHex("color0")),
+	COLOR1(StorageEntryHex("color1")),
+	SPLASH_TEXT(StorageEntryString("splashText"));
 
 	companion object {
-		fun <T> sBy(storage: DiscordStorage): DiscordStorageEntry<T> = storage.entry as DiscordStorageEntry<T>
+		fun <T> sBy(storage: DiscordStorage): StorageEntry<T> = storage.entry as StorageEntry<T>
 
 		var adminRole: Long? by sBy(ADMIN_ROLE)
 		var color0: Int? by sBy(COLOR0)
@@ -25,38 +25,35 @@ enum class DiscordStorage(val entry: DiscordStorageEntry<*>) {
 				Channels.DATA_CATEGORY_NAME,
 				Channels.DATA_CHANNEL_NAME
 			).thenAccept { (_, channel) ->
+				val builder = StringBuilder()
+
 				Channels.allChannelMessages(channel) { message ->
 					val text = message.contentRaw
 					if (text.startsWith("```") && text.endsWith("```")) {
-						val codeBlock = text.substring(3, text.length - 3).trim()
-
-						values().any { (entry) ->
-							if (entry.isThis(codeBlock)) {
-								when (val r = entry.setData(codeBlock)) {
-									is Bad -> channel.sendMessage("Error while reading data for ${entry.name}\n${r.error}").queue()
-								}
-								true
-							} else {
-								false
-							}
-						}
+						builder.append(text.substring(3, text.length - 3) + ' ')
 					}
 				}
 
-				values().forEach { (entry) ->
+				StorageEntry.massAssign(
+					values().map { it.entry } as ArrayList<StorageEntry<*>>,
+					StorageEntry.getParams(builder.toString())
+				).forEach { error ->
+					channel.sendMessage(error).queue()
+				}
+
+				values().map { it.entry }.forEach { entry ->
 					if (entry.value == null) {
-						channel.sendMessage("```${entry.name}=PLEASE INPUT DATA```").queue()
-					} else {
-						println("${entry.name} | ${entry.value}")
+						channel.sendMessage("```${entry.name}=\"NO VALUE SUPPLIED\"```").queue()
 					}
 				}
+
 			}.exceptionally { ex: Throwable ->
 				println("Error while reading data\n${ex.message}").void()
 			}
 		}
 	}
 
-	private operator fun component1(): DiscordStorageEntry<*> {
+	private operator fun component1(): StorageEntry<*> {
 		return entry
 	}
 }

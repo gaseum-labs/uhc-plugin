@@ -22,28 +22,6 @@ import java.util.*
 
 class Chat : Listener {
 	companion object {
-		fun addNick(uuid: UUID, nickname: String) {
-			getNicks(uuid).add(nickname.lowercase())
-
-			val connection = UHC.dataManager.connection ?: return
-			DataManager.nicknamesFile.push(connection, NicknamesFile.NicknameEntry(uuid, nickname))
-		}
-
-		fun removeNick(uuid: UUID, nickname: String): Boolean {
-			val lowerNickname = nickname.lowercase()
-
-			val removed = getNicks(uuid).removeIf { it == lowerNickname }
-
-			val connection = UHC.dataManager.connection ?: return removed
-			DataManager.nicknamesFile.remove(connection, NicknamesFile.NicknameEntry(uuid, nickname))
-
-			return removed
-		}
-
-		fun getNicks(uuid: UUID): ArrayList<String> {
-			return UHC.dataManager.nicknames.map.getOrPut(uuid) { ArrayList() }
-		}
-
 		fun defaultGenerator(string: String): Component {
 			return Component.empty().append(Component.text(string, NamedTextColor.BLUE))
 		}
@@ -210,7 +188,7 @@ class Chat : Listener {
 
 		list.addAll(Bukkit.getOnlinePlayers().map { PlayerMention(it) })
 
-		UHC.dataManager.nicknames.map.forEach { (uuid, nicknames) ->
+		UHC.dataManager.nicknames.allNicks().forEach { (uuid, nicknames) ->
 			val player = Bukkit.getPlayer(uuid)
 
 			if (player != null) {
