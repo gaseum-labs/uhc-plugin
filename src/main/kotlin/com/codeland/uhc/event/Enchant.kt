@@ -172,6 +172,7 @@ class Enchant : Listener {
 			Enchantment.PROTECTION_PROJECTILE,
 			Enchantment.OXYGEN,
 			Enchantment.WATER_WORKER,
+			Enchantment.THORNS,
 			Enchantment.DEPTH_STRIDER,
 			Enchantment.FROST_WALKER,
 			Enchantment.BINDING_CURSE,
