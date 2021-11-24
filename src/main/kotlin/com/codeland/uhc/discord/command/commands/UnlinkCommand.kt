@@ -52,8 +52,6 @@ class UnlinkCommand : MixerCommand(true) {
 					}
 					is Bad -> message(result.error)
 				}
-
-
 			}.exceptionally { message("An error occurred").void() }
 		}
 	}
