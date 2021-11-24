@@ -46,6 +46,9 @@ repositories {
         name 'm2-dv8tion'
         url 'https://m2.dv8tion.net/releases'
     }
+    maven {
+        url 'https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc'
+    }
 }
 
 dependencies {
@@ -53,6 +56,7 @@ dependencies {
     implementation 'org.kodein.di:kodein-di:7.0.0'
     implementation 'net.dv8tion:JDA:4.3.0_277'
     implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:9.4.0.jre16'
     compileOnly 'io.papermc.paper:paper-api:1.17-R0.1-SNAPSHOT'
     compileOnly 'com.comphenix.protocol:ProtocolLib:4.7.0'
     compileOnly 'org.spigotmc:spigot:1.17-R0.1-SNAPSHOT'

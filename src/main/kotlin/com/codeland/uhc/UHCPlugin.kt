@@ -5,11 +5,13 @@ import com.codeland.uhc.command.*
 import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.stats.Tracker
+import com.codeland.uhc.database.DataManager
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.*
 import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.util.GoogleDDNSUpdater
+import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.WorldGenManager
@@ -24,6 +26,7 @@ class UHCPlugin : JavaPlugin() {
 
 	companion object {
 		lateinit var plugin: JavaPlugin
+		val configFile = ConfigFile.load()
 	}
 
 	override fun onEnable() {
@@ -60,22 +63,29 @@ class UHCPlugin : JavaPlugin() {
 
 		WorldGenManager.init(server)
 
-		val configFile = ConfigFile.load()
-		val address = WebAddress.getLocalAddress()
+		GoogleDDNSUpdater.updateDomain(configFile)
+			.thenAccept(::println)
+			.exceptionally { ex ->
+				println("${ChatColor.RED}DDNS Failed")
+				println("${ChatColor.RED}${ex.message}").void()
+			}
 
-		if (configFile.production) println(try {
-			GoogleDDNSUpdater.updateDomain(address)
-		} catch (ex: Exception) {
-			"${ex}\n${ChatColor.RED}DDNS FAILED"
-		})
+		MixerBot.createMixerBot(configFile)
+			.thenAccept { bot ->
+				UHC.bot = bot
+				UHC.getConfig().usingBot.set(true)
+			}.exceptionally { ex ->
+				println("${ChatColor.RED}Bot setup failed")
+				println("${ChatColor.RED}${ex.message}").void()
+			}
 
-		MixerBot.createMixerBot(configFile, address, {
-			UHC.bot = it
-			UHC.getConfig().usingBot.set(true)
-		}, {
-			println("${ChatColor.RED}$it")
-			println("${ChatColor.RED}BOT INIT FAILED | STARTING IN NO-BOT MODE")
-		})
+		DataManager.createDataManager(configFile)
+			.thenAccept { dataManager ->
+				UHC.dataManager = dataManager
+			}.exceptionally { ex ->
+				println("${ChatColor.RED}Database connection failed")
+				println("${ChatColor.RED}${ex.message}").void()
+			}
 
 		Tracker.loadCharacters()
 

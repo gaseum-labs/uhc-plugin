@@ -2,7 +2,6 @@ package com.codeland.uhc.customSpawning.regeneration
 
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
 import org.bukkit.Chunk
 import org.bukkit.World
@@ -18,7 +17,7 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 		val borderChunk = ((world.worldBorder.size / 2).toInt() / 16) - 1
 
 		/* only spawn for one eligible teammate per team chosen at random */
-		return TeamData.teams.mapNotNull { team ->
+		return game.teams.teams().mapNotNull { team ->
 			team.members.filter {
 				PlayerData.isParticipating(it)
 			}.mapNotNull {

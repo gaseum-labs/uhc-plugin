@@ -1,6 +1,7 @@
 package com.codeland.uhc.core.stats
 
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.team.Team
 import org.bukkit.Bukkit
 import org.bukkit.World
 import java.io.File
@@ -28,7 +29,7 @@ class Ledger(val worldSize: Int) {
 	 * they are followed by everyone who has died on the ledger
 	 * if two times survived are the same, the places are combined
 	 */
-	fun toSummary(startDate: ZonedDateTime, gameType: GameType, winners: List<UUID>): Summary {
+	fun createPlayersList(time: Int, winners: List<UUID>): List<Summary.SummaryEntry> {
 		/* first procedurally assign places */
 		val entries = ArrayList<Summary.SummaryEntry>(playerList.size + winners.size)
 		val losers = playerList.sortedByDescending { (_, time) -> time }
@@ -45,18 +46,13 @@ class Ledger(val worldSize: Int) {
 			))
 		}
 
-		return Summary(
-			gameType,
-			startDate,
-			UHC.timer,
-			winners.map { uuid -> Summary.SummaryEntry(
-				1,
-				uuid,
-				Bukkit.getOfflinePlayer(uuid).name ?: "Unknown",
-				UHC.timer,
-				null
-			)}.plus(entries)
-		)
+		return winners.map { uuid -> Summary.SummaryEntry(
+			1,
+			uuid,
+			Bukkit.getOfflinePlayer(uuid).name ?: "Unknown",
+			time,
+			null
+		)}.plus(entries)
 	}
 
 	private fun selectSummaryFile(matchNumber: Int = 0): Pair<File, Int> {
@@ -72,17 +68,17 @@ class Ledger(val worldSize: Int) {
 	 * saves a local copy of the summary
 	 * also pushes to the bot
 	 */
-	fun publish(startDate: ZonedDateTime, gameType: GameType, winners: List<UUID>) {
+	fun publish(gameType: GameType, startDate: ZonedDateTime, time: Int, teams: List<Team>, winners: List<UUID>) {
 		/* get or create summaries directory */
 		val directory = File("./summaries")
 		if (!directory.exists()) directory.mkdir()
 
 		val (summaryFile, summaryNo) = selectSummaryFile()
 
-		val summary = toSummary(startDate, gameType, winners)
+		val summary = Summary(gameType, startDate, time, teams, createPlayersList(time, winners))
 
 		val writer = FileWriter(summaryFile)
-		writer.write(summary.write())
+		writer.write(summary.write(true))
 		writer.close()
 
 		ImageIO.write(

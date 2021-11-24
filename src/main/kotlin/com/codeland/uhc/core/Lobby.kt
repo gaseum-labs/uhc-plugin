@@ -4,8 +4,6 @@ import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
-import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
@@ -71,8 +69,6 @@ object Lobby {
 		player.teleport(lobbyLocation(UHC))
 	}
 
-	fun isLinked(player: Player) = UHC.bot?.isLinked(player.uniqueId) ?: true
-
 	fun lobbyTipsTick(subTick: Int) {
 		if (subTick % 20 == 0) {
 			fun slideN(slide: Int, num: Int, time: Int) = (subTick / 20) % (num * time) < time * (slide + 1)
@@ -86,11 +82,12 @@ object Lobby {
 
 			Bukkit.getOnlinePlayers().forEach { player ->
 				val playerData = PlayerData.getPlayerData(player.uniqueId)
-				val team = TeamData.playersTeam(player.uniqueId)
-				val queueTime = PvpQueue.queueTime(player.uniqueId)
 				val game = ArenaManager.playersArena(player.uniqueId)
 
 				if (!playerData.participating && game == null) {
+					val team = UHC.preGameTeams.playersTeam(player.uniqueId)
+					val queueTime = PvpQueue.queueTime(player.uniqueId)
+
 					if (queueTime != null) {
 						val queueType = playerData.inLobbyPvpQueue.get()
 
@@ -108,7 +105,7 @@ object Lobby {
 						} else {
 							player.sendActionBar(Component.empty())
 						}
-					} else if (!isLinked(player)) {
+					} else if (!UHC.dataManager.isLinked(player.uniqueId)) {
 						player.sendActionBar(Component.text("$RED${BOLD}You are not linked! ${GOLD}Use $WHITE$BOLD\"%link [your minecraft username]\" ${GOLD}in discord"))
 
 					} else if (team != null && team.name == null) {

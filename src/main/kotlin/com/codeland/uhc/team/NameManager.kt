@@ -1,6 +1,5 @@
 package com.codeland.uhc.team
 
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.UHCBar
@@ -15,11 +14,10 @@ import org.bukkit.entity.Player
 import kotlin.math.ceil
 
 object NameManager {
-	fun updateName(player: Player) {
+	fun updateName(player: Player, team: AbstractTeam?) {
 		player as CraftPlayer
 
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val team = TeamData.playersTeam(player.uniqueId)
 		val newName = Packet.playersNewName(player.uniqueId)
 
 		playerData.setSkull(player)
@@ -50,7 +48,7 @@ object NameManager {
 
 			/* tell this player about other players' names & update glowing */
 			if (player != onlinePlayer) {
-				Packet.updateTeamColor(onlinePlayer, TeamData.playersTeam(onlinePlayer.uniqueId), Packet.playersNewName(onlinePlayer.uniqueId), player)
+				Packet.updateTeamColor(onlinePlayer, UHC.getTeams().playersTeam(onlinePlayer.uniqueId), Packet.playersNewName(onlinePlayer.uniqueId), player)
 				player.handle.b.sendPacket(metadataPacketDefaultState(onlinePlayer))
 			}
 		}

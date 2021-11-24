@@ -1,7 +1,7 @@
 package com.codeland.uhc.gui.guiItem.impl.loadout
 
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.discord.filesystem.DataManager
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import com.codeland.uhc.gui.MoveableGuiPage
@@ -63,7 +63,7 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 	override fun onPickUp(player: Player, inventorySlot: Int) {
 		/* only matters if you pick up from bottom inventory */
 		if (rawSlot >= gui.inventory.size) {
-			val loadout = DataManager.loadouts.getPlayersLoadouts(player.uniqueId)[loadoutSlot]
+			val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(player.uniqueId)[loadoutSlot]
 			loadout.ids[inventorySlot] = -1
 			loadout.options[inventorySlot] = -1
 
@@ -105,7 +105,7 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 		/* always can swap in the upper inventory */
 		if (newSlot < gui.inventory.size) return true
 
-		val loadout = DataManager.loadouts.getPlayersLoadouts(player.uniqueId)[loadoutSlot]
+		val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(player.uniqueId)[loadoutSlot]
 
 		val cost = loadout.calculateCost() + itemCost() - if (other is LoadoutMover) other.itemCost() else 0
 		if (cost > Loadouts.MAX_COST) return false

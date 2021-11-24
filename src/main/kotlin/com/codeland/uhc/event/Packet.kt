@@ -1,19 +1,20 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.discord.storage.DiscordStorage
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
-import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.team.AbstractTeam
 import com.codeland.uhc.util.Util
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.events.*
+import com.comphenix.protocol.events.ListenerPriority
+import com.comphenix.protocol.events.PacketAdapter
+import com.comphenix.protocol.events.PacketContainer
+import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.EnumChatFormat
 import net.minecraft.network.chat.ChatComponentText
@@ -32,10 +33,8 @@ import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
-import org.bukkit.event.inventory.InventoryType
 import java.util.*
 import kotlin.experimental.or
-import kotlin.random.Random
 
 object Packet {
 	val playerNames = arrayListOf<UUID>()
@@ -112,7 +111,7 @@ object Packet {
 
 	fun updateTeamColor(
 		teamPlayer: Player,
-		uhcTeam: Team?,
+		uhcTeam: AbstractTeam?,
 		newName: String,
 		sentPlayer: Player
 	) {
@@ -212,7 +211,8 @@ object Packet {
 
 				val metaPlayerID = packetEntityIdField.getInt(event.packet.handle)
 				val metaPlayer = Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
-				val sentPlayerTeam = TeamData.playersTeam(sentPlayer.uniqueId)
+				/* only set when the game is going */
+				val sentPlayerTeam = UHC.game?.teams?.playersTeam(sentPlayer.uniqueId)
 				val metaPlayersArena = ArenaManager.playersArena(metaPlayer.uniqueId)
 
 				/* begin modifying packet */
@@ -266,6 +266,11 @@ object Packet {
 
 		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Status.Server.SERVER_INFO) {
 			override fun onPacketSending(event: PacketEvent) {
+				/* do not attempt to modify MOTD if discordstorage is not set */
+				val splashText = DiscordStorage.splashText ?: return
+				val color0 = TextColor.color(DiscordStorage.color0 ?: return)
+				val color1 = TextColor.color(DiscordStorage.color1 ?: return)
+
 				val oldPing = (event.packet.handle as PacketStatusOutServerInfo).b()
 
 				val newPing = ServerPing()
@@ -273,31 +278,9 @@ object Packet {
 				newPing.setPlayerSample(oldPing.b())
 
 				val length = 48
+				val strip = String(CharArray(length + 1) { i -> if (i == length) '\n' else splashText[i % splashText.length] })
 
-				fun createStrip() = CharArray(length + 1) { i -> if (i == length) '\n' else when (i % 4) {
-					0 -> 'U'
-					1 -> 'H'
-					2 -> 'C'
-					else -> ' '
-				}.toChar() }
-
-				val topStrip = createStrip()
-				val bottomStrip = createStrip()
-
-				newPing.setMOTD(
-					Util.nmsGradientString(
-						String(topStrip),
-						TextColor.color(0x37c4d3),
-						TextColor.color(0x2eac79)
-					).addSibling(
-						Util.nmsGradientString(
-							String(bottomStrip),
-							TextColor.color(0x37c4d3),
-							TextColor.color(0x2eac79)
-						)
-					)
-				)
-
+				newPing.setMOTD(Util.nmsGradientString(strip, color0, color1).addSibling(Util.nmsGradientString(strip, color0, color1)))
 				newPing.setFavicon(UHC.bot?.serverIcon ?: oldPing.d())
 
 				event.packet = PacketContainer.fromPacket(PacketStatusOutServerInfo(newPing))
@@ -320,32 +303,5 @@ object Packet {
 				}
 			}
 		})
-
-		///* enchanting table button updates */
-		//protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.WINDOW_DATA) {
-		//	override fun onPacketSending(event: PacketEvent) {
-		//		val packet = event.packet.handle as PacketPlayOutWindowData
-		//		val option = packet.c()
-//
-		//		val playerData = PlayerData.getPlayerData(event.player.uniqueId)
-//
-		//		val openInventory = event.player.openInventory
-		//		val itemInTable = openInventory.getItem(0)
-		//		event.player.sendMessage(Component.text("${itemInTable?.type}"))
-//
-		//		if (playerData.storedOffers.size == 3) {
-		//			val newValue = when (option) {
-		//				in 0..2 -> playerData.storedOffers[option]?.cost
-		//				in 4..6 -> Enchant.packetEnchantmentIds.indexOf(playerData.storedOffers[option - 4]?.enchantment)
-		//				in 7..9 -> playerData.storedOffers[option - 7]?.enchantmentLevel
-		//				else -> null
-		//			}
-//
-		//			if (newValue != null) {
-		//				event.packet = PacketContainer.fromPacket(PacketPlayOutWindowData(packet.b(), packet.c(), newValue))
-		//			}
-		//		}
-		//	}
-		//})
 	}
 }

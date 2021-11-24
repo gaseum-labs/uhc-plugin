@@ -7,10 +7,7 @@ import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.SchedulerUtil
-import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import java.util.UUID
@@ -60,7 +57,7 @@ class Deathswap(type: QuirkType, game: Game) : Quirk(type, game) {
 	}
 
 	fun doSwaps() {
-		val teams = TeamData.teams
+		val teams = game.teams.teams()
 		if (teams.size < 2) return
 		val shuffledTeams = derangement(teams)
 		teams.zip(shuffledTeams).forEach {

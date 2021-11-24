@@ -3,19 +3,19 @@ package com.codeland.uhc.discord.command.commands
 import com.codeland.uhc.core.stats.Summary
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.discord.Channels
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
+import com.codeland.uhc.util.Util.void
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class EditSummaryCommand : MixerCommand(true) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
-		return optionalDebugFilter(content, bot)
-			&& replyingToDataFilter(event, true, DiscordFilesystem::isSummaryStagingChannel)
+		return replyingToDataFilter(event, true) { it.name == Channels.SUMMARY_STAGING_CHANNEL_NAME }
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
-		DiscordFilesystem.messageStream(event.message).thenAccept { stream ->
+		Channels.messageStream(event.message).thenAccept { stream ->
 			when(val r = Summary.readSummary(stream)) {
 				/* replace the old summary */
 				is Good -> event.message.referencedMessage?.delete()?.queue()

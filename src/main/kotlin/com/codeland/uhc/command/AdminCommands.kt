@@ -10,7 +10,6 @@ import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
@@ -34,38 +33,32 @@ class AdminCommands : BaseCommand() {
 	@CommandCompletion("@uhcplayer")
 	@Subcommand("addLate")
 	@Description("adds a player to the game after it has already started")
-	fun addLate(sender: CommandSender, offlinePlayer: OfflinePlayer) {
+	fun addLate(sender: CommandSender, latePlayer: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game needs to be going")
 
-		if (PlayerData.isOptingOut(offlinePlayer.uniqueId)) return Commands.errorMessage(sender, "${offlinePlayer.name} is opting out of participating")
+		if (PlayerData.isOptingOut(latePlayer.uniqueId)) return Commands.errorMessage(sender, "${latePlayer.name} is opting out of participating")
 
-		/* teleport will be to an alive team member if player is on a team */
-		/* will be to a random location if not on a team or no playing team members */
-		val team = TeamData.playersTeam(offlinePlayer.uniqueId)
+		val team = game.teams.playersTeam(latePlayer.uniqueId) ?:
+			return Commands.errorMessage(sender, "${latePlayer.name} must be on a team")
 
 		fun randomLocation(): Location? {
 			return PlayerSpreader.spreadSinglePlayer(game.world, (game.world.worldBorder.size / 2) - 5)
 		}
 
-		val teleportLocation = if (team == null) {
+		/* find a team member who is not the added player, and who is participating */
+		val teammate = team.members.filter { it != latePlayer.uniqueId }.find { PlayerData.isParticipating(it) }
+
+		/* teleport to the teammate if possible */
+		val startLocation = if (teammate == null) {
 			randomLocation()
-
 		} else {
-			/* find a team member who is not the added player, and who is participating */
-			val teammate = team.members.filter { it != offlinePlayer.uniqueId }.find { PlayerData.isParticipating(it) }
+			Action.getPlayerLocation(teammate) ?: randomLocation()
+		} ?: return Commands.errorMessage(sender, "Could not find a spot to start ${latePlayer.name}")
 
-			/* teleport to the teammate if possible */
-			if (teammate == null)
-				randomLocation()
-			else
-				Action.getPlayerLocation(teammate) ?: randomLocation()
+		game.startPlayer(latePlayer.uniqueId, startLocation)
 
-		} ?: return Commands.errorMessage(sender, "No teleport location found")
-
-		game.startPlayer(offlinePlayer.uniqueId, teleportLocation)
-
-		Action.sendGameMessage(sender, "Started player ${offlinePlayer.name} late")
+		Action.sendGameMessage(sender, "Started player ${latePlayer.name} late")
 	}
 
 	@CommandCompletion("@uhcplayer")

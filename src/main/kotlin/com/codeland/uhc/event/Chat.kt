@@ -1,11 +1,9 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.team.TeamData
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.discord.filesystem.DataManager
-import com.codeland.uhc.discord.filesystem.DiscordFilesystem
+import com.codeland.uhc.database.DataManager
+import com.codeland.uhc.database.file.NicknamesFile
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.FancyText
 import io.papermc.paper.event.player.AsyncChatEvent
@@ -21,44 +19,9 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import java.util.*
-import kotlin.collections.ArrayList
 
 class Chat : Listener {
 	companion object {
-		fun addNick(player: UUID, nickname: String) {
-			getNicks(player).add(nickname)
-
-			val bot = UHC.bot ?: return
-			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, DataManager.nicknames)
-		}
-
-		fun removeNick(player: UUID, nickname: String): Boolean {
-			val lowerNickname = nickname.lowercase()
-
-			val removed = getNicks(player).removeIf { it.lowercase() == lowerNickname }
-
-			val bot = UHC.bot ?: return removed
-			DiscordFilesystem.nicknamesFile.save(bot.guild()!!, DataManager.nicknames)
-
-			return removed
-		}
-
-		fun getNicks(uuid: UUID): ArrayList<String> {
-			val playerIndex = DataManager.nicknames.minecraftIds.indexOf(uuid)
-
-			/* put into list for a new player*/
-			return if (playerIndex == -1) {
-				DataManager.nicknames.minecraftIds.add(uuid)
-				DataManager.nicknames.nicknames.add(ArrayList())
-
-				DataManager.nicknames.nicknames.last()
-
-			/* nickname list for existing player */
-			} else {
-				DataManager.nicknames.nicknames[playerIndex]
-			}
-		}
-
 		fun defaultGenerator(string: String): Component {
 			return Component.empty().append(Component.text(string, NamedTextColor.BLUE))
 		}
@@ -101,21 +64,14 @@ class Chat : Listener {
 		class PlayerMention(val player: Player) : Mention {
 			override fun matches() = player.name
 			override fun includes(player: Player) = this.player === player
-			override fun generate(string: String) = TeamData.playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
-			override fun needsOp() = false
-		}
-
-		class TeamMention(val team: Team) : Mention {
-			override fun matches() = team.gameName()
-			override fun includes(player: Player) = team.members.contains(player.uniqueId)
-			override fun generate(string: String) = team.apply(string)
+			override fun generate(string: String) = UHC.getTeams().playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
 			override fun needsOp() = false
 		}
 
 		class NickMention(val player: Player, val nickname: String) : Mention {
 			override fun matches() = nickname
 			override fun includes(player: Player) = this.player === player
-			override fun generate(string: String) = TeamData.playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
+			override fun generate(string: String) = UHC.getTeams().playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
 			override fun needsOp() = false
 		}
 	}
@@ -140,7 +96,7 @@ class Chat : Listener {
 				val mention = checkList[j]
 
 				/* character-wise comparison, converted to lowercase */
-				if (mention.matches()[iMatch].toInt().or(0x20) != message[iMessage].toInt().or(0x20)) {
+				if (mention.matches()[iMatch].code.or(0x20) != message[iMessage].toInt().or(0x20)) {
 					remaining[j] = false
 					if (--numRemaining == 0) return null
 
@@ -231,14 +187,12 @@ class Chat : Listener {
 		)
 
 		list.addAll(Bukkit.getOnlinePlayers().map { PlayerMention(it) })
-		list.addAll(TeamData.teams.map { TeamMention(it) })
 
-		for (i in DataManager.nicknames.minecraftIds.indices) {
-			val player = Bukkit.getPlayer(DataManager.nicknames.minecraftIds[i])
+		UHC.dataManager.nicknames.allNicks().forEach { (uuid, nicknames) ->
+			val player = Bukkit.getPlayer(uuid)
 
 			if (player != null) {
-				val nicks = DataManager.nicknames.nicknames[i]
-				list.addAll(nicks.map { NickMention(player, it) })
+				list.addAll(nicknames.map { NickMention(player, it) })
 			}
 		}
 
@@ -256,8 +210,8 @@ class Chat : Listener {
 
 		val message = (event.message() as? TextComponent)?.content() ?: return
 
-		val team = TeamData.playersTeam(event.player.uniqueId)
-		val playerComponent = playerComponent(team, event.player)
+		val gameTeam = UHC.game?.teams?.playersTeam(event.player.uniqueId)
+		val playerComponent = playerComponent(gameTeam, event.player)
 
 		val collected = collectMentions(message, generateMentions())
 
@@ -273,10 +227,10 @@ class Chat : Listener {
 		/* if the sending player is on a team */
 		/* if the message does not start with a mention */
 		/* and the message does not start with ! */
-		} else if (UHC.game != null && team != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
-			val messageParts = divideMessage(message, collected, team.colors.last())
+		} else if (gameTeam != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
+			val messageParts = divideMessage(message, collected, gameTeam.colors.last())
 
-			team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
+			gameTeam.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
 				player.sendMessage(playerComponent.append(messageForPlayer(player, collected, messageParts)))
 			}
 

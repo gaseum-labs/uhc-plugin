@@ -1,11 +1,9 @@
 package com.codeland.uhc.lobbyPvp
 
 import java.util.*
-import kotlin.collections.ArrayList
 
 class Loadouts(
-	val uuids: ArrayList<UUID> = ArrayList(),
-	val loadouts: ArrayList<Array<Loadout>> = ArrayList()
+	val loadouts: HashMap<UUID, Array<Loadout>>
 ) {
 	companion object {
 		const val NUM_SLOTS = 3
@@ -51,18 +49,6 @@ class Loadouts(
 	}
 
 	fun getPlayersLoadouts(uuid: UUID): Array<Loadout> {
-		val index = uuids.indexOfFirst { it == uuid }
-
-		return if (index == -1) {
-			val slots = defaultSlots()
-
-			uuids.add(uuid)
-			loadouts.add(slots)
-
-			slots
-
-		} else {
-			loadouts[index]
-		}
+		return loadouts.getOrPut(uuid) { defaultSlots() }
 	}
 }

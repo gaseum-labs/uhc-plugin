@@ -57,7 +57,7 @@ class ParticipantCommands : BaseCommand() {
 		} else {
 			playerData.optingOut = true
 
-			TeamData.removeFromTeam(arrayListOf(sender.uniqueId), true, true, true)
+			UHC.preGameTeams.leaveTeam(sender.uniqueId)
 
 			Action.sendGameMessage(sender, "You have opted out of participating")
 		}

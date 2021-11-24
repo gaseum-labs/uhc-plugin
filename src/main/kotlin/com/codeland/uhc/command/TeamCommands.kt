@@ -8,8 +8,10 @@ import co.aikar.commands.annotation.Subcommand
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.team.AbstractTeam
+import com.codeland.uhc.team.PreTeam
 import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.team.Teams
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
@@ -17,48 +19,75 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
+import java.util.*
+import kotlin.collections.ArrayList
 
 @CommandAlias("uhca")
 @Subcommand("team")
 class TeamCommands : BaseCommand() {
-	/* should the team commands add people to their discord channels */
-	private fun useDiscord() = UHC.game?.config?.usingBot?.get() == true
-
 	@Subcommand("clear")
 	@Description("remove all current teams")
 	fun clearTeamsCommand(sender : CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		/* destroy all teams */
-		TeamData.destroyTeam(null, useDiscord(), true) {}
+		UHC.getTeams().clearTeams()
 
 		Action.sendGameMessage(sender, "Cleared all teams")
+	}
+
+	private fun teamPlayerList(sender: CommandSender, players: List<OfflinePlayer>): List<OfflinePlayer>? {
+		return players.filter { player ->
+			if (PlayerData.isOptingOut(player.uniqueId)) {
+				Commands.errorMessage(sender, "${player.name} is opting out of participating")
+				false
+			} else {
+				true
+			}
+		}.ifEmpty {
+			Commands.errorMessage(sender, "No valid players selected")
+			null
+		}
+	}
+
+	private fun internalCreateTeam(sender: CommandSender, players: List<OfflinePlayer>) {
+		if (Commands.opGuard(sender)) return
+
+		val teamPlayerList = teamPlayerList(sender, players) ?: return
+		val uuids = teamPlayerList.map { it.uniqueId } as ArrayList<UUID>
+
+		val (color0, color1) = UHC.colorCube.pickTeam() ?:
+		return Action.sendGameMessage(sender, "Not enough colors available to create a team")
+
+		val game = UHC.game
+		if (game == null) {
+			UHC.preGameTeams.addTeam(PreTeam(color0, color1, uuids))
+
+		} else {
+			game.teams.addTeam(Team(PreTeam.randomName(), color0, color1, uuids))
+		}
+
+		Action.sendGameMessage(sender, "Created a team for ${teamPlayerList.joinToString(" and ") { it.name ?: "Unknown" }}")
 	}
 
 	@CommandCompletion("@uhcplayer")
 	@Subcommand("create")
 	@Description("create a new team for a player")
 	fun createTeamCommand(sender: CommandSender, player: OfflinePlayer) {
-		if (Commands.opGuard(sender)) return
-
-		internalAddPlayersToTeam(sender, null, listOf(player), { list ->
-			Action.sendGameMessage(sender, "Created a team for ${list.firstOrNull()?.name}")
-		}, {
-			Commands.errorMessage(sender, "Could not create a team")
-		})
+		internalCreateTeam(sender, listOf(player))
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
 	@Subcommand("create")
-	@Description("create a new team comprised of players")
-	fun createTeamCommand(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
-		if (Commands.opGuard(sender)) return
+	@Description("create a new team comprised of 2 players")
+	fun createTeamCommand(sender: CommandSender, player0: OfflinePlayer, player1: OfflinePlayer) {
+		internalCreateTeam(sender, listOf(player0, player1))
+	}
 
-		internalAddPlayersToTeam(sender, null, listOf(player1, player2), { list ->
-			Action.sendGameMessage(sender, "Created a team for ${list.mapNotNull { it.name }.joinToString(" and ")}")
-		}, {
-			Commands.errorMessage(sender, "Could not create a team")
-		})
+	@CommandCompletion("@uhcplayer @uhcplayer @uhcplayer")
+	@Subcommand("create")
+	@Description("create a new team comprised of 3 players")
+	fun createTeamCommand(sender: CommandSender, player0: OfflinePlayer, player1: OfflinePlayer, player2: OfflinePlayer) {
+		internalCreateTeam(sender, listOf(player0, player1, player2))
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
@@ -67,35 +96,15 @@ class TeamCommands : BaseCommand() {
 	fun addPlayerToTeamCommand(sender: CommandSender, teamPlayer: OfflinePlayer, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
-		val team = TeamData.playersTeam(teamPlayer.uniqueId)
+		val teams = UHC.getTeams()
+		val team = teams.playersTeam(teamPlayer.uniqueId)
 			?: return Commands.errorMessage(sender, "${teamPlayer.name} is not on a team")
 
-		internalAddPlayersToTeam(sender, team, listOf(player), { list ->
-			Action.sendGameMessage(sender, "Added ${list.mapNotNull { it.name }.joinToString(" and ")} to ${teamPlayer.name}'s team")
-		}, {
-			Commands.errorMessage(sender, "Could not add players to ${teamPlayer.name}'s team")
-		})
-	}
+		val addedPlayer = (teamPlayerList(sender, listOf(player)) ?: return).first()
 
-	private fun internalAddPlayersToTeam(
-		sender: CommandSender,
-		team: Team?,
-		players: List<OfflinePlayer>,
-		onSuccess: (List<OfflinePlayer>) -> Unit,
-		onFail: () -> Unit
-	) {
-		val addedPlayers = players.filter { player ->
-			if (PlayerData.isOptingOut(player.uniqueId)) {
-				Commands.errorMessage(sender, "${player.name} is opting out of participating")
-				false
-			} else {
-				true
-			}
-		}
+		teams.joinTeam(addedPlayer.uniqueId, team)
 
-		val addedTeam = TeamData.addToTeam(team, addedPlayers.map { it.uniqueId }, useDiscord(), true) {}
-
-		if (addedTeam == null) onFail() else onSuccess(addedPlayers)
+		Action.sendGameMessage(sender, "Added ${addedPlayer.name} to ${teamPlayer.name}'s team")
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -104,13 +113,11 @@ class TeamCommands : BaseCommand() {
 	fun removePlayerFromTeamCommand(sender: CommandSender, player: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
-		TeamData.playersTeam(player.uniqueId)
-			?: return Commands.errorMessage(sender, "${player.name} is not on a team")
-
-		/* unstage and remove player from team */
-		TeamData.removeFromTeam(arrayListOf(player.uniqueId), useDiscord(), true, true)
-
-		Action.sendGameMessage(sender, "Removed ${player.name} from their team")
+		if (UHC.getTeams().leaveTeam(player.uniqueId)) {
+			Action.sendGameMessage(sender, "Removed ${player.name} from their team")
+		} else {
+			Commands.errorMessage(sender, "${player.name} is not on a team")
+		}
 	}
 
 	@Subcommand("random")
@@ -118,12 +125,14 @@ class TeamCommands : BaseCommand() {
 	fun randomTeams(sender : CommandSender, teamSize : Int) {
 		if (Commands.opGuard(sender)) return
 
-		val memberLists = TeamData.generateMemberLists(sender.server.onlinePlayers.filter { player ->
-			!TeamData.isOnTeam(player.uniqueId) && !PlayerData.isOptingOut(player.uniqueId)
-		}.map { it.uniqueId }, teamSize)
+		val teams = UHC.getTeams()
+
+		val memberLists = Teams.randomMemberLists(sender.server.onlinePlayers.filter { player ->
+			!teams.isOnTeam(player.uniqueId) && !PlayerData.isOptingOut(player.uniqueId)
+		}, teamSize)
 
 		memberLists.forEach { memberList ->
-			TeamData.addToTeam(null, memberList.filterNotNull(), useDiscord(), true) {}
+			internalCreateTeam(sender, memberList.filterNotNull())
 		}
 
 		Action.sendGameMessage(sender, "Created ${memberLists.size} teams of size $teamSize")
@@ -132,38 +141,35 @@ class TeamCommands : BaseCommand() {
 	@CommandCompletion("@uhcplayer @uhcplayer")
 	@Subcommand("swap")
 	@Description("swap the teams of two players")
-	fun swapTeams(sender: CommandSender, player1: OfflinePlayer, player2: OfflinePlayer) {
+	fun swapTeams(sender: CommandSender, player0: OfflinePlayer, player1: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
-		if (player1.uniqueId == player2.uniqueId) return Commands.errorMessage(sender, "Both arguments are the same player")
-
-		val team1 = TeamData.playersTeam(player1.uniqueId) ?: return Commands.errorMessage(sender, "${player1.name} is not on a team")
-		val team2 = TeamData.playersTeam(player2.uniqueId) ?: return Commands.errorMessage(sender, "${player2.name} is not on a team")
-
-		TeamData.addToTeam(team2, listOf(player1.uniqueId), useDiscord(), false) {}
-		TeamData.addToTeam(team1, listOf(player2.uniqueId), useDiscord(), false) {}
-
-		Action.sendGameMessage(sender, "Swapped teams of ${player1.name} and ${player2.name}")
+		val teams = UHC.getTeams()
+		if (teams.swapTeams(player0.uniqueId, player1.uniqueId)) {
+			Action.sendGameMessage(sender, "Swapped the teams of ${player0.name} and ${player1.name}")
+		} else {
+			Commands.errorMessage(sender, "Could not swap the teams of ${player0.name} and ${player1.name}")
+		}
 	}
 
 	@Subcommand("list")
 	@Description("lists out all teams and members")
 	fun testTeams(sender: CommandSender) {
-		val teams = TeamData.teams
+		fun <T: AbstractTeam> displayTeam(team: T) {
+			sender.sendMessage(team.apply(team.grabName()).style(Style.style(TextDecoration.BOLD)))
+
+			team.members.forEach { uuid ->
+				sender.sendMessage(Component.text("- ").append(team.apply(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
+			}
+		}
+
+		val teams = UHC.getTeams().teams()
 
 		if (teams.isNotEmpty()) {
 			sender.sendMessage(Component.text("Teams:", NamedTextColor.GRAY, TextDecoration.BOLD))
-
-			teams.forEach { team ->
-				sender.sendMessage(team.apply("${team.name ?: "(Name not chosen)"}:").style(Style.style(TextDecoration.BOLD)))
-
-				team.members.forEach { uuid ->
-					sender.sendMessage(Component.text("- ").append(team.apply(Bukkit.getOfflinePlayer(uuid).name
-						?: "NULL")))
-				}
-			}
+			teams.forEach { team -> displayTeam(team) }
 		} else {
-			sender.sendMessage(Component.text("There are no teams", NamedTextColor.GRAY, TextDecoration.BOLD))
+			sender.sendMessage(Component.text("No teams", NamedTextColor.GRAY, TextDecoration.BOLD))
 		}
 	}
 }

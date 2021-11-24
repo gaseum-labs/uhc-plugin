@@ -6,10 +6,11 @@ import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.core.phase.phases.Postgame
 import com.codeland.uhc.core.phase.phases.Shrink
+import com.codeland.uhc.database.DataManager
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.Portal
 import com.codeland.uhc.event.Trader
-import com.codeland.uhc.team.TeamData
+import com.codeland.uhc.team.*
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
@@ -32,7 +33,14 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 object UHC {
+	val colorCube: ColorCube = ColorCube(4)
+
 	private var preGameConfig: GameConfig = GameConfig()
+	var preGameTeams: Teams<PreTeam> = Teams({ action ->
+		Teams.updateNames(action.uuids, action.team)
+	}, { team ->
+		colorCube.removeTeam(team.colors)
+	})
 
 	var game: Game? = null
 	var timer = 0
@@ -41,7 +49,9 @@ object UHC {
 	var teleportGroups = HashMap<UUID, Location>()
 	var worldRadius: Int = 375
 
+	var dataManager: DataManager = DataManager.offlineDataManager()
 	var bot: MixerBot? = null
+
 	lateinit var heartsObjective: Objective
 
 	val areaPerPlayer = area(375.0f) / 8
@@ -50,6 +60,10 @@ object UHC {
 
 	fun getConfig(): GameConfig {
 		return game?.config ?: preGameConfig
+	}
+
+	fun getTeams(): Teams<AbstractTeam> {
+		return (game?.teams ?: preGameTeams) as Teams<AbstractTeam>
 	}
 
 	/* game flow modifiers */
@@ -71,8 +85,6 @@ object UHC {
 
 		heartsObjective = objective
 
-		/* clear residual teams */
-		TeamData.destroyTeam(null, true, true) {}
 		Bukkit.getServer().onlinePlayers.forEach { player -> Lobby.onSpawnLobby(player) }
 
 		/* begin global ticking task */
@@ -107,7 +119,7 @@ object UHC {
 					currentGame.leatherRegen.tick()
 
 				} else if (timer == halfWay) {
-					Trader.deployTraders()
+					Trader.deployTraders(currentGame)
 				}
 
 				if (switchResult) currentGame.nextPhase()
@@ -123,8 +135,8 @@ object UHC {
 						Title.Times.of(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
 					)
 
-					TeamData.teams.forEach { it.members.forEach { member ->
-						Bukkit.getPlayer(member)?.showTitle(countdownTitle)
+					preGameTeams.teams().forEach { it.members.forEach { uuid ->
+						Bukkit.getPlayer(uuid)?.showTitle(countdownTitle)
 					}}
 
 				} else if (timer == 0) {
@@ -133,8 +145,28 @@ object UHC {
 					val (gameWorld, netherWorld) = preGameConfig.getWorlds()
 					if (gameWorld == null || netherWorld == null) return@everyTick
 
+					/* add people to team vcs */
+					/* make teams finalized */
+					val teams: Teams<Team> = Teams({ action ->
+						Teams.updateNames(action.uuids, action.team)
+
+						val bot = UHC.bot ?: return@Teams
+
+						if (getConfig().usingBot.get()) when (action) {
+							is Teams.ClearAction -> bot.clearTeamVCs()
+							is Teams.AddAction -> bot.addToTeamChannel(action.id, action.uuids)
+							is Teams.RemoveAction -> bot.removeFromTeamChannel(action.id, action.size, action.uuids)
+						}
+					}, { team ->
+						colorCube.removeTeam(team.colors)
+					})
+
+					preGameTeams.transfer(teams, PreTeam::toTeam)
+
+					/* GAME OBJECT */
 					val newGame = Game(
 						preGameConfig,
+						teams,
 						worldRadius,
 						gameWorld,
 						netherWorld
@@ -148,13 +180,6 @@ object UHC {
 						world.time = 0
 						world.isThundering = false
 						world.setStorm(false)
-					}
-
-					/* give all teams that don't have names a name */
-					/* add people to team vcs */
-					TeamData.teams.forEach { team ->
-						if (team.name == null) team.automaticName()
-						if (preGameConfig.usingBot.get()) bot?.addToTeamChannel(team, team.members)
 					}
 
 					/* teleport and set playerData to current */
@@ -201,7 +226,7 @@ object UHC {
 			return false
 		}
 
-		val numPlayers = TeamData.teams.fold(0) { acc, team -> acc + team.members.size }
+		val numPlayers = preGameTeams.teams().fold(0) { acc, team -> acc + team.members.size }
 		if (numPlayers == 0) {
 			messageStream(true, "No one is playing")
 			return false
@@ -223,7 +248,7 @@ object UHC {
 
 		val tempTeleportLocations = PlayerSpreader.spreadPlayers(
 			defaultWorld,
-			TeamData.teams.size,
+			preGameTeams.teams().size,
 			worldRadius - 16.0,
 			if (defaultWorld.environment === World.Environment.NETHER) {
 				PlayerSpreader::findYMid
@@ -240,7 +265,7 @@ object UHC {
 		/* create the master map of teleport locations */
 		teleportGroups = HashMap()
 
-		TeamData.teams.forEachIndexed { i, team ->
+		preGameTeams.teams().forEachIndexed { i, team ->
 			team.members.forEach { uuid ->
 				teleportGroups[uuid] = tempTeleportLocations[i]
 			}
@@ -256,6 +281,8 @@ object UHC {
 	}
 
 	fun destroyGame() {
+		game?.teams?.clearTeams()
+
 		game = null
 		preGameConfig = GameConfig()
 

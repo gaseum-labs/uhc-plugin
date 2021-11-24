@@ -3,8 +3,6 @@ package com.codeland.uhc.core
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.customSpawning.CustomSpawningType
 import com.codeland.uhc.customSpawning.SpawningPlayerData
-import com.codeland.uhc.event.Enchant
-import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.gui.gui.LoadoutGui
 import com.codeland.uhc.gui.gui.LobbyPvpGui
 import com.codeland.uhc.lobbyPvp.ArenaManager
@@ -15,7 +13,6 @@ import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.UHCProperty
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
@@ -168,7 +165,7 @@ class PlayerData(val uuid: UUID) {
 			player.inventory.contents[i]?.clone()
 		}
 
-		val team = TeamData.playersTeam(player.uniqueId)
+		val team = UHC.getTeams().playersTeam(player.uniqueId)
 
 		val zombie = internalCreateZombie(
 			player.location,
@@ -197,7 +194,7 @@ class PlayerData(val uuid: UUID) {
 	 * place this into the offlineZombie field in PlayerData
 	 */
 	fun createDefaultZombie(uuid: UUID, location: Location): Zombie {
-		val team = TeamData.playersTeam(uuid)
+		val team = UHC.getTeams().playersTeam(uuid)
 		val playerName = Bukkit.getOfflinePlayer(uuid).name ?: "NULL"
 
 		return internalCreateZombie(location, uuid, team?.apply(playerName) ?: Component.text(playerName), emptyArray(), 0)

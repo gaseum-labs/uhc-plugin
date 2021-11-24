@@ -66,7 +66,7 @@ class LayerTemperature(val seed: Long, val radius: Int) : AreaTransformer1 {
 		 * -3 X X X | X X
 		 *   -3-2-1 0 1 2
 		 */
-		if (x !in -radius..radius - 1 || z !in -radius..radius - 1) return Temperature.OCEAN
+		//if (x !in -radius..radius - 1 || z !in -radius..radius - 1) return Temperature.OCEAN
 
 		val offset = Random(seed).nextInt(100)
 

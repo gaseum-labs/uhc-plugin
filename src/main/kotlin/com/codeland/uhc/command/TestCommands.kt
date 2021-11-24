@@ -10,6 +10,7 @@ import com.codeland.uhc.command.Commands.errorMessage
 import com.codeland.uhc.core.*
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
+import com.codeland.uhc.event.Portal
 import com.codeland.uhc.event.Trader
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
@@ -17,7 +18,6 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.util.Action
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -116,7 +116,7 @@ class TestCommands : BaseCommand() {
 	@Description("get this player's playerData")
 	fun testPlayerData(sender: CommandSender, player: OfflinePlayer) {
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val team = TeamData.playersTeam(player.uniqueId)
+		val team = UHC.getTeams().playersTeam(player.uniqueId)
 
 		Action.sendGameMessage(sender, "PlayerData for ${player.name}:")
 		Action.sendGameMessage(sender, "Participating: ${playerData.participating}")
@@ -125,7 +125,7 @@ class TestCommands : BaseCommand() {
 		Action.sendGameMessage(sender, "Last Played: ${playerData.lastPlayed}")
 		Action.sendGameMessage(sender, "Arena: ${ArenaManager.playersArena(player.uniqueId)}")
 		sender.sendMessage(Component.text("Team: ", NamedTextColor.GOLD, TextDecoration.BOLD).append(
-			team?.apply(team.name ?: "[Unnamed]") ?: Component.text("[Not on a team]", NamedTextColor.RED)
+			team?.apply(team.grabName()) ?: Component.text("[Not on a team]", NamedTextColor.RED)
 		))
 	}
 
@@ -214,22 +214,54 @@ class TestCommands : BaseCommand() {
 	@Subcommand("flag")
 	@Description("set the global debug flag")
 	fun testFlag(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
 		flag = !flag
 		Action.sendGameMessage(sender, "Set flag to $flag")
 	}
 
 	@Subcommand("killreward")
 	fun testKillReward(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
 		sender as Player
 
-		val killReward = UHC.game?.config?.killReward?.get() ?: return errorMessage(sender, "Game is not going")
+		val game = UHC.game ?: return errorMessage(sender, "Game is not going")
+		val killReward = game.config.killReward.get()
 
-		killReward.apply(sender.uniqueId, TeamData.playersTeam(sender.uniqueId)?.members ?: arrayListOf(), sender.location)
+		killReward.apply(sender.uniqueId, game.teams.playersTeam(sender.uniqueId)?.members ?: arrayListOf(), sender.location)
 	}
 
 	@Subcommand("trader")
 	fun testTrader(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
 		if (sender !is Player) return
 		Trader.spawnTraderForPlayer(sender.uniqueId)
+	}
+
+	@Subcommand("link")
+	fun linkTest(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		val (discordToMinecraft, inverse) = UHC.dataManager.linkData.maps()
+
+		discordToMinecraft.forEach { (discordId, uuid) ->
+			sender.sendMessage("$discordId -> $uuid")
+		}
+
+		sender.sendMessage("--------------")
+
+		inverse.forEach { (uuid, discordId) ->
+			sender.sendMessage("$uuid -> $discordId")
+		}
+	}
+
+	@Subcommand("portal")
+	fun testPortal(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		val player = sender as? Player ?: return
+
+		val game = UHC.game ?: return errorMessage(player, "Game is not going")
+		Portal.onPlayerPortal(player, game)
 	}
 }

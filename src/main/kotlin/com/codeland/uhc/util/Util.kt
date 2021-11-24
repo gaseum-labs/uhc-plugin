@@ -10,6 +10,10 @@ import kotlin.math.floor
 import kotlin.math.sqrt
 
 object Util {
+	fun Any?.unit() = Unit
+	fun Any?.void() = null
+	fun Any?.bool(b: Boolean) = b
+
 	/**
 	 * positive mod
 	 */
@@ -78,15 +82,8 @@ object Util {
 		val minutes = seconds / 60
 		val seconds = seconds % 60
 
-		var minutesPart = if (minutes == 0)
-			""
-		else
-			"$minutes minute${if (minutes == 1) "" else "s"}"
-
-		var secondsPart = if (seconds == 0)
-			""
-		else
-			"$seconds second${if (seconds == 1) "" else "s"}"
+		val minutesPart = if (minutes == 0) "" else "$minutes minute${if (minutes == 1) "" else "s"}"
+		val secondsPart = if (seconds == 0) "" else "$seconds second${if (seconds == 1) "" else "s"}"
 
 		return "$minutesPart${if(minutesPart == "") "" else " "}$secondsPart"
 	}
@@ -211,13 +208,8 @@ object Util {
 	fun coloredInGameMessage(string: String, color: ChatColor): String {
 		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
 	}
-}
 
-fun main() {
-	for (i in 0..90) {
-		val (first, second) = Util.combination(i)
-		val result = Util.inverseCombination(first, second)
-
-		println("$i -> ($first, $second) -> $result")
+	fun <B> fieldError(name: String, type: String): Bad<B> {
+		return Bad("No value for \"${name}\" <${type}> found")
 	}
 }

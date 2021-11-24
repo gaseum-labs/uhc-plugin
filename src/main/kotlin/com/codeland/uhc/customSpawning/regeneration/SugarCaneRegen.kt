@@ -1,19 +1,12 @@
 package com.codeland.uhc.customSpawning.regeneration
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.phase.phases.Grace
-import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.customSpawning.SpawnInfo.Companion.isWater
-import com.codeland.uhc.team.TeamData
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
-import org.bukkit.Bukkit
 import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import kotlin.math.ceil
-import kotlin.random.Random
 
 class SugarCaneRegen(game: Game): Regen(game, 5, 180) {
 	fun findCane(chunk: Chunk): Block? {
