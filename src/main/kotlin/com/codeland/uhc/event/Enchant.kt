@@ -157,8 +157,7 @@ class Enchant : Listener {
 			EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, arrayOf(1, 1, 1, 2, 2, 3, 3, 4, 4)),
 			EnchantOption(Enchantment.PROTECTION_PROJECTILE,    arrayOf(1, 1, 1, 2, 2, 3, 3, 4, 4)),
 			EnchantOption(Enchantment.PROTECTION_FIRE,          arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 4)),
-			EnchantOption(Enchantment.PROTECTION_EXPLOSIONS,    arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 4)),
-			EnchantOption(Enchantment.THORNS,                   arrayOf(0, 0, 0, 0, 1, 2, 2, 3, 3))
+			EnchantOption(Enchantment.PROTECTION_EXPLOSIONS,    arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 4))
 		)
 
 		/**
@@ -293,7 +292,6 @@ class Enchant : Listener {
 			EnchantOption(Enchantment.LOYALTY,                  arrayOf(1, 1, 1, 2, 2, 2, 3, 3, 3)),
 			EnchantOption(Enchantment.LOOT_BONUS_BLOCKS,        arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
 			EnchantOption(Enchantment.LOOT_BONUS_MOBS,          arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
-			EnchantOption(Enchantment.THORNS,                   arrayOf(0, 0, 0, 0, 1, 2, 2, 3, 3)),
 			EnchantOption(Enchantment.RIPTIDE,                  arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
 			EnchantOption(Enchantment.QUICK_CHARGE,             arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3))
 		));
