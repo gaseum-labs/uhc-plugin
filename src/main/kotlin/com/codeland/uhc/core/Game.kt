@@ -142,8 +142,10 @@ class Game(
 	fun end(winningTeam: Team?) {
 		/* game summary */
 		if (winningTeam != null) {
-			ledger.publish(startDate,
+			ledger.publish(
 				config.gameType.get(),
+				startDate,
+				UHC.timer,
 				teams.teams(),
 				winningTeam.members.filter { PlayerData.isAlive(it) }
 			)

@@ -11,8 +11,10 @@ import com.google.gson.GsonBuilder
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.sql.Connection
+import java.sql.SQLException
 import java.time.ZonedDateTime
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 class Summary(
 	val gameType: GameType,
@@ -97,14 +99,18 @@ class Summary(
 		return teams.find { team -> team.members.contains(uuid) }
 	}
 
-	fun pushToDatabase(connection: Connection) {
-		//val statement = connection.prepareCall("EXECUTE uploadSummary ?;")
-//
-		////language=sql
-		//statement.executeQuery("EXECUTE uploadSummary ${DatabaseFile.sqlString(write(false))};")
-//
-		//statement.close()
-		//TODO
+	fun pushToDatabase(connection: Connection, seasonNumber: Int, gameNumber: Int): CompletableFuture<Unit> {
+		return CompletableFuture.supplyAsync {
+			val statement = connection.prepareCall("EXECUTE uploadSummary ?, ?, ?;")
+
+			statement.setNString(1, write(false))
+			statement.setInt(2, seasonNumber)
+			statement.setInt(3, gameNumber)
+
+			statement.execute()
+
+			statement.close()
+		}
 	}
 
 	companion object {

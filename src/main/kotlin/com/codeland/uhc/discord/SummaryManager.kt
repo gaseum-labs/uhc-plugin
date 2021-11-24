@@ -47,8 +47,6 @@ class SummaryManager(val bot: MixerBot) {
 			} else {
 				summaries.sendMessage(summaryToEmbed(season, game, summary)).queue()
 			}
-
-			event.message.delete().queue()
 		}
 	}
 
