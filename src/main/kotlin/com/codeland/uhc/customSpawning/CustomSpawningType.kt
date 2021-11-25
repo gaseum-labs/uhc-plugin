@@ -1,5 +1,7 @@
 package com.codeland.uhc.customSpawning
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.World
 import org.bukkit.block.Biome
 import org.bukkit.entity.Entity
@@ -56,22 +58,17 @@ enum class CustomSpawningType(
 	), { player ->
 		if (player.location.block.y <= SpawnInfo.NETHER_CAVE_Y) 0.0 else 1.0
 	}, { player, entity ->
-		val soundLocation = player.location.add(
+		val component = Component.text("Blaze Spawned!", TextColor.color(0xff6417))
+		player.sendActionBar(component)
+		player.sendMessage(component)
+
+		player.playSound(player.location.add(
 			entity.location
 				.subtract(player.location)
 				.toVector()
 				.normalize()
 				.multiply(3)
-		)
-
-		val component = net.kyori.adventure.text.Component.text("Blaze Spawned!", net.kyori.adventure.text.format.TextColor.color(0xff6417))
-		player.sendActionBar(component)
-		player.sendMessage(component)
-
-		player.playSound(
-			net.kyori.adventure.sound.Sound.sound(net.kyori.adventure.sound.Sound.Type { net.kyori.adventure.key.Key.key("entity.blaze.ambient") }, net.kyori.adventure.sound.Sound.Source.MASTER, 1.0f, 1.0f),
-			soundLocation.x, soundLocation.y, soundLocation.z
-		)
+		), org.bukkit.Sound.ENTITY_BLAZE_AMBIENT, 1.0f, 1.0f)
 	});
 
 	val spawnTag = "_UCS_${this.name}"

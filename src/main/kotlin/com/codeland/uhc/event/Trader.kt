@@ -3,12 +3,10 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.Action
-import net.kyori.adventure.key.Key
-import net.kyori.adventure.sound.Sound
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.Sound
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.EntityType
@@ -73,16 +71,7 @@ object Trader {
 			val traderLocation = findTraderLocation(playerLocation)
 			if (traderLocation != null) {
 				createTrader(traderLocation)
-
-				Bukkit.getPlayer(uuid)?.player?.playSound(
-					Sound.sound(
-						Sound.Type { Key.key("entity.wandering_trader.ambient") },
-						Sound.Source.MASTER,
-						1.0f,
-						1.0f
-					),
-					Sound.Emitter.self()
-				)
+				Bukkit.getPlayer(uuid)?.player?.playSound(traderLocation.location, Sound.ENTITY_WANDERING_TRADER_AMBIENT, 1.0f, 1.0f)
 
 				return true
 			}

@@ -2,13 +2,16 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
-import com.codeland.uhc.core.*
+import com.codeland.uhc.core.KillReward
+import com.codeland.uhc.core.Lobby
+import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.phase.phases.Endgame
+import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
-import com.codeland.uhc.core.phase.phases.Endgame
-import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.team.HideManager
@@ -17,16 +20,12 @@ import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
-import net.kyori.adventure.key.Key
-import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
-import org.bukkit.Material
-import org.bukkit.Particle
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -40,7 +39,7 @@ import org.bukkit.event.player.*
 import org.bukkit.event.vehicle.VehicleCreateEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.event.world.WorldSaveEvent
-import org.bukkit.inventory.*
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.persistence.PersistentDataHolder
@@ -241,7 +240,7 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-		val player = event.whoClicked
+		val player = event.whoClicked as Player
 
 		/* prevent pest crafting */
 		if (UHC.game?.quirkEnabled(QuirkType.PESTS) == true && PlayerData.isUndead(player.uniqueId)) {
@@ -257,7 +256,7 @@ class EventListener : Listener {
 
 			player.closeInventory()
 			player.showTitle(Title.title(Component.text("BRUH", TextColor.color(0x791ee8)), Component.empty()))
-			player.playSound(Sound.sound(Sound.Type { Key.key("entity.ghast.death") }, Sound.Source.MASTER, 2.0f, 0.5f), Sound.Emitter.self())
+			player.playSound(player.location, Sound.ENTITY_GHAST_DEATH, 1.0f, 0.5f)
 		}
 	}
 
