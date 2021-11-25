@@ -1,8 +1,8 @@
-name: Upload
+name: UploadDevelopment
 
 on:
   push:
-    branches: [master]
+    branches: [development]
 
 jobs:
   build:
@@ -26,7 +26,7 @@ jobs:
         id: get-release
         uses: joutvhu/get-release@v1.0.0
         with:
-          tag_name: auto
+          tag_name: auto-dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -35,7 +35,7 @@ jobs:
         uses: mknejp/delete-release-assets@v1
         with:
           token: ${{ github.token }}
-          tag: auto
+          tag: auto-dev
           assets: uhc-plugin-all.jar
           fail-if-no-assets: false
 
