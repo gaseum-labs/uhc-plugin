@@ -1,8 +1,6 @@
 package com.codeland.uhc.util.extensions
 
-import java.sql.CallableStatement
-import java.sql.ResultSet
-import java.sql.Types
+import java.sql.*
 
 object ResultSetExtensions {
 	fun ResultSet.getLongNull(index: Int): Long? {

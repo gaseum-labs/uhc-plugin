@@ -3,20 +3,18 @@ package com.codeland.uhc.database.file
 import com.codeland.uhc.database.DatabaseFile
 import com.codeland.uhc.lobbyPvp.Loadout
 import com.codeland.uhc.lobbyPvp.Loadouts
-import java.lang.StringBuilder
 import java.sql.CallableStatement
 import java.sql.ResultSet
 import java.util.*
-import kotlin.collections.HashMap
 
 class LoadoutsFile : DatabaseFile<Loadouts, LoadoutsFile.LoadoutEntry>() {
 	class LoadoutEntry(val uuid: UUID, val slot: Int, val loadout: Loadout)
 
 	override fun query(): String {
 		return "SELECT DISTINCT p.uuid, slot0, slot1, slot2 FROM PvpLoadout p\n" +
-			"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot0 FROM PvpLoadout) p0 ON p.uuid = p0.uuid AND p0.slot = 0\n" +
-			"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot1 FROM PvpLoadout) p1 ON p.uuid = p1.uuid AND p1.slot = 1\n" +
-			"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot2 FROM PvpLoadout) p2 ON p.uuid = p2.uuid AND p2.slot = 2;"
+		"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot0 FROM PvpLoadout) p0 ON p.uuid = p0.uuid AND p0.slot = 0\n" +
+		"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot1 FROM PvpLoadout) p1 ON p.uuid = p1.uuid AND p1.slot = 1\n" +
+		"LEFT JOIN (SELECT uuid, slot, loadoutData AS slot2 FROM PvpLoadout) p2 ON p.uuid = p2.uuid AND p2.slot = 2;"
 	}
 
 	override fun parseResults(results: ResultSet): Loadouts {

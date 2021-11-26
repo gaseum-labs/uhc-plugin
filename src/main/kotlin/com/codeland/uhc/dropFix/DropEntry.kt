@@ -97,7 +97,8 @@ class DropEntry(val onDrop: (entity: Entity, looting: Int) -> Array<ItemStack?>)
 		}
 
 		fun mobInventory(): DropEntry {
-			return DropEntry { entity, _ -> (entity as LivingEntity)
+			return DropEntry { entity, _ ->
+				(entity as LivingEntity)
 				val equipment = entity.equipment ?: return@DropEntry emptyArray()
 
 				arrayOf(
@@ -112,7 +113,8 @@ class DropEntry(val onDrop: (entity: Entity, looting: Int) -> Array<ItemStack?>)
 		}
 
 		fun mobArmor(): DropEntry {
-			return DropEntry { entity, _ -> (entity as LivingEntity)
+			return DropEntry { entity, _ ->
+				(entity as LivingEntity)
 				val equipment = entity.equipment ?: return@DropEntry emptyArray()
 
 				arrayOf(
@@ -125,7 +127,8 @@ class DropEntry(val onDrop: (entity: Entity, looting: Int) -> Array<ItemStack?>)
 		}
 
 		fun endermanHolding(): DropEntry {
-			return DropEntry { entity, _ -> (entity as Enderman)
+			return DropEntry { entity, _ ->
+				(entity as Enderman)
 				val material = entity.carriedBlock?.material
 
 				arrayOf(if (material == null) material else ItemStack(material))

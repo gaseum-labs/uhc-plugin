@@ -3,7 +3,6 @@ package com.codeland.uhc.event;
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.util.Util
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Piglin
@@ -11,9 +10,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDropItemEvent
-import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
-import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
@@ -48,7 +45,10 @@ class Barter : Listener {
 		var index = 1
 
 		val indexList = Array(barterItemList.size) { it }
-		init { indexList.shuffle() }
+
+		init {
+			indexList.shuffle()
+		}
 	}
 
 	private fun getIndex(player: Player): Int {

@@ -1,10 +1,7 @@
 package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
-import co.aikar.commands.annotation.CommandAlias
-import co.aikar.commands.annotation.CommandCompletion
-import co.aikar.commands.annotation.Description
-import co.aikar.commands.annotation.Subcommand
+import co.aikar.commands.annotation.*
 import com.codeland.uhc.core.*
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.quirk.QuirkType
@@ -20,7 +17,7 @@ import org.bukkit.entity.Player
 class AdminCommands : BaseCommand() {
 	@Subcommand("reset")
 	@Description("reset things to the waiting stage")
-	fun testReset(sender : CommandSender) {
+	fun testReset(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game is not running")
@@ -37,10 +34,11 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game needs to be going")
 
-		if (PlayerData.isOptingOut(latePlayer.uniqueId)) return Commands.errorMessage(sender, "${latePlayer.name} is opting out of participating")
+		if (PlayerData.isOptingOut(latePlayer.uniqueId)) return Commands.errorMessage(sender,
+			"${latePlayer.name} is opting out of participating")
 
-		val team = game.teams.playersTeam(latePlayer.uniqueId) ?:
-			return Commands.errorMessage(sender, "${latePlayer.name} must be on a team")
+		val team = game.teams.playersTeam(latePlayer.uniqueId) ?: return Commands.errorMessage(sender,
+			"${latePlayer.name} must be on a team")
 
 		fun randomLocation(): Location? {
 			return PlayerSpreader.spreadSinglePlayer(game.world, (game.world.worldBorder.size / 2) - 5)
@@ -131,7 +129,8 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
-		val classes = game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes =
+			game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
 

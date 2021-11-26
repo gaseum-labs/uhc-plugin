@@ -2,9 +2,7 @@ package com.codeland.uhc.world.chunkPlacerHolder.type
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
-import com.codeland.uhc.world.chunkPlacer.impl.AmethystPlacer
-import com.codeland.uhc.world.chunkPlacer.impl.OrePlacer
-import com.codeland.uhc.world.chunkPlacer.impl.MineralPlacer
+import com.codeland.uhc.world.chunkPlacer.impl.*
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolder
 import org.bukkit.Chunk
 import org.bukkit.Material
@@ -26,13 +24,13 @@ class OreFix : ChunkPlacerHolder() {
 		val diamondPlacer = OrePlacer(5, 6, 16, 3, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)
 		val emeraldPlacer = OrePlacer(6, 6, 32, 1, Material.EMERALD_ORE, Material.DEEPSLATE_EMERALD_ORE)
 
-		val reverseCoalPlacer =     OrePlacer(1, 63,  240, 6, Material.COAL_ORE, Material.DEEPSLATE_COAL_ORE)
-		val reverseIronPlacer =     OrePlacer(1, 63,  240, 6, Material.IRON_ORE, Material.DEEPSLATE_IRON_ORE)
+		val reverseCoalPlacer = OrePlacer(1, 63, 240, 6, Material.COAL_ORE, Material.DEEPSLATE_COAL_ORE)
+		val reverseIronPlacer = OrePlacer(1, 63, 240, 6, Material.IRON_ORE, Material.DEEPSLATE_IRON_ORE)
 		val reverseRedstonePlacer = OrePlacer(2, 100, 240, 5, Material.REDSTONE_ORE, Material.DEEPSLATE_REDSTONE_ORE)
-		val reverseCopperPlacer =   OrePlacer(2, 100, 240, 4, Material.COPPER_ORE, Material.DEEPSLATE_COPPER_ORE)
-		val reverseGoldPlacer =     OrePlacer(2, 150, 240, 4, Material.GOLD_ORE, Material.DEEPSLATE_GOLD_ORE)
-		val reverseLapisPlacer =    OrePlacer(3, 150, 240, 3, Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE)
-		val reverseDiamondPlacer =  OrePlacer(4, 200, 240, 1, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)
+		val reverseCopperPlacer = OrePlacer(2, 100, 240, 4, Material.COPPER_ORE, Material.DEEPSLATE_COPPER_ORE)
+		val reverseGoldPlacer = OrePlacer(2, 150, 240, 4, Material.GOLD_ORE, Material.DEEPSLATE_GOLD_ORE)
+		val reverseLapisPlacer = OrePlacer(3, 150, 240, 3, Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE)
+		val reverseDiamondPlacer = OrePlacer(4, 200, 240, 1, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)
 
 		val debrisPlacer = OrePlacer(5, 6, 30, 2, Material.ANCIENT_DEBRIS, Material.ANCIENT_DEBRIS)
 
@@ -54,7 +52,7 @@ class OreFix : ChunkPlacerHolder() {
 			return when (block.type) {
 				Material.GRANITE -> true
 				Material.DIORITE -> true
-				Material.ANDESITE ->  true
+				Material.ANDESITE -> true
 				Material.TUFF -> true
 				else -> false
 			}
@@ -73,7 +71,9 @@ class OreFix : ChunkPlacerHolder() {
 					/* remove minerals in a gradient above the height limit */
 					for (y in (HEIGHT_LIMIT + 1)..GRADIENT_LIMIT) {
 						if (
-							random.nextFloat() > Util.invInterp(HEIGHT_LIMIT.toFloat(), GRADIENT_LIMIT + 1f, y.toFloat())
+							random.nextFloat() > Util.invInterp(HEIGHT_LIMIT.toFloat(),
+								GRADIENT_LIMIT + 1f,
+								y.toFloat())
 						) {
 							val block = chunk.getBlock(x, y, z)
 							if (isMineral(block)) block.setType(Material.STONE, false)

@@ -3,9 +3,7 @@ package com.codeland.uhc.util
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.scoreboard.DisplaySlot
-import org.bukkit.scoreboard.Objective
-import org.bukkit.scoreboard.Team
+import org.bukkit.scoreboard.*
 import kotlin.random.Random
 
 class ScoreboardDisplay(val name: String, var size: Int) {

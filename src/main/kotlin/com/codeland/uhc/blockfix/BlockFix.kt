@@ -28,7 +28,12 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 		}
 	}
 
-	fun onBreakBlock(blockState: BlockState, drops: MutableList<Item>, player: Player, onItem: (ItemStack?) -> Unit): Boolean {
+	fun onBreakBlock(
+		blockState: BlockState,
+		drops: MutableList<Item>,
+		player: Player,
+		onItem: (ItemStack?) -> Unit,
+	): Boolean {
 		val tool = player.inventory.itemInMainHand
 		val stackDrops = drops.map { it.itemStack } as MutableList<ItemStack>
 

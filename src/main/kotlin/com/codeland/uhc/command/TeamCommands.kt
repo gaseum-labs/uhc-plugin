@@ -1,33 +1,24 @@
 package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
-import co.aikar.commands.annotation.CommandAlias
-import co.aikar.commands.annotation.CommandCompletion
-import co.aikar.commands.annotation.Description
-import co.aikar.commands.annotation.Subcommand
-import com.codeland.uhc.util.Action
+import co.aikar.commands.annotation.*
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.team.AbstractTeam
-import com.codeland.uhc.team.PreTeam
-import com.codeland.uhc.team.Team
-import com.codeland.uhc.team.Teams
+import com.codeland.uhc.team.*
+import com.codeland.uhc.util.Action
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.Style
-import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.format.*
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import java.util.*
-import kotlin.collections.ArrayList
 
 @CommandAlias("uhca")
 @Subcommand("team")
 class TeamCommands : BaseCommand() {
 	@Subcommand("clear")
 	@Description("remove all current teams")
-	fun clearTeamsCommand(sender : CommandSender) {
+	fun clearTeamsCommand(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
 		UHC.getTeams().clearTeams()
@@ -55,8 +46,8 @@ class TeamCommands : BaseCommand() {
 		val teamPlayerList = teamPlayerList(sender, players) ?: return
 		val uuids = teamPlayerList.map { it.uniqueId } as ArrayList<UUID>
 
-		val (color0, color1) = UHC.colorCube.pickTeam() ?:
-		return Action.sendGameMessage(sender, "Not enough colors available to create a team")
+		val (color0, color1) = UHC.colorCube.pickTeam() ?: return Action.sendGameMessage(sender,
+			"Not enough colors available to create a team")
 
 		val game = UHC.game
 		if (game == null) {
@@ -66,7 +57,8 @@ class TeamCommands : BaseCommand() {
 			game.teams.addTeam(Team(PreTeam.randomName(), color0, color1, uuids))
 		}
 
-		Action.sendGameMessage(sender, "Created a team for ${teamPlayerList.joinToString(" and ") { it.name ?: "Unknown" }}")
+		Action.sendGameMessage(sender,
+			"Created a team for ${teamPlayerList.joinToString(" and ") { it.name ?: "Unknown" }}")
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -86,7 +78,12 @@ class TeamCommands : BaseCommand() {
 	@CommandCompletion("@uhcplayer @uhcplayer @uhcplayer")
 	@Subcommand("create")
 	@Description("create a new team comprised of 3 players")
-	fun createTeamCommand(sender: CommandSender, player0: OfflinePlayer, player1: OfflinePlayer, player2: OfflinePlayer) {
+	fun createTeamCommand(
+		sender: CommandSender,
+		player0: OfflinePlayer,
+		player1: OfflinePlayer,
+		player2: OfflinePlayer,
+	) {
 		internalCreateTeam(sender, listOf(player0, player1, player2))
 	}
 
@@ -122,7 +119,7 @@ class TeamCommands : BaseCommand() {
 
 	@Subcommand("random")
 	@Description("create random teams")
-	fun randomTeams(sender : CommandSender, teamSize : Int) {
+	fun randomTeams(sender: CommandSender, teamSize: Int) {
 		if (Commands.opGuard(sender)) return
 
 		val teams = UHC.getTeams()
@@ -155,11 +152,12 @@ class TeamCommands : BaseCommand() {
 	@Subcommand("list")
 	@Description("lists out all teams and members")
 	fun testTeams(sender: CommandSender) {
-		fun <T: AbstractTeam> displayTeam(team: T) {
+		fun <T : AbstractTeam> displayTeam(team: T) {
 			sender.sendMessage(team.apply(team.grabName()).style(Style.style(TextDecoration.BOLD)))
 
 			team.members.forEach { uuid ->
-				sender.sendMessage(Component.text("- ").append(team.apply(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
+				sender.sendMessage(Component.text("- ")
+					.append(team.apply(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
 			}
 		}
 

@@ -5,30 +5,21 @@ import com.codeland.uhc.customSpawning.CustomSpawningType
 import com.codeland.uhc.customSpawning.SpawningPlayerData
 import com.codeland.uhc.gui.gui.LoadoutGui
 import com.codeland.uhc.gui.gui.LobbyPvpGui
-import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.ArenaType
-import com.codeland.uhc.lobbyPvp.Loadouts
-import com.codeland.uhc.lobbyPvp.arena.PvpArena
-import com.codeland.uhc.lobbyPvp.PvpQueue
+import com.codeland.uhc.lobbyPvp.*
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.UHCProperty
 import net.kyori.adventure.text.Component
-import org.bukkit.Bukkit
-import org.bukkit.Location
-import org.bukkit.Material
+import org.bukkit.*
 import org.bukkit.block.BlockFace
 import org.bukkit.enchantments.EnchantmentOffer
-import org.bukkit.entity.Entity
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Player
-import org.bukkit.entity.Zombie
+import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -71,6 +62,7 @@ class PlayerData(val uuid: UUID) {
 
 	/* other stuff */
 	class QuirkDataHolder(var applied: Boolean, var data: Any)
+
 	var quirkDataList = HashMap<QuirkType, QuirkDataHolder>()
 
 	var skull = ItemStack(Material.PLAYER_HEAD)
@@ -87,24 +79,24 @@ class PlayerData(val uuid: UUID) {
 	var storedOffers: List<EnchantmentOffer?> = emptyList()
 
 	var offlineZombie: Zombie? = null
-	set(value) {
-		field = if (value == null) {
-			val oldValue = offlineZombie
+		set(value) {
+			field = if (value == null) {
+				val oldValue = offlineZombie
 
-			if (oldValue != null) {
-				oldValue.remove()
-				oldValue.world.unloadChunk(oldValue.chunk)
-				oldValue.world.setChunkForceLoaded(oldValue.chunk.x, oldValue.chunk.z, false)
+				if (oldValue != null) {
+					oldValue.remove()
+					oldValue.world.unloadChunk(oldValue.chunk)
+					oldValue.world.setChunkForceLoaded(oldValue.chunk.x, oldValue.chunk.z, false)
+				}
+
+				null
+			} else {
+				value.world.setChunkForceLoaded(value.chunk.x, value.chunk.z, true)
+				value.world.loadChunk(value.chunk)
+
+				value
 			}
-
-			null
-		} else {
-			value.world.setChunkForceLoaded(value.chunk.x, value.chunk.z, true)
-			value.world.loadChunk(value.chunk)
-
-			value
 		}
-	}
 
 	/* begin functions */
 
@@ -118,7 +110,13 @@ class PlayerData(val uuid: UUID) {
 		skull.itemMeta = meta
 	}
 
-	private fun internalCreateZombie(location: Location, uuid: UUID, name: Component, inventory: Array<ItemStack>, experience: Int): Zombie {
+	private fun internalCreateZombie(
+		location: Location,
+		uuid: UUID,
+		name: Component,
+		inventory: Array<ItemStack>,
+		experience: Int,
+	): Zombie {
 		val zombie = location.world.spawn(location, Zombie::class.java)
 
 		zombie.setMetadata(INVENTORY_TAG, FixedMetadataValue(UHCPlugin.plugin, inventory))
@@ -197,7 +195,11 @@ class PlayerData(val uuid: UUID) {
 		val team = UHC.getTeams().playersTeam(uuid)
 		val playerName = Bukkit.getOfflinePlayer(uuid).name ?: "NULL"
 
-		return internalCreateZombie(location, uuid, team?.apply(playerName) ?: Component.text(playerName), emptyArray(), 0)
+		return internalCreateZombie(location,
+			uuid,
+			team?.apply(playerName) ?: Component.text(playerName),
+			emptyArray(),
+			0)
 	}
 
 	fun replaceZombieWithPlayer(player: Player) {
@@ -241,7 +243,7 @@ class PlayerData(val uuid: UUID) {
 
 		/* THE player data list */
 		var playerDataList = HashMap<UUID, PlayerData>()
-		private set
+			private set
 
 		fun prune() {
 			playerDataList = playerDataList.filter { (uuid, _) ->
@@ -347,7 +349,10 @@ class PlayerData(val uuid: UUID) {
 		}
 
 		fun getQuirkDataHolder(playerData: PlayerData, type: QuirkType, game: Game): QuirkDataHolder {
-			return playerData.quirkDataList.getOrPut(type) { QuirkDataHolder(false, game.getQuirk<Quirk>(type)?.defaultData() ?: 0) }
+			return playerData.quirkDataList.getOrPut(type) {
+				QuirkDataHolder(false,
+					game.getQuirk<Quirk>(type)?.defaultData() ?: 0)
+			}
 		}
 
 		fun <DataType> getQuirkData(uuid: UUID, type: QuirkType, game: Game): DataType {

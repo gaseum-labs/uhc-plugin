@@ -1,8 +1,6 @@
 package com.codeland.uhc.team
 
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.core.UHCBar
+import com.codeland.uhc.core.*
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.event.Packet.metadataPacketDefaultState
 import net.minecraft.network.protocol.game.PacketPlayOutScoreboardScore
@@ -31,7 +29,8 @@ object NameManager {
 		/* add to hearts objective */
 		val playerHealthScore = ceil(player.health).toInt()
 		val scoreboard = (Bukkit.getScoreboardManager().mainScoreboard as CraftScoreboard).handle
-		scoreboard.getPlayerScoreForObjective(player.name, scoreboard.getObjective(UHC.heartsObjective.name)).score = playerHealthScore
+		scoreboard.getPlayerScoreForObjective(player.name, scoreboard.getObjective(UHC.heartsObjective.name)).score =
+			playerHealthScore
 
 		/* team name updating */
 
@@ -44,15 +43,20 @@ object NameManager {
 			onlinePlayer.handle.b.sendPacket(metadataPacketDefaultState(player))
 
 			/* send heart packet on joining */
-			onlinePlayer.handle.b.sendPacket(PacketPlayOutScoreboardScore(ScoreboardServer.Action.a, UHC.heartsObjective.name, player.name, playerHealthScore))
+			onlinePlayer.handle.b.sendPacket(PacketPlayOutScoreboardScore(ScoreboardServer.Action.a,
+				UHC.heartsObjective.name,
+				player.name,
+				playerHealthScore))
 
 			/* tell this player about other players' names & update glowing */
 			if (player != onlinePlayer) {
-				Packet.updateTeamColor(onlinePlayer, UHC.getTeams().playersTeam(onlinePlayer.uniqueId), Packet.playersNewName(onlinePlayer.uniqueId), player)
+				Packet.updateTeamColor(onlinePlayer,
+					UHC.getTeams().playersTeam(onlinePlayer.uniqueId),
+					Packet.playersNewName(onlinePlayer.uniqueId),
+					player)
 				player.handle.b.sendPacket(metadataPacketDefaultState(onlinePlayer))
 			}
 		}
 	}
-
 
 }

@@ -1,9 +1,7 @@
 package com.codeland.uhc.quirk.quirks.carePackages
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.*
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.core.phase.phases.Endgame
@@ -11,9 +9,7 @@ import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Action
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.block.Block
 import java.util.*
 import kotlin.math.ceil
@@ -26,6 +22,7 @@ class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 
 	val PER_CHEST = 13
 	val NUM_DROPS = ceil(itemsList.size / 13.0).toInt()
+
 	/**
 	 * time that drops are spread out over
 	 * grace + shrink - 10 minutes
@@ -83,11 +80,14 @@ class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 				if (indexList as? Array<Int> != null && indexList.isNotEmpty()) {
 					val block = chaoticDropBlock(game.world)
 
-					val inventory = CarePackageUtil.generateChest(game.world, block, ChatColor.values()[random.nextInt(ChatColor.MAGIC.ordinal)])
+					val inventory = CarePackageUtil.generateChest(game.world,
+						block,
+						ChatColor.values()[random.nextInt(ChatColor.MAGIC.ordinal)])
 
 					chestSlots(PER_CHEST) { index, slot ->
 						val itemIndex = index + dropNum * PER_CHEST
-						if (itemIndex < indexList.size) inventory.setItem(slot, itemsList[indexList[itemIndex]].create())
+						if (itemIndex < indexList.size) inventory.setItem(slot,
+							itemsList[indexList[itemIndex]].create())
 					}
 
 					val player = Bukkit.getPlayer(uuid)
@@ -114,10 +114,18 @@ class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 		val minRadius = game.config.endgameRadius.get()
 
 		return when (random.nextInt(4)) {
-			0 ->    CarePackageUtil.dropBlock(world, random.nextInt(-maxRadius,  minRadius), random.nextInt(-maxRadius, -minRadius))
-			1 ->    CarePackageUtil.dropBlock(world, random.nextInt( minRadius,  maxRadius), random.nextInt(-maxRadius,  minRadius))
-			2 ->    CarePackageUtil.dropBlock(world, random.nextInt(-minRadius,  maxRadius), random.nextInt( minRadius,  maxRadius))
-			else -> CarePackageUtil.dropBlock(world, random.nextInt(-maxRadius, -minRadius), random.nextInt(-minRadius,  maxRadius))
+			0 -> CarePackageUtil.dropBlock(world,
+				random.nextInt(-maxRadius, minRadius),
+				random.nextInt(-maxRadius, -minRadius))
+			1 -> CarePackageUtil.dropBlock(world,
+				random.nextInt(minRadius, maxRadius),
+				random.nextInt(-maxRadius, minRadius))
+			2 -> CarePackageUtil.dropBlock(world,
+				random.nextInt(-minRadius, maxRadius),
+				random.nextInt(minRadius, maxRadius))
+			else -> CarePackageUtil.dropBlock(world,
+				random.nextInt(-maxRadius, -minRadius),
+				random.nextInt(-minRadius, maxRadius))
 		}
 	}
 

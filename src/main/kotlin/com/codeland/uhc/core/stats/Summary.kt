@@ -1,20 +1,16 @@
 package com.codeland.uhc.core.stats
 
-import com.codeland.uhc.database.DatabaseFile
 import com.codeland.uhc.team.Team
-import com.codeland.uhc.util.Bad
-import com.codeland.uhc.util.Good
-import com.codeland.uhc.util.Result
+import com.codeland.uhc.util.*
 import com.codeland.uhc.util.Util.fieldError
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.sql.Connection
-import java.sql.SQLException
 import java.time.ZonedDateTime
 import java.util.*
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 class Summary(
 	val gameType: GameType,
@@ -25,7 +21,7 @@ class Summary(
 ) {
 	data class SummaryEntry(
 		val place: Int,
-	    val uuid: UUID,
+		val uuid: UUID,
 		val name: String,
 		val timeSurvived: Int,
 		val killedBy: UUID?,
@@ -46,7 +42,9 @@ class Summary(
 
 				val uuid = try {
 					UUID.fromString(map["uuid"] as? String ?: return fieldError("uuid", "string"))
-				} catch (ex: Exception) { return Bad(ex.message ?: "Unknown UUID error") }
+				} catch (ex: Exception) {
+					return Bad(ex.message ?: "Unknown UUID error")
+				}
 
 				val name = map["name"] as? String ?: return fieldError("name", "string")
 
@@ -54,8 +52,10 @@ class Summary(
 
 				val killedByUuid = try {
 					val killedBy = map["killedBy"] as? String?
-					if(killedBy == null) null else UUID.fromString(killedBy)
-				} catch (ex: Exception) { return Bad(ex.message ?: "Unknown UUID error") }
+					if (killedBy == null) null else UUID.fromString(killedBy)
+				} catch (ex: Exception) {
+					return Bad(ex.message ?: "Unknown UUID error")
+				}
 
 				return Good(SummaryEntry(place, uuid, name, timeSurvived, killedByUuid))
 			}
@@ -117,9 +117,11 @@ class Summary(
 		fun readSummary(inputStream: InputStream): Result<Summary> {
 			val gson = try {
 				Gson().fromJson(InputStreamReader(inputStream), HashMap::class.java) as HashMap<String, *>
-			} catch (ex: Exception) { return Bad(ex.message ?: "Unknown JSON error") }
+			} catch (ex: Exception) {
+				return Bad(ex.message ?: "Unknown JSON error")
+			}
 
-			val gameType = when(
+			val gameType = when (
 				val res = GameType.fromString(gson["gameType"] as? String ?: return fieldError("gameType", "string"))
 			) {
 				is Good -> res.value
@@ -128,29 +130,31 @@ class Summary(
 
 			val date = try {
 				ZonedDateTime.parse(gson["date"] as? String ?: return fieldError("date", "string"))
-			} catch (ex: Exception) { return Bad(ex.message ?: "Unknown date error") }
+			} catch (ex: Exception) {
+				return Bad(ex.message ?: "Unknown date error")
+			}
 
 			val gameLength = (gson["gameLength"] as? Double ?: return fieldError("gameLength", "int")).toInt()
 
 			val teams = (
-				gson["teams"] as? ArrayList<AbstractMap<String, *>>
-					?: return fieldError("teams", "array")
+			gson["teams"] as? ArrayList<AbstractMap<String, *>>
+				?: return fieldError("teams", "array")
 			).map {
-				when (val r = Team.deserialize(it)) {
-					is Good -> r.value
-					is Bad -> return r.forward()
+					when (val r = Team.deserialize(it)) {
+						is Good -> r.value
+						is Bad -> return r.forward()
+					}
 				}
-			}
 
 			val players = (
-				gson["players"] as? ArrayList<AbstractMap<String, *>>
-					?: return fieldError("players", "array")
+			gson["players"] as? ArrayList<AbstractMap<String, *>>
+				?: return fieldError("players", "array")
 			).map {
-				when (val r = SummaryEntry.deserialize(it)) {
-					is Good -> r.value
-					is Bad -> return r.forward()
+					when (val r = SummaryEntry.deserialize(it)) {
+						is Good -> r.value
+						is Bad -> return r.forward()
+					}
 				}
-			}
 
 			return Good(Summary(gameType, date, gameLength, teams, players))
 		}

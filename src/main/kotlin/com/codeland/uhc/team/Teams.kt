@@ -4,18 +4,17 @@ import com.codeland.uhc.util.extensions.ArrayListExtensions.removeFirst
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.ceil
 import kotlin.random.Random
 
-class Teams <T: AbstractTeam> (
+class Teams<T : AbstractTeam>(
 	val onPlayerMovement: (action: MoveAction) -> Unit,
-	val teamCleanup: (team: T) -> Unit
+	val teamCleanup: (team: T) -> Unit,
 ) {
 	sealed class MoveAction(val uuids: List<UUID>, val team: AbstractTeam?)
-	class ClearAction  (uuids: List<UUID>) : MoveAction(uuids, null)
-	class AddAction    (val id: Int, uuids: List<UUID>, team: AbstractTeam?) : MoveAction(uuids, team)
-	class RemoveAction (val size: Int, val id: Int, uuids: List<UUID>) : MoveAction(uuids, null)
+	class ClearAction(uuids: List<UUID>) : MoveAction(uuids, null)
+	class AddAction(val id: Int, uuids: List<UUID>, team: AbstractTeam?) : MoveAction(uuids, team)
+	class RemoveAction(val size: Int, val id: Int, uuids: List<UUID>) : MoveAction(uuids, null)
 
 	private val teams = ArrayList<Pair<T, Int>>()
 

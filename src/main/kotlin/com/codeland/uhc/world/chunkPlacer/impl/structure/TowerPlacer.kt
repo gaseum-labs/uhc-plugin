@@ -1,7 +1,7 @@
 package com.codeland.uhc.world.chunkPlacer.impl.structure
 
-import com.codeland.uhc.util.extensions.BlockFaceExtensions.left
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.extensions.BlockFaceExtensions.left
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
@@ -80,7 +80,8 @@ class TowerPlacer(size: Int) : ImmediateChunkPlacer(size) {
 			for (y in storyY(0) + 2..storyY(0) + 4) {
 				for (x in 0..1) {
 					for (z in 0..1) {
-						chunk.getBlock(7 + (direction.modX * 7) + x, y, 7 + (direction.modZ * 7) + z).setType(Material.AIR, false)
+						chunk.getBlock(7 + (direction.modX * 7) + x, y, 7 + (direction.modZ * 7) + z)
+							.setType(Material.AIR, false)
 					}
 				}
 			}
@@ -103,7 +104,8 @@ class TowerPlacer(size: Int) : ImmediateChunkPlacer(size) {
 				stairBlock.blockData = data
 
 				for (y in storyY(story) + 3 + i..storyY(story) + 6) {
-					chunk.getBlock(Util.mod(stairBlock.x, 16), y, Util.mod(stairBlock.z, 16)).setType(Material.AIR, false)
+					chunk.getBlock(Util.mod(stairBlock.x, 16), y, Util.mod(stairBlock.z, 16))
+						.setType(Material.AIR, false)
 				}
 
 				stairBlock = stairBlock.getRelative(stairward.modX, 1, stairward.modZ)
@@ -167,8 +169,11 @@ class TowerPlacer(size: Int) : ImmediateChunkPlacer(size) {
 			fun tntFloor() {
 				for (x in 2..13) {
 					for (z in 2..13) {
-						if (Random.nextInt(12) == 0) chunk.getBlock(x, storyY(story) + 1, z).setType(Material.TNT, false)
-						chunk.getBlock(x, storyY(story) + 2, z).setType(if (Random.nextInt(5) == 0) Material.STONE_PRESSURE_PLATE else Material.REDSTONE_WIRE, false)
+						if (Random.nextInt(12) == 0) chunk.getBlock(x, storyY(story) + 1, z)
+							.setType(Material.TNT, false)
+						chunk.getBlock(x, storyY(story) + 2, z)
+							.setType(if (Random.nextInt(5) == 0) Material.STONE_PRESSURE_PLATE else Material.REDSTONE_WIRE,
+								false)
 					}
 				}
 			}
@@ -178,7 +183,7 @@ class TowerPlacer(size: Int) : ImmediateChunkPlacer(size) {
 					for (z in 2..13) {
 						val rand = Random.nextInt(6)
 
-						chunk.getBlock(x, storyY(story) + 3, z).setType(when(rand) {
+						chunk.getBlock(x, storyY(story) + 3, z).setType(when (rand) {
 							0 -> Material.DARK_OAK_TRAPDOOR
 							1 -> Material.SPRUCE_PLANKS
 							2 -> Material.DARK_OAK_PLANKS

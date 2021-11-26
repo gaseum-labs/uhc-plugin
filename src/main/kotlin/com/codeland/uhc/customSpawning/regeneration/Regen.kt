@@ -13,60 +13,87 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 
 	abstract fun place(chunk: Chunk): Boolean
 
-	fun getPlayerChunks(world: World): ArrayList<Array<Pair<Int, Int>>> {
+	/**
+	 * @return multiplier for how much should spawn based on the world border size
+	 * from 1.0 to 0.0
+	 *
+	 * will be 1.0 when world border is above the chunk radius
+	 */
+	fun regenScale(world: World): Float {
+		val borderDiameter = world.worldBorder.size.toFloat()
+		val regenDiameter = (chunkRadius * 2 + 1) * 16.0f
+
+		return (borderDiameter / regenDiameter).coerceAtMost(1.0f)
+	}
+
+	fun getNextTicks(world: World): Int {
+		return if (regenScale(world) == 0.0f) {
+			Int.MAX_VALUE
+		} else {
+			(ticksPerGenerate / regenScale(world)).coerceAtLeast(1.0f).toInt()
+		}
+	}
+
+	fun getTeamChunks(world: World): ArrayList<List<Array<Pair<Int, Int>>>> {
 		val borderChunk = ((world.worldBorder.size / 2).toInt() / 16) - 1
 
 		/* only spawn for one eligible teammate per team chosen at random */
-		return game.teams.teams().mapNotNull { team ->
+		return game.teams.teams().map { team ->
 			team.members.filter {
 				PlayerData.isParticipating(it)
 			}.mapNotNull {
 				Action.getPlayerLocation(it)
 			}.filter {
 				it.world === world && it.y >= 58
-			}.randomOrNull()
-		}.map { location ->
-			val cx = floor(location.blockX / 16.0).toInt()
-			val cz = floor(location.blockZ / 16.0).toInt()
+			}.shuffled()
+		}.filter {
+			it.isNotEmpty()
+		}.map { locations ->
+			locations.map { location ->
+				val cx = floor(location.blockX / 16.0).toInt()
+				val cz = floor(location.blockZ / 16.0).toInt()
 
-			val left = (cx - chunkRadius).coerceAtLeast(-borderChunk)
-			val right = (cx + chunkRadius).coerceAtMost(borderChunk)
-			val up = (cz - chunkRadius).coerceAtLeast(-borderChunk)
-			val down = (cz + chunkRadius).coerceAtMost(borderChunk)
+				val left = (cx - chunkRadius).coerceAtLeast(-borderChunk)
+				val right = (cx + chunkRadius).coerceAtMost(borderChunk)
+				val up = (cz - chunkRadius).coerceAtLeast(-borderChunk)
+				val down = (cz + chunkRadius).coerceAtMost(borderChunk)
 
-			val width = (right - left + 1)
-			val height = (down - up + 1)
+				val width = (right - left + 1)
+				val height = (down - up + 1)
 
-			val list = Array(width * height) { i ->
-				Pair(left + (i % width), up + (i / width))
+				val list = Array(width * height) { i ->
+					Pair(left + (i % width), up + (i / width))
+				}
+
+				list.shuffle()
+
+				list
 			}
-
-			list.shuffle()
-
-			list
-		} as ArrayList<Array<Pair<Int, Int>>>
+		} as ArrayList<List<Array<Pair<Int, Int>>>>
 	}
 
-	var playerChunks: ArrayList<Array<Pair<Int, Int>>> = ArrayList()
+	var teamChunks: ArrayList<List<Array<Pair<Int, Int>>>> = ArrayList()
 	var timer = 0
 	var tryIndex = 0
 
 	fun tick() {
+		val world = game.getOverworld()
+
 		if (--timer <= 0) {
-			playerChunks = getPlayerChunks(game.getOverworld())
-			timer = ticksPerGenerate
+			teamChunks = getTeamChunks(world)
+			timer = getNextTicks(world)
 			tryIndex = 0
 		}
 
-		playerChunks.removeIf { chunkList ->
-			if (tryIndex < chunkList.size) {
-				val (chunkX, chunkZ) = chunkList[tryIndex]
-				val chunk = game.world.getChunkAt(chunkX, chunkZ)
+		teamChunks.removeIf { players ->
+			players.any { chunks ->
+				if (tryIndex < chunks.size) {
+					val (chunkX, chunkZ) = chunks[tryIndex]
+					place(world.getChunkAt(chunkX, chunkZ))
 
-				place(chunk)
-
-			} else {
-				true
+				} else {
+					true
+				}
 			}
 		}
 

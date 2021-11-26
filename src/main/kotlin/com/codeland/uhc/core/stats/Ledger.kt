@@ -6,7 +6,6 @@ import org.bukkit.Bukkit
 import org.bukkit.World
 import java.io.File
 import java.io.FileWriter
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.*
 import javax.imageio.ImageIO
@@ -46,13 +45,15 @@ class Ledger(val worldSize: Int) {
 			))
 		}
 
-		return winners.map { uuid -> Summary.SummaryEntry(
-			1,
-			uuid,
-			Bukkit.getOfflinePlayer(uuid).name ?: "Unknown",
-			time,
-			null
-		)}.plus(entries)
+		return winners.map { uuid ->
+			Summary.SummaryEntry(
+				1,
+				uuid,
+				Bukkit.getOfflinePlayer(uuid).name ?: "Unknown",
+				time,
+				null
+			)
+		}.plus(entries)
 	}
 
 	private fun selectSummaryFile(matchNumber: Int = 0): Pair<File, Int> {

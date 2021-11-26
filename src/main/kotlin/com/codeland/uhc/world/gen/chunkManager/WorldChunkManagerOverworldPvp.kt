@@ -16,10 +16,10 @@ class WorldChunkManagerOverworldPvp(
 
 	private val areaLazy = CustomGenLayers.createAreaPvp(seed)
 
-    override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
-	    return when {
-	    	ArenaManager.onEdge(x * 4, z * 4) -> inBetween
-		    else -> biomeRegistry.d(BiomeRegistry.a(areaLazy.a(x, z)))
-	    }
-    }
+	override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
+		return when {
+			ArenaManager.onEdge(x * 4, z * 4) -> inBetween
+			else -> biomeRegistry.d(BiomeRegistry.a(areaLazy.a(x, z)))
+		}
+	}
 }

@@ -1,14 +1,7 @@
 package com.codeland.uhc.world.chunkPlacer
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Chunk
-import org.bukkit.World
-import kotlin.system.exitProcess
+import org.bukkit.*
 
 abstract class DelayedChunkPlacer(size: Int) : AbstractChunkPlacer(size) {
 	private var chunkList = ArrayList<Pair<Chunk, Int>>()
@@ -53,21 +46,21 @@ abstract class DelayedChunkPlacer(size: Int) : AbstractChunkPlacer(size) {
 	companion object {
 		fun chunkReadyPlus(world: World, chunkX: Int, chunkZ: Int): Boolean {
 			return world.isChunkGenerated(chunkX + 1, chunkZ + 1) &&
-				world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
-				world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
-				world.isChunkGenerated(chunkX - 1, chunkZ - 1)
+			world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
+			world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
+			world.isChunkGenerated(chunkX - 1, chunkZ - 1)
 		}
 
 		fun chunkReadyAround(world: World, chunkX: Int, chunkZ: Int): Boolean {
 			return world.isChunkGenerated(chunkX + 1, chunkZ + 1) &&
-				world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
-				world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
-				world.isChunkGenerated(chunkX - 1, chunkZ - 1) &&
+			world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
+			world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
+			world.isChunkGenerated(chunkX - 1, chunkZ - 1) &&
 
-				world.isChunkGenerated(chunkX + 1, chunkZ) &&
-				world.isChunkGenerated(chunkX - 1, chunkZ) &&
-				world.isChunkGenerated(chunkX, chunkZ + 1) &&
-				world.isChunkGenerated(chunkX, chunkZ - 1)
+			world.isChunkGenerated(chunkX + 1, chunkZ) &&
+			world.isChunkGenerated(chunkX - 1, chunkZ) &&
+			world.isChunkGenerated(chunkX, chunkZ + 1) &&
+			world.isChunkGenerated(chunkX, chunkZ - 1)
 		}
 	}
 }

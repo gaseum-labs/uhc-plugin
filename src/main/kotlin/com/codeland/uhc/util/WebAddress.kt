@@ -1,14 +1,11 @@
 package com.codeland.uhc.util
 
-import java.io.*
-import java.net.Authenticator
-import java.net.PasswordAuthentication
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.URI
 import java.net.URL
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.util.concurrent.CompletableFuture
+import java.net.http.*
+import java.util.concurrent.*
 
 class WebAddress {
 	companion object {

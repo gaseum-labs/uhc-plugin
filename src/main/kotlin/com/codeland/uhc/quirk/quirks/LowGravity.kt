@@ -2,18 +2,12 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import org.bukkit.Bukkit
+import org.bukkit.*
 import org.bukkit.Bukkit.getWorlds
-import org.bukkit.GameMode
-import org.bukkit.Material
 import org.bukkit.entity.*
-import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
-
 
 class LowGravity(type: QuirkType, game: Game) : Quirk(type, game) {
 	companion object {
@@ -28,12 +22,15 @@ class LowGravity(type: QuirkType, game: Game) : Quirk(type, game) {
 				if (!block.isSolid && block != Material.WATER && player.gameMode == GameMode.SURVIVAL) {
 					// - G = 0.08 for living entities
 					// https://minecraft.gamepedia.com/Entity#Motion_of_entities
-					player.velocity = Vector(player.velocity.x, player.velocity.y - gravity * 0.08 + 0.08, player.velocity.z)
+					player.velocity =
+						Vector(player.velocity.x, player.velocity.y - gravity * 0.08 + 0.08, player.velocity.z)
 					// - also give them a little push in the direction they're facing
 					// to counteract air resistance (if they're sprinting)
 					if (player.isSprinting) {
 						val direction = player.location.direction
-						player.velocity = Vector(player.velocity.x + direction.x * 0.03, player.velocity.y, player.velocity.z + direction.z * 0.03)
+						player.velocity = Vector(player.velocity.x + direction.x * 0.03,
+							player.velocity.y,
+							player.velocity.z + direction.z * 0.03)
 					}
 				}
 			}
@@ -51,7 +48,9 @@ class LowGravity(type: QuirkType, game: Game) : Quirk(type, game) {
 						is Chicken -> 0.04
 						else -> 0.08
 					}
-					entity.velocity = Vector(entity.velocity.x, entity.velocity.y - gravity * normalGravity + normalGravity, entity.velocity.z)
+					entity.velocity = Vector(entity.velocity.x,
+						entity.velocity.y - gravity * normalGravity + normalGravity,
+						entity.velocity.z)
 				}
 			}
 		}, 1, 1)

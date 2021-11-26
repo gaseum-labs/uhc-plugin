@@ -1,9 +1,7 @@
 package com.codeland.uhc.core.phase
 
 import com.codeland.uhc.core.Game
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.World
+import org.bukkit.*
 import kotlin.math.ceil
 
 abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) {
@@ -35,7 +33,11 @@ abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) 
 			if (remainingSeconds() == 0) return true
 
 			if (remainingSeconds() <= 3) Bukkit.getServer().onlinePlayers.forEach { player ->
-				player.sendTitle("${countDownColor(remainingSeconds())}${ChatColor.BOLD}${remainingSeconds()}", "${phaseType.chatColor}${ChatColor.BOLD}${endPhrase()}", 0, 21, 0)
+				player.sendTitle("${countDownColor(remainingSeconds())}${ChatColor.BOLD}${remainingSeconds()}",
+					"${phaseType.chatColor}${ChatColor.BOLD}${endPhrase()}",
+					0,
+					21,
+					0)
 			}
 		}
 

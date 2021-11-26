@@ -1,15 +1,11 @@
 package com.codeland.uhc.discord
 
-import com.codeland.uhc.util.Bad
-import com.codeland.uhc.util.Good
-import com.codeland.uhc.util.Result
+import com.codeland.uhc.util.*
 import com.google.gson.GsonBuilder
 import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
+import java.net.http.*
 import java.util.*
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 object MojangAPI {
 	class ApiResponse(val name: String, val id: String)

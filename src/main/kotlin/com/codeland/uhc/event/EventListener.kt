@@ -2,10 +2,7 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
-import com.codeland.uhc.core.KillReward
-import com.codeland.uhc.core.Lobby
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.*
 import com.codeland.uhc.core.phase.phases.Endgame
 import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.dropFix.DropFixType
@@ -21,9 +18,7 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
-import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.format.*
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.entity.*
@@ -31,10 +26,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
-import org.bukkit.event.inventory.CraftItemEvent
-import org.bukkit.event.inventory.InventoryAction
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryType
+import org.bukkit.event.inventory.*
 import org.bukkit.event.player.*
 import org.bukkit.event.vehicle.VehicleCreateEvent
 import org.bukkit.event.weather.WeatherChangeEvent
@@ -44,9 +36,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
-import org.bukkit.potion.PotionType
+import org.bukkit.potion.*
 
 class EventListener : Listener {
 	@EventHandler
@@ -126,7 +116,13 @@ class EventListener : Listener {
 	@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		fun bloodCloud(location: Location) {
-			location.world.spawnParticle(Particle.REDSTONE, location.clone().add(0.0, 1.0, 0.0), 64, 0.5, 1.0, 0.5, Particle.DustOptions(Color.RED, 2.0f))
+			location.world.spawnParticle(Particle.REDSTONE,
+				location.clone().add(0.0, 1.0, 0.0),
+				64,
+				0.5,
+				1.0,
+				0.5,
+				Particle.DustOptions(Color.RED, 2.0f))
 		}
 
 		val player = event.entity
@@ -150,7 +146,7 @@ class EventListener : Listener {
 
 			arena.checkEnd()
 
-		/* players dying in the game */
+			/* players dying in the game */
 		} else if (playerData.participating) {
 			event.isCancelled = true
 			bloodCloud(player.location)
@@ -173,9 +169,10 @@ class EventListener : Listener {
 			orb.experience = event.droppedExp
 
 			val deathMessage = event.deathMessage()
-			if (deathMessage != null) Bukkit.getOnlinePlayers().filter { !WorldManager.isNonGameWorld(it.world) }.forEach { player ->
-				player.sendMessage(deathMessage)
-			}
+			if (deathMessage != null) Bukkit.getOnlinePlayers().filter { !WorldManager.isNonGameWorld(it.world) }
+				.forEach { player ->
+					player.sendMessage(deathMessage)
+				}
 
 			game?.playerDeath(uuid, player.killer, playerData, false)
 		}
@@ -194,16 +191,17 @@ class EventListener : Listener {
 		} else if (event.entity.world === WorldManager.lobbyWorld) {
 			event.isCancelled = true
 
-		/* witch poison nerf */
-		} else if (UHC.game?.naturalRegeneration?.get() == true) {
+			/* witch poison nerf */
+		} else if (UHC.game?.naturalRegeneration?.get() == false && WorldManager.isGameWorld(event.entity.world)) {
 			val potion = event.entity as? ThrownPotion
-			if (potion != null) {
-				if (potion.shooter is Witch) {
-					/* if this is a posion potion replace with nerfed poison */
-					if ((potion.item.itemMeta as PotionMeta).basePotionData.type == PotionType.POISON) {
-						potion.item = Brew.createCustomPotion(PotionType.POISON, Material.SPLASH_POTION, "Poison", 150, 0).create()
-					}
-				}
+
+			if (
+				potion != null &&
+				potion.shooter is Witch &&
+				(potion.item.itemMeta as PotionMeta).basePotionData.type == PotionType.POISON
+			) {
+				potion.item =
+					Brew.createCustomPotion(PotionType.POISON, Material.SPLASH_POTION, "Poison", 150, 0).create()
 			}
 		}
 	}
@@ -231,9 +229,7 @@ class EventListener : Listener {
 			}
 
 			if (event.entityType === EntityType.BLAZE) {
-				val distance = event.entity.location.distance(target.location)
-
-				if (distance >= 24) event.isCancelled = true
+				if (event.entity.location.distance(target.location) >= 24) event.isCancelled = true
 			}
 		}
 	}
@@ -250,7 +246,8 @@ class EventListener : Listener {
 			PlayerData.isParticipating(player.uniqueId) && (
 			event.recipe.result.type === Material.END_CRYSTAL ||
 			event.recipe.result.type === Material.RESPAWN_ANCHOR
-		)) {
+			)
+		) {
 			event.isCancelled = true
 			event.inventory.matrix.forEach { it.amount = 0 }
 
@@ -277,11 +274,11 @@ class EventListener : Listener {
 		val game = UHC.game
 
 		return ArenaManager.playersArena(player.uniqueId) is PvpArena || (
-			game != null &&
-			!game.config.naturalRegeneration.get() &&
-			playerData.participating &&
-			game.phase !is Grace &&
-			!(game.quirkEnabled(QuirkType.PESTS) && playerData.undead())
+		game != null &&
+		!game.config.naturalRegeneration.get() &&
+		playerData.participating &&
+		game.phase !is Grace &&
+		!(game.quirkEnabled(QuirkType.PESTS) && playerData.undead())
 		)
 	}
 
@@ -361,7 +358,8 @@ class EventListener : Listener {
 			}.map { quirk ->
 				Util.binaryFind(event.entityType, quirk.customDrops!!) { dropFix -> dropFix.entityType }
 			}.firstOrNull()
-				?: Util.binaryFind(event.entityType, DropFixType.list) { dropFixType -> dropFixType.dropFix.entityType }?.dropFix
+				?: Util.binaryFind(event.entityType,
+					DropFixType.list) { dropFixType -> dropFixType.dropFix.entityType }?.dropFix
 			)?.onDeath(event.entity, killer, event.drops)
 
 			game.quirks.filterNotNull().any { quirk ->
@@ -387,7 +385,7 @@ class EventListener : Listener {
 				event.isCancelled = true
 			}
 
-		/* prevent lobby and postgame damage */
+			/* prevent lobby and postgame damage */
 		} else {
 			val arena = ArenaManager.playersArena(player.uniqueId)
 
@@ -416,13 +414,14 @@ class EventListener : Listener {
 			PlayerData.isParticipating(attackingPlayer.uniqueId) &&
 			defender is Player &&
 			PlayerData.isParticipating(defender.uniqueId)
-		) && (
+			) && (
 			game.phase is Grace || (
-				game.quirkEnabled(QuirkType.PESTS) &&
-				!PlayerData.isAlive(attackingPlayer.uniqueId) &&
-				!PlayerData.isAlive(defender.uniqueId)
+			game.quirkEnabled(QuirkType.PESTS) &&
+			!PlayerData.isAlive(attackingPlayer.uniqueId) &&
+			!PlayerData.isAlive(defender.uniqueId)
 			)
-		)) event.isCancelled = true
+			)
+		) event.isCancelled = true
 	}
 
 	/**
@@ -477,7 +476,9 @@ class EventListener : Listener {
 		val block = event.block
 		val player = event.player
 
-		if (UHC.game?.quirkEnabled(QuirkType.UNSHELTERED) == true && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
+		if (UHC.game?.quirkEnabled(QuirkType.UNSHELTERED) == true && !Util.binarySearch(block.type,
+				Unsheltered.acceptedBlocks)
+		) {
 			val oldBlockType = block.type
 			val oldData = block.blockData
 
@@ -504,12 +505,15 @@ class EventListener : Listener {
 
 		val leavesLocation = event.block.location.toCenterLocation()
 
-		val dropPlayer = Bukkit.getOnlinePlayers().filter { PlayerData.isParticipating(it.uniqueId) && it.world === leavesLocation.world }.minByOrNull {
+		val dropPlayer = Bukkit.getOnlinePlayers()
+			.filter { PlayerData.isParticipating(it.uniqueId) && it.world === leavesLocation.world }.minByOrNull {
 			it.location.distance(leavesLocation)
 		}
 
 		/* apply applefix to this leaves block for the nearest player */
-		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(event.block.state, mutableListOf(), dropPlayer) { drop ->
+		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(event.block.state,
+			mutableListOf(),
+			dropPlayer) { drop ->
 			if (drop != null) leavesLocation.world.dropItemNaturally(event.block.location, drop)
 		}
 	}
@@ -556,7 +560,7 @@ class EventListener : Listener {
 					}
 				}
 
-			/* unsheltered block place prevention */
+				/* unsheltered block place prevention */
 			} else if (UHC.game?.quirkEnabled(QuirkType.UNSHELTERED) == true) {
 				val block = event.block
 
@@ -568,7 +572,9 @@ class EventListener : Listener {
 			val pvpGame = ArenaManager.playersArena(player.uniqueId)
 
 			if (pvpGame != null && event.blockPlaced.y > 100) {
-				event.player.sendActionBar(Component.text("Height limit for building is 100", NamedTextColor.RED, TextDecoration.BOLD))
+				event.player.sendActionBar(Component.text("Height limit for building is 100",
+					NamedTextColor.RED,
+					TextDecoration.BOLD))
 				event.isCancelled = true
 			}
 		}

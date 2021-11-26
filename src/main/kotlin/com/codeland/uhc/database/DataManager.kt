@@ -1,21 +1,19 @@
 package com.codeland.uhc.database
 
 import com.codeland.uhc.core.ConfigFile
-import com.codeland.uhc.database.file.LinkDataFile
-import com.codeland.uhc.database.file.LoadoutsFile
-import com.codeland.uhc.database.file.NicknamesFile
+import com.codeland.uhc.database.file.*
 import com.codeland.uhc.lobbyPvp.Loadouts
 import com.microsoft.sqlserver.jdbc.SQLServerDriver
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 class DataManager(
 	var connection: Connection?,
 	var linkData: LinkDataFile.LinkData,
 	var loadouts: Loadouts,
-	var nicknames: NicknamesFile.Nicknames
+	var nicknames: NicknamesFile.Nicknames,
 ) {
 	fun isOnline(): Boolean {
 		return connection != null
@@ -40,10 +38,14 @@ class DataManager(
 		val nicknamesFile = NicknamesFile()
 
 		fun createDataManager(configFile: ConfigFile): CompletableFuture<DataManager> {
-			val url = configFile.databaseUrl ?: return CompletableFuture.failedFuture(Exception("No URL in config file"))
-			val databaseName = configFile.databaseName ?: return CompletableFuture.failedFuture(Exception("No database name in config file"))
-			val username = configFile.databaseUsername ?: return CompletableFuture.failedFuture(Exception("No username in config file"))
-			val password = configFile.databasePassword ?: return CompletableFuture.failedFuture(Exception("No password in config file"))
+			val url =
+				configFile.databaseUrl ?: return CompletableFuture.failedFuture(Exception("No URL in config file"))
+			val databaseName = configFile.databaseName
+				?: return CompletableFuture.failedFuture(Exception("No database name in config file"))
+			val username = configFile.databaseUsername
+				?: return CompletableFuture.failedFuture(Exception("No username in config file"))
+			val password = configFile.databasePassword
+				?: return CompletableFuture.failedFuture(Exception("No password in config file"))
 
 			return CompletableFuture.supplyAsync {
 				DriverManager.registerDriver(SQLServerDriver())
@@ -75,7 +77,10 @@ class DataManager(
 		}
 
 		fun offlineDataManager(): DataManager {
-			return DataManager(null, linkDataFile.defaultData(), loadoutsFile.defaultData(), nicknamesFile.defaultData())
+			return DataManager(null,
+				linkDataFile.defaultData(),
+				loadoutsFile.defaultData(),
+				nicknamesFile.defaultData())
 		}
 	}
 }

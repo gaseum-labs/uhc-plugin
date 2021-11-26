@@ -3,7 +3,6 @@ package com.codeland.uhc.blockfix.blockfix
 import com.codeland.uhc.blockfix.BlockFix
 import com.codeland.uhc.blockfix.SingleRange
 import org.bukkit.Material
-import org.bukkit.block.Block
 import org.bukkit.block.BlockState
 import org.bukkit.block.data.Ageable
 import org.bukkit.inventory.ItemStack

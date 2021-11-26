@@ -22,9 +22,9 @@ sealed class Result<T> {
 	}
 }
 
-class Good<T>(val value: T): Result<T>()
+class Good<T>(val value: T) : Result<T>()
 
-class Bad<T>(error: String?): Result<T>() {
+class Bad<T>(error: String?) : Result<T>() {
 	val error = error ?: "Unknown Error"
 	fun <X> forward(): Bad<X> = Bad(error)
 }

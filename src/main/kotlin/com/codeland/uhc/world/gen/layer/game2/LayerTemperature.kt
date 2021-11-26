@@ -3,7 +3,6 @@ package com.codeland.uhc.world.gen.layer.game2
 import com.codeland.uhc.util.Util
 import net.minecraft.world.level.newbiome.context.WorldGenContext
 import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer1
-import kotlin.math.abs
 import kotlin.random.Random
 
 class LayerTemperature(val seed: Long, val radius: Int) : AreaTransformer1 {
@@ -80,7 +79,9 @@ class LayerTemperature(val seed: Long, val radius: Int) : AreaTransformer1 {
 				val random = Random(seed)
 				val temperature = Temperature.randomSpecial(random)
 
-				if (i == 4 || eightChooseFive[random.nextInt(eightChooseFive.size)].ushr(if (i > 4) i - 1 else i).and(1) == 1) {
+				if (i == 4 || eightChooseFive[random.nextInt(eightChooseFive.size)].ushr(if (i > 4) i - 1 else i)
+						.and(1) == 1
+				) {
 					return temperature
 				}
 			}
@@ -92,11 +93,11 @@ class LayerTemperature(val seed: Long, val radius: Int) : AreaTransformer1 {
 	override fun a(context: WorldGenContext, x: Int, z: Int) = Region.pack(
 		when (temperature(x, z)) {
 			Temperature.TEMPERATE -> temperateRegions[context.a(temperateRegions.size)]
-			Temperature.     COLD ->      coldRegions[context.a(coldRegions.size)]
-			Temperature.      HOT ->       hotRegions[context.a(hotRegions.size)]
-			Temperature. BADLANDS ->  badlandsRegions[context.a(badlandsRegions.size)]
-			Temperature.     MEGA -> Region.GIANT_TAIGA
-			Temperature.    OCEAN -> Region.OCEAN
+			Temperature.COLD -> coldRegions[context.a(coldRegions.size)]
+			Temperature.HOT -> hotRegions[context.a(hotRegions.size)]
+			Temperature.BADLANDS -> badlandsRegions[context.a(badlandsRegions.size)]
+			Temperature.MEGA -> Region.GIANT_TAIGA
+			Temperature.OCEAN -> Region.OCEAN
 		},
 		context.a(4) == 0
 	)

@@ -1,7 +1,6 @@
 package com.codeland.uhc.discord.storage
 
 import com.codeland.uhc.discord.Channels
-import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Util.void
 import net.dv8tion.jda.api.entities.Guild
 

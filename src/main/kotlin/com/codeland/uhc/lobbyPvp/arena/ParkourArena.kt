@@ -5,9 +5,7 @@ import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.lobbyPvp.Arena
-import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.ArenaType
+import com.codeland.uhc.lobbyPvp.*
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
@@ -15,7 +13,7 @@ import org.bukkit.block.Block
 import org.bukkit.entity.Player
 import java.util.*
 
-class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID): Arena(ArenaType.PARKOUR, teams) {
+class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(ArenaType.PARKOUR, teams) {
 	lateinit var start: Block
 
 	data class ParkourData(var checkpoint: Block, var timer: Int, var timerGoing: Boolean)
@@ -99,8 +97,10 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID): Arena(Ar
 		player.gameMode = GameMode.CREATIVE
 
 		/* give items */
-		player.inventory.addItem(ItemCreator.fromType(Material.LAPIS_BLOCK).name("${ChatColor.BLUE}Lapis (Parkour Start)").create())
-		player.inventory.addItem(ItemCreator.fromType(Material.GOLD_BLOCK).name("${ChatColor.YELLOW}Gold (Checkpoint)").create())
+		player.inventory.addItem(ItemCreator.fromType(Material.LAPIS_BLOCK)
+			.name("${ChatColor.BLUE}Lapis (Parkour Start)").create())
+		player.inventory.addItem(ItemCreator.fromType(Material.GOLD_BLOCK).name("${ChatColor.YELLOW}Gold (Checkpoint)")
+			.create())
 
 		player.sendTitle("${ChatColor.GOLD}BUILD", "", 0, 20, 10)
 	}
@@ -119,9 +119,11 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID): Arena(Ar
 	override fun startingPositions(teams: ArrayList<ArrayList<UUID>>): List<List<Position>> {
 		val (centerX, centerZ) = getCenter()
 
-		return teams.map { team -> team.map {
-			Position(centerX, centerZ, 0.0f)
-		}}
+		return teams.map { team ->
+			team.map {
+				Position(centerX, centerZ, 0.0f)
+			}
+		}
 	}
 
 	override fun customStartPlayer(player: Player, playerData: PlayerData) {

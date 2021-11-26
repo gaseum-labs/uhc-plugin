@@ -2,9 +2,7 @@ package com.codeland.uhc.dropFix
 
 import com.codeland.uhc.UHCPlugin
 import org.bukkit.enchantments.Enchantment
-import org.bukkit.entity.Entity
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Player
+import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 import kotlin.random.Random
@@ -12,7 +10,7 @@ import kotlin.random.Random
 class DropFix(
 	val entityType: EntityType,
 	val dropCycle: Array<Array<DropEntry>>,
-	val rares: Array<Pair<Int, DropEntry>> = emptyArray()
+	val rares: Array<Pair<Int, DropEntry>> = emptyArray(),
 ) {
 	private val META_NAME = "Df_${entityType.name}"
 

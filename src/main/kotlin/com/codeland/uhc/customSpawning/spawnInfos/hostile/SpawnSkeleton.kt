@@ -13,7 +13,13 @@ class SpawnSkeleton : SpawnInfo() {
 			if (spawnSpace(block, 1, 3, 1)) reg(EntityType.ENDERMAN) else null
 
 		} else if (spawnSpace(block, 1, 2, 1)) {
-			if (block.biome == Biome.SNOWY_TUNDRA || block.biome == Biome.SNOWY_MOUNTAINS || block.biome == Biome.ICE_SPIKES || block.biome == Biome.FROZEN_RIVER)
+			if (block.y >= 58 && (
+				block.biome === Biome.SNOWY_TUNDRA ||
+				block.biome === Biome.SNOWY_MOUNTAINS ||
+				block.biome === Biome.ICE_SPIKES ||
+				block.biome === Biome.FROZEN_RIVER
+				)
+			)
 				reg(EntityType.STRAY)
 			else
 				reg(EntityType.SKELETON)

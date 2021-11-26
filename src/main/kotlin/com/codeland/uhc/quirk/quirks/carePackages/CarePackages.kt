@@ -4,10 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.phase.Phase
-import com.codeland.uhc.core.phase.phases.Endgame
-import com.codeland.uhc.core.phase.phases.Grace
-import com.codeland.uhc.core.phase.phases.Postgame
-import com.codeland.uhc.core.phase.phases.Shrink
+import com.codeland.uhc.core.phase.phases.*
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_COAL
@@ -16,9 +13,7 @@ import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_GOLD
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_IRON
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_LAPIS
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.pickOne
-import com.codeland.uhc.util.ItemUtil
-import com.codeland.uhc.util.ScoreboardDisplay
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.*
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.Material.*
@@ -168,7 +163,7 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 			scoreboard.setLine(i * 4 + 2, "${color}(${location.blockX}, ${location.blockZ})")
 			scoreboard.setLine(i * 4 + 3, if (i < dropIndex)
 				"${color}Dropped"
-			else if(i == dropIndex)
+			else if (i == dropIndex)
 				"${color}${Util.timeString(timer)}"
 			else
 				"${color}Awaiting"
@@ -432,7 +427,14 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 			}
 		}
 
-		fun circlePlacement(centerX: Int, centerZ: Int, minRadius: Float, maxRadius: Float, numPlaces: Int, onPlace: (Int, Int, Int) -> Unit) {
+		fun circlePlacement(
+			centerX: Int,
+			centerZ: Int,
+			minRadius: Float,
+			maxRadius: Float,
+			numPlaces: Int,
+			onPlace: (Int, Int, Int) -> Unit,
+		) {
 			val initialAngle = Math.random() * PI * 2
 			val angleIncrement = PI * 2 / numPlaces
 			val angleDeviance = angleIncrement / 4
@@ -448,20 +450,37 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 			}
 		}
 
-		fun spirePlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, spireList: Array<CarePackageUtil.SpireData>) {
+		fun spirePlacement(
+			world: World,
+			centerX: Int,
+			centerZ: Int,
+			placeRadius: Int,
+			spireList: Array<CarePackageUtil.SpireData>,
+		) {
 			circlePlacement(centerX, centerZ, placeRadius * 0.5f, placeRadius.toFloat(), spireList.size) { i, x, z ->
 				CarePackageUtil.generateSpire(world, CarePackageUtil.dropBlock(world, x, z), 5f, 14, spireList[i])
 			}
 		}
 
-		fun chestPlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, ringChests: Int, tier: Int): ArrayList<Inventory> {
+		fun chestPlacement(
+			world: World,
+			centerX: Int,
+			centerZ: Int,
+			placeRadius: Int,
+			ringChests: Int,
+			tier: Int,
+		): ArrayList<Inventory> {
 			val inventoryList = ArrayList<Inventory>()
 
 			circlePlacement(centerX, centerZ, placeRadius * 0.4f, placeRadius * 0.6f, ringChests) { _, x, z ->
-				inventoryList.add(CarePackageUtil.generateChest(world,  CarePackageUtil.dropBlock(world, x, z), dropTextColor(tier)))
+				inventoryList.add(CarePackageUtil.generateChest(world,
+					CarePackageUtil.dropBlock(world, x, z),
+					dropTextColor(tier)))
 			}
 
-			inventoryList.add(CarePackageUtil.generateChest(world, CarePackageUtil.dropBlock(world, centerX, centerZ), dropTextColor(tier)))
+			inventoryList.add(CarePackageUtil.generateChest(world,
+				CarePackageUtil.dropBlock(world, centerX, centerZ),
+				dropTextColor(tier)))
 
 			return inventoryList
 		}
@@ -469,11 +488,11 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 		fun placeSugarcane(world: World, x: Int, z: Int, height: Int): Boolean {
 			fun placable(block: Block): Boolean {
 				return block.type == GRASS_BLOCK ||
-					block.type == STONE ||
-					block.type == DIRT ||
-					block.type == SAND ||
-					block.type == RED_SAND ||
-					block.type == PODZOL
+				block.type == STONE ||
+				block.type == DIRT ||
+				block.type == SAND ||
+				block.type == RED_SAND ||
+				block.type == PODZOL
 			}
 
 			for (y in 255 downTo 0) {

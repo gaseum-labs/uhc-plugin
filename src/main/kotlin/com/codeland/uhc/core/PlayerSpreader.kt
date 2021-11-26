@@ -3,13 +3,17 @@ package com.codeland.uhc.core
 import com.codeland.uhc.util.Util
 import org.bukkit.Location
 import org.bukkit.World
-import kotlin.math.cos
-import kotlin.math.round
-import kotlin.math.sin
+import kotlin.math.*
 import kotlin.random.Random
 
 object PlayerSpreader {
-	fun findLocation(world: World, angle: Double, angleDeviation: Double, spreadRadius: Double, findY: (World, Int, Int) -> Int): Location? {
+	fun findLocation(
+		world: World,
+		angle: Double,
+		angleDeviation: Double,
+		spreadRadius: Double,
+		findY: (World, Int, Int) -> Int,
+	): Location? {
 		val minRadius = spreadRadius / 2
 
 		/* initial (i, j) within the 32 * 32 polar coordinate area is random */
@@ -75,7 +79,12 @@ object PlayerSpreader {
 	/**
 	 * @return an empty arraylist if not all spaces could be filled
 	 */
-	fun spreadPlayers(world: World, numSpaces: Int, spreadRadius: Double, findY: (World, Int, Int) -> Int): ArrayList<Location> {
+	fun spreadPlayers(
+		world: World,
+		numSpaces: Int,
+		spreadRadius: Double,
+		findY: (World, Int, Int) -> Int,
+	): ArrayList<Location> {
 		val ret = ArrayList<Location>(numSpaces)
 
 		var angle = Math.random() * 2 * Math.PI
@@ -121,7 +130,7 @@ object PlayerSpreader {
 			if (
 				chunk.getBlock(subX, usingY + 2, subZ).isEmpty &&
 				chunk.getBlock(subX, usingY + 1, subZ).isEmpty &&
-				!chunk.getBlock(subX, usingY    , subZ).isPassable
+				!chunk.getBlock(subX, usingY, subZ).isPassable
 			) return usingY
 		}
 

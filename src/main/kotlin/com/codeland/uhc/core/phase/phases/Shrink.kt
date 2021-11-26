@@ -1,11 +1,10 @@
 package com.codeland.uhc.core.phase.phases
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.WorldManager
 import net.md_5.bungee.api.ChatColor.*
 import org.bukkit.Bukkit
 import org.bukkit.World
@@ -28,9 +27,13 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 			val borderRadius = ((game.world.worldBorder.size - 1) / 2).toInt()
 
 			if (world === game.world) {
-				"${RESET}Border Radius: ${RED}${BOLD}${borderRadius} ${RESET}Reaching ${RED}${BOLD}${game.config.endgameRadius.get()} ${RESET}in ${RED}${BOLD}${Util.timeString(remainingSeconds)}"
+				"${RESET}Border Radius: ${RED}${BOLD}${borderRadius} ${RESET}Reaching ${RED}${BOLD}${game.config.endgameRadius.get()} ${RESET}in ${RED}${BOLD}${
+					Util.timeString(remainingSeconds)
+				}"
 			} else {
-				"${RESET}Overworld Border Radius: ${RED}${BOLD}${borderRadius} ${RESET}Dimension Closes in ${RED}${BOLD}${Util.timeString(remainingSeconds)}"
+				"${RESET}Overworld Border Radius: ${RED}${BOLD}${borderRadius} ${RESET}Dimension Closes in ${RED}${BOLD}${
+					Util.timeString(remainingSeconds)
+				}"
 			}
 		} else {
 			"${RESET}Endgame Y Range: ${phaseType.chatColor}${BOLD}${game.endgameLowY} - ${game.endgameHighY}"

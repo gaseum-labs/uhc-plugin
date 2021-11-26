@@ -9,10 +9,7 @@ import com.codeland.uhc.team.AbstractTeam
 import com.codeland.uhc.util.Util
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.events.ListenerPriority
-import com.comphenix.protocol.events.PacketAdapter
-import com.comphenix.protocol.events.PacketContainer
-import com.comphenix.protocol.events.PacketEvent
+import com.comphenix.protocol.events.*
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
 import net.kyori.adventure.text.format.TextColor
@@ -22,9 +19,7 @@ import net.minecraft.network.chat.ChatModifier
 import net.minecraft.network.protocol.game.*
 import net.minecraft.network.protocol.status.PacketStatusOutServerInfo
 import net.minecraft.network.protocol.status.ServerPing
-import net.minecraft.network.syncher.DataWatcher
-import net.minecraft.network.syncher.DataWatcherObject
-import net.minecraft.network.syncher.DataWatcherRegistry
+import net.minecraft.network.syncher.*
 import net.minecraft.world.inventory.Containers
 import net.minecraft.world.scores.Scoreboard
 import net.minecraft.world.scores.ScoreboardTeam
@@ -45,7 +40,7 @@ object Packet {
 		val name = CharArray(length * 2)
 
 		for (i in 0 until length) {
-			name[i * 2    ] = ChatColor.COLOR_CHAR
+			name[i * 2] = ChatColor.COLOR_CHAR
 			name[i * 2 + 1] = ChatColor.values()[countDown % 10].char
 			countDown /= 10
 		}
@@ -95,13 +90,17 @@ object Packet {
 
 		/* a new data watcher which only contains the first byte */
 		val stateDataWatcher = DataWatcher(player.handle)
-		stateDataWatcher.register(DataWatcherObject(0, DataWatcherRegistry.a), getDatawatcherByte(player.handle.dataWatcher))
+		stateDataWatcher.register(DataWatcherObject(0, DataWatcherRegistry.a),
+			getDatawatcherByte(player.handle.dataWatcher))
 
 		return PacketPlayOutEntityMetadata(player.entityId, stateDataWatcher, true)
 	}
 
 	val entriesField = DataWatcher::class.java.getDeclaredField("f")
-	init { entriesField.isAccessible = true }
+
+	init {
+		entriesField.isAccessible = true
+	}
 
 	fun getDatawatcherByte(dataWatcher: DataWatcher): Byte {
 		val entries = entriesField[dataWatcher] as Int2ObjectOpenHashMap<DataWatcher.Item<Any>>
@@ -113,7 +112,7 @@ object Packet {
 		teamPlayer: Player,
 		uhcTeam: AbstractTeam?,
 		newName: String,
-		sentPlayer: Player
+		sentPlayer: Player,
 	) {
 		sentPlayer as CraftPlayer
 		val oldName = teamPlayer.name
@@ -123,7 +122,8 @@ object Packet {
 		val isOnTeam = when {
 			teamPlayer.uniqueId == sentPlayer.uniqueId -> true
 			arena == null -> uhcTeam?.members?.contains(sentPlayer.uniqueId) == true
-			else -> arena is PvpArena && ArenaManager.playersTeam(arena, teamPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
+			else -> arena is PvpArena && ArenaManager.playersTeam(arena, teamPlayer.uniqueId)
+				?.contains(sentPlayer.uniqueId) == true
 		}
 
 		/* update fake scoreboard team */
@@ -150,7 +150,8 @@ object Packet {
 		val playerInfoDataListField = PacketPlayOutPlayerInfo::class.java.getDeclaredField("b")
 		playerInfoDataListField.isAccessible = true
 
-		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.PLAYER_INFO) {
+		protocolManager.addPacketListener(object :
+			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.PLAYER_INFO) {
 			override fun onPacketSending(event: PacketEvent) {
 				/* only change add player packets */
 				val stalePacketWrapper = event.packet
@@ -168,26 +169,27 @@ object Packet {
 
 				val sentPlayer = event.player as CraftPlayer
 
-				freshPacketWrapper.playerInfoDataLists.write(0, freshPacketWrapper.playerInfoDataLists.read(0).map { playerInfoData ->
-					val newName = playersNewName(playerInfoData.profile.uuid)
+				freshPacketWrapper.playerInfoDataLists.write(0,
+					freshPacketWrapper.playerInfoDataLists.read(0).map { playerInfoData ->
+						val newName = playersNewName(playerInfoData.profile.uuid)
 
-					fun createTeam(name: String) {
-						val sentTeam = ScoreboardTeam(Scoreboard(), name)
-						sentTeam.playerNameSet.add(name)
-						sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(sentTeam, true))
-					}
+						fun createTeam(name: String) {
+							val sentTeam = ScoreboardTeam(Scoreboard(), name)
+							sentTeam.playerNameSet.add(name)
+							sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(sentTeam, true))
+						}
 
-					createTeam(newName)
-					if (sentPlayer.uniqueId == playerInfoData.profile.uuid) createTeam(playerInfoData.profile.name)
+						createTeam(newName)
+						if (sentPlayer.uniqueId == playerInfoData.profile.uuid) createTeam(playerInfoData.profile.name)
 
-					/* initialize the team that the sentplayer will know the playerInfoData player by */
-					PlayerInfoData(
-						playerInfoData.profile.withName(newName),
-						playerInfoData.latency,
-						playerInfoData.gameMode,
-						playerInfoData.displayName
-					)
-				})
+						/* initialize the team that the sentplayer will know the playerInfoData player by */
+						PlayerInfoData(
+							playerInfoData.profile.withName(newName),
+							playerInfoData.latency,
+							playerInfoData.gameMode,
+							playerInfoData.displayName
+						)
+					})
 			}
 		})
 
@@ -200,7 +202,8 @@ object Packet {
 		val itemValueField = DataWatcher.Item::class.java.getDeclaredField("b")
 		itemValueField.isAccessible = true
 
-		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.ENTITY_METADATA) {
+		protocolManager.addPacketListener(object :
+			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.ENTITY_METADATA) {
 			override fun onPacketSending(event: PacketEvent) {
 				/* make sure this packet is sending the first byte of datawatcher info */
 				val staleItemList = packetItemListField[event.packet.handle] as MutableList<DataWatcher.Item<Any>>
@@ -210,7 +213,8 @@ object Packet {
 				val sentPlayer = event.player as CraftPlayer
 
 				val metaPlayerID = packetEntityIdField.getInt(event.packet.handle)
-				val metaPlayer = Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
+				val metaPlayer =
+					Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
 				/* only set when the game is going */
 				val sentPlayerTeam = UHC.game?.teams?.playersTeam(sentPlayer.uniqueId)
 				val metaPlayersArena = ArenaManager.playersArena(metaPlayer.uniqueId)
@@ -225,15 +229,17 @@ object Packet {
 					/* if on same team as meta player (not same player), or if game is in glow phase */
 					if (
 						(
-							metaPlayer.uniqueId != sentPlayer.uniqueId &&
-							ArenaManager.playersTeam(metaPlayersArena, metaPlayer.uniqueId)?.contains(sentPlayer.uniqueId) == true
+						metaPlayer.uniqueId != sentPlayer.uniqueId &&
+						ArenaManager.playersTeam(metaPlayersArena, metaPlayer.uniqueId)
+							?.contains(sentPlayer.uniqueId) == true
 						) ||
-						(metaPlayersArena.shouldGlow() && metaPlayersArena.teams.flatten().contains(sentPlayer.uniqueId))
+						(metaPlayersArena.shouldGlow() && metaPlayersArena.teams.flatten()
+							.contains(sentPlayer.uniqueId))
 					) {
 						itemValueField[freshItemList[0]] = byteValue.or(0x40)
 					}
 
-				/* teammate glowing */
+					/* teammate glowing */
 				} else if (
 					UHC.game != null &&
 					sentPlayer.entityId != metaPlayerID &&
@@ -251,7 +257,8 @@ object Packet {
 		val scoreboardPlayerField = PacketPlayOutScoreboardScore::class.java.getDeclaredField("a")
 		scoreboardPlayerField.isAccessible = true
 
-		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.SCOREBOARD_SCORE) {
+		protocolManager.addPacketListener(object :
+			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.SCOREBOARD_SCORE) {
 			override fun onPacketSending(event: PacketEvent) {
 				val objectiveName = scoreboardObjectiveField[event.packet.handle] as String
 				if (objectiveName != UHC.heartsObjective.name) return
@@ -264,7 +271,8 @@ object Packet {
 			}
 		})
 
-		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Status.Server.SERVER_INFO) {
+		protocolManager.addPacketListener(object :
+			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Status.Server.SERVER_INFO) {
 			override fun onPacketSending(event: PacketEvent) {
 				/* do not attempt to modify MOTD if discordstorage is not set */
 				val splashText = DiscordStorage.splashText ?: return
@@ -274,13 +282,16 @@ object Packet {
 				val oldPing = (event.packet.handle as PacketStatusOutServerInfo).b()
 
 				val newPing = ServerPing()
-				newPing.setServerInfo(ServerPing.ServerData("UHC ${Bukkit.getMinecraftVersion()}", oldPing.serverData.protocolVersion))
+				newPing.setServerInfo(ServerPing.ServerData("UHC ${Bukkit.getMinecraftVersion()}",
+					oldPing.serverData.protocolVersion))
 				newPing.setPlayerSample(oldPing.b())
 
 				val length = 48
-				val strip = String(CharArray(length + 1) { i -> if (i == length) '\n' else splashText[i % splashText.length] })
+				val strip =
+					String(CharArray(length + 1) { i -> if (i == length) '\n' else splashText[i % splashText.length] })
 
-				newPing.setMOTD(Util.nmsGradientString(strip, color0, color1).addSibling(Util.nmsGradientString(strip, color0, color1)))
+				newPing.setMOTD(Util.nmsGradientString(strip, color0, color1)
+					.addSibling(Util.nmsGradientString(strip, color0, color1)))
 				newPing.setFavicon(UHC.bot?.serverIcon ?: oldPing.d())
 
 				event.packet = PacketContainer.fromPacket(PacketStatusOutServerInfo(newPing))
@@ -288,7 +299,8 @@ object Packet {
 		})
 
 		/* set the name of every enchanting table gui */
-		protocolManager.addPacketListener(object : PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.OPEN_WINDOW) {
+		protocolManager.addPacketListener(object :
+			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.OPEN_WINDOW) {
 			override fun onPacketSending(event: PacketEvent) {
 				val packet = event.packet.handle as PacketPlayOutOpenWindow
 
@@ -297,7 +309,9 @@ object Packet {
 						PacketPlayOutOpenWindow(
 							packet.b(),
 							Containers.m,
-							Util.nmsGradientString("Replace Item to Cycle Enchants", TextColor.color(0xc40a0a), TextColor.color(0x820874))
+							Util.nmsGradientString("Replace Item to Cycle Enchants",
+								TextColor.color(0xc40a0a),
+								TextColor.color(0x820874))
 						)
 					)
 				}

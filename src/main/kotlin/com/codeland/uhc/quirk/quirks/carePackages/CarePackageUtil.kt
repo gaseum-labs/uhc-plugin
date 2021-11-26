@@ -8,19 +8,14 @@ import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.Material.*
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
-import org.bukkit.block.Chest
+import org.bukkit.block.*
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.*
-import org.bukkit.potion.PotionData
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
-import org.bukkit.potion.PotionType
+import org.bukkit.potion.*
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -61,7 +56,8 @@ object CarePackageUtil {
 
 				val angle = (atan2(offZ.toDouble(), offX.toDouble()) + PI).toFloat()
 
-				val blockRadius = radius * Util.bilinear2D(magnitudeField, 3, 3, angle / (PI.toFloat() * 2.0f), magnitudeHeight)
+				val blockRadius =
+					radius * Util.bilinear2D(magnitudeField, 3, 3, angle / (PI.toFloat() * 2.0f), magnitudeHeight)
 
 				if (sqrt(offX.toDouble().pow(2) + offZ.toDouble().pow(2)) < blockRadius) {
 					val circleBlock = world.getBlockAt(block.x + offX, y, block.z + offZ)
@@ -153,13 +149,15 @@ object CarePackageUtil {
 		return ItemStack(material, amounts[(Math.random() * amounts.size).toInt()])
 	}
 
-	private val bottlePossibilities = ItemPossibilities(arrayOf(SAND, GLASS, GLASS_BOTTLE), arrayOf(arrayOf(6, 9), arrayOf(3, 6, 9), arrayOf(3, 6)))
+	private val bottlePossibilities =
+		ItemPossibilities(arrayOf(SAND, GLASS, GLASS_BOTTLE), arrayOf(arrayOf(6, 9), arrayOf(3, 6, 9), arrayOf(3, 6)))
 
 	fun randomBottlePart(): ItemStack {
 		return randomItem(bottlePossibilities)
 	}
 
-	private val stewPossibilities = ItemPossibilities(arrayOf(RED_MUSHROOM, BROWN_MUSHROOM, OXEYE_DAISY), arrayOf(arrayOf(3,5), arrayOf(3,5), arrayOf(3,5)))
+	private val stewPossibilities = ItemPossibilities(arrayOf(RED_MUSHROOM, BROWN_MUSHROOM, OXEYE_DAISY),
+		arrayOf(arrayOf(3, 5), arrayOf(3, 5), arrayOf(3, 5)))
 
 	fun randomStewPart(): ItemStack {
 		return randomItem(stewPossibilities)
@@ -221,7 +219,11 @@ object CarePackageUtil {
 		return book
 	}
 
-	private data class PotionAssociation(val potionType: PotionType, val potionInfo: Brew.Companion.PotionInfo?, val bottleType: Material)
+	private data class PotionAssociation(
+		val potionType: PotionType,
+		val potionInfo: Brew.Companion.PotionInfo?,
+		val bottleType: Material,
+	)
 
 	private val potionAssociations = arrayOf(
 		PotionAssociation(PotionType.INSTANT_HEAL, null, SPLASH_POTION),
@@ -247,7 +249,8 @@ object CarePackageUtil {
 		}.create()
 	}
 
-	private val armorEnchantments = arrayOf(Enchantment.THORNS, Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_PROJECTILE, null)
+	private val armorEnchantments =
+		arrayOf(Enchantment.THORNS, Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_PROJECTILE, null)
 	private val diamondArmor = arrayOf(DIAMOND_HELMET, DIAMOND_CHESTPLATE, DIAMOND_LEGGINGS, DIAMOND_BOOTS)
 	private val ironArmor = arrayOf(IRON_HELMET, IRON_CHESTPLATE, IRON_LEGGINGS, IRON_BOOTS)
 
@@ -392,7 +395,8 @@ object CarePackageUtil {
 		return possibilities[(Math.random() * possibilities.size).toInt()]
 	}
 
-	private val glowStonePossibilities = ItemPossibilities(arrayOf(GLOWSTONE, GLOWSTONE_DUST), arrayOf(arrayOf(4, 6), arrayOf(12, 18)))
+	private val glowStonePossibilities =
+		ItemPossibilities(arrayOf(GLOWSTONE, GLOWSTONE_DUST), arrayOf(arrayOf(4, 6), arrayOf(12, 18)))
 
 	fun glowstone(): ItemStack {
 		return randomItem(glowStonePossibilities)
@@ -655,7 +659,8 @@ object CarePackageUtil {
 			ItemReference(3, ItemCreator.regular(FLINT_AND_STEEL)),
 			ItemReference(3, ItemCreator.regular(SADDLE)),
 			ItemReference(4, ItemCreator.regular(SHIELD)),
-			ItemReference(3, ItemCreator.regular(FISHING_ROD).enchant(Enchantment.LUCK, 3).enchant(Enchantment.LURE, 3)),
+			ItemReference(3,
+				ItemCreator.regular(FISHING_ROD).enchant(Enchantment.LUCK, 3).enchant(Enchantment.LURE, 3)),
 
 			ItemReference(32, 2, 4, ItemCreator.regular(ARROW)),
 			ItemReference(32, 2, 4, ItemCreator.regular(SPECTRAL_ARROW)),
@@ -664,27 +669,27 @@ object CarePackageUtil {
 			ItemReference(32, 2, 4, ItemCreator.regular(FEATHER)),
 
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta <PotionMeta> { meta ->
+				.customMeta<PotionMeta> { meta ->
 					meta.basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false)
 				}
 			),
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta <PotionMeta> { meta ->
+				.customMeta<PotionMeta> { meta ->
 					meta.basePotionData = PotionData(PotionType.INSTANT_HEAL, false, true)
 				}
 			),
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta <PotionMeta> { meta ->
+				.customMeta<PotionMeta> { meta ->
 					meta.basePotionData = PotionData(PotionType.REGEN, true, false)
 				}
 			),
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta <PotionMeta> { meta ->
+				.customMeta<PotionMeta> { meta ->
 					meta.basePotionData = PotionData(PotionType.SLOWNESS, false, true)
 				}
 			),
 			ItemReference(32, 2, 4, ItemCreator.regular(TIPPED_ARROW)
-				.customMeta <PotionMeta> { meta ->
+				.customMeta<PotionMeta> { meta ->
 					meta.basePotionData = PotionData(PotionType.WEAKNESS, false, false)
 				}
 			),
@@ -717,7 +722,7 @@ object CarePackageUtil {
 			ItemReference(22, 1, 3, ItemCreator.regular(BROWN_MUSHROOM)),
 			ItemReference(3, 3, 3, ItemCreator.regular(BOWL)),
 			ItemReference(
-				5, ItemCreator.regular(SUSPICIOUS_STEW).customMeta <SuspiciousStewMeta> {
+				5, ItemCreator.regular(SUSPICIOUS_STEW).customMeta<SuspiciousStewMeta> {
 					it.addCustomEffect(PotionEffect(PotionEffectType.REGENERATION, 8 * 20, 0), true)
 				}
 			),
@@ -740,7 +745,7 @@ object CarePackageUtil {
 			ItemReference(8, ItemCreator.regular(GOLDEN_APPLE)),
 
 			ItemReference(3, ItemCreator.regular(LIGHT_BLUE_SHULKER_BOX)),
-			ItemReference(18, ItemCreator.regular(ENCHANTED_BOOK).customMeta <EnchantmentStorageMeta> {
+			ItemReference(18, ItemCreator.regular(ENCHANTED_BOOK).customMeta<EnchantmentStorageMeta> {
 				val (enchant, level) = randFrom(random, bookEnchants)
 				it.addStoredEnchant(enchant, level, true)
 			})

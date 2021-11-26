@@ -1,18 +1,19 @@
 package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
-import org.bukkit.Bukkit
-import org.bukkit.Material
+import com.codeland.uhc.gui.ItemCreator
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
-import kotlin.collections.ArrayList
-import com.codeland.uhc.gui.ItemCreator
-import org.bukkit.Location
-import org.bukkit.NamespacedKey
 
-enum class KillReward(val prettyName: String, val representation: Material, val lore: Array<String>, val apply: (UUID, ArrayList<UUID>, Location) -> Unit) {
+enum class KillReward(
+	val prettyName: String,
+	val representation: Material,
+	val lore: Array<String>,
+	val apply: (UUID, ArrayList<UUID>, Location) -> Unit,
+) {
 	ABSORPTION("Absorption", Material.SHIELD, arrayOf(
 		"Gain 3 absorption hearts on kill",
 		"Increased to 4 if alone",
@@ -29,8 +30,20 @@ enum class KillReward(val prettyName: String, val representation: Material, val 
 		"1 heart to teammates"
 	), { uuid, team, _ ->
 		forPlayer(uuid, team) { alone, player, others ->
-			player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, if (alone) 400 else 300, 0, false, true, true))
-			others.forEach { it.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 100, 0, false, true, true))}
+			player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION,
+				if (alone) 400 else 300,
+				0,
+				false,
+				true,
+				true))
+			others.forEach {
+				it.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION,
+					100,
+					0,
+					false,
+					true,
+					true))
+			}
 		}
 	}),
 	APPLE("Apple Drop", Material.GOLDEN_APPLE, arrayOf(

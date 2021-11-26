@@ -1,9 +1,7 @@
 package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
-import co.aikar.commands.annotation.CommandAlias
-import co.aikar.commands.annotation.CommandCompletion
-import co.aikar.commands.annotation.Description
+import co.aikar.commands.annotation.*
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.team.NameManager
 import net.kyori.adventure.text.Component
@@ -131,7 +129,9 @@ class ParticipantTeamCommands : BaseCommand() {
 				}
 
 				var colorBlock = Component.text(char, TextColor.color(color))
-				if (char == available) colorBlock = colorBlock.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/teamColor $slot $colorIndex"))
+				if (char == available) colorBlock =
+					colorBlock.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
+						"/teamColor $slot $colorIndex"))
 
 				component = component.append(colorBlock)
 			}

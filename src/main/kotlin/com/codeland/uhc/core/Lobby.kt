@@ -2,8 +2,8 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component

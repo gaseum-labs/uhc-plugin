@@ -2,9 +2,7 @@ package com.codeland.uhc.core
 
 import com.google.gson.GsonBuilder
 import org.bukkit.ChatColor.RED
-import java.io.File
-import java.io.FileReader
-import java.io.FileWriter
+import java.io.*
 
 class ConfigFile(
 	val botToken: String? = null,

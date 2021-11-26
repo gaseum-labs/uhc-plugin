@@ -7,7 +7,7 @@ enum class WorldGenOption(
 	val prettyName: String,
 	val defaultEnabled: Boolean,
 	val description: List<Component>,
-	val representation: Material
+	val representation: Material,
 ) {
 	NETHER_FIX("Nether Fix", true, listOf(
 		Component.text("Nether wart and blazes spawn randomly in the nether")
@@ -61,12 +61,12 @@ enum class WorldGenOption(
 		Component.text("Each chunk is a different biome"),
 	), Material.DEAD_BUSH),
 
-	AMPLIFIED("Amplified", false, listOf (
+	AMPLIFIED("Amplified", false, listOf(
 		Component.text("Incredibly mountainous terrain")
 	), Material.ACACIA_SAPLING),
 
 	REVERSE_ORE_FIX("Reverse Ore Fix", false, listOf(
-	Component.text("Ores generate at the top of the world")
+		Component.text("Ores generate at the top of the world")
 	), Material.GOLD_INGOT),
 
 	TOWERS("Towers", false, listOf(

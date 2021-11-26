@@ -12,7 +12,6 @@ import com.codeland.uhc.gui.GuiManager
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.util.GoogleDDNSUpdater
 import com.codeland.uhc.util.Util.void
-import com.codeland.uhc.util.WebAddress
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.WorldGenManager
 import org.bukkit.ChatColor

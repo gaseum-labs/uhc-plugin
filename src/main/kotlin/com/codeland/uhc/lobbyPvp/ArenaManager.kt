@@ -2,19 +2,15 @@ package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.event.Chat
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
-import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
 import org.bukkit.block.Structure
-import org.bukkit.block.data.type.StructureBlock
 import org.bukkit.block.structure.UsageMode
 import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 object ArenaManager {
 	const val ARENA_STRIDE = 96
@@ -25,7 +21,8 @@ object ArenaManager {
 
 	val ongoing = ArrayList<Arena>()
 	private val typedOngoing = HashMap<ArenaType, ArrayList<Arena>>()
-	fun <T : Arena> typeList(type: ArenaType): ArrayList<T> = typedOngoing.getOrPut(type) { ArrayList() } as ArrayList<T>
+	fun <T : Arena> typeList(type: ArenaType): ArrayList<T> =
+		typedOngoing.getOrPut(type) { ArrayList() } as ArrayList<T>
 
 	val spiral = Spiral()
 

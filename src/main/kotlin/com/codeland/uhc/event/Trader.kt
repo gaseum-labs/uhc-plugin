@@ -4,9 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.util.Action
-import org.bukkit.Bukkit
-import org.bukkit.Material
-import org.bukkit.Sound
+import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.EntityType
@@ -55,14 +53,15 @@ object Trader {
 	}
 
 	private fun createTrader(block: Block) {
-		val trader = block.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), EntityType.WANDERING_TRADER) as WanderingTrader
+		val trader =
+			block.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), EntityType.WANDERING_TRADER) as WanderingTrader
 
-		trader.setRecipe(0, createTrade(1, ItemStack(      Material.OXEYE_DAISY), 4))
-		trader.setRecipe(1, createTrade(1, ItemStack(          Material.SAND, 9), 4))
+		trader.setRecipe(0, createTrade(1, ItemStack(Material.OXEYE_DAISY), 4))
+		trader.setRecipe(1, createTrade(1, ItemStack(Material.SAND, 9), 4))
 		trader.setRecipe(2, createTrade(1, ItemStack(Material.GLOWSTONE_DUST, 8), 4))
-		trader.setRecipe(3, createTrade(1, ItemStack(    Material.SUGAR_CANE, 3), 4))
-		trader.setRecipe(4, createTrade(2, ItemStack(            Material.APPLE), 3))
-		trader.setRecipe(5, createTrade(3, ItemStack(      Material.MELON_SLICE), 2))
+		trader.setRecipe(3, createTrade(1, ItemStack(Material.SUGAR_CANE, 3), 4))
+		trader.setRecipe(4, createTrade(2, ItemStack(Material.APPLE), 3))
+		trader.setRecipe(5, createTrade(3, ItemStack(Material.MELON_SLICE), 2))
 	}
 
 	private fun spawnTrader(uuid: UUID): Boolean {
@@ -71,7 +70,10 @@ object Trader {
 			val traderLocation = findTraderLocation(playerLocation)
 			if (traderLocation != null) {
 				createTrader(traderLocation)
-				Bukkit.getPlayer(uuid)?.player?.playSound(traderLocation.location, Sound.ENTITY_WANDERING_TRADER_AMBIENT, 1.0f, 1.0f)
+				Bukkit.getPlayer(uuid)?.player?.playSound(traderLocation.location,
+					Sound.ENTITY_WANDERING_TRADER_AMBIENT,
+					1.0f,
+					1.0f)
 
 				return true
 			}

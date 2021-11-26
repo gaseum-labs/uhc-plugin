@@ -1,16 +1,13 @@
 package com.codeland.uhc.discord.storage
 
-import com.codeland.uhc.util.Bad
-import com.codeland.uhc.util.Good
-import com.codeland.uhc.util.Result
+import com.codeland.uhc.util.*
 import com.codeland.uhc.util.extensions.ArrayListExtensions.removeFirst
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.reflect.KProperty
 
 data class Param(val name: String?, val value: String)
 
-abstract class StorageEntry <T> (val name: String?) {
+abstract class StorageEntry<T>(val name: String?) {
 	var value: T? = null
 
 	fun setValue(dataPart: String): Result<Unit> {

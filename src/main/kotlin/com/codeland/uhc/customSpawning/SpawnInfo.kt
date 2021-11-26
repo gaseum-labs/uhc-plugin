@@ -1,10 +1,7 @@
 package com.codeland.uhc.customSpawning
 
 import org.bukkit.Material
-import org.bukkit.World
-import org.bukkit.block.Biome
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
+import org.bukkit.block.*
 import org.bukkit.block.data.Waterlogged
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
@@ -15,7 +12,7 @@ abstract class SpawnInfo {
 	open fun onSpawn(block: Block, spawnCycle: Int, entity: LivingEntity) {}
 
 	companion object {
-		val NETHER_CAVE_Y = 31
+		const val NETHER_CAVE_Y = 31
 
 		val leaves = arrayOf(
 			Material.OAK_LEAVES,
@@ -27,11 +24,11 @@ abstract class SpawnInfo {
 		)
 
 		fun isWater(block: Block): Boolean {
-			return block.type == Material.WATER ||
-				block.type == Material.KELP ||
-				block.type == Material.SEAGRASS ||
-				block.type == Material.TALL_SEAGRASS ||
-				((block.blockData as? Waterlogged)?.isWaterlogged == true)
+			return block.type === Material.WATER ||
+			block.type === Material.KELP ||
+			block.type === Material.SEAGRASS ||
+			block.type === Material.TALL_SEAGRASS ||
+			((block.blockData as? Waterlogged)?.isWaterlogged == true)
 		}
 
 		fun spawnObstacle(block: Block): Boolean {
@@ -39,63 +36,65 @@ abstract class SpawnInfo {
 		}
 
 		fun spawnFloor(block: Block): Boolean {
-			return !block.isPassable && leaves.none { it === block.type }
+			return !block.isPassable && block.type !== Material.LILY_PAD && !leaves.contains(block.type)
 		}
 
 		fun animalSpawnFloor(block: Block): Boolean {
-			return block.type === Material.GRASS_BLOCK || block.type === Material.SAND
+			return block.type === Material.GRASS_BLOCK ||
+			block.type === Material.DIRT ||
+			block.type === Material.COARSE_DIRT ||
+			block.type === Material.PODZOL ||
+			block.type === Material.GRAVEL ||
+			block.type === Material.SAND
 		}
 
 		fun regularAllowSpawn(block: Block, lightLevel: Int): Boolean {
-			if (
-				block.world.environment !== World.Environment.NETHER &&
-				block.lightLevel > lightLevel
-			) return false
-
-			return spawnSpace(block, 1, 2, 1)
+			return block.lightLevel <= lightLevel && spawnSpace(block, 1, 2, 1)
 		}
 
 		fun desert(biome: Biome) = biome === Biome.DESERT ||
-			biome === Biome.DESERT_HILLS ||
-			biome === Biome.DESERT_LAKES
+		biome === Biome.DESERT_HILLS ||
+		biome === Biome.DESERT_LAKES
 
 		fun mountains(biome: Biome) = biome === Biome.MOUNTAINS ||
-			biome === Biome.GRAVELLY_MOUNTAINS ||
-			biome === Biome.WOODED_MOUNTAINS ||
-			biome === Biome.MODIFIED_GRAVELLY_MOUNTAINS
+		biome === Biome.GRAVELLY_MOUNTAINS ||
+		biome === Biome.WOODED_MOUNTAINS ||
+		biome === Biome.MODIFIED_GRAVELLY_MOUNTAINS
 
 		fun snowy(biome: Biome) = biome === Biome.SNOWY_TUNDRA ||
-			biome === Biome.SNOWY_MOUNTAINS ||
-			biome === Biome.ICE_SPIKES
+		biome === Biome.SNOWY_MOUNTAINS ||
+		biome === Biome.ICE_SPIKES
 
 		fun plains(biome: Biome) = biome === Biome.PLAINS ||
-			biome === Biome.SUNFLOWER_PLAINS
+		biome === Biome.SUNFLOWER_PLAINS
 
 		fun taiga(biome: Biome) = biome === Biome.GIANT_SPRUCE_TAIGA ||
-			biome === Biome.GIANT_TREE_TAIGA ||
-			biome === Biome.SNOWY_TAIGA ||
-			biome === Biome.SNOWY_TAIGA_MOUNTAINS ||
-			biome === Biome.TAIGA ||
-			biome === Biome.TAIGA_HILLS ||
-			biome === Biome.TAIGA_MOUNTAINS
+		biome === Biome.GIANT_TREE_TAIGA ||
+		biome === Biome.SNOWY_TAIGA ||
+		biome === Biome.SNOWY_TAIGA_MOUNTAINS ||
+		biome === Biome.TAIGA ||
+		biome === Biome.TAIGA_HILLS ||
+		biome === Biome.TAIGA_MOUNTAINS
 
 		fun jungle(biome: Biome) = biome === Biome.JUNGLE ||
-			biome === Biome.JUNGLE_EDGE ||
-			biome === Biome.JUNGLE_HILLS ||
-			biome === Biome.MODIFIED_JUNGLE_EDGE ||
-			biome === Biome.MODIFIED_JUNGLE ||
-			biome === Biome.BAMBOO_JUNGLE ||
-			biome === Biome.BAMBOO_JUNGLE_HILLS
+		biome === Biome.JUNGLE_EDGE ||
+		biome === Biome.JUNGLE_HILLS ||
+		biome === Biome.MODIFIED_JUNGLE_EDGE ||
+		biome === Biome.MODIFIED_JUNGLE ||
+		biome === Biome.BAMBOO_JUNGLE ||
+		biome === Biome.BAMBOO_JUNGLE_HILLS
 
 		fun animalAllowSpawn(type: EntityType, block: Block): Pair<EntityType, Boolean>? {
 			return if (when (type) {
-				EntityType.POLAR_BEAR,
-				EntityType.DONKEY,
-				EntityType.PANDA,
-				EntityType.HORSE,
-				EntityType.TURTLE -> animalAllowSpawn(block, 3, 2, 3)
-				else -> animalAllowSpawn(block, 1, 2, 1)
-			}) {
+					EntityType.POLAR_BEAR,
+					EntityType.DONKEY,
+					EntityType.PANDA,
+					EntityType.HORSE,
+					EntityType.TURTLE,
+					-> animalAllowSpawn(block, 3, 2, 3)
+					else -> animalAllowSpawn(block, 1, 2, 1)
+				}
+			) {
 				Pair(type, false)
 			} else {
 				null

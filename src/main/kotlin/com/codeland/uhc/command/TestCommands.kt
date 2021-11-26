@@ -1,13 +1,11 @@
 package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
-import co.aikar.commands.annotation.CommandAlias
-import co.aikar.commands.annotation.CommandCompletion
-import co.aikar.commands.annotation.Description
-import co.aikar.commands.annotation.Subcommand
+import co.aikar.commands.annotation.*
 import com.codeland.uhc.blockfix.BlockFixType
 import com.codeland.uhc.command.Commands.errorMessage
-import com.codeland.uhc.core.*
+import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
 import com.codeland.uhc.event.Portal
@@ -15,9 +13,9 @@ import com.codeland.uhc.event.Trader
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.Deathswap
 import com.codeland.uhc.quirk.quirks.LowGravity
+import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.util.Action
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -32,7 +30,7 @@ import java.util.*
 class TestCommands : BaseCommand() {
 	@Subcommand("next")
 	@Description("Manually go to the next round")
-	fun testNext(sender : CommandSender) {
+	fun testNext(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
 		val game = UHC.game
@@ -52,7 +50,8 @@ class TestCommands : BaseCommand() {
 		val random = Random()
 
 		for (i in 0 until 500) {
-			sender.inventory.addItem(ItemStack(Material.values()[random.nextInt(Material.values().size)], random.nextInt(64) + 1))
+			sender.inventory.addItem(ItemStack(Material.values()[random.nextInt(Material.values().size)],
+				random.nextInt(64) + 1))
 		}
 	}
 
@@ -186,13 +185,17 @@ class TestCommands : BaseCommand() {
 	fun pvpMatch(sender: CommandSender, offlinePlayer1: OfflinePlayer, offlinePlayer2: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
-		val player1 = Bukkit.getPlayer(offlinePlayer1.uniqueId) ?: return errorMessage(sender, "The Player named ${offlinePlayer1.name} could not be found")
-		val player2 = Bukkit.getPlayer(offlinePlayer2.uniqueId) ?: return errorMessage(sender, "The Player named ${offlinePlayer2.name} could not be found")
+		val player1 = Bukkit.getPlayer(offlinePlayer1.uniqueId) ?: return errorMessage(sender,
+			"The Player named ${offlinePlayer1.name} could not be found")
+		val player2 = Bukkit.getPlayer(offlinePlayer2.uniqueId) ?: return errorMessage(sender,
+			"The Player named ${offlinePlayer2.name} could not be found")
 
 		if (player1 === player2) return errorMessage(sender, "Must select two different players")
 
-		if (ArenaManager.playersArena(player1.uniqueId) != null) return errorMessage(sender, "${player1.name} is already in a game")
-		if (ArenaManager.playersArena(player2.uniqueId) != null) return errorMessage(sender, "${player2.name} is already in a game")
+		if (ArenaManager.playersArena(player1.uniqueId) != null) return errorMessage(sender,
+			"${player1.name} is already in a game")
+		if (ArenaManager.playersArena(player2.uniqueId) != null) return errorMessage(sender,
+			"${player2.name} is already in a game")
 
 		PlayerData.getPlayerData(player1.uniqueId).inLobbyPvpQueue.set(0)
 		PlayerData.getPlayerData(player2.uniqueId).inLobbyPvpQueue.set(0)
@@ -200,8 +203,8 @@ class TestCommands : BaseCommand() {
 		ArenaManager.addArena(
 			PvpArena(
 				arrayListOf(arrayListOf(player1.uniqueId),
-				arrayListOf(player2.uniqueId)
-			), PvpArena.TYPE_1V1)
+					arrayListOf(player2.uniqueId)
+				), PvpArena.TYPE_1V1)
 		)
 
 		Action.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
@@ -228,7 +231,9 @@ class TestCommands : BaseCommand() {
 		val game = UHC.game ?: return errorMessage(sender, "Game is not going")
 		val killReward = game.config.killReward.get()
 
-		killReward.apply(sender.uniqueId, game.teams.playersTeam(sender.uniqueId)?.members ?: arrayListOf(), sender.location)
+		killReward.apply(sender.uniqueId,
+			game.teams.playersTeam(sender.uniqueId)?.members ?: arrayListOf(),
+			sender.location)
 	}
 
 	@Subcommand("trader")

@@ -2,23 +2,15 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
-import com.codeland.uhc.util.ItemUtil
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextDecoration
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Material
+import com.codeland.uhc.util.Action
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
-import javax.swing.text.Style
-import kotlin.collections.ArrayList
 
 class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 	var taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, ::compassTick, 0, 10)
@@ -57,7 +49,9 @@ class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 			val team = game.teams.playersTeam(player.uniqueId)
 
 			players.forEachIndexed { j, otherPlayer ->
-				if (j != i && otherPlayer.world == player.world && (team == null || team != game.teams.playersTeam(otherPlayer.uniqueId))) {
+				if (j != i && otherPlayer.world == player.world && (team == null || team != game.teams.playersTeam(
+						otherPlayer.uniqueId))
+				) {
 					val distance = player.location.distance(otherPlayer.location)
 
 					if (distance < leastDistance) {
@@ -75,9 +69,9 @@ class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 	companion object {
 		fun isCompass(itemStack: ItemStack?): Boolean {
 			return itemStack != null &&
-				itemStack.type == Material.COMPASS &&
-				itemStack.itemMeta.hasLore() &&
-				itemStack.itemMeta.hasDisplayName()
+			itemStack.type == Material.COMPASS &&
+			itemStack.itemMeta.hasLore() &&
+			itemStack.itemMeta.hasDisplayName()
 		}
 
 		fun createCompass(): ItemStack {

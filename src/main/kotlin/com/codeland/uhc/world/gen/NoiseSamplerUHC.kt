@@ -4,20 +4,15 @@ import com.codeland.uhc.lobbyPvp.ArenaManager
 import net.minecraft.util.MathHelper
 import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.WorldChunkManager
-import net.minecraft.world.level.levelgen.ChunkGeneratorAbstract
-import net.minecraft.world.level.levelgen.NoiseModifier
-import net.minecraft.world.level.levelgen.NoiseSampler
-import net.minecraft.world.level.levelgen.NoiseSettings
-import net.minecraft.world.level.levelgen.synth.BlendedNoise
-import net.minecraft.world.level.levelgen.synth.NoiseGenerator3Handler
-import net.minecraft.world.level.levelgen.synth.NoiseGeneratorOctaves
+import net.minecraft.world.level.levelgen.*
+import net.minecraft.world.level.levelgen.synth.*
 import kotlin.math.abs
 
 class NoiseSamplerUHC(
 	val worldChunkManager: WorldChunkManager,
 	val iii: Int, val jjj: Int, val kkk: Int, val noiseSettings: NoiseSettings, val blendedNoise: BlendedNoise,
 	gen3: NoiseGenerator3Handler?, val octaves: NoiseGeneratorOctaves,
-	val noiseModifier: NoiseModifier, val amplified: Boolean, val pvp: Boolean, val finalRadius: Int
+	val noiseModifier: NoiseModifier, val amplified: Boolean, val pvp: Boolean, val finalRadius: Int,
 ) : NoiseSampler(
 	worldChunkManager, iii, jjj, kkk,
 	noiseSettings, blendedNoise,
@@ -34,6 +29,7 @@ class NoiseSamplerUHC(
 		const val FINAL_SCALE = 0.36f
 
 		val circle = FloatArray(25)
+
 		init {
 			for (i in -2..2) for (j in -2..2) {
 				circle[i + 2 + (j + 2) * 5] = 10.0f / MathHelper.c((i * i + j * j).toFloat() + 0.2f)
@@ -87,12 +83,15 @@ class NoiseSamplerUHC(
 		}
 
 		val uField = ChunkGeneratorAbstract::class.java.getDeclaredField("u")
-		init { uField.isAccessible = true }
+
+		init {
+			uField.isAccessible = true
+		}
 
 		fun inject(
 			chunkGeneratorAbstract: ChunkGeneratorAbstract,
 			worldChunkManager: WorldChunkManager,
-			amplified: Boolean, pvp: Boolean, finalRadius: Int
+			amplified: Boolean, pvp: Boolean, finalRadius: Int,
 		): NoiseSamplerUHC {
 			NoiseSamplerUHC
 			val original = uField[chunkGeneratorAbstract] as NoiseSampler

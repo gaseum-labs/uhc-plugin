@@ -1,12 +1,9 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.command.Commands
-import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
-import com.codeland.uhc.world.WorldManager
-import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.core.*
 import com.codeland.uhc.core.phase.phases.Endgame
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.util.Action
 import org.bukkit.*
 import org.bukkit.block.Block
@@ -18,7 +15,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerPortalEvent
 import java.util.*
-import kotlin.collections.HashMap
 
 class Portal : Listener {
 	companion object {
@@ -81,17 +77,28 @@ class Portal : Listener {
 				val westMost = portalExtent(portalBlock, BlockFace.WEST)
 				val eastMost = portalExtent(portalBlock, BlockFace.EAST)
 
-				Location(portalBlock.world, (eastMost.x + westMost.x) / 2.0 + 0.5, portalBlock.y.toDouble(), portalBlock.z + 0.5, 0.0F, 0.0F)
+				Location(portalBlock.world,
+					(eastMost.x + westMost.x) / 2.0 + 0.5,
+					portalBlock.y.toDouble(),
+					portalBlock.z + 0.5,
+					0.0F,
+					0.0F)
 			} else { /* z axis portal */
 				val northMost = portalExtent(portalBlock, BlockFace.NORTH)
 				val southMost = portalExtent(portalBlock, BlockFace.SOUTH)
 
-				Location(portalBlock.world, portalBlock.x + 0.5, portalBlock.y.toDouble(), (southMost.z + northMost.z) / 2.0 + 0.5, 90.0F, 0.0F)
+				Location(portalBlock.world,
+					portalBlock.x + 0.5,
+					portalBlock.y.toDouble(),
+					(southMost.z + northMost.z) / 2.0 + 0.5,
+					90.0F,
+					0.0F)
 			}
 		}
 
 		fun reducePortalCorner(portalBlock: Block): Block {
-			return portalExtent(portalExtent(portalExtent(portalBlock, BlockFace.NORTH), BlockFace.WEST), BlockFace.DOWN)
+			return portalExtent(portalExtent(portalExtent(portalBlock, BlockFace.NORTH), BlockFace.WEST),
+				BlockFace.DOWN)
 		}
 
 		/**
@@ -122,7 +129,12 @@ class Portal : Listener {
 		 * @return the block the portal is at OR the block the portal should be at
 		 * AND a status of whether to create the exit portal or not
 		 */
-		fun getExitPortalPosition(exitWorld: World, x: Int, z: Int, idealPortalY: (World, Int, Int) -> Int): Pair<Block, Boolean> {
+		fun getExitPortalPosition(
+			exitWorld: World,
+			x: Int,
+			z: Int,
+			idealPortalY: (World, Int, Int) -> Int,
+		): Pair<Block, Boolean> {
 			/* look for an existing portal at this x z coordinate */
 			val existingPortal = findExistingPortal(exitWorld, x, z)
 			if (existingPortal != null) return Pair(existingPortal, false)
@@ -194,7 +206,7 @@ class Portal : Listener {
 			/* lobby pvpers can't escape through the nether */
 			if (pvpGame != null) {
 
-			/* prevent going to the nether after nether closes */
+				/* prevent going to the nether after nether closes */
 			} else if (game.phase is Endgame) {
 				val location = player.location
 				val world = location.world
@@ -225,7 +237,9 @@ class Portal : Listener {
 
 			val entrancePortalBlock = findPlayersPortal(entity.world, entity.location)
 
-			val (exitPortalX, exitPortalZ) = setWithinBorder(exitWorld.worldBorder, entrancePortalBlock.x, entrancePortalBlock.z)
+			val (exitPortalX, exitPortalZ) = setWithinBorder(exitWorld.worldBorder,
+				entrancePortalBlock.x,
+				entrancePortalBlock.z)
 
 			val (exitPortalBlock, needCreatePortal) = getExitPortalPosition(
 				exitWorld,
@@ -284,7 +298,9 @@ class Portal : Listener {
 					for (y in 32..107) {
 						val midBlock = nether.getBlockAt(blockX, y, blockZ)
 
-						if (isAir(midBlock) && isAir(midBlock.getRelative(BlockFace.UP)) && isSolid(midBlock.getRelative(BlockFace.DOWN)))
+						if (isAir(midBlock) && isAir(midBlock.getRelative(BlockFace.UP)) && isSolid(midBlock.getRelative(
+								BlockFace.DOWN))
+						)
 							return@concentricSquare y
 					}
 

@@ -1,19 +1,15 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import org.bukkit.Chunk
-import org.bukkit.Material
-import org.bukkit.World
-import org.bukkit.block.Biome
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
+import org.bukkit.*
+import org.bukkit.block.*
 
 class SugarCanePlacer(size: Int, val lowBound: Int, val highBound: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
 		return world.isChunkGenerated(chunkX + 1, chunkZ + 1) &&
-			world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
-			world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
-			world.isChunkGenerated(chunkX - 1, chunkZ - 1)
+		world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
+		world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
+		world.isChunkGenerated(chunkX - 1, chunkZ - 1)
 	}
 
 	fun gensPerChunk(chunk: Chunk): Int {
@@ -23,7 +19,8 @@ class SugarCanePlacer(size: Int, val lowBound: Int, val highBound: Int) : Delaye
 			Biome.STONE_SHORE,
 			Biome.DESERT,
 			Biome.DESERT_HILLS,
-			Biome.DESERT_LAKES -> 2
+			Biome.DESERT_LAKES,
+			-> 2
 			else -> 1
 		}
 	}
@@ -39,17 +36,17 @@ class SugarCanePlacer(size: Int, val lowBound: Int, val highBound: Int) : Delaye
 
 				if (
 					(block.type.isAir || block.type == Material.GRASS) && (
-						down.type == Material.GRASS_BLOCK ||
-						down.type == Material.DIRT ||
-						down.type == Material.SAND ||
-						down.type == Material.PODZOL ||
-						down.type == Material.RED_SAND ||
-						down.type == Material.COARSE_DIRT
+					down.type == Material.GRASS_BLOCK ||
+					down.type == Material.DIRT ||
+					down.type == Material.SAND ||
+					down.type == Material.PODZOL ||
+					down.type == Material.RED_SAND ||
+					down.type == Material.COARSE_DIRT
 					) && (
-						isWater(down.getRelative(BlockFace.WEST)) ||
-						isWater(down.getRelative(BlockFace.EAST)) ||
-						isWater(down.getRelative(BlockFace.NORTH)) ||
-						isWater(down.getRelative(BlockFace.SOUTH))
+					isWater(down.getRelative(BlockFace.WEST)) ||
+					isWater(down.getRelative(BlockFace.EAST)) ||
+					isWater(down.getRelative(BlockFace.NORTH)) ||
+					isWater(down.getRelative(BlockFace.SOUTH))
 					)
 				) {
 					var current = block

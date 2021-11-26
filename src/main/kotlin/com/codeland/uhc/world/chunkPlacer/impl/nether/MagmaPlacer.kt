@@ -1,9 +1,7 @@
 package com.codeland.uhc.world.chunkPlacer.impl.nether
 
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import org.bukkit.Chunk
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 
@@ -23,12 +21,12 @@ class MagmaPlacer : DelayedChunkPlacer(1) {
 
 				if (
 					block.type === Material.BLACKSTONE && (
-						border(block.getRelative(BlockFace.UP)) ||
-						border(block.getRelative(BlockFace.DOWN)) ||
-						border(block.getRelative(BlockFace.NORTH)) ||
-						border(block.getRelative(BlockFace.SOUTH)) ||
-						border(block.getRelative(BlockFace.EAST)) ||
-						border(block.getRelative(BlockFace.WEST))
+					border(block.getRelative(BlockFace.UP)) ||
+					border(block.getRelative(BlockFace.DOWN)) ||
+					border(block.getRelative(BlockFace.NORTH)) ||
+					border(block.getRelative(BlockFace.SOUTH)) ||
+					border(block.getRelative(BlockFace.EAST)) ||
+					border(block.getRelative(BlockFace.WEST))
 					)
 				) {
 					block.setType(Material.MAGMA_BLOCK, false)

@@ -2,10 +2,9 @@ package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.customSpawning.SpawnInfo
 import com.codeland.uhc.dropFix.DropFix
-import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.core.phase.Phase
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack

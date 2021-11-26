@@ -9,10 +9,8 @@ import com.codeland.uhc.util.Util
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.Material.*
-import org.bukkit.entity.Entity
-import org.bukkit.entity.EntityType
+import org.bukkit.entity.*
 import org.bukkit.entity.EntityType.*
-import org.bukkit.entity.Player
 import org.bukkit.event.block.Action
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.event.player.PlayerInteractEvent
@@ -55,7 +53,7 @@ class Summoner(type: QuirkType, game: Game) : Quirk(type, game) {
 		val team = game.teams.playersTeam(event.player.uniqueId)
 		if (team != null) {
 			setCommandedBy(entity, team)
-			
+
 			entity.customName(team.apply("${team.name} ${entity.name}"))
 		}
 

@@ -2,24 +2,21 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.ItemUtil
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Material
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import java.util.*
-import kotlin.collections.HashMap
 
 class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 	init {
 		storeTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(UHCPlugin.plugin, {
 			PlayerData.playerDataList
-				.filter { (_, data) -> data.participating}
+				.filter { (_, data) -> data.participating }
 				.forEach { (uuid, _) ->
 					Action.playerAction(uuid) { player ->
 
@@ -30,11 +27,13 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 						}
 						if (
 							inventory.getItem(BACK_BUTTON)?.type != BUTTON_MATERIAL
-							|| inventory.getItem(FORWARD_BUTTON)?.type != BUTTON_MATERIAL) {
+							|| inventory.getItem(FORWARD_BUTTON)?.type != BUTTON_MATERIAL
+						) {
 							// this should almost never happen
 							addButtons(player)
 						}
-					}}
+					}
+				}
 		}, 1, 1)
 	}
 
@@ -102,8 +101,8 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 		var currentPage: Int = 0
 
 		private fun getIndices(): List<Pair<Int, Int>> {
-			val playerInventoryIndices = (9..35).filter {it !in listOf(BACK_BUTTON, FORWARD_BUTTON, EMPTY_SLOT)}
-			return (0..23).map {Pair(it, playerInventoryIndices[it])}
+			val playerInventoryIndices = (9..35).filter { it !in listOf(BACK_BUTTON, FORWARD_BUTTON, EMPTY_SLOT) }
+			return (0..23).map { Pair(it, playerInventoryIndices[it]) }
 		}
 
 		fun getAllOtherItems(): List<ItemStack> {
@@ -150,7 +149,7 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 		}
 
 		private fun newPage(): Array<ItemStack?> {
-			return Array(24) {null}
+			return Array(24) { null }
 		}
 
 		fun store(item: ItemStack) {
@@ -163,8 +162,7 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 						page[j] = item
 						if (i == currentPage) restore()
 						return
-					}
-					else if (existing.isSimilar(item) && existing.amount < existing.maxStackSize) {
+					} else if (existing.isSimilar(item) && existing.amount < existing.maxStackSize) {
 						if (existing.amount + item.amount > existing.maxStackSize) {
 							existing.amount = existing.maxStackSize;
 							item.amount -= (existing.maxStackSize - existing.amount)

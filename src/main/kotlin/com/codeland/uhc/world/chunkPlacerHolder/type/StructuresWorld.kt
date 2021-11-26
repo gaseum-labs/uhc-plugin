@@ -1,7 +1,6 @@
 package com.codeland.uhc.world.chunkPlacerHolder.type
 
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
-import com.codeland.uhc.world.chunkPlacer.impl.christmas.SnowPlacer
 import com.codeland.uhc.world.chunkPlacer.impl.structure.TowerPlacer
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolder
 

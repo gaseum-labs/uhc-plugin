@@ -2,12 +2,10 @@ package com.codeland.uhc.discord.command.commands
 
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.stats.Summary
+import com.codeland.uhc.discord.Channels
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.Channels
-import com.codeland.uhc.discord.storage.StorageEntry
-import com.codeland.uhc.discord.storage.StorageEntryInt
-import com.codeland.uhc.discord.storage.StorageEntryString
+import com.codeland.uhc.discord.storage.*
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Util.void
@@ -16,7 +14,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 class PublishSummaryCommand : MixerCommand(true) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
 		return keywordFilter(content, "publish")
-			&& replyingToDataFilter(event, false) { it.name == Channels.SUMMARY_STAGING_CHANNEL_NAME }
+		&& replyingToDataFilter(event, false) { it.name == Channels.SUMMARY_STAGING_CHANNEL_NAME }
 	}
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
@@ -24,7 +22,8 @@ class PublishSummaryCommand : MixerCommand(true) {
 		val gameEntry = StorageEntryInt("game")
 		val modeEntry = StorageEntryString("mode")
 
-		StorageEntry.massAssign(arrayListOf(seasonEntry, gameEntry, modeEntry), StorageEntry.getParams(afterKeyword(content, "publish")))
+		StorageEntry.massAssign(arrayListOf(seasonEntry, gameEntry, modeEntry),
+			StorageEntry.getParams(afterKeyword(content, "publish")))
 
 		val season = seasonEntry.value ?: return errorMessage(event, "Please specify a value for [season]")
 		val game = gameEntry.value ?: return errorMessage(event, "Please specify a value for [game]")
@@ -33,7 +32,8 @@ class PublishSummaryCommand : MixerCommand(true) {
 		val doDiscord = mode == null || mode == "discord"
 		val doDatabase = mode == null || mode == "db"
 
-		if (!doDiscord && !doDatabase) return errorMessage(event, "Unknown mode. Try 'discord', 'db', or leave empty (both)")
+		if (!doDiscord && !doDatabase) return errorMessage(event,
+			"Unknown mode. Try 'discord', 'db', or leave empty (both)")
 
 		val referenced = event.message.referencedMessage ?: return
 

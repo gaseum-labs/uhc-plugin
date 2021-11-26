@@ -1,19 +1,16 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.core.phase.phases.*
 import com.codeland.uhc.customSpawning.CustomSpawning
 import com.codeland.uhc.customSpawning.CustomSpawningType
-import com.codeland.uhc.core.phase.phases.Grace
-import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.core.phase.phases.Postgame
-import com.codeland.uhc.core.phase.phases.Shrink
 import com.codeland.uhc.database.DataManager
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.event.Portal
 import com.codeland.uhc.event.Trader
+import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.team.*
-import com.codeland.uhc.util.Action
-import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.team.Team
+import com.codeland.uhc.util.*
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.CustomGenLayers.BORDER_INCREMENT
 import com.codeland.uhc.world.gen.CustomGenLayers.OCEAN_BUFFER
@@ -22,15 +19,10 @@ import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
-import org.bukkit.scoreboard.DisplaySlot
-import org.bukkit.scoreboard.Objective
-import org.bukkit.scoreboard.RenderType
+import org.bukkit.scoreboard.*
 import java.time.Duration
 import java.util.*
-import kotlin.collections.HashMap
-import kotlin.math.ceil
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 object UHC {
 	val colorCube: ColorCube = ColorCube(4)
@@ -114,11 +106,11 @@ object UHC {
 
 				val halfWay = (currentGame.config.graceTime.get() + currentGame.config.shrinkTime.get()) * 20 / 2
 
-				if (timer < halfWay) {
-					currentGame.sugarCaneRegen.tick()
-					currentGame.leatherRegen.tick()
+				currentGame.sugarCaneRegen.tick()
+				currentGame.leatherRegen.tick()
+				currentGame.melonRegen.tick()
 
-				} else if (timer == halfWay) {
+				if (timer == halfWay) {
 					Trader.deployTraders(currentGame)
 				}
 
@@ -135,10 +127,12 @@ object UHC {
 						Title.Times.of(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
 					)
 
-					preGameTeams.teams().forEach { it.members.forEach { uuid ->
-						Bukkit.getPlayer(uuid)?.showTitle(countdownTitle)
-					}}
-
+					preGameTeams.teams().forEach {
+						it.members.forEach { uuid ->
+							Bukkit.getPlayer(uuid)?.showTitle(countdownTitle)
+						}
+					}
+					
 				} else if (timer == 0) {
 					countdownTimerGoing = false
 
@@ -234,7 +228,8 @@ object UHC {
 
 		messageStream(false, "Creating game worlds for $numPlayers player${if (numPlayers == 1) "" else "s"}")
 
-		worldRadius = (ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / BORDER_INCREMENT) * BORDER_INCREMENT).toInt() + OCEAN_BUFFER
+		worldRadius =
+			(ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / BORDER_INCREMENT) * BORDER_INCREMENT).toInt() + OCEAN_BUFFER
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
@@ -315,7 +310,13 @@ object UHC {
 						else -> locZ
 					}
 
-					if (x != locX || z != locZ) player.teleport(player.location.set(x + 0.5, player.location.y, z + 0.5))
+					if (x != locX || z != locZ) player.teleport(
+						player.location.set(
+							x + 0.5,
+							player.location.y,
+							z + 0.5
+						)
+					)
 				}
 			}
 	}

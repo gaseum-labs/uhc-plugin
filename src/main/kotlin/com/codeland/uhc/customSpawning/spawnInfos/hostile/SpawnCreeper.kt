@@ -8,6 +8,6 @@ class SpawnCreeper : SpawnInfo() {
 	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {
 		if (!regularAllowSpawn(block, 7)) return null
 
-		return if (onCycle(spawnCycle, 40)) reg(EntityType.WITCH) else reg(EntityType.CREEPER)
+		return if (onCycle(spawnCycle, 30)) reg(EntityType.WITCH) else reg(EntityType.CREEPER)
 	}
 }

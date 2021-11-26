@@ -3,26 +3,18 @@ package com.codeland.uhc.core
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
-import com.codeland.uhc.core.phase.phases.Endgame
-import com.codeland.uhc.core.phase.phases.Grace
-import com.codeland.uhc.core.phase.phases.Postgame
-import com.codeland.uhc.core.phase.phases.Shrink
+import com.codeland.uhc.core.phase.phases.*
 import com.codeland.uhc.core.stats.Ledger
-import com.codeland.uhc.customSpawning.regeneration.LeatherRegen
-import com.codeland.uhc.customSpawning.regeneration.SugarCaneRegen
+import com.codeland.uhc.customSpawning.regeneration.*
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.team.Teams
-import com.codeland.uhc.util.Action
-import com.codeland.uhc.util.UHCProperty
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.*
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
-import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.format.*
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.entity.Player
@@ -68,9 +60,11 @@ class Game(
 
 	val sugarCaneRegen = SugarCaneRegen(this)
 	val leatherRegen = LeatherRegen(this)
+	val melonRegen = MelonRegen(this)
 
 	val endgameLowY: Int
 	val endgameHighY: Int
+
 	init {
 		val (low, high) = Endgame.determineMinMax(world, config.endgameRadius.get(), 100)
 		endgameLowY = low
@@ -79,9 +73,10 @@ class Game(
 
 	/* getters */
 
-	fun <T: Quirk> getQuirk(quirkType: QuirkType): T? {
+	fun <T : Quirk> getQuirk(quirkType: QuirkType): T? {
 		return quirks[quirkType.ordinal] as T?
 	}
+
 	fun quirkEnabled(quirkType: QuirkType): Boolean {
 		return getQuirk<Quirk>(quirkType) != null
 	}
@@ -182,7 +177,8 @@ class Game(
 		} else {
 			Title.title(
 				winningTeam.apply("${winningTeam.name} has won!"),
-				winningTeam.apply(winningTeam.members.filter { PlayerData.isAlive(it) }.joinToString(", ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }),
+				winningTeam.apply(winningTeam.members.filter { PlayerData.isAlive(it) }
+					.joinToString(", ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }),
 				Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
 			)
 		}
@@ -205,7 +201,7 @@ class Game(
 	 * the last remaining team if there is exactly 1 else null,
 	 * and if a provided team is among the remaining
 	 */
-	private fun remainingTeamsFocusOn(focusTeam: Team?) : RemainingTeamsReturn {
+	private fun remainingTeamsFocusOn(focusTeam: Team?): RemainingTeamsReturn {
 		val remainingTeams = teams.teams().filter { it.members.any { member -> PlayerData.isAlive(member) } }
 
 		return RemainingTeamsReturn(
@@ -244,7 +240,7 @@ class Game(
 			Action.playerAction(uuid) { it.gameMode = GameMode.SPECTATOR }
 			end(lastTeamAlive)
 
-		/* or does it keep going */
+			/* or does it keep going */
 		} else {
 			/* apply kill reward (no team kills) */
 			if (killer != null && playerTeam !== killerTeam) {
@@ -265,7 +261,12 @@ class Game(
 		}
 	}
 
-	private fun eliminationMessages(uuid: UUID, playerTeam: Team?, numRemaining: Int, teamIsAlive: Boolean): List<Component> {
+	private fun eliminationMessages(
+		uuid: UUID,
+		playerTeam: Team?,
+		numRemaining: Int,
+		teamIsAlive: Boolean,
+	): List<Component> {
 		val playerName = Bukkit.getOfflinePlayer(uuid).name ?: "Unknown"
 
 		/* should never happen */
@@ -317,11 +318,13 @@ class Game(
 
 		player.sendTitle(
 			"${ChatColor.RED}You died!",
-			"${ChatColor.DARK_RED}${when {
-				respawn -> "Prepare to respawn"
-				killer != null -> "killed by ${killer.name}"
-				else -> ""
-			}}",
+			"${ChatColor.DARK_RED}${
+				when {
+					respawn -> "Prepare to respawn"
+					killer != null -> "killed by ${killer.name}"
+					else -> ""
+				}
+			}",
 			0, 80, 20
 		)
 	}
@@ -358,10 +361,10 @@ class Game(
 		var spawnModifier = borderRadius / 128.0
 		if (spawnModifier > 1.0) spawnModifier = 1.0
 
-		world.     monsterSpawnLimit = 0
-		world.      animalSpawnLimit = 0
-		world.     ambientSpawnLimit = (15 * spawnModifier).roundToInt().coerceAtLeast(1)
-		world. waterAnimalSpawnLimit = ( 5 * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.monsterSpawnLimit = 0
+		world.animalSpawnLimit = 0
+		world.ambientSpawnLimit = (15 * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.waterAnimalSpawnLimit = (5 * spawnModifier).roundToInt().coerceAtLeast(1)
 		world.waterAmbientSpawnLimit = (20 * spawnModifier).roundToInt().coerceAtLeast(1)
 	}
 }

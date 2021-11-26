@@ -74,7 +74,7 @@ class LayerPvp : AreaTransformer1 {
 				0 -> JUNGLE_EDGE
 				else -> SWAMP
 			}
-			8 -> when(context.a(5)) {
+			8 -> when (context.a(5)) {
 				0 -> SNOWY_TUNDRA
 				1 -> SNOWY_TAIGA
 				2 -> SNOWY_MOUNTAINS
@@ -82,11 +82,11 @@ class LayerPvp : AreaTransformer1 {
 				else -> ICE_SPIKES
 			}
 			9 -> DARK_FOREST
-			10 -> when(context.a(2)) {
+			10 -> when (context.a(2)) {
 				0 -> SAVANNA
 				else -> SHATTERED_SAVANNA
 			}
-			else -> when(context.a(2)) {
+			else -> when (context.a(2)) {
 				0 -> BADLANDS
 				else -> WOODED_BADLANDS_PLATEAU
 			}

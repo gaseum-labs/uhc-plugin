@@ -1,16 +1,12 @@
 package com.codeland.uhc.customSpawning.spawnInfos.hostile
 
 import com.codeland.uhc.customSpawning.SpawnInfo
-import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.ItemUtil
 import org.bukkit.Material
-import org.bukkit.block.Biome
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
+import org.bukkit.block.*
 import org.bukkit.entity.*
 import org.bukkit.inventory.EntityEquipment
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.Damageable
 import kotlin.random.Random
 
 class SpawnZombie : SpawnInfo() {
@@ -21,7 +17,7 @@ class SpawnZombie : SpawnInfo() {
 
 		return if (onCycle(spawnCycle, 20))
 			reg(EntityType.ZOMBIE_VILLAGER)
-		else if (block.biome == Biome.DESERT || block.biome == Biome.DESERT_HILLS || block.biome == Biome.DESERT_LAKES)
+		else if (block.y >= 58 && (block.biome === Biome.DESERT || block.biome === Biome.DESERT_HILLS || block.biome === Biome.DESERT_LAKES))
 			reg(EntityType.HUSK)
 		else if (isWater(block) && isWater(block.getRelative(BlockFace.UP)))
 			reg(EntityType.DROWNED)

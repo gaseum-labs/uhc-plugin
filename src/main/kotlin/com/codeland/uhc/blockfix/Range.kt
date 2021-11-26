@@ -12,14 +12,14 @@ sealed class Range(val prettyName: String)
 
 class SingleRange(
 	prettyName: String,
-	val onDrop: (Material, MutableList<ItemStack>, Int) -> ItemStack?
+	val onDrop: (Material, MutableList<ItemStack>, Int) -> ItemStack?,
 ) : Range(prettyName)
 
 class CountingRange(
 	prettyName: String,
 	val size: Int,
 	val onDrop: (Material, MutableList<ItemStack>) -> ItemStack?,
-	val offDrop: (Material, MutableList<ItemStack>) -> ItemStack?
+	val offDrop: (Material, MutableList<ItemStack>) -> ItemStack?,
 ) : Range(prettyName) {
 	private val metaName: String = "${prettyName}_BF"
 

@@ -1,9 +1,9 @@
 package com.codeland.uhc.discord.command.commands
 
 import com.codeland.uhc.core.stats.Summary
+import com.codeland.uhc.discord.Channels
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.Channels
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Util.void
@@ -16,7 +16,7 @@ class EditSummaryCommand : MixerCommand(true) {
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
 		Channels.messageStream(event.message).thenAccept { stream ->
-			when(val r = Summary.readSummary(stream)) {
+			when (val r = Summary.readSummary(stream)) {
 				/* replace the old summary */
 				is Good -> event.message.referencedMessage?.delete()?.queue()
 				/* old summary stands, new one is deleted and error is told */

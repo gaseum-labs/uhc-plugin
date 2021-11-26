@@ -3,7 +3,6 @@ package com.codeland.uhc.blockfix.blockfix
 import com.codeland.uhc.blockfix.BlockFix
 import com.codeland.uhc.blockfix.SingleRange
 import org.bukkit.Material
-import org.bukkit.block.Block
 import org.bukkit.block.BlockState
 import org.bukkit.inventory.ItemStack
 
@@ -21,7 +20,8 @@ class GildedFix : BlockFix("Gilded", arrayOf(
 			Material.IRON_PICKAXE,
 			Material.GOLDEN_PICKAXE,
 			Material.DIAMOND_PICKAXE,
-			Material.NETHERITE_PICKAXE -> true
+			Material.NETHERITE_PICKAXE,
+			-> true
 			else -> false
 		}
 	}

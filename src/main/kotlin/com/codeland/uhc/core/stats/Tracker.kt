@@ -9,8 +9,6 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.util.*
 import javax.imageio.ImageIO
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
@@ -19,7 +17,10 @@ class Tracker {
 	val playerLocations = HashMap<UUID, LinkedList<ArrayList<Int>>>()
 
 	fun addPlayerPosition(uuid: UUID, block: Block) {
-		val position = packPosition(block.x.toShort(), block.z.toShort(), block.world.environment, PlayerData.getPlayerData(uuid).lifeNo)
+		val position = packPosition(block.x.toShort(),
+			block.z.toShort(),
+			block.world.environment,
+			PlayerData.getPlayerData(uuid).lifeNo)
 
 		val list = playerLocations.getOrPut(uuid) {
 			val firstChunk = LinkedList<ArrayList<Int>>()
@@ -212,16 +213,19 @@ class Tracker {
 		}
 
 		private fun threeByteShort(int: Int) = (
-			if (int.ushr(11).and(1) == 1)
-				int.or(0xf000)
-			else
-				int.and(0x0fff)
-			).toShort()
+		if (int.ushr(11).and(1) == 1)
+			int.or(0xf000)
+		else
+			int.and(0x0fff)
+		).toShort()
 
 		private data class Position(val x: Short, val z: Short, val environment: Boolean, val lifeNo: Boolean)
 
 		private fun unpackPosition(packed: Int): Position {
-			return Position(threeByteShort(packed.ushr(12)), threeByteShort(packed), packed.ushr(24).and(1) == 1, packed.ushr(25).and(1) == 1)
+			return Position(threeByteShort(packed.ushr(12)),
+				threeByteShort(packed),
+				packed.ushr(24).and(1) == 1,
+				packed.ushr(25).and(1) == 1)
 		}
 
 		private fun selectColor(index: Int, total: Int): Triple<Int, Int, Int> {

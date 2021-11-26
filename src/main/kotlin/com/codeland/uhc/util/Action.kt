@@ -1,11 +1,9 @@
 package com.codeland.uhc.util
 
 import com.codeland.uhc.core.PlayerData
-import org.bukkit.Bukkit
+import org.bukkit.*
 import org.bukkit.ChatColor.BOLD
 import org.bukkit.ChatColor.GOLD
-import org.bukkit.Location
-import org.bukkit.NamespacedKey
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player

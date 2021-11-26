@@ -9,7 +9,6 @@ import net.minecraft.network.chat.ChatComponentText
 import net.minecraft.network.protocol.game.PacketPlayOutBoss
 import net.minecraft.world.BossBattle
 import org.bukkit.ChatColor
-import org.bukkit.World
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 
@@ -54,15 +53,15 @@ object UHCBar {
 						"${ChatColor.RED}Game Over"
 					} else {
 						"${ChatColor.RED}${PvpArena.typeName(arena.matchType)} PVP" +
-							if (arena.startTime >= 0) {
-								" | " + if (arena.shouldGlow()) {
-									"${ChatColor.GOLD}Glowing"
-								} else {
-									"Glowing in ${Util.timeString(arena.glowTimer)}"
-								}
+						if (arena.startTime >= 0) {
+							" | " + if (arena.shouldGlow()) {
+								"${ChatColor.GOLD}Glowing"
 							} else {
-								""
+								"Glowing in ${Util.timeString(arena.glowTimer)}"
 							}
+						} else {
+							""
+						}
 					},
 					if (arena.isOver() || arena.glowPeriod == 0 || arena.glowTimer <= 0) {
 						1.0f
@@ -89,11 +88,11 @@ object UHCBar {
 				updateBossBar(
 					player,
 					"${ChatColor.WHITE}Waiting Lobby" +
-						if (phaseType != null) {
-							" | ${phaseType.chatColor}Game Ongoing: ${phaseType.prettyName}"
-						} else {
-							""
-						},
+					if (phaseType != null) {
+						" | ${phaseType.chatColor}Game Ongoing: ${phaseType.prettyName}"
+					} else {
+						""
+					},
 					phase?.updateBarLength(phase.remainingTicks) ?: 1.0f,
 					BossBattle.BarColor.g
 				)

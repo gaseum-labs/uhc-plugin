@@ -1,10 +1,10 @@
 package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
+import com.codeland.uhc.util.Action
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -35,11 +35,11 @@ class Flying(type: QuirkType, game: Game) : Quirk(type, game) {
 
 			player.inventory.addItem(
 				ItemCreator.fromType(Material.FIREWORK_ROCKET)
-				.customMeta <FireworkMeta> { it.power = 2 }
-				.lore("Given from Flying Quirk")
-				.name("${ChatColor.GOLD}UHC Rocket")
-				.amount(numRockets)
-				.create()
+					.customMeta<FireworkMeta> { it.power = 2 }
+					.lore("Given from Flying Quirk")
+					.name("${ChatColor.GOLD}UHC Rocket")
+					.amount(numRockets)
+					.create()
 			)
 		}
 

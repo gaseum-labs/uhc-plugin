@@ -5,17 +5,12 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.event.Portal
-import com.codeland.uhc.util.Action
-import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.*
 import net.md_5.bungee.api.ChatColor.GOLD
 import net.md_5.bungee.api.ChatColor.RESET
 import net.minecraft.network.protocol.game.PacketPlayOutBlockBreakAnimation
-import org.bukkit.Bukkit
+import org.bukkit.*
 import org.bukkit.ChatColor.BOLD
-import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.TileState
 import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlock
@@ -165,10 +160,13 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 				PlayerData.playerDataList.mapNotNull { (uuid, playerData) -> playerData.offlineZombie }
 					.filter { it.location.y > max }
 					.forEach { zombie ->
-					val x = zombie.location.blockX
-					val z = zombie.location.blockX
-					zombie.teleport(Location(game.world, x + 0.5, Util.topBlockY(game.world, x, z).toDouble(), z + 0.5))
-				}
+						val x = zombie.location.blockX
+						val z = zombie.location.blockX
+						zombie.teleport(Location(game.world,
+							x + 0.5,
+							Util.topBlockY(game.world, x, z).toDouble(),
+							z + 0.5))
+					}
 			}
 		}
 
@@ -179,14 +177,18 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 				skybaseBlock.block.setType(Material.AIR, skybaseBlock.updateOnDestroy)
 
 				if (skybaseBlock.updateOnDestroy) {
-					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, 10)
+					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID,
+						(skybaseBlock.block as CraftBlock).position,
+						10)
 					animationPlayers.forEach { (it as CraftPlayer).handle.b.sendPacket(packet) }
 				}
 
 				true
 			} else {
 				if (skybaseBlock.updateOnDestroy) {
-					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID, (skybaseBlock.block as CraftBlock).position, ticksLeftToAnim(skybaseBlock))
+					val packet = PacketPlayOutBlockBreakAnimation(skybaseBlock.fakeEntityID,
+						(skybaseBlock.block as CraftBlock).position,
+						ticksLeftToAnim(skybaseBlock))
 					animationPlayers.forEach { (it as CraftPlayer).handle.b.sendPacket(packet) }
 				}
 

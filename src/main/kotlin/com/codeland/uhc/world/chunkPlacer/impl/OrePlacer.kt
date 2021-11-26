@@ -1,9 +1,7 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import org.bukkit.Chunk
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import kotlin.random.Random
@@ -14,7 +12,7 @@ class OrePlacer(
 	private val high: Int,
 	private val amount: Int,
 	val type: Material,
-	val deepType: Material
+	val deepType: Material,
 ) : DelayedChunkPlacer(size) {
 	val random = Random(size + low + high + amount + type.ordinal + uniqueSeed)
 
@@ -29,12 +27,12 @@ class OrePlacer(
 		randomPosition(chunk, low, high) { block, _, _, _ ->
 			if (
 				isStone(block) && (
-					isOpen(block.getRelative(BlockFace. DOWN).type) ||
-					isOpen(block.getRelative(BlockFace.   UP).type) ||
-					isOpen(block.getRelative(BlockFace. EAST).type) ||
-					isOpen(block.getRelative(BlockFace. WEST).type) ||
-					isOpen(block.getRelative(BlockFace.NORTH).type) ||
-					isOpen(block.getRelative(BlockFace.SOUTH).type)
+				isOpen(block.getRelative(BlockFace.DOWN).type) ||
+				isOpen(block.getRelative(BlockFace.UP).type) ||
+				isOpen(block.getRelative(BlockFace.EAST).type) ||
+				isOpen(block.getRelative(BlockFace.WEST).type) ||
+				isOpen(block.getRelative(BlockFace.NORTH).type) ||
+				isOpen(block.getRelative(BlockFace.SOUTH).type)
 				)
 			) {
 				/* place the first ore in the vein */
@@ -89,14 +87,14 @@ class OrePlacer(
 
 	fun isStone(block: Block): Boolean {
 		return block.type === Material.STONE ||
-			block.type === Material.ANDESITE ||
-			block.type === Material.GRANITE ||
-			block.type === Material.DIORITE ||
-			block.type === Material.TUFF ||
-			block.type === Material.DEEPSLATE ||
-			block.type === Material.BLACKSTONE ||
-			block.type === Material.BASALT ||
-			block.type === Material.MAGMA_BLOCK
+		block.type === Material.ANDESITE ||
+		block.type === Material.GRANITE ||
+		block.type === Material.DIORITE ||
+		block.type === Material.TUFF ||
+		block.type === Material.DEEPSLATE ||
+		block.type === Material.BLACKSTONE ||
+		block.type === Material.BASALT ||
+		block.type === Material.MAGMA_BLOCK
 	}
 
 	fun placeOre(block: Block): Block {

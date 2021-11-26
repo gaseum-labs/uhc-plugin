@@ -6,7 +6,6 @@ import kotlin.random.Random
 enum class ChunkPlacerHolderType(val chunkPlacerHolder: ChunkPlacerHolder) {
 	CHRISTMAS(ChristmasWorld()),
 	HALLOWEEN_WORLD(HalloweenWorld()),
-	MELON_FIX(MelonFix()),
 	MUSHROOM_OXEYE_FIX(MushroomOxeyeFix()),
 	NETHER_FIX(NetherFix()),
 	NETHER_INDICATORS(NetherIndicators()),

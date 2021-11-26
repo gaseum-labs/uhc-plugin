@@ -3,40 +3,40 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.Util
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Material
+import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BrewingStand
-import org.bukkit.entity.Item
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.inventory.BrewEvent
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryDragEvent
-import org.bukkit.event.inventory.InventoryMoveItemEvent
-import org.bukkit.inventory.BrewerInventory
-import org.bukkit.inventory.Inventory
-import org.bukkit.inventory.ItemStack
+import org.bukkit.event.inventory.*
+import org.bukkit.inventory.*
 import org.bukkit.inventory.meta.PotionMeta
-import org.bukkit.potion.PotionData
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
-import org.bukkit.potion.PotionType
+import org.bukkit.potion.*
 
 class Brew : Listener {
 	companion object {
-		fun createCustomPotion(potionType: PotionType, material: Material, name: String, duration: Int, amplifier: Int): ItemCreator {
+		fun createCustomPotion(
+			potionType: PotionType,
+			material: Material,
+			name: String,
+			duration: Int,
+			amplifier: Int,
+		): ItemCreator {
 			val effectType = potionType.effectType ?: PotionEffectType.POISON
 
-			return ItemCreator.fromType(material).name("${ChatColor.RESET}Potion of $name").customMeta <PotionMeta> { meta ->
-				meta.color = effectType.color
-				meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)
-			}
+			return ItemCreator.fromType(material).name("${ChatColor.RESET}Potion of $name")
+				.customMeta<PotionMeta> { meta ->
+					meta.color = effectType.color
+					meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)
+				}
 		}
 
-		fun externalCreatePotion(material: Material, info: PotionInfo, extended: Boolean, amplified: Boolean): ItemCreator {
+		fun externalCreatePotion(
+			material: Material,
+			info: PotionInfo,
+			extended: Boolean,
+			amplified: Boolean,
+		): ItemCreator {
 			return createCustomPotion(
 				info.type,
 				material,
@@ -46,10 +46,16 @@ class Brew : Listener {
 		}
 
 		fun createDefaultPotion(material: Material, potionData: PotionData): ItemCreator {
-			return ItemCreator.fromType(material).customMeta <PotionMeta> { it.basePotionData = potionData }
+			return ItemCreator.fromType(material).customMeta<PotionMeta> { it.basePotionData = potionData }
 		}
 
-		class PotionInfo(val type: PotionType, val name: String, val baseDuration: Int, val extendedDuration: Int, val amplifiedDuration: Int)
+		class PotionInfo(
+			val type: PotionType,
+			val name: String,
+			val baseDuration: Int,
+			val extendedDuration: Int,
+			val amplifiedDuration: Int,
+		)
 
 		val POISON_INFO = PotionInfo(PotionType.POISON, "Poison", 150, 325, 144)
 		val REGEN_INFO = PotionInfo(PotionType.REGEN, "Regeneration", 250, 500, 225)
@@ -106,7 +112,7 @@ class Brew : Listener {
 			val extend: Boolean,
 			val upgrade: Boolean,
 			val splash: Boolean,
-			val creator: (ItemStack) -> ItemStack
+			val creator: (ItemStack) -> ItemStack,
 		) {
 			fun applies(inventory: BrewerInventory): Boolean {
 				return ingredient == inventory.ingredient?.type && containsAffected(inventory)
@@ -124,15 +130,21 @@ class Brew : Listener {
 				val upgraded = isUpgraded(itemStack)
 
 				return isType(itemStack, affectedType) &&
-					(!extend || (!extended && !upgraded)) &&
-					(!upgrade || (!upgraded && !extended)) &&
-					(!splash || !isSplash(itemStack)) &&
-					(!extended || createdType.isExtendable) &&
-					(!upgraded || createdType.isUpgradeable)
+				(!extend || (!extended && !upgraded)) &&
+				(!upgrade || (!upgraded && !extended)) &&
+				(!splash || !isSplash(itemStack)) &&
+				(!extended || createdType.isExtendable) &&
+				(!upgraded || createdType.isUpgradeable)
 			}
 		}
 
-		private fun baseCreatePath(ingredient: Material, affectedType: PotionType, createdType: PotionType, modifiers: Int, creator: (ItemStack) -> ItemStack): PotionPath {
+		private fun baseCreatePath(
+			ingredient: Material,
+			affectedType: PotionType,
+			createdType: PotionType,
+			modifiers: Int,
+			creator: (ItemStack) -> ItemStack,
+		): PotionPath {
 			val extend = modifiers.and(1) == 1
 			val upgrade = modifiers.shr(1).and(1) == 1
 			val splash = modifiers.shr(2).and(1) == 1
@@ -152,17 +164,34 @@ class Brew : Listener {
 			)
 		}
 
-		fun createCustomPath(ingredient: Material, affectedType: PotionType, info: PotionInfo, modifiers: Int): PotionPath {
+		fun createCustomPath(
+			ingredient: Material,
+			affectedType: PotionType,
+			info: PotionInfo,
+			modifiers: Int,
+		): PotionPath {
 			return baseCreatePath(ingredient, affectedType, info.type, modifiers) { itemStack ->
 				val (extended, upgraded, splashed) = finalModifiers(itemStack, modifiers)
-				createCustomPotion(info.type, if (splashed) Material.SPLASH_POTION else Material.POTION, info.name, when { extended -> info.extendedDuration; upgraded -> info.amplifiedDuration; else -> info.baseDuration }, if (upgraded) 1 else 0).create()
+				createCustomPotion(info.type,
+					if (splashed) Material.SPLASH_POTION else Material.POTION,
+					info.name,
+					when {
+						extended -> info.extendedDuration; upgraded -> info.amplifiedDuration; else -> info.baseDuration
+					},
+					if (upgraded) 1 else 0).create()
 			}
 		}
 
-		fun createDefaultPath(ingredient: Material, affectedType: PotionType, potionType: PotionType, modifiers: Int): PotionPath {
+		fun createDefaultPath(
+			ingredient: Material,
+			affectedType: PotionType,
+			potionType: PotionType,
+			modifiers: Int,
+		): PotionPath {
 			return baseCreatePath(ingredient, affectedType, potionType, modifiers) { itemStack ->
 				val (extended, upgraded, splashed) = finalModifiers(itemStack, modifiers)
-				createDefaultPotion(if (splashed) Material.SPLASH_POTION else Material.POTION, PotionData(potionType, extended, upgraded)).create()
+				createDefaultPotion(if (splashed) Material.SPLASH_POTION else Material.POTION,
+					PotionData(potionType, extended, upgraded)).create()
 			}
 		}
 
@@ -172,26 +201,26 @@ class Brew : Listener {
 		)
 
 		val customPotionPathList = arrayOf(
-			createCustomPath(      Material.REDSTONE, PotionType.POISON, POISON_INFO,  PATH_EXTEND),
+			createCustomPath(Material.REDSTONE, PotionType.POISON, POISON_INFO, PATH_EXTEND),
 			createCustomPath(Material.GLOWSTONE_DUST, PotionType.POISON, POISON_INFO, PATH_UPGRADE),
-			createCustomPath(     Material.GUNPOWDER, PotionType.POISON, POISON_INFO,  PATH_SPLASH),
+			createCustomPath(Material.GUNPOWDER, PotionType.POISON, POISON_INFO, PATH_SPLASH),
 
 			createDefaultPath(Material.FERMENTED_SPIDER_EYE, PotionType.POISON, PotionType.INSTANT_DAMAGE, 0),
 
-			createCustomPath(      Material.REDSTONE,  PotionType.REGEN,  REGEN_INFO,  PATH_EXTEND),
-			createCustomPath(Material.GLOWSTONE_DUST,  PotionType.REGEN,  REGEN_INFO, PATH_UPGRADE),
-			createCustomPath(     Material.GUNPOWDER,  PotionType.REGEN,  REGEN_INFO,  PATH_SPLASH),
+			createCustomPath(Material.REDSTONE, PotionType.REGEN, REGEN_INFO, PATH_EXTEND),
+			createCustomPath(Material.GLOWSTONE_DUST, PotionType.REGEN, REGEN_INFO, PATH_UPGRADE),
+			createCustomPath(Material.GUNPOWDER, PotionType.REGEN, REGEN_INFO, PATH_SPLASH),
 
 			createCustomPath(Material.FERMENTED_SPIDER_EYE, PotionType.WATER, WEAKNESS_INFO, 0),
-			createCustomPath(      Material.REDSTONE, PotionType.WEAKNESS, WEAKNESS_INFO, PATH_EXTEND),
-			createCustomPath(     Material.GUNPOWDER, PotionType.WEAKNESS, WEAKNESS_INFO,  PATH_SPLASH),
+			createCustomPath(Material.REDSTONE, PotionType.WEAKNESS, WEAKNESS_INFO, PATH_EXTEND),
+			createCustomPath(Material.GUNPOWDER, PotionType.WEAKNESS, WEAKNESS_INFO, PATH_SPLASH),
 		)
 
 		val bannedPaths = arrayOf(
-			createCustomPath(  Material.BLAZE_POWDER,  PotionType.AWKWARD, STRENGTH_INFO,            0),
-			createCustomPath(      Material.REDSTONE, PotionType.STRENGTH, STRENGTH_INFO,  PATH_EXTEND),
+			createCustomPath(Material.BLAZE_POWDER, PotionType.AWKWARD, STRENGTH_INFO, 0),
+			createCustomPath(Material.REDSTONE, PotionType.STRENGTH, STRENGTH_INFO, PATH_EXTEND),
 			createCustomPath(Material.GLOWSTONE_DUST, PotionType.STRENGTH, STRENGTH_INFO, PATH_UPGRADE),
-			createCustomPath(     Material.GUNPOWDER, PotionType.STRENGTH, STRENGTH_INFO,  PATH_SPLASH)
+			createCustomPath(Material.GUNPOWDER, PotionType.STRENGTH, STRENGTH_INFO, PATH_SPLASH)
 		)
 	}
 
@@ -270,10 +299,12 @@ class Brew : Listener {
 	fun onInventoryDrag(event: InventoryDragEvent) {
 		internalOnInventory(event.inventory)
 	}
+
 	@EventHandler
 	fun onInventoryClick(event: InventoryClickEvent) {
 		internalOnInventory(event.inventory)
 	}
+
 	@EventHandler
 	fun onHopper(event: InventoryMoveItemEvent) {
 		internalOnInventory(event.destination)

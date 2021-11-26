@@ -41,9 +41,9 @@ class GenLayerCombiner : AreaTransformer2, AreaTransformerIdentity {
 		val subX = Util.mod(Util.mod(x, 2) - 1, 2)
 		val subZ = Util.mod(Util.mod(z, 2) - 1, 2)
 
-		val up    = zoom(x - Util.mod(x, 2), 2)
-		val left  = zoom(z - Util.mod(z, 2), 2)
-		val down  = zoom(x + Util.mod(x, 2), 2)
+		val up = zoom(x - Util.mod(x, 2), 2)
+		val left = zoom(z - Util.mod(z, 2), 2)
+		val down = zoom(x + Util.mod(x, 2), 2)
 		val right = zoom(z + Util.mod(z, 2), 2)
 
 		val ul = area.a(up, left)
@@ -58,10 +58,10 @@ class GenLayerCombiner : AreaTransformer2, AreaTransformerIdentity {
 		return if (((subX == 0 && subZ == 0) || (subX == 1 && subZ == 1)) && ur == dl) {
 			ur
 
-		/* [*] [X]
-		 *
-		 * [X] [*]
-		 */
+			/* [*] [X]
+			 *
+			 * [X] [*]
+			 */
 		} else if (((subX == 1 && subZ == 0) || (subX == 0 && subZ == 1)) && ul == dr) {
 			ul
 

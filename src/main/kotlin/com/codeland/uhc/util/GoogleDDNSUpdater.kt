@@ -1,17 +1,14 @@
 package com.codeland.uhc.util
 
 import com.codeland.uhc.core.ConfigFile
-import java.net.Authenticator
-import java.net.InetAddress
-import java.net.PasswordAuthentication
-import java.net.URI
+import java.net.*
 import java.net.http.HttpClient
 import java.net.http.HttpClient.Redirect
 import java.net.http.HttpClient.Version
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 object GoogleDDNSUpdater {
 	fun sendRequest(
@@ -19,7 +16,7 @@ object GoogleDDNSUpdater {
 		password: String,
 		domain: String,
 		newAddress: String,
-		oldAddress: String?
+		oldAddress: String?,
 	): CompletableFuture<String> {
 		val client = HttpClient
 			.newBuilder()
@@ -49,9 +46,12 @@ object GoogleDDNSUpdater {
 	}
 
 	fun updateDomain(configFile: ConfigFile): CompletableFuture<String> {
-		val username = configFile.ddnsUsername ?: return CompletableFuture.failedFuture(Exception("No ddnsUsername in config file"))
-		val password = configFile.ddnsPassword ?: return CompletableFuture.failedFuture(Exception("No ddnsPassword in config file"))
-		val domain = configFile.ddnsDomain ?: return CompletableFuture.failedFuture(Exception("No ddnsDomain in config file"))
+		val username = configFile.ddnsUsername
+			?: return CompletableFuture.failedFuture(Exception("No ddnsUsername in config file"))
+		val password = configFile.ddnsPassword
+			?: return CompletableFuture.failedFuture(Exception("No ddnsPassword in config file"))
+		val domain =
+			configFile.ddnsDomain ?: return CompletableFuture.failedFuture(Exception("No ddnsDomain in config file"))
 
 		return WebAddress.getLocalAddressAsync().thenApply { newAddress ->
 			val oldAddress = InetAddress.getByName(domain)?.hostAddress

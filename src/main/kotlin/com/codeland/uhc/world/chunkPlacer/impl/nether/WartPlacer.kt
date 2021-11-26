@@ -3,9 +3,7 @@ package com.codeland.uhc.world.chunkPlacer.impl.nether
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.block.Biome
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
+import org.bukkit.block.*
 import org.bukkit.block.data.Ageable
 
 class WartPlacer(size: Int) : ImmediateChunkPlacer(size) {
@@ -18,7 +16,7 @@ class WartPlacer(size: Int) : ImmediateChunkPlacer(size) {
 					block.setType(Material.NETHER_WART, false)
 
 					val data = block.blockData as Ageable
-					data.age =  data.maximumAge
+					data.age = data.maximumAge
 					block.blockData = data
 
 					under.setType(Material.SOUL_SAND, false)

@@ -5,20 +5,18 @@ import com.codeland.uhc.customSpawning.SpawnInfo
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.block.Biome
-import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
+import org.bukkit.block.*
 import org.bukkit.entity.Ageable
 import org.bukkit.entity.EntityType
 import kotlin.random.Random
 
-class LeatherRegen(game: Game): Regen(game, 5, 540) {
+class LeatherRegen(game: Game) : Regen(game, 5, 570) {
 	private fun spawnOn(block: Block): Boolean {
 		return block.type === Material.GRASS_BLOCK ||
-			block.type === Material.DIRT ||
-			block.type === Material.COARSE_DIRT ||
-			block.type === Material.PODZOL ||
-			block.type === Material.GRAVEL
+		block.type === Material.DIRT ||
+		block.type === Material.COARSE_DIRT ||
+		block.type === Material.PODZOL ||
+		block.type === Material.GRAVEL
 	}
 
 	private fun entityType(block: Block): EntityType {
@@ -26,9 +24,11 @@ class LeatherRegen(game: Game): Regen(game, 5, 540) {
 			Biome.MOUNTAINS,
 			Biome.WOODED_MOUNTAINS,
 			Biome.GRAVELLY_MOUNTAINS,
-			Biome.MODIFIED_GRAVELLY_MOUNTAINS -> EntityType.LLAMA
+			Biome.MODIFIED_GRAVELLY_MOUNTAINS,
+			-> EntityType.LLAMA
 			Biome.PLAINS,
-			Biome.SUNFLOWER_PLAINS -> if (Random(block.blockKey).nextBoolean()) EntityType.HORSE else EntityType.DONKEY
+			Biome.SUNFLOWER_PLAINS,
+			-> if (Random(block.blockKey).nextBoolean()) EntityType.HORSE else EntityType.DONKEY
 			else -> EntityType.COW
 		}
 	}
@@ -36,7 +36,8 @@ class LeatherRegen(game: Game): Regen(game, 5, 540) {
 	private fun spawnBox(block: Block, type: EntityType): Boolean {
 		return when (type) {
 			EntityType.HORSE,
-			EntityType.DONKEY -> SpawnInfo.spawnBox(block, 3, 2, 3)
+			EntityType.DONKEY,
+			-> SpawnInfo.spawnBox(block, 3, 2, 3)
 			else -> SpawnInfo.spawnBox(block, 1, 2, 1)
 		}
 	}

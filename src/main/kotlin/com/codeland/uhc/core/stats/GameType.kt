@@ -1,8 +1,6 @@
 package com.codeland.uhc.core.stats
 
-import com.codeland.uhc.util.Bad
-import com.codeland.uhc.util.Good
-import com.codeland.uhc.util.Result
+import com.codeland.uhc.util.*
 import org.bukkit.Material
 
 enum class GameType(val representation: Material, val color: Int) {

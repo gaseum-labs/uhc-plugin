@@ -1,12 +1,8 @@
 package com.codeland.uhc.customSpawning.spawnInfos.hostile
 
 import com.codeland.uhc.customSpawning.SpawnInfo
-import com.codeland.uhc.util.Util
 import org.bukkit.block.Block
-import org.bukkit.entity.Entity
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.LivingEntity
-import org.bukkit.entity.MagmaCube
+import org.bukkit.entity.*
 
 class SpawnMagmaCube : SpawnInfo() {
 	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {

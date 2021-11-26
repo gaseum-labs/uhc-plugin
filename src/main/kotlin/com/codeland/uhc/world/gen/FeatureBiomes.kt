@@ -4,12 +4,9 @@ import com.codeland.uhc.world.gen.cave.WorldGenCavesSuperNether
 import com.google.common.collect.ImmutableCollection
 import net.minecraft.core.IRegistry
 import net.minecraft.data.RegistryGeneration
-import net.minecraft.data.worldgen.WorldGenCarvers
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.ResourceKey
-import net.minecraft.util.valueproviders.ConstantFloat
-import net.minecraft.util.valueproviders.TrapezoidFloat
-import net.minecraft.util.valueproviders.UniformFloat
+import net.minecraft.util.valueproviders.*
 import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.BiomeSettingsGeneration
 import net.minecraft.world.level.block.Blocks
@@ -20,7 +17,7 @@ import net.minecraft.world.level.levelgen.heightproviders.BiasedToBottomHeight
 import net.minecraft.world.level.levelgen.heightproviders.UniformHeight
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import java.lang.reflect.Constructor
-import java.util.function.Supplier
+import java.util.function.*
 
 object FeatureBiomes {
 	val biomeRegistryField = RegistryGeneration::class.java.getDeclaredField("i")
@@ -36,7 +33,8 @@ object FeatureBiomes {
 	val lField = BiomeBase::class.java.getDeclaredField("l")
 	val mField = BiomeBase::class.java.getDeclaredField("m")
 
-	val biomeSettingsGenerationConstructor = BiomeSettingsGeneration::class.java.declaredConstructors[0] as Constructor<BiomeSettingsGeneration>
+	val biomeSettingsGenerationConstructor =
+		BiomeSettingsGeneration::class.java.declaredConstructors[0] as Constructor<BiomeSettingsGeneration>
 
 	val dField = BiomeSettingsGeneration::class.java.getDeclaredField("d")
 	val eField = BiomeSettingsGeneration::class.java.getDeclaredField("e")
@@ -45,7 +43,7 @@ object FeatureBiomes {
 	val hField = BiomeSettingsGeneration::class.java.getDeclaredField("h")
 
 	init {
-	    biomeRegistryField.isAccessible = true
+		biomeRegistryField.isAccessible = true
 		biomeMapField.isAccessible = true
 
 		biomeBaseConstructor.isAccessible = true
@@ -174,7 +172,8 @@ object FeatureBiomes {
 			BiomeNo.SOUL_SAND_VALLEY,
 			BiomeNo.CRIMSON_FOREST,
 			BiomeNo.WARPED_FOREST,
-			BiomeNo.BASALT_DELTAS -> true
+			BiomeNo.BASALT_DELTAS,
+			-> true
 			else -> false
 		}
 	}
@@ -189,7 +188,8 @@ object FeatureBiomes {
 			val original = biomeRegistry.d(key)
 			val originalSettings = lField[original] as BiomeSettingsGeneration
 
-			val originalCarverMap = eField[originalSettings] as Map<WorldGenStage.Features, ImmutableCollection<Supplier<WorldGenCarverWrapper<*>>>>
+			val originalCarverMap =
+				eField[originalSettings] as Map<WorldGenStage.Features, ImmutableCollection<Supplier<WorldGenCarverWrapper<*>>>>
 			val newCarverMap = HashMap<WorldGenStage.Features, ArrayList<Supplier<WorldGenCarverWrapper<*>>>>()
 
 			originalCarverMap.forEach { (key, value) ->

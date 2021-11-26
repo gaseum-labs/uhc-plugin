@@ -9,7 +9,7 @@ class GenLayerExpandNether : AreaTransformer4 {
 			/* half way either wastes or delta */
 			if (context.a(2) == 0) 8 else 173
 
-		/* pass through other biomes*/
+			/* pass through other biomes*/
 		} else {
 			p5
 		}

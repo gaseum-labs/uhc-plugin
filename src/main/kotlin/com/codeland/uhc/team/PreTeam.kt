@@ -7,7 +7,7 @@ import java.util.*
 class PreTeam(
 	color0: TextColor,
 	color1: TextColor,
-	members: ArrayList<UUID>
+	members: ArrayList<UUID>,
 ) : AbstractTeam(
 	arrayOf(color0, color1),
 	members

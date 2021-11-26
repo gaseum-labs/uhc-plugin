@@ -2,23 +2,17 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.database.DataManager
-import com.codeland.uhc.database.file.NicknamesFile
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.FancyText
 import io.papermc.paper.event.player.AsyncChatEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.Style
-import net.kyori.adventure.text.format.TextColor
-import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.format.*
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import java.util.*
 
 class Chat : Listener {
 	companion object {
@@ -49,7 +43,9 @@ class Chat : Listener {
 
 		val mentionSpectating = object : Mention {
 			override fun matches() = "spectating"
-			override fun includes(player: Player) = !PlayerData.isParticipating(player.uniqueId) && player.gameMode == GameMode.SPECTATOR
+			override fun includes(player: Player) =
+				!PlayerData.isParticipating(player.uniqueId) && player.gameMode == GameMode.SPECTATOR
+
 			override fun generate(string: String) = defaultGenerator(string)
 			override fun needsOp() = false
 		}
@@ -64,14 +60,18 @@ class Chat : Listener {
 		class PlayerMention(val player: Player) : Mention {
 			override fun matches() = player.name
 			override fun includes(player: Player) = this.player === player
-			override fun generate(string: String) = UHC.getTeams().playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
+			override fun generate(string: String) =
+				UHC.getTeams().playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
+
 			override fun needsOp() = false
 		}
 
 		class NickMention(val player: Player, val nickname: String) : Mention {
 			override fun matches() = nickname
 			override fun includes(player: Player) = this.player === player
-			override fun generate(string: String) = UHC.getTeams().playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
+			override fun generate(string: String) =
+				UHC.getTeams().playersTeam(player.uniqueId)?.apply(string) ?: defaultGenerator(string)
+
 			override fun needsOp() = false
 		}
 	}
@@ -145,9 +145,14 @@ class Chat : Listener {
 	 * mentions will be applied normally
 	 * mention components will be replaced with underlines when sent to the players
 	 */
-	private fun divideMessage(message: String, collected: ArrayList<Triple<Mention, Int, Int>>, chatColor: TextColor): ArrayList<Component> {
+	private fun divideMessage(
+		message: String,
+		collected: ArrayList<Triple<Mention, Int, Int>>,
+		chatColor: TextColor,
+	): ArrayList<Component> {
 		val componentList = arrayListOf(
-			Component.text(message.substring(0, collected.firstOrNull()?.second ?: message.length), chatColor) as Component
+			Component.text(message.substring(0, collected.firstOrNull()?.second ?: message.length),
+				chatColor) as Component
 		)
 
 		for (i in collected.indices) {
@@ -157,13 +162,18 @@ class Chat : Listener {
 			componentList.add(mention.generate(message.substring(startIndex, endIndex)))
 
 			/* the part after the mention until the next mention, or until the end of the message */
-			componentList.add(Component.text(message.substring(endIndex, collected.getOrNull(i + 1)?.second ?: message.length), chatColor))
+			componentList.add(Component.text(message.substring(endIndex,
+				collected.getOrNull(i + 1)?.second ?: message.length), chatColor))
 		}
 
 		return componentList
 	}
 
-	private fun messageForPlayer(player: Player, mentions: ArrayList<Triple<Mention, Int, Int>>, components: ArrayList<Component>): Component {
+	private fun messageForPlayer(
+		player: Player,
+		mentions: ArrayList<Triple<Mention, Int, Int>>,
+		components: ArrayList<Component>,
+	): Component {
 		return components.foldIndexed(Component.empty()) { i, acc, component ->
 			/* regular components */
 			if (i % 2 == 0) acc.append(component)
@@ -223,10 +233,10 @@ class Chat : Listener {
 				player.sendMessage(playerComponent.append(Component.text(cleanMessage)))
 			}
 
-		/* filter messages only to teammates */
-		/* if the sending player is on a team */
-		/* if the message does not start with a mention */
-		/* and the message does not start with ! */
+			/* filter messages only to teammates */
+			/* if the sending player is on a team */
+			/* if the message does not start with a mention */
+			/* and the message does not start with ! */
 		} else if (gameTeam != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
 			val messageParts = divideMessage(message, collected, gameTeam.colors.last())
 
@@ -234,7 +244,7 @@ class Chat : Listener {
 				player.sendMessage(playerComponent.append(messageForPlayer(player, collected, messageParts)))
 			}
 
-		/* regular chat behavior before game */
+			/* regular chat behavior before game */
 		} else {
 			val cleanMessage = if (message.startsWith("!")) message.substring(1) else message
 

@@ -1,16 +1,11 @@
 package com.codeland.uhc.world
 
-import com.codeland.uhc.core.*
+import com.codeland.uhc.core.Lobby
+import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
-import net.minecraft.data.worldgen.biome.BiomeRegistry
-import net.minecraft.world.level.biome.Biomes
 import org.bukkit.*
-import org.bukkit.block.Biome
-import org.bukkit.entity.Player
 import java.io.File
-import kotlin.math.ceil
 
 object WorldManager {
 	const val LOBBY_WORLD_NAME = "world"
@@ -24,13 +19,13 @@ object WorldManager {
 	/* cached worlds */
 
 	lateinit var lobbyWorld: World
-	private set
+		private set
 	lateinit var pvpWorld: World
-	private set
+		private set
 	var gameWorld: World? = null
-	private set
+		private set
 	var netherWorld: World? = null
-	private set
+		private set
 
 	/* */
 

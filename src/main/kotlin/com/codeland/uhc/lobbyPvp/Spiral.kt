@@ -5,8 +5,10 @@ import kotlin.math.abs
 class Spiral {
 	/* positive x, positive z, negative x, negative z */
 	var currentDir = 0
+
 	/* x, z */
 	val axes = arrayOf(0, 0)
+
 	/* positive x, positive z, negative x, negative z */
 	val maxes = arrayOf(0, 0, 0, 0)
 

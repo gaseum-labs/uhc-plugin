@@ -1,9 +1,7 @@
 package com.codeland.uhc.customSpawning
 
 import com.codeland.uhc.customSpawning.spawnInfos.hostile.*
-import com.codeland.uhc.customSpawning.spawnInfos.passive.SpawnChicken
-import com.codeland.uhc.customSpawning.spawnInfos.passive.SpawnPig
-import com.codeland.uhc.customSpawning.spawnInfos.passive.SpawnSheep
+import com.codeland.uhc.customSpawning.spawnInfos.passive.*
 
 enum class SpawnInfoType(val spawnInfo: SpawnInfo) {
 	ZOMBIE(SpawnZombie()),

@@ -16,11 +16,11 @@ import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.format.TextColor
 
 class LoadoutGui(val playerData: PlayerData, val loadoutSlot: Int) :
-MoveableGuiPage(
-	4,
-	Util.gradientString("Edit Loadout", TextColor.color(0x7d0580), TextColor.color(0x910d40)),
-	GuiType.PERSONAL
-) {
+	MoveableGuiPage(
+		4,
+		Util.gradientString("Edit Loadout", TextColor.color(0x7d0580), TextColor.color(0x910d40)),
+		GuiType.PERSONAL
+	) {
 	val costCounter = addItem(CostCounter(coords(7, 3), playerData.slotCosts[loadoutSlot]))
 	val closeButton = addItem(CloseButton(coords(8, 3)))
 
@@ -39,7 +39,12 @@ MoveableGuiPage(
 			if (id != -1) {
 				val option = loadout.options[slot]
 
-				list.add(LoadoutMover(slot + inventory.size, this, playerData, LoadoutItems.values()[id], option, loadoutSlot))
+				list.add(LoadoutMover(slot + inventory.size,
+					this,
+					playerData,
+					LoadoutItems.values()[id],
+					option,
+					loadoutSlot))
 				used[id] = true
 			}
 		}
@@ -62,7 +67,9 @@ MoveableGuiPage(
 	override fun save() {
 		UHC.dataManager.push(
 			DataManager.loadoutsFile,
-			LoadoutsFile.LoadoutEntry(playerData.uuid, loadoutSlot, UHC.dataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot])
+			LoadoutsFile.LoadoutEntry(playerData.uuid,
+				loadoutSlot,
+				UHC.dataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot])
 		)
 	}
 }

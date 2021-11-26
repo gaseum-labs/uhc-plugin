@@ -5,9 +5,7 @@ import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
 import org.bukkit.ChatColor
 import org.bukkit.World
-import kotlin.math.acos
-import kotlin.math.floor
-import kotlin.math.sqrt
+import kotlin.math.*
 
 object Util {
 	fun Any?.unit() = Unit
@@ -85,7 +83,7 @@ object Util {
 		val minutesPart = if (minutes == 0) "" else "$minutes minute${if (minutes == 1) "" else "s"}"
 		val secondsPart = if (seconds == 0) "" else "$seconds second${if (seconds == 1) "" else "s"}"
 
-		return "$minutesPart${if(minutesPart == "") "" else " "}$secondsPart"
+		return "$minutesPart${if (minutesPart == "") "" else " "}$secondsPart"
 	}
 
 	fun interp(low: Float, high: Float, along: Float): Float {
@@ -124,7 +122,7 @@ object Util {
 		val weight0 = 1 - weight1
 
 		val left = mod(floor(x).toInt(), array.size)
-		val right =  mod(left + 1, array.size)
+		val right = mod(left + 1, array.size)
 
 		return array[left] * weight0 + array[right] + weight1
 	}
@@ -140,10 +138,10 @@ object Util {
 
 		val coefY = y - minY
 
-		return (array[minY * width + minX] *      coefY  *      coefX ) +
-			   (array[minY * width + maxX] *      coefY  * (1 - coefX)) +
-			   (array[maxY * width + minX] * (1 - coefY) *      coefX ) +
-			   (array[maxY * width + maxX] * (1 - coefY) * (1 - coefX))
+		return (array[minY * width + minX] * coefY * coefX) +
+		(array[minY * width + maxX] * coefY * (1 - coefX)) +
+		(array[maxY * width + minX] * (1 - coefY) * coefX) +
+		(array[maxY * width + maxX] * (1 - coefY) * (1 - coefX))
 	}
 
 	/* the area of the intersection of two circles with the same radius at a given distance of centers */
@@ -157,9 +155,9 @@ object Util {
 	}
 
 	fun interpColor(along: Float, from: TextColor, to: TextColor): TextColor {
-		val red = ((  to.red() -   from.red()) * along +   from.red()).toInt()
+		val red = ((to.red() - from.red()) * along + from.red()).toInt()
 		val gre = ((to.green() - from.green()) * along + from.green()).toInt()
-		val blu = (( to.blue() -  from.blue()) * along +  from.blue()).toInt()
+		val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
 		return TextColor.color(red, gre, blu)
 	}
 
@@ -183,13 +181,21 @@ object Util {
 			val red = ((to.red() - from.red()) * along + from.red()).toInt()
 			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
 			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
-			component = component.addSibling(ChatComponentText("$c").setChatModifier(ChatModifier.a.setColor(ChatHexColor.a(red.shl(16).or(gre.shl(8)).or(blu)))))
+			component =
+				component.addSibling(ChatComponentText("$c").setChatModifier(ChatModifier.a.setColor(ChatHexColor.a(red.shl(
+					16).or(gre.shl(8)).or(blu)))))
 		}
 
 		return component
 	}
 
-	fun nmsGradientStringStylized(string: String, from: TextColor, to: TextColor, chatModifier: ChatModifier, exclude: Array<Int>): IChatMutableComponent {
+	fun nmsGradientStringStylized(
+		string: String,
+		from: TextColor,
+		to: TextColor,
+		chatModifier: ChatModifier,
+		exclude: Array<Int>,
+	): IChatMutableComponent {
 		var component = ChatComponentText("") as IChatMutableComponent
 
 		string.forEachIndexed { i, c ->
@@ -198,7 +204,9 @@ object Util {
 			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
 			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
 
-			val modifier = (if (exclude.contains(i)) ChatModifier.a else chatModifier).setColor(ChatHexColor.a(red.shl(16).or(gre.shl(8)).or(blu)))
+			val modifier =
+				(if (exclude.contains(i)) ChatModifier.a else chatModifier).setColor(ChatHexColor.a(red.shl(16)
+					.or(gre.shl(8)).or(blu)))
 			component = component.addSibling(ChatComponentText("$c").setChatModifier(modifier))
 		}
 

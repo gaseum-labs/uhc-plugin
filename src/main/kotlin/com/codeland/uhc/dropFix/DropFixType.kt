@@ -8,7 +8,6 @@ import com.codeland.uhc.dropFix.DropEntry.Companion.lootMulti
 import com.codeland.uhc.dropFix.DropEntry.Companion.mobArmor
 import com.codeland.uhc.dropFix.DropEntry.Companion.mobInventory
 import com.codeland.uhc.dropFix.DropEntry.Companion.noBaby
-import com.codeland.uhc.dropFix.DropEntry.Companion.nothing
 import com.codeland.uhc.dropFix.DropEntry.Companion.onFire
 import com.codeland.uhc.dropFix.DropEntry.Companion.potion
 import com.codeland.uhc.dropFix.DropEntry.Companion.saddle
@@ -111,9 +110,30 @@ enum class DropFixType(val dropFix: DropFix) {
 	))),
 
 	WITCH(DropFix(EntityType.WITCH, arrayOf(
-		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.INSTANT_HEAL)),
-		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.FIRE_RESISTANCE)),
-		arrayOf(item(GLASS_BOTTLE), item(GLOWSTONE_DUST), item(GUNPOWDER), item(REDSTONE), item(SPIDER_EYE), item(SUGAR), item(STICK), potion(PotionType.SPEED))
+		arrayOf(item(GLASS_BOTTLE),
+			item(GLOWSTONE_DUST),
+			item(GUNPOWDER),
+			item(REDSTONE),
+			item(SPIDER_EYE),
+			item(SUGAR),
+			item(STICK),
+			potion(PotionType.INSTANT_HEAL)),
+		arrayOf(item(GLASS_BOTTLE),
+			item(GLOWSTONE_DUST),
+			item(GUNPOWDER),
+			item(REDSTONE),
+			item(SPIDER_EYE),
+			item(SUGAR),
+			item(STICK),
+			potion(PotionType.FIRE_RESISTANCE)),
+		arrayOf(item(GLASS_BOTTLE),
+			item(GLOWSTONE_DUST),
+			item(GUNPOWDER),
+			item(REDSTONE),
+			item(SPIDER_EYE),
+			item(SUGAR),
+			item(STICK),
+			potion(PotionType.SPEED))
 	))),
 
 	ZOMBIE(zombieTemplate(EntityType.ZOMBIE)),
@@ -144,6 +164,9 @@ enum class DropFixType(val dropFix: DropFix) {
 
 	companion object {
 		val list = values()
-		init { list.sortBy { dropFixType -> dropFixType.dropFix.entityType } }
+
+		init {
+			list.sortBy { dropFixType -> dropFixType.dropFix.entityType }
+		}
 	}
 }

@@ -1,11 +1,8 @@
 package com.codeland.uhc.world.chunkPlacer.impl.nether
 
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import org.bukkit.Chunk
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
 import kotlin.random.Random
 
 class BasaltPlacer(size: Int) : DelayedChunkPlacer(size) {

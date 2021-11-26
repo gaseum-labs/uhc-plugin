@@ -1,22 +1,25 @@
 package com.codeland.uhc.gui.guiItem.impl.lobbyPvp
 
-import com.codeland.uhc.util.UHCProperty
-import com.codeland.uhc.gui.guiItem.GuiItemProperty
 import com.codeland.uhc.gui.ItemCreator
+import com.codeland.uhc.gui.guiItem.GuiItemProperty
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.lobbyPvp.PvpQueue
+import com.codeland.uhc.lobbyPvp.arena.PvpArena
+import com.codeland.uhc.util.UHCProperty
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class QueueJoiner(index: Int, val type: Int, queueProperty: UHCProperty<Int>) : GuiItemProperty<Int>(index, queueProperty) {
+class QueueJoiner(index: Int, val type: Int, queueProperty: UHCProperty<Int>) :
+	GuiItemProperty<Int>(index, queueProperty) {
 	val name = PvpArena.typeName(type)
 	val material = if (type == PvpArena.TYPE_1V1) Material.IRON_SWORD else Material.IRON_AXE
 	val disabledMaterial = if (type == PvpArena.TYPE_1V1) Material.STONE_SWORD else Material.STONE_AXE
 
-	init { PvpQueue.enabled.watch(::updateDisplay) }
+	init {
+		PvpQueue.enabled.watch(::updateDisplay)
+	}
 
 	override fun onClick(player: Player, shift: Boolean) {
 		/* don't let players leave during the countdown */

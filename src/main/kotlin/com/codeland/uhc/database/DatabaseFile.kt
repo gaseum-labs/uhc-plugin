@@ -1,10 +1,8 @@
 package com.codeland.uhc.database
 
-import java.sql.CallableStatement
-import java.sql.Connection
-import java.sql.ResultSet
+import java.sql.*
 
-abstract class DatabaseFile <Data, Entry> {
+abstract class DatabaseFile<Data, Entry> {
 	abstract fun query(): String
 	abstract fun parseResults(results: ResultSet): Data
 

@@ -1,16 +1,13 @@
 package com.codeland.uhc.quirk.quirks.classes
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.util.Action
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.Summoner
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.SchedulerUtil
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Material
-import org.bukkit.Sound
+import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.type.Switch
@@ -32,7 +29,7 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 			fun <T> cleanupList(
 				list: MutableList<T>, creatorClass: QuirkClass, shouldBe: Material,
 				radiusX: Int, radiusY: Int, radiusZ: Int,
-				getBlock: (T) -> Block, setBack: (T) -> Material
+				getBlock: (T) -> Block, setBack: (T) -> Material,
 			) {
 				list.removeIf { li ->
 					val listBlock = getBlock(li)
@@ -44,16 +41,23 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 						val playerBlock = player.location.block
 
 						playerData.participating
-							&& getClass(playerData) == creatorClass
-							&& abs(playerBlock.x - listBlock.x) <= radiusX
-							&& abs(playerBlock.y - listBlock.y) <= radiusY
-							&& abs(playerBlock.z - listBlock.z) <= radiusZ
+						&& getClass(playerData) == creatorClass
+						&& abs(playerBlock.x - listBlock.x) <= radiusX
+						&& abs(playerBlock.y - listBlock.y) <= radiusY
+						&& abs(playerBlock.z - listBlock.z) <= radiusZ
 
 					} && run { listBlock.setType(setBack(li), true); true })
 				}
 			}
 
-			cleanupList(obsidianifiedLava, QuirkClass.LAVACASTER, Material.OBSIDIAN, 3, 3, 3, { it.block }, { if (it.flowing) Material.AIR else Material.LAVA })
+			cleanupList(obsidianifiedLava,
+				QuirkClass.LAVACASTER,
+				Material.OBSIDIAN,
+				3,
+				3,
+				3,
+				{ it.block },
+				{ if (it.flowing) Material.AIR else Material.LAVA })
 
 			cleanupList(grindedStone, QuirkClass.ENCHANTER, Material.GRINDSTONE, 0, 3, 0, { it }, { Material.STONE })
 
@@ -142,7 +146,8 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 						}.map { pair ->
 							player.location.block.getRelative(pair.first, 0, pair.second)
 						}.firstOrNull { block ->
-							block.type.isAir && block.lightLevel <= 7 && validTorchSpots.contains(block.getRelative(BlockFace.DOWN).type)
+							block.type.isAir && block.lightLevel <= 7 && validTorchSpots.contains(block.getRelative(
+								BlockFace.DOWN).type)
 						}?.setType(Material.TORCH, true)
 					}
 				}
@@ -266,9 +271,9 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 			val meta = newItem.itemMeta
 			meta.setDisplayName("${ChatColor.RESET}${statusColor}${control.displayName}")
 			meta.lore = mutableListOf("${ChatColor.GRAY}Controlling the lever at (" +
-				ChatColor.GOLD + lever.x + ChatColor.GRAY + ", " +
-				ChatColor.GOLD + lever.y + ChatColor.GRAY + ", " +
-				ChatColor.GOLD + lever.z + ChatColor.GRAY + ").",
+			ChatColor.GOLD + lever.x + ChatColor.GRAY + ", " +
+			ChatColor.GOLD + lever.y + ChatColor.GRAY + ", " +
+			ChatColor.GOLD + lever.z + ChatColor.GRAY + ").",
 				"${ChatColor.GRAY}Current status: $statusColor$currentStatus"
 			)
 			newItem.itemMeta = meta

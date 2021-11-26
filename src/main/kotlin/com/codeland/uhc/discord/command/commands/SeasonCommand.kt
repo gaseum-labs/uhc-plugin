@@ -4,15 +4,12 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.discord.Channels
 import com.codeland.uhc.discord.MixerBot
 import com.codeland.uhc.discord.command.MixerCommand
-import com.codeland.uhc.discord.storage.StorageEntry
-import com.codeland.uhc.discord.storage.StorageEntryHex
-import com.codeland.uhc.discord.storage.StorageEntryInt
-import com.codeland.uhc.discord.storage.StorageEntryUuid
+import com.codeland.uhc.discord.storage.*
 import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.util.extensions.ResultSetExtensions.setIntNull
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 class SeasonCommand : MixerCommand(true) {
 	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
@@ -21,7 +18,8 @@ class SeasonCommand : MixerCommand(true) {
 
 	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
 		CompletableFuture.supplyAsync {
-			val connection = UHC.dataManager.connection ?: return@supplyAsync errorMessage(event, "Not connected to the database")
+			val connection =
+				UHC.dataManager.connection ?: return@supplyAsync errorMessage(event, "Not connected to the database")
 
 			val seasonNumberEntry = StorageEntryInt("number")
 			val colorEntry = StorageEntryHex("color")

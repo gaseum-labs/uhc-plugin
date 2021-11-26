@@ -2,9 +2,7 @@ package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
-import org.bukkit.Chunk
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -31,7 +29,9 @@ class BricksPlacer(size: Int) : DelayedChunkPlacer(size) {
 		Material.CRIMSON_NYLIUM
 	)
 
-	init { replaceable.sort() }
+	init {
+		replaceable.sort()
+	}
 
 	override fun place(chunk: Chunk, chunkIndex: Int) {
 		randomPosition(chunk, 8, 99) { block, x, y, z ->

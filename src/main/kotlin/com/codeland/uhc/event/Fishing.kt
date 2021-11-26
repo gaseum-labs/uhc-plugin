@@ -45,7 +45,9 @@ class Fishing : Listener {
 		data class FishingData(var index: Int, val list: Array<Int>) {
 			fun get() = list[index]
 
-			init { list.shuffle() }
+			init {
+				list.shuffle()
+			}
 
 			companion object {
 				fun default(): FishingData {
@@ -158,7 +160,7 @@ class Fishing : Listener {
 
 		fun bookEntry(random: Random): ItemCreator {
 			val (enchant, level) = bookEnchants[random.nextInt(bookEnchants.size)]
-			return ItemCreator.fromType(Material.ENCHANTED_BOOK, false).customMeta <EnchantmentStorageMeta> { meta ->
+			return ItemCreator.fromType(Material.ENCHANTED_BOOK, false).customMeta<EnchantmentStorageMeta> { meta ->
 				meta.addStoredEnchant(enchant, level, true)
 			}
 		}

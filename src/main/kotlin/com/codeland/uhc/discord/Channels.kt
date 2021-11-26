@@ -2,7 +2,7 @@ package com.codeland.uhc.discord
 
 import net.dv8tion.jda.api.entities.*
 import java.io.InputStream
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 object Channels {
 	const val DATA_CATEGORY_NAME = "data"
@@ -53,26 +53,33 @@ object Channels {
 		}
 	}
 
-	fun getCategoryChannel(guild: Guild, categoryName: String, channelName: String): CompletableFuture<Pair<Category, TextChannel>> {
+	fun getCategoryChannel(
+		guild: Guild,
+		categoryName: String,
+		channelName: String,
+	): CompletableFuture<Pair<Category, TextChannel>> {
 		return getCategory(guild, categoryName).thenApply { category ->
 			Pair(category, getChannel(category, channelName).get())
 		}
 	}
 
-	fun getCategoryVoiceChannel(guild: Guild, categoryName: String, channelName: String): CompletableFuture<Pair<Category, VoiceChannel>> {
+	fun getCategoryVoiceChannel(
+		guild: Guild,
+		categoryName: String,
+		channelName: String,
+	): CompletableFuture<Pair<Category, VoiceChannel>> {
 		return getCategory(guild, categoryName).thenApply { category ->
 			Pair(category, getVoiceChannel(category, channelName).get())
 		}
 	}
 
 	fun messageStream(message: Message): CompletableFuture<InputStream> {
-		return message.attachments.firstOrNull()?.retrieveInputStream() ?:
-			CompletableFuture.failedFuture(Exception("Message does not have an attachment"))
+		return message.attachments.firstOrNull()?.retrieveInputStream()
+			?: CompletableFuture.failedFuture(Exception("Message does not have an attachment"))
 	}
 
 	fun messageStreamOptional(message: Message): CompletableFuture<InputStream?> {
-		return message.attachments.firstOrNull()?.retrieveInputStream() ?:
-		CompletableFuture.completedFuture(null)
+		return message.attachments.firstOrNull()?.retrieveInputStream() ?: CompletableFuture.completedFuture(null)
 	}
 
 	fun allChannelMessages(channel: TextChannel, onMessage: (Message) -> Unit) {

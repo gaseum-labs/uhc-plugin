@@ -7,7 +7,13 @@ import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
-enum class QuirkClass(val prettyName: String, val headBlock: Material, val onStart: (Player) -> Unit, val headMeta: (ItemMeta) -> Unit, val onEnd: (Player) -> Unit) {
+enum class QuirkClass(
+	val prettyName: String,
+	val headBlock: Material,
+	val onStart: (Player) -> Unit,
+	val headMeta: (ItemMeta) -> Unit,
+	val onEnd: (Player) -> Unit,
+) {
 	NO_CLASS("", Material.DIRT, {}, {}, {}),
 
 	LAVACASTER("Lavacaster", Material.MAGMA_BLOCK, { player ->

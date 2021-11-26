@@ -1,9 +1,7 @@
 package com.codeland.uhc.gui.gui
 
 import com.codeland.uhc.command.Commands
-import com.codeland.uhc.core.GameConfig
-import com.codeland.uhc.core.KillReward
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.*
 import com.codeland.uhc.core.stats.GameType
 import com.codeland.uhc.gui.*
 import com.codeland.uhc.gui.guiItem.*
@@ -11,12 +9,8 @@ import com.codeland.uhc.gui.guiItem.impl.CloseButton
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
-import net.kyori.adventure.text.format.TextDecoration
-import org.bukkit.ChatColor
-import org.bukkit.Material
-import org.bukkit.World
+import net.kyori.adventure.text.format.*
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
@@ -50,7 +44,9 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 					.create()
 			}
 		})
-		addItem(object : GuiItemCycler<World.Environment>(coords(2, 0), gameConfig.defaultWorldEnvironment, arrayOf(World.Environment.NORMAL, World.Environment.NETHER)) {
+		addItem(object : GuiItemCycler<World.Environment>(coords(2, 0),
+			gameConfig.defaultWorldEnvironment,
+			arrayOf(World.Environment.NORMAL, World.Environment.NETHER)) {
 			override fun getStackProperty(value: World.Environment): ItemStack {
 				return ItemCreator.fromType(
 					if (value === World.Environment.NORMAL) Material.GRASS_BLOCK
@@ -77,7 +73,8 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 				).create()
 			}
 		})
-		addItem(object : GuiItemCycler<GameType>(coords(4, 0), gameConfig.gameType, arrayOf(GameType.UHC, GameType.CHC)) {
+		addItem(object :
+			GuiItemCycler<GameType>(coords(4, 0), gameConfig.gameType, arrayOf(GameType.UHC, GameType.CHC)) {
 			override fun getStackProperty(value: GameType): ItemStack {
 				return ItemCreator.fromType(value.representation)
 					.name(ItemCreator.stateName("Game Type", value.name))
@@ -142,22 +139,27 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 						Action.sendGameMessage(player, message)
 				}
 			}
-			override fun getStack() = ItemCreator.fromType(Material.ENCHANTING_TABLE).name("${ChatColor.GOLD}Start Game").create()
+
+			override fun getStack() =
+				ItemCreator.fromType(Material.ENCHANTING_TABLE).name("${ChatColor.GOLD}Start Game").create()
 		})
 		/* open quirks gui */
 		addItem(object : GuiItem(coords(5, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = quirkGui.open(player)
-			override fun getStack() = ItemCreator.fromType(Material.TOTEM_OF_UNDYING).name("${ChatColor.LIGHT_PURPLE}Quirks").create()
+			override fun getStack() =
+				ItemCreator.fromType(Material.TOTEM_OF_UNDYING).name("${ChatColor.LIGHT_PURPLE}Quirks").create()
 		})
 		/* open worldgen gui */
 		addItem(object : GuiItem(coords(6, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = worldGenGui.open(player)
-			override fun getStack() = ItemCreator.fromType(Material.GOLD_ORE).name("${ChatColor.GREEN}World Gen Options").create()
+			override fun getStack() =
+				ItemCreator.fromType(Material.GOLD_ORE).name("${ChatColor.GREEN}World Gen Options").create()
 		})
 		/* reset button */
 		addItem(object : GuiItem(coords(7, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = gameConfig.reset()
-			override fun getStack() = ItemCreator.fromType(Material.MUSIC_DISC_CHIRP).name("${ChatColor.RED}Reset").create()
+			override fun getStack() =
+				ItemCreator.fromType(Material.MUSIC_DISC_CHIRP).name("${ChatColor.RED}Reset").create()
 		})
 		addItem(CloseButton(coords(8, 2)))
 	}

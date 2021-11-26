@@ -3,21 +3,13 @@ package com.codeland.uhc.util
 import com.codeland.uhc.UHCPlugin
 import io.papermc.paper.enchantments.EnchantmentRarity
 import net.kyori.adventure.text.Component
-import org.bukkit.Color
-import org.bukkit.FireworkEffect
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
+import org.bukkit.*
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.EnchantmentTarget
 import org.bukkit.entity.EntityCategory
-import org.bukkit.inventory.EquipmentSlot
-import org.bukkit.inventory.Inventory
-import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.*
-import org.bukkit.potion.PotionData
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
-import org.bukkit.potion.PotionType
+import org.bukkit.inventory.*
+import org.bukkit.inventory.meta.Damageable
+import org.bukkit.inventory.meta.ItemMeta
 import kotlin.random.Random
 
 object ItemUtil {

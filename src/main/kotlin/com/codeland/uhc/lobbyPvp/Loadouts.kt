@@ -3,7 +3,7 @@ package com.codeland.uhc.lobbyPvp
 import java.util.*
 
 class Loadouts(
-	val loadouts: HashMap<UUID, Array<Loadout>>
+	val loadouts: HashMap<UUID, Array<Loadout>>,
 ) {
 	companion object {
 		const val NUM_SLOTS = 3

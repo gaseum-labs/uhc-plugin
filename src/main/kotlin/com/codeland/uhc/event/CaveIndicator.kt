@@ -70,10 +70,12 @@ class CaveIndicator : Listener {
 			Material.ANDESITE,
 			Material.DIORITE,
 			Material.GRANITE,
-			Material.TUFF -> true
+			Material.TUFF,
+			-> true
 			else -> false
 		}
 	}
+
 	private fun stoneLike(block: Block): Boolean {
 		return when (block.type) {
 			Material.ANDESITE,
@@ -82,7 +84,8 @@ class CaveIndicator : Listener {
 			Material.TUFF,
 			Material.DEEPSLATE,
 			Material.DIRT,
-			Material.STONE -> true
+			Material.STONE,
+			-> true
 			else -> false
 		}
 	}

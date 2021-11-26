@@ -1,7 +1,7 @@
 package com.codeland.uhc.util.extensions
 
 import net.dv8tion.jda.api.requests.RestAction
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 object RestActionExtensions {
 	fun <T> RestAction<T>.submitAsync(): CompletableFuture<T> {

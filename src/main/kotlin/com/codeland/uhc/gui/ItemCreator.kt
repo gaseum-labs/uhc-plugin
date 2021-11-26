@@ -4,10 +4,7 @@ import com.codeland.uhc.util.ItemUtil
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.TextDecoration
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
+import org.bukkit.*
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
@@ -23,27 +20,27 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 		else meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES)
 	}
 
-	fun name(name: String) : ItemCreator {
+	fun name(name: String): ItemCreator {
 		meta.displayName(noItalic(Component.text(name)))
 		return this
 	}
 
-	fun name(component: Component) : ItemCreator {
+	fun name(component: Component): ItemCreator {
 		meta.displayName(noItalic(component))
 		return this
 	}
 
-	fun lore(vararg lore: String) : ItemCreator {
+	fun lore(vararg lore: String): ItemCreator {
 		meta.lore(lore.map { str -> noItalic(Component.text(str)) })
 		return this
 	}
 
-	fun lore(list: List<Component>) : ItemCreator {
+	fun lore(list: List<Component>): ItemCreator {
 		meta.lore(list)
 		return this
 	}
 
-	fun lore(component: Component) : ItemCreator {
+	fun lore(component: Component): ItemCreator {
 		meta.lore(listOf(noItalic(component)))
 		return this
 	}

@@ -31,13 +31,15 @@ class AmethystPlacer : ImmediateChunkPlacer(1) {
 			Material.CAVE_AIR,
 			Material.SMALL_AMETHYST_BUD,
 			Material.MEDIUM_AMETHYST_BUD,
-			Material.LARGE_AMETHYST_BUD -> {
+			Material.LARGE_AMETHYST_BUD,
+			-> {
 				relative.setType(Material.AMETHYST_CLUSTER, false)
 				val data = relative.blockData as Directional
 				data.facing = face
 				relative.blockData = data
 			}
-			else -> {}
+			else -> {
+			}
 		}
 	}
 }

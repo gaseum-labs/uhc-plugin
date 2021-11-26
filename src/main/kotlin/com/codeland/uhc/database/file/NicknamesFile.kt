@@ -4,8 +4,6 @@ import com.codeland.uhc.database.DatabaseFile
 import java.sql.CallableStatement
 import java.sql.ResultSet
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class NicknamesFile : DatabaseFile<NicknamesFile.Nicknames, NicknamesFile.NicknameEntry>() {
 	class Nicknames(private val map: HashMap<UUID, ArrayList<String>>) {

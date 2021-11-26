@@ -10,10 +10,6 @@ import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.util.SchedulerUtil
 import org.bukkit.*
 import org.bukkit.ChatColor.*
-import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.Sound
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.FaceAttachable
@@ -30,13 +26,11 @@ import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.player.*
-import org.bukkit.inventory.EnchantingInventory
-import org.bukkit.inventory.EquipmentSlot
-import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.*
 import org.bukkit.metadata.FixedMetadataValue
-import java.util.*
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import java.util.*
 
 class ClassesEvents : Listener {
 	private fun surface(block: Block): Boolean {
@@ -45,7 +39,18 @@ class ClassesEvents : Listener {
 		}
 	}
 
-	fun <T> auraReplacer(player: Player, list: MutableList<T>, from: Material, to: Material, radiusX: Int, lowY: Int, highY: Int, radiusZ: Int, produce: (Block) -> T, modify: (Block) -> Unit) {
+	fun <T> auraReplacer(
+		player: Player,
+		list: MutableList<T>,
+		from: Material,
+		to: Material,
+		radiusX: Int,
+		lowY: Int,
+		highY: Int,
+		radiusZ: Int,
+		produce: (Block) -> T,
+		modify: (Block) -> Unit,
+	) {
 		for (dx in -radiusX..radiusX)
 			for (dy in lowY..highY)
 				for (dz in -radiusZ..radiusZ) {
@@ -67,16 +72,34 @@ class ClassesEvents : Listener {
 
 		when (classes.getClass(player.uniqueId)) {
 			QuirkClass.LAVACASTER -> {
-				auraReplacer(player, Classes.obsidianifiedLava, Material.LAVA, Material.OBSIDIAN, 3, -2, -1, 3, { block ->
-					Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
-				}, {})
+				auraReplacer(player,
+					Classes.obsidianifiedLava,
+					Material.LAVA,
+					Material.OBSIDIAN,
+					3,
+					-2,
+					-1,
+					3,
+					{ block ->
+						Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
+					},
+					{})
 			}
 			QuirkClass.ENCHANTER -> {
-				auraReplacer(player, Classes.grindedStone, Material.STONE, Material.GRINDSTONE, 0, -1, -1, 0, { it }, { block ->
-					val data = block.blockData as Grindstone
-					data.attachedFace = FaceAttachable.AttachedFace.FLOOR
-					block.setBlockData(data, false)
-				})
+				auraReplacer(player,
+					Classes.grindedStone,
+					Material.STONE,
+					Material.GRINDSTONE,
+					0,
+					-1,
+					-1,
+					0,
+					{ it },
+					{ block ->
+						val data = block.blockData as Grindstone
+						data.attachedFace = FaceAttachable.AttachedFace.FLOOR
+						block.setBlockData(data, false)
+					})
 			}
 			QuirkClass.DIVER -> {
 				if (player.world.environment != World.Environment.NETHER) {
@@ -119,7 +142,8 @@ class ClassesEvents : Listener {
 			block.type = Material.WATER
 			block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
 
-			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity = player.location.direction.multiply(2)
+			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity =
+				player.location.direction.multiply(2)
 
 			SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
 				if (block.type == Material.WATER) {
@@ -156,12 +180,13 @@ class ClassesEvents : Listener {
 					player.sendActionBar(
 						meta.enchants.asIterable().mapIndexed { index, (enchant, level) ->
 							"${enchantColor(index)}$BOLD${enchant.key.key} ${enchantColor(index)}$level"
-						}.joinToString(", ", "$WHITE${hurtPlayer.name}'s $WHITE$BOLD${itemStack.type.name.toLowerCase()}: ")
+						}.joinToString(", ",
+							"$WHITE${hurtPlayer.name}'s $WHITE$BOLD${itemStack.type.name.toLowerCase()}: ")
 					)
 				}
 
 				fun validItem(itemStack: ItemStack?) = itemStack != null &&
-					itemStack.itemMeta?.enchants?.isNotEmpty() == true
+				itemStack.itemMeta?.enchants?.isNotEmpty() == true
 
 				fun tellSlot(slot: Int): Boolean {
 					val item = if (slot == 3)
@@ -225,12 +250,27 @@ class ClassesEvents : Listener {
 	)
 
 	val weapons = arrayOf(
-		Material.WOODEN_SWORD, Material.GOLDEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD,
-		Material.WOODEN_AXE, Material.GOLDEN_AXE, Material.STONE_AXE, Material.IRON_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE
+		Material.WOODEN_SWORD,
+		Material.GOLDEN_SWORD,
+		Material.STONE_SWORD,
+		Material.IRON_SWORD,
+		Material.DIAMOND_SWORD,
+		Material.NETHERITE_SWORD,
+		Material.WOODEN_AXE,
+		Material.GOLDEN_AXE,
+		Material.STONE_AXE,
+		Material.IRON_AXE,
+		Material.DIAMOND_AXE,
+		Material.NETHERITE_AXE
 	)
 
 	val pickaxes = arrayOf(
-		Material.WOODEN_PICKAXE, Material.GOLDEN_PICKAXE, Material.STONE_PICKAXE, Material.IRON_PICKAXE, Material.DIAMOND_PICKAXE, Material.NETHERITE_PICKAXE
+		Material.WOODEN_PICKAXE,
+		Material.GOLDEN_PICKAXE,
+		Material.STONE_PICKAXE,
+		Material.IRON_PICKAXE,
+		Material.DIAMOND_PICKAXE,
+		Material.NETHERITE_PICKAXE
 	)
 
 	val bows = arrayOf(Material.BOW)
@@ -265,12 +305,12 @@ class ClassesEvents : Listener {
 
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
 			val logs = listOf(
-					Material.OAK_LOG,
-					Material.BIRCH_LOG,
-					Material.DARK_OAK_LOG,
-					Material.ACACIA_LOG,
-					Material.SPRUCE_LOG,
-					Material.JUNGLE_LOG)
+				Material.OAK_LOG,
+				Material.BIRCH_LOG,
+				Material.DARK_OAK_LOG,
+				Material.ACACIA_LOG,
+				Material.SPRUCE_LOG,
+				Material.JUNGLE_LOG)
 			if (event.block.type in logs) {
 				// breaks all blocks adjacent to this block of the same type, with a delay
 				fun breakRecursively(block: Block, type: Material) {
@@ -281,7 +321,7 @@ class ClassesEvents : Listener {
 								// extra check to make sure the block hasn't changed
 								if (nextBlock.type == type) {
 									nextBlock.breakNaturally()
-                                    nextBlock.world.playSound(nextBlock.location, Sound.BLOCK_WOOD_BREAK, 1.0f, 1.0f)
+									nextBlock.world.playSound(nextBlock.location, Sound.BLOCK_WOOD_BREAK, 1.0f, 1.0f)
 									breakRecursively(nextBlock, type)
 								}
 							}
@@ -293,19 +333,19 @@ class ClassesEvents : Listener {
 			if (event.block.type == Material.REDSTONE_ORE) {
 				// list of components with their relative frequency
 				val components = listOf(
-						Pair(10, Material.STONE_PRESSURE_PLATE),
-						Pair(10, Material.REDSTONE_TORCH),
-						Pair(10, Material.LEVER),
-						Pair(10, Material.REPEATER),
-						Pair(10, Material.COMPARATOR),
-						Pair(5, Material.DROPPER),
-						Pair(5, Material.DISPENSER),
-						Pair(5, Material.TRAPPED_CHEST),
-						Pair(5, Material.PISTON),
-						Pair(5, Material.OBSERVER),
-						Pair(1, Material.STICKY_PISTON),
-						Pair(1, Material.SLIME_BLOCK),
-						Pair(1, Material.TNT),
+					Pair(10, Material.STONE_PRESSURE_PLATE),
+					Pair(10, Material.REDSTONE_TORCH),
+					Pair(10, Material.LEVER),
+					Pair(10, Material.REPEATER),
+					Pair(10, Material.COMPARATOR),
+					Pair(5, Material.DROPPER),
+					Pair(5, Material.DISPENSER),
+					Pair(5, Material.TRAPPED_CHEST),
+					Pair(5, Material.PISTON),
+					Pair(5, Material.OBSERVER),
+					Pair(1, Material.STICKY_PISTON),
+					Pair(1, Material.SLIME_BLOCK),
+					Pair(1, Material.TNT),
 				)
 				outer@ for (i in 1..5) {
 					var total = components.map { it.first }.sum()
@@ -332,7 +372,8 @@ class ClassesEvents : Listener {
 					if (event.player.isSneaking && event.clickedBlock!!.type == Material.LEVER) {
 						val lever = event.clickedBlock!!
 						val existing = Classes.remoteControls.find { (_, block, _) ->
-							block == lever }
+							block == lever
+						}
 						if (existing != null && event.player.inventory.contains(existing.item)) {
 							if (event.player.inventory.itemInMainHand != existing.item)
 								event.player.sendMessage("${RED}You already have a controller for this lever.")
@@ -346,7 +387,8 @@ class ClassesEvents : Listener {
 				}
 				Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
 					val control = Classes.remoteControls.find { (item, _, _) ->
-						item == event.player.inventory.itemInMainHand }
+						item == event.player.inventory.itemInMainHand
+					}
 					if (control != null) {
 						event.isCancelled = true
 						val leverData = control.block.blockData as? Switch
@@ -354,20 +396,18 @@ class ClassesEvents : Listener {
 							leverData.isPowered = !leverData.isPowered
 							control.block.blockData = leverData
 							control.block.world.playSound(
-									control.block.location,
-									Sound.BLOCK_LEVER_CLICK,
-									1.0f,
-									// some attempt to preserve the difference in pitch of on and off
-									if (leverData.isPowered) 1.5f else 1.0f
+								control.block.location,
+								Sound.BLOCK_LEVER_CLICK,
+								1.0f,
+								// some attempt to preserve the difference in pitch of on and off
+								if (leverData.isPowered) 1.5f else 1.0f
 							)
 						}
 						event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
 					}
 				}
 			}
-		}
-
-		else if (
+		} else if (
 			classes.getClass(event.player.uniqueId) == QuirkClass.MINER &&
 			pickaxes.contains(event.player.inventory.itemInMainHand.type) &&
 			event.hand == EquipmentSlot.HAND
@@ -390,18 +430,30 @@ class ClassesEvents : Listener {
 						}.")
 
 					} else {
-						fun superRecursive(x: Double, z: Double, dx: Double, dz: Double, y: Double, n: Int, limit: Int) {
+						fun superRecursive(
+							x: Double,
+							z: Double,
+							dx: Double,
+							dz: Double,
+							y: Double,
+							n: Int,
+							limit: Int,
+						) {
 							if (n > limit) return
 
 							for (i in -1..1) for (j in 0..1) for (k in -1..1) {
-								val block = event.player.world.getBlockAt(x.toInt(), y.toInt(), z.toInt()).getRelative(i, j, k)
+								val block =
+									event.player.world.getBlockAt(x.toInt(), y.toInt(), z.toInt()).getRelative(i, j, k)
 
 								if (block.type != Material.BEDROCK && block.type != Material.OBSIDIAN) {
 									block.breakNaturally()
 								}
 							}
 
-							event.player.world.playSound(Location(event.player.world, x, y, z), Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f)
+							event.player.world.playSound(Location(event.player.world, x, y, z),
+								Sound.BLOCK_STONE_BREAK,
+								1.0f,
+								1.0f)
 
 							SchedulerUtil.later(4) { superRecursive(x + dx, z + dz, dx, dz, y, n + 1, limit) }
 						}
@@ -415,7 +467,13 @@ class ClassesEvents : Listener {
 						}.toInt()
 
 						/* begin digging tunnel */
-						superRecursive(event.player.location.x, event.player.location.z, dir.x, dir.z, event.player.location.y, 0, numBlocks)
+						superRecursive(event.player.location.x,
+							event.player.location.z,
+							dir.x,
+							dir.z,
+							event.player.location.y,
+							0,
+							numBlocks)
 
 						/* reset timer */
 						minerData.superBreakTimer = 0
@@ -437,14 +495,14 @@ class ClassesEvents : Listener {
 	private fun xray(sender: Player) {
 		val radius = 35
 		val shouldRemove = listOf(
-				Material.STONE,
-				Material.ANDESITE,
-				Material.DIORITE,
-				Material.GRANITE,
-				Material.DIRT,
-				Material.GRAVEL,
-				Material.SANDSTONE,
-				Material.SAND
+			Material.STONE,
+			Material.ANDESITE,
+			Material.DIORITE,
+			Material.GRANITE,
+			Material.DIRT,
+			Material.GRAVEL,
+			Material.SANDSTONE,
+			Material.SAND
 		)
 		val centerLocation = sender.location.clone()
 		sender.addPotionEffect(PotionEffect(PotionEffectType.NIGHT_VISION, 6 * radius + 20 * 20, 1))
@@ -452,24 +510,29 @@ class ClassesEvents : Listener {
 			if (z > limit) return
 			for (dx in -radius..radius) for (dy in -radius..radius) {
 				if (centerLocation.block.getRelative(dx, dy, z).type in shouldRemove) {
-					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, z).location, Material.BARRIER.createBlockData())
+					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, z).location,
+						Material.BARRIER.createBlockData())
 				}
 				if (z != 0 && centerLocation.block.getRelative(dx, dy, -z).type in shouldRemove) {
-					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, -z).location, Material.BARRIER.createBlockData())
+					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, -z).location,
+						Material.BARRIER.createBlockData())
 				}
 			}
 			SchedulerUtil.later(6) {
 				fillRecursive(z + 1, limit)
 			}
 		}
+
 		fun restoreRecursive(z: Int) {
 			if (z < 0) return
 			for (dx in -radius..radius) for (dy in -radius..radius) {
 				if (centerLocation.block.getRelative(dx, dy, z).type in shouldRemove) {
-					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, z).location, centerLocation.block.getRelative(dx, dy, z).blockData)
+					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, z).location,
+						centerLocation.block.getRelative(dx, dy, z).blockData)
 				}
 				if (z != 0 && centerLocation.block.getRelative(dx, dy, -z).type in shouldRemove) {
-					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, -z).location, centerLocation.block.getRelative(dx, dy, -z).blockData)
+					sender.sendBlockChange(centerLocation.block.getRelative(dx, dy, -z).location,
+						centerLocation.block.getRelative(dx, dy, -z).blockData)
 				}
 			}
 			SchedulerUtil.later(6) {
@@ -544,7 +607,14 @@ class ClassesEvents : Listener {
 						val vector = trackLocation.subtract(player.location).toVector().normalize()
 
 						for (i in 0..64) {
-							player.spawnParticle(Particle.REDSTONE, player.location.clone().add(vector.clone().multiply(i * (1.0 / 3.0))).add(0.0, 1.0, 0.0), 3, 0.1, 0.1, 0.1, Particle.DustOptions(Color.RED, 1.0f))
+							player.spawnParticle(Particle.REDSTONE,
+								player.location.clone().add(vector.clone().multiply(i * (1.0 / 3.0)))
+									.add(0.0, 1.0, 0.0),
+								3,
+								0.1,
+								0.1,
+								0.1,
+								Particle.DustOptions(Color.RED, 1.0f))
 						}
 
 						--item.amount

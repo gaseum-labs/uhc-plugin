@@ -44,6 +44,7 @@ class GameConfig {
 
 	/* quirks settings */
 	val quirksEnabled = ArrayList<UHCProperty<Boolean>>(QuirkType.values().size)
+
 	init {
 		QuirkType.values().forEach { quirkType ->
 			quirksEnabled.add(

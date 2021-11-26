@@ -10,7 +10,7 @@ import org.bukkit.event.inventory.InventoryAction.*
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 
-abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType): GuiPage(height, name, type) {
+abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType) : GuiPage(height, name, type) {
 	var moveableGuiItems = ArrayList<MoveableGuiItem>()
 	val savedIventory = arrayOfNulls<ItemStack>(36)
 
@@ -83,15 +83,15 @@ abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType): Gui
 			if (clickedItem != null && event.action == MOVE_TO_OTHER_INVENTORY) {
 				clickedItem.onShiftClick(player, event.currentItem!!)
 
-			/* placing item from the cursor */
+				/* placing item from the cursor */
 			} else if (heldItem != null && event.action == PLACE_ALL) {
 				if (heldItem.move(player, rawSlot, event.slot, null)) event.isCancelled = false
 
-			/* placing an item, also picking one up */
+				/* placing an item, also picking one up */
 			} else if (heldItem != null && clickedItem != null && event.action == SWAP_WITH_CURSOR) {
 				if (heldItem.move(player, rawSlot, event.slot, clickedItem)) event.isCancelled = false
 
-			/* putting an item onto cursor */
+				/* putting an item onto cursor */
 			} else if (clickedItem != null && event.action == PICKUP_ALL) {
 				clickedItem.onPickUp(player, event.slot)
 				event.isCancelled = false

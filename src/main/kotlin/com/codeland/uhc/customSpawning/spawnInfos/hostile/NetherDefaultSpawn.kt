@@ -4,7 +4,6 @@ import com.codeland.uhc.customSpawning.SpawnInfo
 import com.codeland.uhc.customSpawning.SpawnInfoType
 import org.bukkit.block.Biome
 import org.bukkit.block.Block
-import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
 
@@ -20,11 +19,12 @@ class NetherDefaultSpawn : SpawnInfo() {
 	companion object {
 		fun getSpawnInfo(block: Block, spawnCycle: Int): SpawnInfo {
 			return when (block.biome) {
-				Biome.CRIMSON_FOREST -> when (spawnCycle % 5) {
-					0 -> SpawnInfoType.PIGLIN
+				Biome.CRIMSON_FOREST -> when (spawnCycle % 6) {
+					0 -> SpawnInfoType.ZOMBIE_PIGLIN
 					1 -> SpawnInfoType.PIGLIN
 					2 -> SpawnInfoType.PIGLIN
-					3 -> SpawnInfoType.ZOMBIE_PIGLIN
+					3 -> SpawnInfoType.HOGLIN
+					4 -> SpawnInfoType.HOGLIN
 					else -> SpawnInfoType.HOGLIN
 				}
 				Biome.BASALT_DELTAS -> SpawnInfoType.MAGMA_CUBE

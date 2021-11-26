@@ -38,14 +38,14 @@ class WorldChunkManagerOverworldGame(
 		}
 	}
 
-    override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
-	    /* center biome area */
-	    return if (centerBiome != null && inRange(x, z, endRadius)) {
-	        centerBiome
+	override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
+		/* center biome area */
+		return if (centerBiome != null && inRange(x, z, endRadius)) {
+			centerBiome
 
-	    /* regular game area */
-        } else {
-		    biomeFromInt(areaLazy.a(x, z))
-        }
-    }
+			/* regular game area */
+		} else {
+			biomeFromInt(areaLazy.a(x, z))
+		}
+	}
 }

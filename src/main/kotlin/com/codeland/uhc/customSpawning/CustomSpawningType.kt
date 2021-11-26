@@ -36,8 +36,8 @@ enum class CustomSpawningType(
 				if (player.location.world.isDayTime && player.location.y >= 58) 10.0 else 30.0
 			}
 			World.Environment.NETHER -> {
-				20.0 * (if (player.location.block.y <= SpawnInfo.NETHER_CAVE_Y) 2.0 else 1.0) /
-					(if (player.location.block.biome === Biome.SOUL_SAND_VALLEY) 2.0 else 1.0)
+				30.0 * (if (player.location.block.y <= SpawnInfo.NETHER_CAVE_Y) 1.5 else 1.0) /
+				(if (player.location.block.biome === Biome.SOUL_SAND_VALLEY) 2.0 else 1.0)
 			}
 			else -> 30.0
 		}

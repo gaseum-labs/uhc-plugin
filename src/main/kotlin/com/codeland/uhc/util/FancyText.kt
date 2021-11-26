@@ -1,6 +1,5 @@
 package com.codeland.uhc.util
 
-import java.util.*
 import kotlin.random.Random
 
 object FancyText {

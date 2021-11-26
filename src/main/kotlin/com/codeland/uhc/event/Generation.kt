@@ -1,14 +1,15 @@
 package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.*
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.world.WorldGenOption.*
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.chunkPlacer.impl.OxeyePlacer
 import com.codeland.uhc.world.chunkPlacer.impl.SugarCanePlacer
-import com.codeland.uhc.world.chunkPlacerHolder.*
 import com.codeland.uhc.world.chunkPlacerHolder.type.*
 import org.bukkit.Bukkit
+import org.bukkit.Material.AIR
+import org.bukkit.Material.MELON
 import org.bukkit.entity.Animals
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -27,6 +28,12 @@ class Generation : Listener {
 				/* no chunk animals */
 				chunk.entities.forEach { entity ->
 					if (entity is Animals) entity.remove()
+				}
+
+				/* remove chunk melons */
+				for (y in 63..120) for (x in 0..15) for (z in 0..15) {
+					val block = chunk.getBlock(x, y, z)
+					if (block.type === MELON) block.setType(AIR, false)
 				}
 
 				OreFix.amethystPlacer.onGenerate(chunk, world.seed.toInt())
@@ -65,11 +72,6 @@ class Generation : Listener {
 					MushroomOxeyeFix.oxeyePlacer.onGenerate(chunk, world.seed.toInt())
 					MushroomOxeyeFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt())
 					MushroomOxeyeFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt())
-				}
-
-				if (config.worldGenEnabled(MELON_FIX)) {
-					MelonFix.removeMelons(chunk)
-					MelonFix.melonPlacer.onGenerate(chunk, world.seed.toInt())
 				}
 
 				if (config.worldGenEnabled(SUGAR_CANE_FIX) || config.worldGenEnabled(SUGAR_CANE_REGEN)) {

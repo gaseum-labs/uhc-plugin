@@ -1,16 +1,15 @@
 package com.codeland.uhc.quirk
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.event.Brew
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import org.bukkit.Material
+import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
-import org.bukkit.inventory.meta.PotionMeta
 
 enum class QuirkType(
 	val prettyName: String,
@@ -26,27 +25,27 @@ enum class QuirkType(
 			"Terrain cannot be modified",
 			"You cannot place or mine blocks",
 			"But you still get the block loot"
-        )
+		)
 	),
 
-    PESTS(
-	    "Pests",
-	    ::Pests,
-	    { ItemCreator.fromType(Material.WOODEN_SWORD) },
-	    arrayOf(
+	PESTS(
+		"Pests",
+		::Pests,
+		{ ItemCreator.fromType(Material.WOODEN_SWORD) },
+		arrayOf(
 			"Dead players come back to exact their revenge",
 			"But they are weak and have no access to advanced tools"
 		)
-    ),
+	),
 
-    CREATIVE(
-	    "Creative",
-	    ::Creative,
-	    { ItemCreator.fromType(Material.BRICK) },
-	    arrayOf(
-	        "you may place tough to get blocks without them emptying from your inventory"
+	CREATIVE(
+		"Creative",
+		::Creative,
+		{ ItemCreator.fromType(Material.BRICK) },
+		arrayOf(
+			"you may place tough to get blocks without them emptying from your inventory"
 		)
-    ),
+	),
 
 	SUMMONER(
 		"Summoner",
@@ -83,7 +82,7 @@ enum class QuirkType(
 		arrayOf(
 			"All players are limited to only",
 			"their hotbar to store items"
-  	    )
+		)
 	),
 
 	CARE_PACKAGES(
@@ -99,7 +98,10 @@ enum class QuirkType(
 	CHAOTIC_CARE_PACKAGES(
 		"Chaotic Care Packages",
 		::ChaoticCarePackages,
-		{ ItemCreator.fromType(Material.TIPPED_ARROW).customMeta <PotionMeta> { it.basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false) } },
+		{
+			ItemCreator.fromType(Material.TIPPED_ARROW)
+				.customMeta<PotionMeta> { it.basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false) }
+		},
 		arrayOf(
 			"Tons of chests drop throughout the world",
 			"Wacky loot is inside"
@@ -181,26 +183,26 @@ enum class QuirkType(
 		)
 	);
 
-   	var incompatibilities = mutableSetOf<QuirkType>()
+	var incompatibilities = mutableSetOf<QuirkType>()
 
-    /**
-     * you have to do this after initialization to
-     * have all the quirks already there
-     *
-     * this function is both ways, it will update the
-     * incompatibilities of each quirk passed in as well
-     */
-    fun setIncompatible(vararg quirks: QuirkType) {
-        incompatibilities.addAll(quirks)
+	/**
+	 * you have to do this after initialization to
+	 * have all the quirks already there
+	 *
+	 * this function is both ways, it will update the
+	 * incompatibilities of each quirk passed in as well
+	 */
+	fun setIncompatible(vararg quirks: QuirkType) {
+		incompatibilities.addAll(quirks)
 
-        quirks.forEach { quirk ->
-            quirk.incompatibilities.add(this)
-        }
-    }
+		quirks.forEach { quirk ->
+			quirk.incompatibilities.add(this)
+		}
+	}
 
-    fun isIncompatible(other: QuirkType) {
-        incompatibilities.contains(other)
-    }
+	fun isIncompatible(other: QuirkType) {
+		incompatibilities.contains(other)
+	}
 
 	fun createQuirk(game: Game): Quirk {
 		/* quirk instance from quirk type */
@@ -210,11 +212,11 @@ enum class QuirkType(
 		return quirk
 	}
 
-    companion object {
-        init {
-            CREATIVE.setIncompatible(UNSHELTERED)
-	        CARE_PACKAGES.setIncompatible(CHAOTIC_CARE_PACKAGES)
-	        INFINITE_INVENTORY.setIncompatible(HOTBAR)
+	companion object {
+		init {
+			CREATIVE.setIncompatible(UNSHELTERED)
+			CARE_PACKAGES.setIncompatible(CHAOTIC_CARE_PACKAGES)
+			INFINITE_INVENTORY.setIncompatible(HOTBAR)
 		}
-    }
+	}
 }

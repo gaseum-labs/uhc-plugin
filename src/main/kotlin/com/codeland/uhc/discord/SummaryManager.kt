@@ -7,11 +7,9 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
+import java.net.http.*
 import java.util.*
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 class SummaryManager(val bot: MixerBot) {
 	fun getSummariesChannel(): CompletableFuture<TextChannel> {
@@ -20,7 +18,9 @@ class SummaryManager(val bot: MixerBot) {
 	}
 
 	fun getStagingChannel(): CompletableFuture<TextChannel> {
-		return Channels.getCategoryChannel(bot.guild, Channels.DATA_CATEGORY_NAME, Channels.SUMMARY_STAGING_CHANNEL_NAME)
+		return Channels.getCategoryChannel(bot.guild,
+			Channels.DATA_CATEGORY_NAME,
+			Channels.SUMMARY_STAGING_CHANNEL_NAME)
 			.thenApply { (_, channel) -> channel }
 	}
 
@@ -75,7 +75,10 @@ class SummaryManager(val bot: MixerBot) {
 			val kills = summary.numKills(uuid)
 
 			builder.addField(
-				"$place. ${formatName(uuid, name)} ${if (kills == 0) "" else "($kills kill${if ((kills) == 1) "" else "s"})"}",
+				"$place. ${
+					formatName(uuid,
+						name)
+				} ${if (kills == 0) "" else "($kills kill${if ((kills) == 1) "" else "s"})"}",
 				if (place == 1) {
 					"Winner"
 				} else {

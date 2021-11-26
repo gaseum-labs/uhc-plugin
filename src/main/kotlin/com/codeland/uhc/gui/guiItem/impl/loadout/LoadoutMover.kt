@@ -3,15 +3,22 @@ package com.codeland.uhc.gui.guiItem.impl.loadout
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import com.codeland.uhc.gui.MoveableGuiPage
+import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import com.codeland.uhc.lobbyPvp.LoadoutItems
 import com.codeland.uhc.lobbyPvp.Loadouts
 import org.bukkit.ChatColor.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerData, val loadoutItem: LoadoutItems, var optionIndex: Int, val loadoutSlot: Int) : MoveableGuiItem(rawSlot, gui) {
+class LoadoutMover(
+	rawSlot: Int,
+	gui: MoveableGuiPage,
+	val playerData: PlayerData,
+	val loadoutItem: LoadoutItems,
+	var optionIndex: Int,
+	val loadoutSlot: Int,
+) : MoveableGuiItem(rawSlot, gui) {
 	override fun internalGenerate(): ItemCreator {
 		val creator = ItemCreator.fromStack(loadoutItem.createItem(), false)
 			.lore(
@@ -29,17 +36,17 @@ class LoadoutMover(rawSlot: Int, gui: MoveableGuiPage, val playerData: PlayerDat
 						creator.enchant(option.enchant, option.level)
 					}
 					is LoadoutItems.Companion.AmountOption -> {
-						creator.amount(creator.amount + option.addAmount) 
+						creator.amount(creator.amount + option.addAmount)
 					}
 				}
-	
+
 				/* different types of options have different colors */
 				val color = when (loadoutItem.enchantOptions.first()) {
 					is LoadoutItems.Companion.EnchantOption -> LIGHT_PURPLE
 					is LoadoutItems.Companion.AmountOption -> DARK_PURPLE
 					else -> RED
 				}
-	
+
 				"${color}${BOLD}<${optionIndex + 1}/${loadoutItem.enchantOptions.size}> "
 			}
 		}${GREEN}${BOLD}$${itemCost()}")

@@ -6,7 +6,6 @@ import com.codeland.uhc.util.extensions.ResultSetExtensions.setLongNull
 import java.sql.CallableStatement
 import java.sql.ResultSet
 import java.util.*
-import kotlin.collections.HashMap
 
 class LinkDataFile : DatabaseFile<LinkDataFile.LinkData, LinkDataFile.LinkEntry>() {
 	class LinkData(

@@ -54,7 +54,7 @@ abstract class AbstractChunkPlacer(val size: Int) {
 			chunk: Chunk,
 			low: Int,
 			high: Int,
-			placeBlock: (block: Block, x: Int, y: Int, z: Int) -> Boolean
+			placeBlock: (block: Block, x: Int, y: Int, z: Int) -> Boolean,
 		): Block? {
 			xPos.shuffle()
 			zPos.shuffle()

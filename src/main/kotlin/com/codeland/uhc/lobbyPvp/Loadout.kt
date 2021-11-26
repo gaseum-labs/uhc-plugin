@@ -1,12 +1,11 @@
 package com.codeland.uhc.lobbyPvp
 
-import com.codeland.uhc.util.ItemUtil
 import org.bukkit.Material
 import org.bukkit.inventory.PlayerInventory
 
 class Loadout(
 	val ids: Array<Int> = Array(LOADOUT_SIZE) { -1 },
-	val options: Array<Int> = Array(LOADOUT_SIZE) { -1 }
+	val options: Array<Int> = Array(LOADOUT_SIZE) { -1 },
 ) {
 	companion object {
 		const val LOADOUT_SIZE = 9 * 4

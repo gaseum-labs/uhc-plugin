@@ -1,10 +1,9 @@
 package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.util.UHCProperty
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
+import com.codeland.uhc.util.UHCProperty
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.math.min
 
@@ -55,7 +54,7 @@ object PvpQueue {
 	data class QueuePair(
 		val player1: UUID, val player2: UUID,
 		val index1: Int, val index2: Int,
-		val priority1: Int, val priority2: Int
+		val priority1: Int, val priority2: Int,
 	)
 
 	fun perSecond() {
@@ -84,7 +83,7 @@ object PvpQueue {
 									0, greatestTime
 								))
 							}
-						/* fresh opponent */
+							/* fresh opponent */
 						} else {
 							queuePairs.add(QueuePair(
 								element1.uuid, element2.uuid,

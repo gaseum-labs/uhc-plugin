@@ -5,7 +5,6 @@ import com.codeland.uhc.blockfix.CountingRange
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.Util.binarySearch
 import org.bukkit.Material
-import org.bukkit.block.Block
 import org.bukkit.block.BlockState
 import org.bukkit.inventory.ItemStack
 
@@ -28,7 +27,9 @@ class LeavesFix : BlockFix("Leaves", arrayOf(
 	CountingRange(
 		"Sapling",
 		20,
-		{ leaves, _ -> ItemStack(Util.binaryFind(leaves, leavesInfo) { info -> info.leaves }?.sapling ?: Material.OAK_SAPLING) },
+		{ leaves, _ ->
+			ItemStack(Util.binaryFind(leaves, leavesInfo) { info -> info.leaves }?.sapling ?: Material.OAK_SAPLING)
+		},
 		{ _, _ -> null }
 	)
 )) {

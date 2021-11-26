@@ -19,7 +19,7 @@ object CustomSpawning {
 		type: CustomSpawningType,
 		player: Player,
 		spawningData: SpawningPlayerData,
-		game: Game
+		game: Game,
 	): SpawnInfo? {
 		return when (player.world) {
 			WorldManager.gameWorld -> {
@@ -64,7 +64,13 @@ object CustomSpawning {
 		}
 	}
 
-	private fun spawnXZValid(type: CustomSpawningType, player: Player, spawnPlayers: List<Pair<Player, SpawningPlayerData>>, x: Double, z: Double): Boolean {
+	private fun spawnXZValid(
+		type: CustomSpawningType,
+		player: Player,
+		spawnPlayers: List<Pair<Player, SpawningPlayerData>>,
+		x: Double,
+		z: Double,
+	): Boolean {
 		val borderRadius = player.world.worldBorder.size / 2
 		if (abs(x) > borderRadius || abs(z) > borderRadius) return false
 
@@ -82,7 +88,7 @@ object CustomSpawning {
 		}
 
 		return rayCastStartEnd(s.location.add(0.5, 0.5, 0.5), e.location.add(0.5, 0.5, 0.5)) == null ||
-			rayCastStartEnd(s.location.add(0.5, 1.5, 0.5), e.location.add(0.5, 1.5, 0.5)) == null
+		rayCastStartEnd(s.location.add(0.5, 1.5, 0.5), e.location.add(0.5, 1.5, 0.5)) == null
 	}
 
 	fun getSpawnBlock(
@@ -90,7 +96,7 @@ object CustomSpawning {
 		player: Player,
 		spawningData: SpawningPlayerData,
 		spawnPlayers: List<Pair<Player, SpawningPlayerData>>,
-		spawnInfo: SpawnInfo
+		spawnInfo: SpawnInfo,
 	): Pair<EntityType, Block>? {
 		val minY = (player.location.y - type.verticalRadius).toInt().coerceAtLeast(0).coerceAtMost(255)
 		val maxY = (player.location.y + type.verticalRadius).toInt().coerceAtMost(255).coerceAtLeast(0)
@@ -195,7 +201,13 @@ object CustomSpawning {
 	/**
 	 * @return whether more spawning should be attempted after this
 	 */
-	private fun attemptSpawn(type: CustomSpawningType, game: Game, player: Player, data: SpawningPlayerData, spawnPlayers: List<Pair<Player, SpawningPlayerData>>): Boolean {
+	private fun attemptSpawn(
+		type: CustomSpawningType,
+		game: Game,
+		player: Player,
+		data: SpawningPlayerData,
+		spawnPlayers: List<Pair<Player, SpawningPlayerData>>,
+	): Boolean {
 		val playerMobCount = calcPlayerMobs(type, player)
 
 		if (playerMobCount < data.intCap()) {
@@ -226,7 +238,7 @@ object CustomSpawning {
 				data.isAttempting = attemptSpawn(type, game, player, data, spawnPlayers)
 			}
 
-		/* retry tick */
+			/* retry tick */
 		} else if (currentTick % 19 == 0) {
 			val spawnPlayers = collectSpawnPlayers(type)
 

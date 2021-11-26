@@ -1,9 +1,7 @@
 package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.command.Commands
-import com.codeland.uhc.core.Lobby
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.*
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
@@ -16,7 +14,6 @@ import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
-import kotlin.collections.ArrayList
 
 abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>) {
 	var x = 0
@@ -164,7 +161,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 	fun playerIsAlive(player: Player): Boolean {
 		return player.location.world === WorldManager.pvpWorld &&
-			player.gameMode !== GameMode.SPECTATOR
+		player.gameMode !== GameMode.SPECTATOR
 	}
 
 	fun playerIsParticipating(uuid: UUID): Boolean {
@@ -205,9 +202,11 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 	fun outsideBorder(onOutside: (Player, Int) -> Unit) {
 		online().forEach { player ->
 			val minX = (x * ArenaManager.ARENA_STRIDE) + (ArenaManager.ARENA_STRIDE - ArenaManager.BORDER) / 2
-			val maxX = (x * ArenaManager.ARENA_STRIDE) + ((ArenaManager.ARENA_STRIDE / 2) + (ArenaManager.BORDER / 2)) - 1
+			val maxX =
+				(x * ArenaManager.ARENA_STRIDE) + ((ArenaManager.ARENA_STRIDE / 2) + (ArenaManager.BORDER / 2)) - 1
 			val minZ = (z * ArenaManager.ARENA_STRIDE) + (ArenaManager.ARENA_STRIDE - ArenaManager.BORDER) / 2
-			val maxZ = (z * ArenaManager.ARENA_STRIDE) + ((ArenaManager.ARENA_STRIDE / 2) + (ArenaManager.BORDER / 2)) - 1
+			val maxZ =
+				(z * ArenaManager.ARENA_STRIDE) + ((ArenaManager.ARENA_STRIDE / 2) + (ArenaManager.BORDER / 2)) - 1
 
 			val playerX = player.location.blockX
 			val playerZ = player.location.blockZ

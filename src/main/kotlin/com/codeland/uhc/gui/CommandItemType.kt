@@ -4,9 +4,7 @@ import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
-import org.bukkit.ChatColor
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
@@ -16,7 +14,7 @@ import org.bukkit.persistence.PersistentDataType
 enum class CommandItemType(
 	val material: Material,
 	val displayName: Component,
-	val command: String
+	val command: String,
 ) {
 	/* lobby */
 	GUI_OPENER(
@@ -34,6 +32,7 @@ enum class CommandItemType(
 		Component.text("${ChatColor.BLUE}Spectate Game"),
 		"uhc spectate"
 	),
+
 	/* parkour */
 	LOBBY_RETURN(
 		Material.MAGMA_CREAM,
@@ -59,7 +58,8 @@ enum class CommandItemType(
 	fun isItem(stack: ItemStack): Boolean {
 		if (stack.type !== material) return false
 
-		val index = (stack.itemMeta as PersistentDataHolder).persistentDataContainer.get(key, PersistentDataType.INTEGER)
+		val index =
+			(stack.itemMeta as PersistentDataHolder).persistentDataContainer.get(key, PersistentDataType.INTEGER)
 
 		return index != null && index == ordinal
 	}

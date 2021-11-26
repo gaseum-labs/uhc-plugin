@@ -2,9 +2,7 @@ package com.codeland.uhc.customSpawning.spawnInfos.passive
 
 import com.codeland.uhc.customSpawning.SpawnInfo
 import org.bukkit.block.Block
-import org.bukkit.entity.Ageable
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.LivingEntity
+import org.bukkit.entity.*
 
 class SpawnChicken : SpawnInfo() {
 	override fun allowSpawn(block: Block, spawnCycle: Int): Pair<EntityType, Boolean>? {

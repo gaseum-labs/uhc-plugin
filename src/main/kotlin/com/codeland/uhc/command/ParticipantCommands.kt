@@ -1,14 +1,8 @@
 package com.codeland.uhc.command
 
 import co.aikar.commands.BaseCommand
-import co.aikar.commands.annotation.CommandAlias
-import co.aikar.commands.annotation.CommandCompletion
-import co.aikar.commands.annotation.Description
-import co.aikar.commands.annotation.Subcommand
-import com.codeland.uhc.util.Action
-import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.core.Lobby
-import com.codeland.uhc.core.UHC
+import co.aikar.commands.annotation.*
+import com.codeland.uhc.core.*
 import com.codeland.uhc.event.Enchant
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
@@ -16,8 +10,7 @@ import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
-import com.codeland.uhc.team.*
-import net.kyori.adventure.text.Component
+import com.codeland.uhc.util.Action
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -146,7 +139,8 @@ class ParticipantCommands : BaseCommand() {
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
 
-		val classes = game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes =
+			game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (classes.getClass(sender.uniqueId) != QuirkClass.NO_CLASS) {
 			return Commands.errorMessage(sender, "You've already chosen a class")
@@ -173,13 +167,16 @@ class ParticipantCommands : BaseCommand() {
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
 
-		val classes = game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes =
+			game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
-		if (classes.getClass(sender.uniqueId) != QuirkClass.TRAPPER) return Commands.errorMessage(sender, "Your class can't use this command.")
+		if (classes.getClass(sender.uniqueId) != QuirkClass.TRAPPER) return Commands.errorMessage(sender,
+			"Your class can't use this command.")
 
 		val control = Classes.remoteControls.find { (item, _, _) ->
-			item == sender.inventory.itemInMainHand }
-				?: return Commands.errorMessage(sender, "You're not holding a remote control.")
+			item == sender.inventory.itemInMainHand
+		}
+			?: return Commands.errorMessage(sender, "You're not holding a remote control.")
 
 		control.displayName = name
 		sender.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
@@ -246,16 +243,20 @@ class ParticipantCommands : BaseCommand() {
 		sender.sendMessage("${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}0  1  3  5  7  9  11 13 15 ${ChatColor.WHITE}| ${ChatColor.WHITE}Shelves")
 		sender.sendMessage("")
 		enchantFixType.options.forEachIndexed { i, option ->
-			sender.sendMessage("${option.levels.joinToString("  ") {
-				"${when (it) {
-					0 -> ChatColor.BLACK
-					1 -> ChatColor.RED
-					2 -> ChatColor.GOLD
-					3 -> ChatColor.YELLOW
-					4 -> ChatColor.GREEN
-					else -> ChatColor.AQUA
-				}}${ChatColor.BOLD}${it}"
-			}} ${ChatColor.WHITE}| ${ChatColor.BLUE}${names[i]}")
+			sender.sendMessage("${
+				option.levels.joinToString("  ") {
+					"${
+						when (it) {
+							0 -> ChatColor.BLACK
+							1 -> ChatColor.RED
+							2 -> ChatColor.GOLD
+							3 -> ChatColor.YELLOW
+							4 -> ChatColor.GREEN
+							else -> ChatColor.AQUA
+						}
+					}${ChatColor.BOLD}${it}"
+				}
+			} ${ChatColor.WHITE}| ${ChatColor.BLUE}${names[i]}")
 		}
 	}
 }

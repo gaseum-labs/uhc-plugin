@@ -2,10 +2,10 @@ package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.event.Axe
 import com.codeland.uhc.event.Brew
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.AmountOption
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.EnchantOption
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.ItemOption
-import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
@@ -87,52 +87,54 @@ val goldenAppleAmounts: Array<ItemOption> = arrayOf(
 
 enum class LoadoutItems(val cost: Int, val enchantOptions: Array<ItemOption>, val createItem: () -> ItemStack) {
 	/* DO NOT REORDER THESE, IMPORTANT FOR BACKWARDS COMPATIBILITY */
-	IRON_HELMET       (1, armorEnchants, { ItemStack(Material.IRON_HELMET) }),
-	IRON_CHESTPLATE   (1, armorEnchants, { ItemStack(Material.IRON_CHESTPLATE) }),
-	IRON_LEGGINGS     (1, armorEnchants, { ItemStack(Material.IRON_LEGGINGS) }),
-	IRON_BOOTS        (1, armorEnchants, { ItemStack(Material.IRON_BOOTS) }),
-	DIAMOND_HELMET    (4, armorEnchants, { ItemStack(Material.DIAMOND_HELMET) }),
+	IRON_HELMET(1, armorEnchants, { ItemStack(Material.IRON_HELMET) }),
+	IRON_CHESTPLATE(1, armorEnchants, { ItemStack(Material.IRON_CHESTPLATE) }),
+	IRON_LEGGINGS(1, armorEnchants, { ItemStack(Material.IRON_LEGGINGS) }),
+	IRON_BOOTS(1, armorEnchants, { ItemStack(Material.IRON_BOOTS) }),
+	DIAMOND_HELMET(4, armorEnchants, { ItemStack(Material.DIAMOND_HELMET) }),
 	DIAMOND_CHESTPLATE(5, armorEnchants, { ItemStack(Material.DIAMOND_CHESTPLATE) }),
-	DIAMOND_LEGGINGS  (4, armorEnchants, { ItemStack(Material.DIAMOND_LEGGINGS) }),
-	DIAMOND_BOOTS     (4, armorEnchants, { ItemStack(Material.DIAMOND_BOOTS) }),
+	DIAMOND_LEGGINGS(4, armorEnchants, { ItemStack(Material.DIAMOND_LEGGINGS) }),
+	DIAMOND_BOOTS(4, armorEnchants, { ItemStack(Material.DIAMOND_BOOTS) }),
 
-	IRON_SWORD        (1, swordEnchants, { ItemStack(Material.IRON_SWORD) }),
-	DIAMOND_SWORD     (3, swordEnchants, { ItemStack(Material.DIAMOND_SWORD) }),
-	IRON_AXE          (1, axeEnchants,   { Axe.ironAxe() }),
-	DIAMOND_AXE       (3, axeEnchants,   { Axe.diamondAxe() }),
-	BOW               (2, bowEnchants,   { ItemStack(Material.BOW) }),
-	CROSSBOW          (2, emptyArray(),  { ItemCreator.regular(Material.CROSSBOW).enchant(Enchantment.PIERCING, 1).create() }),
-	SHIELD            (2, emptyArray(),  { ItemStack(Material.SHIELD) }),
-	PICKAXE           (1, pickaxeEnchants,  { ItemCreator.regular(Material.DIAMOND_PICKAXE).enchant(Enchantment.DIG_SPEED, 2).create() }),
+	IRON_SWORD(1, swordEnchants, { ItemStack(Material.IRON_SWORD) }),
+	DIAMOND_SWORD(3, swordEnchants, { ItemStack(Material.DIAMOND_SWORD) }),
+	IRON_AXE(1, axeEnchants, { Axe.ironAxe() }),
+	DIAMOND_AXE(3, axeEnchants, { Axe.diamondAxe() }),
+	BOW(2, bowEnchants, { ItemStack(Material.BOW) }),
+	CROSSBOW(2, emptyArray(), { ItemCreator.regular(Material.CROSSBOW).enchant(Enchantment.PIERCING, 1).create() }),
+	SHIELD(2, emptyArray(), { ItemStack(Material.SHIELD) }),
+	PICKAXE(1,
+		pickaxeEnchants,
+		{ ItemCreator.regular(Material.DIAMOND_PICKAXE).enchant(Enchantment.DIG_SPEED, 2).create() }),
 
-	ARROWS            (1, arrowAmounts,  { ItemStack(Material.ARROW, 16) }),
-	/* UNUSED */ ARROWS_2_UNUSED (1, emptyArray(), { ItemStack(Material.ARROW) }),
-	SPECTRAL_ARROWS   (1, spectralArrowAmounts,  { ItemStack(Material.SPECTRAL_ARROW, 10) }),
-	/* UNUSED */ SPECTRAL_ARROWS_UNUSED (1, emptyArray(), { ItemStack(Material.SPECTRAL_ARROW) }),
+	ARROWS(1, arrowAmounts, { ItemStack(Material.ARROW, 16) }),
+	/* UNUSED */ ARROWS_2_UNUSED(1, emptyArray(), { ItemStack(Material.ARROW) }),
+	SPECTRAL_ARROWS(1, spectralArrowAmounts, { ItemStack(Material.SPECTRAL_ARROW, 10) }),
+	/* UNUSED */ SPECTRAL_ARROWS_UNUSED(1, emptyArray(), { ItemStack(Material.SPECTRAL_ARROW) }),
 
-	WATER_BUCKET      (1, emptyArray(),  { ItemStack(Material.WATER_BUCKET) }),
-	LAVA_BUCKET       (1, emptyArray(),  { ItemStack(Material.LAVA_BUCKET) }),
+	WATER_BUCKET(1, emptyArray(), { ItemStack(Material.WATER_BUCKET) }),
+	LAVA_BUCKET(1, emptyArray(), { ItemStack(Material.LAVA_BUCKET) }),
 
-	BLOCKS            (1, emptyArray(),  { ItemStack(Material.OAK_PLANKS, 64) }),
-	BLOCKS_2          (1, emptyArray(),  { ItemStack(Material.COBBLESTONE, 64) }),
-	ENDER_PEARLS      (1, enderPearlAmounts,  { ItemStack(Material.ENDER_PEARL, 1) }),
-	GOLDEN_APPLES     (1, goldenAppleAmounts,  { ItemStack(Material.GOLDEN_APPLE, 1) }),
+	BLOCKS(1, emptyArray(), { ItemStack(Material.OAK_PLANKS, 64) }),
+	BLOCKS_2(1, emptyArray(), { ItemStack(Material.COBBLESTONE, 64) }),
+	ENDER_PEARLS(1, enderPearlAmounts, { ItemStack(Material.ENDER_PEARL, 1) }),
+	GOLDEN_APPLES(1, goldenAppleAmounts, { ItemStack(Material.GOLDEN_APPLE, 1) }),
 
-	SPEED_POTION      (2, emptyArray(),  ::createSpeed),
-	SPEED_POTION_2    (2, emptyArray(),  ::createSpeed),
-	HEALTH_POTION     (2, emptyArray(),  ::createHealth),
-	HEALTH_POTION_2   (2, emptyArray(),  ::createHealth),
-	DAMAGE_POTION     (2, emptyArray(),  ::createDamage),
-	DAMAGE_POTION_2   (2, emptyArray(),  ::createDamage),
+	SPEED_POTION(2, emptyArray(), ::createSpeed),
+	SPEED_POTION_2(2, emptyArray(), ::createSpeed),
+	HEALTH_POTION(2, emptyArray(), ::createHealth),
+	HEALTH_POTION_2(2, emptyArray(), ::createHealth),
+	DAMAGE_POTION(2, emptyArray(), ::createDamage),
+	DAMAGE_POTION_2(2, emptyArray(), ::createDamage),
 
-	CROSSBOW_2        (2, emptyArray(),  { ItemCreator.regular(Material.CROSSBOW).enchant(Enchantment.PIERCING, 1).create() });
+	CROSSBOW_2(2, emptyArray(), { ItemCreator.regular(Material.CROSSBOW).enchant(Enchantment.PIERCING, 1).create() });
 
 	companion object {
 		abstract class ItemOption(val addCost: Int)
 
 		class EnchantOption(addCost: Int, val enchant: Enchantment, val level: Int) : ItemOption(addCost)
 
-		class AmountOption(addCost: Int, val addAmount: Int): ItemOption(addCost)
+		class AmountOption(addCost: Int, val addAmount: Int) : ItemOption(addCost)
 
 		class ReplaceOption(addCost: Int, val create: () -> ItemStack) : ItemOption(addCost)
 	}

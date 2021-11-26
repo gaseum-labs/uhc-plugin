@@ -1,11 +1,9 @@
 package com.codeland.uhc.gui.gui
 
 import com.codeland.uhc.core.GameConfig
+import com.codeland.uhc.gui.*
 import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.gui.guiItem.GuiItemToggle
-import com.codeland.uhc.gui.GuiPage
-import com.codeland.uhc.gui.GuiType
-import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.format.TextColor
@@ -34,11 +32,13 @@ class QuirkGui(val gameConfig: GameConfig, val createGameGui: CreateGameGui) : G
 
 		addItem(object : GuiItem(coords(7, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = gameConfig.quirksEnabled.forEach { it.set(false) }
-			override fun getStack() = ItemCreator.fromType(Material.MUSIC_DISC_CHIRP).name("${ChatColor.RED}Reset").create()
+			override fun getStack() =
+				ItemCreator.fromType(Material.MUSIC_DISC_CHIRP).name("${ChatColor.RED}Reset").create()
 		})
 		addItem(object : GuiItem(coords(8, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = createGameGui.open(player)
-			override fun getStack() = ItemCreator.fromType(Material.PRISMARINE_SHARD).name("${ChatColor.BLUE}Back").create()
+			override fun getStack() =
+				ItemCreator.fromType(Material.PRISMARINE_SHARD).name("${ChatColor.BLUE}Back").create()
 		})
 	}
 }

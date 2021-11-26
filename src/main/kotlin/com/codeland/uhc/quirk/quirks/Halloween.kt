@@ -2,12 +2,12 @@ package com.codeland.uhc.quirk.quirks
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.SchedulerUtil
-import org.bukkit.*
+import org.bukkit.Bukkit
 import org.bukkit.Material.*
+import org.bukkit.Sound
 import org.bukkit.entity.*
 import org.bukkit.entity.EntityType.*
 import org.bukkit.event.entity.CreatureSpawnEvent
@@ -42,6 +42,7 @@ class Halloween(type: QuirkType, game: Game) : Quirk(type, game) {
 	}
 
 	companion object {
+		//TODO make these work again
 		fun onEntitySpawn(entity: Entity) {
 			if (entity as? LivingEntity != null) {
 				entity.equipment?.helmet = ItemStack(if (Math.random() < 0.5) CARVED_PUMPKIN else JACK_O_LANTERN)

@@ -1,18 +1,15 @@
 package com.codeland.uhc.gui.guiItem.impl.lobbyPvp;
 
-import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.gui.ItemCreator
+import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.lobbyPvp.Arena
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.world.WorldManager
-import org.bukkit.ChatColor
-import org.bukkit.GameMode
-import org.bukkit.Location
-import org.bukkit.Material
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
-class SpectatePvp(index: Int): GuiItem(index) {
+class SpectatePvp(index: Int) : GuiItem(index) {
 	override fun onClick(player: Player, shift: Boolean) {
 		if (ArenaManager.playersArena(player.uniqueId) == null) {
 			val center = ArenaManager.ongoing.lastOrNull()?.getCenter()

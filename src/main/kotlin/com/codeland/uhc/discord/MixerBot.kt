@@ -2,7 +2,7 @@ package com.codeland.uhc.discord
 
 import com.codeland.uhc.core.ConfigFile
 import com.codeland.uhc.core.UHC
-import com.codeland.uhc.discord.command.*
+import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.discord.command.commands.*
 import com.codeland.uhc.discord.storage.DiscordStorage
 import com.codeland.uhc.util.WebAddress
@@ -10,9 +10,7 @@ import com.codeland.uhc.util.extensions.RestActionExtensions
 import com.codeland.uhc.util.extensions.RestActionExtensions.submitAsync
 import io.netty.buffer.ByteBufOutputStream
 import io.netty.buffer.Unpooled
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.*
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
@@ -20,12 +18,10 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
+import java.net.http.*
 import java.nio.charset.StandardCharsets
 import java.util.*
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 import javax.imageio.ImageIO
 
 class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
@@ -90,7 +86,8 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 					val scaledImage = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
 
 					val graphics = scaledImage.createGraphics()
-					graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+					graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+						RenderingHints.VALUE_INTERPOLATION_BILINEAR)
 					graphics.drawImage(baseImage, 0, 0, size, size, 0, 0, baseImage.width, baseImage.height, null)
 					graphics.dispose()
 
@@ -149,7 +146,7 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 						destroyTeamChannel(guild, teamChannel, general)
 					}
 
-				/* remove only certain players, don't delete channel */
+					/* remove only certain players, don't delete channel */
 				} else {
 					voiceMembersFromPlayers(guild, players).forEach { member ->
 						guild.moveVoiceMember(member, general).queue()
@@ -170,7 +167,7 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 		Channels.getCategoryVoiceChannel(guild, Channels.VOICE_CATEGORY_NAME, Channels.GENERAL_VOICE_CHANNEL_NAME)
 			.thenAccept { (category, general) ->
 				category.voiceChannels.forEach { channel ->
-					if (channel.idLong != general.idLong)  {
+					if (channel.idLong != general.idLong) {
 						destroyTeamChannel(guild, channel, general)
 					}
 				}

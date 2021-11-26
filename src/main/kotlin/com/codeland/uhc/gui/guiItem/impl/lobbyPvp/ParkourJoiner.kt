@@ -1,20 +1,17 @@
 package com.codeland.uhc.gui.guiItem.impl.lobbyPvp
 
-import com.codeland.uhc.util.UHCProperty
-import com.codeland.uhc.gui.guiItem.GuiItemProperty
 import com.codeland.uhc.gui.ItemCreator
-import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.ArenaType
-import com.codeland.uhc.lobbyPvp.PvpQueue
+import com.codeland.uhc.gui.guiItem.GuiItemProperty
+import com.codeland.uhc.lobbyPvp.*
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.Material
+import com.codeland.uhc.util.UHCProperty
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 
-class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) : GuiItemProperty<Int>(index, parkourIndexProperty) {
+class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) :
+	GuiItemProperty<Int>(index, parkourIndexProperty) {
 	override fun onClick(player: Player, shift: Boolean) {
 		if (shift) {
 			val arenaList = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)
@@ -47,7 +44,7 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) : GuiIte
 			val player = Bukkit.getOfflinePlayer(arena.owner)
 
 			ItemCreator.fromType(Material.PLAYER_HEAD)
-				.customMeta <SkullMeta> { it.owningPlayer = player }
+				.customMeta<SkullMeta> { it.owningPlayer = player }
 				.name("${ChatColor.YELLOW}Join ${player.name}'s Parkour")
 				.lore(if (arenaList.size == 1) "" else "Shift click to see more arenas")
 

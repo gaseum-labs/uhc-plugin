@@ -3,19 +3,14 @@ package com.codeland.uhc.lobbyPvp.arena
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.event.Packet
-import com.codeland.uhc.lobbyPvp.Arena
-import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.lobbyPvp.ArenaType
-import org.bukkit.ChatColor
-import org.bukkit.GameMode
-import org.bukkit.Material
-import org.bukkit.World
+import com.codeland.uhc.lobbyPvp.*
+import org.bukkit.*
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.math.*
 
-class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(ArenaType.PVP, teams) {
+class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(ArenaType.PVP, teams) {
 	companion object {
 		const val TYPE_1V1 = 1
 		const val TYPE_2V2 = 2
@@ -60,7 +55,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int): Arena(Are
 			endNaturally(teamsAlive.first())
 			false
 
-		/* if somehow all players disconnect then end it immediately */
+			/* if somehow all players disconnect then end it immediately */
 		} else {
 			teamsAlive.isEmpty()
 		}
