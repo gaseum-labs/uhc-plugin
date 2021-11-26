@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen.layer.game2
+package com.codeland.uhc.world.gen.layer.game
 
 import kotlin.random.Random
 

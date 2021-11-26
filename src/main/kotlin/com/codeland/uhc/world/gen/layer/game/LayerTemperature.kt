@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen.layer.game2
+package com.codeland.uhc.world.gen.layer.game
 
 import com.codeland.uhc.util.Util
 import net.minecraft.world.level.newbiome.context.WorldGenContext

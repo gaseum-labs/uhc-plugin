@@ -79,5 +79,31 @@ abstract class AbstractChunkPlacer(val size: Int) {
 
 			return null
 		}
+
+		fun <T> randomPosition(
+			chunk: Chunk,
+			low: Int,
+			high: Int,
+			onBlock: (block: Block) -> T?,
+		): T? {
+			xPos.shuffle()
+			zPos.shuffle()
+
+			val height = high - low + 1
+
+			val yPos = Array(height) { it + low }
+			yPos.shuffle()
+
+			for (k in 0 until height) {
+				for (j in 0..15) {
+					for (i in 0..15) {
+						val result = onBlock(chunk.getBlock(xPos[i], yPos[k], zPos[j]))
+						if (result != null) return result
+					}
+				}
+			}
+
+			return null
+		}
 	}
 }

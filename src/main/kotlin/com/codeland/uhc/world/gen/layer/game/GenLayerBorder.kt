@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen.layer.game2
+package com.codeland.uhc.world.gen.layer.game
 
 import net.minecraft.world.level.newbiome.context.WorldGenContext
 import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer7

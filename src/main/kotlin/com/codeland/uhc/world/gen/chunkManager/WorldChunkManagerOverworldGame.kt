@@ -16,7 +16,7 @@ class WorldChunkManagerOverworldGame(
 	val endRadius: Int,
 	val features: Boolean,
 ) : WorldChunkManagerOverworld(seed, false, false, var4) {
-	private val areaLazy = CustomGenLayers.createAreaGame2(seed, startRadius)
+	private val areaLazy = CustomGenLayers.createAreaGame(seed, startRadius)
 
 	private val centerBiome = if (centerBiomeNo == null) null else biomeFromInt(centerBiomeNo)
 

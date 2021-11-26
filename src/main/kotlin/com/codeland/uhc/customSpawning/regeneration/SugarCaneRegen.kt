@@ -1,14 +1,14 @@
 package com.codeland.uhc.customSpawning.regeneration
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.customSpawning.SpawnInfo.Companion.isWater
+import com.codeland.uhc.customSpawning.SpawnUtil
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 
-class SugarCaneRegen(game: Game) : Regen(game, 5, 190) {
+class SugarCaneRegen(game: Game) : Regen(game, 5, 200) {
 	fun findCane(chunk: Chunk): Block? {
 		val caneBlock =
 			AbstractChunkPlacer.randomPosition(chunk, 58, 70) { block, _, _, _ ->
@@ -44,10 +44,10 @@ class SugarCaneRegen(game: Game) : Regen(game, 5, 190) {
 					down.type === Material.PODZOL ||
 					down.type === Material.RED_SAND ||
 					down.type === Material.COARSE_DIRT) &&
-					(isWater(down.getRelative(BlockFace.WEST)) ||
-					isWater(down.getRelative(BlockFace.EAST)) ||
-					isWater(down.getRelative(BlockFace.NORTH)) ||
-					isWater(down.getRelative(BlockFace.SOUTH)))
+					(SpawnUtil.isWater(down.getRelative(BlockFace.WEST)) ||
+					SpawnUtil.isWater(down.getRelative(BlockFace.EAST)) ||
+					SpawnUtil.isWater(down.getRelative(BlockFace.NORTH)) ||
+					SpawnUtil.isWater(down.getRelative(BlockFace.SOUTH)))
 				}
 
 		block?.setType(Material.SUGAR_CANE, false)

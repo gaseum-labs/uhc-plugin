@@ -6,7 +6,7 @@ import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.*
 
-class MelonRegen(game: Game) : Regen(game, 3, 2400) {
+class MelonRegen(game: Game) : Regen(game, 3, 2600) {
 	/* at least half of the chunk must be jungle */
 	fun hasJungle(chunk: Chunk): Boolean {
 		val THRESHOLD = 8 * 8 / 2
@@ -41,7 +41,7 @@ class MelonRegen(game: Game) : Regen(game, 3, 2400) {
 
 		/* update physics */
 		block?.type = Material.MELON
-		
+
 		return block != null
 	}
 }

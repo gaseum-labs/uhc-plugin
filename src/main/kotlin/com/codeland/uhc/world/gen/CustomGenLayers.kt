@@ -1,8 +1,7 @@
 package com.codeland.uhc.world.gen
 
-import com.codeland.uhc.world.gen.layer.GenLayerExpandNether
-import com.codeland.uhc.world.gen.layer.LayerNetherBase
-import com.codeland.uhc.world.gen.layer.game2.*
+import com.codeland.uhc.world.gen.layer.game.*
+import com.codeland.uhc.world.gen.layer.nether.LayerNetherBiome
 import com.codeland.uhc.world.gen.layer.pvp.LayerPvp
 import net.minecraft.world.level.newbiome.area.Area
 import net.minecraft.world.level.newbiome.context.WorldGenContextArea
@@ -12,14 +11,14 @@ object CustomGenLayers {
 	fun createAreaNether(seed: Long): Area {
 		val noise = { s: Long -> WorldGenContextArea(25, seed, s) }
 
-		var baseLayer = LayerNetherBase().a(noise(101L))
+		var baseLayer = LayerNetherBiome(seed).a(noise(4500L))  /* 4X */
 
-		baseLayer = GenLayerZoom.ar.a(noise(102L), baseLayer)
-		baseLayer = GenLayerZoom.a.a(noise(103L), baseLayer)
-		baseLayer = GenLayerZoom.a.a(noise(104L), baseLayer)
-
-		baseLayer = GenLayerExpandNether().a(noise(105L), baseLayer)
-		baseLayer = GenLayerZoom.a.a(noise(106L), baseLayer)
+		baseLayer = GenLayerShiftZZoom(seed, 3).a(noise(1L), baseLayer)   /* 3X */
+		baseLayer = GenLayerShiftX(seed, 3).a(noise(1L), baseLayer)
+		baseLayer = GenLayerCombiner().a(noise(1L), baseLayer)   /* 2X */
+		baseLayer = GenLayerShiftZZoom(seed, 2).a(noise(1L), baseLayer)   /* 2X */
+		baseLayer = GenLayerShiftX(seed, 2).a(noise(1L), baseLayer)
+		baseLayer = GenLayerCombiner().a(noise(1L), baseLayer)   /* 2X */
 
 		return baseLayer.make()
 	}
@@ -27,7 +26,7 @@ object CustomGenLayers {
 	const val BORDER_INCREMENT = 96
 	const val OCEAN_BUFFER = 16
 
-	fun createAreaGame2(seed: Long, borderRadius: Int): Area {
+	fun createAreaGame(seed: Long, borderRadius: Int): Area {
 		val noise = { s: Long -> WorldGenContextArea(25, seed, s) }
 
 		var baseLayer = LayerTemperature(seed, (borderRadius - OCEAN_BUFFER) / BORDER_INCREMENT).a(noise(0L))  /* 4X */
@@ -59,7 +58,7 @@ object CustomGenLayers {
 
 		baseLayer = GenLayerRiverApply().a(noise(9091L), baseLayer, riverLayer)
 
-		return baseLayer.make() as Area
+		return baseLayer.make()
 	}
 
 	fun createAreaPvp(seed: Long): Area {
@@ -71,6 +70,6 @@ object CustomGenLayers {
 		baseLayer = GenLayerZoom.a.a(noise(1003L), baseLayer)
 		baseLayer = GenLayerZoom.ar.a(noise(1004L), baseLayer)
 
-		return baseLayer.make() as Area
+		return baseLayer.make()
 	}
 }

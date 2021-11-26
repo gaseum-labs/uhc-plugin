@@ -15,17 +15,17 @@ import kotlin.math.*
 import kotlin.random.Random
 
 object CustomSpawning {
-	fun getSpawnInfo(
+	fun getSpawnEntry(
 		type: CustomSpawningType,
 		player: Player,
 		spawningData: SpawningPlayerData,
 		game: Game,
-	): SpawnInfo? {
+	): SpawnEntry? {
 		return when (player.world) {
 			WorldManager.gameWorld -> {
-				if (type.gameSpawnInfoList.isEmpty()) return null
+				if (type.overworldEntries.isEmpty()) return null
 
-				val supplementalList = ArrayList<SpawnInfo>()
+				val supplementalList = ArrayList<SpawnEntry>()
 				if (type === CustomSpawningType.HOSTILE) {
 					game.quirks.filterNotNull().forEach { quirk ->
 						if (quirk.spawnInfos != null) quirk.spawnInfos.forEach { spawnInfo ->
@@ -37,26 +37,26 @@ object CustomSpawning {
 				}
 
 				/* wrap spawn index */
-				if (spawningData.index >= type.gameSpawnInfoList.size + supplementalList.size) {
+				if (spawningData.index >= type.overworldEntries.size + supplementalList.size) {
 					spawningData.index = 0
 					++spawningData.cycle
 				}
 
-				if (spawningData.index >= type.gameSpawnInfoList.size)
-					supplementalList[spawningData.index - type.gameSpawnInfoList.size]
+				if (spawningData.index >= type.overworldEntries.size)
+					supplementalList[spawningData.index - type.overworldEntries.size]
 				else
-					type.gameSpawnInfoList[spawningData.index]
+					type.overworldEntries[spawningData.index]
 			}
 			WorldManager.netherWorld -> {
-				if (type.netherSpawnInfoList.isEmpty()) return null
+				if (type.netherEntries.isEmpty()) return null
 
 				/* wrap spawn index */
-				if (spawningData.index >= type.netherSpawnInfoList.size) {
+				if (spawningData.index >= type.netherEntries.size) {
 					spawningData.index = 0
 					++spawningData.cycle
 				}
 
-				type.netherSpawnInfoList[spawningData.index]
+				type.netherEntries[spawningData.index]
 			}
 			else -> {
 				null
@@ -68,16 +68,19 @@ object CustomSpawning {
 		type: CustomSpawningType,
 		player: Player,
 		spawnPlayers: List<Pair<Player, SpawningPlayerData>>,
-		x: Double,
-		z: Double,
+		x: Int,
+		z: Int,
 	): Boolean {
+		val cx = x + 0.5
+		val cz = z + 0.5
+
 		val borderRadius = player.world.worldBorder.size / 2
-		if (abs(x) > borderRadius || abs(z) > borderRadius) return false
+		if (abs(cx) > borderRadius || abs(cz) > borderRadius) return false
 
 		return spawnPlayers.none { (otherPlayer, _) ->
 			player !== otherPlayer &&
 			player.world === otherPlayer.world &&
-			(x - otherPlayer.location.x).pow(2) + (z - otherPlayer.location.z).pow(2) < type.minRadius * type.minRadius
+			(cx - otherPlayer.location.x).pow(2) + (cz - otherPlayer.location.z).pow(2) < type.minRadius * type.minRadius
 		}
 	}
 
@@ -96,8 +99,8 @@ object CustomSpawning {
 		player: Player,
 		spawningData: SpawningPlayerData,
 		spawnPlayers: List<Pair<Player, SpawningPlayerData>>,
-		spawnInfo: SpawnInfo,
-	): Pair<EntityType, Block>? {
+		spawnEntry: SpawnEntry,
+	): Pair<SpawnInfo<*>, Block>? {
 		val minY = (player.location.y - type.verticalRadius).toInt().coerceAtLeast(0).coerceAtMost(255)
 		val maxY = (player.location.y + type.verticalRadius).toInt().coerceAtMost(255).coerceAtLeast(0)
 
@@ -111,18 +114,16 @@ object CustomSpawning {
 			val x = (player.location.blockX + cos(angle) * radius).roundToInt()
 			val z = (player.location.blockZ + sin(angle) * radius).roundToInt()
 
-			if (spawnXZValid(type, player, spawnPlayers, x + 0.5, z + 0.5)) for (y in ys) {
+			if (spawnXZValid(type, player, spawnPlayers, x, z)) for (y in ys) {
 				val block = player.world.getBlockAt(x, y, z)
-				val spawnResult = spawnInfo.allowSpawn(block, spawningData.cycle)
+				val spawnInfo = spawnEntry.getSpawnInfo(block, spawningData.cycle)
 
-				if (spawnResult != null) {
-					val (entityType, lineOfSight) = spawnResult
-
-					if (lineOfSight && !clearLineOfSight(block, player.location.block)) {
+				if (spawnInfo.allowSpawn(block, spawningData.cycle)) {
+					return if (spawnInfo.lineOfSight && !clearLineOfSight(block, player.location.block)) {
 						return null
+					} else {
+						Pair(spawnInfo, block)
 					}
-
-					return Pair(entityType, block)
 				}
 			}
 		}
@@ -211,16 +212,14 @@ object CustomSpawning {
 		val playerMobCount = calcPlayerMobs(type, player)
 
 		if (playerMobCount < data.intCap()) {
-			val spawnInfo = getSpawnInfo(type, player, data, game) ?: return false
+			val spawnEntry = getSpawnEntry(type, player, data, game) ?: return false
 			/* no valid spawn spots found this time, keep trying */
-			val (entityType, block) = getSpawnBlock(type, player, data, spawnPlayers, spawnInfo) ?: return true
+			val (spawnInfo, block) = getSpawnBlock(type, player, data, spawnPlayers, spawnEntry) ?: return true
 
-			val entity = player.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType) as LivingEntity
-			makePlayerMob(type, entity, player)
-			spawnInfo.onSpawn(block, data.cycle, entity)
-
-			type.onSpawn(player, entity)
-
+			val count = data.counts.getOrPut(spawnInfo.type) { Count(0) }
+			makePlayerMob(type, spawnInfo.spawn(block, count.count, player), player)
+			
+			++count.count
 			++data.index
 		}
 

@@ -3,7 +3,7 @@ package com.codeland.uhc.quirk
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.phase.Phase
-import com.codeland.uhc.customSpawning.SpawnInfo
+import com.codeland.uhc.customSpawning.SpawnEntry
 import com.codeland.uhc.dropFix.DropFix
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
@@ -46,7 +46,7 @@ abstract class Quirk(val type: QuirkType, val game: Game) {
 	open fun onPhaseSwitch(phase: Phase) {}
 
 	protected open fun customDrops(): Array<DropFix>? = null
-	protected open fun customSpawnInfos(): Array<SpawnInfo>? = null
+	protected open fun customSpawnInfos(): Array<SpawnEntry>? = null
 
 	val customDrops = customDrops()
 	val spawnInfos = customSpawnInfos()

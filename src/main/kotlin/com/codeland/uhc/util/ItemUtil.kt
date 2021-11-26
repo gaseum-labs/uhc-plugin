@@ -22,6 +22,15 @@ object ItemUtil {
 		return ret
 	}
 
+	fun randomDamagedItem(type: Material): ItemStack {
+		val ret = ItemStack(type)
+		val damageable = ret.itemMeta as Damageable
+		damageable.damage = Random.nextInt(1, type.maxDurability / 2)
+		ret.itemMeta = damageable as ItemMeta
+
+		return ret
+	}
+
 	fun fireworkEffect(type: FireworkEffect.Type, limitColors: Int = -1): FireworkEffect {
 		val builder = FireworkEffect.builder()
 

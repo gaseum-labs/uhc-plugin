@@ -1,5 +1,5 @@
 name: UHCPlugin
-version: 1.7.3
+version: 1.7.4
 authors:
   - Balduvian
   - Sumdumdude
@@ -9,6 +9,6 @@ authors:
   - mclonergan
 load: STARTUP
 main: com.codeland.uhc.UHCPlugin
-api-version: 1.16
+api-version: 1.17
 depend:
   - ProtocolLib
