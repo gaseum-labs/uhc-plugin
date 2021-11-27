@@ -2,7 +2,10 @@ package com.codeland.uhc.event
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.blockfix.BlockFixType
-import com.codeland.uhc.core.*
+import com.codeland.uhc.core.KillReward
+import com.codeland.uhc.core.Lobby
+import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.phase.phases.Endgame
 import com.codeland.uhc.core.phase.phases.Grace
 import com.codeland.uhc.dropFix.DropFixType
@@ -18,7 +21,9 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.*
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.entity.*
@@ -26,7 +31,10 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
-import org.bukkit.event.inventory.*
+import org.bukkit.event.inventory.CraftItemEvent
+import org.bukkit.event.inventory.InventoryAction
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.vehicle.VehicleCreateEvent
 import org.bukkit.event.weather.WeatherChangeEvent
@@ -36,7 +44,9 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
-import org.bukkit.potion.*
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
+import org.bukkit.potion.PotionType
 
 class EventListener : Listener {
 	@EventHandler
@@ -679,6 +689,25 @@ class EventListener : Listener {
 			event.entityType === EntityType.WANDERING_TRADER
 		) {
 			event.isCancelled = true
+		}
+	}
+
+	@EventHandler
+	fun advancement(event: PlayerAdvancementDoneEvent) {
+		if (UHC.game?.quirkEnabled(QuirkType.ACHIEVEMENTS) == true) {
+			val key = event.advancement.key.key
+			if (key == "husbandry/complete_catalogue") {
+				UHC.game?.end(
+					UHC.game?.teams?.playersTeam(event.player.uniqueId)
+				)
+				return
+			}
+			val prefixes = listOf("story", "nether", "end", "husbandry", "adventure")
+			if (prefixes.any { key.startsWith(it) } && !key.endsWith("root")) {
+				val hearts = Achievements.achievementMap[event.advancement.key.key] ?: 1
+				event.player.maxHealth += hearts
+				event.player.health += hearts
+			}
 		}
 	}
 }

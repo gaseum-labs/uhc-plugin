@@ -181,6 +181,16 @@ enum class QuirkType(
 			"Pick a class as the game begins",
 			"Get cool abilities"
 		)
+	),
+
+	ACHIEVEMENTS(
+		"Achievements",
+		::Achievements,
+		{ ItemCreator.fromType(Material.WRITABLE_BOOK) },
+		arrayOf(
+			"When you earn an achievement, you get",
+			"extra health based on its difficulty."
+		)
 	);
 
 	var incompatibilities = mutableSetOf<QuirkType>()
