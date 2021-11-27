@@ -8,20 +8,32 @@ import com.codeland.uhc.quirk.quirks.classes.Classes
 import com.codeland.uhc.quirk.quirks.classes.Classes.Companion.HUNTER_SPAWN_META
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.Util.materialRange
+import com.codeland.uhc.util.extensions.LocationExtensions.minus
+import com.codeland.uhc.util.extensions.LocationExtensions.plus
+import com.codeland.uhc.util.extensions.VectorExtensions.plus
 import org.bukkit.*
 import org.bukkit.ChatColor.*
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.Sound
+import org.bukkit.World
+import org.bukkit.attribute.Attribute
+import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import org.bukkit.block.data.FaceAttachable
 import org.bukkit.block.data.Levelled
-import org.bukkit.block.data.type.Grindstone
+import org.bukkit.block.data.type.Stairs
 import org.bukkit.block.data.type.Switch
+import org.bukkit.block.data.type.Wall
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.entity.*
 import org.bukkit.event.inventory.CraftItemEvent
@@ -31,6 +43,9 @@ import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
+import org.bukkit.util.Vector
+import kotlin.math.abs
+import kotlin.random.Random
 
 class ClassesEvents : Listener {
 	private fun surface(block: Block): Boolean {
@@ -65,6 +80,50 @@ class ClassesEvents : Listener {
 	}
 
 	@EventHandler
+	fun playerDamage(event: EntityDamageEvent) {
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+		val player = if (event.entity is Player) event.entity as Player else return
+
+		if (classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
+			event.isCancelled = true
+
+			val block = player.location.block
+			if (!block.type.isAir) block.breakNaturally()
+
+			block.type = Material.WATER
+			block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
+
+			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity = player.location.direction.multiply(2)
+
+			SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
+				if (block.type == Material.WATER) {
+					block.type = Material.AIR
+					block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
+				}
+			}
+		}
+
+		if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER && event.cause == EntityDamageEvent.DamageCause.FALL) {
+			event.isCancelled = true
+		}
+
+		if (classes.getClass(player.uniqueId) == QuirkClass.ENCHANTER) {
+			if (event.damage > player.health
+					&& player.level > 0
+					&& event.damage <= player.health + player.level) {
+				event.isCancelled = true
+				val health = player.health + player.level
+				player.level = 0
+				player.health = if (health > player.maxHealth) player.maxHealth else health
+				if (health > player.maxHealth) {
+					player.absorptionAmount += health - player.maxHealth
+				}
+			}
+		}
+	}
+
+	@EventHandler
 	fun playerMove(event: PlayerMoveEvent) {
 		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
@@ -84,22 +143,6 @@ class ClassesEvents : Listener {
 						Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
 					},
 					{})
-			}
-			QuirkClass.ENCHANTER -> {
-				auraReplacer(player,
-					Classes.grindedStone,
-					Material.STONE,
-					Material.GRINDSTONE,
-					0,
-					-1,
-					-1,
-					0,
-					{ it },
-					{ block ->
-						val data = block.blockData as Grindstone
-						data.attachedFace = FaceAttachable.AttachedFace.FLOOR
-						block.setBlockData(data, false)
-					})
 			}
 			QuirkClass.DIVER -> {
 				if (player.world.environment != World.Environment.NETHER) {
@@ -124,37 +167,6 @@ class ClassesEvents : Listener {
 					}
 				}
 			}
-		}
-	}
-
-	@EventHandler
-	fun playerDamage(event: EntityDamageEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
-		val player = if (event.entity is Player) event.entity as Player else return
-
-		if (classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
-			event.isCancelled = true
-
-			val block = player.location.block
-			if (!block.type.isAir) block.breakNaturally()
-
-			block.type = Material.WATER
-			block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
-
-			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity =
-				player.location.direction.multiply(2)
-
-			SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
-				if (block.type == Material.WATER) {
-					block.type = Material.AIR
-					block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_FILL, 1.0f, 1.0f)
-				}
-			}
-		}
-
-		if (classes.getClass(player.uniqueId) == QuirkClass.TRAPPER && event.cause == EntityDamageEvent.DamageCause.FALL) {
-			event.isCancelled = true
 		}
 	}
 
@@ -303,7 +315,7 @@ class ClassesEvents : Listener {
 	fun blockBreak(event: BlockBreakEvent) {
 		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
+		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENGINEER) {
 			val logs = listOf(
 				Material.OAK_LOG,
 				Material.BIRCH_LOG,
@@ -366,9 +378,9 @@ class ClassesEvents : Listener {
 	fun interactEvent(event: PlayerInteractEvent) {
 		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-		if (classes.getClass(event.player.uniqueId) == QuirkClass.TRAPPER) {
-			when (event.action) {
-				Action.LEFT_CLICK_BLOCK -> {
+		when (event.action) {
+			Action.LEFT_CLICK_BLOCK -> {
+				if (classes.getClass(event.player.uniqueId) == QuirkClass.ENGINEER) {
 					if (event.player.isSneaking && event.clickedBlock!!.type == Material.LEVER) {
 						val lever = event.clickedBlock!!
 						val existing = Classes.remoteControls.find { (_, block, _) ->
@@ -385,29 +397,30 @@ class ClassesEvents : Listener {
 						}
 					}
 				}
-				Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
-					val control = Classes.remoteControls.find { (item, _, _) ->
-						item == event.player.inventory.itemInMainHand
-					}
-					if (control != null) {
-						event.isCancelled = true
-						val leverData = control.block.blockData as? Switch
-						if (leverData != null) {
-							leverData.isPowered = !leverData.isPowered
-							control.block.blockData = leverData
-							control.block.world.playSound(
+			}
+			Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
+				val control = Classes.remoteControls.find { (item, _, _) ->
+					item == event.player.inventory.itemInMainHand }
+				if (control != null) {
+					event.isCancelled = true
+					val leverData = control.block.blockData as? Switch
+					if (leverData != null) {
+						leverData.isPowered = !leverData.isPowered
+						control.block.blockData = leverData
+						control.block.world.playSound(
 								control.block.location,
 								Sound.BLOCK_LEVER_CLICK,
 								1.0f,
 								// some attempt to preserve the difference in pitch of on and off
 								if (leverData.isPowered) 1.5f else 1.0f
-							)
-						}
-						event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+						)
 					}
+					event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
 				}
 			}
-		} else if (
+		}
+
+		if (
 			classes.getClass(event.player.uniqueId) == QuirkClass.MINER &&
 			pickaxes.contains(event.player.inventory.itemInMainHand.type) &&
 			event.hand == EquipmentSlot.HAND
@@ -623,4 +636,73 @@ class ClassesEvents : Listener {
 			}
 		}
 	}
+
+	@EventHandler
+	fun onBlockPlace(event: BlockPlaceEvent) {
+        val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+
+        val player = event.player
+
+        if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER) {
+            when (event.block.type) {
+				Material.LIGHT_WEIGHTED_PRESSURE_PLATE -> {
+					for (x in -1..1) for (y in 1..7) for (z in -1..1) {
+						if (player.location.block.getRelative(x, y, z).type.isSolid) {
+							event.isCancelled = true
+							com.codeland.uhc.util.Action.sendGameMessage(player, "You can't use that here. Get to a more open area.")
+                            return
+						}
+					}
+					val location = event.blockPlaced.location + Vector(0.0, 5.0, 0.0)
+					player.velocity = Vector(0.0, 1.2, 0.0) // fine tune
+					SchedulerUtil.later(10) {
+						SchedulerUtil.delayedFor(1, 0..3) { i ->
+							for (dx in -i..i) for (dz in -i..i) {
+								val block = location.block.getRelative(dx, 0, dz)
+								if (block.type == Material.AIR) {
+									block.type = Material.COBBLESTONE
+								}
+							}
+						}
+					}
+				}
+				Material.STONE_BRICK_WALL -> {
+					val location = event.blockPlaced.location.clone()
+					val difference = location - player.location
+					val facingX = (event.player.getTargetBlockFace(10) ?: return).ordinal % 2 != 0
+					SchedulerUtil.delayedFor(1, 0 until 5) { i ->
+						for (dl in -2..2) {
+							if (facingX) event.blockPlaced.getRelative(0, i, dl).type = Material.STONE
+                            else event.blockPlaced.getRelative(dl, i, 0).type = Material.STONE
+						}
+                    }
+				}
+				Material.POLISHED_GRANITE_STAIRS -> {
+					val location = event.blockPlaced.location.clone()
+					val difference = location - player.location
+					val direction = (event.blockPlaced.blockData as Stairs).facing
+					event.blockPlaced.type = Material.COBBLESTONE_STAIRS
+					SchedulerUtil.delayedFor(1, 0..8) { i ->
+                        for (dl in -1..1) {
+							val block = when (direction) {
+								BlockFace.EAST -> event.blockPlaced.getRelative(i, i, dl)
+								BlockFace.WEST -> event.blockPlaced.getRelative(-i, i, dl)
+								BlockFace.SOUTH -> event.blockPlaced.getRelative(dl, i, i)
+								BlockFace.NORTH -> event.blockPlaced.getRelative(dl, i, -i)
+								else -> throw Exception("can't")
+							}
+							if (block.type == Material.AIR) block.type = Material.COBBLESTONE_STAIRS
+							val stairData: Stairs = block.blockData as Stairs
+							stairData.facing = direction
+							block.blockData = stairData
+
+							val below = block.getRelative(0, -1, 0)
+							if (below.type == Material.AIR) below.type = Material.COBBLESTONE
+						}
+                    }
+				}
+				else -> {}
+			}
+        }
+    }
 }

@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
 import org.bukkit.ChatColor
+import org.bukkit.Material
 import org.bukkit.World
 import kotlin.math.*
 
@@ -215,6 +216,10 @@ object Util {
 
 	fun coloredInGameMessage(string: String, color: ChatColor): String {
 		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
+	}
+
+	fun materialRange(a: Material, b: Material): List<Material> {
+		return (a.ordinal..b.ordinal).toList().map(Material.values()::get)
 	}
 
 	fun <B> fieldError(name: String, type: String): Bad<B> {
