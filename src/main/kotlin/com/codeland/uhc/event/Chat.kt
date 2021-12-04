@@ -4,26 +4,26 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.FancyText
+import com.codeland.uhc.util.SchedulerUtil
 import io.papermc.paper.event.player.AsyncChatEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.*
-import org.bukkit.Bukkit
-import org.bukkit.GameMode
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 
 class Chat : Listener {
 	companion object {
-		fun defaultGenerator(string: String): Component {
+		fun defaultGenerator(string: String): TextComponent {
 			return Component.empty().append(Component.text(string, NamedTextColor.BLUE))
 		}
 
 		interface Mention {
 			fun matches(): String
 			fun includes(player: Player): Boolean
-			fun generate(string: String): Component
+			fun generate(string: String): TextComponent
 			fun needsOp(): Boolean
 		}
 
@@ -96,7 +96,7 @@ class Chat : Listener {
 				val mention = checkList[j]
 
 				/* character-wise comparison, converted to lowercase */
-				if (mention.matches()[iMatch].code.or(0x20) != message[iMessage].toInt().or(0x20)) {
+				if (mention.matches()[iMatch].code.or(0x20) != message[iMessage].code.or(0x20)) {
 					remaining[j] = false
 					if (--numRemaining == 0) return null
 
@@ -115,8 +115,10 @@ class Chat : Listener {
 		return null
 	}
 
-	private fun collectMentions(message: String, checkList: ArrayList<Mention>): ArrayList<Triple<Mention, Int, Int>> {
-		val mentionList = ArrayList<Triple<Mention, Int, Int>>()
+	data class MentionInstance(val mention: Mention, val startIndex: Int, val endIndex: Int)
+
+	private fun collectMentions(message: String, checkList: ArrayList<Mention>): ArrayList<MentionInstance> {
+		val mentionList = ArrayList<MentionInstance>()
 		var iterIndex = 0
 
 		while (iterIndex < message.length) {
@@ -125,7 +127,7 @@ class Chat : Listener {
 
 				if (matched != null) {
 					val (mention, endIndex) = matched
-					mentionList.add(Triple(mention, iterIndex, endIndex))
+					mentionList.add(MentionInstance(mention, iterIndex, endIndex))
 
 					iterIndex = endIndex
 
@@ -147,45 +149,40 @@ class Chat : Listener {
 	 */
 	private fun divideMessage(
 		message: String,
-		collected: ArrayList<Triple<Mention, Int, Int>>,
+		collected: ArrayList<MentionInstance>,
 		chatColor: TextColor,
-	): ArrayList<Component> {
-		val componentList = arrayListOf(
-			Component.text(message.substring(0, collected.firstOrNull()?.second ?: message.length),
-				chatColor) as Component
-		)
+	): List<Pair<TextComponent, Mention?>> {
+		return (0..collected.size).flatMap { i ->
+			val current = collected.getOrNull(i)
 
-		for (i in collected.indices) {
-			val (mention, startIndex, endIndex) = collected[i]
+			val lastEnd = collected.getOrNull(i - 1)?.endIndex ?: 0
+			val nextStart = current?.startIndex ?: message.length
 
-			/* add the mention, which is replaced */
-			componentList.add(mention.generate(message.substring(startIndex, endIndex)))
-
-			/* the part after the mention until the next mention, or until the end of the message */
-			componentList.add(Component.text(message.substring(endIndex,
-				collected.getOrNull(i + 1)?.second ?: message.length), chatColor))
+			listOfNotNull(
+				if (nextStart - lastEnd > 0)
+					Component.text(message.substring(lastEnd, nextStart), chatColor) to null
+				else null,
+				current?.mention?.generate(message.substring(current.startIndex, current.endIndex))?.to(current.mention)
+			)
 		}
-
-		return componentList
 	}
 
 	private fun messageForPlayer(
 		player: Player,
-		mentions: ArrayList<Triple<Mention, Int, Int>>,
-		components: ArrayList<Component>,
-	): Component {
-		return components.foldIndexed(Component.empty()) { i, acc, component ->
-			/* regular components */
-			if (i % 2 == 0) acc.append(component)
+		parts: List<Pair<TextComponent, Mention?>>,
+	): Pair<Component, Boolean> {
+		var mentioned = false
 
-			/* mention components */
-			else acc.append(
-				if (mentions[i / 2].first.includes(player))
-					component.style(Style.style(TextDecoration.UNDERLINED))
-				else
-					component
-			)
+		val component = parts.fold(Component.empty()) { acc, (component, mention) ->
+			if (mention?.includes(player) == true) {
+				mentioned = true
+				acc.append(component.style(Style.style(TextDecoration.UNDERLINED)))
+			} else {
+				acc.append(component)
+			}
 		}
+
+		return component to mentioned
 	}
 
 	private fun generateMentions(): ArrayList<Mention> {
@@ -218,41 +215,45 @@ class Chat : Listener {
 	fun onMessage(event: AsyncChatEvent) {
 		event.isCancelled = true
 
-		val message = (event.message() as? TextComponent)?.content() ?: return
+		val message = (event.originalMessage() as? TextComponent)?.content() ?: return
 
 		val gameTeam = UHC.game?.teams?.playersTeam(event.player.uniqueId)
 		val playerComponent = playerComponent(gameTeam, event.player)
 
 		val collected = collectMentions(message, generateMentions())
 
+		/* ! by itself is just a message and won't go to global chat */
+		val exclaiming = message.startsWith('!') && message.length >= 2
 
-		if (message.startsWith('$')) {
-			val cleanMessage = FancyText.make(message.substring(1))
+		/* fancy text */
+		/* team chat */
+		/* global chat */
+		val (parts, recipients) = if (message.startsWith('$')) {
+			divideMessage(FancyText.make(message.substring(1)),
+				collected,
+				NamedTextColor.WHITE) to Bukkit.getOnlinePlayers()
 
-			Bukkit.getOnlinePlayers().forEach { player ->
-				player.sendMessage(playerComponent.append(Component.text(cleanMessage)))
+		} else if (gameTeam != null && collected.firstOrNull()?.startIndex != 0 && !exclaiming) {
+			divideMessage(message, collected, gameTeam.colors.last()) to gameTeam.members.mapNotNull {
+				Bukkit.getPlayer(it)
 			}
 
-			/* filter messages only to teammates */
-			/* if the sending player is on a team */
-			/* if the message does not start with a mention */
-			/* and the message does not start with ! */
-		} else if (gameTeam != null && collected.firstOrNull()?.second != 0 && !message.startsWith("!")) {
-			val messageParts = divideMessage(message, collected, gameTeam.colors.last())
-
-			gameTeam.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { player ->
-				player.sendMessage(playerComponent.append(messageForPlayer(player, collected, messageParts)))
-			}
-
-			/* regular chat behavior before game */
 		} else {
-			val cleanMessage = if (message.startsWith("!")) message.substring(1) else message
+			divideMessage(
+				if (exclaiming) message.substring(1) else message,
+				collected,
+				NamedTextColor.WHITE
+			) to Bukkit.getOnlinePlayers()
+		}
 
-			if (cleanMessage.isNotEmpty()) {
-				val messageParts = divideMessage(cleanMessage, collected, NamedTextColor.WHITE)
+		recipients.forEach { player ->
+			val (playerMessage, mentioned) = messageForPlayer(player, parts)
+			player.sendMessage(playerComponent.append(playerMessage))
 
-				Bukkit.getOnlinePlayers().forEach { player ->
-					player.sendMessage(playerComponent.append(messageForPlayer(player, collected, messageParts)))
+			if (mentioned) {
+				player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 0.707107f)
+				SchedulerUtil.later(5) {
+					player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 0.943874f)
 				}
 			}
 		}

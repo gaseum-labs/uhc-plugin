@@ -1,6 +1,7 @@
 package com.codeland.uhc.util
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
 import org.bukkit.ChatColor
@@ -162,7 +163,7 @@ object Util {
 		return TextColor.color(red, gre, blu)
 	}
 
-	fun gradientString(string: String, from: TextColor, to: TextColor): Component {
+	fun gradientString(string: String, from: TextColor, to: TextColor): TextComponent {
 		var component = Component.empty()
 
 		string.forEachIndexed { i, c ->
