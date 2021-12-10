@@ -26,6 +26,7 @@ import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
+import org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -511,21 +512,25 @@ class EventListener : Listener {
 	fun onDecay(event: LeavesDecayEvent) {
 		/* prevent default drops */
 		event.isCancelled = true
-		event.block.type = Material.AIR
 
 		val leavesLocation = event.block.location.toCenterLocation()
 
 		val dropPlayer = Bukkit.getOnlinePlayers()
 			.filter { PlayerData.isParticipating(it.uniqueId) && it.world === leavesLocation.world }.minByOrNull {
-			it.location.distance(leavesLocation)
-		}
+				it.location.distance(leavesLocation)
+			}
 
 		/* apply applefix to this leaves block for the nearest player */
-		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(event.block.state,
+		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(
+			event.block.state,
 			mutableListOf(),
-			dropPlayer) { drop ->
+			dropPlayer
+		) { drop ->
 			if (drop != null) leavesLocation.world.dropItemNaturally(event.block.location, drop)
 		}
+
+		/* set after drops so that leaves state is captured */
+		event.block.type = Material.AIR
 	}
 
 	@EventHandler
@@ -705,7 +710,8 @@ class EventListener : Listener {
 			val prefixes = listOf("story", "nether", "end", "husbandry", "adventure")
 			if (prefixes.any { key.startsWith(it) } && !key.endsWith("root")) {
 				val hearts = Achievements.achievementMap[event.advancement.key.key] ?: 1
-				event.player.maxHealth += hearts
+				event.player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue =
+					(event.player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue ?: 20.0) + hearts
 				event.player.health += hearts
 			}
 		}
