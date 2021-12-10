@@ -17,6 +17,7 @@ class SpawnBlaze : SpawnInfo<Blaze>(Blaze::class.java, Vector(0.5, 0.0, 0.5), tr
 
 	override fun onSpawn(block: Block, count: Int, player: Player?, entity: Blaze) {
 		entity.removeWhenFarAway = false
+		println("${entity.removeWhenFarAway} | ${entity.location.block}")
 		if (player == null) return
 
 		val component = Component.text("Blaze Spawned!", TextColor.color(0xff6417))
