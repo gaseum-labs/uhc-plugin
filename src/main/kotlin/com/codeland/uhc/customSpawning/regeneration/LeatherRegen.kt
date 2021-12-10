@@ -36,7 +36,7 @@ class LeatherRegen(game: Game) : Regen(game, 5, 600) {
 			}
 		} ?: return false
 
-		spawnInfo.spawn(block)
+		spawnInfo.spawn(block).removeWhenFarAway = false
 
 		return true
 	}

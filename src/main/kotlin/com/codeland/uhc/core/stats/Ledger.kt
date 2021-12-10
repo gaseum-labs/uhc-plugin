@@ -83,13 +83,13 @@ class Ledger(val worldSize: Int) {
 		writer.close()
 
 		ImageIO.write(
-			tracker.generateImage(worldSize, World.Environment.NORMAL, 4.0f),
+			tracker.generateImage(worldSize, World.Environment.NORMAL, 4),
 			"PNG",
 			imageFile(World.Environment.NORMAL, summaryNo)
 		)
 
 		ImageIO.write(
-			tracker.generateImage(worldSize, World.Environment.NETHER, 4.0f),
+			tracker.generateImage(worldSize, World.Environment.NETHER, 4),
 			"PNG",
 			imageFile(World.Environment.NETHER, summaryNo)
 		)

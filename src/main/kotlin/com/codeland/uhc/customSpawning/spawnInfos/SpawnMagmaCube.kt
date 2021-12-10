@@ -9,8 +9,8 @@ import org.bukkit.util.Vector
 
 class SpawnMagmaCube : SpawnInfo<MagmaCube>(MagmaCube::class.java, Vector(1.0, 0.0, 1.0), false) {
 	override fun allowSpawn(block: Block, spawnCycle: Int): Boolean {
-		return SpawnUtil.spawnFloor(block.getRelative(DOWN)) &&
-		SpawnUtil.offsetTallSpawnBox(block)
+		return SpawnUtil.wideSpawnFloor(block.getRelative(DOWN)) &&
+		SpawnUtil.wideTallSpawnBox(block)
 	}
 
 	override fun onSpawn(block: Block, count: Int, player: Player?, entity: MagmaCube) {

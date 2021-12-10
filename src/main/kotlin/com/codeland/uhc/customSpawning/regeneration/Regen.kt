@@ -3,9 +3,9 @@ package com.codeland.uhc.customSpawning.regeneration
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.util.Action
+import com.codeland.uhc.util.Util
 import org.bukkit.Chunk
 import org.bukkit.World
-import kotlin.math.floor
 import kotlin.random.Random
 
 abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate: Int) {
@@ -50,8 +50,8 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 			it.isNotEmpty()
 		}.map { locations ->
 			locations.map { location ->
-				val cx = floor(location.blockX / 16.0).toInt()
-				val cz = floor(location.blockZ / 16.0).toInt()
+				val cx = Util.floorDiv(location.blockX, 16)
+				val cz = Util.floorDiv(location.blockZ, 16)
 
 				val left = (cx - chunkRadius).coerceAtLeast(-borderChunk)
 				val right = (cx + chunkRadius).coerceAtMost(borderChunk)

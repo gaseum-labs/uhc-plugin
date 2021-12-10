@@ -11,8 +11,8 @@ import org.bukkit.util.Vector
 class SpawnSpider : SpawnInfo<Spider>(Spider::class.java, Vector(1.0, 0.0, 1.0), false) {
 	override fun allowSpawn(block: Block, spawnCycle: Int): Boolean {
 		return SpawnUtil.lightFilter(block, SpawnUtil.MONSTER_LIGHT_LEVEL) &&
-		SpawnUtil.spawnFloor(block.getRelative(DOWN)) &&
-		SpawnUtil.offsetShortSpawnBox(block)
+		SpawnUtil.wideSpawnFloor(block.getRelative(DOWN)) &&
+		SpawnUtil.wideSpawnBox(block)
 	}
 
 	override fun onSpawn(block: Block, count: Int, player: Player?, entity: Spider) {

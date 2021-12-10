@@ -47,10 +47,10 @@ enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> Spawn
 		when (block.biome) {
 			Biome.CRIMSON_FOREST -> when (spawnCycle % 6) {
 				0 -> SpawnZombiePiglin()
-				1 -> SpawnPiglin()
+				1 -> SpawnHoglin()
 				2 -> SpawnPiglin()
 				3 -> SpawnHoglin()
-				4 -> SpawnHoglin()
+				4 -> SpawnPiglin()
 				else -> SpawnHoglin()
 			}
 			Biome.BASALT_DELTAS -> SpawnMagmaCube()
@@ -65,7 +65,6 @@ enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> Spawn
 			}
 		}
 	}),
-
 	NETHER_SPECIAL({ _, spawnCycle ->
 		when (spawnCycle % 5) {
 			0 -> SpawnGhast()
@@ -78,29 +77,35 @@ enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> Spawn
 
 	CHICKEN({ block, spawnCycle ->
 		when {
-			SpawnUtil.desert(block.biome) || SpawnUtil.taiga(block.biome) -> when (spawnCycle % 2) {
+			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 3) {
 				0 -> SpawnChicken()
-				else -> SpawnRabbit()
-			}
-			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 2) {
-				0 -> SpawnChicken()
+				1 -> SpawnChicken()
 				else -> SpawnParrot()
 			}
+			SpawnUtil.snowy(block.biome) -> when (spawnCycle % 3) {
+				0 -> SpawnRabbit()
+				1 -> SpawnRabbit()
+				else -> SpawnPolarBear()
+			}
+			SpawnUtil.taiga(block.biome) -> when (spawnCycle % 3) {
+				0 -> SpawnChicken()
+				1 -> SpawnChicken()
+				else -> SpawnRabbit()
+			}
+			SpawnUtil.desert(block.biome) -> SpawnRabbit()
 			else -> SpawnChicken()
 		}
 	}),
 	PIG({ block, spawnCycle ->
 		when {
-			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 4) {
+			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 3) {
 				0 -> SpawnPig()
 				1 -> SpawnPig()
-				2 -> SpawnPig()
 				else -> SpawnPanda()
 			}
-			SpawnUtil.snowy(block.biome) -> when (spawnCycle % 4) {
+			SpawnUtil.snowy(block.biome) -> when (spawnCycle % 3) {
 				0 -> SpawnRabbit()
 				1 -> SpawnRabbit()
-				2 -> SpawnRabbit()
 				else -> SpawnPolarBear()
 			}
 			SpawnUtil.taiga(block.biome) -> when (spawnCycle % 3) {
@@ -115,16 +120,14 @@ enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> Spawn
 	}),
 	SHEEP({ block, spawnCycle ->
 		when {
-			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 4) {
+			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 3) {
 				0 -> SpawnSheep()
 				1 -> SpawnSheep()
-				2 -> SpawnSheep()
 				else -> SpawnOcelot()
 			}
-			SpawnUtil.snowy(block.biome) -> when (spawnCycle % 4) {
+			SpawnUtil.snowy(block.biome) -> when (spawnCycle % 3) {
 				0 -> SpawnRabbit()
 				1 -> SpawnRabbit()
-				2 -> SpawnRabbit()
 				else -> SpawnPolarBear()
 			}
 			SpawnUtil.taiga(block.biome) -> when (spawnCycle % 3) {

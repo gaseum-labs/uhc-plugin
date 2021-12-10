@@ -133,7 +133,6 @@ object CustomSpawning {
 
 	private fun makePlayerMob(type: CustomSpawningType, entity: LivingEntity, player: Player) {
 		entity.setMetadata(type.spawnTag, FixedMetadataValue(UHCPlugin.plugin, player.uniqueId))
-		entity.removeWhenFarAway = true
 	}
 
 	private fun isPlayerMob(type: CustomSpawningType, entity: Entity, player: Player): Int {
@@ -218,7 +217,7 @@ object CustomSpawning {
 
 			val count = data.counts.getOrPut(spawnInfo.type) { Count(0) }
 			makePlayerMob(type, spawnInfo.spawn(block, count.count, player), player)
-			
+
 			++count.count
 			++data.index
 		}

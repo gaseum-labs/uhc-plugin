@@ -191,30 +191,6 @@ object Util {
 		return component
 	}
 
-	fun nmsGradientStringStylized(
-		string: String,
-		from: TextColor,
-		to: TextColor,
-		chatModifier: ChatModifier,
-		exclude: Array<Int>,
-	): IChatMutableComponent {
-		var component = ChatComponentText("") as IChatMutableComponent
-
-		string.forEachIndexed { i, c ->
-			val along = i.toFloat() / (string.length - 1)
-			val red = ((to.red() - from.red()) * along + from.red()).toInt()
-			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
-			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
-
-			val modifier =
-				(if (exclude.contains(i)) ChatModifier.a else chatModifier).setColor(ChatHexColor.a(red.shl(16)
-					.or(gre.shl(8)).or(blu)))
-			component = component.addSibling(ChatComponentText("$c").setChatModifier(modifier))
-		}
-
-		return component
-	}
-
 	fun coloredInGameMessage(string: String, color: ChatColor): String {
 		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
 	}
@@ -226,4 +202,6 @@ object Util {
 	fun <B> fieldError(name: String, type: String): Bad<B> {
 		return Bad("No value for \"${name}\" <${type}> found")
 	}
+
+	fun floorDiv(a: Int, b: Int) = if (a < 0) (a - b + 1) / b else a / b
 }
