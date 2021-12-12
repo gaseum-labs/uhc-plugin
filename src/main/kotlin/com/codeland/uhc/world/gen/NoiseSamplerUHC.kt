@@ -104,7 +104,7 @@ class NoiseSamplerUHC(
 	}
 
 	fun inCenter(x: Int, z: Int): Boolean {
-		return abs(x) <= finalRadius / 4 && abs(z) <= finalRadius / 4
+		return abs(x) <= (finalRadius + 8) / 4 && abs(z) <= (finalRadius + 8) / 4
 	}
 
 	fun getBase(biomeBase: BiomeBase, x: Int, z: Int): Float {

@@ -90,6 +90,10 @@ object UHC {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.BLAZE, currentTick, currentGame)
+
+					currentGame.sugarCaneRegen.tick()
+					currentGame.leatherRegen.tick()
+					currentGame.melonRegen.tick()
 				}
 
 				Portal.portalTick(currentGame)
@@ -103,10 +107,6 @@ object UHC {
 				}
 
 				val halfWay = (currentGame.config.graceTime.get() + currentGame.config.shrinkTime.get()) * 20 / 2
-
-				currentGame.sugarCaneRegen.tick()
-				currentGame.leatherRegen.tick()
-				currentGame.melonRegen.tick()
 
 				if (timer == halfWay) {
 					Trader.deployTraders(currentGame)

@@ -2,10 +2,8 @@ package com.codeland.uhc.customSpawning.regeneration
 
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
-import com.codeland.uhc.util.Action
-import com.codeland.uhc.util.Util
-import org.bukkit.Chunk
-import org.bukkit.World
+import org.bukkit.*
+import java.lang.StrictMath.abs
 import kotlin.random.Random
 
 abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate: Int) {
@@ -34,45 +32,22 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 		}
 	}
 
-	fun getTeamChunks(world: World): ArrayList<List<Array<Pair<Int, Int>>>> {
+	fun getPlayerChunks(world: World): ArrayList<ArrayList<Loc>> {
 		val borderChunk = ((world.worldBorder.size / 2).toInt() / 16) - 1
 
-		/* only spawn for one eligible teammate per team chosen at random */
-		return game.teams.teams().map { team ->
-			team.members.filter {
-				PlayerData.isParticipating(it)
-			}.mapNotNull {
-				Action.getPlayerLocation(it)
-			}.filter {
-				it.world === world && it.y >= 58
-			}.shuffled()
-		}.filter {
-			it.isNotEmpty()
-		}.map { locations ->
-			locations.map { location ->
-				val cx = Util.floorDiv(location.blockX, 16)
-				val cz = Util.floorDiv(location.blockZ, 16)
+		/* get the chunks players are in to generate for */
+		val locs = Bukkit.getOnlinePlayers()
+			.filter { it.world === world && it.location.y >= 58 && PlayerData.isParticipating(it.uniqueId) }
+			.map { Loc(it.chunk.x, it.chunk.z) }
 
-				val left = (cx - chunkRadius).coerceAtLeast(-borderChunk)
-				val right = (cx + chunkRadius).coerceAtMost(borderChunk)
-				val up = (cz - chunkRadius).coerceAtLeast(-borderChunk)
-				val down = (cz + chunkRadius).coerceAtMost(borderChunk)
+		val ret = group(locs, chunkRadius, borderChunk)
 
-				val width = (right - left + 1)
-				val height = (down - up + 1)
+		println(ret.firstOrNull()?.getOrNull(11 + 11 + 11 + 11 + 11 + 5))
 
-				val list = Array(width * height) { i ->
-					Pair(left + (i % width), up + (i / width))
-				}
-
-				list.shuffle()
-
-				list
-			}
-		} as ArrayList<List<Array<Pair<Int, Int>>>>
+		return ret
 	}
 
-	var teamChunks: ArrayList<List<Array<Pair<Int, Int>>>> = ArrayList()
+	var playerChunks: ArrayList<ArrayList<Loc>> = ArrayList()
 	var timer = 0
 	var tryIndex = 0
 
@@ -80,23 +55,149 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 		val world = game.getOverworld()
 
 		if (--timer <= 0) {
-			teamChunks = getTeamChunks(world)
+			playerChunks = getPlayerChunks(world)
 			timer = getNextTicks(world)
 			tryIndex = 0
 		}
 
-		teamChunks.removeIf { players ->
-			players.any { chunks ->
-				if (tryIndex < chunks.size) {
-					val (chunkX, chunkZ) = chunks[tryIndex]
-					place(world.getChunkAt(chunkX, chunkZ))
+		playerChunks.removeIf { locs ->
+			if (tryIndex < locs.size) {
+				val (chunkX, chunkZ) = locs[tryIndex]
+				place(world.getChunkAt(chunkX, chunkZ))
 
-				} else {
-					true
-				}
+			} else {
+				true
 			}
 		}
 
 		++tryIndex
 	}
+
+	companion object {
+		data class Loc(val x: Int, val z: Int)
+		data class Eligible(var group: Int, val loc: Loc)
+
+		class OffsetGrid(val left: Int, val right: Int, val down: Int, val up: Int, val border: Int) {
+			val width = right - left + 1
+			val height = up - down + 1
+
+			val grid = Array(width * height) { -1 }
+
+			fun get(x: Int, z: Int): Int {
+				return if (x in -border..border && z in -border..border) {
+					grid[(z - down) * width + (x - left)]
+				} else {
+					-1
+				}
+			}
+
+			fun set(x: Int, z: Int, value: Int) {
+				grid[(z - down) * width + (x - left)] = value
+			}
+		}
+
+		fun group(players: List<Loc>, radius: Int, border: Int): ArrayList<ArrayList<Loc>> {
+			val eligible = players.mapIndexed { index, loc -> Eligible(index, loc) }
+
+			/* find which locations are overlapping */
+			for (i in 0..eligible.lastIndex - 1) {
+				for (j in i + 1..eligible.lastIndex) {
+					val player0 = eligible[i]
+					val player1 = eligible[j]
+
+					if (
+						abs(player0.loc.x - player1.loc.x) < radius * 2 + 1 &&
+						abs(player0.loc.z - player1.loc.z) < radius * 2 + 1
+					) {
+						player1.group = player0.group
+					}
+				}
+			}
+
+			/* put the overlapping locs in groups */
+			val groups = Array<ArrayList<Loc>>(eligible.size) { ArrayList() }
+			eligible.forEach { (group, loc) -> groups[group].add(loc) }
+
+			return groups.flatMap { locs ->
+				if (locs.isEmpty()) return@flatMap emptyList<ArrayList<Loc>>()
+				/* overlap order chosen randomly */
+				locs.shuffle()
+
+				/* determine bounds of the group */
+				/* z         */
+				/* ^         */
+				/* |         */
+				/* |         */
+				/* +-----> x */
+				var left = Int.MAX_VALUE
+				var right = Int.MIN_VALUE
+				var down = Int.MAX_VALUE
+				var up = Int.MIN_VALUE
+
+				locs.forEach { (x, z) ->
+					if (x - radius < left) left = x - radius
+					if (x + radius > right) right = x + radius
+					if (z - radius < down) down = z - radius
+					if (z + radius > up) up = z + radius
+				}
+
+				/* array of all positions within the bounds of the group */
+				val grid = OffsetGrid(left, right, down, up, border)
+
+				/* assign spaces to the players within, overlapping */
+				locs.forEachIndexed { player, (cx, cz) ->
+					for (ox in -radius..radius) for (oz in -radius..radius) {
+						grid.set(cx + ox, cz + oz, player)
+					}
+				}
+
+				/* go back over each player's square and see which spaces it retains */
+				locs.mapIndexed { player, (cx, cz) ->
+					val list = ArrayList<Loc>((radius * 2 + 1) * (radius * 2 + 1))
+
+					for (ox in -radius..radius) for (oz in -radius..radius) {
+						if (grid.get(cx + ox, cz + oz) == player) list.add(Loc(cx + ox, cz + oz))
+					}
+
+					list.shuffle()
+					list
+				}
+			} as ArrayList<ArrayList<Loc>>
+		}
+	}
 }
+
+//fun main() {
+//	val size = 28
+//
+//	val res = group(arrayListOf(
+//		Loc(7, 6),
+//		Loc(15, 3),
+//		Loc(9, 14),
+//		Loc(18, 11),
+//		Loc(22, 8),
+//		Loc(5, 23),
+//		Loc(19, 15),
+//		Loc(15, 19),
+//	), 2, size - 4)
+//
+//	val image = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
+//
+//	res.forEachIndexed { i, locs ->
+//		val shade = (i + 1) * 8
+//
+//		val pixel = shade.or(shade.shl(8)).or(shade.shl(16)).or(0xff000000.toInt())
+//
+//		locs.forEach { (x, z) ->
+//			if (image.getRGB(x, z) != 0) {
+//				println("OVERLAP | $i ($x, $z)")
+//			} else if (x >= size || z >= size) {
+//				println("OUT OF BOUNDS | $i ($x, $z)")
+//			} else {
+//				image.setRGB(x, z, pixel)
+//			}
+//		}
+//	}
+//
+//	ImageIO.write(image, "PNG", File("overlapTest.png"))
+//}

@@ -42,7 +42,18 @@ private fun horseTemplate(entityType: EntityType): DropFix {
 
 enum class DropFixType(val dropFix: DropFix) {
 	BLAZE(DropFix(EntityType.BLAZE, arrayOf(
-		arrayOf(item(BLAZE_ROD, ::lootItem))
+		arrayOf(item(BLAZE_ROD) { l -> (0 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (1 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (2 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (3 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (4 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (5 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (6 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (7 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (8 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (9 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (10 % (l + 1)) + 1 }),
+		arrayOf(item(BLAZE_ROD) { l -> (11 % (l + 1)) + 1 }),
 	))),
 
 	SPIDER(DropFix(

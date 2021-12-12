@@ -105,7 +105,11 @@ object SpawnUtil {
 
 	fun desert(biome: Biome) = biome === Biome.DESERT ||
 	biome === Biome.DESERT_HILLS ||
-	biome === Biome.DESERT_LAKES
+	biome === Biome.DESERT_LAKES ||
+	biome === Biome.BADLANDS ||
+	biome === Biome.BADLANDS_PLATEAU ||
+	biome === Biome.MODIFIED_BADLANDS_PLATEAU ||
+	biome === Biome.ERODED_BADLANDS
 
 	fun mountains(biome: Biome) = biome === Biome.MOUNTAINS ||
 	biome === Biome.GRAVELLY_MOUNTAINS ||
