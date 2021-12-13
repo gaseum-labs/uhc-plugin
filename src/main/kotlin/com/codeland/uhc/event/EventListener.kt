@@ -43,6 +43,7 @@ import org.bukkit.event.world.WorldSaveEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
+import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
@@ -475,10 +476,25 @@ class EventListener : Listener {
 		Material.NETHERITE_HOE,
 	)
 
+	data class HoeCount(var count: Int)
+
 	@EventHandler
 	fun onItemDamage(event: PlayerItemDamageEvent) {
 		if (hoes.contains(event.item.type)) {
-			event.damage = if (Math.random() < 0.4) 1 else 0
+			val meta = event.player.getMetadata("_U_Hoe")
+			val hoeCount = if (meta.isEmpty()) {
+				val count = HoeCount(0)
+				event.player.setMetadata("_U_Hoe", FixedMetadataValue(UHCPlugin.plugin, count))
+				count
+			} else {
+				meta.first().value() as HoeCount
+			}
+
+			if (hoeCount.count % 5 == 0 || hoeCount.count % 5 == 2 || hoeCount.count % 5 == 4) {
+				event.damage = 0
+			}
+
+			++hoeCount.count
 		}
 	}
 

@@ -42,8 +42,6 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 
 		val ret = group(locs, chunkRadius, borderChunk)
 
-		println(ret.firstOrNull()?.getOrNull(11 + 11 + 11 + 11 + 11 + 5))
-
 		return ret
 	}
 

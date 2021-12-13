@@ -9,26 +9,34 @@ import kotlin.random.Random
 
 class DropFix(
 	val entityType: EntityType,
-	val dropCycle: Array<Array<DropEntry>>,
-	val rares: Array<Pair<Int, DropEntry>> = emptyArray(),
+	val cycleSize: Int,
+	val drops: Array<DropEntry>,
+	val rares: Array<RareEntry> = emptyArray(),
 ) {
 	private val META_NAME = "Df_${entityType.name}"
 
-	internal class DropFixData(val size: Int, val rareSizes: List<Int>) {
+	/**
+	 * indices manager for a dropfix
+	 */
+	internal class DropFixData(val cycleSize: Int, val rareSizes: List<Int>) {
 		var count = 0
-		var cycleIndices = Array(size) { it }
+		var rareCounts = Array(rareSizes.size) { 0 }
+
+		var cycleIndices = Array(cycleSize) { it }
 		var rareIndices = Array(rareSizes.size) { 0 }
 
-		fun get(onCycle: (Int) -> Unit, onRare: (Int) -> Unit) {
-			if (size != 0) {
-				onCycle(cycleIndices[count % size])
-				if ((count + 1) % size == 0) cycleIndices.shuffle()
+		fun get(onCycle: (Int) -> Unit, onRare: (Int, Int) -> Unit) {
+			/* some dropfixes only have rares */
+			if (cycleSize != 0) {
+				onCycle(cycleIndices[count % cycleSize])
+				if ((count + 1) % cycleSize == 0) cycleIndices.shuffle()
 			}
 
 			for (i in rareIndices.indices) {
-				if (count % rareSizes[i] == rareIndices[i]) onRare(i)
+				if (count % rareSizes[i] == rareIndices[i]) onRare(i, rareCounts[i]++)
 				if ((count + 1) % rareSizes[i] == 0) rareIndices[i] = Random.nextInt(rareSizes[i])
 			}
+
 			++count
 		}
 
@@ -38,21 +46,26 @@ class DropFix(
 		}
 	}
 
-	private fun getDrops(player: Player, onDrop: (DropEntry) -> Unit) {
+	/**
+	 * @param player the player who the mob is dropping items for
+	 * @param onDrop can be called multiple times, contains the drop entry
+	 * and the cycle index for the player
+	 */
+	private fun getDrops(player: Player, onDrop: (DropEntry, Int) -> Unit) {
+		/* get the dropfixdata from the player */
 		val meta = player.getMetadata(META_NAME)
-
 		val data = if (meta.isEmpty()) {
-			val ret = DropFixData(dropCycle.size, rares.map { it.first })
+			val ret = DropFixData(cycleSize, rares.map { it.size })
 			player.setMetadata(META_NAME, FixedMetadataValue(UHCPlugin.plugin, ret))
 			ret
 		} else {
 			meta[0].value() as DropFixData
 		}
 
-		data.get({ i ->
-			dropCycle[i].forEach { onDrop(it) }
-		}, { i ->
-			onDrop(rares[i].second)
+		data.get({ cycle ->
+			drops.forEach { entry -> onDrop(entry, cycle) }
+		}, { rareIndex, cycle ->
+			onDrop(rares[rareIndex].dropEntry, cycle)
 		})
 	}
 
@@ -65,8 +78,8 @@ class DropFix(
 
 		val nearestPlayer = killer ?: entity.world.players.minByOrNull { entity.location.distance(it.location) }
 
-		if (nearestPlayer != null) getDrops(nearestPlayer) { entry ->
-			drops.addAll(entry.onDrop(entity, looting).filterNotNull().filter { it.amount > 0 })
+		if (nearestPlayer != null) getDrops(nearestPlayer) { entry, cycle ->
+			drops.addAll(entry.onDrop(entity, looting, cycle).filterNotNull().filter { it.amount > 0 })
 		}
 	}
 }
