@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
 import org.bukkit.Material
+import org.bukkit.Material.POTION
 import org.bukkit.attribute.Attribute
 import org.bukkit.attribute.AttributeModifier
 import org.bukkit.event.EventHandler
@@ -10,6 +11,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.inventory.SmithItemEvent
 import org.bukkit.inventory.*
+import org.bukkit.inventory.meta.Damageable
 import java.util.*
 
 class Axe : Listener {

@@ -47,7 +47,8 @@ object SpawnUtil {
 		block.type !== Material.BIRCH_LEAVES &&
 		block.type !== Material.JUNGLE_LEAVES &&
 		block.type !== Material.ACACIA_LEAVES &&
-		block.type !== Material.DARK_OAK_LEAVES
+		block.type !== Material.DARK_OAK_LEAVES &&
+		block.type !== Material.BAMBOO
 	}
 
 	fun animalSpawnFloor(block: Block): Boolean {
@@ -56,6 +57,20 @@ object SpawnUtil {
 		block.type === Material.COARSE_DIRT ||
 		block.type === Material.PODZOL ||
 		block.type === Material.SAND
+	}
+
+	fun wideSpawnFloor(block: Block): Boolean {
+		return spawnFloor(block) ||
+		spawnFloor(block.getRelative(1, 0, 0)) ||
+		spawnFloor(block.getRelative(0, 0, 1)) ||
+		spawnFloor(block.getRelative(1, 0, 1))
+	}
+
+	fun wideAnimalSpawnFloor(block: Block): Boolean {
+		return animalSpawnFloor(block) ||
+		animalSpawnFloor(block.getRelative(1, 0, 0)) ||
+		animalSpawnFloor(block.getRelative(0, 0, 1)) ||
+		animalSpawnFloor(block.getRelative(1, 0, 1))
 	}
 
 	/* spawn boxes */
@@ -68,28 +83,14 @@ object SpawnUtil {
 		return spawnIn(block) && spawnIn(block.getRelative(0, 1, 0)) && spawnIn(block.getRelative(0, 2, 0))
 	}
 
-	//fun largeSpawnBox(block: Block, height: Int): Boolean {
-	//	return (0 until height).all { y ->
-	//		spawnIn(block.getRelative(-1, y, -1)) &&
-	//		spawnIn(block.getRelative(0, y, -1)) &&
-	//		spawnIn(block.getRelative(1, y, -1)) &&
-	//		spawnIn(block.getRelative(-1, y, 0)) &&
-	//		spawnIn(block.getRelative(0, y, 0)) &&
-	//		spawnIn(block.getRelative(1, y, 0)) &&
-	//		spawnIn(block.getRelative(-1, y, 1)) &&
-	//		spawnIn(block.getRelative(0, y, 1)) &&
-	//		spawnIn(block.getRelative(1, y, 1))
-	//	}
-	//}
-
-	fun offsetShortSpawnBox(block: Block): Boolean {
+	fun wideSpawnBox(block: Block): Boolean {
 		return spawnIn(block.getRelative(0, 0, 0)) &&
 		spawnIn(block.getRelative(1, 0, 0)) &&
 		spawnIn(block.getRelative(0, 0, 1)) &&
 		spawnIn(block.getRelative(1, 0, 1))
 	}
 
-	fun offsetTallSpawnBox(block: Block): Boolean {
+	fun wideTallSpawnBox(block: Block): Boolean {
 		return spawnIn(block.getRelative(0, 0, 0)) &&
 		spawnIn(block.getRelative(1, 0, 0)) &&
 		spawnIn(block.getRelative(0, 0, 1)) &&
@@ -104,7 +105,11 @@ object SpawnUtil {
 
 	fun desert(biome: Biome) = biome === Biome.DESERT ||
 	biome === Biome.DESERT_HILLS ||
-	biome === Biome.DESERT_LAKES
+	biome === Biome.DESERT_LAKES ||
+	biome === Biome.BADLANDS ||
+	biome === Biome.BADLANDS_PLATEAU ||
+	biome === Biome.MODIFIED_BADLANDS_PLATEAU ||
+	biome === Biome.ERODED_BADLANDS
 
 	fun mountains(biome: Biome) = biome === Biome.MOUNTAINS ||
 	biome === Biome.GRAVELLY_MOUNTAINS ||

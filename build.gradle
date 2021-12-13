@@ -1,8 +1,7 @@
-
 plugins {
     id 'idea'
     id 'com.github.johnrengelman.shadow' version '7.1.0'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+    id 'org.jetbrains.kotlin.jvm' version '1.6.0'
 }
 
 idea {
@@ -14,59 +13,43 @@ idea {
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "16"
-        languageVersion = "1.5"
-        apiVersion = "1.5"
+        jvmTarget = "17"
+        languageVersion = "1.6"
+        apiVersion = "1.6"
     }
 }
 
 repositories {
-    mavenCentral()
     mavenLocal()
     maven {
-        name 'papermc'
+        /* paper api */
         url 'https://papermc.io/repo/repository/maven-public/'
     }
     maven {
-        name 'sonatype'
-        url 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
-    maven {
-        name 'aikar'
+        /* commands api */
         url "https://repo.aikar.co/content/groups/aikar/"
     }
     maven {
-        name 'dmulloy2'
+        /* spigot jar */
         url 'https://repo.dmulloy2.net/repository/public'
     }
     maven {
-        url 'https://jitpack.io'
-    }
-    maven {
-        name 'm2-dv8tion'
+        /* discord */
         url 'https://m2.dv8tion.net/releases'
     }
     maven {
+        /* transact-sql driver */
         url 'https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc'
     }
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation 'org.kodein.di:kodein-di:7.0.0'
     implementation 'net.dv8tion:JDA:4.3.0_277'
     implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
     implementation 'com.microsoft.sqlserver:mssql-jdbc:9.4.0.jre16'
-    compileOnly 'io.papermc.paper:paper-api:1.17-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
     compileOnly 'com.comphenix.protocol:ProtocolLib:4.7.0'
-    compileOnly 'org.spigotmc:spigot:1.17-R0.1-SNAPSHOT'
-}
-
-shadowJar {
-    relocate 'co.aikar.commands', 'com.codeland.uhc.acf'
-    relocate 'co.aikar.locales', 'com.codeland.uhc.locales'
-    exclude 'paper-184.jar'
-    exclude 'com.comphenix.*'
+    compileOnly 'org.spigotmc:spigot:1.17.1-R0.1-SNAPSHOT'
 }
 
 build.dependsOn shadowJar

@@ -1,12 +1,14 @@
 package com.codeland.uhc.customSpawning.spawnInfos
 
-import com.codeland.uhc.customSpawning.*
+import com.codeland.uhc.customSpawning.SpawnInfo
+import com.codeland.uhc.customSpawning.SpawnUtil
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Sound
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace.DOWN
-import org.bukkit.entity.*
+import org.bukkit.entity.Blaze
+import org.bukkit.entity.Player
 import org.bukkit.util.Vector
 
 class SpawnBlaze : SpawnInfo<Blaze>(Blaze::class.java, Vector(0.5, 0.0, 0.5), true) {
@@ -17,6 +19,7 @@ class SpawnBlaze : SpawnInfo<Blaze>(Blaze::class.java, Vector(0.5, 0.0, 0.5), tr
 
 	override fun onSpawn(block: Block, count: Int, player: Player?, entity: Blaze) {
 		entity.removeWhenFarAway = false
+
 		if (player == null) return
 
 		val component = Component.text("Blaze Spawned!", TextColor.color(0xff6417))

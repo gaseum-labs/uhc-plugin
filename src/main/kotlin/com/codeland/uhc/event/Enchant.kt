@@ -148,7 +148,7 @@ class Enchant : Listener {
 		)
 
 		val ENCHANT_OPTIONS_ARMOR = arrayOf(
-			EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, arrayOf(1, 1, 1, 2, 2, 3, 3, 4, 4)),
+			EnchantOption(Enchantment.PROTECTION_ENVIRONMENTAL, arrayOf(1, 1, 1, 2, 2, 3, 3, 3, 3)),
 			EnchantOption(Enchantment.PROTECTION_PROJECTILE, arrayOf(1, 1, 1, 2, 2, 3, 3, 4, 4)),
 			EnchantOption(Enchantment.PROTECTION_FIRE, arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 4)),
 			EnchantOption(Enchantment.PROTECTION_EXPLOSIONS, arrayOf(1, 1, 2, 2, 3, 3, 4, 4, 4))
@@ -211,21 +211,16 @@ class Enchant : Listener {
 			EnchantOption(Enchantment.LOOT_BONUS_MOBS, arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
 			EnchantOption(Enchantment.FIRE_ASPECT, arrayOf(0, 0, 0, 0, 1, 1, 2, 2, 2))
 		)),
-		AXE(arrayOf(
-			Material.IRON_AXE,
-			Material.DIAMOND_AXE,
-			Material.NETHERITE_AXE
-		), arrayOf(
-			*ENCHANT_OPTIONS_TOOL,
-			EnchantOption(Enchantment.DAMAGE_ALL, arrayOf(0, 0, 0, 0, 0, 1, 2, 3, 4))
-		)),
 		TOOL(arrayOf(
 			Material.IRON_SHOVEL,
 			Material.DIAMOND_SHOVEL,
 			Material.NETHERITE_SHOVEL,
 			Material.IRON_PICKAXE,
 			Material.DIAMOND_PICKAXE,
-			Material.NETHERITE_PICKAXE
+			Material.NETHERITE_PICKAXE,
+			Material.DIAMOND_AXE,
+			Material.NETHERITE_AXE,
+			Material.IRON_AXE,
 		), ENCHANT_OPTIONS_TOOL),
 		BOW(arrayOf(
 			Material.BOW

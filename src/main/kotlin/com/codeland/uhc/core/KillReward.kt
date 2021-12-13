@@ -3,6 +3,7 @@ package com.codeland.uhc.core
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.*
+import org.bukkit.ChatColor.*
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -55,7 +56,7 @@ enum class KillReward(
 			location,
 			ItemCreator.fromType(Material.ENCHANTED_GOLDEN_APPLE)
 				.setData(uhcAppleKey, 1)
-				.name("${org.bukkit.ChatColor.GOLD}UHC Apple")
+				.name("${ChatColor.GOLD}UHC Apple")
 				.lore("6 absorption hearts", "2 regeneration hearts")
 				.create()
 		)

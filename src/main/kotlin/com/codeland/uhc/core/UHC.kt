@@ -12,8 +12,6 @@ import com.codeland.uhc.team.*
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.*
 import com.codeland.uhc.world.WorldManager
-import com.codeland.uhc.world.gen.CustomGenLayers.BORDER_INCREMENT
-import com.codeland.uhc.world.gen.CustomGenLayers.OCEAN_BUFFER
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -92,6 +90,10 @@ object UHC {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.BLAZE, currentTick, currentGame)
+
+					currentGame.sugarCaneRegen.tick()
+					currentGame.leatherRegen.tick()
+					currentGame.melonRegen.tick()
 				}
 
 				Portal.portalTick(currentGame)
@@ -105,10 +107,6 @@ object UHC {
 				}
 
 				val halfWay = (currentGame.config.graceTime.get() + currentGame.config.shrinkTime.get()) * 20 / 2
-
-				currentGame.sugarCaneRegen.tick()
-				currentGame.leatherRegen.tick()
-				currentGame.melonRegen.tick()
 
 				if (timer == halfWay) {
 					Trader.deployTraders(currentGame)
@@ -132,7 +130,7 @@ object UHC {
 							Bukkit.getPlayer(uuid)?.showTitle(countdownTitle)
 						}
 					}
-					
+
 				} else if (timer == 0) {
 					countdownTimerGoing = false
 
@@ -228,8 +226,7 @@ object UHC {
 
 		messageStream(false, "Creating game worlds for $numPlayers player${if (numPlayers == 1) "" else "s"}")
 
-		worldRadius =
-			(ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / BORDER_INCREMENT) * BORDER_INCREMENT).toInt() + OCEAN_BUFFER
+		worldRadius = (ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / 96) * 96).toInt()
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()

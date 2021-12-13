@@ -10,7 +10,6 @@ import java.awt.image.BufferedImage
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.floor
-import kotlin.math.roundToInt
 
 class Tracker {
 	val POSITION_CHUNK_SIZE = 512
@@ -40,9 +39,9 @@ class Tracker {
 		}
 	}
 
-	fun generateImage(border: Int, environment: World.Environment, zoom: Float): BufferedImage {
+	fun generateImage(border: Int, environment: World.Environment, zoom: Int): BufferedImage {
 		/* prepare map part */
-		val imageSize = ((border * 2 + 1) / zoom).roundToInt()
+		val imageSize = (border * 2 + 1) / zoom
 		val pixels = IntArray(imageSize * imageSize) { BLACK }
 		val environmentMatch = environment !== World.Environment.NORMAL
 
@@ -82,10 +81,10 @@ class Tracker {
 						val (lx, lz, le, ln) = unpackPosition(lastPosition)
 						lastPosition = position
 
-						val imgLastX = floor((lx + border) / zoom).toInt()
-						val imgLastY = floor((lz + border) / zoom).toInt()
-						val imgX = floor((x + border) / zoom).toInt()
-						val imgY = floor((z + border) / zoom).toInt()
+						val imgLastX = Util.floorDiv((lx + border), zoom)
+						val imgLastY = Util.floorDiv((lz + border), zoom)
+						val imgX = Util.floorDiv((x + border), zoom)
+						val imgY = Util.floorDiv((z + border), zoom)
 
 						val color = alongColor(red, gre, blu, (i * POSITION_CHUNK_SIZE + j) / trailSize.toFloat())
 

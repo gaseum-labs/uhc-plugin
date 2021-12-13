@@ -72,40 +72,6 @@ object WorldGenManager {
 		}
 	}
 
-	val lobbyBiomes = listOf(
-		Biomes.m,
-		Biomes.E,
-		Biomes.f,
-		Biomes.b,
-		Biomes.aa,
-		Biomes.e,
-		Biomes.ad,
-		Biomes.B,
-		Biomes.D,
-		Biomes.v,
-		Biomes.x,
-		Biomes.av,
-		Biomes.c,
-		Biomes.J,
-		Biomes.L
-	)
-
-	val tallLobbyBiomes = listOf(
-		Biomes.ai,
-		Biomes.au,
-		Biomes.at,
-		Biomes.ap,
-		Biomes.ak,
-		Biomes.o,
-		Biomes.ah,
-		Biomes.G,
-		Biomes.I,
-		Biomes.ag,
-		Biomes.am,
-		Biomes.`as`,
-		Biomes.an
-	)
-
 	private fun onWorldAdded(world: World): Boolean {
 		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return false
 

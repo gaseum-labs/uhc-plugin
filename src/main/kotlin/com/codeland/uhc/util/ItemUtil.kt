@@ -65,6 +65,7 @@ object ItemUtil {
 		override fun getRarity() = EnchantmentRarity.COMMON
 		override fun getDamageIncrease(level: Int, entityCategory: EntityCategory) = 0.0f
 		override fun getActiveSlots() = emptySet<EquipmentSlot>()
+		override fun translationKey() = "fake"
 	}
 
 	val fakeEnchantment = FakeEnchantment()

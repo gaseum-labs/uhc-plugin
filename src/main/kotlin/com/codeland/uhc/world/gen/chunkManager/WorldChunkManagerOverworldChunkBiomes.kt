@@ -1,5 +1,6 @@
 package com.codeland.uhc.world.gen.chunkManager
 
+import com.codeland.uhc.util.Util
 import net.minecraft.core.IRegistry
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.ResourceKey
@@ -23,11 +24,11 @@ class WorldChunkManagerOverworldChunkBiomes(
 		.map { (_, biome) -> biome } as ArrayList<ResourceKey<BiomeBase>>
 
 	override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
-		val chunkX = floor(x / 4.0).toInt()
-		val chunkZ = floor(z / 4.0).toInt()
+		val chunkX = Util.floorDiv(x, 4)
+		val chunkZ = Util.floorDiv(z, 4)
 
 		val random = Random(chunkX.toLong().shl(32).or(chunkZ.toLong().and(0x0000FFFF)).xor(seed))
 
-		return var4.d(biomeList[random.nextInt(0, biomeList.size)])
+		return var4.d(biomeList[random.nextInt(biomeList.size)])
 	}
 }

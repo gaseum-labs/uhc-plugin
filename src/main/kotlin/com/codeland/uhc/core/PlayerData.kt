@@ -13,6 +13,7 @@ import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.UHCProperty
 import net.kyori.adventure.text.Component
 import org.bukkit.*
+import org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH
 import org.bukkit.block.BlockFace
 import org.bukkit.enchantments.EnchantmentOffer
 import org.bukkit.entity.*
@@ -130,13 +131,13 @@ class PlayerData(val uuid: UUID) {
 		zombie.conversionTime = -1
 		zombie.removeWhenFarAway = false
 
-		zombie.equipment?.helmet = skull
-		zombie.equipment?.helmetDropChance = 0.0f
-		zombie.equipment?.chestplateDropChance = 0.0f
-		zombie.equipment?.leggingsDropChance = 0.0f
-		zombie.equipment?.bootsDropChance = 0.0f
-		zombie.equipment?.itemInMainHandDropChance = 0.0f
-		zombie.equipment?.itemInOffHandDropChance = 0.0f
+		zombie.equipment.helmet = skull
+		zombie.equipment.helmetDropChance = 0.0f
+		zombie.equipment.chestplateDropChance = 0.0f
+		zombie.equipment.leggingsDropChance = 0.0f
+		zombie.equipment.bootsDropChance = 0.0f
+		zombie.equipment.itemInMainHandDropChance = 0.0f
+		zombie.equipment.itemInOffHandDropChance = 0.0f
 
 		/* small zombie when disconnecting while crouching */
 		if (!location.world.getBlockAt(location).getRelative(BlockFace.UP).isPassable) zombie.setBaby()
@@ -173,15 +174,16 @@ class PlayerData(val uuid: UUID) {
 			player.totalExperience
 		)
 
+		zombie.getAttribute(GENERIC_MAX_HEALTH)?.baseValue = player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
 		zombie.health = player.health
 		zombie.fireTicks = player.fireTicks
 		zombie.addPotionEffects(player.activePotionEffects)
 
-		zombie.equipment?.chestplate = player.inventory.chestplate?.clone()
-		zombie.equipment?.leggings = player.inventory.leggings?.clone()
-		zombie.equipment?.boots = player.inventory.boots?.clone()
-		zombie.equipment?.setItemInMainHand(player.inventory.itemInMainHand.clone())
-		zombie.equipment?.setItemInOffHand(player.inventory.itemInOffHand.clone())
+		zombie.equipment.chestplate = player.inventory.chestplate?.clone()
+		zombie.equipment.leggings = player.inventory.leggings?.clone()
+		zombie.equipment.boots = player.inventory.boots?.clone()
+		zombie.equipment.setItemInMainHand(player.inventory.itemInMainHand.clone())
+		zombie.equipment.setItemInOffHand(player.inventory.itemInOffHand.clone())
 
 		return zombie
 	}
@@ -208,11 +210,12 @@ class PlayerData(val uuid: UUID) {
 		val (inventory, experience) = getZombieData(zombie)
 
 		player.teleport(zombie.location)
-		player.inventory.contents = inventory
+		player.inventory.setContents(inventory)
 		player.totalExperience = experience
 		player.fireTicks = zombie.fireTicks
 		player.health = zombie.health
-
+		player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue = zombie.getAttribute(GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
+		
 		player.activePotionEffects.clear()
 		player.addPotionEffects(zombie.activePotionEffects)
 

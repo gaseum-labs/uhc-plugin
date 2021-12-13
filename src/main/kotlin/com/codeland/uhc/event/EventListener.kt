@@ -26,6 +26,7 @@ import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
+import org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -42,6 +43,7 @@ import org.bukkit.event.world.WorldSaveEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
+import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
@@ -474,10 +476,25 @@ class EventListener : Listener {
 		Material.NETHERITE_HOE,
 	)
 
+	data class HoeCount(var count: Int)
+
 	@EventHandler
 	fun onItemDamage(event: PlayerItemDamageEvent) {
 		if (hoes.contains(event.item.type)) {
-			event.damage = if (Math.random() < 0.4) 1 else 0
+			val meta = event.player.getMetadata("_U_Hoe")
+			val hoeCount = if (meta.isEmpty()) {
+				val count = HoeCount(0)
+				event.player.setMetadata("_U_Hoe", FixedMetadataValue(UHCPlugin.plugin, count))
+				count
+			} else {
+				meta.first().value() as HoeCount
+			}
+
+			if (hoeCount.count % 5 == 0 || hoeCount.count % 5 == 2 || hoeCount.count % 5 == 4) {
+				event.damage = 0
+			}
+
+			++hoeCount.count
 		}
 	}
 
@@ -511,21 +528,25 @@ class EventListener : Listener {
 	fun onDecay(event: LeavesDecayEvent) {
 		/* prevent default drops */
 		event.isCancelled = true
-		event.block.type = Material.AIR
 
 		val leavesLocation = event.block.location.toCenterLocation()
 
 		val dropPlayer = Bukkit.getOnlinePlayers()
 			.filter { PlayerData.isParticipating(it.uniqueId) && it.world === leavesLocation.world }.minByOrNull {
-			it.location.distance(leavesLocation)
-		}
+				it.location.distance(leavesLocation)
+			}
 
 		/* apply applefix to this leaves block for the nearest player */
-		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(event.block.state,
+		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(
+			event.block.state,
 			mutableListOf(),
-			dropPlayer) { drop ->
+			dropPlayer
+		) { drop ->
 			if (drop != null) leavesLocation.world.dropItemNaturally(event.block.location, drop)
 		}
+
+		/* set after drops so that leaves state is captured */
+		event.block.type = Material.AIR
 	}
 
 	@EventHandler
@@ -705,7 +726,8 @@ class EventListener : Listener {
 			val prefixes = listOf("story", "nether", "end", "husbandry", "adventure")
 			if (prefixes.any { key.startsWith(it) } && !key.endsWith("root")) {
 				val hearts = Achievements.achievementMap[event.advancement.key.key] ?: 1
-				event.player.maxHealth += hearts
+				event.player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue =
+					(event.player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue ?: 20.0) + hearts
 				event.player.health += hearts
 			}
 		}
