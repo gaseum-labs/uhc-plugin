@@ -1,46 +1,36 @@
 package com.codeland.uhc.world.chunkPlacer
 
-import com.codeland.uhc.UHCPlugin
-import org.bukkit.*
+import org.bukkit.Chunk
+import org.bukkit.World
+import java.util.concurrent.locks.*
 
 abstract class DelayedChunkPlacer(size: Int) : AbstractChunkPlacer(size) {
-	private var chunkList = ArrayList<Pair<Chunk, Int>>()
+	private var chunkList = ArrayList<Chunk>()
 
 	abstract fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean
 
-	override fun onGenerate(chunk: Chunk, seed: Int) {
-		val chunkIndex = shouldGenerate(chunk.x, chunk.z, seed, uniqueSeed, size)
-		if (chunkIndex != -1) chunkList.add(Pair(chunk, chunkIndex))
+	private val lock = ReentrantLock()
 
-		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
-			var safeChunks = 0
+	override fun onGenerate(chunk: Chunk, uniqueSeed: Long, worldSeed: Long) {
+		try {
+			lock.lock()
 
-			val removeChunks = Array(chunkList.size) { i ->
-				val checkChunk = chunkList[i].first
+			if (shouldGenerate(chunk.x, chunk.z, uniqueSeed, worldSeed, size)) {
+				chunkList.add(chunk)
+			}
 
-				if (chunkReady(checkChunk.world, checkChunk.x, checkChunk.z)) {
-					place(checkChunk, chunkList[i].second)
+			chunkList.removeIf {
+				if (chunkReady(it.world, it.x, it.z)) {
+					place(it)
 					true
 				} else {
-					++safeChunks
 					false
 				}
 			}
 
-			val newChunkList = ArrayList<Pair<Chunk, Int>>(safeChunks)
-
-			removeChunks.forEachIndexed { i, removed ->
-				if (!removed) newChunkList.add(chunkList[i])
-			}
-
-			chunkList = newChunkList
+		} finally {
+			lock.unlock()
 		}
-	}
-
-	override fun reset(uniqueSeed: Int) {
-		super.reset(uniqueSeed)
-
-		chunkList.clear()
 	}
 
 	companion object {

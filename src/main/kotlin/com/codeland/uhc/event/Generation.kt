@@ -1,13 +1,12 @@
 package com.codeland.uhc.event
 
-import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.WorldGenOption.*
 import com.codeland.uhc.world.WorldManager
-import com.codeland.uhc.world.chunkPlacer.impl.OxeyePlacer
-import com.codeland.uhc.world.chunkPlacer.impl.SugarCanePlacer
-import com.codeland.uhc.world.chunkPlacerHolder.type.*
-import org.bukkit.Bukkit
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacerHolder
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacerHolder.*
+import com.codeland.uhc.world.chunkPlacer.impl.*
 import org.bukkit.Material.AIR
 import org.bukkit.Material.MELON
 import org.bukkit.entity.Animals
@@ -18,10 +17,9 @@ import org.bukkit.event.world.ChunkPopulateEvent
 class Generation : Listener {
 	@EventHandler
 	fun onChunkLoad(event: ChunkPopulateEvent) {
-		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin) {
+		SchedulerUtil.nextTick {
 			val world = event.world
 			val chunk = event.chunk
-
 			val config = UHC.getConfig()
 
 			if (world.name == WorldManager.GAME_WORLD_NAME) {
@@ -36,42 +34,33 @@ class Generation : Listener {
 					if (block.type === MELON) block.setType(AIR, false)
 				}
 
-				OreFix.amethystPlacer.onGenerate(chunk, world.seed.toInt())
-
-				if (config.worldGenEnabled(CAVE_INDICATORS)) {
-					OreFix.removeMinerals(chunk)
-					OreFix.mineralPlacer.onGenerate(chunk, world.seed.toInt())
-				}
+				AMETHYST.onGenerate(chunk, world.seed)
 
 				if (config.worldGenEnabled(ORE_FIX) || config.worldGenEnabled(REVERSE_ORE_FIX)) {
-					OreFix.removeOres(chunk)
+					OrePlacer.removeOres(chunk)
 				}
 
 				if (config.worldGenEnabled(REVERSE_ORE_FIX)) {
-					OreFix.reverseCoalPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.reverseIronPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.reverseRedstonePlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.reverseCopperPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.reverseGoldPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.reverseLapisPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.reverseDiamondPlacer.onGenerate(chunk, world.seed.toInt())
+					REVERSE_DIAMOND.onGenerate(chunk, world.seed)
+					REVERSE_LAPIS.onGenerate(chunk, world.seed)
+					REVERSE_GOLD.onGenerate(chunk, world.seed)
+					REVERSE_COPPER.onGenerate(chunk, world.seed)
+					REVERSE_REDSTONE.onGenerate(chunk, world.seed)
+					REVERSE_IRON.onGenerate(chunk, world.seed)
+					REVERSE_COAL.onGenerate(chunk, world.seed)
 
 				} else if (config.worldGenEnabled(ORE_FIX)) {
-					OreFix.diamondPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.goldPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.lapisPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.emeraldPlacer.onGenerate(chunk, world.seed.toInt())
-				}
-
-				if (config.worldGenEnabled(NETHER_INDICATORS)) {
-					NetherIndicators.netherIndicatorPlacer.onGenerate(chunk, world.seed.toInt())
+					DIAMOND.onGenerate(chunk, world.seed)
+					GOLD.onGenerate(chunk, world.seed)
+					LAPIS.onGenerate(chunk, world.seed)
+					EMERALD.onGenerate(chunk, world.seed)
 				}
 
 				if (config.worldGenEnabled(MUSHROOM_FIX)) {
 					OxeyePlacer.removeOxeye(chunk)
-					MushroomOxeyeFix.oxeyePlacer.onGenerate(chunk, world.seed.toInt())
-					MushroomOxeyeFix.redMushroomPlacer.onGenerate(chunk, world.seed.toInt())
-					MushroomOxeyeFix.brownMushroomPlacer.onGenerate(chunk, world.seed.toInt())
+					OXEYE.onGenerate(chunk, world.seed)
+					RED_MUSHROOM.onGenerate(chunk, world.seed)
+					BROWN_MUSHROOM.onGenerate(chunk, world.seed)
 				}
 
 				if (config.worldGenEnabled(SUGAR_CANE_FIX) || config.worldGenEnabled(SUGAR_CANE_REGEN)) {
@@ -79,38 +68,36 @@ class Generation : Listener {
 				}
 
 				if (config.worldGenEnabled(SUGAR_CANE_FIX)) {
-					SugarCaneFix.deepSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
-					SugarCaneFix.lowSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
-					SugarCaneFix.highSugarCanePlacer.onGenerate(chunk, world.seed.toInt())
+					DEEP_SUGAR_CANE.onGenerate(chunk, world.seed)
+					LOW_SUGAR_CANE.onGenerate(chunk, world.seed)
+					HIGH_SUGAR_CANE.onGenerate(chunk, world.seed)
 				}
 
 				if (config.worldGenEnabled(HALLOWEEN)) {
-					HalloweenWorld.pumpkinPlacer.onGenerate(chunk, world.seed.toInt())
-					HalloweenWorld.deadBushPlacer.onGenerate(chunk, world.seed.toInt())
-
-					HalloweenWorld.lanternPlacer.onGenerate(chunk, world.seed.toInt())
-					HalloweenWorld.cobwebPlacer.onGenerate(chunk, world.seed.toInt())
-					HalloweenWorld.bannerPlacer.onGenerate(chunk, world.seed.toInt())
-					HalloweenWorld.bricksPlacer.onGenerate(chunk, world.seed.toInt())
+					PUMPKIN.onGenerate(chunk, world.seed)
+					DEAD_BUSH.onGenerate(chunk, world.seed)
+					LANTERN.onGenerate(chunk, world.seed)
+					COBWEB.onGenerate(chunk, world.seed)
+					BANNER.onGenerate(chunk, world.seed)
+					BRICKS.onGenerate(chunk, world.seed)
 				}
 
 				if (config.worldGenEnabled(CHRISTMAS)) {
-					ChristmasWorld.snowPlacer.onGenerate(chunk, world.seed.toInt())
+					SNOW.onGenerate(chunk, world.seed)
 				}
 
 				if (config.worldGenEnabled(TOWERS)) {
-					StructuresWorld.towerPlacer.onGenerate(chunk, world.seed.toInt())
+					TOWER.onGenerate(chunk, world.seed)
 				}
 
 			} else if (world.name == WorldManager.NETHER_WORLD_NAME) {
 				if (config.worldGenEnabled(NETHER_FIX)) {
-					NetherFix.blackstonePlacer.onGenerate(chunk, world.seed.toInt())
-					NetherFix.magmaPlacer.onGenerate(chunk, world.seed.toInt())
-					NetherFix.lavaStreamPlacer.onGenerate(chunk, world.seed.toInt())
-					OreFix.debrisPlacer.onGenerate(chunk, world.seed.toInt())
-					NetherFix.basaltPlacer.onGenerate(chunk, world.seed.toInt())
-
-					NetherFix.wartPlacer.onGenerate(chunk, world.seed.toInt())
+					BLACKSTONE.onGenerate(chunk, world.seed)
+					DEBRIS.onGenerate(chunk, world.seed)
+					MAGMA.onGenerate(chunk, world.seed)
+					LAVA_STREAM.onGenerate(chunk, world.seed)
+					BASALT.onGenerate(chunk, world.seed)
+					WART.onGenerate(chunk, world.seed)
 				}
 			}
 		}

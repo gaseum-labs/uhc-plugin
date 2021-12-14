@@ -3,6 +3,7 @@ package com.codeland.uhc.customSpawning.regeneration
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.customSpawning.*
 import com.codeland.uhc.customSpawning.spawnInfos.*
+import com.codeland.uhc.util.Util.takeFrom
 import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.*
@@ -28,12 +29,7 @@ class LeatherRegen(game: Game) : Regen(game, 5, 600) {
 	override fun place(chunk: Chunk): Boolean {
 		val (block, spawnInfo) = AbstractChunkPlacer.randomPosition(chunk, 59, 80) { block ->
 			val spawnInfo = spawnInfo(block)
-
-			if (spawnInfo.allowSpawn(block, 0)) {
-				Pair(block, spawnInfo)
-			} else {
-				null
-			}
+			Pair(block, spawnInfo).takeFrom(spawnInfo.allowSpawn(block, 0))
 		} ?: return false
 
 		spawnInfo.spawn(block).removeWhenFarAway = false

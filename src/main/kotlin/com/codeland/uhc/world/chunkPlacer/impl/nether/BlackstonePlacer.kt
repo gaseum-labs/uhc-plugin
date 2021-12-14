@@ -9,7 +9,7 @@ import org.bukkit.block.BlockFace
 import kotlin.random.Random
 
 class BlackstonePlacer : ImmediateChunkPlacer(1) {
-	override fun place(chunk: Chunk, chunkIndex: Int) {
+	override fun place(chunk: Chunk) {
 		val random = Random(chunk.world.seed.xor(chunk.chunkKey))
 
 		for (y in 30 downTo 26) {

@@ -14,17 +14,14 @@ class OrePlacer(
 	val type: Material,
 	val deepType: Material,
 ) : DelayedChunkPlacer(size) {
-	val random = Random(size + low + high + amount + type.ordinal + uniqueSeed)
+	val random = Random(size + low + high + amount + type.ordinal)
 
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		for (x in -1..1) for (z in -1..1)
-			if (!world.isChunkGenerated(chunkX + x, chunkZ + z)) return false
-
-		return true
+		return chunkReadyAround(world, chunkX, chunkZ)
 	}
 
-	override fun place(chunk: Chunk, chunkIndex: Int) {
-		randomPosition(chunk, low, high) { block, _, _, _ ->
+	override fun place(chunk: Chunk) {
+		randomPositionBool(chunk, low, high) { block ->
 			if (
 				isStone(block) && (
 				isOpen(block.getRelative(BlockFace.DOWN).type) ||
@@ -49,7 +46,7 @@ class OrePlacer(
 
 					while (currentBlock == null) {
 						index = (index + 1) % amount
-						if (index == startIndex) return@randomPosition true
+						if (index == startIndex) return@randomPositionBool true
 
 						currentBlock = placeRelativeBlock(veinBlocks[index])
 					}
@@ -85,7 +82,7 @@ class OrePlacer(
 		return placeOre(block.getRelative(BlockFace.values()[faceIndex]))
 	}
 
-	fun isStone(block: Block): Boolean {
+	private fun isStone(block: Block): Boolean {
 		return block.type === Material.STONE ||
 		block.type === Material.ANDESITE ||
 		block.type === Material.GRANITE ||
@@ -97,7 +94,7 @@ class OrePlacer(
 		block.type === Material.MAGMA_BLOCK
 	}
 
-	fun placeOre(block: Block): Block {
+	private fun placeOre(block: Block): Block {
 		block.setType(if (block.type === Material.DEEPSLATE) deepType else type, false)
 		return block
 	}
@@ -108,6 +105,25 @@ class OrePlacer(
 			Material.CAVE_AIR -> true
 			Material.WATER -> true
 			else -> false
+		}
+	}
+
+	companion object {
+		fun removeOres(chunk: Chunk) {
+			for (x in 0..15) for (z in 0..15) for (y in 1..127) {
+				val block = chunk.getBlock(x, y, z)
+				when (block.type) {
+					Material.GOLD_ORE,
+					Material.LAPIS_ORE,
+					Material.DIAMOND_ORE,
+					Material.DEEPSLATE_GOLD_ORE,
+					Material.DEEPSLATE_LAPIS_ORE,
+					Material.DEEPSLATE_DIAMOND_ORE,
+					-> block.setType(Material.STONE, false)
+					else -> {
+					}
+				}
+			}
 		}
 	}
 }

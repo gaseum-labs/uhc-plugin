@@ -35,7 +35,7 @@ class MelonRegen(game: Game) : Regen(game, 3, 2800) {
 	override fun place(chunk: Chunk): Boolean {
 		if (!hasJungle(chunk)) return false
 
-		val block = AbstractChunkPlacer.randomPosition(chunk, 63, 80) { block, x, y, z ->
+		val block = AbstractChunkPlacer.randomPositionBool(chunk, 63, 80) { block ->
 			block.isPassable && block.getRelative(BlockFace.DOWN).type === Material.GRASS_BLOCK
 		}
 

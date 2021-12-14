@@ -15,7 +15,7 @@ import org.bukkit.util.Vector
 import kotlin.random.Random
 
 class TowerPlacer(size: Int) : ImmediateChunkPlacer(size) {
-	override fun place(chunk: Chunk, chunkIndex: Int) {
+	override fun place(chunk: Chunk) {
 		val floorY = determineFloorY(chunk) ?: return
 
 		val numStories = random.nextInt(8, 24)

@@ -44,7 +44,8 @@ object UHC {
 
 	lateinit var heartsObjective: Objective
 
-	val areaPerPlayer = area(375.0f) / 8
+	/* 3 biomes times 6 chunks per biome times 16 blocks per chunk */
+	val areaPerPlayer = (3 * 6 * 16) * (3 * 6 * 16)
 	fun area(radius: Float) = ((radius * 2) + 1).pow(2)
 	fun radius(area: Float) = (sqrt(area) - 1) / 2
 
@@ -226,7 +227,7 @@ object UHC {
 
 		messageStream(false, "Creating game worlds for $numPlayers player${if (numPlayers == 1) "" else "s"}")
 
-		worldRadius = (ceil(radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer) / 96) * 96).toInt()
+		worldRadius = radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer).toInt()
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()

@@ -14,7 +14,7 @@ class MagmaPlacer : DelayedChunkPlacer(1) {
 		return block.type === Material.LAVA || block.type === Material.AIR
 	}
 
-	override fun place(chunk: Chunk, chunkIndex: Int) {
+	override fun place(chunk: Chunk) {
 		for (y in 7 downTo 5) {
 			for (x in 0..15) for (z in 0..15) {
 				val block = chunk.getBlock(x, y, z)

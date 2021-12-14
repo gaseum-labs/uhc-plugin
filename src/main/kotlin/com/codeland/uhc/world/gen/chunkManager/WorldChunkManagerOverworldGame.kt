@@ -14,17 +14,16 @@ class WorldChunkManagerOverworldGame(
 	val seed: Long,
 	private val var4: IRegistry<BiomeBase>,
 	val centerBiomeNo: Int?,
-	val startRadius: Int,
 	val endRadius: Int,
 	val features: Boolean,
 ) : WorldChunkManagerOverworld(seed, false, false, var4) {
-	private val areaLazy = createAreaGame(seed, startRadius)
+	private val areaLazy = createAreaGame(seed)
 
 	private val centerBiome = if (centerBiomeNo == null) null else biomeFromInt(centerBiomeNo)
 
 	fun withFeatures(newFeatures: Boolean): WorldChunkManagerOverworldGame {
 		return WorldChunkManagerOverworldGame(
-			seed, var4, centerBiomeNo, startRadius, endRadius, newFeatures
+			seed, var4, centerBiomeNo, endRadius, newFeatures
 		)
 	}
 
@@ -51,10 +50,10 @@ class WorldChunkManagerOverworldGame(
 		}
 	}
 
-	private fun createAreaGame(seed: Long, borderRadius: Int): Area {
+	private fun createAreaGame(seed: Long): Area {
 		val noise = { s: Long -> WorldGenContextArea(25, seed, s) }
 
-		var baseLayer = LayerTemperature(seed, borderRadius / 96).a(noise(0L))  /* 4X */
+		var baseLayer = LayerTemperature(seed).a(noise(0L))  /* 4X */
 
 		baseLayer = GenLayerShiftZZoom(seed, 3).a(noise(1L), baseLayer)   /* 3X */
 		baseLayer = GenLayerShiftX(seed, 3).a(noise(1L), baseLayer)

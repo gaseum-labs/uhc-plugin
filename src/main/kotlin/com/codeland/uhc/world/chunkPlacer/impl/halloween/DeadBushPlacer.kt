@@ -6,7 +6,7 @@ import org.bukkit.Material
 import kotlin.random.Random
 
 class DeadBushPlacer(size: Int) : ImmediateChunkPlacer(size) {
-	override fun place(chunk: Chunk, chunkIndex: Int) {
+	override fun place(chunk: Chunk) {
 		val numBushes = Random.nextInt(0, 4)
 
 		for (i in 0 until numBushes) {

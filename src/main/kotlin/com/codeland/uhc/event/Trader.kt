@@ -56,12 +56,16 @@ object Trader {
 		val trader =
 			block.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), EntityType.WANDERING_TRADER) as WanderingTrader
 
-		trader.setRecipe(0, createTrade(1, ItemStack(Material.OXEYE_DAISY), 4))
-		trader.setRecipe(1, createTrade(1, ItemStack(Material.SAND, 9), 4))
-		trader.setRecipe(2, createTrade(1, ItemStack(Material.GLOWSTONE_DUST, 8), 4))
-		trader.setRecipe(3, createTrade(1, ItemStack(Material.SUGAR_CANE, 3), 4))
-		trader.setRecipe(4, createTrade(2, ItemStack(Material.APPLE), 3))
-		trader.setRecipe(5, createTrade(3, ItemStack(Material.MELON_SLICE), 2))
+		trader.recipes = listOf(
+			createTrade(1, ItemStack(Material.OXEYE_DAISY), 5),
+			createTrade(1, ItemStack(Material.SAND, 9), 5),
+			createTrade(1, ItemStack(Material.GLOWSTONE_DUST, 8), 5),
+			createTrade(1, ItemStack(Material.SUGAR_CANE, 3), 5),
+			createTrade(1, ItemStack(Material.LEATHER), 5),
+			createTrade(1, ItemStack(Material.LEATHER), 5),
+			createTrade(2, ItemStack(Material.APPLE), 4),
+			createTrade(3, ItemStack(Material.MELON_SLICE), 3),
+		)
 	}
 
 	private fun spawnTrader(uuid: UUID): Boolean {

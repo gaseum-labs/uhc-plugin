@@ -9,16 +9,10 @@ import kotlin.random.Random
 
 class PumpkinPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		for (i in -1..1) {
-			for (j in -1..1) {
-				if (!world.isChunkGenerated(chunkX + i, chunkZ + j)) return false
-			}
-		}
-
-		return true
+		return chunkReadyAround(world, chunkX, chunkZ)
 	}
 
-	override fun place(chunk: Chunk, chunkIndex: Int) {
+	override fun place(chunk: Chunk) {
 		for (i in 0 until 16 * 16) {
 			val x = chunk.x * 16 + i % 16
 			val z = chunk.z * 16 + (1 / 16) % 16

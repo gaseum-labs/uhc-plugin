@@ -33,16 +33,12 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 	}
 
 	fun getPlayerChunks(world: World): ArrayList<ArrayList<Loc>> {
-		val borderChunk = ((world.worldBorder.size / 2).toInt() / 16) - 1
-
-		/* get the chunks players are in to generate for */
-		val locs = Bukkit.getOnlinePlayers()
-			.filter { it.world === world && it.location.y >= 58 && PlayerData.isParticipating(it.uniqueId) }
-			.map { Loc(it.chunk.x, it.chunk.z) }
-
-		val ret = group(locs, chunkRadius, borderChunk)
-
-		return ret
+		return group(
+			world.players
+				.filter { it.location.y >= 58 && PlayerData.isParticipating(it.uniqueId) }
+				.map { Loc(it.chunk.x, it.chunk.z) },
+			chunkRadius
+		)
 	}
 
 	var playerChunks: ArrayList<ArrayList<Loc>> = ArrayList()
@@ -75,18 +71,14 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 		data class Loc(val x: Int, val z: Int)
 		data class Eligible(var group: Int, val loc: Loc)
 
-		class OffsetGrid(val left: Int, val right: Int, val down: Int, val up: Int, val border: Int) {
+		class OffsetGrid(val left: Int, val right: Int, val down: Int, val up: Int) {
 			val width = right - left + 1
 			val height = up - down + 1
 
 			val grid = Array(width * height) { -1 }
 
 			fun get(x: Int, z: Int): Int {
-				return if (x in -border..border && z in -border..border) {
-					grid[(z - down) * width + (x - left)]
-				} else {
-					-1
-				}
+				return grid[(z - down) * width + (x - left)]
 			}
 
 			fun set(x: Int, z: Int, value: Int) {
@@ -94,7 +86,7 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 			}
 		}
 
-		fun group(players: List<Loc>, radius: Int, border: Int): ArrayList<ArrayList<Loc>> {
+		fun group(players: List<Loc>, radius: Int): ArrayList<ArrayList<Loc>> {
 			val eligible = players.mapIndexed { index, loc -> Eligible(index, loc) }
 
 			/* find which locations are overlapping */
@@ -140,7 +132,7 @@ abstract class Regen(val game: Game, val chunkRadius: Int, val ticksPerGenerate:
 				}
 
 				/* array of all positions within the bounds of the group */
-				val grid = OffsetGrid(left, right, down, up, border)
+				val grid = OffsetGrid(left, right, down, up)
 
 				/* assign spaces to the players within, overlapping */
 				locs.forEachIndexed { player, (cx, cz) ->

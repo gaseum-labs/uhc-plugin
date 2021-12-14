@@ -42,3 +42,18 @@ class GenLayerRegion : AreaTransformer4 {
 		Region.BADLANDS_PLATEAU
 	)
 }
+/*
+ * common:
+ * forested -> (forest, birch forest, dark forest)
+ * flat -> (plains, swamp, desert)
+ *
+ * fixed:
+ * jungley -> (jungle, jungle edge, bamboo jungle)
+ *
+ * interspersed:
+ * spruce -> (taiga, giant spruce taiga)
+ * mountainous -> (mountains, wooded mountains, gravelly mountains)
+ * arid -> (badlands, wooded badlands plateau)
+ * acacia -> (savanna, shattered savanna)
+ * snowy -> (snowy tundra, snowy taiga)
+ */

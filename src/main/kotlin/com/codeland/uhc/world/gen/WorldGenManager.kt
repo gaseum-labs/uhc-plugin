@@ -105,7 +105,6 @@ object WorldGenManager {
 					val manager = WorldChunkManagerOverworldGame(
 						seed, biomeRegistry,
 						BiomeNo.fromName(UHC.getConfig().centerBiome.get()?.name),
-						UHC.worldRadius,
 						UHC.getConfig().endgameRadius.get(),
 						false
 					)
@@ -119,9 +118,7 @@ object WorldGenManager {
 			WorldManager.LOBBY_WORLD_NAME -> {
 				Pair(WorldChunkManagerOverworldGame(
 					seed, biomeRegistry,
-					null,
-					Lobby.LOBBY_RADIUS * 2,
-					0, false
+					null, 0, false
 				), null)
 			}
 			WorldManager.PVP_WORLD_NAME -> {

@@ -7,14 +7,12 @@ import org.bukkit.block.data.type.Lantern
 import kotlin.random.Random
 
 class LanternPlacer(size: Int) : ImmediateChunkPlacer(size) {
-	override fun place(chunk: Chunk, chunkIndex: Int) {
-		randomPosition(chunk, 20, 99) { block, x, y, z ->
-			val world = block.world
-
+	override fun place(chunk: Chunk) {
+		randomPositionBool(chunk, 20, 99) { block ->
 			if (!block.isPassable) {
 				var maxDepth = 0
 				for (yOffset in 1..7) {
-					val downBlock = chunk.getBlock(x, y - yOffset, z)
+					val downBlock = block.getRelative(0, -yOffset, 0)
 
 					if (downBlock.type == Material.AIR || downBlock.type == Material.CAVE_AIR)
 						++maxDepth
@@ -26,7 +24,7 @@ class LanternPlacer(size: Int) : ImmediateChunkPlacer(size) {
 					val chainSize = Random.nextInt(1, maxDepth - 1)
 
 					for (yOffset in 1..chainSize) {
-						val downBlock = chunk.getBlock(x, y - yOffset, z)
+						val downBlock = block.getRelative(0, -yOffset, 0)
 						downBlock.setType(Material.CHAIN, false)
 
 						val chainData = downBlock.blockData as Orientable
@@ -34,7 +32,7 @@ class LanternPlacer(size: Int) : ImmediateChunkPlacer(size) {
 						downBlock.blockData = chainData
 					}
 
-					val lanternBlock = chunk.getBlock(x, y - chainSize - 1, z)
+					val lanternBlock = block.getRelative(0, -chainSize - 1, 0)
 					lanternBlock.setType(if (Math.random() < 0.5) Material.LANTERN else Material.SOUL_LANTERN, false)
 
 					val lanternData = lanternBlock.blockData as Lantern

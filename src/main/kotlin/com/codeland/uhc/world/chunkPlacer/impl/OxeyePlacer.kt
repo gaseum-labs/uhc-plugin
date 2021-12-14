@@ -3,20 +3,17 @@ package com.codeland.uhc.world.chunkPlacer.impl
 import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
+import org.bukkit.Material.GRASS
 import org.bukkit.block.Biome
 import org.bukkit.block.BlockFace
 
 class OxeyePlacer(size: Int) : ImmediateChunkPlacer(size) {
-	override fun place(chunk: Chunk, chunkIndex: Int) {
-		randomPosition(chunk, 63, 99) { block, x, y, z ->
-			if ((block.biome == Biome.PLAINS || block.biome == Biome.FLOWER_FOREST) && block.getRelative(BlockFace.DOWN).type == Material.GRASS_BLOCK && block.type == Material.AIR) {
-				block.setType(Material.OXEYE_DAISY, false)
-				true
-
-			} else {
-				false
-			}
-		}
+	override fun place(chunk: Chunk) {
+		randomPositionBool(chunk, 63, 99) { block ->
+			(block.biome === Biome.PLAINS || block.biome === Biome.FLOWER_FOREST) &&
+			block.getRelative(BlockFace.DOWN).type === Material.GRASS_BLOCK &&
+			(block.type.isAir || block.type === GRASS)
+		}?.setType(Material.OXEYE_DAISY, false)
 	}
 
 	companion object {
@@ -25,7 +22,7 @@ class OxeyePlacer(size: Int) : ImmediateChunkPlacer(size) {
 				for (z in 0..15) {
 					for (y in 63..99) {
 						val block = chunk.getBlock(x, y, z)
-						if (block.type == Material.OXEYE_DAISY) block.setType(Material.AIR, false)
+						if (block.type === Material.OXEYE_DAISY) block.setType(Material.AIR, false)
 					}
 				}
 			}

@@ -10,10 +10,7 @@ import org.bukkit.block.BlockFace
 
 class SugarCaneRegen(game: Game) : Regen(game, 5, 200) {
 	fun findCane(chunk: Chunk): Block? {
-		val caneBlock =
-			AbstractChunkPlacer.randomPosition(chunk, 58, 70) { block, _, _, _ ->
-				block.type === Material.SUGAR_CANE
-			}
+		val caneBlock = AbstractChunkPlacer.randomPositionBool(chunk, 58, 70) { it.type === Material.SUGAR_CANE }
 
 		if (caneBlock != null) {
 			var min: Block = caneBlock
@@ -32,23 +29,22 @@ class SugarCaneRegen(game: Game) : Regen(game, 5, 200) {
 	}
 
 	override fun place(chunk: Chunk): Boolean {
-		val block =
-			findCane(chunk)
-				?: AbstractChunkPlacer.randomPosition(chunk, 58, 70) { block, _, _, _ ->
-					val down = block.getRelative(BlockFace.DOWN)
+		val block = findCane(chunk)
+			?: AbstractChunkPlacer.randomPositionBool(chunk, 58, 70) { block ->
+				val down = block.getRelative(BlockFace.DOWN)
 
-					(block.type.isAir || block.type == Material.GRASS) &&
-					(down.type === Material.GRASS_BLOCK ||
-					down.type === Material.DIRT ||
-					down.type === Material.SAND ||
-					down.type === Material.PODZOL ||
-					down.type === Material.RED_SAND ||
-					down.type === Material.COARSE_DIRT) &&
-					(SpawnUtil.isWater(down.getRelative(BlockFace.WEST)) ||
-					SpawnUtil.isWater(down.getRelative(BlockFace.EAST)) ||
-					SpawnUtil.isWater(down.getRelative(BlockFace.NORTH)) ||
-					SpawnUtil.isWater(down.getRelative(BlockFace.SOUTH)))
-				}
+				(block.type.isAir || block.type == Material.GRASS) &&
+				(down.type === Material.GRASS_BLOCK ||
+				down.type === Material.DIRT ||
+				down.type === Material.SAND ||
+				down.type === Material.PODZOL ||
+				down.type === Material.RED_SAND ||
+				down.type === Material.COARSE_DIRT) &&
+				(SpawnUtil.isWater(down.getRelative(BlockFace.WEST)) ||
+				SpawnUtil.isWater(down.getRelative(BlockFace.EAST)) ||
+				SpawnUtil.isWater(down.getRelative(BlockFace.NORTH)) ||
+				SpawnUtil.isWater(down.getRelative(BlockFace.SOUTH)))
+			}
 
 		block?.setType(Material.SUGAR_CANE, false)
 

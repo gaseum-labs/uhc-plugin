@@ -14,7 +14,7 @@ class BasaltPlacer(size: Int) : DelayedChunkPlacer(size) {
 		return block.type === Material.LAVA || block.type === Material.AIR
 	}
 
-	override fun place(chunk: Chunk, chunkIndex: Int) {
+	override fun place(chunk: Chunk) {
 		val random = Random(chunk.chunkKey.xor(chunk.world.seed))
 
 		val centerX = random.nextInt(16)

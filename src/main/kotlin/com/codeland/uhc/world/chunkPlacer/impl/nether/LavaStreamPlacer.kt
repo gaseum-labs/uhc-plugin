@@ -13,8 +13,8 @@ class LavaStreamPlacer(size: Int) : DelayedChunkPlacer(size) {
 		return if (boolean) 1 else 0
 	}
 
-	override fun place(chunk: Chunk, chunkIndex: Int) {
-		randomPosition(chunk, 8, 17) { block, x, y, z ->
+	override fun place(chunk: Chunk) {
+		randomPositionBool(chunk, 8, 17) { block ->
 			val east = block.getRelative(BlockFace.EAST).isPassable
 			val west = block.getRelative(BlockFace.WEST).isPassable
 			val north = block.getRelative(BlockFace.NORTH).isPassable
@@ -25,15 +25,8 @@ class LavaStreamPlacer(size: Int) : DelayedChunkPlacer(size) {
 			val aroundCount = itb(east) + itb(west) + itb(north) + itb(south)
 			val vertCount = itb(up) + itb(down)
 
-			if (
-				(aroundCount == 1 && vertCount == 0) ||
-				(aroundCount == 0 && vertCount == 1)
-			) {
-				block.setType(Material.LAVA, true)
-				true
-			} else {
-				false
-			}
-		}
+			(aroundCount == 1 && vertCount == 0) ||
+			(aroundCount == 0 && vertCount == 1)
+		}?.setType(Material.LAVA, true)
 	}
 }

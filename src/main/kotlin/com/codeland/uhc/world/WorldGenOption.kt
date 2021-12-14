@@ -35,19 +35,10 @@ enum class WorldGenOption(
 		Component.text("Sugar cane generate is spread out"),
 		Component.text("Sugar cane always generates 3 at a time")
 	), Material.SUGAR_CANE),
-
-	CAVE_INDICATORS("Cave Indicators", false, listOf(
-		Component.text("Minerals underground point you toward caves"),
-	), Material.DIORITE),
-
+	
 	DUNGEON_FIX("Dungeon Fix", false, listOf(
 		Component.text("Loot in dungeon chest is normalized")
 	), Material.MOSSY_COBBLESTONE),
-
-	NETHER_INDICATORS("Nether Indicators", false, listOf(
-		Component.text("Nether blocks generate below y level 15"),
-		Component.text("Indicates the corresponding biome in the nether")
-	), Material.SOUL_SOIL),
 
 	HALLOWEEN("Halloween", false, listOf(
 		Component.text("Adds spooky decorations to the world"),

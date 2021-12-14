@@ -201,7 +201,7 @@ object ArenaManager {
 	fun decodeArenaLocations(data: String): List<Pair<Int, Int>> {
 		return data.split('|').map { str ->
 			val parts = str.split(',')
-			Pair(parts[0].toInt(), parts[1].toInt())
+			(parts[0].toIntOrNull() ?: return emptyList()) to (parts[1].toIntOrNull() ?: return emptyList())
 		}
 	}
 

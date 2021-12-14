@@ -3,7 +3,6 @@ package com.codeland.uhc.world
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.lobbyPvp.ArenaManager
-import com.codeland.uhc.world.chunkPlacerHolder.ChunkPlacerHolderType
 import org.bukkit.*
 import java.io.File
 
@@ -80,10 +79,7 @@ object WorldManager {
 		world.animalSpawnLimit = 0
 		world.monsterSpawnLimit = 0
 
-		if (world.name == GAME_WORLD_NAME) {
-			ChunkPlacerHolderType.resetAll(world.seed)
-
-		} else if (world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME) {
+		if (world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME) {
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
 			world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
 			world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)

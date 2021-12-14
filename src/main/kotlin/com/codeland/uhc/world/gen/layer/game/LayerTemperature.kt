@@ -5,7 +5,7 @@ import net.minecraft.world.level.newbiome.context.WorldGenContext
 import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer1
 import kotlin.random.Random
 
-class LayerTemperature(val seed: Long, val radius: Int) : AreaTransformer1 {
+class LayerTemperature(val seed: Long) : AreaTransformer1 {
 	companion object {
 		val eightChooseFive = (0b00011111..0xff).filter { i ->
 			i.and(1) +
@@ -65,8 +65,7 @@ class LayerTemperature(val seed: Long, val radius: Int) : AreaTransformer1 {
 		 * -3 X X X | X X
 		 *   -3-2-1 0 1 2
 		 */
-		//if (x !in -radius..radius - 1 || z !in -radius..radius - 1) return Temperature.OCEAN
-
+	
 		val offset = Random(seed).nextInt(100)
 
 		for (i in 0..8) {

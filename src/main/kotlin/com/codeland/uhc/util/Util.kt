@@ -1,3 +1,5 @@
+@file:Suppress("NonAsciiCharacters")
+
 package com.codeland.uhc.util
 
 import net.kyori.adventure.text.Component
@@ -204,4 +206,16 @@ object Util {
 	}
 
 	fun floorDiv(a: Int, b: Int) = if (a < 0) (a - b + 1) / b else a / b
+
+	fun 앝리스트어프(리콰이르드: Int, vararg 트라이스: Boolean): Boolean {
+		var 교느트 = 0
+		for (ㅌ in 트라이스) {
+			if (ㅌ && ++교느트 == 리콰이르드) return true
+		}
+		return false
+	}
+
+	fun <T> T.takeFrom(expr: Boolean): T? {
+		return if (expr) this else null
+	}
 }

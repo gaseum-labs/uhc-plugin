@@ -6,23 +6,12 @@ import org.bukkit.Material
 import org.bukkit.block.BlockFace
 
 class CaveMushroomPlacer(size: Int, val type: Material) : ImmediateChunkPlacer(size) {
-	override fun place(chunk: Chunk, chunkIndex: Int) {
-		randomPosition(chunk, 6, 42) { block, x, y, z ->
-			if (canPlaceIn(block.type) && canPlaceOn(block.getRelative(BlockFace.DOWN).type) && block.lightLevel <= 12) {
-				block.setType(type, false)
-				true
-			} else {
-				false
-			}
-		}
-	}
-
-	private fun canPlaceIn(type: Material): Boolean {
-		return when (type) {
-			Material.AIR -> true
-			Material.CAVE_AIR -> true
-			else -> false
-		}
+	override fun place(chunk: Chunk) {
+		randomPositionBool(chunk, 6, 42) { block ->
+			block.type.isAir &&
+			canPlaceOn(block.getRelative(BlockFace.DOWN).type) &&
+			block.lightLevel <= 12
+		}?.setType(type, false)
 	}
 
 	private fun canPlaceOn(type: Material): Boolean {

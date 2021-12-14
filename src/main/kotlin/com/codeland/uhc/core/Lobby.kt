@@ -15,7 +15,7 @@ import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 
 object Lobby {
-	val LOBBY_RADIUS = 96
+	val LOBBY_RADIUS = 64
 
 	fun lobbyLocation(uhc: UHC): Location {
 		return Location(

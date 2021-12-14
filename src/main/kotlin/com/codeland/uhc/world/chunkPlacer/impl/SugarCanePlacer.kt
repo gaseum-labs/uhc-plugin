@@ -6,13 +6,10 @@ import org.bukkit.block.*
 
 class SugarCanePlacer(size: Int, val lowBound: Int, val highBound: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return world.isChunkGenerated(chunkX + 1, chunkZ + 1) &&
-		world.isChunkGenerated(chunkX - 1, chunkZ + 1) &&
-		world.isChunkGenerated(chunkX + 1, chunkZ - 1) &&
-		world.isChunkGenerated(chunkX - 1, chunkZ - 1)
+		return chunkReady(world, chunkX, chunkZ)
 	}
 
-	fun gensPerChunk(chunk: Chunk): Int {
+	private fun gensPerChunk(chunk: Chunk): Int {
 		return when (chunk.getBlock(7, lowBound, 7).biome) {
 			Biome.SWAMP,
 			Biome.SWAMP_HILLS,
@@ -25,13 +22,13 @@ class SugarCanePlacer(size: Int, val lowBound: Int, val highBound: Int) : Delaye
 		}
 	}
 
-	fun isWater(block: Block): Boolean {
+	private fun isWater(block: Block): Boolean {
 		return block.type == Material.WATER || block.type == Material.ICE
 	}
 
-	override fun place(chunk: Chunk, chunkIndex: Int) {
+	override fun place(chunk: Chunk) {
 		for (i in 0 until gensPerChunk(chunk)) {
-			randomPosition(chunk, lowBound, highBound) { block, x, y, z ->
+			randomPositionBool(chunk, lowBound, highBound) { block ->
 				val down = block.getRelative(BlockFace.DOWN)
 
 				if (

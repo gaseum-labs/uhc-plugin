@@ -8,7 +8,7 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
 
 class AmethystPlacer : ImmediateChunkPlacer(1) {
-	override fun place(chunk: Chunk, chunkIndex: Int) {
+	override fun place(chunk: Chunk) {
 		for (y in 8..58) for (x in 0..15) for (z in 0..15) {
 			val block = chunk.getBlock(x, y, z)
 

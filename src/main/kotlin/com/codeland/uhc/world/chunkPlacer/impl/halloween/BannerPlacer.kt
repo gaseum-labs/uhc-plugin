@@ -11,17 +11,11 @@ import kotlin.random.Random
 
 class BannerPlacer(size: Int) : DelayedChunkPlacer(size) {
 	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		for (i in -1..1) {
-			for (j in -1..1) {
-				if (!world.isChunkGenerated(chunkX + i, chunkZ + j)) return false
-			}
-		}
-
-		return true
+		return chunkReadyAround(world, chunkX, chunkZ)
 	}
 
-	override fun place(chunk: Chunk, chunkIndex: Int) {
-		randomPosition(chunk, 20, 80) { block, x, y, z ->
+	override fun place(chunk: Chunk) {
+		randomPositionBool(chunk, 20, 80) { block ->
 			fun tryBanner(facing: BlockFace): Boolean {
 				return if (Util.binarySearch(block.getRelative(facing).type, validBlocks)) {
 					makeBanner(chunk.world, bannerList[Random.nextInt(bannerList.size)], facing.oppositeFace, block)
@@ -47,7 +41,7 @@ class BannerPlacer(size: Int) : DelayedChunkPlacer(size) {
 
 	data class BannerData(val baseColor: Material, val patterns: Array<Pattern>)
 
-	val bannerList = arrayOf(
+	private val bannerList = arrayOf(
 		/* bat */
 		BannerData(Material.BLACK_WALL_BANNER, arrayOf(
 			Pattern(DyeColor.PURPLE, PatternType.CIRCLE_MIDDLE),
@@ -100,7 +94,7 @@ class BannerPlacer(size: Int) : DelayedChunkPlacer(size) {
 		))
 	)
 
-	fun makeBanner(world: World, bannerData: BannerData, facing: BlockFace, block: Block) {
+	private fun makeBanner(world: World, bannerData: BannerData, facing: BlockFace, block: Block) {
 		block.setType(bannerData.baseColor, false)
 		val banner = block.getState(false) as Banner
 

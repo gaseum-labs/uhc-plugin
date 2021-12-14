@@ -7,8 +7,8 @@ import org.bukkit.block.*
 import org.bukkit.block.data.Ageable
 
 class WartPlacer(size: Int) : ImmediateChunkPlacer(size) {
-	override fun place(chunk: Chunk, chunkIndex: Int) {
-		randomPosition(chunk, 32, 99) { block, _, _, _ ->
+	override fun place(chunk: Chunk) {
+		randomPositionBool(chunk, 32, 99) { block ->
 			val under = block.getRelative(BlockFace.DOWN)
 
 			fun placeWart(check: (Block, Block) -> Boolean): Boolean {
