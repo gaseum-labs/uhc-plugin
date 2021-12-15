@@ -12,13 +12,15 @@ class GenLayerRiverApply : AreaTransformer3, AreaTransformerIdentity {
 
 		return if (riverArea.a(a(x), b(z)) == 7) {
 			when (baseBiome) {
+				BiomeNo.WARM_OCEAN -> BiomeNo.WARM_OCEAN
+				BiomeNo.LUKEWARM_OCEAN -> BiomeNo.LUKEWARM_OCEAN
 				BiomeNo.OCEAN -> BiomeNo.OCEAN
-				BiomeNo.DEEP_OCEAN -> BiomeNo.DEEP_OCEAN
-				BiomeNo.SNOWY_TUNDRA -> BiomeNo.FROZEN_RIVER
-				BiomeNo.SNOWY_TAIGA -> BiomeNo.FROZEN_RIVER
-				BiomeNo.ICE_SPIKES -> BiomeNo.FROZEN_RIVER
-				BiomeNo.SNOWY_TAIGA_MOUNTAINS -> BiomeNo.FROZEN_RIVER
-				BiomeNo.SNOWY_MOUNTAINS -> BiomeNo.FROZEN_RIVER
+				BiomeNo.SNOWY_TUNDRA,
+				BiomeNo.SNOWY_TAIGA,
+				BiomeNo.ICE_SPIKES,
+				BiomeNo.SNOWY_TAIGA_MOUNTAINS,
+				BiomeNo.SNOWY_MOUNTAINS,
+				-> BiomeNo.FROZEN_RIVER
 				else -> BiomeNo.RIVER
 			}
 		} else {

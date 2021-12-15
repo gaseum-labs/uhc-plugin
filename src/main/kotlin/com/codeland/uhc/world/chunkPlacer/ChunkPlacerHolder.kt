@@ -65,4 +65,8 @@ enum class ChunkPlacerHolder(val chunkPlacer: AbstractChunkPlacer) {
 	fun onGenerate(chunk: Chunk, seed: Long) {
 		chunkPlacer.onGenerate(chunk, this.ordinal.toLong(), seed)
 	}
+
+	operator fun component1(): AbstractChunkPlacer {
+		return chunkPlacer
+	}
 }

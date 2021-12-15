@@ -1,33 +1,64 @@
 package com.codeland.uhc.world.gen.layer.game;
 
 import com.codeland.uhc.world.gen.BiomeNo
+import kotlin.random.Random
 
-enum class Region(val main: Int, val internal: Int, val special: Int) {
-	PLAINS(BiomeNo.PLAINS, BiomeNo.FOREST, BiomeNo.SUNFLOWER_PLAINS),
-	SWAMP(BiomeNo.SWAMP, BiomeNo.SWAMP, BiomeNo.SWAMP_HILLS),
-	DARK_FOREST(BiomeNo.DARK_FOREST, BiomeNo.PLAINS, BiomeNo.DARK_FOREST_HILLS),
-	TAIGA(BiomeNo.TAIGA, BiomeNo.TAIGA_HILLS, BiomeNo.TAIGA_MOUNTAINS),
-	JUNGLE(BiomeNo.JUNGLE, BiomeNo.JUNGLE_HILLS, BiomeNo.MODIFIED_JUNGLE),
-	FOREST(BiomeNo.FOREST, BiomeNo.WOODED_HILLS, BiomeNo.FLOWER_FOREST),
-	BIRCH_FOREST(BiomeNo.BIRCH_FOREST, BiomeNo.BIRCH_FOREST_HILLS, BiomeNo.TALL_BIRCH_FOREST),
-	MOUNTAINS(BiomeNo.MOUNTAINS, BiomeNo.WOODED_MOUNTAINS, BiomeNo.GRAVELLY_MOUNTAINS),
+enum class Region(vararg val biomes: Pair<Int, Int>) {
+	FLAT(
+		3 to BiomeNo.PLAINS,
+		2 to BiomeNo.SWAMP,
+		1 to BiomeNo.DESERT,
+	),
+	FORESTED(
+		2 to BiomeNo.FOREST,
+		1 to BiomeNo.BIRCH_FOREST,
+		1 to BiomeNo.DARK_FOREST,
+	),
 
-	SNOWY(BiomeNo.SNOWY_TUNDRA, BiomeNo.SNOWY_MOUNTAINS, BiomeNo.ICE_SPIKES),
-	SNOWY_TAIGA(BiomeNo.SNOWY_TAIGA, BiomeNo.SNOWY_TAIGA_HILLS, BiomeNo.SNOWY_TAIGA_MOUNTAINS),
+	AQUATIC(
+		2 to BiomeNo.OCEAN,
+		1 to BiomeNo.LUKEWARM_OCEAN,
+		1 to BiomeNo.WARM_OCEAN
+	),
+	JUNGLEY(
+		3 to BiomeNo.JUNGLE,
+		1 to BiomeNo.JUNGLE_EDGE,
+		1 to BiomeNo.BAMBOO_JUNGLE,
+	),
 
-	SAVANNA(BiomeNo.SAVANNA, BiomeNo.SAVANNA_PLATEAU, BiomeNo.SHATTERED_SAVANNA),
-	DESERT(BiomeNo.DESERT, BiomeNo.DESERT_HILLS, BiomeNo.DESERT_LAKES),
+	SPRUCEY(
+		4 to BiomeNo.TAIGA,
+		1 to BiomeNo.GIANT_TREE_TAIGA,
+		1 to BiomeNo.GIANT_SPRUCE_TAIGA,
+	),
+	MOUNTAINOUS(
+		2 to BiomeNo.MOUNTAINS,
+		2 to BiomeNo.WOODED_MOUNTAINS,
+		1 to BiomeNo.GRAVELLY_MOUNTAINS,
+	),
+	ARID(
+		3 to BiomeNo.BADLANDS,
+		2 to BiomeNo.WOODED_BADLANDS_PLATEAU,
+		1 to BiomeNo.BADLANDS_PLATEAU,
+		1 to BiomeNo.ERODED_BADLANDS,
+	),
+	ACACIA(
+		2 to BiomeNo.SAVANNA,
+		1 to BiomeNo.SHATTERED_SAVANNA,
+	),
+	SNOWING(
+		1 to BiomeNo.SNOWY_TUNDRA,
+		1 to BiomeNo.SNOWY_TAIGA
+	)
+	;
 
-	GIANT_TAIGA(BiomeNo.GIANT_TREE_TAIGA, BiomeNo.GIANT_TREE_TAIGA_HILLS, BiomeNo.GIANT_SPRUCE_TAIGA),
+	private val list = biomes.flatMap { (count, biome) ->
+		Array(count) { biome }.asIterable()
+	}
 
-	BADLANDS(BiomeNo.BADLANDS, BiomeNo.WOODED_BADLANDS_PLATEAU, BiomeNo.MODIFIED_WOODED_BADLANDS_PLATEAU),
-	BADLANDS_PLATEAU(BiomeNo.BADLANDS_PLATEAU, BiomeNo.BADLANDS_PLATEAU, BiomeNo.ERODED_BADLANDS),
-
-	OCEAN(BiomeNo.OCEAN, BiomeNo.OCEAN, BiomeNo.WARM_OCEAN),
-	BEACH(BiomeNo.BEACH, BiomeNo.BEACH, BiomeNo.BEACH),
-	SNOWY_BEACH(BiomeNo.SNOWY_BEACH, BiomeNo.SNOWY_BEACH, BiomeNo.SNOWY_BEACH),
-	JUNGLE_EDGE(BiomeNo.JUNGLE_EDGE, BiomeNo.JUNGLE_EDGE, BiomeNo.MODIFIED_JUNGLE_EDGE),
-	STONE_SHORE(BiomeNo.STONE_SHORE, BiomeNo.STONE_SHORE, BiomeNo.STONE_SHORE);
+	fun getBiome(random: Random): Int {
+		return list[random.nextInt(list.size)]
+	}
 
 	companion object {
 		fun pack(region: Region, special: Boolean): Int {

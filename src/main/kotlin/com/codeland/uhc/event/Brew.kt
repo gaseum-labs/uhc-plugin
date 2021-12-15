@@ -58,7 +58,7 @@ class Brew : Listener {
 		)
 
 		val POISON_INFO = PotionInfo(PotionType.POISON, "Poison", 150, 325, 144)
-		val REGEN_INFO = PotionInfo(PotionType.REGEN, "Regeneration", 250, 500, 225)
+		val REGEN_INFO = PotionInfo(PotionType.REGEN, "Regeneration", 250, 600, 250)
 		val STRENGTH_INFO = PotionInfo(PotionType.STRENGTH, "Strength", 0, 0, 0)
 		val WEAKNESS_INFO = PotionInfo(PotionType.WEAKNESS, "Weakness", 600, 1200, 0)
 

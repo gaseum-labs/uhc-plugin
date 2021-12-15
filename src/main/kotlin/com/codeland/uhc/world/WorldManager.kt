@@ -3,6 +3,8 @@ package com.codeland.uhc.world
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacerHolder
+import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
 import org.bukkit.*
 import java.io.File
 
@@ -78,6 +80,14 @@ object WorldManager {
 		world.difficulty = Difficulty.NORMAL
 		world.animalSpawnLimit = 0
 		world.monsterSpawnLimit = 0
+
+		if (world.name == GAME_WORLD_NAME || world.name == NETHER_WORLD_NAME) {
+			ChunkPlacerHolder.values().forEach { (chunkPlacer) ->
+				if (chunkPlacer is DelayedChunkPlacer) {
+					chunkPlacer.clean()
+				}
+			}
+		}
 
 		if (world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME) {
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)

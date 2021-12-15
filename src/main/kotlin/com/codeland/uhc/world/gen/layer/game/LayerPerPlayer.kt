@@ -6,22 +6,27 @@ import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer1
 import kotlin.random.Random
 
 class LayerPerPlayer(val seed: Long) : AreaTransformer1 {
-	fun dot(x: Int, z: Int) = if (
-		Util.mod(x, 2) == 0 &&
-		Util.mod(z, 2) == 0 &&
-		Util.mod(z * 8 + x, 5) == 0
-	) {
-		Util.coordPack(x, z, seed)
-	} else {
+	private val baseRegions = arrayOf(
+		Region.FLAT,
+		Region.FLAT,
+		Region.FLAT,
+		Region.FORESTED,
+		Region.FORESTED,
+		Region.FORESTED,
+		Region.AQUATIC,
+		Region.JUNGLEY,
 		null
-	}
+	)
 
-	fun chunkIndex(chunkX: Int, chunkZ: Int, seed: Long): Int {
-		val baseX = Util.floorDiv(chunkX, 3)
-		val baseZ = Util.floorDiv(chunkX, 3)
+	private val specialRegions = arrayOf(
+		Region.SPRUCEY,
+		Region.MOUNTAINOUS,
+		Region.ARID,
+		Region.ACACIA,
+		Region.SNOWING,
+	)
 
-		val random = Random(Util.coordPack(baseX, baseZ, seed))
-
+	private fun chunkIndex(x: Int, z: Int, random: Random): Int {
 		/* bits 0..8 indicate 1 if this spot is filled */
 		var filled = 0
 
@@ -32,14 +37,21 @@ class LayerPerPlayer(val seed: Long) : AreaTransformer1 {
 			filled = filled.or(1.shl(spot))
 
 			/* found the index of this subchunk */
-			if (spot == Util.mod(chunkX, 3) * 3 + Util.mod(chunkZ, 3)) return spot
+			if (spot == Util.mod(x, 3) * 3 + Util.mod(z, 3)) return spot
 		}
 
 		/* impossible, the loop will always succeed */
-		return 0
+		throw Exception("chunk could not find an index")
 	}
 
 	override fun a(context: WorldGenContext, x: Int, z: Int): Int {
-		return 0
+		val baseX = Util.floorDiv(x, 3)
+		val baseZ = Util.floorDiv(z, 3)
+
+		val random = Random(Util.coordPack(baseX, baseZ, seed))
+
+		val specialRegion = specialRegions[random.nextInt(specialRegions.size)]
+
+		return (baseRegions[chunkIndex(x, z, random)] ?: specialRegion).getBiome(random)
 	}
 }

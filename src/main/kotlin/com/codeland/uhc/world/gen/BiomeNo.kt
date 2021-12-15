@@ -1,5 +1,7 @@
 package com.codeland.uhc.world.gen
 
+import it.unimi.dsi.fastutil.Hash
+import net.minecraft.core.IRegistry
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.MinecraftKey
 import net.minecraft.resources.ResourceKey
@@ -92,6 +94,7 @@ object BiomeNo {
 	private val nameField = MinecraftKey::class.java.getDeclaredField("f")
 
 	private val nameMap = HashMap<String, Int>()
+	private val idMap = HashMap<Int, BiomeBase>()
 
 	init {
 		biomeMapField.isAccessible = true
@@ -100,13 +103,19 @@ object BiomeNo {
 
 		val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
 
+		val biomeRegistry = FeatureBiomes.biomeRegistryField[null] as IRegistry<BiomeBase>
+
 		biomeMap.forEach { (id, resourceKey) ->
-			val name = nameField[minecraftKeyField[resourceKey]] as String
-			nameMap[name] = id
+			nameMap[nameField[minecraftKeyField[resourceKey]] as String] = id
+			idMap[id] = biomeRegistry.d(resourceKey)
 		}
 	}
 
 	fun fromName(name: String?): Int? {
 		return nameMap[name]
+	}
+
+	fun fromId(id: Int): BiomeBase? {
+		return idMap[id]
 	}
 }

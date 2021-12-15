@@ -62,7 +62,6 @@ object Trader {
 			createTrade(1, ItemStack(Material.GLOWSTONE_DUST, 8), 5),
 			createTrade(1, ItemStack(Material.SUGAR_CANE, 3), 5),
 			createTrade(1, ItemStack(Material.LEATHER), 5),
-			createTrade(1, ItemStack(Material.LEATHER), 5),
 			createTrade(2, ItemStack(Material.APPLE), 4),
 			createTrade(3, ItemStack(Material.MELON_SLICE), 3),
 		)

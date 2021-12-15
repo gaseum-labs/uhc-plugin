@@ -1,12 +1,17 @@
 package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.lobbyPvp.ArenaManager
+import com.codeland.uhc.util.Util
+import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.util.MathHelper
 import net.minecraft.world.level.biome.BiomeBase
+import net.minecraft.world.level.biome.BiomeBase.Geography
+import net.minecraft.world.level.biome.BiomeBase.b
 import net.minecraft.world.level.biome.WorldChunkManager
 import net.minecraft.world.level.levelgen.*
 import net.minecraft.world.level.levelgen.synth.*
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 class NoiseSamplerUHC(
 	val worldChunkManager: WorldChunkManager,
@@ -25,8 +30,8 @@ class NoiseSamplerUHC(
 		const val PVP_BASE = 0.01f
 		const val PVP_SCALE = 0.16f
 
-		const val FINAL_BASE = 0.10f
-		const val FINAL_SCALE = 0.36f
+		const val FINAL_BASE = 0.05f
+		const val FINAL_SCALE = 0.35f
 
 		val circle = FloatArray(25)
 
@@ -103,8 +108,14 @@ class NoiseSamplerUHC(
 		}
 	}
 
-	fun inCenter(x: Int, z: Int): Boolean {
-		return abs(x) <= (finalRadius + 8) / 4 && abs(z) <= (finalRadius + 8) / 4
+	private val river = BiomeNo.fromId(BiomeNo.RIVER)
+
+	fun centerAlong(x: Int, z: Int): Float {
+		return Util.invInterp(
+			(finalRadius + 20.0f) / 4.0f,
+			finalRadius / 4.0f,
+			sqrt(x * x + z * z.toFloat())
+		).coerceIn(0.0f..1.0f)
 	}
 
 	fun getBase(biomeBase: BiomeBase, x: Int, z: Int): Float {
@@ -122,10 +133,11 @@ class NoiseSamplerUHC(
 			else
 				AMPLIFIED_BASE
 		} else {
-			if (inCenter(x, z))
-				FINAL_BASE
-			else
+			if (biomeBase.h() == river?.h()) {
 				biomeBase.h()
+			} else {
+				Util.interp(biomeBase.h(), FINAL_BASE, centerAlong(x, z))
+			}
 		}
 	}
 
@@ -138,9 +150,11 @@ class NoiseSamplerUHC(
 
 		if (base > 0 && amplified) return AMPLIFIED_SCALE
 
-		if (inCenter(x, z)) return FINAL_SCALE
-
-		return biomeBase.j()
+		return if (biomeBase.j() == river?.j()) {
+			biomeBase.j()
+		} else {
+			Util.interp(biomeBase.j(), FINAL_SCALE, centerAlong(x, z))
+		}
 	}
 
 	override fun a(adouble: DoubleArray, i: Int, j: Int, noisesettings: NoiseSettings, k: Int, l: Int, i1: Int) {
@@ -179,7 +193,7 @@ class NoiseSamplerUHC(
 
 		val LOWER_LIMIT = 0.0
 
-		if (((pvp || amplified) && originBase > 0) || (!pvp && !amplified && inCenter(i, j))) {
+		if (((pvp || amplified) && originBase > 0)) {
 			if (d0 < LOWER_LIMIT) d0 = LOWER_LIMIT
 			if (d1 < LOWER_LIMIT) d1 = LOWER_LIMIT
 		}
