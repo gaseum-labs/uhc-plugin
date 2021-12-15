@@ -1,15 +1,11 @@
 package com.codeland.uhc.world.chunkPlacer.impl.nether
 
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 
-class MagmaPlacer : DelayedChunkPlacer(1) {
-	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return chunkReadyPlus(world, chunkX, chunkZ)
-	}
-
+class MagmaPlacer : ChunkPlacer(1) {
 	fun border(block: Block): Boolean {
 		return block.type === Material.LAVA || block.type === Material.AIR
 	}

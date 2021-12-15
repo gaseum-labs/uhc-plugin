@@ -1,14 +1,10 @@
 package com.codeland.uhc.world.chunkPlacer.impl.nether
 
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.BlockFace
 
-class LavaStreamPlacer(size: Int) : DelayedChunkPlacer(size) {
-	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return chunkReadyPlus(world, chunkX, chunkZ)
-	}
-
+class LavaStreamPlacer(size: Int) : ChunkPlacer(size) {
 	fun itb(boolean: Boolean): Int {
 		return if (boolean) 1 else 0
 	}

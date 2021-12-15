@@ -4,11 +4,9 @@ import com.codeland.uhc.core.Game
 import com.codeland.uhc.customSpawning.*
 import com.codeland.uhc.customSpawning.spawnInfos.*
 import com.codeland.uhc.util.Util.takeFrom
-import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.*
-import org.bukkit.block.BlockFace.UP
-import org.bukkit.entity.*
 import kotlin.random.Random
 
 class LeatherRegen(game: Game) : Regen(game, 5, 600) {
@@ -27,7 +25,7 @@ class LeatherRegen(game: Game) : Regen(game, 5, 600) {
 	}
 
 	override fun place(chunk: Chunk): Boolean {
-		val (block, spawnInfo) = AbstractChunkPlacer.randomPosition(chunk, 59, 80) { block ->
+		val (block, spawnInfo) = ChunkPlacer.randomPosition(chunk, 59, 80) { block ->
 			val spawnInfo = spawnInfo(block)
 			Pair(block, spawnInfo).takeFrom(spawnInfo.allowSpawn(block, 0))
 		} ?: return false

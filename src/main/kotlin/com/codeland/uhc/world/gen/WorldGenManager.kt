@@ -2,6 +2,7 @@ package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.chunkManager.*
@@ -12,8 +13,7 @@ import net.minecraft.world.level.biome.*
 import net.minecraft.world.level.chunk.ChunkGenerator
 import net.minecraft.world.level.levelgen.ChunkGeneratorAbstract
 import net.minecraft.world.level.levelgen.GeneratorSettingBase
-import org.bukkit.Server
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import java.util.*
@@ -67,13 +67,17 @@ object WorldGenManager {
 		/* replace worlds hashmap on server */
 		serverWorldsField[server] = object : HashMap<String, World>() {
 			override fun put(key: String, value: World): World? {
-				return if (onWorldAdded(value)) super.put(key, value) else null
+				if (key == WorldManager.END_WORLD_NAME || key == WorldManager.BAD_NETHER_WORLD_NAME) {
+					SchedulerUtil.nextTick { WorldManager.destroyWorld(key) }
+				}
+				onWorldAdded(value)
+				return super.put(key, value)
 			}
 		}
 	}
 
-	private fun onWorldAdded(world: World): Boolean {
-		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return false
+	private fun onWorldAdded(world: World) {
+		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return
 
 		val worldServer = worldServerField[world] as WorldServer
 		val chunkProviderServer = chunkProviderServerField[worldServer] as ChunkProviderServer
@@ -94,7 +98,7 @@ object WorldGenManager {
 		}
 
 		/* the old world chunk manager is of a nonsupported type */
-		if (seed == null || biomeRegistry == null) return false
+		if (seed == null || biomeRegistry == null) return
 
 		val (biomeManager, featureManager) = when (world.name) {
 			WorldManager.GAME_WORLD_NAME -> {
@@ -154,7 +158,5 @@ object WorldGenManager {
 			worldChunkManagerBField[chunkGenerator] = featureManager ?: biomeManager
 			worldChunkManagerCField[chunkGenerator] = biomeManager
 		}
-
-		return true
 	}
 }

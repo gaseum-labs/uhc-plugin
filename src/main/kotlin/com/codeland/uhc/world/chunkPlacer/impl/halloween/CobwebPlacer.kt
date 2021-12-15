@@ -1,16 +1,12 @@
 package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.Material.COBWEB
 import org.bukkit.block.BlockFace
 
-class CobwebPlacer(size: Int) : DelayedChunkPlacer(size) {
-	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return chunkReadyAround(world, chunkX, chunkZ)
-	}
-
+class CobwebPlacer(size: Int) : ChunkPlacer(size) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 10, 64) { block ->
 			(block.type == Material.AIR || block.type == Material.CAVE_AIR) &&

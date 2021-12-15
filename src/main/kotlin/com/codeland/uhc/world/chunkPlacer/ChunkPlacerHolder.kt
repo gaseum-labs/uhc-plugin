@@ -8,7 +8,7 @@ import com.codeland.uhc.world.chunkPlacer.impl.structure.TowerPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 
-enum class ChunkPlacerHolder(val chunkPlacer: AbstractChunkPlacer) {
+enum class ChunkPlacerHolder(val chunkPlacer: ChunkPlacer) {
 	/* nether */
 	WART(WartPlacer(3)),
 	BLACKSTONE(BlackstonePlacer()),
@@ -54,19 +54,15 @@ enum class ChunkPlacerHolder(val chunkPlacer: AbstractChunkPlacer) {
 	REVERSE_LAPIS(OrePlacer(3, 150, 240, 3, Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE)),
 	REVERSE_DIAMOND(OrePlacer(4, 200, 240, 1, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)),
 
-	/** DEPRECATED */
-
-	/* sugar cane */
-	DEEP_SUGAR_CANE(SugarCanePlacer(2, 58, 62)),
-	LOW_SUGAR_CANE(SugarCanePlacer(6, 63, 63)),
-	HIGH_SUGAR_CANE(SugarCanePlacer(4, 64, 82)),
 	;
 
-	fun onGenerate(chunk: Chunk, seed: Long) {
-		chunkPlacer.onGenerate(chunk, this.ordinal.toLong(), seed)
+	fun addToList(chunk: Chunk, list: ArrayList<ChunkPlacer>) {
+		if (chunkPlacer.shouldGenerate(chunk.x, chunk.z, ordinal.toLong(), chunk.world.seed)) {
+			list.add(chunkPlacer)
+		}
 	}
 
-	operator fun component1(): AbstractChunkPlacer {
+	operator fun component1(): ChunkPlacer {
 		return chunkPlacer
 	}
 }

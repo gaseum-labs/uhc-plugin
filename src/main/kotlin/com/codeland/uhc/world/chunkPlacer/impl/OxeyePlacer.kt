@@ -1,13 +1,13 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.Material.GRASS
 import org.bukkit.block.Biome
 import org.bukkit.block.BlockFace
 
-class OxeyePlacer(size: Int) : ImmediateChunkPlacer(size) {
+class OxeyePlacer(size: Int) : ChunkPlacer(size) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 63, 99) { block ->
 			(block.biome === Biome.PLAINS || block.biome === Biome.FLOWER_FOREST) &&

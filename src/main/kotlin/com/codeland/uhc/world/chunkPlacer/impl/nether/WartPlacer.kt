@@ -1,12 +1,12 @@
 package com.codeland.uhc.world.chunkPlacer.impl.nether
 
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.*
 import org.bukkit.block.data.Ageable
 
-class WartPlacer(size: Int) : ImmediateChunkPlacer(size) {
+class WartPlacer(size: Int) : ChunkPlacer(size) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 32, 99) { block ->
 			val under = block.getRelative(BlockFace.DOWN)

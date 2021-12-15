@@ -2,7 +2,7 @@ package com.codeland.uhc.world.chunkPlacer.impl.structure
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.extensions.BlockFaceExtensions.left
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
@@ -14,11 +14,11 @@ import org.bukkit.inventory.Inventory
 import org.bukkit.util.Vector
 import kotlin.random.Random
 
-class TowerPlacer(size: Int) : ImmediateChunkPlacer(size) {
+class TowerPlacer(size: Int) : ChunkPlacer(size) {
 	override fun place(chunk: Chunk) {
 		val floorY = determineFloorY(chunk) ?: return
 
-		val numStories = random.nextInt(8, 24)
+		val numStories = Random.nextInt(8, 24)
 
 		fun storyY(story: Int) = floorY + (story * STORY_HEIGHT)
 
@@ -308,11 +308,11 @@ class TowerPlacer(size: Int) : ImmediateChunkPlacer(size) {
 		)
 
 		fun floorBlock(): Material {
-			return floorBlocks[random.nextInt(floorBlocks.size)]
+			return floorBlocks[Random.nextInt(floorBlocks.size)]
 		}
 
 		fun wallBlock(): Material {
-			return wallBlocks[random.nextInt(wallBlocks.size)]
+			return wallBlocks[Random.nextInt(wallBlocks.size)]
 		}
 
 		fun fillChestContents(inventory: Inventory) {

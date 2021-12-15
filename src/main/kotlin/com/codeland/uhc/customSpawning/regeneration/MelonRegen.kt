@@ -1,7 +1,7 @@
 package com.codeland.uhc.customSpawning.regeneration
 
 import com.codeland.uhc.core.Game
-import com.codeland.uhc.world.chunkPlacer.AbstractChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.*
@@ -35,7 +35,7 @@ class MelonRegen(game: Game) : Regen(game, 3, 2800) {
 	override fun place(chunk: Chunk): Boolean {
 		if (!hasJungle(chunk)) return false
 
-		val block = AbstractChunkPlacer.randomPositionBool(chunk, 63, 80) { block ->
+		val block = ChunkPlacer.randomPositionBool(chunk, 63, 80) { block ->
 			block.isPassable && block.getRelative(BlockFace.DOWN).type === Material.GRASS_BLOCK
 		}
 

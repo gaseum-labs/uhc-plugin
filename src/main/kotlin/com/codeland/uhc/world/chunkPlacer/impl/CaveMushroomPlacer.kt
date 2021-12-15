@@ -1,11 +1,11 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
 
-class CaveMushroomPlacer(size: Int, val type: Material) : ImmediateChunkPlacer(size) {
+class CaveMushroomPlacer(size: Int, val type: Material) : ChunkPlacer(size) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 6, 42) { block ->
 			block.type.isAir &&

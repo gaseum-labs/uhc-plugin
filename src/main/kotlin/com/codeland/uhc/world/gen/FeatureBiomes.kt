@@ -72,13 +72,13 @@ object FeatureBiomes {
 	val caveLevels = arrayOf(
 		caveCarverMaster.a(CaveCarverConfiguration(
 			0.075f,
-			UniformHeight.a(VerticalAnchor.a(1), VerticalAnchor.a(16)),
+			UniformHeight.a(VerticalAnchor.a(6), VerticalAnchor.a(16)),
 			ConstantFloat.a(0.3f),
 			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			UniformFloat.b(2.0f, 3.4f),
-			UniformFloat.b(1.5f, 2.0f),
+			ConstantFloat.a(3.4f),//UniformFloat.b(2.0f, 3.4f),
+			ConstantFloat.a(2.0f),//UniformFloat.b(1.5f, 2.0f),
 			ConstantFloat.a(0.0f)
 		)),
 		caveCarverMaster.a(CaveCarverConfiguration(
@@ -88,9 +88,9 @@ object FeatureBiomes {
 			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			UniformFloat.b(1.5f, 2.6f),
-			UniformFloat.b(1.0f, 1.5f),
-			ConstantFloat.a(-1.0f)
+			ConstantFloat.a(2.6f),//UniformFloat.b(1.5f, 2.6f),
+			ConstantFloat.a(1.5f),//UniformFloat.b(1.0f, 1.5f),
+			ConstantFloat.a(-0.5f)
 		)),
 		caveCarverMaster.a(CaveCarverConfiguration(
 			0.125f,
@@ -99,8 +99,8 @@ object FeatureBiomes {
 			VerticalAnchor.b(6),
 			false,
 			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			UniformFloat.b(1.25f, 1.8f),
-			UniformFloat.b(1.0f, 1.25f),
+			ConstantFloat.a(1.8f),//UniformFloat.b(1.25f, 1.8f),
+			ConstantFloat.a(1.25f),//UniformFloat.b(1.0f, 1.25f),
 			ConstantFloat.a(-1.0f)
 		)),
 		caveCarverMaster.a(CaveCarverConfiguration(

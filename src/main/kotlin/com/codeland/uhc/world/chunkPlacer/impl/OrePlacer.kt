@@ -1,10 +1,10 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.util.extensions.ArrayListExtensions.mapFirstNotNullPrefer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import kotlin.random.Random
 
 class OrePlacer(
 	size: Int,
@@ -13,73 +13,68 @@ class OrePlacer(
 	private val amount: Int,
 	val type: Material,
 	val deepType: Material,
-) : DelayedChunkPlacer(size) {
-	val random = Random(size + low + high + amount + type.ordinal)
-
-	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return chunkReadyAround(world, chunkX, chunkZ)
-	}
-
+) : ChunkPlacer(size) {
 	override fun place(chunk: Chunk) {
-		randomPositionBool(chunk, low, high) { block ->
-			if (
-				isStone(block) && (
-				isOpen(block.getRelative(BlockFace.DOWN).type) ||
-				isOpen(block.getRelative(BlockFace.UP).type) ||
-				isOpen(block.getRelative(BlockFace.EAST).type) ||
-				isOpen(block.getRelative(BlockFace.WEST).type) ||
-				isOpen(block.getRelative(BlockFace.NORTH).type) ||
-				isOpen(block.getRelative(BlockFace.SOUTH).type)
-				)
-			) {
-				/* place the first ore in the vein */
-				placeOre(block)
-				val veinBlocks = Array(amount) { block }
+		val origin = randomPositionBool(chunk, low, high) { block ->
+			isStone(block) && (
+			isOpen(block.getRelative(BlockFace.DOWN).type) ||
+			isOpen(block.getRelative(BlockFace.UP).type) ||
+			isOpen(block.getRelative(BlockFace.EAST).type) ||
+			isOpen(block.getRelative(BlockFace.WEST).type) ||
+			isOpen(block.getRelative(BlockFace.NORTH).type) ||
+			isOpen(block.getRelative(BlockFace.SOUTH).type)
+			)
+		} ?: randomSinglePosition(chunk, low, high)
 
-				/* place the rest in a contiguous cluster */
-				for (j in 1 until amount) {
-					/* get an existing block in the vein */
-					var index = random.nextInt(0, j)
-					val startIndex = index
+		/* place the first ore in the vein */
+		placeOre(origin)
 
-					var currentBlock: Block? = placeRelativeBlock(veinBlocks[index])
+		/* keep track of all the ores that will be placed */
+		/* to decide the next location to spread to */
+		val veinBlocks = ArrayList<Block>(amount)
+		veinBlocks.add(origin)
 
-					while (currentBlock == null) {
-						index = (index + 1) % amount
-						if (index == startIndex) return@randomPositionBool true
+		/* place the rest in a contiguous cluster */
+		for (j in 1 until amount) {
+			veinBlocks.shuffle()
 
-						currentBlock = placeRelativeBlock(veinBlocks[index])
-					}
+			val (seedBlock, addFace) = veinBlocks.mapFirstNotNullPrefer { oreBlock ->
+				val (optimal, nonOptimal) = openFace(oreBlock)
+				optimal?.let { oreBlock to it } to nonOptimal?.let { oreBlock to it }
+			} ?: return
 
-					veinBlocks[j] = currentBlock
-				}
-
-				true
-
-			} else {
-				false
-			}
+			veinBlocks.add(placeOre(seedBlock.getRelative(addFace)))
 		}
 	}
+
+	val aroundFaces = arrayOf(
+		BlockFace.EAST,
+		BlockFace.WEST,
+		BlockFace.NORTH,
+		BlockFace.SOUTH,
+		BlockFace.DOWN,
+		BlockFace.UP,
+	)
 
 	/**
-	 * replaces the a block adjacent to this x y z location if possible
-	 * returns the block
-	 *
-	 * @return null the block couldn't be placed
+	 * @return an optimal block face to place a new ore (is stone)
+	 * and a non-optimal block face to place a new ore (any non-this ore)
 	 */
-	private fun placeRelativeBlock(block: Block): Block? {
-		var faceIndex = random.nextInt(0, 6)
-		val startIndex = faceIndex
+	private fun openFace(oreBlock: Block): Pair<BlockFace?, BlockFace?> {
+		var nonOptimal: BlockFace? = null
 
-		/* try to place a block on the first available face */
-		/* if cannot find an available face return null */
-		while (!isStone(block.getRelative(BlockFace.values()[faceIndex]))) {
-			faceIndex = (faceIndex + 1) % 6
-			if (faceIndex == startIndex) return null
+		aroundFaces.asIterable().shuffled().forEach { face ->
+			val relative = oreBlock.getRelative(face)
+
+			if (isStone(relative)) {
+				return face to null
+
+			} else if (relative.type !== type && relative.type !== deepType) {
+				nonOptimal = face
+			}
 		}
 
-		return placeOre(block.getRelative(BlockFace.values()[faceIndex]))
+		return null to nonOptimal
 	}
 
 	private fun isStone(block: Block): Boolean {

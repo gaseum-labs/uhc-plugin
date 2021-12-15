@@ -1,13 +1,13 @@
 package com.codeland.uhc.world.chunkPlacer.impl
 
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
 
-class AmethystPlacer : ImmediateChunkPlacer(1) {
+class AmethystPlacer : ChunkPlacer(1) {
 	override fun place(chunk: Chunk) {
 		for (y in 8..58) for (x in 0..15) for (z in 0..15) {
 			val block = chunk.getBlock(x, y, z)
