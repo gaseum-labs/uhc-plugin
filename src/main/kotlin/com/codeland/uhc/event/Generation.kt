@@ -58,11 +58,6 @@ class Generation : Listener {
 				if (block.type === MELON) block.setType(AIR, false)
 			}
 
-			/* remove chunk ores */
-			if (config.worldGenEnabled(ORE_FIX) || config.worldGenEnabled(REVERSE_ORE_FIX)) {
-				OrePlacer.removeOres(chunk)
-			}
-
 			/* remove chunk oxeyes */
 			if (config.worldGenEnabled(MUSHROOM_FIX)) {
 				OxeyePlacer.removeOxeye(chunk)

@@ -13,6 +13,8 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.levelgen.VerticalAnchor
 import net.minecraft.world.level.levelgen.WorldGenStage
 import net.minecraft.world.level.levelgen.carver.*
+import net.minecraft.world.level.levelgen.feature.WorldGenFeatureConfigured
+import net.minecraft.world.level.levelgen.feature.configurations.*
 import net.minecraft.world.level.levelgen.heightproviders.BiasedToBottomHeight
 import net.minecraft.world.level.levelgen.heightproviders.UniformHeight
 import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
@@ -178,6 +180,14 @@ object FeatureBiomes {
 		}
 	}
 
+	fun digUntilBase(supplier: Supplier<WorldGenFeatureConfigured<*, *>>): WorldGenFeatureConfiguration {
+		val configuration = supplier.get().f
+
+		return if (configuration is WorldGenFeatureCompositeConfiguration)
+			digUntilBase(configuration.b)
+		else configuration
+	}
+
 	fun genBiomes(): Map<Int, BiomeBase> {
 		val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
 		val biomeRegistry = biomeRegistryField[null] as IRegistry<BiomeBase>
@@ -191,6 +201,32 @@ object FeatureBiomes {
 			val originalCarverMap =
 				eField[originalSettings] as Map<WorldGenStage.Features, ImmutableCollection<Supplier<WorldGenCarverWrapper<*>>>>
 			val newCarverMap = HashMap<WorldGenStage.Features, ArrayList<Supplier<WorldGenCarverWrapper<*>>>>()
+
+			val originalFeatures =
+				fField[originalSettings] as List<List<Supplier<WorldGenFeatureConfigured<*, *>>>>
+
+			val newFeatures = ArrayList<ArrayList<Supplier<WorldGenFeatureConfigured<*, *>>>>()
+
+			originalFeatures.forEach { list0 ->
+				val newSubList = ArrayList<Supplier<WorldGenFeatureConfigured<*, *>>>()
+				list0.forEach { supplier ->
+					val finalConfig = digUntilBase(supplier)
+					if (finalConfig is WorldGenFeatureOreConfiguration &&
+						finalConfig.b.any {
+							it.c.a(Blocks.bZ) ||
+							it.c.a(Blocks.av) ||
+							it.c.a(Blocks.F)
+						}
+					) {
+						println(key)
+					} else {
+						newSubList.add(supplier)
+					}
+				}
+				newFeatures.add(newSubList)
+			}
+
+			fField[originalSettings] = newFeatures
 
 			originalCarverMap.forEach { (key, value) ->
 				newCarverMap[key] = if (isNetherBiome(id)) {
