@@ -7,6 +7,7 @@ import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import com.codeland.uhc.world.chunkPlacer.ChunkPlacerHolder.*
 import com.codeland.uhc.world.chunkPlacer.impl.*
+import net.minecraft.world.level.levelgen.ChunkGeneratorAbstract
 import org.bukkit.*
 import org.bukkit.Material.AIR
 import org.bukkit.Material.MELON
@@ -40,18 +41,13 @@ class Generation : Listener {
 
 	@EventHandler
 	fun onChunkLoad(event: ChunkPopulateEvent) {
-		/** santizie chunk */
+		/** sanitize chunk *///TODO move all sanitization to biome manipulation
 
 		val world = event.world
 		val chunk = event.chunk
 		val config = UHC.getConfig()
 
 		if (world.name == WorldManager.GAME_WORLD_NAME) {
-			/* no chunk animals */
-			chunk.entities.forEach { entity ->
-				if (entity is Animals) entity.remove()
-			}
-
 			/* remove chunk melons */
 			for (y in 63..120) for (x in 0..15) for (z in 0..15) {
 				val block = chunk.getBlock(x, y, z)

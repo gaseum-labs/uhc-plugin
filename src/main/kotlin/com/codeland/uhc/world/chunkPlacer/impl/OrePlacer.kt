@@ -102,23 +102,4 @@ class OrePlacer(
 			else -> false
 		}
 	}
-
-	companion object {
-		fun removeOres(chunk: Chunk) {
-			for (x in 0..15) for (z in 0..15) for (y in 1..127) {
-				val block = chunk.getBlock(x, y, z)
-				when (block.type) {
-					Material.GOLD_ORE,
-					Material.LAPIS_ORE,
-					Material.DIAMOND_ORE,
-					Material.DEEPSLATE_GOLD_ORE,
-					Material.DEEPSLATE_LAPIS_ORE,
-					Material.DEEPSLATE_DIAMOND_ORE,
-					-> block.setType(Material.STONE, false)
-					else -> {
-					}
-				}
-			}
-		}
-	}
 }

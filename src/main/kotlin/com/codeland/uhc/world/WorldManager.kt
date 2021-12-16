@@ -75,7 +75,7 @@ object WorldManager {
 		world.difficulty = Difficulty.NORMAL
 		world.animalSpawnLimit = 0
 		world.monsterSpawnLimit = 0
-		
+
 		Generation.cleanSuspended(world)
 
 		if (world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME) {

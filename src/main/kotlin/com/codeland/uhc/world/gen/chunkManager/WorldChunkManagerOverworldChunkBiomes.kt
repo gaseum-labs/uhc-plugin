@@ -1,13 +1,12 @@
 package com.codeland.uhc.world.gen.chunkManager
 
 import com.codeland.uhc.util.Util
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import net.minecraft.core.IRegistry
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.level.biome.BiomeBase
 import net.minecraft.world.level.biome.WorldChunkManagerOverworld
-import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
-import kotlin.math.floor
 import kotlin.random.Random
 
 class WorldChunkManagerOverworldChunkBiomes(

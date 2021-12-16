@@ -42,6 +42,7 @@ object WorldGenManager {
 	private val noiseCavesField = GeneratorSettingBase::class.java.getDeclaredField("s")
 	private val noodleCavesField = GeneratorSettingBase::class.java.getDeclaredField("u")
 	private val aquifersField = GeneratorSettingBase::class.java.getDeclaredField("r")
+	private val noChunkMobsField = GeneratorSettingBase::class.java.getDeclaredField("q")
 
 	init {
 		serverWorldsField.isAccessible = true
@@ -57,10 +58,11 @@ object WorldGenManager {
 		optionField.isAccessible = true
 		seedFieldMultiNoise.isAccessible = true
 		gField.isAccessible = true
+		xField.isAccessible = true
 		noiseCavesField.isAccessible = true
 		noodleCavesField.isAccessible = true
 		aquifersField.isAccessible = true
-		xField.isAccessible = true
+		noChunkMobsField.isAccessible = true
 	}
 
 	fun init(server: Server) {
@@ -81,7 +83,7 @@ object WorldGenManager {
 
 		val worldServer = worldServerField[world] as WorldServer
 		val chunkProviderServer = chunkProviderServerField[worldServer] as ChunkProviderServer
-		val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGenerator
+		val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGeneratorAbstract
 
 		/* grab the existing chunk manager */
 		val oldChunkManager = worldChunkManagerBField[chunkGenerator]
@@ -139,12 +141,13 @@ object WorldGenManager {
 				noiseCavesField[customGeneratorSettings] = true
 				noodleCavesField[customGeneratorSettings] = true
 				aquifersField[customGeneratorSettings] = true
+				noChunkMobsField[customGeneratorSettings] = true
 
 				gField[chunkGenerator] = Supplier<GeneratorSettingBase> { customGeneratorSettings }
 			}
 
 			if (world.name != WorldManager.NETHER_WORLD_NAME) NoiseSamplerUHC.inject(
-				chunkGenerator as ChunkGeneratorAbstract,
+				chunkGenerator,
 				biomeManager,
 				if (world.name == WorldManager.GAME_WORLD_NAME) {
 					UHC.getConfig().worldGenEnabled(WorldGenOption.AMPLIFIED)

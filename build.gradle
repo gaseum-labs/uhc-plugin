@@ -49,7 +49,7 @@ dependencies {
     implementation 'com.microsoft.sqlserver:mssql-jdbc:9.4.0.jre16'
     compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
     compileOnly 'com.comphenix.protocol:ProtocolLib:4.7.0'
-    compileOnly 'org.spigotmc:spigot:1.17.1-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper:1.17.1-R0.1-SNAPSHOT'
 }
 
 build.dependsOn shadowJar

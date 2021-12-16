@@ -1,6 +1,6 @@
 package com.codeland.uhc.world.gen.chunkManager
 
-import com.codeland.uhc.world.gen.FeatureBiomes
+import com.codeland.uhc.world.gen.ModifiedBiomesRegistry
 import com.codeland.uhc.world.gen.layer.game.*
 import com.codeland.uhc.world.gen.layer.nether.LayerNetherBiome
 import net.minecraft.core.IRegistry
@@ -26,7 +26,7 @@ class WorldChunkManagerNether(
 	override fun getBiome(x: Int, y: Int, z: Int): BiomeBase {
 		val biomeNo = area.a(x, z)
 
-		return if (features) FeatureBiomes.biomes[biomeNo]!!
+		return if (features) ModifiedBiomesRegistry.featureBiomes[biomeNo]!!
 		else biomeRegistry.d(BiomeRegistry.a(biomeNo))
 	}
 
