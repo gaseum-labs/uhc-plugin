@@ -41,36 +41,9 @@ class Generation : Listener {
 
 	@EventHandler
 	fun onChunkLoad(event: ChunkPopulateEvent) {
-		/** sanitize chunk *///TODO move all sanitization to biome manipulation
-
 		val world = event.world
 		val chunk = event.chunk
 		val config = UHC.getConfig()
-
-		if (world.name == WorldManager.GAME_WORLD_NAME) {
-			/* remove chunk melons */
-			for (y in 63..120) for (x in 0..15) for (z in 0..15) {
-				val block = chunk.getBlock(x, y, z)
-				if (block.type === MELON) block.setType(AIR, false)
-			}
-
-			/* remove chunk oxeyes */
-			if (config.worldGenEnabled(MUSHROOM_FIX)) {
-				OxeyePlacer.removeOxeye(chunk)
-			}
-
-			/* remove chunk sugar cane */
-			if (config.worldGenEnabled(SUGAR_CANE_REGEN)) {
-				for (x in 0..15) {
-					for (z in 0..15) {
-						for (y in 60..86) {
-							val block = chunk.getBlock(x, y, z)
-							if (block.type === Material.SUGAR_CANE) block.setType(AIR, false)
-						}
-					}
-				}
-			}
-		}
 
 		/** synchronize and delay the chunk placers */
 

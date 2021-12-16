@@ -4,14 +4,16 @@ import com.google.common.collect.ImmutableCollection
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import net.minecraft.core.IRegistry
 import net.minecraft.data.RegistryGeneration
+import net.minecraft.data.worldgen.BiomeDecoratorGroups
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.level.biome.*
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.levelgen.WorldGenStage
-import net.minecraft.world.level.levelgen.carver.*
+import net.minecraft.world.level.levelgen.carver.WorldGenCarverWrapper
 import net.minecraft.world.level.levelgen.feature.WorldGenFeatureConfigured
 import net.minecraft.world.level.levelgen.feature.configurations.*
+import net.minecraft.world.level.levelgen.feature.stateproviders.WorldGenFeatureStateProviderSimpl
 import java.lang.reflect.Constructor
 import java.util.function.*
 
@@ -73,6 +75,49 @@ object ModifiedBiomes {
 		else configuration
 	}
 
+	fun rejectFeature(config: WorldGenFeatureConfiguration): Boolean {
+		/* diamond, lapis, gold ores *///TODO leave in badlands gold
+		if (config is WorldGenFeatureOreConfiguration &&
+			config.b.any {
+				it.c.a(Blocks.bZ) ||
+				it.c.a(Blocks.av) ||
+				it.c.a(Blocks.F)
+			}
+		) return true
+
+		/* piles of melons */
+		/** potentially unused??? */
+		if (config is WorldGenFeatureBlockPileConfiguration) {
+			val featureStateProvider = config.b
+			if (featureStateProvider is WorldGenFeatureStateProviderSimpl &&
+				featureStateProvider.a(null, null).a(Blocks.dS)
+			) {
+				println("rejected melon pile")
+				return true
+			}
+		}
+
+		/* patches of melons AND patches of sugar cane */
+		if (config is WorldGenFeatureRandomPatchConfiguration) {
+			val featureStateProvider = config.b
+			if (featureStateProvider is WorldGenFeatureStateProviderSimpl &&
+				featureStateProvider.a(null, null).a(Blocks.dS)
+			) {
+				println("rejected melon patch")
+				return true
+			}
+
+			if (featureStateProvider is WorldGenFeatureStateProviderSimpl &&
+				featureStateProvider.a(null, null).a(Blocks.cP)
+			) {
+				println("rejected sugar cane")
+				return true
+			}
+		}
+
+		return false
+	}
+
 	fun genBiomes(replaceFeatures: Boolean, replaceMobs: Boolean): Map<Int, BiomeBase> {
 		val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
 		val biomeRegistry = biomeRegistryField[null] as IRegistry<BiomeBase>
@@ -112,18 +157,7 @@ object ModifiedBiomes {
 				originalFeatures.forEach { list0 ->
 					val newSubList = ArrayList<Supplier<WorldGenFeatureConfigured<*, *>>>()
 					list0.forEach { supplier ->
-						val finalConfig = digUntilBase(supplier)
-						if (finalConfig is WorldGenFeatureOreConfiguration &&
-							finalConfig.b.any {
-								it.c.a(Blocks.bZ) ||
-								it.c.a(Blocks.av) ||
-								it.c.a(Blocks.F)
-							}
-						) {
-							//println(key)
-						} else {
-							newSubList.add(supplier)
-						}
+						if (!rejectFeature(digUntilBase(supplier))) newSubList.add(supplier)
 					}
 					newFeatures.add(newSubList)
 				}
