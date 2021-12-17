@@ -13,12 +13,6 @@ enum class WorldGenOption(
 		Component.text("Nether wart and blazes spawn randomly in the nether")
 	), Material.NETHER_WART),
 
-	MUSHROOM_FIX("Mushroom Fix", true, listOf(
-		Component.text("Oxeye daisy generation reduced"),
-		Component.text("Giant mushroom drop rate reduced"),
-		Component.text("Mushroom generation in caves increased")
-	), Material.RED_MUSHROOM),
-
 	ORE_FIX("Ore Fix", true, listOf(
 		Component.text("Gold, lapis, and diamond only generate on the sides of caves"),
 	), Material.DIAMOND),
@@ -30,7 +24,7 @@ enum class WorldGenOption(
 	SUGAR_CANE_REGEN("Sugar Cane Regen", true, listOf(
 		Component.text("Sugar cane generates as the game goes on"),
 	), Material.SUGAR),
-	
+
 	DUNGEON_FIX("Dungeon Fix", false, listOf(
 		Component.text("Loot in dungeon chest is normalized")
 	), Material.MOSSY_COBBLESTONE),

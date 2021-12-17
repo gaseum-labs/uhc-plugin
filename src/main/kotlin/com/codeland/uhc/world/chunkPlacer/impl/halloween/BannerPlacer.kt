@@ -9,7 +9,7 @@ import org.bukkit.block.banner.PatternType
 import org.bukkit.block.data.Directional
 import kotlin.random.Random
 
-class BannerPlacer(size: Int) : ChunkPlacer(size) {
+class BannerPlacer : ChunkPlacer(2, 5) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 20, 80) { block ->
 			fun tryBanner(facing: BlockFace): Boolean {

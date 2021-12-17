@@ -6,7 +6,7 @@ import org.bukkit.block.data.Orientable
 import org.bukkit.block.data.type.Lantern
 import kotlin.random.Random
 
-class LanternPlacer(size: Int) : ChunkPlacer(size) {
+class LanternPlacer : ChunkPlacer(1, 2) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 20, 99) { block ->
 			if (!block.isPassable) {

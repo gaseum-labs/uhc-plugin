@@ -67,57 +67,6 @@ object ModifiedBiomes {
 		hField.isAccessible = true
 	}
 
-	fun digUntilBase(supplier: Supplier<WorldGenFeatureConfigured<*, *>>): WorldGenFeatureConfiguration {
-		val configuration = supplier.get().f
-
-		return if (configuration is WorldGenFeatureCompositeConfiguration)
-			digUntilBase(configuration.b)
-		else configuration
-	}
-
-	fun rejectFeature(config: WorldGenFeatureConfiguration): Boolean {
-		/* diamond, lapis, gold ores *///TODO leave in badlands gold
-		if (config is WorldGenFeatureOreConfiguration &&
-			config.b.any {
-				it.c.a(Blocks.bZ) ||
-				it.c.a(Blocks.av) ||
-				it.c.a(Blocks.F)
-			}
-		) return true
-
-		/* piles of melons */
-		/** potentially unused??? */
-		if (config is WorldGenFeatureBlockPileConfiguration) {
-			val featureStateProvider = config.b
-			if (featureStateProvider is WorldGenFeatureStateProviderSimpl &&
-				featureStateProvider.a(null, null).a(Blocks.dS)
-			) {
-				println("rejected melon pile")
-				return true
-			}
-		}
-
-		/* patches of melons AND patches of sugar cane */
-		if (config is WorldGenFeatureRandomPatchConfiguration) {
-			val featureStateProvider = config.b
-			if (featureStateProvider is WorldGenFeatureStateProviderSimpl &&
-				featureStateProvider.a(null, null).a(Blocks.dS)
-			) {
-				println("rejected melon patch")
-				return true
-			}
-
-			if (featureStateProvider is WorldGenFeatureStateProviderSimpl &&
-				featureStateProvider.a(null, null).a(Blocks.cP)
-			) {
-				println("rejected sugar cane")
-				return true
-			}
-		}
-
-		return false
-	}
-
 	fun genBiomes(replaceFeatures: Boolean, replaceMobs: Boolean): Map<Int, BiomeBase> {
 		val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
 		val biomeRegistry = biomeRegistryField[null] as IRegistry<BiomeBase>
@@ -157,7 +106,27 @@ object ModifiedBiomes {
 				originalFeatures.forEach { list0 ->
 					val newSubList = ArrayList<Supplier<WorldGenFeatureConfigured<*, *>>>()
 					list0.forEach { supplier ->
-						if (!rejectFeature(digUntilBase(supplier))) newSubList.add(supplier)
+						val configured = supplier.get()
+
+						if (
+							configured === BiomeDecoratorGroups.bV || // gold ores (excluding badlands)
+							configured === BiomeDecoratorGroups.bW ||
+							configured === BiomeDecoratorGroups.cd || // lapis ore
+							configured === BiomeDecoratorGroups.ce ||
+							configured === BiomeDecoratorGroups.cf ||
+							configured === BiomeDecoratorGroups.ca || // diamond ores
+							configured === BiomeDecoratorGroups.cb ||
+							configured === BiomeDecoratorGroups.cc ||
+							configured === BiomeDecoratorGroups.al || // melons
+							configured === BiomeDecoratorGroups.aJ ||
+							configured === BiomeDecoratorGroups.aT || // sugar cane (excluding badlands)
+							configured === BiomeDecoratorGroups.aU ||
+							configured === BiomeDecoratorGroups.aW
+						) {
+							//
+						} else {
+							newSubList.add(supplier)
+						}
 					}
 					newFeatures.add(newSubList)
 				}

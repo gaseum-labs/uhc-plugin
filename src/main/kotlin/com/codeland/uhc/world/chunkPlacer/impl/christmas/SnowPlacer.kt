@@ -6,7 +6,7 @@ import org.bukkit.Material
 import org.bukkit.block.Biome
 import org.bukkit.block.BlockFace
 
-class SnowPlacer(size: Int) : ChunkPlacer(size) {
+class SnowPlacer : ChunkPlacer(1, 1) {
 	override fun place(chunk: Chunk) {
 		for (x in 0..15) {
 			for (z in 0..15) {

@@ -7,7 +7,7 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
 import kotlin.random.Random
 
-class PumpkinPlacer(size: Int) : ChunkPlacer(size) {
+class PumpkinPlacer : ChunkPlacer(3, 3) {
 	override fun place(chunk: Chunk) {
 		for (i in 0 until 16 * 16) {
 			val x = chunk.x * 16 + i % 16

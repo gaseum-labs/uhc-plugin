@@ -69,12 +69,6 @@ class Generation : Listener {
 					EMERALD.addToList(chunk, placerList)
 				}
 
-				if (config.worldGenEnabled(MUSHROOM_FIX)) {
-					OXEYE.addToList(chunk, placerList)
-					RED_MUSHROOM.addToList(chunk, placerList)
-					BROWN_MUSHROOM.addToList(chunk, placerList)
-				}
-
 				if (config.worldGenEnabled(HALLOWEEN)) {
 					PUMPKIN.addToList(chunk, placerList)
 					DEAD_BUSH.addToList(chunk, placerList)

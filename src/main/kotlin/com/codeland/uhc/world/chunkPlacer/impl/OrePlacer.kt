@@ -7,13 +7,14 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 
 class OrePlacer(
-	size: Int,
+	perSquare: Int,
+	squareSize: Int,
 	private val low: Int,
 	private val high: Int,
 	private val amount: Int,
 	val type: Material,
 	val deepType: Material,
-) : ChunkPlacer(size) {
+) : ChunkPlacer(perSquare, squareSize) {
 	override fun place(chunk: Chunk) {
 		val origin = randomPositionBool(chunk, low, high) { block ->
 			isStone(block) && (

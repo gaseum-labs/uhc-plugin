@@ -14,7 +14,7 @@ import org.bukkit.inventory.Inventory
 import org.bukkit.util.Vector
 import kotlin.random.Random
 
-class TowerPlacer(size: Int) : ChunkPlacer(size) {
+class TowerPlacer : ChunkPlacer(1, 5) {
 	override fun place(chunk: Chunk) {
 		val floorY = determineFloorY(chunk) ?: return
 

@@ -7,7 +7,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-class BricksPlacer(size: Int) : ChunkPlacer(size) {
+class BricksPlacer : ChunkPlacer(7, 8) {
 	private val replaceable = arrayOf(
 		Material.STONE,
 		Material.DIRT,

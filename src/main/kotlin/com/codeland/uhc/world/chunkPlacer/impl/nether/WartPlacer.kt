@@ -6,7 +6,7 @@ import org.bukkit.Material
 import org.bukkit.block.*
 import org.bukkit.block.data.Ageable
 
-class WartPlacer(size: Int) : ChunkPlacer(size) {
+class WartPlacer : ChunkPlacer(3, 3) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 32, 99) { block ->
 			val under = block.getRelative(BlockFace.DOWN)

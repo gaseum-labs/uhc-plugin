@@ -6,7 +6,7 @@ import org.bukkit.*
 import org.bukkit.Material.COBWEB
 import org.bukkit.block.BlockFace
 
-class CobwebPlacer(size: Int) : ChunkPlacer(size) {
+class CobwebPlacer : ChunkPlacer(5, 5) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 10, 64) { block ->
 			(block.type == Material.AIR || block.type == Material.CAVE_AIR) &&

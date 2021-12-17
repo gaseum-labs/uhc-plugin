@@ -4,7 +4,7 @@ import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.BlockFace
 
-class LavaStreamPlacer(size: Int) : ChunkPlacer(size) {
+class LavaStreamPlacer : ChunkPlacer(2, 2) {
 	fun itb(boolean: Boolean): Int {
 		return if (boolean) 1 else 0
 	}

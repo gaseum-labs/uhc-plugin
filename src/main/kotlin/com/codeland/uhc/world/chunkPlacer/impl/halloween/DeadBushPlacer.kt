@@ -5,7 +5,7 @@ import org.bukkit.Chunk
 import org.bukkit.Material
 import kotlin.random.Random
 
-class DeadBushPlacer(size: Int) : ChunkPlacer(size) {
+class DeadBushPlacer : ChunkPlacer(1, 1) {
 	override fun place(chunk: Chunk) {
 		val numBushes = Random.nextInt(0, 4)
 

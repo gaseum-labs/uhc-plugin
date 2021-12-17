@@ -8,7 +8,7 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import kotlin.random.Random
 
-class BlackstonePlacer : ChunkPlacer(1) {
+class BlackstonePlacer : ChunkPlacer(1, 1) {
 	override fun place(chunk: Chunk) {
 		val random = Random(chunk.world.seed.xor(chunk.chunkKey))
 

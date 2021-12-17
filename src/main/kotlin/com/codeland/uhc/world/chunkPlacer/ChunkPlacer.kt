@@ -5,14 +5,14 @@ import org.bukkit.Chunk
 import org.bukkit.block.Block
 import kotlin.random.Random
 
-abstract class ChunkPlacer(val size: Int) {
+abstract class ChunkPlacer(val perSquare: Int, val squareSize: Int) {
 	abstract fun place(chunk: Chunk)
 
 	fun shouldGenerate(chunkX: Int, chunkZ: Int, uniqueSeed: Long, worldSeed: Long): Boolean {
-		if (size == 1) return true
+		if (squareSize == 1) return true
 
-		val baseX = Util.floorDiv(chunkX, size)
-		val baseZ = Util.floorDiv(chunkZ, size)
+		val baseX = Util.floorDiv(chunkX, squareSize)
+		val baseZ = Util.floorDiv(chunkZ, squareSize)
 
 		val random = Random(
 			uniqueSeed.xor(worldSeed.shl(32).or(worldSeed.ushr(32))).xor(baseX.toLong())
@@ -23,13 +23,13 @@ abstract class ChunkPlacer(val size: Int) {
 		var filled = 0
 
 		/* try n out of n*n spots, equates to 1/n chance of finding */
-		for (i in 0 until size) {
-			var spot = random.nextInt(size * size)
-			while (filled.ushr(spot).and(1) == 1) spot = (spot + 1) % (size * size)
+		for (i in 0 until perSquare) {
+			var spot = random.nextInt(squareSize * squareSize)
+			while (filled.ushr(spot).and(1) == 1) spot = (spot + 1) % (squareSize * squareSize)
 			filled = filled.or(1.shl(spot))
 
 			/* found the index of this subchunk */
-			if (spot == Util.mod(chunkZ, size) * size + Util.mod(chunkX, size)) {
+			if (spot == Util.mod(chunkZ, squareSize) * squareSize + Util.mod(chunkX, squareSize)) {
 				return true
 			}
 		}

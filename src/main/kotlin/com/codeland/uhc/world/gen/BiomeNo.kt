@@ -129,4 +129,17 @@ object BiomeNo {
 			else -> false
 		}
 	}
+
+	fun isBadlands(no: Int): Boolean {
+		return when (no) {
+			BADLANDS,
+			BADLANDS_PLATEAU,
+			WOODED_BADLANDS_PLATEAU,
+			MODIFIED_BADLANDS_PLATEAU,
+			MODIFIED_WOODED_BADLANDS_PLATEAU,
+			ERODED_BADLANDS,
+			-> true
+			else -> false
+		}
+	}
 }

@@ -5,7 +5,7 @@ import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 
-class MagmaPlacer : ChunkPlacer(1) {
+class MagmaPlacer : ChunkPlacer(1, 1) {
 	fun border(block: Block): Boolean {
 		return block.type === Material.LAVA || block.type === Material.AIR
 	}

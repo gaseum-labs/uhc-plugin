@@ -5,7 +5,7 @@ import org.bukkit.*
 import org.bukkit.block.Block
 import kotlin.random.Random
 
-class BasaltPlacer(size: Int) : ChunkPlacer(size) {
+class BasaltPlacer : ChunkPlacer(2, 2) {
 	fun border(block: Block): Boolean {
 		return block.type === Material.LAVA || block.type === Material.AIR
 	}
