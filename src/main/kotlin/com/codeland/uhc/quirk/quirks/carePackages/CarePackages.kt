@@ -1,10 +1,13 @@
 package com.codeland.uhc.quirk.quirks.carePackages
 
 import com.codeland.uhc.UHCPlugin
-import com.codeland.uhc.core.Game
-import com.codeland.uhc.core.UHC
+import com.codeland.uhc.core.*
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.phases.*
+import com.codeland.uhc.event.Brew
+import com.codeland.uhc.event.Brew.Companion
+import com.codeland.uhc.event.Brew.Companion.PotionInfo
+import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_COAL
@@ -14,18 +17,22 @@ import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_IRON
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_LAPIS
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.pickOne
 import com.codeland.uhc.util.*
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.Material.*
+import org.bukkit.Material.WATER
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import org.bukkit.potion.*
+import org.bukkit.potion.PotionType.*
 import kotlin.math.*
 import kotlin.random.Random
 
 class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
-	val NUM_DROPS = 3
+	val NUM_DROPS = 2
 
 	var taskID = -1
 
@@ -175,7 +182,7 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 		if (dropIndex < NUM_DROPS) {
 			--timer
 
-			if (timer == 0) {
+			if (timer <= 0) {
 				generateDrop(dropIndex, dropLocations[dropIndex])
 				prepareDrop(dropIndex + 1)
 			}
@@ -199,212 +206,260 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 	}
 
 	companion object {
-		class LootEntry(var makeStack: () -> ItemStack)
+		val chestEntries = arrayOf<Array<ItemCreator>>(
+			arrayOf<ItemCreator>(
+				CarePackagesItems.helmet,
+				CarePackagesItems.chestplate,
+				CarePackagesItems.leggings,
+				CarePackagesItems.boots,
 
-		private const val ENCHANT_CHANCE = 0.25
+				CarePackagesItems.smallHelmet,
+				CarePackagesItems.smallChestplate,
+				CarePackagesItems.smallLeggings,
+				CarePackagesItems.smallBoots,
 
-		val random = Random(324235235L)
+				CarePackagesItems.sword0,
+				CarePackagesItems.sword0,
+				CarePackagesItems.axe0,
+				CarePackagesItems.axe0,
+				CarePackagesItems.bow,
+				CarePackagesItems.bow,
+				CarePackagesItems.crossbow0,
+				CarePackagesItems.crossbow0,
 
-		val chestEntries = arrayOf(
-			arrayOf(
-				LootEntry { ItemStack(WATER_BUCKET) },
-				LootEntry { ItemStack(LAVA_BUCKET) },
-				LootEntry { CarePackageUtil.randomBucket() },
-				LootEntry { CarePackageUtil.randomArmor(false) },
-				LootEntry { CarePackageUtil.randomArmor(false) },
-				LootEntry { CarePackageUtil.randomArmor(false) },
-				LootEntry { CarePackageUtil.randomArmor(false) },
-				LootEntry { CarePackageUtil.randomItem(BROWN_MUSHROOM, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(BROWN_MUSHROOM, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(RED_MUSHROOM, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(RED_MUSHROOM, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(OXEYE_DAISY, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(OXEYE_DAISY, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(LEATHER, 4, 8) },
-				LootEntry { CarePackageUtil.randomItem(LEATHER, 4, 8) },
-				LootEntry { CarePackageUtil.randomItem(PAPER, 6, 9) },
-				LootEntry { CarePackageUtil.randomItem(PAPER, 6, 9) },
-				LootEntry { CarePackageUtil.randomItem(BOOK, 1, 2) },
-				LootEntry { CarePackageUtil.randomItem(BOOKSHELF, 1) },
-				LootEntry { CarePackageUtil.randomItem(MELON_SLICE, 2) },
-				LootEntry { CarePackageUtil.randomItem(MELON_SLICE, 2) },
-				LootEntry { CarePackageUtil.regenerationStew() },
-				LootEntry { CarePackageUtil.randomBottlePart() },
-				LootEntry { CarePackageUtil.randomBottlePart() },
-				LootEntry { CarePackageUtil.randomBrewingIngredient() },
-				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
-				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
-				LootEntry { CarePackageUtil.flamingLazerSword() },
-				LootEntry { ItemStack(NETHER_WART, pickOne(1, 2)) },
-				LootEntry { ItemStack(REDSTONE, pickOne(2, 4)) },
-				LootEntry { ItemStack(GUNPOWDER, pickOne(2, 4)) },
-				LootEntry { CarePackageUtil.glowstone() },
-				LootEntry { ItemStack(STONE, pickOne(16, 32, 48)) },
-				LootEntry { ItemStack(STONE, pickOne(16, 32, 48)) },
-				LootEntry { ItemStack(TORCH, pickOne(16, 32)) },
-				LootEntry { ItemStack(TORCH, pickOne(16, 32)) },
-				LootEntry { ItemStack(OBSIDIAN, pickOne(3, 4, 10)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { CarePackageUtil.randomBoat() },
-				LootEntry { CarePackageUtil.randomItem(FLINT, 5, 10) },
-				LootEntry { CarePackageUtil.randomItem(FLINT, 5, 10) },
-				LootEntry { CarePackageUtil.randomItem(FEATHER, 4, 9) },
-				LootEntry { CarePackageUtil.randomItem(FEATHER, 4, 9) },
-				LootEntry { CarePackageUtil.randomItem(ARROW, 10, 15) },
-				LootEntry { CarePackageUtil.randomItem(ARROW, 10, 15) },
-				LootEntry { CarePackageUtil.randomItem(COOKED_PORKCHOP, 8, 12) },
-				LootEntry { CarePackageUtil.randomItem(COOKED_BEEF, 8, 12) },
-				LootEntry { CarePackageUtil.powerBow(1) },
-				LootEntry { CarePackageUtil.piercingCrossbow() },
-				LootEntry { CarePackageUtil.randomItem(APPLE, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(APPLE, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(STRING, 2, 3) },
-				LootEntry { CarePackageUtil.randomItem(STRING, 2, 3) },
-				LootEntry { CarePackageUtil.randomAxe(false) },
-				LootEntry { CarePackageUtil.randomSword(false) },
-				LootEntry { CarePackageUtil.randomPick(false) },
+				CarePackagesItems.enchantedBook,
+				CarePackagesItems.enchantedBook,
+				CarePackagesItems.enchantedBook,
+				CarePackagesItems.enchantedBook,
+
+				CarePackagesItems.supaPickaxe,
+
+				CarePackagesItems.trident,
+
+				ItemCreator.regular(ARROW).amount(16),
+				ItemCreator.regular(ARROW).amount(16),
+				ItemCreator.regular(ARROW).amount(16),
+				ItemCreator.regular(ARROW).amount(16),
+				ItemCreator.regular(ARROW).amount(16),
+
+				ItemCreator.regular(SPECTRAL_ARROW).amount(16),
+				ItemCreator.regular(SPECTRAL_ARROW).amount(16),
+				ItemCreator.regular(SPECTRAL_ARROW).amount(16),
+
+				CarePackagesItems.poisonTippedArrow,
+				CarePackagesItems.slownessTippedArrow,
+				CarePackagesItems.weaknessTippedArrow,
+
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+
+				ItemCreator.regular(BOOK).amount(9),
+				ItemCreator.regular(BOOK).amount(9),
+				ItemCreator.regular(BOOK).amount(9),
+				ItemCreator.regular(BOOK).amount(9),
+				ItemCreator.regular(BOOK).amount(9),
+				ItemCreator.regular(BOOK).amount(9),
+
+				ItemCreator.regular(OBSIDIAN).amount(10),
+				ItemCreator.regular(OBSIDIAN).amount(10),
+				ItemCreator.regular(OBSIDIAN).amount(10),
+				ItemCreator.regular(OBSIDIAN).amount(10),
+				ItemCreator.regular(OBSIDIAN).amount(10),
+				ItemCreator.regular(OBSIDIAN).amount(10),
+
+				ItemCreator.regular(ANVIL),
+				ItemCreator.regular(ENCHANTING_TABLE),
+				ItemCreator.regular(BREWING_STAND),
+				ItemCreator.regular(BLAST_FURNACE).amount(8),
+
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+
+				CarePackagesItems.regenerationStew,
+				CarePackagesItems.regenerationStew,
+				CarePackagesItems.regenerationStew,
+				CarePackagesItems.regenerationStew,
+				CarePackagesItems.regenerationStew,
+				CarePackagesItems.regenerationStew,
+				CarePackagesItems.regenerationStew,
+				CarePackagesItems.regenerationStew,
+
+				CarePackagesItems.elytraRocket,
+				CarePackagesItems.elytraRocket,
+
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+
+				ItemCreator.regular(SPYGLASS),
+				ItemCreator.regular(SPYGLASS),
+
+				/* brewing ingredients */
+				ItemCreator.regular(GLISTERING_MELON_SLICE).amount(2),
+				ItemCreator.regular(GLISTERING_MELON_SLICE).amount(2),
+				ItemCreator.regular(GLISTERING_MELON_SLICE).amount(2),
+				ItemCreator.regular(GHAST_TEAR).amount(2),
+				ItemCreator.regular(GHAST_TEAR).amount(2),
+				ItemCreator.regular(GHAST_TEAR).amount(2),
+				ItemCreator.regular(SPIDER_EYE).amount(2),
+				ItemCreator.regular(SPIDER_EYE).amount(2),
+				ItemCreator.regular(FERMENTED_SPIDER_EYE).amount(2),
+				ItemCreator.regular(FERMENTED_SPIDER_EYE).amount(2),
+				ItemCreator.regular(GUNPOWDER).amount(5),
+				ItemCreator.regular(GUNPOWDER).amount(5),
+				ItemCreator.regular(GUNPOWDER).amount(5),
+				ItemCreator.regular(GLOWSTONE).amount(12),
+				ItemCreator.regular(GLOWSTONE).amount(12),
+				ItemCreator.regular(GLOWSTONE).amount(12),
+				ItemCreator.regular(BLAZE_ROD).amount(1),
+				ItemCreator.regular(BLAZE_ROD).amount(1),
+				ItemCreator.regular(BLAZE_ROD).amount(1),
+				ItemCreator.regular(NETHER_WART).amount(4),
+				ItemCreator.regular(NETHER_WART).amount(4),
+				ItemCreator.regular(NETHER_WART).amount(4),
+				ItemCreator.regular(NETHER_WART).amount(4),
+
+				Brew.externalCreatePotion(SPLASH_POTION, Brew.POISON_INFO, true, false),
+				Brew.externalCreatePotion(SPLASH_POTION, Brew.WEAKNESS_INFO, true, false),
+				Brew.externalCreatePotion(SPLASH_POTION, Brew.REGEN_INFO, true, false),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(INSTANT_HEAL, false, true)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(INSTANT_HEAL, false, true)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(INSTANT_HEAL, false, true)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(FIRE_RESISTANCE, true, false)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(SPEED, false, true)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(JUMP, false, true)),
 			),
-			arrayOf(
-				LootEntry { ItemStack(WATER_BUCKET) },
-				LootEntry { ItemStack(LAVA_BUCKET) },
-				LootEntry { CarePackageUtil.randomArmor(false) },
-				LootEntry { CarePackageUtil.randomArmor(false) },
-				LootEntry { CarePackageUtil.randomArmor(false) },
-				LootEntry { CarePackageUtil.randomArmor(true) },
-				LootEntry { CarePackageUtil.randomArmor(true) },
-				LootEntry { CarePackageUtil.randomItem(BROWN_MUSHROOM, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(RED_MUSHROOM, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(OXEYE_DAISY, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(LEATHER, 4, 8) },
-				LootEntry { CarePackageUtil.randomItem(PAPER, 6, 9) },
-				LootEntry { CarePackageUtil.randomItem(BOOK, 1, 2) },
-				LootEntry { CarePackageUtil.randomItem(BOOKSHELF, 2) },
-				LootEntry { CarePackageUtil.randomItem(MELON_SLICE, 2) },
-				LootEntry { CarePackageUtil.regenerationStew() },
-				LootEntry { CarePackageUtil.randomBottlePart() },
-				LootEntry { CarePackageUtil.randomBottlePart() },
-				LootEntry { CarePackageUtil.randomItem(LEATHER, 4, 8) },
-				LootEntry { CarePackageUtil.randomBrewingIngredient() },
-				LootEntry { CarePackageUtil.randomBrewingIngredient() },
-				LootEntry { CarePackageUtil.randomBrewingIngredient() },
-				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
-				LootEntry { CarePackageUtil.randomEnchantedBook(false) },
-				LootEntry { CarePackageUtil.randomEnchantedBook(true) },
-				LootEntry { CarePackageUtil.superSwaggyPants() },
-				LootEntry { ItemStack(NETHER_WART, pickOne(1, 2)) },
-				LootEntry { ItemStack(NETHER_WART, pickOne(1, 2)) },
-				LootEntry { ItemStack(BLAZE_ROD, 2) },
-				LootEntry { ItemStack(BLAZE_ROD, 2) },
-				LootEntry { ItemStack(REDSTONE, pickOne(2, 4)) },
-				LootEntry { ItemStack(REDSTONE, pickOne(2, 4)) },
-				LootEntry { ItemStack(GUNPOWDER, pickOne(2, 4)) },
-				LootEntry { ItemStack(GUNPOWDER, pickOne(2, 4)) },
-				LootEntry { CarePackageUtil.glowstone() },
-				LootEntry { CarePackageUtil.glowstone() },
-				LootEntry { ItemStack(OBSIDIAN, pickOne(3, 4, 10)) },
-				LootEntry { ItemStack(OBSIDIAN, pickOne(3, 4, 10)) },
-				LootEntry { ItemStack(OBSIDIAN, pickOne(3, 4, 10)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { CarePackageUtil.randomItem(FLINT, 5, 10) },
-				LootEntry { CarePackageUtil.randomItem(FLINT, 5, 10) },
-				LootEntry { CarePackageUtil.randomItem(FEATHER, 4, 9) },
-				LootEntry { CarePackageUtil.randomItem(FEATHER, 4, 9) },
-				LootEntry { CarePackageUtil.randomItem(ARROW, 10, 15) },
-				LootEntry { CarePackageUtil.randomItem(ARROW, 10, 15) },
-				LootEntry { CarePackageUtil.randomItem(ENDER_PEARL, 4, 6) },
-				LootEntry { CarePackageUtil.randomItem(SPECTRAL_ARROW, 10, 15) },
-				LootEntry { CarePackageUtil.powerBow(1) },
-				LootEntry { CarePackageUtil.powerBow(1) },
-				LootEntry { CarePackageUtil.piercingCrossbow() },
-				LootEntry { CarePackageUtil.piercingCrossbow() },
-				LootEntry { CarePackageUtil.randomItem(APPLE, 2, 4) },
-				LootEntry { CarePackageUtil.randomItem(GOLDEN_APPLE, 1, 2) },
-				LootEntry { CarePackageUtil.randomItem(GOLDEN_APPLE, 1, 2) },
-				LootEntry { CarePackageUtil.randomItem(STRING, 2, 3) },
-				LootEntry { CarePackageUtil.randomAxe(false) },
-				LootEntry { CarePackageUtil.randomAxe(true) },
-				LootEntry { CarePackageUtil.randomSword(false) },
-				LootEntry { CarePackageUtil.randomSword(true) },
-				LootEntry { CarePackageUtil.randomPick(false) },
-				LootEntry { CarePackageUtil.randomPick(true) },
-				LootEntry { CarePackageUtil.randomPotion(random) },
-				LootEntry { CarePackageUtil.randomPotion(random) },
-			),
-			arrayOf(
-				LootEntry { ItemStack(LAVA_BUCKET) },
-				LootEntry { CarePackageUtil.randomArmor(true) },
-				LootEntry { CarePackageUtil.randomArmor(true) },
-				LootEntry { CarePackageUtil.randomArmor(true) },
-				LootEntry { CarePackageUtil.randomArmor(true) },
-				LootEntry { CarePackageUtil.randomItem(BOOK, 4) },
-				LootEntry { CarePackageUtil.randomItem(BOOKSHELF, 2) },
-				LootEntry { CarePackageUtil.randomBottlePart() },
-				LootEntry { CarePackageUtil.randomBottlePart() },
-				LootEntry { CarePackageUtil.randomBrewingIngredient() },
-				LootEntry { CarePackageUtil.randomBrewingIngredient() },
-				LootEntry { CarePackageUtil.randomBrewingIngredient() },
-				LootEntry { CarePackageUtil.randomBrewingIngredient() },
-				LootEntry { CarePackageUtil.randomEnchantedBook(true) },
-				LootEntry { CarePackageUtil.randomEnchantedBook(true) },
-				LootEntry { CarePackageUtil.randomEnchantedBook(true) },
-				LootEntry { ItemStack(NETHER_WART, pickOne(1, 2)) },
-				LootEntry { ItemStack(NETHER_WART, pickOne(1, 2)) },
-				LootEntry { ItemStack(NETHER_WART, pickOne(1, 2)) },
-				LootEntry { ItemStack(BLAZE_ROD, 2) },
-				LootEntry { ItemStack(BLAZE_ROD, 2) },
-				LootEntry { ItemStack(BLAZE_ROD, 2) },
-				LootEntry { ItemStack(REDSTONE, pickOne(2, 4)) },
-				LootEntry { ItemStack(REDSTONE, pickOne(2, 4)) },
-				LootEntry { ItemStack(REDSTONE, pickOne(2, 4)) },
-				LootEntry { ItemStack(GUNPOWDER, pickOne(2, 4)) },
-				LootEntry { ItemStack(GUNPOWDER, pickOne(2, 4)) },
-				LootEntry { ItemStack(GUNPOWDER, pickOne(2, 4)) },
-				LootEntry { CarePackageUtil.glowstone() },
-				LootEntry { CarePackageUtil.glowstone() },
-				LootEntry { CarePackageUtil.glowstone() },
-				LootEntry { ItemStack(OBSIDIAN, pickOne(3, 4, 10)) },
-				LootEntry { ItemStack(OBSIDIAN, pickOne(3, 4, 10)) },
-				LootEntry { ItemStack(OBSIDIAN, pickOne(3, 4, 10)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { ItemStack(EXPERIENCE_BOTTLE, pickOne(14, 18, 22)) },
-				LootEntry { CarePackageUtil.randomItem(FLINT, 5, 10) },
-				LootEntry { CarePackageUtil.randomItem(FEATHER, 4, 9) },
-				LootEntry { CarePackageUtil.randomItem(ARROW, 10, 15) },
-				LootEntry { CarePackageUtil.randomItem(ENDER_PEARL, 4, 6) },
-				LootEntry { CarePackageUtil.randomItem(ENDER_PEARL, 4, 6) },
-				LootEntry { CarePackageUtil.randomItem(SPECTRAL_ARROW, 10, 15) },
-				LootEntry { CarePackageUtil.randomItem(SPECTRAL_ARROW, 10, 15) },
-				LootEntry { CarePackageUtil.powerBow(1) },
-				LootEntry { CarePackageUtil.powerBow(2) },
-				LootEntry { CarePackageUtil.piercingCrossbow() },
-				LootEntry { CarePackageUtil.piercingCrossbow() },
-				LootEntry { CarePackageUtil.randomItem(GOLDEN_APPLE, 1, 2) },
-				LootEntry { CarePackageUtil.randomItem(GOLDEN_APPLE, 1, 2) },
-				LootEntry { CarePackageUtil.randomAxe(true) },
-				LootEntry { CarePackageUtil.randomAxe(true) },
-				LootEntry { CarePackageUtil.randomSword(true) },
-				LootEntry { CarePackageUtil.randomSword(true) },
-				LootEntry { CarePackageUtil.randomPick(true) },
-				LootEntry { CarePackageUtil.randomPick(true) },
-				LootEntry { CarePackageUtil.randomPotion(random) },
-				LootEntry { CarePackageUtil.randomPotion(random) },
-				LootEntry { CarePackageUtil.randomPotion(random) },
+			arrayOf<ItemCreator>(
+				CarePackagesItems.helmet,
+				CarePackagesItems.chestplate,
+				CarePackagesItems.leggings,
+				CarePackagesItems.boots,
+
+				CarePackagesItems.sword1,
+				CarePackagesItems.sword1,
+				CarePackagesItems.axe1,
+				CarePackagesItems.axe1,
+				CarePackagesItems.shredderBow,
+				CarePackagesItems.crossbow1,
+				CarePackagesItems.crossbow1,
+
+				CarePackagesItems.enchantedBook,
+				CarePackagesItems.enchantedBook,
+				CarePackagesItems.enchantedBook,
+				CarePackagesItems.enchantedBook,
+
+				ItemCreator.regular(ARROW).amount(16),
+				ItemCreator.regular(ARROW).amount(16),
+				ItemCreator.regular(ARROW).amount(16),
+				ItemCreator.regular(ARROW).amount(16),
+
+				ItemCreator.regular(SPECTRAL_ARROW).amount(16),
+				ItemCreator.regular(SPECTRAL_ARROW).amount(16),
+				ItemCreator.regular(SPECTRAL_ARROW).amount(16),
+				ItemCreator.regular(SPECTRAL_ARROW).amount(16),
+
+				CarePackagesItems.poisonTippedArrow,
+				CarePackagesItems.poisonTippedArrow,
+				CarePackagesItems.slownessTippedArrow,
+				CarePackagesItems.slownessTippedArrow,
+				CarePackagesItems.weaknessTippedArrow,
+				CarePackagesItems.weaknessTippedArrow,
+
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+				ItemCreator.regular(EXPERIENCE_BOTTLE).amount(32),
+
+				ItemCreator.regular(BOOK).amount(9),
+				ItemCreator.regular(BOOK).amount(9),
+				ItemCreator.regular(BOOK).amount(9),
+				ItemCreator.regular(BOOK).amount(9),
+
+				ItemCreator.regular(OBSIDIAN).amount(10),
+				ItemCreator.regular(OBSIDIAN).amount(10),
+				ItemCreator.regular(OBSIDIAN).amount(10),
+				ItemCreator.regular(OBSIDIAN).amount(10),
+
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+				ItemCreator.regular(GOLDEN_APPLE),
+
+				/* op items */
+				ItemCreator.regular(GHAST_SPAWN_EGG).amount(3),
+				ItemCreator.regular(ELYTRA),
+				ItemCreator.regular(TOTEM_OF_UNDYING),
+				KillReward.uhcAppleCreator,
+				Brew.externalCreatePotion(SPLASH_POTION, Brew.STRENGTH_INFO, true, false).name(
+					Util.gradientString("Illegal Substance", TextColor.color(0xe8e854), TextColor.color(0xa86007))
+				),
+
+				CarePackagesItems.regenerationStew,
+				CarePackagesItems.regenerationStew,
+
+				CarePackagesItems.elytraRocket,
+				CarePackagesItems.elytraRocket,
+				CarePackagesItems.elytraRocket,
+				CarePackagesItems.elytraRocket,
+				CarePackagesItems.elytraRocket,
+
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+				ItemCreator.regular(ENDER_PEARL).amount(3),
+
+				/* brewing ingredients */
+				ItemCreator.regular(GLISTERING_MELON_SLICE).amount(2),
+				ItemCreator.regular(GLISTERING_MELON_SLICE).amount(2),
+				ItemCreator.regular(GHAST_TEAR).amount(2),
+				ItemCreator.regular(GHAST_TEAR).amount(2),
+				ItemCreator.regular(SPIDER_EYE).amount(2),
+				ItemCreator.regular(FERMENTED_SPIDER_EYE).amount(2),
+				ItemCreator.regular(GUNPOWDER).amount(5),
+				ItemCreator.regular(GLOWSTONE).amount(12),
+				ItemCreator.regular(BLAZE_ROD).amount(1),
+				ItemCreator.regular(NETHER_WART).amount(4),
+				ItemCreator.regular(NETHER_WART).amount(4),
+
+				Brew.externalCreatePotion(SPLASH_POTION, Brew.POISON_INFO, true, false),
+				Brew.externalCreatePotion(SPLASH_POTION, Brew.WEAKNESS_INFO, true, false),
+				Brew.externalCreatePotion(SPLASH_POTION, Brew.REGEN_INFO, true, false),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(INSTANT_HEAL, false, true)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(INSTANT_HEAL, false, true)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(INSTANT_HEAL, false, true)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(FIRE_RESISTANCE, true, false)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(SPEED, false, true)),
+				Brew.createDefaultPotion(SPLASH_POTION, PotionData(JUMP, false, true)),
 			)
 		)
 
 		val spireAmounts = arrayOf(
-			arrayOf(SPIRE_COAL, SPIRE_COAL, SPIRE_IRON, SPIRE_IRON),
-			arrayOf(SPIRE_IRON, SPIRE_IRON, SPIRE_GOLD, SPIRE_LAPIS),
-			arrayOf(SPIRE_IRON, SPIRE_GOLD, SPIRE_LAPIS, SPIRE_DIAMOND)
+			arrayOf(SPIRE_IRON, SPIRE_GOLD, SPIRE_LAPIS, SPIRE_DIAMOND),
+			arrayOf(SPIRE_GOLD, SPIRE_LAPIS, SPIRE_DIAMOND, SPIRE_DIAMOND)
 		)
 
 		fun generateLoot(tier: Int, inventories: ArrayList<Inventory>) {
-			val usingEntries = chestEntries[tier].toMutableList() as ArrayList<LootEntry>
+			val usingEntries = chestEntries[tier].toMutableList()
 			usingEntries.shuffle()
 
 			val perChest = usingEntries.size / inventories.size
@@ -412,11 +467,9 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 			for (i in usingEntries.indices) {
 				val inventoryIndex = (i / perChest).coerceAtMost(inventories.lastIndex)
 
-				ItemUtil.randomAddInventory(inventories[inventoryIndex], usingEntries[i].makeStack())
+				ItemUtil.randomAddInventory(inventories[inventoryIndex], usingEntries[i].create())
 			}
 		}
-
-		class XZReturn(val x: Int, val z: Int)
 
 		fun dropTextColor(tier: Int): ChatColor {
 			return when (tier) {
@@ -485,68 +538,6 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 			return inventoryList
 		}
 
-		fun placeSugarcane(world: World, x: Int, z: Int, height: Int): Boolean {
-			fun placable(block: Block): Boolean {
-				return block.type == GRASS_BLOCK ||
-				block.type == STONE ||
-				block.type == DIRT ||
-				block.type == SAND ||
-				block.type == RED_SAND ||
-				block.type == PODZOL
-			}
-
-			for (y in 255 downTo 0) {
-				val block = world.getBlockAt(x, y, z)
-
-				if (block.type == SUGAR_CANE || block.type == WATER || block.type == LAVA) return false
-
-				if (!block.isPassable) {
-					if (placable(block)) {
-						return if (
-							!block.getRelative(BlockFace.WEST).isPassable &&
-							!block.getRelative(BlockFace.EAST).isPassable &&
-							!block.getRelative(BlockFace.NORTH).isPassable &&
-							!block.getRelative(BlockFace.SOUTH).isPassable
-						) {
-							val placeDirection = BlockFace.values()[Random.nextInt(4)]
-
-							var baseBlock = block.getRelative(placeDirection)
-
-							block.setType(WATER, false)
-							baseBlock.setType(SAND, false)
-
-							for (i in 0 until height) {
-								baseBlock = baseBlock.getRelative(BlockFace.UP)
-								baseBlock.setType(SUGAR_CANE, false)
-							}
-
-							true
-
-						} else {
-							false
-						}
-					} else {
-						return false
-					}
-				}
-			}
-
-			return false
-		}
-
-		fun sugarcanePlacement(world: World, centerX: Int, centerZ: Int, placeRadius: Int, numSugarcane: Int) {
-			for (i in 0 until numSugarcane) {
-				val height = Random.nextInt(2, 5)
-
-				for (attempt in 0 until 10) {
-					val x = Random.nextInt(centerX - placeRadius, centerX + placeRadius + 1)
-					val z = Random.nextInt(centerZ - placeRadius, centerZ + placeRadius + 1)
-
-					if (placeSugarcane(world, x, z, height)) break
-				}
-			}
-		}
-
 		fun generateDrop(tier: Int, location: Location) {
 			val world = location.world
 
@@ -556,7 +547,6 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 			val z = location.blockZ
 
 			spirePlacement(world, x, z, radius, spireAmounts[tier])
-			sugarcanePlacement(world, x, z, radius, 9)
 			generateLoot(tier, chestPlacement(world, x, z, radius, 5, tier))
 
 			Bukkit.getOnlinePlayers().forEach { player ->

@@ -17,8 +17,7 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 
 class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
-	val random = Random(game.world.seed)
-	private val itemsList = genItemsList(random, CarePackageUtil.genReferenceItems(random))
+	private val itemsList = genItemsList(CarePackageUtil.genReferenceItems())
 
 	val PER_CHEST = 13
 	val NUM_DROPS = ceil(itemsList.size / 13.0).toInt()
@@ -82,7 +81,7 @@ class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 
 					val inventory = CarePackageUtil.generateChest(game.world,
 						block,
-						ChatColor.values()[random.nextInt(ChatColor.MAGIC.ordinal)])
+						ChatColor.values()[Random.nextInt(ChatColor.MAGIC.ordinal)])
 
 					chestSlots(PER_CHEST) { index, slot ->
 						val itemIndex = index + dropNum * PER_CHEST
@@ -113,19 +112,19 @@ class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 		val maxRadius = (((world.worldBorder.size - 1.0) / 2.0) - 10.0).roundToInt()
 		val minRadius = game.config.endgameRadius.get()
 
-		return when (random.nextInt(4)) {
+		return when (Random.nextInt(4)) {
 			0 -> CarePackageUtil.dropBlock(world,
-				random.nextInt(-maxRadius, minRadius),
-				random.nextInt(-maxRadius, -minRadius))
+				Random.nextInt(-maxRadius, minRadius),
+				Random.nextInt(-maxRadius, -minRadius))
 			1 -> CarePackageUtil.dropBlock(world,
-				random.nextInt(minRadius, maxRadius),
-				random.nextInt(-maxRadius, minRadius))
+				Random.nextInt(minRadius, maxRadius),
+				Random.nextInt(-maxRadius, minRadius))
 			2 -> CarePackageUtil.dropBlock(world,
-				random.nextInt(-minRadius, maxRadius),
-				random.nextInt(minRadius, maxRadius))
+				Random.nextInt(-minRadius, maxRadius),
+				Random.nextInt(minRadius, maxRadius))
 			else -> CarePackageUtil.dropBlock(world,
-				random.nextInt(-maxRadius, -minRadius),
-				random.nextInt(-minRadius, maxRadius))
+				Random.nextInt(-maxRadius, -minRadius),
+				Random.nextInt(-minRadius, maxRadius))
 		}
 	}
 
@@ -135,12 +134,12 @@ class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 		for (i in 0 until num) on(i, slots[i])
 	}
 
-	fun genItemsList(random: Random, reference: Array<CarePackageUtil.ItemReference>): ArrayList<ItemCreator> {
+	fun genItemsList(reference: Array<CarePackageUtil.ItemReference>): ArrayList<ItemCreator> {
 		val generates = ArrayList<ItemCreator>(256)
 
 		reference.forEach { playerItem ->
 			while (playerItem.remaining > 0) {
-				val amount = random.nextInt(playerItem.min, playerItem.max + 1).coerceAtMost(playerItem.remaining)
+				val amount = Random.nextInt(playerItem.min, playerItem.max + 1).coerceAtMost(playerItem.remaining)
 				generates.add(playerItem.create.amount(amount))
 				playerItem.remaining -= amount
 			}
