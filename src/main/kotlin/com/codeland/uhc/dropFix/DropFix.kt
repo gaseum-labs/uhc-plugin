@@ -1,6 +1,7 @@
 package com.codeland.uhc.dropFix
 
 import com.codeland.uhc.UHCPlugin
+import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
@@ -69,8 +70,16 @@ class DropFix(
 		})
 	}
 
+	val preserve = listOf(
+		*Material.values().filter(Material::isRecord).toTypedArray(),
+		Material.CREEPER_HEAD,
+		Material.ZOMBIE_HEAD,
+		Material.SKELETON_SKULL,
+		Material.WITHER_SKELETON_SKULL,
+	)
+
 	fun onDeath(entity: Entity, killer: Player?, drops: MutableList<ItemStack>) {
-		drops.clear()
+		drops.removeIf { it.type !in preserve }
 
 		val looting = killer?.inventory?.itemInMainHand?.itemMeta?.enchants?.asIterable()?.firstOrNull { enchant ->
 			enchant.key == Enchantment.LOOT_BONUS_MOBS
