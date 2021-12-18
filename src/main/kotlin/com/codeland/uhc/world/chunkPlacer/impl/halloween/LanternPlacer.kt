@@ -1,5 +1,6 @@
 package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
+import com.codeland.uhc.util.extensions.RandomExtensions.chance
 import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.data.Orientable
@@ -33,7 +34,7 @@ class LanternPlacer : ChunkPlacer(1, 2) {
 					}
 
 					val lanternBlock = block.getRelative(0, -chainSize - 1, 0)
-					lanternBlock.setType(if (Math.random() < 0.5) Material.LANTERN else Material.SOUL_LANTERN, false)
+					lanternBlock.setType(if (Random.chance(0.5)) Material.LANTERN else Material.SOUL_LANTERN, false)
 
 					val lanternData = lanternBlock.blockData as Lantern
 					lanternData.isHanging = true

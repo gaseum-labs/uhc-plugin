@@ -5,6 +5,7 @@ import com.codeland.uhc.core.Game
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.SchedulerUtil
+import com.codeland.uhc.util.extensions.RandomExtensions.chance
 import org.bukkit.Bukkit
 import org.bukkit.Material.*
 import org.bukkit.Sound
@@ -12,6 +13,7 @@ import org.bukkit.entity.*
 import org.bukkit.entity.EntityType.*
 import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.inventory.ItemStack
+import kotlin.random.Random
 
 class Halloween(type: QuirkType, game: Game) : Quirk(type, game) {
 	var hasGottenDiamonds = false
@@ -20,7 +22,7 @@ class Halloween(type: QuirkType, game: Game) : Quirk(type, game) {
 
 	override fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
 		if (entity is Monster) {
-			val random = Math.random()
+			val random = Random.nextDouble()
 
 			val candy = when {
 				random < 0.025 -> ItemStack(CAKE)
@@ -34,7 +36,7 @@ class Halloween(type: QuirkType, game: Game) : Quirk(type, game) {
 			if (candy != null) drops.add(candy)
 		}
 
-		if (entity is LivingEntity && Math.random() < 0.25) {
+		if (entity is LivingEntity && Random.chance(0.25)) {
 			entity.world.spawnEntity(entity.location, BAT, CreatureSpawnEvent.SpawnReason.CUSTOM)
 		}
 
@@ -45,14 +47,14 @@ class Halloween(type: QuirkType, game: Game) : Quirk(type, game) {
 		//TODO make these work again
 		fun onEntitySpawn(entity: Entity) {
 			if (entity as? LivingEntity != null) {
-				entity.equipment?.helmet = ItemStack(if (Math.random() < 0.5) CARVED_PUMPKIN else JACK_O_LANTERN)
+				entity.equipment?.helmet = ItemStack(if (Random.chance(0.5)) CARVED_PUMPKIN else JACK_O_LANTERN)
 				entity.equipment?.helmetDropChance = 0.25f
 			}
 		}
 
 		fun replaceSpawn(entity: Entity): Boolean {
 			return if (entity is Monster && entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.NATURAL) {
-				if (Math.random() < 0.01) {
+				if (Random.chance(0.01)) {
 					entity.world.spawnEntity(entity.location, WITCH)
 					true
 

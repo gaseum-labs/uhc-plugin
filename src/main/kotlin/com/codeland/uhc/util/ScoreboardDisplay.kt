@@ -72,9 +72,7 @@ class ScoreboardDisplay(val name: String, var size: Int) {
 		}
 
 		fun randomObjectiveID(): String {
-			val random = Random((Math.random() * Int.MAX_VALUE).toInt())
-
-			return String(CharArray(16) { chars[random.nextInt(0, chars.size)] })
+			return String(CharArray(16) { chars.random() })
 		}
 
 		fun generateTeamEntry(number: Int): String {

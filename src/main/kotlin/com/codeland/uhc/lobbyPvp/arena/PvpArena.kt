@@ -9,6 +9,7 @@ import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.math.*
+import kotlin.random.Random
 
 class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(ArenaType.PVP, teams) {
 	companion object {
@@ -116,7 +117,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 
 		val radius = ArenaManager.BORDER / 2.0f - ArenaManager.START_BUFFER
 
-		val startAngle = (Math.random() * PI * 2).toFloat()
+		val startAngle = Random.nextFloat(PI * 2)
 		val angleStride = PI.toFloat() * 2 / teams.size
 
 		val teamAngle = 2 * asin((ArenaManager.TEAM_BUFFER / 2.0f) / radius)

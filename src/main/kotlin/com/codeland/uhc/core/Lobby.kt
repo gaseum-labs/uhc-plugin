@@ -13,6 +13,7 @@ import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
+import kotlin.random.Random
 
 object Lobby {
 	val LOBBY_RADIUS = 64
@@ -75,7 +76,7 @@ object Lobby {
 			fun isFirst(time: Int) = (subTick / 20) % time == 0
 
 			fun tip(player: Player, playerData: PlayerData) {
-				if (isFirst(6)) playerData.loadingTip = (Math.random() * loadingTips.size).toInt()
+				if (isFirst(6)) playerData.loadingTip = Random.nextInt(loadingTips.size)
 
 				player.sendActionBar(Component.text("${GOLD}UHC Tips: $WHITE$BOLD${loadingTips[playerData.loadingTip]}"))
 			}

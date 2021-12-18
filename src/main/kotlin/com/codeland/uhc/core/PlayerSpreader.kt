@@ -23,7 +23,7 @@ object PlayerSpreader {
 		val minRadius = spreadRadius / 2
 
 		/* initial (i, j) within the 32 * 32 polar coordinate area is random */
-		var position = (Math.random() * 32 * 32).toInt()
+		var position = Random.nextInt(32 * 32)
 		for (iterator in 0 until 32 * 32) {
 			val i = position % 32
 			val j = position / 32
@@ -71,7 +71,7 @@ object PlayerSpreader {
 		for (i in 0 until 16) {
 			val location = findLocation(
 				world,
-				Math.random() * 2 * Math.PI,
+				Random.nextDouble(2 * Math.PI),
 				Math.PI * 0.9,
 				spreadRadius,
 				if (world.environment == World.Environment.NETHER) ::findYMid else ::findYTop

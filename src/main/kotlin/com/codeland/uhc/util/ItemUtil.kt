@@ -1,6 +1,7 @@
 package com.codeland.uhc.util
 
 import com.codeland.uhc.UHCPlugin
+import com.codeland.uhc.util.extensions.RandomExtensions.chance
 import io.papermc.paper.enchantments.EnchantmentRarity
 import net.kyori.adventure.text.Component
 import org.bukkit.*
@@ -35,8 +36,8 @@ object ItemUtil {
 		val builder = FireworkEffect.builder()
 
 		/* toggles */
-		builder.flicker(Math.random() < 0.5)
-		builder.trail(Math.random() < 0.5)
+		builder.flicker(Random.chance(0.5))
+		builder.trail(Random.chance(0.5))
 
 		/* effect type */
 		builder.with(type)
@@ -71,7 +72,7 @@ object ItemUtil {
 	val fakeEnchantment = FakeEnchantment()
 
 	fun randomAddInventory(inventory: Inventory, item: ItemStack) {
-		var space = (Math.random() * inventory.size).toInt()
+		var space = Random.nextInt(inventory.size)
 
 		while (inventory.getItem(space) != null) space = (space + 1) % inventory.size
 

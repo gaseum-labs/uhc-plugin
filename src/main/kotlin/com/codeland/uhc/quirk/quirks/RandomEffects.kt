@@ -9,6 +9,7 @@ import com.codeland.uhc.util.Action
 import org.bukkit.Bukkit
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import kotlin.random.Random
 
 class RandomEffects(type: QuirkType, game: Game) : Quirk(type, game) {
 	var time = 180
@@ -66,7 +67,7 @@ class RandomEffects(type: QuirkType, game: Game) : Quirk(type, game) {
 
 			/* shuffle array */
 			for (index in usingEffects.indices) {
-				val swapIndex = (Math.random() * effects.size).toInt()
+				val swapIndex = Random.nextInt(effects.size)
 
 				val temp = usingEffects[index]
 				usingEffects[index] = usingEffects[swapIndex]

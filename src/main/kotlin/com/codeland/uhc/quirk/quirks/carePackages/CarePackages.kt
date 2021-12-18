@@ -17,6 +17,7 @@ import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_IRON
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.SPIRE_LAPIS
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackageUtil.pickOne
 import com.codeland.uhc.util.*
+import com.codeland.uhc.util.extensions.RandomExtensions.nextFloat
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.*
 import org.bukkit.ChatColor.*
@@ -101,7 +102,7 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 
 	private fun generateDrops(): Boolean {
 		fun findLocations(findCurrentRadius: (Int) -> Double) {
-			val initialAngle = Math.random() * PI * 2
+			val initialAngle = Random.nextDouble(PI * 2)
 			val angleAdance = PI * 2 / NUM_DROPS
 
 			dropLocations = Array(NUM_DROPS) { i ->
@@ -488,13 +489,13 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 			numPlaces: Int,
 			onPlace: (Int, Int, Int) -> Unit,
 		) {
-			val initialAngle = Math.random() * PI * 2
+			val initialAngle = Random.nextDouble(PI * 2)
 			val angleIncrement = PI * 2 / numPlaces
 			val angleDeviance = angleIncrement / 4
 
 			for (i in 0 until numPlaces) {
-				val angle = initialAngle + i * angleIncrement + (Math.random() * angleDeviance * 2) - angleDeviance
-				val radius = (Math.random() * (maxRadius - minRadius)) + minRadius
+				val angle = initialAngle + i * angleIncrement + Random.nextDouble(-angleDeviance, angleDeviance)
+				val radius = Random.nextFloat(minRadius, maxRadius)
 
 				val x = (centerX + cos(angle) * radius).toInt()
 				val z = (centerZ + sin(angle) * radius).toInt()

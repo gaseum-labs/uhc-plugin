@@ -211,7 +211,7 @@ class ClassesEvents : Listener {
 					} else false
 				}
 
-				val offset = (Math.random() * 4).toInt()
+				val offset = Random.nextInt(4)
 				(0..3).any { slot -> tellSlot((slot + offset) % 4) }
 			}
 		}

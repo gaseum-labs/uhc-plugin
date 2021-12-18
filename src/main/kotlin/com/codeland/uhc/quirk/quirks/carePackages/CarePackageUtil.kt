@@ -6,6 +6,8 @@ import com.codeland.uhc.event.Brew.Companion.REGEN_INFO
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.ItemUtil
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.extensions.RandomExtensions.chance
+import com.codeland.uhc.util.extensions.RandomExtensions.nextFloat
 import org.bukkit.*
 import org.bukkit.Material.*
 import org.bukkit.block.*
@@ -30,10 +32,10 @@ object CarePackageUtil {
 	val SPIRE_DIAMOND = SpireData(DIAMOND_ORE, DIAMOND_ORE)
 
 	fun generateSpire(world: World, block: Block, maxRadius: Float, height: Int, spireData: SpireData) {
-		val magnitudeField = Array(9) { (Math.random() * 0.2 + 0.9).toFloat() }
+		val magnitudeField = Array(9) { Random.nextFloat(0.2f, 0.9f) }
 
 		fun fillBlock(block: Block) {
-			val random = Math.random()
+			val random = Random.nextDouble()
 
 			block.setType(when {
 				random < 1 / 16.0 -> spireData.ore
@@ -140,13 +142,13 @@ object CarePackageUtil {
 	}
 
 	fun randomItem(items: Array<Material>, vararg amounts: Array<Int>): ItemStack {
-		val index = (Math.random() * items.size).toInt()
+		val index = Random.nextInt(items.size)
 
 		return ItemStack(items[index], amounts[index][Random.nextInt(0, amounts[index].size)])
 	}
 
 	fun randomItem(material: Material, vararg amounts: Int): ItemStack {
-		return ItemStack(material, amounts[(Math.random() * amounts.size).toInt()])
+		return ItemStack(material, amounts.random())
 	}
 
 	private val bottlePossibilities =
@@ -186,7 +188,7 @@ object CarePackageUtil {
 
 	fun randomBucket(): ItemStack {
 		return when {
-			Math.random() < 0.5 -> ItemStack(LAVA_BUCKET)
+			Random.chance(0.5) -> ItemStack(LAVA_BUCKET)
 			else -> ItemStack(WATER_BUCKET)
 		}
 	}
@@ -389,10 +391,6 @@ object CarePackageUtil {
 		item.itemMeta = meta
 
 		return item
-	}
-
-	fun pickOne(vararg possibilities: Int): Int {
-		return possibilities[(Math.random() * possibilities.size).toInt()]
 	}
 
 	private val glowStonePossibilities =

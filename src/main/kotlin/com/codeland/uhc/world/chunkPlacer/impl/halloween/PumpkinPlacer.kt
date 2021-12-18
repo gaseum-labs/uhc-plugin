@@ -1,6 +1,7 @@
 package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.extensions.RandomExtensions.chance
 import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.BlockFace
@@ -21,10 +22,10 @@ class PumpkinPlacer : ChunkPlacer(3, 3) {
 
 				for (j in 0 until numPumpkins) {
 					var offX = Random.nextInt(1, 8)
-					if (Math.random() < 0.5) offX = -offX
+					if (Random.chance(0.5)) offX = -offX
 
 					var offZ = Random.nextInt(1, 8)
-					if (Math.random() < 0.5) offZ = -offZ
+					if (Random.chance(0.5)) offZ = -offZ
 
 					val y = findPumpkinY(chunk.world, x + offX, z + offZ)
 
@@ -39,11 +40,11 @@ class PumpkinPlacer : ChunkPlacer(3, 3) {
 	fun placePumpkin(world: World, x: Int, y: Int, z: Int) {
 		val block = world.getBlockAt(x, y, z)
 
-		block.setType(if (Math.random() < 0.5) Material.PUMPKIN else Material.CARVED_PUMPKIN, false)
+		block.setType(if (Random.chance(0.5)) Material.PUMPKIN else Material.CARVED_PUMPKIN, false)
 
 		if (block.type == Material.CARVED_PUMPKIN) {
 			val data = block.blockData as Directional
-			val random = Math.random()
+			val random = Random.nextDouble()
 
 			data.facing = when {
 				random < 0.25 -> BlockFace.EAST
