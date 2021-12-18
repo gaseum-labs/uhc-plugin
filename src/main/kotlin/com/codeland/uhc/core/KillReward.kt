@@ -5,6 +5,7 @@ import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
@@ -52,14 +53,7 @@ enum class KillReward(
 		"6 absorption hearts",
 		"Regenerates for 2 hearts"
 	), { _, _, location ->
-		location.world.dropItem(
-			location,
-			ItemCreator.fromType(Material.ENCHANTED_GOLDEN_APPLE)
-				.setData(uhcAppleKey, 1)
-				.name("${ChatColor.GOLD}UHC Apple")
-				.lore("6 absorption hearts", "2 regeneration hearts")
-				.create()
-		)
+		location.world.dropItem(location, uhcAppleCreator.create())
 	}),
 	NONE("None", Material.NETHER_WART, arrayOf(
 		"No reward on kill"
@@ -69,6 +63,11 @@ enum class KillReward(
 
 	companion object {
 		val uhcAppleKey = NamespacedKey(UHCPlugin.plugin, "_U_ua")
+
+		val uhcAppleCreator = ItemCreator.fromType(Material.ENCHANTED_GOLDEN_APPLE)
+			.setData(uhcAppleKey, 1)
+			.name("${GOLD}UHC Apple")
+			.lore("6 absorption hearts", "2 regeneration hearts")
 
 		fun forPlayer(uuid: UUID, team: ArrayList<UUID>, on: (Boolean, Player, List<Player>) -> Unit) {
 			val player = Bukkit.getPlayer(uuid) ?: return

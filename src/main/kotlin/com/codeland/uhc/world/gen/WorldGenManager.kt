@@ -2,6 +2,7 @@ package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.world.WorldGenOption
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.chunkManager.*
@@ -12,8 +13,7 @@ import net.minecraft.world.level.biome.*
 import net.minecraft.world.level.chunk.ChunkGenerator
 import net.minecraft.world.level.levelgen.ChunkGeneratorAbstract
 import net.minecraft.world.level.levelgen.GeneratorSettingBase
-import org.bukkit.Server
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import java.util.*
@@ -42,6 +42,7 @@ object WorldGenManager {
 	private val noiseCavesField = GeneratorSettingBase::class.java.getDeclaredField("s")
 	private val noodleCavesField = GeneratorSettingBase::class.java.getDeclaredField("u")
 	private val aquifersField = GeneratorSettingBase::class.java.getDeclaredField("r")
+	private val noChunkMobsField = GeneratorSettingBase::class.java.getDeclaredField("q")
 
 	init {
 		serverWorldsField.isAccessible = true
@@ -57,27 +58,32 @@ object WorldGenManager {
 		optionField.isAccessible = true
 		seedFieldMultiNoise.isAccessible = true
 		gField.isAccessible = true
+		xField.isAccessible = true
 		noiseCavesField.isAccessible = true
 		noodleCavesField.isAccessible = true
 		aquifersField.isAccessible = true
-		xField.isAccessible = true
+		noChunkMobsField.isAccessible = true
 	}
 
 	fun init(server: Server) {
 		/* replace worlds hashmap on server */
 		serverWorldsField[server] = object : HashMap<String, World>() {
 			override fun put(key: String, value: World): World? {
-				return if (onWorldAdded(value)) super.put(key, value) else null
+				if (key == WorldManager.END_WORLD_NAME || key == WorldManager.BAD_NETHER_WORLD_NAME) {
+					SchedulerUtil.nextTick { WorldManager.destroyWorld(key) }
+				}
+				onWorldAdded(value)
+				return super.put(key, value)
 			}
 		}
 	}
 
-	private fun onWorldAdded(world: World): Boolean {
-		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return false
+	private fun onWorldAdded(world: World) {
+		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return
 
 		val worldServer = worldServerField[world] as WorldServer
 		val chunkProviderServer = chunkProviderServerField[worldServer] as ChunkProviderServer
-		val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGenerator
+		val chunkGenerator = chunkGeneratorField[chunkProviderServer] as ChunkGeneratorAbstract
 
 		/* grab the existing chunk manager */
 		val oldChunkManager = worldChunkManagerBField[chunkGenerator]
@@ -94,7 +100,7 @@ object WorldGenManager {
 		}
 
 		/* the old world chunk manager is of a nonsupported type */
-		if (seed == null || biomeRegistry == null) return false
+		if (seed == null || biomeRegistry == null) return
 
 		val (biomeManager, featureManager) = when (world.name) {
 			WorldManager.GAME_WORLD_NAME -> {
@@ -135,12 +141,13 @@ object WorldGenManager {
 				noiseCavesField[customGeneratorSettings] = true
 				noodleCavesField[customGeneratorSettings] = true
 				aquifersField[customGeneratorSettings] = true
+				noChunkMobsField[customGeneratorSettings] = true
 
 				gField[chunkGenerator] = Supplier<GeneratorSettingBase> { customGeneratorSettings }
 			}
 
 			if (world.name != WorldManager.NETHER_WORLD_NAME) NoiseSamplerUHC.inject(
-				chunkGenerator as ChunkGeneratorAbstract,
+				chunkGenerator,
 				biomeManager,
 				if (world.name == WorldManager.GAME_WORLD_NAME) {
 					UHC.getConfig().worldGenEnabled(WorldGenOption.AMPLIFIED)
@@ -154,7 +161,5 @@ object WorldGenManager {
 			worldChunkManagerBField[chunkGenerator] = featureManager ?: biomeManager
 			worldChunkManagerCField[chunkGenerator] = biomeManager
 		}
-
-		return true
 	}
 }

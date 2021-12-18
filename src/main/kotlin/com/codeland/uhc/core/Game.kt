@@ -34,27 +34,7 @@ class Game(
 
 	var naturalRegeneration = UHCProperty(false)
 
-	var quirks = Array(QuirkType.values().size) { i ->
-		if (config.quirksEnabled[i].get()) {
-			QuirkType.values()[i].createQuirk(this)
-		} else {
-			null
-		}
-	}
-
-	init {
-		config.quirksEnabled.forEachIndexed { i, property ->
-			property.watch {
-				quirks[i] = if (property.get()) {
-					QuirkType.values()[i].createQuirk(this)
-				} else {
-					null
-				}
-			}
-		}
-	}
-
-	val startDate = ZonedDateTime.now()
+	val startDate: ZonedDateTime = ZonedDateTime.now()
 
 	val ledger = Ledger(initialRadius)
 
@@ -71,6 +51,27 @@ class Game(
 		endgameHighY = high
 	}
 
+	var quirks = Array(QuirkType.values().size) { i ->
+		if (config.quirksEnabled[i].get()) {
+			QuirkType.values()[i].createQuirk(this)
+		} else {
+			null
+		}
+	}
+
+	init {
+		config.quirksEnabled.forEachIndexed { i, property ->
+			property.watch {
+				quirks[i] = if (property.get()) {
+					QuirkType.values()[i].createQuirk(this)
+				} else {
+					quirks[i]?.onDestroy()
+					null
+				}
+			}
+		}
+	}
+	
 	/* getters */
 
 	fun <T : Quirk> getQuirk(quirkType: QuirkType): T? {

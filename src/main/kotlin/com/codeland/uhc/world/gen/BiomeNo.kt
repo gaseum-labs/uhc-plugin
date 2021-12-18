@@ -1,12 +1,11 @@
 package com.codeland.uhc.world.gen
 
-import it.unimi.dsi.fastutil.Hash
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import net.minecraft.core.IRegistry
 import net.minecraft.data.worldgen.biome.BiomeRegistry
 import net.minecraft.resources.MinecraftKey
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.level.biome.BiomeBase
-import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectMap
 
 object BiomeNo {
 	const val OCEAN = 0
@@ -103,7 +102,7 @@ object BiomeNo {
 
 		val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
 
-		val biomeRegistry = FeatureBiomes.biomeRegistryField[null] as IRegistry<BiomeBase>
+		val biomeRegistry = ModifiedBiomes.biomeRegistryField[null] as IRegistry<BiomeBase>
 
 		biomeMap.forEach { (id, resourceKey) ->
 			nameMap[nameField[minecraftKeyField[resourceKey]] as String] = id
@@ -117,5 +116,30 @@ object BiomeNo {
 
 	fun fromId(id: Int): BiomeBase? {
 		return idMap[id]
+	}
+
+	fun isNetherBiome(no: Int): Boolean {
+		return when (no) {
+			NETHER_WASTES,
+			SOUL_SAND_VALLEY,
+			CRIMSON_FOREST,
+			WARPED_FOREST,
+			BASALT_DELTAS,
+			-> true
+			else -> false
+		}
+	}
+
+	fun isBadlands(no: Int): Boolean {
+		return when (no) {
+			BADLANDS,
+			BADLANDS_PLATEAU,
+			WOODED_BADLANDS_PLATEAU,
+			MODIFIED_BADLANDS_PLATEAU,
+			MODIFIED_WOODED_BADLANDS_PLATEAU,
+			ERODED_BADLANDS,
+			-> true
+			else -> false
+		}
 	}
 }

@@ -11,6 +11,7 @@ import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.team.*
 import com.codeland.uhc.team.Team
 import com.codeland.uhc.util.*
+import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
@@ -45,7 +46,7 @@ object UHC {
 	lateinit var heartsObjective: Objective
 
 	/* 3 biomes times 6 chunks per biome times 16 blocks per chunk */
-	val areaPerPlayer = (3 * 6 * 16) * (3 * 6 * 16)
+	val areaPerTeam = (3 * 6 * 16) * (3 * 6 * 16)
 	fun area(radius: Float) = ((radius * 2) + 1).pow(2)
 	fun radius(area: Float) = (sqrt(area) - 1) / 2
 
@@ -213,21 +214,21 @@ object UHC {
 	 * @param messageStream send status messages and error messages to the caller,
 	 * true indicates an error
 	 */
-	fun startGame(messageStream: (Boolean, String) -> Unit): Boolean {
+	fun startGame(messageStream: (Boolean, String) -> Unit) {
 		if (game != null) {
-			messageStream(true, "Game has already started")
-			return false
+			return messageStream(true, "Game has already started")
 		}
 
-		val numPlayers = preGameTeams.teams().fold(0) { acc, team -> acc + team.members.size }
-		if (numPlayers == 0) {
-			messageStream(true, "No one is playing")
-			return false
+		val teams = preGameTeams.teams()
+
+		val numTeams = teams.size
+		if (numTeams == 0) {
+			return messageStream(true, "No one is playing")
 		}
 
-		messageStream(false, "Creating game worlds for $numPlayers player${if (numPlayers == 1) "" else "s"}")
+		messageStream(false, "Creating game worlds for $numTeams team${if (numTeams == 1) "" else "s"}")
 
-		worldRadius = radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer).toInt()
+		worldRadius = radius(numTeams * preGameConfig.scale.get() * areaPerTeam).toInt()
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
@@ -235,46 +236,36 @@ object UHC {
 		/* get where players are teleporting */
 		val (defaultWorld, otherWorld) = preGameConfig.getWorlds()
 		if (defaultWorld == null || otherWorld == null) {
-			messageStream(true, "Worlds did not initialize")
-			return false
+			return messageStream(true, "Worlds did not initialize")
 		}
 
-		val tempTeleportLocations = PlayerSpreader.spreadPlayers(
-			defaultWorld,
-			preGameTeams.teams().size,
-			worldRadius - 16.0,
-			if (defaultWorld.environment === World.Environment.NETHER) {
-				PlayerSpreader::findYMid
-			} else {
-				PlayerSpreader::findYTop
+		messageStream(false, "Finding starting locations")
+
+		PlayerSpreader.spreadPlayers(defaultWorld, worldRadius, teams).thenAccept { teleports ->
+			/* create the master map of teleport locations */
+			teleportGroups = HashMap()
+
+			for (i in teams.indices) {
+				val blockList = teleports[i]
+				teams[i].members.forEachIndexed { j, uuid ->
+					teleportGroups[uuid] = blockList[j].getRelative(0, 1, 0).location.add(0.5, 0.0, 0.5)
+				}
 			}
-		)
 
-		if (tempTeleportLocations.isEmpty()) {
-			messageStream(true, "Not enough valid starting locations found")
-			return false
+			timer = -11
+			countdownTimerGoing = true
+			preGameConfig.lock = true
+
+			messageStream(false, "Starting UHC")
+
+		}.exceptionally { ex ->
+			messageStream(true, "Could not start | ${ex.message}").void()
 		}
-
-		/* create the master map of teleport locations */
-		teleportGroups = HashMap()
-
-		preGameTeams.teams().forEachIndexed { i, team ->
-			team.members.forEach { uuid ->
-				teleportGroups[uuid] = tempTeleportLocations[i]
-			}
-		}
-
-		timer = -11
-		countdownTimerGoing = true
-		preGameConfig.lock = true
-
-		messageStream(false, "Starting UHC")
-
-		return true
 	}
 
 	fun destroyGame() {
 		game?.teams?.clearTeams()
+		game?.quirks?.forEach { quirk -> quirk?.onDestroy() }
 
 		game = null
 		preGameConfig = GameConfig()

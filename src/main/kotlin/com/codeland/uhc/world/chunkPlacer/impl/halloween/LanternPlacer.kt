@@ -1,12 +1,12 @@
 package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.data.Orientable
 import org.bukkit.block.data.type.Lantern
 import kotlin.random.Random
 
-class LanternPlacer(size: Int) : ImmediateChunkPlacer(size) {
+class LanternPlacer : ChunkPlacer(1, 2) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 20, 99) { block ->
 			if (!block.isPassable) {

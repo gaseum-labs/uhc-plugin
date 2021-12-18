@@ -1,15 +1,11 @@
 package com.codeland.uhc.world.chunkPlacer.impl.nether
 
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.Block
 import kotlin.random.Random
 
-class BasaltPlacer(size: Int) : DelayedChunkPlacer(size) {
-	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return chunkReadyAround(world, chunkX, chunkZ)
-	}
-
+class BasaltPlacer : ChunkPlacer(2, 2) {
 	fun border(block: Block): Boolean {
 		return block.type === Material.LAVA || block.type === Material.AIR
 	}

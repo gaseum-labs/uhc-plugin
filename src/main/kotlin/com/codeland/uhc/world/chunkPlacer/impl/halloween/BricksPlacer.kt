@@ -1,17 +1,13 @@
 package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-class BricksPlacer(size: Int) : DelayedChunkPlacer(size) {
-	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return chunkReadyAround(world, chunkX, chunkZ)
-	}
-
+class BricksPlacer : ChunkPlacer(7, 8) {
 	private val replaceable = arrayOf(
 		Material.STONE,
 		Material.DIRT,

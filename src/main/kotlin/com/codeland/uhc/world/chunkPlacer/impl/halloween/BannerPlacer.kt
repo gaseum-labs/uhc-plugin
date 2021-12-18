@@ -1,7 +1,7 @@
 package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.*
 import org.bukkit.block.banner.Pattern
@@ -9,11 +9,7 @@ import org.bukkit.block.banner.PatternType
 import org.bukkit.block.data.Directional
 import kotlin.random.Random
 
-class BannerPlacer(size: Int) : DelayedChunkPlacer(size) {
-	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return chunkReadyAround(world, chunkX, chunkZ)
-	}
-
+class BannerPlacer : ChunkPlacer(2, 5) {
 	override fun place(chunk: Chunk) {
 		randomPositionBool(chunk, 20, 80) { block ->
 			fun tryBanner(facing: BlockFace): Boolean {

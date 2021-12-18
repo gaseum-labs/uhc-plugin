@@ -1,12 +1,12 @@
 package com.codeland.uhc.world.chunkPlacer.impl.christmas
 
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Biome
 import org.bukkit.block.BlockFace
 
-class SnowPlacer(size: Int) : ImmediateChunkPlacer(size) {
+class SnowPlacer : ChunkPlacer(1, 1) {
 	override fun place(chunk: Chunk) {
 		for (x in 0..15) {
 			for (z in 0..15) {

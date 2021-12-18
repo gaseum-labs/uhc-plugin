@@ -12,6 +12,7 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.*
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.PlayerInfoData
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.EnumChatFormat
 import net.minecraft.network.chat.ChatComponentText
@@ -20,12 +21,12 @@ import net.minecraft.network.protocol.game.*
 import net.minecraft.network.protocol.status.PacketStatusOutServerInfo
 import net.minecraft.network.protocol.status.ServerPing
 import net.minecraft.network.syncher.*
+import net.minecraft.network.syncher.DataWatcher.Item
 import net.minecraft.world.inventory.Containers
 import net.minecraft.world.scores.Scoreboard
 import net.minecraft.world.scores.ScoreboardTeam
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.craftbukkit.libs.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
@@ -103,7 +104,7 @@ object Packet {
 	}
 
 	fun getDatawatcherByte(dataWatcher: DataWatcher): Byte {
-		val entries = entriesField[dataWatcher] as Int2ObjectOpenHashMap<DataWatcher.Item<Any>>
+		val entries = entriesField[dataWatcher] as Int2ObjectOpenHashMap<Item<Any>>
 		val item = entries[0] as DataWatcher.Item<Byte>
 		return item.b()
 	}

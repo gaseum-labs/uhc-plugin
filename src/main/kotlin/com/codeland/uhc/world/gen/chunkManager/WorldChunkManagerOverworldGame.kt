@@ -1,6 +1,7 @@
 package com.codeland.uhc.world.gen.chunkManager
 
-import com.codeland.uhc.world.gen.*
+import com.codeland.uhc.world.gen.BiomeNo
+import com.codeland.uhc.world.gen.ModifiedBiomesRegistry
 import com.codeland.uhc.world.gen.layer.game.*
 import net.minecraft.core.IRegistry
 import net.minecraft.data.worldgen.biome.BiomeRegistry
@@ -33,7 +34,7 @@ class WorldChunkManagerOverworldGame(
 
 	fun biomeFromInt(no: Int): BiomeBase {
 		return if (features) {
-			FeatureBiomes.biomes[no]!!
+			ModifiedBiomesRegistry.featureBiomes[no]!!
 		} else {
 			var4.d(BiomeRegistry.a(no))
 		}

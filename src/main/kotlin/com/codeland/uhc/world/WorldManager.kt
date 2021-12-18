@@ -2,9 +2,9 @@ package com.codeland.uhc.world
 
 import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
+import com.codeland.uhc.event.Generation
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.world.chunkPlacer.ChunkPlacerHolder
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
 import org.bukkit.*
 import java.io.File
 
@@ -33,11 +33,6 @@ object WorldManager {
 	fun init(): String? {
 		pvpWorld = recoverWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
 			?: return "PVP world could not be loaded"
-
-		Bukkit.unloadWorld(END_WORLD_NAME, false)
-		Bukkit.unloadWorld(BAD_NETHER_WORLD_NAME, false)
-		Bukkit.unloadWorld(GAME_WORLD_NAME, true)
-		Bukkit.unloadWorld(NETHER_WORLD_NAME, true)
 
 		lobbyWorld = Bukkit.getWorld(LOBBY_WORLD_NAME)
 			?: return "Lobby world could not be loaded"
@@ -81,13 +76,7 @@ object WorldManager {
 		world.animalSpawnLimit = 0
 		world.monsterSpawnLimit = 0
 
-		if (world.name == GAME_WORLD_NAME || world.name == NETHER_WORLD_NAME) {
-			ChunkPlacerHolder.values().forEach { (chunkPlacer) ->
-				if (chunkPlacer is DelayedChunkPlacer) {
-					chunkPlacer.clean()
-				}
-			}
-		}
+		Generation.cleanSuspended(world)
 
 		if (world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME) {
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)

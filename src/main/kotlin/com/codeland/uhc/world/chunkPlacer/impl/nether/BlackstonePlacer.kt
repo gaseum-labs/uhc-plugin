@@ -1,14 +1,14 @@
 package com.codeland.uhc.world.chunkPlacer.impl.nether
 
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.chunkPlacer.ImmediateChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import kotlin.random.Random
 
-class BlackstonePlacer : ImmediateChunkPlacer(1) {
+class BlackstonePlacer : ChunkPlacer(1, 1) {
 	override fun place(chunk: Chunk) {
 		val random = Random(chunk.world.seed.xor(chunk.chunkKey))
 

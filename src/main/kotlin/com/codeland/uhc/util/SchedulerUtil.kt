@@ -4,7 +4,6 @@ import com.codeland.uhc.UHCPlugin
 import org.bukkit.Bukkit
 
 object SchedulerUtil {
-
 	val plugin = UHCPlugin.plugin
 
 	fun nextTick(runnable: () -> Unit) {
@@ -30,5 +29,5 @@ object SchedulerUtil {
 				delayedFor(ticks, range.drop(1), runnable)
 			}, ticks)
 		}
-    }
+	}
 }

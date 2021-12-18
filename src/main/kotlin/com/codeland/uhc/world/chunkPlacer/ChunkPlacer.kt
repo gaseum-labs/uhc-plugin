@@ -5,42 +5,39 @@ import org.bukkit.Chunk
 import org.bukkit.block.Block
 import kotlin.random.Random
 
-abstract class AbstractChunkPlacer(val size: Int) {
+abstract class ChunkPlacer(val perSquare: Int, val squareSize: Int) {
 	abstract fun place(chunk: Chunk)
-	abstract fun onGenerate(chunk: Chunk, uniqueSeed: Long, worldSeed: Long)
 
-	companion object {
-		val random = Random(System.currentTimeMillis())
+	fun shouldGenerate(chunkX: Int, chunkZ: Int, uniqueSeed: Long, worldSeed: Long): Boolean {
+		if (squareSize == 1) return true
 
-		fun shouldGenerate(chunkX: Int, chunkZ: Int, seed0: Long, seed1: Long, size: Int): Boolean {
-			if (size == 1) return true
+		val baseX = Util.floorDiv(chunkX, squareSize)
+		val baseZ = Util.floorDiv(chunkZ, squareSize)
 
-			val baseX = Util.floorDiv(chunkX, size)
-			val baseZ = Util.floorDiv(chunkZ, size)
+		val random = Random(
+			uniqueSeed.xor(worldSeed.shl(32).or(worldSeed.ushr(32))).xor(baseX.toLong())
+				.xor(baseZ.toLong().shl(32).or(baseZ.toLong().ushr(32)))
+		)
 
-			val random = Random(
-				seed0.xor(seed1.shl(32).or(seed1.ushr(32))).xor(baseX.toLong())
-					.xor(baseZ.toLong().shl(32).or(baseZ.toLong().ushr(32)))
-			)
+		/* indexed by bits to see if this spot has been filled */
+		var filled = 0
 
-			/* indexed by bits to see if this spot has been filled */
-			var filled = 0
+		/* try n out of n*n spots, equates to 1/n chance of finding */
+		for (i in 0 until perSquare) {
+			var spot = random.nextInt(squareSize * squareSize)
+			while (filled.ushr(spot).and(1) == 1) spot = (spot + 1) % (squareSize * squareSize)
+			filled = filled.or(1.shl(spot))
 
-			/* try n out of n*n spots, equates to 1/n chance of finding */
-			for (i in 0 until size) {
-				var spot = random.nextInt(size * size)
-				while (filled.ushr(spot).and(1) == 1) spot = (spot + 1) % (size * size)
-				filled = filled.or(1.shl(spot))
-
-				/* found the index of this subchunk */
-				if (spot == Util.mod(chunkZ, size) * size + Util.mod(chunkX, size)) {
-					return true
-				}
+			/* found the index of this subchunk */
+			if (spot == Util.mod(chunkZ, squareSize) * squareSize + Util.mod(chunkX, squareSize)) {
+				return true
 			}
-
-			return false
 		}
 
+		return false
+	}
+
+	companion object {
 		private val xPos = Array(16) { it }
 		private val zPos = Array(16) { it }
 
@@ -94,6 +91,10 @@ abstract class AbstractChunkPlacer(val size: Int) {
 			}
 
 			return null
+		}
+
+		fun randomSinglePosition(chunk: Chunk, low: Int, high: Int): Block {
+			return chunk.getBlock(Random.nextInt(16), Random.nextInt(low, high + 1), Random.nextInt(16))
 		}
 	}
 }

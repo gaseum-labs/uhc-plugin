@@ -1,17 +1,13 @@
 package com.codeland.uhc.world.chunkPlacer.impl.halloween
 
 import com.codeland.uhc.util.Util
-import com.codeland.uhc.world.chunkPlacer.DelayedChunkPlacer
+import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import org.bukkit.*
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
 import kotlin.random.Random
 
-class PumpkinPlacer(size: Int) : DelayedChunkPlacer(size) {
-	override fun chunkReady(world: World, chunkX: Int, chunkZ: Int): Boolean {
-		return chunkReadyAround(world, chunkX, chunkZ)
-	}
-
+class PumpkinPlacer : ChunkPlacer(3, 3) {
 	override fun place(chunk: Chunk) {
 		for (i in 0 until 16 * 16) {
 			val x = chunk.x * 16 + i % 16

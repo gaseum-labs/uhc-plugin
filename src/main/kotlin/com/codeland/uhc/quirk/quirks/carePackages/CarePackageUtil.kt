@@ -488,11 +488,11 @@ object CarePackageUtil {
 		*crossbowEnchants
 	)
 
-	fun <T> randFrom(random: Random, arr: Array<T>): T {
-		return arr[random.nextInt(arr.size)]
+	fun <T> randFrom(arr: Array<T>): T {
+		return arr[Random.nextInt(arr.size)]
 	}
 
-	fun genReferenceItems(random: Random): Array<ItemReference> {
+	fun genReferenceItems(): Array<ItemReference> {
 		return arrayOf(
 			ItemReference(324, 18, 64, ItemCreator.regular(IRON_NUGGET)),
 			ItemReference(36, 2, 5, ItemCreator.regular(IRON_INGOT)),
@@ -501,62 +501,62 @@ object CarePackageUtil {
 			ItemReference(4, ItemCreator.regular(IRON_BLOCK)),
 			ItemReference(4, ItemCreator.regular(RAW_IRON_BLOCK)),
 
-			ItemReference(2, ItemCreator.regular(IRON_HOE).enchant(randFrom(random, toolEnchants))),
-			ItemReference(2, ItemCreator.regular(IRON_SHOVEL).enchant(randFrom(random, toolEnchants))),
-			ItemReference(2, ItemCreator.regular(IRON_PICKAXE).enchant(randFrom(random, toolEnchants))),
-			ItemReference(2, ItemCreator.regular(IRON_SWORD).enchant(randFrom(random, swordEnchants))),
-			ItemReference(2, ItemCreator.regular(IRON_AXE).enchant(randFrom(random, axeEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_HOE).enchant(randFrom(toolEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_SHOVEL).enchant(randFrom(toolEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_PICKAXE).enchant(randFrom(toolEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_SWORD).enchant(randFrom(swordEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_AXE).enchant(randFrom(axeEnchants))),
 
-			ItemReference(2, ItemCreator.regular(IRON_HELMET).enchant(randFrom(random, armorEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_HELMET).enchant(randFrom(armorEnchants))),
 			ItemReference(
 				2,
-				ItemCreator.regular(IRON_CHESTPLATE).enchant(randFrom(random, armorEnchants))
+				ItemCreator.regular(IRON_CHESTPLATE).enchant(randFrom(armorEnchants))
 			),
 			ItemReference(
 				2,
-				ItemCreator.regular(IRON_LEGGINGS).enchant(randFrom(random, armorEnchants))
+				ItemCreator.regular(IRON_LEGGINGS).enchant(randFrom(armorEnchants))
 			),
-			ItemReference(2, ItemCreator.regular(IRON_BOOTS).enchant(randFrom(random, armorEnchants))),
+			ItemReference(2, ItemCreator.regular(IRON_BOOTS).enchant(randFrom(armorEnchants))),
 
 			ItemReference(
 				2,
-				ItemCreator.regular(TURTLE_HELMET).enchant(randFrom(random, armorEnchants))
+				ItemCreator.regular(TURTLE_HELMET).enchant(randFrom(armorEnchants))
 			),
 
 			ItemReference(8, ItemCreator.regular(DIAMOND)),
 			ItemReference(8, ItemCreator.regular(DIAMOND_ORE)),
 			ItemReference(8, ItemCreator.regular(DEEPSLATE_DIAMOND_ORE)),
 
-			ItemReference(1, ItemCreator.regular(DIAMOND_HOE).enchant(randFrom(random, toolEnchants))),
+			ItemReference(1, ItemCreator.regular(DIAMOND_HOE).enchant(randFrom(toolEnchants))),
 			ItemReference(
 				1,
-				ItemCreator.regular(DIAMOND_SHOVEL).enchant(randFrom(random, toolEnchants))
+				ItemCreator.regular(DIAMOND_SHOVEL).enchant(randFrom(toolEnchants))
 			),
 			ItemReference(
 				1,
-				ItemCreator.regular(DIAMOND_PICKAXE).enchant(randFrom(random, toolEnchants))
+				ItemCreator.regular(DIAMOND_PICKAXE).enchant(randFrom(toolEnchants))
 			),
 			ItemReference(
 				1,
-				ItemCreator.regular(DIAMOND_SWORD).enchant(randFrom(random, swordEnchants))
+				ItemCreator.regular(DIAMOND_SWORD).enchant(randFrom(swordEnchants))
 			),
-			ItemReference(1, ItemCreator.regular(DIAMOND_AXE).enchant(randFrom(random, axeEnchants))),
+			ItemReference(1, ItemCreator.regular(DIAMOND_AXE).enchant(randFrom(axeEnchants))),
 
 			ItemReference(
 				1,
-				ItemCreator.regular(DIAMOND_HELMET).enchant(randFrom(random, armorEnchants))
+				ItemCreator.regular(DIAMOND_HELMET).enchant(randFrom(armorEnchants))
 			),
 			ItemReference(
 				1,
-				ItemCreator.regular(DIAMOND_CHESTPLATE).enchant(randFrom(random, armorEnchants))
+				ItemCreator.regular(DIAMOND_CHESTPLATE).enchant(randFrom(armorEnchants))
 			),
 			ItemReference(
 				1,
-				ItemCreator.regular(DIAMOND_LEGGINGS).enchant(randFrom(random, armorEnchants))
+				ItemCreator.regular(DIAMOND_LEGGINGS).enchant(randFrom(armorEnchants))
 			),
 			ItemReference(
 				1,
-				ItemCreator.regular(DIAMOND_BOOTS).enchant(randFrom(random, armorEnchants))
+				ItemCreator.regular(DIAMOND_BOOTS).enchant(randFrom(armorEnchants))
 			),
 
 			ItemReference(162, 9, 64, ItemCreator.regular(GOLD_NUGGET)),
@@ -573,7 +573,7 @@ object CarePackageUtil {
 			ItemReference(1, ItemCreator.regular(NETHER_STAR)),
 			ItemReference(2, ItemCreator.regular(COBWEB)),
 			ItemReference(2, ItemCreator.regular(ENDER_EYE)),
-			ItemReference(4, ItemCreator.regular(TRIDENT).enchant(randFrom(random, tridentEnchants))),
+			ItemReference(4, ItemCreator.regular(TRIDENT).enchant(randFrom(tridentEnchants))),
 
 			ItemReference(96, 4, 8, ItemCreator.regular(COAL)),
 			ItemReference(96, 4, 8, ItemCreator.regular(CHARCOAL)),
@@ -694,8 +694,8 @@ object CarePackageUtil {
 				}
 			),
 
-			ItemReference(3, ItemCreator.regular(BOW).enchant(randFrom(random, bowEnchants))),
-			ItemReference(3, ItemCreator.regular(CROSSBOW).enchant(randFrom(random, crossbowEnchants))),
+			ItemReference(3, ItemCreator.regular(BOW).enchant(randFrom(bowEnchants))),
+			ItemReference(3, ItemCreator.regular(CROSSBOW).enchant(randFrom(crossbowEnchants))),
 			ItemReference(3, ItemCreator.regular(CROSSBOW)),
 			ItemReference(32, 2, 3, ItemCreator.regular(STRING)),
 
@@ -746,7 +746,7 @@ object CarePackageUtil {
 
 			ItemReference(3, ItemCreator.regular(LIGHT_BLUE_SHULKER_BOX)),
 			ItemReference(18, ItemCreator.regular(ENCHANTED_BOOK).customMeta<EnchantmentStorageMeta> {
-				val (enchant, level) = randFrom(random, bookEnchants)
+				val (enchant, level) = randFrom(bookEnchants)
 				it.addStoredEnchant(enchant, level, true)
 			})
 		)
