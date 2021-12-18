@@ -61,7 +61,7 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 	 */
 
 	init {
-		if (UHC.game?.phase is Grace || UHC.game?.phase is Shrink) onStart()
+		if (game.phase is Grace || game.phase is Shrink) onStart()
 	}
 
 	override fun customDestroy() {

@@ -46,7 +46,7 @@ object UHC {
 	lateinit var heartsObjective: Objective
 
 	/* 3 biomes times 6 chunks per biome times 16 blocks per chunk */
-	val areaPerPlayer = (3 * 6 * 16) * (3 * 6 * 16)
+	val areaPerTeam = (3 * 6 * 16) * (3 * 6 * 16)
 	fun area(radius: Float) = ((radius * 2) + 1).pow(2)
 	fun radius(area: Float) = (sqrt(area) - 1) / 2
 
@@ -221,14 +221,14 @@ object UHC {
 
 		val teams = preGameTeams.teams()
 
-		val numPlayers = teams.fold(0) { acc, team -> acc + team.members.size }
-		if (numPlayers == 0) {
+		val numTeams = teams.size
+		if (numTeams == 0) {
 			return messageStream(true, "No one is playing")
 		}
 
-		messageStream(false, "Creating game worlds for $numPlayers player${if (numPlayers == 1) "" else "s"}")
+		messageStream(false, "Creating game worlds for $numTeams team${if (numTeams == 1) "" else "s"}")
 
-		worldRadius = radius(numPlayers * preGameConfig.scale.get() * areaPerPlayer).toInt()
+		worldRadius = radius(numTeams * preGameConfig.scale.get() * areaPerTeam).toInt()
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
@@ -265,6 +265,7 @@ object UHC {
 
 	fun destroyGame() {
 		game?.teams?.clearTeams()
+		game?.quirks?.forEach { quirk -> quirk?.onDestroy() }
 
 		game = null
 		preGameConfig = GameConfig()

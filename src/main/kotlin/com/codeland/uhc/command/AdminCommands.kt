@@ -20,7 +20,9 @@ class AdminCommands : BaseCommand() {
 	fun testReset(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		val game = UHC.game ?: return Commands.errorMessage(sender, "Game is not running")
+		if (UHC.game == null) {
+			return Commands.errorMessage(sender, "Game is not running")
+		}
 
 		UHC.destroyGame()
 

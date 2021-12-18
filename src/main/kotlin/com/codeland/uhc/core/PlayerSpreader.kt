@@ -122,12 +122,9 @@ object PlayerSpreader {
 		for (i in 0 until 4) {
 			for (j in 0 until 4) {
 				val y = topGround(chunk, i * 4 + 2, j * 4 + 2).y
-
 				if (y > highest) highest = y
 			}
 		}
-
-		println("highest for chunk ${chunk.x},${chunk.z} : $highest")
 
 		/* all underwater */
 		if (highest < 62) return null

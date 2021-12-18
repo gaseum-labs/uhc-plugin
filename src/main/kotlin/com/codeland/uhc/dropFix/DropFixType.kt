@@ -19,6 +19,7 @@ import org.bukkit.entity.EntityType
 import org.bukkit.potion.PotionType
 import com.codeland.uhc.gui.ItemCreator
 import org.bukkit.inventory.meta.PotionMeta
+import com.codeland.uhc.util.ItemUtil
 
 private fun zombieTemplate(entityType: EntityType): DropFix {
 	return DropFix(
@@ -51,7 +52,10 @@ enum class DropFixType(val dropFix: DropFix) {
 	)),
 
 	SKELETON(DropFix(EntityType.SKELETON, 1,
-		arrayOf(item(BONE, ::lootItem), item(ARROW, ::lootItem), mobArmor())
+		arrayOf(item(BONE, ::lootItem), item(ARROW, ::lootItem), mobArmor()),
+		arrayOf(RareEntry(12, DropEntry { _, _, _ ->
+			arrayOf(ItemUtil.randomDamagedItem(BOW))
+		}))
 	)),
 
 	COW(DropFix(EntityType.COW, 1,
