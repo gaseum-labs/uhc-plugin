@@ -32,7 +32,7 @@ class PlayerData(val uuid: UUID) {
 
 	/* lobby pvp stuff */
 
-	var lobbyInventory = emptyArray<ItemStack>()
+	var lobbyInventory = emptyArray<ItemStack?>()
 	var lastPlayed: UUID? = null
 	var loadoutSlot = UHCProperty(0)
 	var inLobbyPvpQueue = UHCProperty(0) { set ->
@@ -215,7 +215,7 @@ class PlayerData(val uuid: UUID) {
 		player.fireTicks = zombie.fireTicks
 		player.health = zombie.health
 		player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue = zombie.getAttribute(GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
-		
+
 		player.activePotionEffects.clear()
 		player.addPotionEffects(zombie.activePotionEffects)
 

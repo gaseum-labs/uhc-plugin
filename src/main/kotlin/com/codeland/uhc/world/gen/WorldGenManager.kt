@@ -122,9 +122,8 @@ object WorldGenManager {
 				Pair(manager, manager.withFeatures(true))
 			}
 			WorldManager.LOBBY_WORLD_NAME -> {
-				Pair(WorldChunkManagerOverworldGame(
-					seed, biomeRegistry,
-					null, 0, false
+				Pair(WorldChunkManagerOverworldSingleBiome(
+					seed, biomeRegistry, BiomeNo.MODIFIED_BADLANDS_PLATEAU
 				), null)
 			}
 			WorldManager.PVP_WORLD_NAME -> {
@@ -155,7 +154,7 @@ object WorldGenManager {
 					false
 				},
 				world.name == WorldManager.PVP_WORLD_NAME,
-				if (world.name == WorldManager.LOBBY_WORLD_NAME) Lobby.LOBBY_RADIUS / 2 else UHC.getConfig().endgameRadius.get()
+				if (world.name == WorldManager.LOBBY_WORLD_NAME) 0 else UHC.getConfig().endgameRadius.get()
 			)
 
 			worldChunkManagerBField[chunkGenerator] = featureManager ?: biomeManager

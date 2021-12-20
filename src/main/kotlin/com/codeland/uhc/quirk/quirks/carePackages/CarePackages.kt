@@ -407,7 +407,7 @@ class CarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 				ItemCreator.regular(ELYTRA),
 				ItemCreator.regular(TOTEM_OF_UNDYING),
 				KillReward.uhcAppleCreator,
-				Brew.externalCreatePotion(SPLASH_POTION, Brew.STRENGTH_INFO, true, false).name(
+				Brew.externalCreatePotion(POTION, Brew.STRENGTH_INFO, true, false).name(
 					Util.gradientString("Illegal Substance", TextColor.color(0xe8e854), TextColor.color(0xa86007))
 				),
 

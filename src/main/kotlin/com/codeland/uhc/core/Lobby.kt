@@ -5,6 +5,7 @@ import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.WorldStorage
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
@@ -12,18 +13,43 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.attribute.Attribute
+import org.bukkit.block.Block
 import org.bukkit.entity.Player
 
 object Lobby {
-	val LOBBY_RADIUS = 64
+	var spawn: Block? = null
+	var radius: Int = 64
 
-	fun lobbyLocation(uhc: UHC): Location {
-		return Location(
-			WorldManager.lobbyWorld,
-			0.5,
-			Util.topBlockY(WorldManager.lobbyWorld, 0, 0) + 1.0,
-			0.5
-		)
+	fun defaultSpawn(): Block {
+		return WorldManager.lobbyWorld.getBlockAt(0, Util.topBlockY(WorldManager.lobbyWorld, 0, 0) + 1, 0)
+	}
+
+	fun loadSpawn(world: World) {
+		val data = WorldStorage.load(world, 64, 64)
+		if (data != null) {
+			val parts = data.split(',')
+			if (parts.size != 3) return
+
+			val x = parts[0].toIntOrNull() ?: return
+			val y = parts[1].toIntOrNull() ?: return
+			val z = parts[2].toIntOrNull() ?: return
+
+			spawn = world.getBlockAt(x, y, z)
+		}
+	}
+
+	fun loadRadius(world: World) {
+		radius = WorldStorage.load(world, 32, 32)?.toIntOrNull() ?: return
+	}
+
+	fun saveSpawn(block: Block) {
+		WorldStorage.save(block.world, 64, 64, "${block.x},${block.y},${block.z}")
+		spawn = block
+	}
+
+	fun saveRadius(world: World, radius: Int) {
+		WorldStorage.save(world, 32, 32, radius.toString())
+		radius = radius
 	}
 
 	fun resetPlayerStats(player: Player) {
@@ -31,6 +57,7 @@ object Lobby {
 		player.totalExperience = 0
 		player.level = 0
 		player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
+		player.absorptionAmount = 0.0
 		player.health = 20.0
 		player.foodLevel = 20
 		player.saturation = 5.0f
@@ -49,7 +76,7 @@ object Lobby {
 	fun onSpawnLobby(player: Player) {
 		resetPlayerStats(player)
 
-		player.gameMode = GameMode.CREATIVE
+		player.gameMode = GameMode.ADVENTURE
 
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
@@ -66,7 +93,7 @@ object Lobby {
 		CommandItemType.PVP_OPENER.giveItem(player.inventory)
 		CommandItemType.SPECTATE.giveItem(player.inventory)
 
-		player.teleport(lobbyLocation(UHC))
+		player.teleport((spawn ?: defaultSpawn()).location.add(0.5, 0.0, 0.5))
 	}
 
 	fun lobbyTipsTick(subTick: Int) {

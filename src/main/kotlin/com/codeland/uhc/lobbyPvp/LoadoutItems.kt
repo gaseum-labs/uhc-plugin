@@ -1,6 +1,5 @@
 package com.codeland.uhc.lobbyPvp
 
-import com.codeland.uhc.event.Axe
 import com.codeland.uhc.event.Brew
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.LoadoutItems.Companion.AmountOption
@@ -98,8 +97,8 @@ enum class LoadoutItems(val cost: Int, val enchantOptions: Array<ItemOption>, va
 
 	IRON_SWORD(1, swordEnchants, { ItemStack(Material.IRON_SWORD) }),
 	DIAMOND_SWORD(3, swordEnchants, { ItemStack(Material.DIAMOND_SWORD) }),
-	IRON_AXE(1, axeEnchants, { Axe.ironAxe() }),
-	DIAMOND_AXE(3, axeEnchants, { Axe.diamondAxe() }),
+	IRON_AXE(1, axeEnchants, { ItemStack(Material.IRON_AXE) }),
+	DIAMOND_AXE(3, axeEnchants, { ItemStack(Material.DIAMOND_AXE) }),
 	BOW(2, bowEnchants, { ItemStack(Material.BOW) }),
 	CROSSBOW(2, emptyArray(), { ItemCreator.regular(Material.CROSSBOW).enchant(Enchantment.PIERCING, 1).create() }),
 	SHIELD(2, emptyArray(), { ItemStack(Material.SHIELD) }),

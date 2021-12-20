@@ -148,4 +148,27 @@ class AdminCommands : BaseCommand() {
 
 		Action.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
 	}
+
+	@Subcommand("lobbySpawn")
+	fun lobbySpawnCommand(sender: CommandSender) {
+		sender as Player
+		if (Commands.opGuard(sender)) return
+
+		val block = sender.location.block
+		if (block.world !== WorldManager.lobbyWorld) return Commands.errorMessage(sender, "You are not in the lobby")
+
+		Lobby.saveSpawn(block)
+		Action.sendGameMessage(sender, "Set the lobby spawn to ${block.x}, ${block.y}, ${block.z}")
+	}
+
+	@Subcommand("lobbyRadius")
+	fun lobbyRadiusCommand(sender: CommandSender, radius: Int) {
+		sender as Player
+		if (Commands.opGuard(sender)) return
+
+		if (radius < 0) Commands.errorMessage(sender, "Radius cannot be negative")
+
+		Lobby.saveRadius(WorldManager.lobbyWorld, radius)
+		Action.sendGameMessage(sender, "Set the lobby radius to $radius")
+	}
 }

@@ -4,6 +4,7 @@ import com.codeland.uhc.core.Lobby
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.WorldStorage
 import com.codeland.uhc.world.WorldManager
 import org.bukkit.*
 import org.bukkit.block.Structure
@@ -157,8 +158,8 @@ object ArenaManager {
 			true
 		}
 
-		destroyStore(world, 1, 1)
-		destroyStore(world, 2, 2)
+		WorldStorage.destroy(world, 1, 1)
+		WorldStorage.destroy(world, 2, 2)
 
 		spiral.reset()
 	}
@@ -169,13 +170,13 @@ object ArenaManager {
 
 			val playerData = PlayerData.getPlayerData(player.uniqueId)
 			Lobby.onSpawnLobby(player)
-			player.inventory.contents = playerData.lobbyInventory
+			player.inventory.setContents(playerData.lobbyInventory)
 		}
 
 		val typeList = typeList<Arena>(arena.type)
 		typeList.removeIf { it === arena }
 
-		destroyStore(WorldManager.pvpWorld, arena.x * ARENA_STRIDE, arena.z * ARENA_STRIDE)
+		WorldStorage.destroy(WorldManager.pvpWorld, arena.x * ARENA_STRIDE, arena.z * ARENA_STRIDE)
 
 		if (arena.type === ArenaType.PARKOUR) {
 			typeList as ArrayList<ParkourArena>
@@ -205,40 +206,17 @@ object ArenaManager {
 		}
 	}
 
-	fun destroyStore(world: World, x: Int, z: Int) {
-		val infoBlock = world.getBlockAt(x, 0, z)
-		infoBlock.setType(Material.BEDROCK, false)
-	}
-
-	fun storeBlock(world: World, x: Int, z: Int, data: String) {
-		val infoBlock = world.getBlockAt(x, 0, z)
-
-		infoBlock.setType(Material.STRUCTURE_BLOCK, false)
-		val state = infoBlock.getState(false) as Structure
-
-		state.usageMode = UsageMode.DATA
-		state.metadata = data
-	}
-
-	fun loadBlock(world: World, x: Int, z: Int): String? {
-		val infoBlock = world.getBlockAt(x, 0, z)
-
-		if (infoBlock.type !== Material.STRUCTURE_BLOCK) return null
-		val state = infoBlock.getState(false) as Structure
-
-		return state.metadata
-	}
-
 	fun saveWorldInfo(world: World) {
-		storeBlock(world, 1, 1, spiral.toMetadata())
-		storeBlock(world, 2, 2, encodeArenaLocations(ongoing.filter { arena -> arena.save(world) }))
+		WorldStorage.save(world, 1, 1, spiral.toMetadata())
+		WorldStorage.save(world, 2, 2,
+			encodeArenaLocations(ongoing.filter { arena -> arena.save(world) }))
 	}
 
 	fun loadWorldInfo(world: World) {
-		val spiralData = loadBlock(world, 1, 1) ?: return
+		val spiralData = WorldStorage.load(world, 1, 1) ?: return
 		spiral.fromMetadata(spiralData)
 
-		val arenaLocationsData = loadBlock(world, 2, 2) ?: return
+		val arenaLocationsData = WorldStorage.load(world, 2, 2) ?: return
 		decodeArenaLocations(arenaLocationsData).forEach { (x, z) ->
 			val loadedArena = Arena.load(world, x, z)
 			if (loadedArena != null) addArena(loadedArena, Pair(x, z))

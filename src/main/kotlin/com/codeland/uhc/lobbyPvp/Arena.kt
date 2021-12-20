@@ -4,6 +4,7 @@ import com.codeland.uhc.command.Commands
 import com.codeland.uhc.core.*
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
+import com.codeland.uhc.util.WorldStorage
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket
@@ -113,7 +114,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		val saveData = customSave()
 
 		return if (saveData != null) {
-			ArenaManager.storeBlock(
+			WorldStorage.save(
 				world,
 				x * ArenaManager.ARENA_STRIDE,
 				z * ArenaManager.ARENA_STRIDE,
@@ -179,7 +180,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		}
 
 		fun load(world: World, x: Int, z: Int): Arena? {
-			val data = ArenaManager.loadBlock(
+			val data = WorldStorage.load(
 				world,
 				x * ArenaManager.ARENA_STRIDE,
 				z * ArenaManager.ARENA_STRIDE

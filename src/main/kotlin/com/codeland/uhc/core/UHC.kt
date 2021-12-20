@@ -77,6 +77,9 @@ object UHC {
 
 		heartsObjective = objective
 
+		/* lobby spawn */
+		Lobby.loadSpawn(WorldManager.lobbyWorld)
+		Lobby.loadRadius(WorldManager.lobbyWorld)
 		Bukkit.getServer().onlinePlayers.forEach { player -> Lobby.onSpawnLobby(player) }
 
 		/* begin global ticking task */

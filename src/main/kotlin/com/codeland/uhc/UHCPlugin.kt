@@ -54,7 +54,6 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Loot(), this)
 		server.pluginManager.registerEvents(Enchant(), this)
 		server.pluginManager.registerEvents(Parkour(), this)
-		server.pluginManager.registerEvents(Axe(), this)
 		server.pluginManager.registerEvents(Snowball(), this)
 		server.pluginManager.registerEvents(Fishing(), this)
 		server.pluginManager.registerEvents(CaveIndicator(), this)
