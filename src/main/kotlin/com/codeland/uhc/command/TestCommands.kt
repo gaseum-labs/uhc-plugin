@@ -58,7 +58,7 @@ class TestCommands : BaseCommand() {
 	@Subcommand("gravity")
 	@Description("change the gravity constant")
 	fun testGravity(sender: CommandSender, gravity: Double) {
-		LowGravity.gravity = gravity
+		LowGravity.gravityModifier = gravity
 	}
 
 	@Subcommand("deathswap warning")
