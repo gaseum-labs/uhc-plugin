@@ -1,11 +1,10 @@
 package com.codeland.uhc.world.gen.layer.game
 
 import com.codeland.uhc.util.Util
-import net.minecraft.world.level.newbiome.context.WorldGenContext
-import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer1
+import com.codeland.uhc.world.gen.UHCArea.UHCLayer
 import kotlin.random.Random
 
-class LayerPerPlayer(val seed: Long) : AreaTransformer1 {
+class LayerPerPlayer(seed: Long) : UHCLayer(seed) {
 	private val baseRegions = arrayOf(
 		Region.FLAT,
 		Region.FLAT,
@@ -44,7 +43,7 @@ class LayerPerPlayer(val seed: Long) : AreaTransformer1 {
 		throw Exception("chunk could not find an index")
 	}
 
-	override fun a(context: WorldGenContext, x: Int, z: Int): Int {
+	override fun sample(x: Int, z: Int): Int {
 		val baseX = Util.floorDiv(x, 3)
 		val baseZ = Util.floorDiv(z, 3)
 

@@ -1,16 +1,13 @@
 package com.codeland.uhc.world.gen.layer.game
 
 import com.codeland.uhc.world.gen.BiomeNo
-import net.minecraft.world.level.newbiome.area.Area
-import net.minecraft.world.level.newbiome.context.WorldGenContext
-import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer3
-import net.minecraft.world.level.newbiome.layer.traits.AreaTransformerIdentity
+import com.codeland.uhc.world.gen.UHCArea.UHCLayerMerge
 
-class GenLayerRiverApply : AreaTransformer3, AreaTransformerIdentity {
-	override fun a(p0: WorldGenContext, biomeArea: Area, riverArea: Area, x: Int, z: Int): Int {
-		val baseBiome = biomeArea.a(a(x), b(z))
+class GenLayerRiverApply(seed: Long) : UHCLayerMerge(seed) {
+	override fun sample(x: Int, z: Int): Int {
+		val baseBiome = previous.sample(x, z)
 
-		return if (riverArea.a(a(x), b(z)) == 7) {
+		return if (otherPrevious.sample(x, z) == 7) {
 			when (baseBiome) {
 				BiomeNo.WARM_OCEAN -> BiomeNo.WARM_OCEAN
 				BiomeNo.LUKEWARM_OCEAN -> BiomeNo.LUKEWARM_OCEAN
@@ -24,7 +21,7 @@ class GenLayerRiverApply : AreaTransformer3, AreaTransformerIdentity {
 				else -> BiomeNo.RIVER
 			}
 		} else {
-			biomeArea.a(a(x), b(z))
+			baseBiome
 		}
 	}
 }

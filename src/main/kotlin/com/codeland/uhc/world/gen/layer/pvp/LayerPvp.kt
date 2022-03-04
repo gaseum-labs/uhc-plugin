@@ -23,48 +23,49 @@ import com.codeland.uhc.world.gen.BiomeNo.TAIGA
 import com.codeland.uhc.world.gen.BiomeNo.TALL_BIRCH_FOREST
 import com.codeland.uhc.world.gen.BiomeNo.WOODED_BADLANDS_PLATEAU
 import com.codeland.uhc.world.gen.BiomeNo.WOODED_MOUNTAINS
-import net.minecraft.world.level.newbiome.context.WorldGenContext
-import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer1
+import com.codeland.uhc.world.gen.UHCArea.UHCLayer
 
-class LayerPvp : AreaTransformer1 {
-	override fun a(context: WorldGenContext, p1: Int, p2: Int): Int {
-		return when (context.a(11)) {
-			0 -> when (context.a(2)) {
+class LayerPvp(seed: Long) : UHCLayer(seed) {
+	override fun sample(x: Int, z: Int): Int {
+		val random = random(x, z)
+
+		return when (random.nextInt(11)) {
+			0 -> when (random.nextInt(2)) {
 				0 -> PLAINS
 				else -> SUNFLOWER_PLAINS
 			}
 			1 -> DESERT
-			2 -> when (context.a(4)) {
+			2 -> when (random.nextInt(4)) {
 				0 -> MOUNTAINS
 				1 -> WOODED_MOUNTAINS
 				2 -> GRAVELLY_MOUNTAINS
 				else -> STONE_SHORE
 			}
-			3 -> when (context.a(2)) {
+			3 -> when (random.nextInt(2)) {
 				0 -> FOREST
 				else -> FLOWER_FOREST
 			}
 			4 -> TAIGA
-			5 -> when (context.a(2)) {
+			5 -> when (random.nextInt(2)) {
 				0 -> BIRCH_FOREST
 				else -> TALL_BIRCH_FOREST
 			}
-			6 -> when (context.a(2)) {
+			6 -> when (random.nextInt(2)) {
 				0 -> JUNGLE_EDGE
 				else -> SWAMP
 			}
-			7 -> when (context.a(4)) {
+			7 -> when (random.nextInt(4)) {
 				0 -> SNOWY_TUNDRA
 				1 -> SNOWY_TAIGA
 				2 -> SNOWY_BEACH
 				else -> ICE_SPIKES
 			}
 			8 -> DARK_FOREST
-			9 -> when (context.a(2)) {
+			9 -> when (random.nextInt(2)) {
 				0 -> SAVANNA
 				else -> SHATTERED_SAVANNA
 			}
-			else -> when (context.a(2)) {
+			else -> when (random.nextInt(2)) {
 				0 -> BADLANDS
 				else -> WOODED_BADLANDS_PLATEAU
 			}

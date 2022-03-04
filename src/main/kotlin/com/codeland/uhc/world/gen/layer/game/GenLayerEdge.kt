@@ -1,11 +1,12 @@
 package com.codeland.uhc.world.gen.layer.game
 
-import net.minecraft.world.level.newbiome.context.WorldGenContext
-import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer4
+import com.codeland.uhc.world.gen.UHCArea.UHCLayer
 
-class GenLayerEdge(val produce: Int) : AreaTransformer4 {
-	override fun a(context: WorldGenContext, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int): Int {
-		return if (p1 != p5 || p2 != p5 || p3 != p5 || p4 != p5) {
+class GenLayerEdge(seed: Long, val produce: Int) : UHCLayer(seed) {
+	override fun sample(x: Int, z: Int): Int {
+		val (p1, p2, p3, p4, pc) = around(x, z)
+
+		return if (p1 != pc || p2 != pc || p3 != pc || p4 != pc) {
 			produce
 		} else {
 			0

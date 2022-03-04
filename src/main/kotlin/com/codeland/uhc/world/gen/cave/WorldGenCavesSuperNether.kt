@@ -2,36 +2,43 @@ package com.codeland.uhc.world.gen.cave
 
 import com.google.common.collect.ImmutableSet
 import com.mojang.serialization.Codec
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.biome.Biome
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.levelgen.carver.CaveCarverConfiguration
-import net.minecraft.world.level.levelgen.carver.WorldGenCaves
-import net.minecraft.world.level.material.FluidType
-import net.minecraft.world.level.material.FluidTypes
+import net.minecraft.world.level.chunk.CarvingMask
+import net.minecraft.world.level.chunk.ChunkAccess
+import net.minecraft.world.level.levelgen.Aquifer
+import net.minecraft.world.level.levelgen.carver.*
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import java.util.*
+import java.util.function.Function
 
-class WorldGenCavesSuperNether(codec: Codec<CaveCarverConfiguration>) : WorldGenCaves(codec) {
+class WorldGenCavesSuperNether() : CaveWorldCarver(
+	CaveCarverConfiguration.CODEC
+) {
 	init {
-		k = ImmutableSet.of(
-			Blocks.b,
-			Blocks.c,
-			Blocks.e,
-			Blocks.g,
-			Blocks.j,
-			Blocks.k,
-			/* -- */
-			Blocks.l,
-			Blocks.i,
-			Blocks.cT,
-			Blocks.cU,
-			Blocks.cV,
-			Blocks.mI,
-			Blocks.mz,
-			Blocks.iY,
-			Blocks.mB,
-			Blocks.cW,
-			Blocks.nD,
-			/* -- */
-			Blocks.B
+		replaceableBlocks = ImmutableSet.of(
+			Blocks.STONE,
+			Blocks.GRANITE,
+			Blocks.DIORITE,
+			Blocks.ANDESITE,
+			Blocks.DIRT,
+			Blocks.COARSE_DIRT,
+			Blocks.PODZOL,
+			Blocks.GRASS_BLOCK,
+			Blocks.NETHERRACK,
+			Blocks.SOUL_SAND,
+			Blocks.SOUL_SOIL,
+			Blocks.CRIMSON_NYLIUM,
+			Blocks.WARPED_NYLIUM,
+			Blocks.NETHER_WART_BLOCK,
+			Blocks.WARPED_WART_BLOCK,
+			Blocks.BASALT,
+			Blocks.BLACKSTONE
 		)
-		l = ImmutableSet.of<FluidType>(FluidTypes.e, FluidTypes.c)
+		liquids = ImmutableSet.of<Fluid>(Fluids.WATER, Fluids.LAVA)
 	}
 }

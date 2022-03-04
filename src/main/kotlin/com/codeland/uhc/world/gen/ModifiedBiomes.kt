@@ -1,93 +1,70 @@
 package com.codeland.uhc.world.gen
 
-import com.google.common.collect.ImmutableCollection
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap
-import net.minecraft.core.IRegistry
-import net.minecraft.data.RegistryGeneration
-import net.minecraft.data.worldgen.BiomeDecoratorGroups
-import net.minecraft.data.worldgen.biome.BiomeRegistry
-import net.minecraft.resources.ResourceKey
+import com.codeland.uhc.world.UHCReflect
+import net.minecraft.data.worldgen.placement.OrePlacements
+import net.minecraft.data.worldgen.placement.VegetationPlacements
 import net.minecraft.world.level.biome.*
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.levelgen.WorldGenStage
-import net.minecraft.world.level.levelgen.carver.WorldGenCarverWrapper
-import net.minecraft.world.level.levelgen.feature.WorldGenFeatureConfigured
+import net.minecraft.world.level.levelgen.GenerationStep
+import net.minecraft.world.level.levelgen.GenerationStep.Carving
+import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver
 import net.minecraft.world.level.levelgen.feature.configurations.*
-import net.minecraft.world.level.levelgen.feature.stateproviders.WorldGenFeatureStateProviderSimpl
+import net.minecraft.world.level.levelgen.placement.PlacedFeature
 import java.lang.reflect.Constructor
 import java.util.function.*
 
 object ModifiedBiomes {
-	val biomeRegistryField = RegistryGeneration::class.java.getDeclaredField("i")
-	val biomeMapField = BiomeRegistry::class.java.getDeclaredField("c")
+	/* fields of Biome */
+	val generationSettingsField = UHCReflect<Biome, BiomeGenerationSettings>(
+		Biome::class, "generationSettings"
+	)
+	val mobsSettingsField = UHCReflect<Biome, MobSpawnSettings>(
+		Biome::class, "mobSettings"
+	)
 
-	val biomeBaseConstructor = BiomeBase::class.java.declaredConstructors[0] as Constructor<BiomeBase>
+	val climateSettingsField = UHCReflect<Biome, Any>(
+		Biome::class, "climateSettings"
+	)
+	val biomeCategoryField = UHCReflect<Biome, Any>(
+		Biome::class, "biomeCategory"
+	)
+	val specialEffectsField = UHCReflect<Biome, Any>(
+		Biome::class, "specialEffects"
+	)
 
-	val kField = BiomeBase::class.java.getDeclaredField("k")
-	val pField = BiomeBase::class.java.getDeclaredField("p")
-	val nField = BiomeBase::class.java.getDeclaredField("n")
-	val oField = BiomeBase::class.java.getDeclaredField("o")
-	val qField = BiomeBase::class.java.getDeclaredField("q")
-	val lField = BiomeBase::class.java.getDeclaredField("l")
-	val mField = BiomeBase::class.java.getDeclaredField("m")
+	/* fields of BiomeGenerationSettings */
+	val featuresField = UHCReflect<BiomeGenerationSettings, List<List<Supplier<PlacedFeature>>>>(
+		BiomeGenerationSettings::class, "features"
+	)
+	val carversField =
+		UHCReflect<BiomeGenerationSettings, Map<GenerationStep.Carving, List<Supplier<ConfiguredWorldCarver<*>>>>>(
+			BiomeGenerationSettings::class, "carvers"
+		)
 
-	val biomeSettingsGenerationConstructor =
-		BiomeSettingsGeneration::class.java.declaredConstructors[0] as Constructor<BiomeSettingsGeneration>
-
-	val biomeSettingsMobsConstructor =
-		BiomeSettingsMobs::class.java.declaredConstructors[0] as Constructor<BiomeSettingsMobs>
-
-	val dField = BiomeSettingsGeneration::class.java.getDeclaredField("d")
-	val eField = BiomeSettingsGeneration::class.java.getDeclaredField("e")
-	val fField = BiomeSettingsGeneration::class.java.getDeclaredField("f")
-	val gField = BiomeSettingsGeneration::class.java.getDeclaredField("g")
-	val hField = BiomeSettingsGeneration::class.java.getDeclaredField("h")
+	val biomeGenerationSettingsConstructor = BiomeGenerationSettings::class.java.constructors[0]
+	val mobSpawnSettingsConstructor = MobSpawnSettings::class.java.constructors[0]
+	val biomeConstructor = Biome::class.java.constructors[0] as Constructor<Biome>
 
 	init {
-		biomeRegistryField.isAccessible = true
-		biomeMapField.isAccessible = true
-
-		biomeBaseConstructor.isAccessible = true
-
-		kField.isAccessible = true
-		pField.isAccessible = true
-		nField.isAccessible = true
-		oField.isAccessible = true
-		qField.isAccessible = true
-		lField.isAccessible = true
-		mField.isAccessible = true
-
-		biomeSettingsGenerationConstructor.isAccessible = true
-		biomeSettingsMobsConstructor.isAccessible = true
-
-		dField.isAccessible = true
-		eField.isAccessible = true
-		fField.isAccessible = true
-		gField.isAccessible = true
-		hField.isAccessible = true
+		biomeGenerationSettingsConstructor.isAccessible = true
+		mobSpawnSettingsConstructor.isAccessible = true
+		biomeConstructor.isAccessible = true
 	}
 
-	fun genBiomes(replaceFeatures: Boolean, replaceMobs: Boolean): Map<Int, BiomeBase> {
-		val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
-		val biomeRegistry = biomeRegistryField[null] as IRegistry<BiomeBase>
+	fun genBiomes(replaceFeatures: Boolean, replaceMobs: Boolean): Map<Int, Biome> {
+		val ret = HashMap<Int, Biome>()
 
-		val ret = HashMap<Int, BiomeBase>()
+		BiomeNo.biomeRegistry.entrySet().forEach { (key, original) ->
+			val biomeId = BiomeNo.toId(key)
+			val originalSettings = generationSettingsField.get(original)
 
-		biomeMap.forEach { (id, key) ->
-			val original = biomeRegistry.d(key)
-
-			val originalSettings = lField[original] as BiomeSettingsGeneration
 			val newSettings = if (replaceFeatures) {
-				val originalCarverMap =
-					eField[originalSettings] as Map<WorldGenStage.Features, ImmutableCollection<Supplier<WorldGenCarverWrapper<*>>>>
-				val originalFeatures =
-					fField[originalSettings] as List<List<Supplier<WorldGenFeatureConfigured<*, *>>>>
+				val originalFeatures = featuresField.get(originalSettings)
+				val originalCarvers = carversField.get(originalSettings)
 
-				val newCarverMap = HashMap<WorldGenStage.Features, ArrayList<Supplier<WorldGenCarverWrapper<*>>>>()
-				val newFeatures = ArrayList<ArrayList<Supplier<WorldGenFeatureConfigured<*, *>>>>()
+				val newCarvers = HashMap<Carving, List<Supplier<ConfiguredWorldCarver<*>>>>()
 
-				originalCarverMap.forEach { (key, value) ->
-					newCarverMap[key] = if (BiomeNo.isNetherBiome(id)) {
+				originalCarvers.forEach { (key) ->
+					newCarvers[key] = if (BiomeNo.isNetherBiome(biomeId)) {
 						arrayListOf(
 							Supplier { ModifiedBiomesRegistry.netherSuperCaveCarver },
 							Supplier { ModifiedBiomesRegistry.netherUpperCaveCarver },
@@ -103,25 +80,31 @@ object ModifiedBiomes {
 					}
 				}
 
-				originalFeatures.forEach { list0 ->
-					val newSubList = ArrayList<Supplier<WorldGenFeatureConfigured<*, *>>>()
-					list0.forEach { supplier ->
+				val newFeatures = ArrayList<List<Supplier<PlacedFeature>>>()
+
+				originalFeatures.forEach { originalSubList ->
+					val newSubList = ArrayList<Supplier<PlacedFeature>>()
+
+					originalSubList.forEach { supplier ->
 						val configured = supplier.get()
 
 						if (
-							configured === BiomeDecoratorGroups.bV || // gold ores (excluding badlands)
-							configured === BiomeDecoratorGroups.bW ||
-							configured === BiomeDecoratorGroups.cd || // lapis ore
-							configured === BiomeDecoratorGroups.ce ||
-							configured === BiomeDecoratorGroups.cf ||
-							configured === BiomeDecoratorGroups.ca || // diamond ores
-							configured === BiomeDecoratorGroups.cb ||
-							configured === BiomeDecoratorGroups.cc ||
-							configured === BiomeDecoratorGroups.al || // melons
-							configured === BiomeDecoratorGroups.aJ ||
-							configured === BiomeDecoratorGroups.aT || // sugar cane (excluding badlands)
-							configured === BiomeDecoratorGroups.aU ||
-							configured === BiomeDecoratorGroups.aW
+							configured === OrePlacements.ORE_GOLD || // gold ores (excluding badlands)
+							configured === OrePlacements.ORE_GOLD_LOWER ||
+
+							configured === OrePlacements.ORE_LAPIS || // lapis ore
+							configured === OrePlacements.ORE_LAPIS_BURIED ||
+
+							configured === OrePlacements.ORE_DIAMOND || // diamond ores
+							configured === OrePlacements.ORE_DIAMOND_LARGE ||
+							configured === OrePlacements.ORE_DIAMOND_BURIED ||
+
+							configured === VegetationPlacements.PATCH_MELON || // melons
+							configured === VegetationPlacements.PATCH_MELON_SPARSE ||
+
+							configured === VegetationPlacements.PATCH_SUGAR_CANE || // sugar cane (excluding badlands)
+							configured === VegetationPlacements.PATCH_SUGAR_CANE_DESERT ||
+							configured === VegetationPlacements.PATCH_SUGAR_CANE_SWAMP
 						) {
 							//
 						} else {
@@ -131,36 +114,32 @@ object ModifiedBiomes {
 					newFeatures.add(newSubList)
 				}
 
-				biomeSettingsGenerationConstructor.newInstance(
-					dField[originalSettings],
-					newCarverMap,
-					newFeatures,
-					gField[originalSettings],
+				biomeGenerationSettingsConstructor.newInstance(
+					newCarvers,
+					newFeatures
 				)
 			} else {
 				originalSettings
 			}
 
-			val originalMobs = mField[original] as BiomeSettingsMobs
+			val originalMobs = mobsSettingsField.get(original)
+
 			val newMobs = if (replaceMobs) {
-				biomeSettingsMobsConstructor.newInstance(
+				mobSpawnSettingsConstructor.newInstance(
 					-1.0f, /* prevent all chunk mobs */
 					emptyMap<Any, Any>(),
 					emptyMap<Any, Any>(),
-					originalMobs.b()
 				)
 			} else {
 				originalMobs
 			}
 
-			ret[id] = biomeBaseConstructor.newInstance(
-				kField[original],
-				pField[original],
-				nField[original],
-				oField[original],
-				qField[original],
+			ret[biomeId] = biomeConstructor.newInstance(
+				climateSettingsField.get(original),
 				newSettings,
 				newMobs,
+				biomeCategoryField.get(original),
+				specialEffectsField.get(original)
 			)
 		}
 

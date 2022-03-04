@@ -3,7 +3,7 @@ package com.codeland.uhc.world.gen.layer.game;
 import com.codeland.uhc.world.gen.BiomeNo
 import kotlin.random.Random
 
-enum class Region(vararg val biomes: Pair<Int, Int>) {
+enum class Region(vararg biomes: Pair<Int, Int>) {
 	FLAT(
 		3 to BiomeNo.PLAINS,
 		2 to BiomeNo.SWAMP,

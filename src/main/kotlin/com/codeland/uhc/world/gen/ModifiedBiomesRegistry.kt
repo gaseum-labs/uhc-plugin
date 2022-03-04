@@ -1,110 +1,104 @@
 package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.world.gen.cave.WorldGenCavesSuperNether
+import net.minecraft.data.worldgen.Carvers
 import net.minecraft.util.valueproviders.*
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.levelgen.VerticalAnchor
 import net.minecraft.world.level.levelgen.carver.*
-import net.minecraft.world.level.levelgen.carver.CanyonCarverConfiguration.a
+import net.minecraft.world.level.levelgen.carver.CanyonCarverConfiguration.CanyonShapeConfiguration
 import net.minecraft.world.level.levelgen.heightproviders.UniformHeight
 
 object ModifiedBiomesRegistry {
-	val caveCarverMaster = WorldGenCarverAbstract.a
-	val netherCavesMaster = WorldGenCavesSuperNether(CaveCarverConfiguration.a)
-	val canyonCarverMaster = WorldGenCarverAbstract.c
+	val caveCarverMaster = WorldCarver.CAVE
+	val netherCavesMaster = WorldGenCavesSuperNether()
+	val canyonCarverMaster = WorldCarver.CANYON
 
 	val caveLevels = arrayOf(
-		caveCarverMaster.a(CaveCarverConfiguration(
+		caveCarverMaster.configured(CaveCarverConfiguration(
 			0.075f,
-			UniformHeight.a(VerticalAnchor.a(6), VerticalAnchor.a(16)),
-			ConstantFloat.a(0.3f),
-			VerticalAnchor.b(6),
-			false,
-			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(3.4f),//UniformFloat.b(2.0f, 3.4f),
-			ConstantFloat.a(2.0f),//UniformFloat.b(1.5f, 2.0f),
-			ConstantFloat.a(0.0f)
+			UniformHeight.of(VerticalAnchor.aboveBottom(6), VerticalAnchor.aboveBottom(16)),
+			ConstantFloat.of(0.3f),
+			VerticalAnchor.aboveBottom(6),
+			true,
+			ConstantFloat.of(3.4f),
+			ConstantFloat.of(2.0f),
+			ConstantFloat.of(0.0f)
 		)),
-		caveCarverMaster.a(CaveCarverConfiguration(
+		caveCarverMaster.configured(CaveCarverConfiguration(
 			0.100f,
-			UniformHeight.a(VerticalAnchor.a(17), VerticalAnchor.a(32)),
-			ConstantFloat.a(0.4f),
-			VerticalAnchor.b(6),
-			false,
-			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(2.6f),//UniformFloat.b(1.5f, 2.6f),
-			ConstantFloat.a(1.5f),//UniformFloat.b(1.0f, 1.5f),
-			ConstantFloat.a(-0.5f)
+			UniformHeight.of(VerticalAnchor.aboveBottom(17), VerticalAnchor.aboveBottom(32)),
+			ConstantFloat.of(0.4f),
+			VerticalAnchor.aboveBottom(6),
+			true,
+			ConstantFloat.of(2.6f),
+			ConstantFloat.of(1.5f),
+			ConstantFloat.of(-0.5f)
 		)),
-		caveCarverMaster.a(CaveCarverConfiguration(
+		caveCarverMaster.configured(CaveCarverConfiguration(
 			0.125f,
-			UniformHeight.a(VerticalAnchor.a(33), VerticalAnchor.a(48)),
-			ConstantFloat.a(0.5f),
-			VerticalAnchor.b(6),
-			false,
-			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(1.8f),//UniformFloat.b(1.25f, 1.8f),
-			ConstantFloat.a(1.25f),//UniformFloat.b(1.0f, 1.25f),
-			ConstantFloat.a(-1.0f)
+			UniformHeight.of(VerticalAnchor.aboveBottom(33), VerticalAnchor.aboveBottom(48)),
+			ConstantFloat.of(0.5f),
+			VerticalAnchor.aboveBottom(6),
+			true,
+			ConstantFloat.of(1.8f),
+			ConstantFloat.of(1.25f),
+			ConstantFloat.of(-1.0f)
 		)),
-		caveCarverMaster.a(CaveCarverConfiguration(
+		caveCarverMaster.configured(CaveCarverConfiguration(
 			0.150f,
-			UniformHeight.a(VerticalAnchor.a(49), VerticalAnchor.a(64)),
-			ConstantFloat.a(0.5f),
-			VerticalAnchor.b(6),
-			false,
-			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(1.0f),
-			ConstantFloat.a(1.0f),
-			ConstantFloat.a(-1.0f)
+			UniformHeight.of(VerticalAnchor.aboveBottom(49), VerticalAnchor.aboveBottom(64)),
+			ConstantFloat.of(0.5f),
+			VerticalAnchor.aboveBottom(6),
+			true,
+			ConstantFloat.of(1.0f),
+			ConstantFloat.of(1.0f),
+			ConstantFloat.of(-1.0f)
 		)),
 	)
 
-	val superCanyonCarver = canyonCarverMaster.a(
+	val superCanyonCarver = canyonCarverMaster.configured(
 		CanyonCarverConfiguration(
 			0.02F,
-			UniformHeight.a(VerticalAnchor.a(0), VerticalAnchor.a(48)),
-			ConstantFloat.a(3.0F),
-			VerticalAnchor.b(6),
-			false,
-			CarverDebugSettings.a(false, Blocks.nf.blockData),
-			UniformFloat.b(-2.0F, 2.0F),
-			a(
-				UniformFloat.b(0.25F, 1.75F),
-				TrapezoidFloat.a(0.0F, 5.0F, 2.0F),
+			UniformHeight.of(VerticalAnchor.aboveBottom(0), VerticalAnchor.aboveBottom(48)),
+			ConstantFloat.of(3.0F),
+			VerticalAnchor.aboveBottom(6),
+			CarverDebugSettings.of(false, Blocks.OAK_BUTTON.defaultBlockState()),
+			UniformFloat.of(-2.0F, 2.0F),
+			CanyonShapeConfiguration(
+				UniformFloat.of(0.25F, 1.75F),
+				TrapezoidFloat.of(0.0F, 5.0F, 2.0F),
 				2,
-				UniformFloat.b(0.25F, 1.75F),
+				UniformFloat.of(0.25F, 1.75F),
 				1.1f,
 				0.5F
 			)
 		)
 	)
 
-	val netherSuperCaveCarver = netherCavesMaster.a(
+	val netherSuperCaveCarver = netherCavesMaster.configured(
 		CaveCarverConfiguration(
 			1.0f,
-			UniformHeight.a(VerticalAnchor.a(-8), VerticalAnchor.a(32)),
-			ConstantFloat.a(0.0f),
-			VerticalAnchor.b(6),
+			UniformHeight.of(VerticalAnchor.aboveBottom(-8), VerticalAnchor.aboveBottom(32)),
+			ConstantFloat.of(0.0f),
+			VerticalAnchor.aboveBottom(6),
 			false,
-			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(2.0f),
-			ConstantFloat.a(2.0f),
-			UniformFloat.b(-1.0f, 0.0f)
+			ConstantFloat.of(2.0f),
+			ConstantFloat.of(2.0f),
+			UniformFloat.of(-1.0f, 0.0f)
 		)
 	)
 
-	val netherUpperCaveCarver = netherCavesMaster.a(
+	val netherUpperCaveCarver = netherCavesMaster.configured(
 		CaveCarverConfiguration(
 			0.45f,
-			UniformHeight.a(VerticalAnchor.a(29), VerticalAnchor.a(112)),
-			ConstantFloat.a(2.5f),
-			VerticalAnchor.b(6),
+			UniformHeight.of(VerticalAnchor.aboveBottom(29), VerticalAnchor.aboveBottom(112)),
+			ConstantFloat.of(2.5f),
+			VerticalAnchor.aboveBottom(6),
 			false,
-			CarverDebugSettings.a(false, Blocks.ne.blockData),
-			ConstantFloat.a(1.0f),
-			ConstantFloat.a(1.0f),
-			ConstantFloat.a(-1.0f)
+			ConstantFloat.of(1.0f),
+			ConstantFloat.of(1.0f),
+			ConstantFloat.of(-1.0f)
 		)
 	)
 

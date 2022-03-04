@@ -1,112 +1,155 @@
 package com.codeland.uhc.world.gen
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap
-import net.minecraft.core.IRegistry
-import net.minecraft.data.worldgen.biome.BiomeRegistry
-import net.minecraft.resources.MinecraftKey
+import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
-import net.minecraft.world.level.biome.BiomeBase
+import net.minecraft.server.dedicated.DedicatedServer
+import net.minecraft.world.level.biome.Biome
+import net.minecraft.world.level.biome.Biomes
+import org.bukkit.Bukkit
+import org.bukkit.craftbukkit.v1_18_R1.CraftServer
 
 object BiomeNo {
-	const val OCEAN = 0
+	const val THE_VOID = 0
 	const val PLAINS = 1
-	const val DESERT = 2
-	const val MOUNTAINS = 3
-	const val FOREST = 4
-	const val TAIGA = 5
+	const val SUNFLOWER_PLAINS = 2
+	const val SNOWY_PLAINS = 3
+	const val ICE_SPIKES = 4
+	const val DESERT = 5
 	const val SWAMP = 6
-	const val RIVER = 7
-	const val NETHER_WASTES = 8
-	const val THE_END = 9
-	const val FROZEN_OCEAN = 10
-	const val FROZEN_RIVER = 11
-	const val SNOWY_TUNDRA = 12
-	const val SNOWY_MOUNTAINS = 13
-	const val MUSHROOM_FIELDS = 14
-	const val MUSHROOM_FIELD_SHORE = 15
-	const val BEACH = 16
-	const val DESERT_HILLS = 17
-	const val WOODED_HILLS = 18
-	const val TAIGA_HILLS = 19
-	const val MOUNTAIN_EDGE = 20
-	const val JUNGLE = 21
-	const val JUNGLE_HILLS = 22
-	const val JUNGLE_EDGE = 23
-	const val DEEP_OCEAN = 24
-	const val STONE_SHORE = 25
-	const val SNOWY_BEACH = 26
-	const val BIRCH_FOREST = 27
-	const val BIRCH_FOREST_HILLS = 28
-	const val DARK_FOREST = 29
-	const val SNOWY_TAIGA = 30
-	const val SNOWY_TAIGA_HILLS = 31
-	const val GIANT_TREE_TAIGA = 32
-	const val GIANT_TREE_TAIGA_HILLS = 33
-	const val WOODED_MOUNTAINS = 34
-	const val SAVANNA = 35
-	const val SAVANNA_PLATEAU = 36
-	const val BADLANDS = 37
-	const val WOODED_BADLANDS_PLATEAU = 38
-	const val BADLANDS_PLATEAU = 39
-	const val SMALL_END_ISLANDS = 40
-	const val END_MIDLANDS = 41
-	const val END_HIGHLANDS = 42
-	const val END_BARRENS = 43
-	const val WARM_OCEAN = 44
-	const val LUKEWARM_OCEAN = 45
-	const val COLD_OCEAN = 46
-	const val DEEP_WARM_OCEAN = 47
-	const val DEEP_LUKEWARM_OCEAN = 48
-	const val DEEP_COLD_OCEAN = 49
-	const val DEEP_FROZEN_OCEAN = 50
-	const val THE_VOID = 127
-	const val SUNFLOWER_PLAINS = 129
-	const val DESERT_LAKES = 130
-	const val GRAVELLY_MOUNTAINS = 131
-	const val FLOWER_FOREST = 132
-	const val TAIGA_MOUNTAINS = 133
-	const val SWAMP_HILLS = 134
-	const val ICE_SPIKES = 140
-	const val MODIFIED_JUNGLE = 149
-	const val MODIFIED_JUNGLE_EDGE = 151
-	const val TALL_BIRCH_FOREST = 155
-	const val TALL_BIRCH_HILLS = 156
-	const val DARK_FOREST_HILLS = 157
-	const val SNOWY_TAIGA_MOUNTAINS = 158
-	const val GIANT_SPRUCE_TAIGA = 160
-	const val GIANT_SPRUCE_TAIGA_HILLS = 161
-	const val MODIFIED_GRAVELLY_MOUNTAINS = 162
-	const val SHATTERED_SAVANNA = 163
-	const val SHATTERED_SAVANNA_PLATEAU = 164
-	const val ERODED_BADLANDS = 165
-	const val MODIFIED_WOODED_BADLANDS_PLATEAU = 166
-	const val MODIFIED_BADLANDS_PLATEAU = 167
-	const val BAMBOO_JUNGLE = 168
-	const val BAMBOO_JUNGLE_HILLS = 169
-	const val SOUL_SAND_VALLEY = 170
-	const val CRIMSON_FOREST = 171
-	const val WARPED_FOREST = 172
-	const val BASALT_DELTAS = 173
+	const val FOREST = 7
+	const val FLOWER_FOREST = 8
+	const val BIRCH_FOREST = 9
+	const val DARK_FOREST = 10
+	const val OLD_GROWTH_BIRCH_FOREST = 11
+	const val OLD_GROWTH_PINE_TAIGA = 12
+	const val OLD_GROWTH_SPRUCE_TAIGA = 13
+	const val TAIGA = 14
+	const val SNOWY_TAIGA = 15
+	const val SAVANNA = 16
+	const val SAVANNA_PLATEAU = 17
+	const val WINDSWEPT_HILLS = 18
+	const val WINDSWEPT_GRAVELLY_HILLS = 19
+	const val WINDSWEPT_FOREST = 20
+	const val WINDSWEPT_SAVANNA = 21
+	const val JUNGLE = 22
+	const val SPARSE_JUNGLE = 23
+	const val BAMBOO_JUNGLE = 24
+	const val BADLANDS = 25
+	const val ERODED_BADLANDS = 26
+	const val WOODED_BADLANDS = 27
+	const val MEADOW = 28
+	const val GROVE = 29
+	const val SNOWY_SLOPES = 30
+	const val FROZEN_PEAKS = 31
+	const val JAGGED_PEAKS = 32
+	const val STONY_PEAKS = 33
+	const val RIVER = 34
+	const val FROZEN_RIVER = 35
+	const val BEACH = 36
+	const val SNOWY_BEACH = 37
+	const val STONY_SHORE = 38
+	const val WARM_OCEAN = 39
+	const val LUKEWARM_OCEAN = 40
+	const val DEEP_LUKEWARM_OCEAN = 41
+	const val OCEAN = 42
+	const val DEEP_OCEAN = 43
+	const val COLD_OCEAN = 44
+	const val DEEP_COLD_OCEAN = 45
+	const val FROZEN_OCEAN = 46
+	const val DEEP_FROZEN_OCEAN = 47
+	const val MUSHROOM_FIELDS = 48
+	const val DRIPSTONE_CAVES = 49
+	const val LUSH_CAVES = 50
+	const val NETHER_WASTES = 51
+	const val WARPED_FOREST = 52
+	const val CRIMSON_FOREST = 53
+	const val SOUL_SAND_VALLEY = 54
+	const val BASALT_DELTAS = 55
+	const val THE_END = 56
+	const val END_HIGHLANDS = 57
+	const val END_MIDLANDS = 58
+	const val SMALL_END_ISLANDS = 59
+	const val END_BARRENS = 60
 
-	private val biomeMapField = BiomeRegistry::class.java.getDeclaredField("c")
-	private val minecraftKeyField = ResourceKey::class.java.getDeclaredField("c")
-	private val nameField = MinecraftKey::class.java.getDeclaredField("f")
+	val resourceKeys = arrayOf(
+		Biomes.THE_VOID,
+		Biomes.PLAINS,
+		Biomes.SUNFLOWER_PLAINS,
+		Biomes.SNOWY_PLAINS,
+		Biomes.ICE_SPIKES,
+		Biomes.DESERT,
+		Biomes.SWAMP,
+		Biomes.FOREST,
+		Biomes.FLOWER_FOREST,
+		Biomes.BIRCH_FOREST,
+		Biomes.DARK_FOREST,
+		Biomes.OLD_GROWTH_BIRCH_FOREST,
+		Biomes.OLD_GROWTH_PINE_TAIGA,
+		Biomes.OLD_GROWTH_SPRUCE_TAIGA,
+		Biomes.TAIGA,
+		Biomes.SNOWY_TAIGA,
+		Biomes.SAVANNA,
+		Biomes.SAVANNA_PLATEAU,
+		Biomes.WINDSWEPT_HILLS,
+		Biomes.WINDSWEPT_GRAVELLY_HILLS,
+		Biomes.WINDSWEPT_FOREST,
+		Biomes.WINDSWEPT_SAVANNA,
+		Biomes.JUNGLE,
+		Biomes.SPARSE_JUNGLE,
+		Biomes.BAMBOO_JUNGLE,
+		Biomes.BADLANDS,
+		Biomes.ERODED_BADLANDS,
+		Biomes.WOODED_BADLANDS,
+		Biomes.MEADOW,
+		Biomes.GROVE,
+		Biomes.SNOWY_SLOPES,
+		Biomes.FROZEN_PEAKS,
+		Biomes.JAGGED_PEAKS,
+		Biomes.STONY_PEAKS,
+		Biomes.RIVER,
+		Biomes.FROZEN_RIVER,
+		Biomes.BEACH,
+		Biomes.SNOWY_BEACH,
+		Biomes.STONY_SHORE,
+		Biomes.WARM_OCEAN,
+		Biomes.LUKEWARM_OCEAN,
+		Biomes.DEEP_LUKEWARM_OCEAN,
+		Biomes.OCEAN,
+		Biomes.DEEP_OCEAN,
+		Biomes.COLD_OCEAN,
+		Biomes.DEEP_COLD_OCEAN,
+		Biomes.FROZEN_OCEAN,
+		Biomes.DEEP_FROZEN_OCEAN,
+		Biomes.MUSHROOM_FIELDS,
+		Biomes.DRIPSTONE_CAVES,
+		Biomes.LUSH_CAVES,
+		Biomes.NETHER_WASTES,
+		Biomes.WARPED_FOREST,
+		Biomes.CRIMSON_FOREST,
+		Biomes.SOUL_SAND_VALLEY,
+		Biomes.BASALT_DELTAS,
+		Biomes.THE_END,
+		Biomes.END_HIGHLANDS,
+		Biomes.END_MIDLANDS,
+		Biomes.SMALL_END_ISLANDS,
+		Biomes.END_BARRENS,
+	)
 
-	private val nameMap = HashMap<String, Int>()
-	private val idMap = HashMap<Int, BiomeBase>()
+	val dedicatedServerField = CraftServer::class.java.getDeclaredField("console")
 
 	init {
-		biomeMapField.isAccessible = true
-		minecraftKeyField.isAccessible = true
-		nameField.isAccessible = true
+		dedicatedServerField.isAccessible = true
+	}
 
-		val biomeMap = biomeMapField[null] as Int2ObjectMap<ResourceKey<BiomeBase>>
+	val biomeRegistry = (dedicatedServerField[Bukkit.getServer()] as DedicatedServer)
+		.registryHolder.ownedRegistryOrThrow(Registry.BIOME_REGISTRY)
 
-		val biomeRegistry = ModifiedBiomes.biomeRegistryField[null] as IRegistry<BiomeBase>
+	private val nameMap = HashMap<String, Int>()
 
-		biomeMap.forEach { (id, resourceKey) ->
-			nameMap[nameField[minecraftKeyField[resourceKey]] as String] = id
-			idMap[id] = biomeRegistry.d(resourceKey)
+	init {
+		biomeRegistry.entrySet().toList().forEach { entry ->
+			println(entry.key.location().path)
+			nameMap[entry.key.location().path] = toId(entry.key)
 		}
 	}
 
@@ -114,8 +157,12 @@ object BiomeNo {
 		return nameMap[name]
 	}
 
-	fun fromId(id: Int): BiomeBase? {
-		return idMap[id]
+	fun fromId(id: Int): Biome {
+		return biomeRegistry.get(resourceKeys[id])
+	}
+
+	fun toId(key: ResourceKey<Biome>): Int {
+		return resourceKeys.indexOfFirst { it === key }
 	}
 
 	fun isNetherBiome(no: Int): Boolean {
@@ -133,10 +180,6 @@ object BiomeNo {
 	fun isBadlands(no: Int): Boolean {
 		return when (no) {
 			BADLANDS,
-			BADLANDS_PLATEAU,
-			WOODED_BADLANDS_PLATEAU,
-			MODIFIED_BADLANDS_PLATEAU,
-			MODIFIED_WOODED_BADLANDS_PLATEAU,
 			ERODED_BADLANDS,
 			-> true
 			else -> false

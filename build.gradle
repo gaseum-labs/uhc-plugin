@@ -1,7 +1,8 @@
 plugins {
     id 'idea'
     id 'com.github.johnrengelman.shadow' version '7.1.0'
-    id 'org.jetbrains.kotlin.jvm' version '1.6.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.6.10'
+    id "io.papermc.paperweight.userdev" version "1.3.3-LOCAL-SNAPSHOT"
 }
 
 idea {
@@ -30,10 +31,6 @@ repositories {
         url "https://repo.aikar.co/content/groups/aikar/"
     }
     maven {
-        /* spigot jar */
-        url 'https://repo.dmulloy2.net/repository/public'
-    }
-    maven {
         /* discord */
         url 'https://m2.dv8tion.net/releases'
     }
@@ -44,12 +41,12 @@ repositories {
 }
 
 dependencies {
+    paperweightDevelopmentBundle("io.papermc.paper:dev-bundle:1.18.1-R0.1-SNAPSHOT")
     implementation 'net.dv8tion:JDA:4.3.0_277'
     implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
     implementation 'com.microsoft.sqlserver:mssql-jdbc:9.4.0.jre16'
-    compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT'
     compileOnly 'com.comphenix.protocol:ProtocolLib:4.7.0'
-    compileOnly 'io.papermc.paper:paper:1.17.1-R0.1-SNAPSHOT'
 }
 
 build.dependsOn shadowJar

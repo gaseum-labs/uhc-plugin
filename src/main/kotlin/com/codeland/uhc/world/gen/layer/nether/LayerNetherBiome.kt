@@ -2,10 +2,9 @@ package com.codeland.uhc.world.gen.layer.nether
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.gen.BiomeNo
-import net.minecraft.world.level.newbiome.context.WorldGenContext
-import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer1
+import com.codeland.uhc.world.gen.UHCArea.UHCLayer
 
-class LayerNetherBiome(val seed: Long) : AreaTransformer1 {
+class LayerNetherBiome(seed: Long) : UHCLayer(seed) {
 	companion object {
 		val specialBiomes = arrayOf(
 			BiomeNo.BASALT_DELTAS,
@@ -15,9 +14,9 @@ class LayerNetherBiome(val seed: Long) : AreaTransformer1 {
 		)
 	}
 
-	override fun a(context: WorldGenContext, x: Int, z: Int): Int {
+	override fun sample(x: Int, z: Int): Int {
 		return if (Util.mod(2 * z + x, 4) == 0) {
-			specialBiomes[context.a(specialBiomes.size)]
+			specialBiomes[random(x, z).nextInt(specialBiomes.size)]
 		} else {
 			BiomeNo.NETHER_WASTES
 		}
