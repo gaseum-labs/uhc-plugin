@@ -49,7 +49,7 @@ object Lobby {
 
 	fun saveRadius(world: World, radius: Int) {
 		WorldStorage.save(world, 32, 32, radius.toString())
-		radius = radius
+		this.radius = radius
 	}
 
 	fun resetPlayerStats(player: Player) {

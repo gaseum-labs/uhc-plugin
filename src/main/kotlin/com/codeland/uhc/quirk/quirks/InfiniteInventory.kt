@@ -118,7 +118,7 @@ class InfiniteInventory(type: QuirkType, game: Game) : Quirk(type, game) {
 		}
 
 		private fun save() {
-			val contents = player.inventory.contents
+			val contents = player.inventory.contents!!
 			for ((i, j) in getIndices()) {
 				pages[currentPage][i] = contents[j]
 			}

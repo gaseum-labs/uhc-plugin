@@ -9,15 +9,15 @@ import com.codeland.uhc.discord.storage.*
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Util.void
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class PublishSummaryCommand : MixerCommand(true) {
-	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
+	override fun isCommand(content: String, event: MessageReceivedEvent, bot: MixerBot): Boolean {
 		return keywordFilter(content, "publish")
 		&& replyingToDataFilter(event, false) { it.name == Channels.SUMMARY_STAGING_CHANNEL_NAME }
 	}
 
-	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
+	override fun onCommand(content: String, event: MessageReceivedEvent, bot: MixerBot) {
 		val seasonEntry = StorageEntryInt("season")
 		val gameEntry = StorageEntryInt("game")
 		val modeEntry = StorageEntryString("mode")

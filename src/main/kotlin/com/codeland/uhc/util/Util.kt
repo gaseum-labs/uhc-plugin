@@ -4,6 +4,7 @@ package com.codeland.uhc.util
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
 import org.bukkit.ChatColor
@@ -177,17 +178,20 @@ object Util {
 		return component
 	}
 
-	fun nmsGradientString(string: String, from: TextColor, to: TextColor): IChatMutableComponent {
-		var component = ChatComponentText("") as IChatMutableComponent
+	fun nmsGradientString(string: String, from: TextColor, to: TextColor): MutableComponent {
+		var component = TextComponent("") as MutableComponent
 
 		string.forEachIndexed { i, c ->
 			val along = i.toFloat() / (string.length - 1)
 			val red = ((to.red() - from.red()) * along + from.red()).toInt()
 			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
 			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
-			component =
-				component.addSibling(ChatComponentText("$c").setChatModifier(ChatModifier.a.setColor(ChatHexColor.a(red.shl(
-					16).or(gre.shl(8)).or(blu)))))
+			
+			component = component.append(
+				TextComponent("$c").setStyle(net.minecraft.network.chat.Style.EMPTY.withColor(
+					red.shl(16).or(gre.shl(8)).or(blu))
+				)
+			)
 		}
 
 		return component

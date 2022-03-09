@@ -44,7 +44,7 @@ class Flying(type: QuirkType, game: Game) : Quirk(type, game) {
 		}
 
 		fun revokeItems(player: Player) {
-			player.inventory.contents.forEach { stack ->
+			player.inventory.contents!!.forEach { stack ->
 				if (stack != null && (stack.type == Material.ELYTRA || stack.type == Material.FIREWORK_ROCKET) && stack.itemMeta.hasLore()) {
 					stack.amount = 0
 				}

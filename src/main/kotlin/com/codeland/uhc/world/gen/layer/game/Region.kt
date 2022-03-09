@@ -8,6 +8,7 @@ enum class Region(vararg biomes: Pair<Int, Int>) {
 		3 to BiomeNo.PLAINS,
 		2 to BiomeNo.SWAMP,
 		1 to BiomeNo.DESERT,
+		1 to BiomeNo.MEADOW,
 	),
 	FORESTED(
 		2 to BiomeNo.FOREST,
@@ -22,33 +23,33 @@ enum class Region(vararg biomes: Pair<Int, Int>) {
 	),
 	JUNGLEY(
 		3 to BiomeNo.JUNGLE,
-		1 to BiomeNo.JUNGLE_EDGE,
+		1 to BiomeNo.SPARSE_JUNGLE,
 		1 to BiomeNo.BAMBOO_JUNGLE,
 	),
 
 	SPRUCEY(
 		4 to BiomeNo.TAIGA,
-		1 to BiomeNo.GIANT_TREE_TAIGA,
-		1 to BiomeNo.GIANT_SPRUCE_TAIGA,
+		1 to BiomeNo.OLD_GROWTH_PINE_TAIGA,
+		1 to BiomeNo.OLD_GROWTH_SPRUCE_TAIGA,
 	),
 	MOUNTAINOUS(
-		2 to BiomeNo.MOUNTAINS,
-		2 to BiomeNo.WOODED_MOUNTAINS,
-		1 to BiomeNo.GRAVELLY_MOUNTAINS,
+		2 to BiomeNo.WINDSWEPT_FOREST,
+		2 to BiomeNo.WINDSWEPT_HILLS,
+		1 to BiomeNo.WINDSWEPT_GRAVELLY_HILLS,
 	),
 	ARID(
 		3 to BiomeNo.BADLANDS,
-		2 to BiomeNo.WOODED_BADLANDS_PLATEAU,
-		1 to BiomeNo.BADLANDS_PLATEAU,
+		2 to BiomeNo.WOODED_BADLANDS,
 		1 to BiomeNo.ERODED_BADLANDS,
 	),
 	ACACIA(
 		2 to BiomeNo.SAVANNA,
-		1 to BiomeNo.SHATTERED_SAVANNA,
+		1 to BiomeNo.WINDSWEPT_SAVANNA,
 	),
 	SNOWING(
-		1 to BiomeNo.SNOWY_TUNDRA,
-		1 to BiomeNo.SNOWY_TAIGA
+		1 to BiomeNo.SNOWY_SLOPES,
+		1 to BiomeNo.SNOWY_TAIGA,
+		1 to BiomeNo.SNOWY_PLAINS,
 	)
 	;
 

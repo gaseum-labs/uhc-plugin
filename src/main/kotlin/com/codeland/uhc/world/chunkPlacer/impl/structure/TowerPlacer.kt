@@ -316,10 +316,7 @@ class TowerPlacer : ChunkPlacer(1, 5) {
 		}
 
 		fun fillChestContents(inventory: Inventory) {
-			val numItems = Random.nextInt(4, 9)
-			inventory.contents.indices.shuffled().subList(0, numItems).forEach { i ->
-
-			}
+			
 		}
 	}
 }

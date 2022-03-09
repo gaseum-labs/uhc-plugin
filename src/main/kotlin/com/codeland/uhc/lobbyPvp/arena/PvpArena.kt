@@ -5,7 +5,7 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.lobbyPvp.*
 import org.bukkit.*
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.math.*
@@ -70,7 +70,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 
 		online.forEach { player1 ->
 			online.forEach { player2 ->
-				(player1 as CraftPlayer).handle.b.sendPacket(Packet.metadataPacketDefaultState(player2))
+				(player1 as CraftPlayer).handle.connection.send(Packet.metadataPacketDefaultState(player2))
 			}
 		}
 	}

@@ -8,6 +8,7 @@ import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.phase.phases.Endgame
 import com.codeland.uhc.core.phase.phases.Grace
+import com.codeland.uhc.discord.storage.DiscordStorage
 import com.codeland.uhc.dropFix.DropFixType
 import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
@@ -37,6 +38,7 @@ import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
+import org.bukkit.event.server.ServerListPingEvent
 import org.bukkit.event.vehicle.VehicleCreateEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.event.world.WorldSaveEvent
@@ -49,6 +51,7 @@ import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
+import org.bukkit.util.CachedServerIcon
 
 class EventListener : Listener {
 	@EventHandler
@@ -261,7 +264,7 @@ class EventListener : Listener {
 			)
 		) {
 			event.isCancelled = true
-			event.inventory.matrix.forEach { it.amount = 0 }
+			event.inventory.matrix?.forEach { it?.amount = 0 }
 
 			player.closeInventory()
 			player.showTitle(Title.title(Component.text("BRUH", TextColor.color(0x791ee8)), Component.empty()))
@@ -731,5 +734,22 @@ class EventListener : Listener {
 				event.player.health += hearts
 			}
 		}
+	}
+
+	@EventHandler
+	fun serverListPint(event: ServerListPingEvent) {
+		/* do not attempt to modify MOTD if discordstorage is not set */
+		val splashText = DiscordStorage.splashText ?: return
+
+		val color0 = TextColor.color(DiscordStorage.color0 ?: return)
+		val color1 = TextColor.color(DiscordStorage.color1 ?: return)
+
+		val length = 48
+		val strip =
+			String(CharArray(length + 1) { i -> if (i == length) '\n' else splashText[i % splashText.length] })
+
+		event.motd(
+			Util.gradientString(strip, color0, color1).append(Util.gradientString(strip, color0, color1))
+		)
 	}
 }

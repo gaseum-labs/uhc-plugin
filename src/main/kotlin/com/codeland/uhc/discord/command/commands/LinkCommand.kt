@@ -9,14 +9,14 @@ import com.codeland.uhc.discord.command.MixerCommand
 import com.codeland.uhc.util.Bad
 import com.codeland.uhc.util.Good
 import com.codeland.uhc.util.Util.void
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class LinkCommand : MixerCommand(false) {
-	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
+	override fun isCommand(content: String, event: MessageReceivedEvent, bot: MixerBot): Boolean {
 		return keywordFilter(content, "link")
 	}
 
-	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
+	override fun onCommand(content: String, event: MessageReceivedEvent, bot: MixerBot) {
 		fun message(message: String) = event.channel.sendMessage(message).queue()
 
 		val inputUsername = content.split(' ').filter { it.isNotEmpty() }.getOrNull(1)

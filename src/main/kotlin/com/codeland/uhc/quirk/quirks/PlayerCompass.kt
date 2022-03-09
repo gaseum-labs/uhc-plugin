@@ -83,8 +83,8 @@ class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 		}
 
 		fun revokeCompass(player: Player) {
-			player.inventory.contents.forEach { itemStack ->
-				if (isCompass(itemStack)) itemStack.amount = 0
+			player.inventory.contents!!.forEach { itemStack ->
+				if (isCompass(itemStack)) itemStack?.amount = 0
 			}
 		}
 	}

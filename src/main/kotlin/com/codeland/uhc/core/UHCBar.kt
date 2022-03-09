@@ -5,20 +5,20 @@ import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
-import net.minecraft.network.chat.ChatComponentText
-import net.minecraft.network.protocol.game.PacketPlayOutBoss
-import net.minecraft.world.BossBattle
+import net.minecraft.network.chat.TextComponent
+import net.minecraft.network.protocol.game.ClientboundBossEventPacket
+import net.minecraft.world.BossEvent.BossBarColor
+import net.minecraft.world.BossEvent.BossBarColor.*
+import net.minecraft.world.BossEvent.BossBarOverlay.PROGRESS
 import org.bukkit.ChatColor
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.entity.Player
 
 object UHCBar {
 	fun addBossBar(player: Player) {
-		(player as CraftPlayer).handle.b.sendPacket(
-			PacketPlayOutBoss.createAddPacket(
-				object : BossBattle(
-					player.uniqueId, ChatComponentText(""), BarColor.a, BarStyle.a
-				) {}
+		(player as CraftPlayer).handle.connection.send(
+			ClientboundBossEventPacket.createAddPacket(
+				UHCBossEvent(player.uniqueId, TextComponent(""), WHITE, PROGRESS)
 			)
 		)
 	}
@@ -27,19 +27,16 @@ object UHCBar {
 		player: Player,
 		name: String,
 		progress: Float,
-		barColor: BossBattle.BarColor,
+		barColor: BossBarColor,
 	) {
-		player as CraftPlayer
+		val connection = (player as CraftPlayer).handle.connection
 
-		val bossBar = object : BossBattle(
-			player.uniqueId, ChatComponentText(name),
-			barColor, BarStyle.a
-		) {}
+		val bossBar = UHCBossEvent(player.uniqueId, TextComponent(name), barColor, PROGRESS)
 		bossBar.progress = progress
 
-		player.handle.b.sendPacket(PacketPlayOutBoss.createUpdateNamePacket(bossBar))
-		player.handle.b.sendPacket(PacketPlayOutBoss.createUpdateProgressPacket(bossBar))
-		player.handle.b.sendPacket(PacketPlayOutBoss.createUpdateStylePacket(bossBar))
+		connection.send(ClientboundBossEventPacket.createUpdateNamePacket(bossBar))
+		connection.send(ClientboundBossEventPacket.createUpdateProgressPacket(bossBar))
+		connection.send(ClientboundBossEventPacket.createUpdateStylePacket(bossBar))
 	}
 
 	fun updateBar(player: Player) {
@@ -70,7 +67,7 @@ object UHCBar {
 					} else {
 						1.0f - (arena.glowTimer.toFloat() / arena.glowPeriod)
 					},
-					BossBattle.BarColor.c
+					RED
 				)
 			}
 			arena is ParkourArena -> {
@@ -78,7 +75,7 @@ object UHCBar {
 					player,
 					"Parkour",
 					1.0f,
-					BossBattle.BarColor.g
+					GREEN
 				)
 			}
 			player.world === WorldManager.lobbyWorld -> {
@@ -94,7 +91,7 @@ object UHCBar {
 						""
 					},
 					phase?.updateBarLength(phase.remainingTicks) ?: 1.0f,
-					BossBattle.BarColor.g
+					WHITE
 				)
 			}
 			else -> {

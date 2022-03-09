@@ -2,16 +2,16 @@ package com.codeland.uhc.discord.command
 
 import com.codeland.uhc.discord.MixerBot
 import net.dv8tion.jda.api.entities.TextChannel
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 abstract class MixerCommand(val requiresAdmin: Boolean) {
-	abstract fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean
-	abstract fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot)
+	abstract fun isCommand(content: String, event: MessageReceivedEvent, bot: MixerBot): Boolean
+	abstract fun onCommand(content: String, event: MessageReceivedEvent, bot: MixerBot)
 
 	companion object {
 		const val prefix = "%"
 
-		fun errorMessage(event: GuildMessageReceivedEvent, text: String?) {
+		fun errorMessage(event: MessageReceivedEvent, text: String?) {
 			event.channel.sendMessage(text ?: "Unknown error").queue()
 		}
 
@@ -24,7 +24,7 @@ abstract class MixerCommand(val requiresAdmin: Boolean) {
 		}
 
 		fun replyingToDataFilter(
-			event: GuildMessageReceivedEvent,
+			event: MessageReceivedEvent,
 			needsReplacement: Boolean,
 			isChannel: (TextChannel) -> Boolean,
 		): Boolean {

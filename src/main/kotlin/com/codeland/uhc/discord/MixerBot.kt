@@ -12,7 +12,7 @@ import io.netty.buffer.ByteBufOutputStream
 import io.netty.buffer.Unpooled
 import net.dv8tion.jda.api.*
 import net.dv8tion.jda.api.entities.*
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import java.awt.RenderingHints
@@ -58,8 +58,6 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 		SeasonCommand()
 	)
 
-	var serverIcon: String? = null
-
 	val SummaryManager: SummaryManager = SummaryManager(this)
 
 	init {
@@ -71,40 +69,29 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 		DiscordStorage.load(guild)
 
 		clearTeamVCs()
+	}
 
-		val iconUrl = guild.iconUrl
-		if (iconUrl != null) {
-			val request = HttpRequest.newBuilder(URI(iconUrl)).GET().build()
-			val client = HttpClient.newHttpClient()
+	fun loadIcon(): CompletableFuture<BufferedImage> {
+		val iconUrl = guild.iconUrl ?: return CompletableFuture.failedFuture(Exception("Server has no icon"))
 
-			client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).thenAccept { response ->
-				val bytebuf = Unpooled.buffer()
+		val request = HttpRequest.newBuilder(URI(iconUrl)).GET().build()
+		val client = HttpClient.newHttpClient()
 
-				try {
-					val size = 64
-					val baseImage = ImageIO.read(response.body())
-					val scaledImage = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
+		return client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).thenApply { response ->
+			val size = 64
+			val baseImage = ImageIO.read(response.body())
+			val scaledImage = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
 
-					val graphics = scaledImage.createGraphics()
-					graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-						RenderingHints.VALUE_INTERPOLATION_BILINEAR)
-					graphics.drawImage(baseImage, 0, 0, size, size, 0, 0, baseImage.width, baseImage.height, null)
-					graphics.dispose()
+			val graphics = scaledImage.createGraphics()
+			graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+			graphics.drawImage(baseImage, 0, 0, size, size, 0, 0, baseImage.width, baseImage.height, null)
+			graphics.dispose()
 
-					ImageIO.write(scaledImage, "PNG", ByteBufOutputStream(bytebuf))
-					bytebuf.setInt(16, size)
-					bytebuf.setInt(20, size)
-					val bytebuffer = Base64.getEncoder().encode(bytebuf.nioBuffer())
-					serverIcon = "data:image/png;base64," + StandardCharsets.UTF_8.decode(bytebuffer)
-
-				} finally {
-					bytebuf.release()
-				}
-			}
+			scaledImage
 		}
 	}
 
-	override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
+	override fun onMessageReceived(event: MessageReceivedEvent) {
 		val message = event.message
 		val content = message.contentRaw
 		val member = event.member ?: return
@@ -207,7 +194,7 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 	private fun voiceMembersFromPlayers(guild: Guild, players: List<UUID>): List<Member> {
 		return players.mapNotNull { UHC.dataManager.linkData.getDiscordId(it) }
 			.mapNotNull { guild.getMemberById(it) }
-			.filter { it.voiceState?.inVoiceChannel() == true }
+			.filter { it.voiceState?.inAudioChannel() == true }
 	}
 
 	private fun isAdmin(member: Member): Boolean {

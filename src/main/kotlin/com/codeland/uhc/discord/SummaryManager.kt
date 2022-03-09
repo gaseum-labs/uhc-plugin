@@ -3,9 +3,9 @@ package com.codeland.uhc.discord
 import com.codeland.uhc.core.stats.Summary
 import com.codeland.uhc.util.Util
 import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.entities.TextChannel
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.MessageBuilder
+import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.net.URI
 import java.net.http.*
 import java.util.*
@@ -30,7 +30,7 @@ class SummaryManager(val bot: MixerBot) {
 		}
 	}
 
-	fun sendFinalSummary(season: Int, game: Int, summary: Summary, event: GuildMessageReceivedEvent) {
+	fun sendFinalSummary(season: Int, game: Int, summary: Summary, event: MessageReceivedEvent) {
 		val iconUrl = event.guild.iconUrl
 		val icon = if (iconUrl != null) {
 			val request = HttpRequest.newBuilder(URI(iconUrl)).GET().build()
@@ -43,9 +43,11 @@ class SummaryManager(val bot: MixerBot) {
 
 		getSummariesChannel().thenAccept { summaries ->
 			if (icon != null) {
-				summaries.sendFile(icon, "logo.png").embed(summaryToEmbed(season, game, summary)).queue()
+				summaries.sendFile(icon, "logo.png").setEmbeds(summaryToEmbed(season, game, summary)).queue()
 			} else {
-				summaries.sendMessage(summaryToEmbed(season, game, summary)).queue()
+				summaries.sendMessage(
+					MessageBuilder().setEmbeds(summaryToEmbed(season, game, summary)).build()
+				).queue()
 			}
 		}
 	}

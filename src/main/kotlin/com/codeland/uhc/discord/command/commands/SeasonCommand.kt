@@ -8,15 +8,15 @@ import com.codeland.uhc.discord.storage.*
 import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.util.extensions.ResultSetExtensions.setIntNull
 import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.util.concurrent.*
 
 class SeasonCommand : MixerCommand(true) {
-	override fun isCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot): Boolean {
+	override fun isCommand(content: String, event: MessageReceivedEvent, bot: MixerBot): Boolean {
 		return keywordFilter(content, "season")
 	}
 
-	override fun onCommand(content: String, event: GuildMessageReceivedEvent, bot: MixerBot) {
+	override fun onCommand(content: String, event: MessageReceivedEvent, bot: MixerBot) {
 		CompletableFuture.supplyAsync {
 			val connection =
 				UHC.dataManager.connection ?: return@supplyAsync errorMessage(event, "Not connected to the database")
@@ -61,7 +61,7 @@ class SeasonCommand : MixerCommand(true) {
 				val championColor = seasonResults.getInt(4)
 				val championName = seasonResults.getNString(5)
 
-				event.channel.sendFile(logo, "logo.png").embed(
+				event.channel.sendFile(logo, "logo.png").setEmbeds(
 					EmbedBuilder()
 						.setTitle("Season $season")
 						.setImage("attachment://logo.png")

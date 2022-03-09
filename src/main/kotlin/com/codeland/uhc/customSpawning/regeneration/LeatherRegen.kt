@@ -11,15 +11,9 @@ import kotlin.random.Random
 
 class LeatherRegen(game: Game) : Regen(game, 5, 600) {
 	private fun spawnInfo(block: Block): SpawnInfo<*> {
-		return when (block.biome) {
-			Biome.MOUNTAINS,
-			Biome.WOODED_MOUNTAINS,
-			Biome.GRAVELLY_MOUNTAINS,
-			Biome.MODIFIED_GRAVELLY_MOUNTAINS,
-			-> SpawnLlama()
-			Biome.PLAINS,
-			Biome.SUNFLOWER_PLAINS,
-			-> if (Random(block.blockKey).nextBoolean()) SpawnHorse() else SpawnDonkey()
+		return when {
+			SpawnUtil.mountains(block.biome) -> SpawnLlama()
+			SpawnUtil.plains(block.biome) -> if (Random.nextBoolean()) SpawnHorse() else SpawnDonkey()
 			else -> SpawnCow()
 		}
 	}

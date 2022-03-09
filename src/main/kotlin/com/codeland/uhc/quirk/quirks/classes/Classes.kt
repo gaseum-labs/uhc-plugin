@@ -68,7 +68,7 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 				if (itemStack.type.maxDurability != 0.toShort()) {
 					val meta = itemStack.itemMeta as Damageable
 					meta.damage -= 10
-					itemStack.itemMeta = meta as ItemMeta
+					itemStack.itemMeta = meta
 				}
 			}
 
@@ -79,14 +79,15 @@ class Classes(type: QuirkType, game: Game) : Quirk(type, game) {
 
 					if (getClass(playerData) == QuirkClass.ENCHANTER) {
 						if (!player.inventory.contains(Material.GRINDSTONE)
-						  && player.inventory.contents.any { it == null }) {
+							&& player.inventory.contents!!.any { it == null }
+						) {
 							player.inventory.addItem(ItemStack(Material.GRINDSTONE))
 						}
 
 						val slot = Random.nextInt(5)
 
 						if (slot < 4)
-							regenDurability(player.inventory.armorContents[slot])
+							regenDurability(player.inventory.armorContents!![slot])
 						else
 							regenDurability(player.inventory.itemInOffHand)
 					}

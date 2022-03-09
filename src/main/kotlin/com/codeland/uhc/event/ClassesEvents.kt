@@ -13,6 +13,7 @@ import com.codeland.uhc.util.Util.materialRange
 import com.codeland.uhc.util.extensions.LocationExtensions.minus
 import com.codeland.uhc.util.extensions.LocationExtensions.plus
 import com.codeland.uhc.util.extensions.VectorExtensions.plus
+import net.kyori.adventure.text.Component
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.Location
@@ -94,7 +95,8 @@ class ClassesEvents : Listener {
 			block.type = Material.WATER
 			block.world.playSound(block.location.toCenterLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f)
 
-			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity = player.location.direction.multiply(2)
+			if (player.isSprinting && block.world.environment != World.Environment.NETHER) player.velocity =
+				player.location.direction.multiply(2)
 
 			SchedulerUtil.later(if (block.world.environment == World.Environment.NETHER) 10 else 60) {
 				if (block.type == Material.WATER) {
@@ -110,8 +112,9 @@ class ClassesEvents : Listener {
 
 		if (classes.getClass(player.uniqueId) == QuirkClass.ENCHANTER) {
 			if (event.damage > player.health
-					&& player.level > 0
-					&& event.damage <= player.health + player.level) {
+				&& player.level > 0
+				&& event.damage <= player.health + player.level
+			) {
 				event.isCancelled = true
 				val health = player.health + player.level
 				player.level = 0
@@ -186,15 +189,16 @@ class ClassesEvents : Listener {
 				val enchantColors = arrayOf(RED, GOLD, YELLOW, GREEN, AQUA, BLUE, LIGHT_PURPLE)
 				fun enchantColor(index: Int) = enchantColors[index % enchantColors.size]
 
-				fun tellItem(itemStack: ItemStack) {
-					val meta = itemStack.itemMeta
+				fun tellItem(itemStack: ItemStack?) {
+					val meta = itemStack?.itemMeta ?: return
 
-					player.sendActionBar(
+					player.sendActionBar(Component.text(
 						meta.enchants.asIterable().mapIndexed { index, (enchant, level) ->
 							"${enchantColor(index)}$BOLD${enchant.key.key} ${enchantColor(index)}$level"
 						}.joinToString(", ",
-							"$WHITE${hurtPlayer.name}'s $WHITE$BOLD${itemStack.type.name.toLowerCase()}: ")
-					)
+							"$WHITE${hurtPlayer.name}'s $WHITE$BOLD${itemStack.type.name.lowercase()}: "
+						)
+					))
 				}
 
 				fun validItem(itemStack: ItemStack?) = itemStack != null &&
@@ -204,7 +208,7 @@ class ClassesEvents : Listener {
 					val item = if (slot == 3)
 						hurtPlayer.inventory.itemInMainHand
 					else
-						hurtPlayer.inventory.armorContents[slot]
+						hurtPlayer.inventory.armorContents!![slot]
 
 					return if (validItem(item)) {
 						tellItem(item); true
@@ -400,7 +404,8 @@ class ClassesEvents : Listener {
 			}
 			Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
 				val control = Classes.remoteControls.find { (item, _, _) ->
-					item == event.player.inventory.itemInMainHand }
+					item == event.player.inventory.itemInMainHand
+				}
 				if (control != null) {
 					event.isCancelled = true
 					val leverData = control.block.blockData as? Switch
@@ -408,11 +413,11 @@ class ClassesEvents : Listener {
 						leverData.isPowered = !leverData.isPowered
 						control.block.blockData = leverData
 						control.block.world.playSound(
-								control.block.location,
-								Sound.BLOCK_LEVER_CLICK,
-								1.0f,
-								// some attempt to preserve the difference in pitch of on and off
-								if (leverData.isPowered) 1.5f else 1.0f
+							control.block.location,
+							Sound.BLOCK_LEVER_CLICK,
+							1.0f,
+							// some attempt to preserve the difference in pitch of on and off
+							if (leverData.isPowered) 1.5f else 1.0f
 						)
 					}
 					event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
@@ -639,18 +644,19 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onBlockPlace(event: BlockPlaceEvent) {
-        val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
+		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
 
-        val player = event.player
+		val player = event.player
 
-        if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER) {
-            when (event.block.type) {
+		if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER) {
+			when (event.block.type) {
 				Material.LIGHT_WEIGHTED_PRESSURE_PLATE -> {
 					for (x in -1..1) for (y in 1..7) for (z in -1..1) {
 						if (player.location.block.getRelative(x, y, z).type.isSolid) {
 							event.isCancelled = true
-							com.codeland.uhc.util.Action.sendGameMessage(player, "You can't use that here. Get to a more open area.")
-                            return
+							com.codeland.uhc.util.Action.sendGameMessage(player,
+								"You can't use that here. Get to a more open area.")
+							return
 						}
 					}
 					val location = event.blockPlaced.location + Vector(0.0, 5.0, 0.0)
@@ -673,9 +679,9 @@ class ClassesEvents : Listener {
 					SchedulerUtil.delayedFor(1, 0 until 5) { i ->
 						for (dl in -2..2) {
 							if (facingX) event.blockPlaced.getRelative(0, i, dl).type = Material.STONE
-                            else event.blockPlaced.getRelative(dl, i, 0).type = Material.STONE
+							else event.blockPlaced.getRelative(dl, i, 0).type = Material.STONE
 						}
-                    }
+					}
 				}
 				Material.POLISHED_GRANITE_STAIRS -> {
 					val location = event.blockPlaced.location.clone()
@@ -683,7 +689,7 @@ class ClassesEvents : Listener {
 					val direction = (event.blockPlaced.blockData as Stairs).facing
 					event.blockPlaced.type = Material.COBBLESTONE_STAIRS
 					SchedulerUtil.delayedFor(1, 0..8) { i ->
-                        for (dl in -1..1) {
+						for (dl in -1..1) {
 							val block = when (direction) {
 								BlockFace.EAST -> event.blockPlaced.getRelative(i, i, dl)
 								BlockFace.WEST -> event.blockPlaced.getRelative(-i, i, dl)
@@ -699,10 +705,11 @@ class ClassesEvents : Listener {
 							val below = block.getRelative(0, -1, 0)
 							if (below.type == Material.AIR) below.type = Material.COBBLESTONE
 						}
-                    }
+					}
 				}
-				else -> {}
+				else -> {
+				}
 			}
-        }
-    }
+		}
+	}
 }

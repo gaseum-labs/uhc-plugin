@@ -3,11 +3,11 @@ package com.codeland.uhc.team
 import com.codeland.uhc.core.*
 import com.codeland.uhc.event.Packet
 import com.codeland.uhc.event.Packet.metadataPacketDefaultState
-import net.minecraft.network.protocol.game.PacketPlayOutScoreboardScore
-import net.minecraft.server.ScoreboardServer
+import net.minecraft.network.protocol.game.ClientboundSetScorePacket
+import net.minecraft.server.ServerScoreboard
 import org.bukkit.Bukkit
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
-import org.bukkit.craftbukkit.v1_17_R1.scoreboard.CraftScoreboard
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_18_R2.scoreboard.CraftScoreboard
 import org.bukkit.entity.Player
 import kotlin.math.ceil
 
@@ -29,8 +29,9 @@ object NameManager {
 		/* add to hearts objective */
 		val playerHealthScore = ceil(player.health).toInt()
 		val scoreboard = (Bukkit.getScoreboardManager().mainScoreboard as CraftScoreboard).handle
-		scoreboard.getPlayerScoreForObjective(player.name, scoreboard.getObjective(UHC.heartsObjective.name)).score =
-			playerHealthScore
+
+		val nmsObjective = scoreboard.getObjective(UHC.heartsObjective.name)!!
+		scoreboard.getPlayerScores(player.name)[nmsObjective]?.score = playerHealthScore
 
 		/* team name updating */
 
@@ -40,13 +41,15 @@ object NameManager {
 
 			/* tell other players this player's name & update glowing */
 			Packet.updateTeamColor(player, team, newName, onlinePlayer)
-			onlinePlayer.handle.b.sendPacket(metadataPacketDefaultState(player))
+			onlinePlayer.handle.connection.send(metadataPacketDefaultState(player))
 
 			/* send heart packet on joining */
-			onlinePlayer.handle.b.sendPacket(PacketPlayOutScoreboardScore(ScoreboardServer.Action.a,
+			onlinePlayer.handle.connection.send(ClientboundSetScorePacket(
+				ServerScoreboard.Method.CHANGE,
 				UHC.heartsObjective.name,
 				player.name,
-				playerHealthScore))
+				playerHealthScore
+			))
 
 			/* tell this player about other players' names & update glowing */
 			if (player != onlinePlayer) {
@@ -54,7 +57,7 @@ object NameManager {
 					UHC.getTeams().playersTeam(onlinePlayer.uniqueId),
 					Packet.playersNewName(onlinePlayer.uniqueId),
 					player)
-				player.handle.b.sendPacket(metadataPacketDefaultState(onlinePlayer))
+				player.handle.connection.send(metadataPacketDefaultState(onlinePlayer))
 			}
 		}
 	}

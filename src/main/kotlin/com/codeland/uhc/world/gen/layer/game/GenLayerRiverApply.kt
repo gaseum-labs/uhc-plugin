@@ -12,11 +12,10 @@ class GenLayerRiverApply(seed: Long) : UHCLayerMerge(seed) {
 				BiomeNo.WARM_OCEAN -> BiomeNo.WARM_OCEAN
 				BiomeNo.LUKEWARM_OCEAN -> BiomeNo.LUKEWARM_OCEAN
 				BiomeNo.OCEAN -> BiomeNo.OCEAN
-				BiomeNo.SNOWY_TUNDRA,
 				BiomeNo.SNOWY_TAIGA,
-				BiomeNo.ICE_SPIKES,
-				BiomeNo.SNOWY_TAIGA_MOUNTAINS,
-				BiomeNo.SNOWY_MOUNTAINS,
+				BiomeNo.SNOWY_BEACH,
+				BiomeNo.SNOWY_PLAINS,
+				BiomeNo.SNOWY_SLOPES,
 				-> BiomeNo.FROZEN_RIVER
 				else -> BiomeNo.RIVER
 			}

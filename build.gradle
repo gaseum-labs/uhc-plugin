@@ -38,15 +38,25 @@ repositories {
         /* transact-sql driver */
         url 'https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc'
     }
+    maven {
+        url 'https://repo.maven.apache.org/maven2'
+        name 'Maven Central'
+    }
 }
 
 dependencies {
-    paperweightDevelopmentBundle("io.papermc.paper:dev-bundle:1.18.1-R0.1-SNAPSHOT")
-    implementation 'net.dv8tion:JDA:4.3.0_277'
+    paperweightDevelopmentBundle("io.papermc.paper:dev-bundle:1.18.2-R0.1-SNAPSHOT")
+    paperweight { "io.papermc.paper:dev-bundle:1.18.2-R0.1-SNAPSHOT" }
+    
+    implementation 'net.dv8tion:JDA:5.0.0-alpha.9'
     implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
-    implementation 'com.microsoft.sqlserver:mssql-jdbc:9.4.0.jre16'
-    compileOnly 'io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT'
-    compileOnly 'com.comphenix.protocol:ProtocolLib:4.7.0'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:10.2.0.jre17'
+    compileOnly 'io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT'
+    compileOnly 'com.comphenix.protocol:ProtocolLib:4.8.0'
 }
 
 build.dependsOn shadowJar
+
+shadowJar {
+    archiveFileName = "UHC Plugin.jar"
+}

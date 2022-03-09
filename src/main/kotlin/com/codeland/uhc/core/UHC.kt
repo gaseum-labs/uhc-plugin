@@ -127,7 +127,7 @@ object UHC {
 					val countdownTitle = Title.title(
 						Component.text("${-timer}", countdownColor(-timer), TextDecoration.BOLD),
 						Component.text("Game starts in"),
-						Title.Times.of(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
+						Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
 					)
 
 					preGameTeams.teams().forEach {

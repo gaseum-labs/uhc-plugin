@@ -1,12 +1,15 @@
 package com.codeland.uhc.world.gen
 
+import com.codeland.uhc.util.UHCReflect
+import net.minecraft.core.Holder
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.world.level.biome.Biome
 import net.minecraft.world.level.biome.Biomes
+import net.minecraft.world.level.levelgen.synth.NormalNoise
 import org.bukkit.Bukkit
-import org.bukkit.craftbukkit.v1_18_R1.CraftServer
+import org.bukkit.craftbukkit.v1_18_R2.CraftServer
 
 object BiomeNo {
 	const val THE_VOID = 0
@@ -135,14 +138,25 @@ object BiomeNo {
 		Biomes.END_BARRENS,
 	)
 
-	val dedicatedServerField = CraftServer::class.java.getDeclaredField("console")
+	val dedicatedServerField = UHCReflect<CraftServer, DedicatedServer>(CraftServer::class, "console")
+
+	val biomeRegistry: Registry<Biome>
+	val noiseRegistry: Registry<NormalNoise.NoiseParameters>
 
 	init {
-		dedicatedServerField.isAccessible = true
+		val registryHolder = dedicatedServerField.get(Bukkit.getServer() as CraftServer).registryHolder
+
+		biomeRegistry = registryHolder.ownedRegistryOrThrow(Registry.BIOME_REGISTRY)
+		noiseRegistry = registryHolder.ownedRegistryOrThrow(Registry.NOISE_REGISTRY)
 	}
 
-	val biomeRegistry = (dedicatedServerField[Bukkit.getServer()] as DedicatedServer)
-		.registryHolder.ownedRegistryOrThrow(Registry.BIOME_REGISTRY)
+	val biomeHolders = HashMap<Int, Holder<Biome>>()
+
+	init {
+		resourceKeys.forEachIndexed { i, resourceKey ->
+			biomeHolders[i] = Holder.direct(biomeRegistry.get(resourceKey)!!)
+		}
+	}
 
 	private val nameMap = HashMap<String, Int>()
 
@@ -157,8 +171,8 @@ object BiomeNo {
 		return nameMap[name]
 	}
 
-	fun fromId(id: Int): Biome {
-		return biomeRegistry.get(resourceKeys[id])
+	fun fromId(id: Int): Holder<Biome> {
+		return biomeHolders[id]!!
 	}
 
 	fun toId(key: ResourceKey<Biome>): Int {

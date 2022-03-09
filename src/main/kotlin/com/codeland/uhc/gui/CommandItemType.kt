@@ -79,7 +79,7 @@ enum class CommandItemType(
 	}
 
 	private fun hasItem(inventory: Inventory): Boolean {
-		return inventory.contents.any { stack -> stack != null && isItem(stack) }
+		return inventory.contents!!.any { stack -> stack != null && isItem(stack) }
 	}
 
 	private fun createItem(): ItemStack {

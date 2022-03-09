@@ -6,6 +6,8 @@ import com.codeland.uhc.event.Generation
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.world.chunkPlacer.ChunkPlacerHolder
 import org.bukkit.*
+import org.bukkit.entity.SpawnCategory.ANIMAL
+import org.bukkit.entity.SpawnCategory.MONSTER
 import java.io.File
 
 object WorldManager {
@@ -73,8 +75,8 @@ object WorldManager {
 		world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true)
 		world.setGameRule(GameRule.DO_TRADER_SPAWNING, false)
 		world.difficulty = Difficulty.NORMAL
-		world.animalSpawnLimit = 0
-		world.monsterSpawnLimit = 0
+		world.setSpawnLimit(MONSTER, 0)
+		world.setSpawnLimit(ANIMAL, 0)
 
 		Generation.cleanSuspended(world)
 

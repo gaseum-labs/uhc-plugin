@@ -160,8 +160,10 @@ class PlayerData(val uuid: UUID) {
 	 * place this into the offlineZombie field in PlayerData
 	 */
 	fun createZombie(player: Player): Zombie {
-		val clonedInventory = Array(player.inventory.contents.size) { i ->
-			player.inventory.contents[i]?.clone()
+		val inventoryContents = player.inventory.contents!!
+
+		val clonedInventory = Array(inventoryContents.size) { i ->
+			inventoryContents[i]?.clone()
 		}
 
 		val team = UHC.getTeams().playersTeam(player.uniqueId)

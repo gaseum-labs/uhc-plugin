@@ -25,7 +25,7 @@ class SnowPlacer : ChunkPlacer(1, 1) {
 						}
 					}
 
-					block.biome = Biome.SNOWY_TUNDRA
+					block.biome = Biome.SNOWY_PLAINS
 				}
 			}
 		}

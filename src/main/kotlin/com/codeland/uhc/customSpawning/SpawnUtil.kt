@@ -104,38 +104,26 @@ object SpawnUtil {
 	/* animal spawning biome categories */
 
 	fun desert(biome: Biome) = biome === Biome.DESERT ||
-	biome === Biome.DESERT_HILLS ||
-	biome === Biome.DESERT_LAKES ||
 	biome === Biome.BADLANDS ||
-	biome === Biome.BADLANDS_PLATEAU ||
-	biome === Biome.MODIFIED_BADLANDS_PLATEAU ||
 	biome === Biome.ERODED_BADLANDS
 
-	fun mountains(biome: Biome) = biome === Biome.MOUNTAINS ||
-	biome === Biome.GRAVELLY_MOUNTAINS ||
-	biome === Biome.WOODED_MOUNTAINS ||
-	biome === Biome.MODIFIED_GRAVELLY_MOUNTAINS
+	fun mountains(biome: Biome) = biome === Biome.WINDSWEPT_HILLS ||
+	biome === Biome.WINDSWEPT_GRAVELLY_HILLS ||
+	biome === Biome.WINDSWEPT_SAVANNA
 
-	fun snowy(biome: Biome) = biome === Biome.SNOWY_TUNDRA ||
-	biome === Biome.SNOWY_MOUNTAINS ||
-	biome === Biome.ICE_SPIKES
+	fun snowy(biome: Biome) = biome === Biome.SNOWY_BEACH ||
+	biome === Biome.SNOWY_PLAINS ||
+	biome === Biome.SNOWY_SLOPES
 
 	fun plains(biome: Biome) = biome === Biome.PLAINS ||
-	biome === Biome.SUNFLOWER_PLAINS
+	biome === Biome.SUNFLOWER_PLAINS ||
+	biome === Biome.MEADOW
 
-	fun taiga(biome: Biome) = biome === Biome.GIANT_SPRUCE_TAIGA ||
-	biome === Biome.GIANT_TREE_TAIGA ||
-	biome === Biome.SNOWY_TAIGA ||
-	biome === Biome.SNOWY_TAIGA_MOUNTAINS ||
-	biome === Biome.TAIGA ||
-	biome === Biome.TAIGA_HILLS ||
-	biome === Biome.TAIGA_MOUNTAINS
+	fun taiga(biome: Biome) = biome === Biome.TAIGA ||
+	biome === Biome.OLD_GROWTH_PINE_TAIGA ||
+	biome === Biome.OLD_GROWTH_SPRUCE_TAIGA
 
 	fun jungle(biome: Biome) = biome === Biome.JUNGLE ||
-	biome === Biome.JUNGLE_EDGE ||
-	biome === Biome.JUNGLE_HILLS ||
-	biome === Biome.MODIFIED_JUNGLE_EDGE ||
-	biome === Biome.MODIFIED_JUNGLE ||
 	biome === Biome.BAMBOO_JUNGLE ||
-	biome === Biome.BAMBOO_JUNGLE_HILLS
+	biome === Biome.SPARSE_JUNGLE
 }

@@ -6,12 +6,7 @@ import com.codeland.uhc.world.WorldGenOption.*
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.chunkPlacer.ChunkPlacer
 import com.codeland.uhc.world.chunkPlacer.ChunkPlacerHolder.*
-import com.codeland.uhc.world.chunkPlacer.impl.*
-import net.minecraft.world.level.levelgen.ChunkGeneratorAbstract
 import org.bukkit.*
-import org.bukkit.Material.AIR
-import org.bukkit.Material.MELON
-import org.bukkit.entity.Animals
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.world.ChunkPopulateEvent

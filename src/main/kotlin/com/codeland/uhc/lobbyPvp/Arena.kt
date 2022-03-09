@@ -11,8 +11,8 @@ import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket
 import net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket
 import net.minecraft.world.level.border.WorldBorder
 import org.bukkit.*
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -86,7 +86,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		val playerData = PlayerData.getPlayerData(player.uniqueId)
 
 		/* save before pvp state */
-		playerData.lobbyInventory = player.inventory.contents.clone()
+		playerData.lobbyInventory = player.inventory.contents!!.clone()
 
 		Lobby.resetPlayerStats(player)
 
@@ -103,8 +103,8 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		border.size = ArenaManager.BORDER.toDouble()
 
 		player as CraftPlayer
-		player.handle.b.sendPacket(ClientboundSetBorderCenterPacket(border))
-		player.handle.b.sendPacket(ClientboundSetBorderSizePacket(border))
+		player.handle.connection.send(ClientboundSetBorderCenterPacket(border))
+		player.handle.connection.send(ClientboundSetBorderSizePacket(border))
 	}
 
 	/**

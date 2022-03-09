@@ -10,25 +10,22 @@ import com.codeland.uhc.util.Util
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.*
-import com.comphenix.protocol.wrappers.EnumWrappers
-import com.comphenix.protocol.wrappers.PlayerInfoData
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import com.mojang.authlib.GameProfile
 import net.kyori.adventure.text.format.TextColor
-import net.minecraft.EnumChatFormat
-import net.minecraft.network.chat.ChatComponentText
-import net.minecraft.network.chat.ChatModifier
+import net.minecraft.ChatFormatting.*
+import net.minecraft.core.Registry
+import net.minecraft.network.chat.TextComponent
 import net.minecraft.network.protocol.game.*
-import net.minecraft.network.protocol.status.PacketStatusOutServerInfo
-import net.minecraft.network.protocol.status.ServerPing
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.PlayerUpdate
 import net.minecraft.network.syncher.*
-import net.minecraft.network.syncher.DataWatcher.Item
-import net.minecraft.world.inventory.Containers
-import net.minecraft.world.scores.Scoreboard
-import net.minecraft.world.scores.ScoreboardTeam
+import net.minecraft.world.Containers
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.scores.*
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.entity.Player
+import org.bukkit.event.server.ServerListPingEvent
 import java.util.*
 import kotlin.experimental.or
 
@@ -86,27 +83,33 @@ object Packet {
 	 *  creates a metadata packet for the specified player
 	 *  that only contains the first byte field
 	 */
-	fun metadataPacketDefaultState(player: Player): PacketPlayOutEntityMetadata {
+	fun metadataPacketDefaultState(player: Player): ClientboundSetEntityDataPacket {
 		player as CraftPlayer
 
-		/* a new data watcher which only contains the first byte */
-		val stateDataWatcher = DataWatcher(player.handle)
-		stateDataWatcher.register(DataWatcherObject(0, DataWatcherRegistry.a),
-			getDatawatcherByte(player.handle.dataWatcher))
-
-		return PacketPlayOutEntityMetadata(player.entityId, stateDataWatcher, true)
+		return ClientboundSetEntityDataPacket(
+			player.entityId,
+			SynchedEntityData(player.handle),
+			true
+		)
 	}
 
-	val entriesField = DataWatcher::class.java.getDeclaredField("f")
+	fun initFakeTeam(
+		teamPlayerUuid: UUID,
+		teamPlayerRealName: String,
+		teamPlayerIdName: String,
+		sentPlayer: Player,
+	) {
+		fun createFakeTeam(name: String) {
+			val sentTeam = PlayerTeam(Scoreboard(), name)
+			sentTeam.players.add(name)
 
-	init {
-		entriesField.isAccessible = true
-	}
+			(sentPlayer as CraftPlayer).handle.connection.send(
+				ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(sentTeam, true)
+			)
+		}
 
-	fun getDatawatcherByte(dataWatcher: DataWatcher): Byte {
-		val entries = entriesField[dataWatcher] as Int2ObjectOpenHashMap<Item<Any>>
-		val item = entries[0] as DataWatcher.Item<Byte>
-		return item.b()
+		createFakeTeam(teamPlayerIdName)
+		if (sentPlayer.uniqueId == teamPlayerUuid) createFakeTeam(teamPlayerRealName)
 	}
 
 	fun updateTeamColor(
@@ -116,11 +119,11 @@ object Packet {
 		sentPlayer: Player,
 	) {
 		sentPlayer as CraftPlayer
-		val oldName = teamPlayer.name
+		val trueName = teamPlayer.name
 
 		val arena = ArenaManager.playersArena(teamPlayer.uniqueId)
 
-		val isOnTeam = when {
+		val isOneSameTeam = when {
 			teamPlayer.uniqueId == sentPlayer.uniqueId -> true
 			arena == null -> uhcTeam?.members?.contains(sentPlayer.uniqueId) == true
 			else -> arena is PvpArena && ArenaManager.playersTeam(arena, teamPlayer.uniqueId)
@@ -128,194 +131,172 @@ object Packet {
 		}
 
 		/* update fake scoreboard team */
-		fun updateTeam(name: String) {
-			val scoreboardTeam = ScoreboardTeam(Scoreboard(), name)
-			scoreboardTeam.color = if (isOnTeam) EnumChatFormat.l else EnumChatFormat.m
-			scoreboardTeam.prefix = if (uhcTeam != null) {
-				Util.nmsGradientString(oldName, uhcTeam.colors[0], uhcTeam.colors[1])
-			} else {
-				ChatComponentText(oldName).setChatModifier(ChatModifier.a.setColor(EnumChatFormat.p))
-			}
-			scoreboardTeam.playerNameSet.add(name)
+		fun updateTeam(idName: String) {
+			val playerTeam = PlayerTeam(Scoreboard(), idName)
+			playerTeam.color = if (isOneSameTeam) AQUA else RED
 
-			sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(scoreboardTeam, false))
+			playerTeam.playerPrefix = if (uhcTeam != null) {
+				Util.nmsGradientString(trueName, uhcTeam.colors[0], uhcTeam.colors[1])
+			} else {
+				TextComponent(trueName)
+			}
+
+			playerTeam.players.add(idName)
+
+			sentPlayer.handle.connection.send(
+				ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(playerTeam, true)
+			)
 		}
 
 		updateTeam(newName)
-		if (teamPlayer.uniqueId == sentPlayer.uniqueId) updateTeam(oldName)
+		if (teamPlayer.uniqueId == sentPlayer.uniqueId) updateTeam(trueName)
 	}
 
 	fun init() {
 		val protocolManager = ProtocolLibrary.getProtocolManager()
 
-		val playerInfoDataListField = PacketPlayOutPlayerInfo::class.java.getDeclaredField("b")
-		playerInfoDataListField.isAccessible = true
-
 		protocolManager.addPacketListener(object :
 			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.PLAYER_INFO) {
 			override fun onPacketSending(event: PacketEvent) {
-				/* only change add player packets */
-				val stalePacketWrapper = event.packet
-				if (stalePacketWrapper.playerInfoAction.read(0) != EnumWrappers.PlayerInfoAction.ADD_PLAYER) return
+				/* this packet should not be modified */
+				val oldPacket = event.packet.handle as ClientboundPlayerInfoPacket
 
-				/* create a new packet that would be what the original was */
-				val freshPacket = PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.a,
-					(playerInfoDataListField[event.packet.handle] as List<PacketPlayOutPlayerInfo.PlayerInfoData>)
-						.mapNotNull { (Bukkit.getPlayer(it.a().id) as CraftPlayer).handle }
+				/* only look for add player packets */
+				if (oldPacket.action != ClientboundPlayerInfoPacket.Action.ADD_PLAYER) return
+
+				/* create a new packet to modify */
+				val modifyPacket = ClientboundPlayerInfoPacket(
+					oldPacket.action,
+					oldPacket.entries.mapNotNull { oldEntry ->
+						(Bukkit.getPlayer(oldEntry.profile.id) as? CraftPlayer)?.handle
+					}
 				)
 
-				/* give the new packet to the event to modify */
-				val freshPacketWrapper = PacketContainer.fromPacket(freshPacket)
-				event.packet = freshPacketWrapper
+				for (i in 0 until modifyPacket.entries.size) {
+					val original = modifyPacket.entries[i]
 
-				val sentPlayer = event.player as CraftPlayer
+					val idName = playersNewName(original.profile.id)
 
-				freshPacketWrapper.playerInfoDataLists.write(0,
-					freshPacketWrapper.playerInfoDataLists.read(0).map { playerInfoData ->
-						val newName = playersNewName(playerInfoData.profile.uuid)
+					modifyPacket.entries[i] = PlayerUpdate(
+						GameProfile(original.profile.id, idName),
+						original.latency,
+						original.gameMode,
+						original.displayName
+					)
 
-						fun createTeam(name: String) {
-							val sentTeam = ScoreboardTeam(Scoreboard(), name)
-							sentTeam.playerNameSet.add(name)
-							sentPlayer.handle.b.sendPacket(PacketPlayOutScoreboardTeam.a(sentTeam, true))
-						}
+					initFakeTeam(
+						original.profile.id,
+						original.profile.name,
+						idName,
+						event.player
+					)
+				}
 
-						createTeam(newName)
-						if (sentPlayer.uniqueId == playerInfoData.profile.uuid) createTeam(playerInfoData.profile.name)
-
-						/* initialize the team that the sentplayer will know the playerInfoData player by */
-						PlayerInfoData(
-							playerInfoData.profile.withName(newName),
-							playerInfoData.latency,
-							playerInfoData.gameMode,
-							playerInfoData.displayName
-						)
-					})
+				/* the event now acts on the modify packet only for the sent player */
+				event.packet = PacketContainer.fromPacket(modifyPacket)
 			}
 		})
 
-		val packetEntityIdField = PacketPlayOutEntityMetadata::class.java.getDeclaredField("a")
-		packetEntityIdField.isAccessible = true
-
-		val packetItemListField = PacketPlayOutEntityMetadata::class.java.getDeclaredField("b")
-		packetItemListField.isAccessible = true
-
-		val itemValueField = DataWatcher.Item::class.java.getDeclaredField("b")
-		itemValueField.isAccessible = true
+		fun playerFromEntityId(id: Int): Player? {
+			return Bukkit.getOnlinePlayers().find { player -> player.entityId == id }
+		}
 
 		protocolManager.addPacketListener(object :
 			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.ENTITY_METADATA) {
 			override fun onPacketSending(event: PacketEvent) {
-				/* make sure this packet is sending the first byte of datawatcher info */
-				val staleItemList = packetItemListField[event.packet.handle] as MutableList<DataWatcher.Item<Any>>
-				val byteValue = itemValueField[staleItemList[0]] as? Byte ?: return
+				val originalPacket = event.packet.handle as ClientboundSetEntityDataPacket
 
-				/* find out who this packet deals with */
+				val dataList = originalPacket.unpackedData
+
+				val dataPlayer = playerFromEntityId(originalPacket.id) ?: return
+
+				val newData = SynchedEntityData((dataPlayer as CraftPlayer).handle)
+				newData.assignValues(dataList)
+
+				fun setGlowing() {
+					val originalByte = newData.get(EntityDataAccessor(0, EntityDataSerializers.BYTE))
+					newData.set(EntityDataAccessor(0, EntityDataSerializers.BYTE), originalByte.or(0x40))
+				}
+
 				val sentPlayer = event.player as CraftPlayer
 
-				val metaPlayerID = packetEntityIdField.getInt(event.packet.handle)
-				val metaPlayer =
-					Bukkit.getOnlinePlayers().find { it.entityId == metaPlayerID } as CraftPlayer? ?: return
+				/* determine whether player should be glowing */
+
 				/* only set when the game is going */
 				val sentPlayerTeam = UHC.game?.teams?.playersTeam(sentPlayer.uniqueId)
-				val metaPlayersArena = ArenaManager.playersArena(metaPlayer.uniqueId)
-
-				/* begin modifying packet */
-				event.packet = event.packet.deepClone()
-
-				val freshItemList = packetItemListField[event.packet.handle] as MutableList<DataWatcher.Item<Any>>
+				val metaPlayersArena = ArenaManager.playersArena(dataPlayer.uniqueId)
 
 				/* glowing in games */
 				if (metaPlayersArena is PvpArena) {
 					/* if on same team as meta player (not same player), or if game is in glow phase */
 					if (
 						(
-						metaPlayer.uniqueId != sentPlayer.uniqueId &&
-						ArenaManager.playersTeam(metaPlayersArena, metaPlayer.uniqueId)
+						dataPlayer.uniqueId != sentPlayer.uniqueId &&
+						ArenaManager.playersTeam(metaPlayersArena, dataPlayer.uniqueId)
 							?.contains(sentPlayer.uniqueId) == true
 						) ||
 						(metaPlayersArena.shouldGlow() && metaPlayersArena.teams.flatten()
 							.contains(sentPlayer.uniqueId))
 					) {
-						itemValueField[freshItemList[0]] = byteValue.or(0x40)
+						setGlowing()
 					}
 
 					/* teammate glowing */
 				} else if (
 					UHC.game != null &&
-					sentPlayer.entityId != metaPlayerID &&
+					sentPlayer.uniqueId != dataPlayer.uniqueId &&
 					sentPlayerTeam != null &&
-					sentPlayerTeam.members.contains(metaPlayer.uniqueId)
+					sentPlayerTeam.members.contains(dataPlayer.uniqueId)
 				) {
-					itemValueField[freshItemList[0]] = byteValue.or(0x40)
+					setGlowing()
 				}
+
+				event.packet = PacketContainer.fromPacket(ClientboundSetEntityDataPacket(
+					originalPacket.id,
+					newData,
+					false
+				))
 			}
 		})
 
-		val scoreboardObjectiveField = PacketPlayOutScoreboardScore::class.java.getDeclaredField("b")
-		scoreboardObjectiveField.isAccessible = true
-
-		val scoreboardPlayerField = PacketPlayOutScoreboardScore::class.java.getDeclaredField("a")
-		scoreboardPlayerField.isAccessible = true
-
+		/* redirect hearts objective packets to target the fake player names */
 		protocolManager.addPacketListener(object :
 			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.SCOREBOARD_SCORE) {
 			override fun onPacketSending(event: PacketEvent) {
-				val objectiveName = scoreboardObjectiveField[event.packet.handle] as String
-				if (objectiveName != UHC.heartsObjective.name) return
+				val packet = event.packet.handle as ClientboundSetScorePacket
 
-				val originalPlayerName = scoreboardPlayerField[event.packet.handle] as String
-				val player = Bukkit.getPlayer(originalPlayerName) ?: return
+				if (packet.objectiveName != UHC.heartsObjective.name) return
+				val player = Bukkit.getPlayer(packet.owner) ?: return
 
-				val mappedPlayerName = playersNewName(player.uniqueId)
-				scoreboardPlayerField.set(event.packet.handle, mappedPlayerName)
+				event.packet = PacketContainer.fromPacket(ClientboundSetScorePacket(
+					packet.method,
+					UHC.heartsObjective.name,
+					playersNewName(player.uniqueId),
+					packet.score
+				))
 			}
 		})
 
-		protocolManager.addPacketListener(object :
-			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Status.Server.SERVER_INFO) {
-			override fun onPacketSending(event: PacketEvent) {
-				/* do not attempt to modify MOTD if discordstorage is not set */
-				val splashText = DiscordStorage.splashText ?: return
-				val color0 = TextColor.color(DiscordStorage.color0 ?: return)
-				val color1 = TextColor.color(DiscordStorage.color1 ?: return)
-
-				val oldPing = (event.packet.handle as PacketStatusOutServerInfo).b()
-
-				val newPing = ServerPing()
-				newPing.setServerInfo(ServerPing.ServerData("UHC ${Bukkit.getMinecraftVersion()}",
-					oldPing.serverData.protocolVersion))
-				newPing.setPlayerSample(oldPing.b())
-
-				val length = 48
-				val strip =
-					String(CharArray(length + 1) { i -> if (i == length) '\n' else splashText[i % splashText.length] })
-
-				newPing.setMOTD(Util.nmsGradientString(strip, color0, color1)
-					.addSibling(Util.nmsGradientString(strip, color0, color1)))
-				newPing.setFavicon(UHC.bot?.serverIcon ?: oldPing.d())
-
-				event.packet = PacketContainer.fromPacket(PacketStatusOutServerInfo(newPing))
-			}
-		})
+		val enchantmentMenuId = 12//Registry.MENU.getId(MenuType.ENCHANTMENT) why doesn't this work?!
 
 		/* set the name of every enchanting table gui */
 		protocolManager.addPacketListener(object :
 			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.OPEN_WINDOW) {
 			override fun onPacketSending(event: PacketEvent) {
-				val packet = event.packet.handle as PacketPlayOutOpenWindow
+				val packet = event.packet.handle as ClientboundOpenScreenPacket
 
-				if (packet.c() === Containers.m) {
-					event.packet = PacketContainer.fromPacket(
-						PacketPlayOutOpenWindow(
-							packet.b(),
-							Containers.m,
-							Util.nmsGradientString("Replace Item to Cycle Enchants",
-								TextColor.color(0xc40a0a),
-								TextColor.color(0x820874))
-						)
+				/* enchantment table id: 12 */
+				if (packet.containerId != enchantmentMenuId) return
+
+				event.packet = PacketContainer.fromPacket(
+					ClientboundOpenScreenPacket(
+						packet.containerId,
+						MenuType.ENCHANTMENT,
+						Util.nmsGradientString("Replace Item to Cycle Enchants",
+							TextColor.color(0xc40a0a),
+							TextColor.color(0x820874))
 					)
-				}
+				)
 			}
 		})
 	}

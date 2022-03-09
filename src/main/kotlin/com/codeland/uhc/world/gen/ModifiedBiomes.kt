@@ -1,13 +1,12 @@
 package com.codeland.uhc.world.gen
 
-import com.codeland.uhc.world.UHCReflect
+import com.codeland.uhc.util.UHCReflect
+import net.minecraft.core.Holder
 import net.minecraft.data.worldgen.placement.OrePlacements
 import net.minecraft.data.worldgen.placement.VegetationPlacements
 import net.minecraft.world.level.biome.*
-import net.minecraft.world.level.levelgen.GenerationStep
 import net.minecraft.world.level.levelgen.GenerationStep.Carving
 import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver
-import net.minecraft.world.level.levelgen.feature.configurations.*
 import net.minecraft.world.level.levelgen.placement.PlacedFeature
 import java.lang.reflect.Constructor
 import java.util.function.*
@@ -36,7 +35,7 @@ object ModifiedBiomes {
 		BiomeGenerationSettings::class, "features"
 	)
 	val carversField =
-		UHCReflect<BiomeGenerationSettings, Map<GenerationStep.Carving, List<Supplier<ConfiguredWorldCarver<*>>>>>(
+		UHCReflect<BiomeGenerationSettings, Map<Carving, List<Supplier<ConfiguredWorldCarver<*>>>>>(
 			BiomeGenerationSettings::class, "carvers"
 		)
 
@@ -50,8 +49,8 @@ object ModifiedBiomes {
 		biomeConstructor.isAccessible = true
 	}
 
-	fun genBiomes(replaceFeatures: Boolean, replaceMobs: Boolean): Map<Int, Biome> {
-		val ret = HashMap<Int, Biome>()
+	fun genBiomes(replaceFeatures: Boolean, replaceMobs: Boolean): Map<Int, Holder<Biome>> {
+		val ret = HashMap<Int, Holder<Biome>>()
 
 		BiomeNo.biomeRegistry.entrySet().forEach { (key, original) ->
 			val biomeId = BiomeNo.toId(key)
@@ -89,22 +88,22 @@ object ModifiedBiomes {
 						val configured = supplier.get()
 
 						if (
-							configured === OrePlacements.ORE_GOLD || // gold ores (excluding badlands)
-							configured === OrePlacements.ORE_GOLD_LOWER ||
+							configured === OrePlacements.ORE_GOLD.value() || // gold ores (excluding badlands)
+							configured === OrePlacements.ORE_GOLD_LOWER.value() ||
 
-							configured === OrePlacements.ORE_LAPIS || // lapis ore
-							configured === OrePlacements.ORE_LAPIS_BURIED ||
+							configured === OrePlacements.ORE_LAPIS.value() || // lapis ore
+							configured === OrePlacements.ORE_LAPIS_BURIED.value() ||
 
-							configured === OrePlacements.ORE_DIAMOND || // diamond ores
-							configured === OrePlacements.ORE_DIAMOND_LARGE ||
-							configured === OrePlacements.ORE_DIAMOND_BURIED ||
+							configured === OrePlacements.ORE_DIAMOND.value() || // diamond ores
+							configured === OrePlacements.ORE_DIAMOND_LARGE.value() ||
+							configured === OrePlacements.ORE_DIAMOND_BURIED.value() ||
 
-							configured === VegetationPlacements.PATCH_MELON || // melons
-							configured === VegetationPlacements.PATCH_MELON_SPARSE ||
+							configured === VegetationPlacements.PATCH_MELON.value() || // melons
+							configured === VegetationPlacements.PATCH_MELON_SPARSE.value() ||
 
-							configured === VegetationPlacements.PATCH_SUGAR_CANE || // sugar cane (excluding badlands)
-							configured === VegetationPlacements.PATCH_SUGAR_CANE_DESERT ||
-							configured === VegetationPlacements.PATCH_SUGAR_CANE_SWAMP
+							configured === VegetationPlacements.PATCH_SUGAR_CANE.value() || // sugar cane (excluding badlands)
+							configured === VegetationPlacements.PATCH_SUGAR_CANE_DESERT.value() ||
+							configured === VegetationPlacements.PATCH_SUGAR_CANE_SWAMP.value()
 						) {
 							//
 						} else {
@@ -134,13 +133,13 @@ object ModifiedBiomes {
 				originalMobs
 			}
 
-			ret[biomeId] = biomeConstructor.newInstance(
+			ret[biomeId] = Holder.direct(biomeConstructor.newInstance(
 				climateSettingsField.get(original),
 				newSettings,
 				newMobs,
 				biomeCategoryField.get(original),
 				specialEffectsField.get(original)
-			)
+			))
 		}
 
 		return ret

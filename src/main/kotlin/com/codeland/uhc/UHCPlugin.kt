@@ -14,6 +14,7 @@ import com.codeland.uhc.util.GoogleDDNSUpdater
 import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.world.WorldManager
 import com.codeland.uhc.world.gen.WorldGenManager
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.plugin.java.JavaPlugin
 import kotlin.system.exitProcess
@@ -72,6 +73,10 @@ class UHCPlugin : JavaPlugin() {
 			.thenAccept { bot ->
 				UHC.bot = bot
 				UHC.getConfig().usingBot.set(true)
+				bot.loadIcon().thenAccept { image ->
+					server.loadServerIcon(image)
+				}
+
 			}.exceptionally { ex ->
 				println("${ChatColor.RED}Bot setup failed")
 				println("${ChatColor.RED}${ex.message}").void()
