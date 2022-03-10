@@ -3,7 +3,10 @@ package com.codeland.uhc.gui
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.util.Util
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor.*
+import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration.BOLD
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
@@ -19,7 +22,7 @@ enum class CommandItemType(
 	/* lobby */
 	GUI_OPENER(
 		Material.MUSIC_DISC_WAIT,
-		Component.text("${ChatColor.AQUA}Open UHC Settings"),
+		Component.text("Open UHC Settings", AQUA),
 		"uhc gui"
 	),
 	PVP_OPENER(
@@ -29,29 +32,29 @@ enum class CommandItemType(
 	),
 	SPECTATE(
 		Material.HEART_OF_THE_SEA,
-		Component.text("${ChatColor.BLUE}Spectate Game"),
+		Component.text("Spectate Game", BLUE),
 		"uhc spectate"
 	),
 
 	/* parkour */
 	LOBBY_RETURN(
 		Material.MAGMA_CREAM,
-		Component.text("${ChatColor.WHITE}Return to Lobby"),
+		Component.text("Return to Lobby", WHITE),
 		"uhc lobby"
 	),
 	PARKOUR_TEST(
 		Material.RABBIT_FOOT,
-		Component.text("${ChatColor.LIGHT_PURPLE}Test Parkour"),
+		Component.text("Test Parkour", LIGHT_PURPLE),
 		"uhc parkour test"
 	),
 	PARKOUR_CHECKPOINT(
 		Material.GOLD_NUGGET,
-		Component.text("${ChatColor.GOLD}Checkpoint"),
+		Component.text("Checkpoint", GOLD),
 		"uhc parkour checkpoint"
 	),
 	PARKOUR_RESET(
 		Material.GOLD_INGOT,
-		Component.text("${ChatColor.GOLD}Reset"),
+		Component.text("Reset", GOLD),
 		"uhc parkour reset"
 	);
 
@@ -85,7 +88,7 @@ enum class CommandItemType(
 	private fun createItem(): ItemStack {
 		return ItemCreator.fromType(material)
 			.name(displayName)
-			.lore("Shortcut: ${ChatColor.BOLD}/${command}")
+			.lore(Component.text("Shortcut: ").append(Component.text("/${command}", Style.style(BOLD))))
 			.setData(key, ordinal)
 			.create()
 	}

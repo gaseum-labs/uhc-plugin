@@ -2,6 +2,8 @@ package com.codeland.uhc.core
 
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.gui.ItemCreator
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.entity.Player
@@ -66,8 +68,8 @@ enum class KillReward(
 
 		val uhcAppleCreator = ItemCreator.fromType(Material.ENCHANTED_GOLDEN_APPLE)
 			.setData(uhcAppleKey, 1)
-			.name("${GOLD}UHC Apple")
-			.lore("6 absorption hearts", "2 regeneration hearts")
+			.name(Component.text("UHC Apple", NamedTextColor.GOLD))
+			.lore(listOf(Component.text("6 absorption hearts"), Component.text("2 regeneration hearts")))
 
 		fun forPlayer(uuid: UUID, team: ArrayList<UUID>, on: (Boolean, Player, List<Player>) -> Unit) {
 			val player = Bukkit.getPlayer(uuid) ?: return

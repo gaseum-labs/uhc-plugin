@@ -3,7 +3,10 @@ package com.codeland.uhc.gui
 import com.codeland.uhc.util.ItemUtil
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.NamedTextColor.*
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.format.TextDecoration.BOLD
 import org.bukkit.*
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemFlag
@@ -20,18 +23,8 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 		else meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES)
 	}
 
-	fun name(name: String): ItemCreator {
-		meta.displayName(noItalic(Component.text(name)))
-		return this
-	}
-
 	fun name(component: Component): ItemCreator {
 		meta.displayName(noItalic(component))
-		return this
-	}
-
-	fun lore(vararg lore: String): ItemCreator {
-		meta.lore(lore.map { str -> noItalic(Component.text(str)) })
 		return this
 	}
 
@@ -99,11 +92,15 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 		}
 
 		fun stateName(base: String, state: String): TextComponent {
-			return Component.text("${ChatColor.WHITE}$base ${ChatColor.GRAY}- ${ChatColor.GOLD}${ChatColor.BOLD}$state")
+			return Component.text(base)
+				.append(Component.text(" - ", GRAY))
+				.append(Component.text(state, GOLD, BOLD))
 		}
 
 		fun enabledName(base: String, enabled: Boolean): TextComponent {
-			return Component.text("${ChatColor.WHITE}$base ${ChatColor.GRAY}- ${if (enabled) ChatColor.GREEN else ChatColor.RED}${ChatColor.BOLD}${if (enabled) "Enabled" else "Disabled"}")
+			return Component.text(base)
+				.append(Component.text(" - ", GRAY))
+				.append(Component.text(if (enabled) "Enabled" else "Disabled", if (enabled) GREEN else RED, BOLD))
 		}
 
 		fun getData(key: NamespacedKey, stack: ItemStack): Int? {

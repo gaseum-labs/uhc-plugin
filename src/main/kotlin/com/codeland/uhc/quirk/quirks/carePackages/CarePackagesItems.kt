@@ -2,12 +2,10 @@ package com.codeland.uhc.quirk.quirks.carePackages
 
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.Util
-import net.bytebuddy.implementation.bytecode.assign.primitive.PrimitiveUnboxingDelegate.UnboxingResponsible
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.enchantments.Enchantment
-import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.*
 import org.bukkit.potion.*
 import kotlin.random.Random
@@ -124,7 +122,7 @@ object CarePackagesItems {
 		}
 		meta.addStoredEnchant(enchantment, level, true)
 	}
-	
+
 	val elytraRocket = ItemCreator.regular(FIREWORK_ROCKET).customMeta<FireworkMeta> { meta ->
 		meta.power = 3
 	}.amount(12)

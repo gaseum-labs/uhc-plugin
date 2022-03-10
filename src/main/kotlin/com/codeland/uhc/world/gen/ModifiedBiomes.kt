@@ -1,6 +1,6 @@
 package com.codeland.uhc.world.gen
 
-import com.codeland.uhc.util.UHCReflect
+import com.codeland.uhc.reflect.UHCReflect
 import net.minecraft.core.Holder
 import net.minecraft.data.worldgen.placement.OrePlacements
 import net.minecraft.data.worldgen.placement.VegetationPlacements

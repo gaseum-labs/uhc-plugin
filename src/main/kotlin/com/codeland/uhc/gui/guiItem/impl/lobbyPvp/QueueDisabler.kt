@@ -3,7 +3,9 @@ package com.codeland.uhc.gui.guiItem.impl.lobbyPvp
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.gui.guiItem.GuiItemProperty
 import com.codeland.uhc.util.UHCProperty
-import org.bukkit.ChatColor
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor.GRAY
+import net.kyori.adventure.text.format.NamedTextColor.GREEN
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -22,8 +24,8 @@ class QueueDisabler(index: Int, enabledProperty: UHCProperty<Boolean>) :
 			else Material.GRAY_CANDLE
 		)
 			.name(
-				if (value) "${ChatColor.GREEN}Queue is open"
-				else "${ChatColor.GRAY}Queue is closed"
+				if (value) Component.text("Queue is open", GREEN)
+				else Component.text("Queue is closed", GRAY)
 			)
 			.create()
 	}

@@ -7,7 +7,11 @@ import com.codeland.uhc.gui.MoveableGuiPage
 import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import com.codeland.uhc.lobbyPvp.LoadoutItems
 import com.codeland.uhc.lobbyPvp.Loadouts
-import org.bukkit.ChatColor.*
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.NamedTextColor.*
+import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.format.TextDecoration.BOLD
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 
@@ -20,24 +24,23 @@ class LoadoutMover(
 	val loadoutSlot: Int,
 ) : MoveableGuiItem(rawSlot, gui) {
 	override fun internalGenerate(): ItemCreator {
-		val creator = ItemCreator.fromStack(loadoutItem.createItem(), false)
+		val item = loadoutItem.createItem()
+
+		val creator = ItemCreator.fromStack(item, false)
 			.lore(
-				if (loadoutItem.enchantOptions.isEmpty()) ""
-				else "Shift click to cycle enchants"
+				if (loadoutItem.enchantOptions.isEmpty()) Component.empty()
+				else Component.text("Shift click to cycle enchants")
 			)
 
-		return creator.name("$AQUA${prettifyName(creator.type.name)} ${
-			if (loadoutItem.enchantOptions.isEmpty()) {
-				""
+		creator.name(Component.text(prettifyName(item.type.name), AQUA)
+			.append(if (loadoutItem.enchantOptions.isEmpty()) {
+				Component.empty()
 			} else {
-				/* add options if there is the option */
 				if (optionIndex != -1) when (val option = loadoutItem.enchantOptions[optionIndex]) {
-					is LoadoutItems.Companion.EnchantOption -> {
+					is LoadoutItems.Companion.EnchantOption ->
 						creator.enchant(option.enchant, option.level)
-					}
-					is LoadoutItems.Companion.AmountOption -> {
+					is LoadoutItems.Companion.AmountOption ->
 						creator.amount(creator.amount + option.addAmount)
-					}
 				}
 
 				/* different types of options have different colors */
@@ -47,9 +50,11 @@ class LoadoutMover(
 					else -> RED
 				}
 
-				"${color}${BOLD}<${optionIndex + 1}/${loadoutItem.enchantOptions.size}> "
-			}
-		}${GREEN}${BOLD}$${itemCost()}")
+				Component.text("<${optionIndex + 1}/${loadoutItem.enchantOptions.size}> ", color, BOLD)
+			})
+			.append(Component.text(itemCost(), GREEN, BOLD)))
+
+		return creator
 	}
 
 	override fun onShiftClick(player: Player, stack: ItemStack) {

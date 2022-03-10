@@ -3,6 +3,7 @@ package com.codeland.uhc.event
 import com.codeland.uhc.UHCPlugin
 import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.util.SchedulerUtil
+import net.kyori.adventure.text.Component
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BrewingStand
@@ -24,7 +25,7 @@ class Brew : Listener {
 		): ItemCreator {
 			val effectType = potionType.effectType ?: PotionEffectType.POISON
 
-			return ItemCreator.fromType(material).name("${ChatColor.RESET}Potion of $name")
+			return ItemCreator.fromType(material).name(Component.text("Potion of $name"))
 				.customMeta<PotionMeta> { meta ->
 					meta.color = effectType.color
 					meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)

@@ -2,10 +2,11 @@ package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.SchedulerUtil
-import com.codeland.uhc.util.UHCReflect
+import com.codeland.uhc.reflect.UHCReflect
 import com.codeland.uhc.world.*
 import com.codeland.uhc.world.gen.chunkManager.*
 import net.minecraft.world.level.biome.*
+import net.minecraft.world.level.biome.Climate.Sampler
 import net.minecraft.world.level.chunk.ChunkGenerator
 import net.minecraft.world.level.levelgen.*
 import org.bukkit.*
@@ -17,12 +18,9 @@ import kotlin.Pair
 object WorldGenManager {
 	private val serverWorldsField = UHCReflect<CraftServer, Map<String, World>>(CraftServer::class, "worlds")
 
-	private val biomeSourceField = UHCReflect<ChunkGenerator, BiomeSource>(ChunkGenerator::class, "c") //biomeSource
+	private val biomeSourceField = UHCReflect<ChunkGenerator, BiomeSource>(ChunkGenerator::class, "biomeSource")
 	private val runtimeBiomeSourceField =
-		UHCReflect<ChunkGenerator, BiomeSource>(ChunkGenerator::class, "d") //runtimeBiomeSource
-
-	private val samplerField =
-		UHCReflect<NoiseBasedChunkGenerator, Climate.Sampler>(NoiseBasedChunkGenerator::class, "n") //sampler
+		UHCReflect<ChunkGenerator, BiomeSource>(ChunkGenerator::class, "runtimeBiomeSource")
 
 	fun init(server: Server) {
 
@@ -42,7 +40,7 @@ object WorldGenManager {
 		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return
 
 		val generator =
-			(world as CraftWorld).handle.chunkSource.chunkMap.generator as? NoiseBasedChunkGenerator ?: return
+			(world as CraftWorld).handle.chunkSource.chunkMap.generator ?: return
 
 		val seed = world.seed
 
@@ -72,33 +70,6 @@ object WorldGenManager {
 		}
 
 		if (biomeManager != null) {
-			//val noiseSampler = Climate.Sampler(
-			//	NoiseSettings(
-			//		0,
-			//		256,
-			//		NoiseSamplingSettings(4.0, 4.0, 2.0, 1.0),
-			//		NoiseSlider(25.0, 4, 2),
-			//		NoiseSlider(25.0, 4, 2),
-			//		32,
-			//		32,
-			//		true,
-			//		true,
-			//		true,
-			//		TerrainShaper.overworld(
-			//			UHC.getConfig().worldGenEnabled(WorldGenOption.AMPLIFIED)
-			//		)
-			//	),
-			//	true,
-			//	seed,
-			//	BiomeNo.noiseRegistry,
-			//	WorldgenRandom.Algorithm.XOROSHIRO
-			//)
-
-			//val noiseSampler = Climate.Sampler(
-			//	DensityFunctions.noise()
-			//)
-
-			//samplerField.set(generator, noiseSampler)
 			runtimeBiomeSourceField.set(generator, biomeManager)
 			biomeSourceField.set(generator, featureManager ?: biomeManager)
 		}

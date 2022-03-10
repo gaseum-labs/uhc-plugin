@@ -61,7 +61,7 @@ class UHCPlugin : JavaPlugin() {
 		Packet.init()
 
 		WorldGenManager.init(server)
-
+		
 		GoogleDDNSUpdater.updateDomain(configFile)
 			.thenAccept(::println)
 			.exceptionally { ex ->

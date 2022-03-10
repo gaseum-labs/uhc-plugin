@@ -8,10 +8,11 @@ import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WorldStorage
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.TextColor
-import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.format.*
+import net.kyori.adventure.text.format.NamedTextColor.GOLD
+import net.kyori.adventure.text.format.NamedTextColor.RED
+import net.kyori.adventure.text.format.TextDecoration.BOLD
 import org.bukkit.*
-import org.bukkit.ChatColor.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.block.Block
 import org.bukkit.entity.Player
@@ -104,7 +105,10 @@ object Lobby {
 			fun tip(player: Player, playerData: PlayerData) {
 				if (isFirst(6)) playerData.loadingTip = (Math.random() * loadingTips.size).toInt()
 
-				player.sendActionBar(Component.text("${GOLD}UHC Tips: $WHITE$BOLD${loadingTips[playerData.loadingTip]}"))
+				player.sendActionBar(
+					Component.text("UHC Tips: ", GOLD)
+						.append(Component.text(loadingTips[playerData.loadingTip], Style.style(BOLD)))
+				)
 			}
 
 			Bukkit.getOnlinePlayers().forEach { player ->
@@ -127,23 +131,30 @@ object Lobby {
 
 					} else if (player.gameMode == GameMode.SPECTATOR) {
 						if (slideN(0, 3, 6)) {
-							player.sendActionBar(Component.text("${GOLD}Use $WHITE$BOLD/uhc lobby ${GOLD}to return to lobby"))
+							player.sendActionBar(
+								Component.text("Use ", GOLD)
+									.append(Component.text("/uhc lobby ", Style.style(BOLD)))
+									.append(Component.text("to return to lobby", GOLD))
+							)
 
 						} else {
 							player.sendActionBar(Component.empty())
 						}
 					} else if (!UHC.dataManager.isLinked(player.uniqueId)) {
-						player.sendActionBar(Component.text("$RED${BOLD}You are not linked! ${GOLD}Use $WHITE$BOLD\"%link [your minecraft username]\" ${GOLD}in discord"))
+						player.sendActionBar(
+							Component.text("You are not linked! ", RED, BOLD)
+								.append(Component.text("Use ", GOLD))
+								.append(Component.text("\"%link [your minecraft username]\" ", Style.style(BOLD)))
+								.append(Component.text("in Discord", GOLD))
+						)
 
 					} else if (team != null && team.name == null) {
 						val warningColor = TextColor.color(if (slideN(0, 2, 1)) 0xFF0000 else 0xFFFFFF)
 
-						val commandComponent = Component.text("\"/teamName [name]\"", warningColor, TextDecoration.BOLD)
-
 						player.sendActionBar(
-							Component.text("$RED${BOLD}Your team does not have a name! ${GOLD}Use ").append(
-								commandComponent.append(Component.text(" ${GOLD}to set your team's name"))
-							)
+							Component.text("Your team does not have a name! ", RED, BOLD)
+								.append(Component.text("\"/teamName [name]\" ", warningColor, BOLD))
+								.append(Component.text("to set your team's name", GOLD))
 						)
 
 					} else {
