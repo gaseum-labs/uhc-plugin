@@ -1,9 +1,11 @@
 package com.codeland.uhc.core.phase;
 
+import com.codeland.uhc.component.UHCColor
 import com.codeland.uhc.gui.ItemCreator
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.TextColor
 import net.minecraft.world.BossEvent.BossBarColor
 import net.minecraft.world.BossEvent.BossBarColor.*
-import org.bukkit.ChatColor
 import org.bukkit.Material
 
 enum class PhaseType(
@@ -11,14 +13,14 @@ enum class PhaseType(
 	val representation: () -> ItemCreator,
 	val hasTimer: Boolean,
 	val barColor: BossBarColor,
-	val chatColor: ChatColor,
+	val color: TextColor,
 	val description: Array<String>,
 ) {
 	GRACE("Grace period",
 		{ ItemCreator.fromType(Material.PAPER) },
 		true,
 		BLUE,
-		ChatColor.AQUA,
+		UHCColor.GRACE,
 		arrayOf(
 			"Natural regeneration is enabled",
 			"Respawning is enabled",
@@ -29,7 +31,7 @@ enum class PhaseType(
 		{ ItemCreator.fromType(Material.GLOWSTONE_DUST) },
 		true,
 		RED,
-		ChatColor.RED,
+		UHCColor.SHRINK,
 		arrayOf(
 			"Natural regeneration is disabled",
 			"If you die you are eliminated",
@@ -40,7 +42,7 @@ enum class PhaseType(
 		{ ItemCreator.fromType(Material.PHANTOM_MEMBRANE) },
 		true,
 		YELLOW,
-		ChatColor.YELLOW,
+		UHCColor.ENDGAME,
 		arrayOf(
 			"Bedrock floor moves up from below",
 			"Skybases are destroyed from above",
@@ -50,7 +52,7 @@ enum class PhaseType(
 		{ ItemCreator.fromType(Material.FILLED_MAP) },
 		true,
 		PURPLE,
-		ChatColor.LIGHT_PURPLE,
+		UHCColor.POSTGAME,
 		arrayOf(
 			"The game has completed",
 		)),

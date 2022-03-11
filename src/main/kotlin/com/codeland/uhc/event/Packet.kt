@@ -136,7 +136,7 @@ object Packet {
 			playerTeam.color = if (isOneSameTeam) AQUA else RED
 
 			playerTeam.playerPrefix = if (uhcTeam != null) {
-				Util.nmsGradientString(trueName, uhcTeam.colors[0], uhcTeam.colors[1])
+				Util.nmsGradientString(trueName, uhcTeam.colors[0].value(), uhcTeam.colors[1].value())
 			} else {
 				TextComponent(trueName)
 			}
@@ -206,12 +206,11 @@ object Packet {
 			override fun onPacketSending(event: PacketEvent) {
 				val originalPacket = event.packet.handle as ClientboundSetEntityDataPacket
 
-				val dataList = originalPacket.unpackedData
-
+				val dataList = originalPacket.unpackedData ?: return
 				val dataPlayer = playerFromEntityId(originalPacket.id) ?: return
 
 				val newData = SynchedEntityData((dataPlayer as CraftPlayer).handle)
-				newData.assignValues(dataList)
+				if (dataList.isNotEmpty()) newData.assignValues(dataList)
 
 				fun setGlowing() {
 					val originalByte = newData.get(EntityDataAccessor(0, EntityDataSerializers.BYTE))
@@ -277,7 +276,7 @@ object Packet {
 			}
 		})
 
-		val enchantmentMenuId = 12//Registry.MENU.getId(MenuType.ENCHANTMENT) why doesn't this work?!
+		val enchantmentMenuId = Registry.MENU.getId(MenuType.ENCHANTMENT)
 
 		/* set the name of every enchanting table gui */
 		protocolManager.addPacketListener(object :
@@ -292,9 +291,7 @@ object Packet {
 					ClientboundOpenScreenPacket(
 						packet.containerId,
 						MenuType.ENCHANTMENT,
-						Util.nmsGradientString("Replace Item to Cycle Enchants",
-							TextColor.color(0xc40a0a),
-							TextColor.color(0x820874))
+						Util.nmsGradientString("Replace Item to Cycle Enchants", 0xc40a0a, 0x820874)
 					)
 				)
 			}

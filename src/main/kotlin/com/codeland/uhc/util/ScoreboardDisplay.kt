@@ -78,10 +78,15 @@ class ScoreboardDisplay(val name: String, var size: Int) {
 		}
 
 		fun generateTeamEntry(number: Int): String {
-			val colorIndex0 = number / ChatColor.values().size
-			var colorIndex1 = number % ChatColor.values().size
-
-			return "${ChatColor.values()[colorIndex0]}${ChatColor.values()[colorIndex1]}"
+			return "${
+				ChatColor.values()[
+				number / ChatColor.values().size
+				]
+			}${
+				ChatColor.values()[
+				number % ChatColor.values().size
+				]
+			}"
 		}
 	}
 }

@@ -30,7 +30,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 				return ItemCreator.fromType(
 					if (value) Material.BEEF else Material.ROTTEN_FLESH
 				).lore(
-					"Is natural regeneration allowed after grace?"
+					Component.text("Is natural regeneration allowed after grace?")
 				).name(
 					ItemCreator.enabledName("Natural Regeneration", value)
 				).create()
@@ -40,7 +40,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 			override fun getStackProperty(value: KillReward): ItemStack {
 				return ItemCreator.fromType(value.representation)
 					.name(ItemCreator.stateName("Kill Reward", value.prettyName))
-					.lore(*value.lore)
+					.lore(value.lore)
 					.create()
 			}
 		})
@@ -56,7 +56,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 						if (value === World.Environment.NORMAL) "Normal"
 						else "Nether"
 					))
-					.lore("Which dimension the UHC starts in")
+					.lore(Component.text("Which dimension the UHC starts in"))
 					.create()
 			}
 
@@ -67,7 +67,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 					if (UHC.bot == null) Material.GUNPOWDER
 					else if (value) Material.NAUTILUS_SHELL
 					else Material.HONEYCOMB
-				).lore("Separate teams into separate discord vcs?").name(
+				).lore(Component.text("Separate teams into separate discord vcs?")).name(
 					if (UHC.bot == null) Component.text("Bot is not running", NamedTextColor.RED, TextDecoration.BOLD)
 					else ItemCreator.enabledName("Bot VCs", value)
 				).create()
@@ -78,7 +78,7 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 			override fun getStackProperty(value: GameType): ItemStack {
 				return ItemCreator.fromType(value.representation)
 					.name(ItemCreator.stateName("Game Type", value.name))
-					.lore("For record keeping purposes")
+					.lore(Component.text("For record keeping purposes"))
 					.create()
 			}
 		})
@@ -141,25 +141,29 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 			}
 
 			override fun getStack() =
-				ItemCreator.fromType(Material.ENCHANTING_TABLE).name("${ChatColor.GOLD}Start Game").create()
+				ItemCreator.fromType(Material.ENCHANTING_TABLE).name(Component.text("Start Game", NamedTextColor.GOLD))
+					.create()
 		})
 		/* open quirks gui */
 		addItem(object : GuiItem(coords(5, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = quirkGui.open(player)
 			override fun getStack() =
-				ItemCreator.fromType(Material.TOTEM_OF_UNDYING).name("${ChatColor.LIGHT_PURPLE}Quirks").create()
+				ItemCreator.fromType(Material.TOTEM_OF_UNDYING)
+					.name(Component.text("Quirks", NamedTextColor.LIGHT_PURPLE)).create()
 		})
 		/* open worldgen gui */
 		addItem(object : GuiItem(coords(6, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = worldGenGui.open(player)
 			override fun getStack() =
-				ItemCreator.fromType(Material.GOLD_ORE).name("${ChatColor.GREEN}World Gen Options").create()
+				ItemCreator.fromType(Material.GOLD_ORE).name(Component.text("World Gen Options", NamedTextColor.GREEN))
+					.create()
 		})
 		/* reset button */
 		addItem(object : GuiItem(coords(7, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = gameConfig.reset()
 			override fun getStack() =
-				ItemCreator.fromType(Material.MUSIC_DISC_CHIRP).name("${ChatColor.RED}Reset").create()
+				ItemCreator.fromType(Material.MUSIC_DISC_CHIRP).name(Component.text("Reset", NamedTextColor.RED))
+					.create()
 		})
 		addItem(CloseButton(coords(8, 2)))
 	}

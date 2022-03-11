@@ -15,7 +15,10 @@ import com.codeland.uhc.util.*
 import com.codeland.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.*
+import net.kyori.adventure.text.format.NamedTextColor.GOLD
+import net.kyori.adventure.text.format.TextDecoration.BOLD
 import net.kyori.adventure.title.Title
+import net.kyori.adventure.title.Title.Times
 import org.bukkit.*
 import org.bukkit.entity.Player
 import java.time.Duration
@@ -71,7 +74,7 @@ class Game(
 			}
 		}
 	}
-	
+
 	/* getters */
 
 	fun <T : Quirk> getQuirk(quirkType: QuirkType): T? {
@@ -171,16 +174,16 @@ class Game(
 	fun createEndTitle(winningTeam: Team?): Title {
 		return if (winningTeam == null) {
 			Title.title(
-				Component.text("No one wins?", NamedTextColor.GOLD, TextDecoration.BOLD),
+				Component.text("No one wins?", GOLD, BOLD),
 				Component.empty(),
-				Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
+				Times.times(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
 			)
 		} else {
 			Title.title(
 				winningTeam.apply("${winningTeam.name} has won!"),
 				winningTeam.apply(winningTeam.members.filter { PlayerData.isAlive(it) }
 					.joinToString(", ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }),
-				Title.Times.of(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
+				Times.times(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
 			)
 		}
 	}
@@ -271,19 +274,19 @@ class Game(
 		val playerName = Bukkit.getOfflinePlayer(uuid).name ?: "Unknown"
 
 		/* should never happen */
-		if (playerTeam == null) return listOf(Component.text(playerName, NamedTextColor.GRAY, TextDecoration.BOLD))
+		if (playerTeam == null) return listOf(Component.text(playerName, NamedTextColor.GRAY, BOLD))
 
 		val color0 = TextColor.color(0xf0e118)
 		val color1 = TextColor.color(0xedd42f)
 
 		return listOfNotNull(
 			Component.empty()
-				.append(playerTeam.apply(playerName).decorate(TextDecoration.BOLD))
+				.append(playerTeam.apply(playerName).decorate(BOLD))
 				.append(Util.gradientString(" has been eliminated!", color0, color1)),
 
 			if (!teamIsAlive) {
 				Util.gradientString("All members of ", color0, color1)
-					.append(playerTeam.apply(playerTeam.name).decorate(TextDecoration.BOLD))
+					.append(playerTeam.apply(playerTeam.name).decorate(BOLD))
 					.append(Util.gradientString(" have been eliminated!", color0, color1))
 			} else null,
 
@@ -317,17 +320,15 @@ class Game(
 		player.gameMode = GameMode.SPECTATOR
 		Lobby.resetPlayerStats(player)
 
-		player.sendTitle(
-			"${ChatColor.RED}You died!",
-			"${ChatColor.DARK_RED}${
-				when {
-					respawn -> "Prepare to respawn"
-					killer != null -> "killed by ${killer.name}"
-					else -> ""
-				}
-			}",
-			0, 80, 20
-		)
+		player.showTitle(Title.title(
+			Component.text("You died!", NamedTextColor.RED),
+			Component.text(when {
+				respawn -> "Prepare to respawn"
+				killer != null -> "killed by ${killer.name}"
+				else -> ""
+			}, NamedTextColor.DARK_RED),
+			Times.times(Duration.ZERO, Duration.ofSeconds(4), Duration.ofSeconds(1))
+		))
 	}
 
 	private fun respawnLocation(): Location {

@@ -5,7 +5,9 @@ import com.codeland.uhc.gui.guiItem.GuiItem
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
-import org.bukkit.ChatColor
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor.GRAY
+import net.kyori.adventure.text.format.NamedTextColor.GREEN
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -34,8 +36,8 @@ class ParkourCreator(index: Int) : GuiItem(index) {
 			if (PvpQueue.enabled.get()) Material.HEAVY_WEIGHTED_PRESSURE_PLATE
 			else Material.STONE_PRESSURE_PLATE
 		).name(
-			if (PvpQueue.enabled.get()) "${ChatColor.GREEN}Create Parkour"
-			else "${ChatColor.GRAY}Parkour is closed"
+			if (PvpQueue.enabled.get()) Component.text("Create Parkour", GREEN)
+			else Component.text("Parkour is closed", GRAY)
 		).create()
 	}
 }

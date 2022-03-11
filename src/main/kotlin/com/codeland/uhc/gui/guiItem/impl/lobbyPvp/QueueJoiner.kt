@@ -5,8 +5,10 @@ import com.codeland.uhc.gui.guiItem.GuiItemProperty
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
 import com.codeland.uhc.lobbyPvp.arena.PvpArena
+import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.UHCProperty
-import org.bukkit.ChatColor
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor.*
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -28,11 +30,11 @@ class QueueJoiner(index: Int, val type: Int, queueProperty: UHCProperty<Int>) :
 		if (!PvpQueue.enabled.get()) return
 
 		if (property.get() == type) {
-			player.sendMessage("${ChatColor.GOLD}Left $name PVP Queue")
+			Action.sendGameMessage(player, "Left $name PVP Queue")
 			property.set(0)
 
 		} else {
-			player.sendMessage("${ChatColor.RED}Entered $name PVP Queue")
+			Action.sendGameMessage(player, "Entered $name PVP Queue")
 			property.set(type)
 		}
 	}
@@ -43,17 +45,17 @@ class QueueJoiner(index: Int, val type: Int, queueProperty: UHCProperty<Int>) :
 
 			ItemCreator.fromType(material)
 				.name(
-					if (inQueue) "${ChatColor.GREEN}In $name Queue"
-					else "${ChatColor.RED}Not in $name Queue"
+					if (inQueue) Component.text("In $name Queue", GREEN)
+					else Component.text("Not in $name Queue", RED)
 				).lore(
-					if (inQueue) "Click to leave $name queue"
-					else "Click to join $name queue"
+					if (inQueue) Component.text("Click to leave $name queue")
+					else Component.text("Click to join $name queue")
 				).enchant(inQueue)
 
 		} else {
 			ItemCreator.fromType(disabledMaterial)
-				.name("${ChatColor.GRAY}Queue Disabled")
-				.lore("Ask an admin to enable queue")
+				.name(Component.text("Queue Disabled", GRAY))
+				.lore(Component.text("Ask an admin to enable queue"))
 
 		}.create()
 	}

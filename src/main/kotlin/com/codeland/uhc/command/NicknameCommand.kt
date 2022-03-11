@@ -6,10 +6,9 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.database.DataManager
 import com.codeland.uhc.database.file.NicknamesFile
 import com.codeland.uhc.util.Action
-import com.codeland.uhc.util.Util
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor.*
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor.GOLD
-import org.bukkit.ChatColor.GRAY
 import org.bukkit.command.CommandSender
 
 @CommandAlias("nick")
@@ -30,15 +29,15 @@ class NicknameCommand : BaseCommand() {
 
 		val target = Bukkit.getOfflinePlayerIfCached(targetName)
 			?: return Commands.errorMessage(sender,
-				"Cannot find player by the name ${Commands.coloredInError(targetName, GRAY)}")
+				"Cannot find player by the name $targetName")
 
 		if (UHC.dataManager.nicknames.addNick(target.uniqueId, validated)) {
 			UHC.dataManager.push(DataManager.nicknamesFile, NicknamesFile.NicknameEntry(target.uniqueId, validated))
-			Action.sendGameMessage(sender,
-				"${Util.coloredInGameMessage(targetName, GRAY)} can now be called ${
-					Util.coloredInGameMessage(validated,
-						GRAY)
-				}")
+			sender.sendMessage(
+				Component.text(targetName, GRAY)
+					.append(Component.text(" can now be called ", GOLD))
+					.append(Component.text(validated, GRAY))
+			)
 
 		} else {
 			Commands.errorMessage(sender, "That nickname already exists for ${target.name}")
@@ -51,22 +50,19 @@ class NicknameCommand : BaseCommand() {
 	fun remove(sender: CommandSender, targetName: String, nickname: String) {
 		val target = Bukkit.getOfflinePlayerIfCached(targetName)
 			?: return Commands.errorMessage(sender,
-				"Cannot find player by the name ${Commands.coloredInError(targetName, GRAY)}")
+				"Cannot find player by the name $targetName"
+			)
 
 		if (UHC.dataManager.nicknames.removeNick(target.uniqueId, nickname)) {
 			UHC.dataManager.remove(DataManager.nicknamesFile, NicknamesFile.NicknameEntry(target.uniqueId, nickname))
-			Action.sendGameMessage(
-				sender,
-				"${Util.coloredInGameMessage(targetName, GRAY)} can no longer be called ${
-					Util.coloredInGameMessage(nickname, GRAY)
-				}"
+			sender.sendMessage(
+				Component.text(targetName, GRAY)
+					.append(Component.text(" can no longer be called ", GOLD))
+					.append(Component.text(nickname, GRAY))
 			)
 		} else {
 			Commands.errorMessage(
-				sender,
-				"${Commands.coloredInError(nickname, GRAY)} is not one of ${
-					Commands.coloredInError(targetName, GRAY)
-				}'s nicknames"
+				sender, "$nickname is not one of ${targetName}'s nicknames"
 			)
 		}
 	}
@@ -77,15 +73,19 @@ class NicknameCommand : BaseCommand() {
 	fun list(sender: CommandSender, targetName: String) {
 		val target = Bukkit.getOfflinePlayerIfCached(targetName)
 			?: return Commands.errorMessage(sender,
-				"Cannot find player by the name ${Commands.coloredInError(targetName, GRAY)}")
+				"Cannot find player by the name $targetName")
 
 		val nickList = UHC.dataManager.nicknames.getNicks(target.uniqueId)
 
 		if (nickList.isEmpty()) {
 			Action.sendGameMessage(sender, "This player has no nicknames.")
 		} else {
-			Action.sendGameMessage(sender, "Nicknames for ${Util.coloredInGameMessage(targetName, GRAY)}:")
-			nickList.forEach { nickname -> sender.sendMessage("$GOLD- $nickname") }
+			sender.sendMessage(
+				Component.text("Nicknames for", GOLD)
+					.append(Component.text(targetName, GRAY))
+					.append(Component.text(":", GRAY))
+			)
+			nickList.forEach { nickname -> sender.sendMessage(Component.text("- $nickname", GOLD)) }
 		}
 	}
 }

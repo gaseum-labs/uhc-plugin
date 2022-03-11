@@ -1,12 +1,15 @@
 package com.codeland.uhc.lobbyPvp
 
 import com.codeland.uhc.command.Commands
+import com.codeland.uhc.component.ComponentAction.uhcHotbar
+import com.codeland.uhc.component.ComponentAction.uhcTitle
+import com.codeland.uhc.component.UHCColor
+import com.codeland.uhc.component.UHCComponent
 import com.codeland.uhc.core.*
 import com.codeland.uhc.team.NameManager
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.WorldStorage
 import com.codeland.uhc.world.WorldManager
-import net.kyori.adventure.text.Component
 import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket
 import net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket
 import net.minecraft.world.level.border.WorldBorder
@@ -28,8 +31,12 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 		return if (startTime < 0) {
 			online().forEach { player ->
-				player.sendTitle("${ChatColor.RED}${-startTime}", "${ChatColor.RED}${startText()}", 0, 21, 0)
-				player.sendActionBar(Component.text(""))
+				player.uhcTitle(
+					UHCComponent.text((-startTime).toString(), UHCColor.U_RED),
+					UHCComponent.text(startText(), UHCColor.U_RED),
+					0, 21, 0
+				)
+				player.uhcHotbar(UHCComponent.text())
 			}
 
 			false

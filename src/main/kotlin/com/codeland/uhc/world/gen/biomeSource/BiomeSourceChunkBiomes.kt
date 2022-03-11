@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen.chunkManager
+package com.codeland.uhc.world.gen.biomeSource
 
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.gen.BiomeNo

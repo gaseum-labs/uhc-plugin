@@ -1,6 +1,7 @@
 package com.codeland.uhc.blockfix
 
-import org.bukkit.ChatColor
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.block.BlockState
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Item
@@ -14,15 +15,18 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<Range>) {
 	abstract fun reject(tool: ItemStack, drops: List<ItemStack>): Boolean
 	abstract fun allowTool(tool: ItemStack): Boolean
 
-	fun getInfoString(player: Player, onString: (output: String) -> Unit) {
-		onString("${ChatColor.GOLD}<$prettyName Ranges>")
+	fun getInfoString(player: Player, onString: (output: Component) -> Unit) {
+		onString(Component.text("<$prettyName Ranges>", NamedTextColor.GOLD))
 
 		ranges.forEach { range ->
 			onString(when (range) {
-				is SingleRange -> "${ChatColor.YELLOW}${range.prettyName}"
+				is SingleRange -> Component.text(range.prettyName, NamedTextColor.YELLOW)
 				is CountingRange -> {
 					val metadata = range.getMeta(player)
-					"${ChatColor.YELLOW}${range.prettyName} count: ${metadata.count} next drop: ${metadata.index}"
+					Component.text(
+						"${range.prettyName} count: ${metadata.count} next drop: ${metadata.index}",
+						NamedTextColor.YELLOW
+					)
 				}
 			})
 		}

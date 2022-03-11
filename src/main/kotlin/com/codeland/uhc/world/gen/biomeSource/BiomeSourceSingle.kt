@@ -1,4 +1,4 @@
-package com.codeland.uhc.world.gen.chunkManager
+package com.codeland.uhc.world.gen.biomeSource
 
 import com.codeland.uhc.world.gen.BiomeNo
 import net.minecraft.core.Holder

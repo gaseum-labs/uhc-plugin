@@ -7,6 +7,9 @@ import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.quirk.Quirk
 import com.codeland.uhc.quirk.QuirkType
 import com.codeland.uhc.util.Action
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.NamedTextColor.GOLD
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -76,8 +79,11 @@ class PlayerCompass(type: QuirkType, game: Game) : Quirk(type, game) {
 
 		fun createCompass(): ItemStack {
 			return ItemCreator.fromType(Material.COMPASS, false)
-				.name("${ChatColor.RESET}${ChatColor.GOLD}Player Compass")
-				.lore("From Player Compasses CHC", "${ChatColor.BLACK}${UUID.randomUUID()}")
+				.name(Component.text("Player Compass", GOLD))
+				.lore(listOf(
+					Component.text("From Player Compasses CHC"),
+					Component.text(UUID.randomUUID().toString(), NamedTextColor.BLACK)
+				))
 				.enchant()
 				.create()
 		}

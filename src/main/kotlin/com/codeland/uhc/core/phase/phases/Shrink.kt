@@ -1,11 +1,12 @@
 package com.codeland.uhc.core.phase.phases
 
+import com.codeland.uhc.component.*
+import com.codeland.uhc.component.UHCComponent.Companion
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.phase.Phase
 import com.codeland.uhc.core.phase.PhaseType
 import com.codeland.uhc.util.Action
 import com.codeland.uhc.util.Util
-import net.md_5.bungee.api.ChatColor.*
 import org.bukkit.Bukkit
 import org.bukkit.World
 import org.bukkit.entity.Animals
@@ -22,22 +23,33 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 		}
 	}
 
-	override fun updateBarTitle(world: World, remainingSeconds: Int): String {
-		return if ((remainingSeconds / 10) % 3 > 0) {
-			val borderRadius = ((game.world.worldBorder.size - 1) / 2).toInt()
+	override fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent {
+		val borderRadius = ((game.world.worldBorder.size - 1) / 2).toInt()
 
-			if (world === game.world) {
-				"${RESET}Border Radius: ${RED}${BOLD}${borderRadius} ${RESET}Reaching ${RED}${BOLD}${game.config.endgameRadius.get()} ${RESET}in ${RED}${BOLD}${
-					Util.timeString(remainingSeconds)
-				}"
-			} else {
-				"${RESET}Overworld Border Radius: ${RED}${BOLD}${borderRadius} ${RESET}Dimension Closes in ${RED}${BOLD}${
-					Util.timeString(remainingSeconds)
-				}"
+		return UHCComponent.text()
+			.andSwitch((remainingSeconds / 10) % 3 > 0) {
+				Companion.text()
+					.andSwitch(world === game.world) {
+						Companion.text("Border Radius: ", UHCColor.U_WHITE)
+							.and(borderRadius.toString(), phaseType.color, UHCStyle.BOLD)
+							.and(" Reaching ", UHCColor.U_WHITE)
+							.and(game.config.endgameRadius.get().toString(), phaseType.color, UHCStyle.BOLD)
+							.and(" in ", UHCColor.U_WHITE)
+							.and(Util.timeString(remainingSeconds), phaseType.color, UHCStyle.BOLD)
+					}
+					.andSwitch(true) {
+						Companion.text("Overworld Border Radius: ", UHCColor.U_WHITE)
+							.and(borderRadius.toString(), phaseType.color, UHCStyle.BOLD)
+							.and(" Dimension Closes in ", UHCColor.U_WHITE)
+							.and(Util.timeString(remainingSeconds), phaseType.color, UHCStyle.BOLD)
+					}
 			}
-		} else {
-			"${RESET}Endgame Y Range: ${phaseType.chatColor}${BOLD}${game.endgameLowY} - ${game.endgameHighY}"
-		}
+			.andSwitch(true) {
+				UHCComponent.text("Endgame Y Range", phaseType.color)
+					.and(game.endgameLowY.toString(), phaseType.color, UHCStyle.BOLD)
+					.and(" - ", UHCColor.U_WHITE)
+					.and(game.endgameHighY.toString(), phaseType.color, UHCStyle.BOLD)
+			}
 	}
 
 	override fun updateBarLength(remainingTicks: Int): Float {

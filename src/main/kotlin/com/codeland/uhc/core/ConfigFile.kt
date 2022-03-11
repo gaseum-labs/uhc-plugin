@@ -1,7 +1,7 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.util.Util
 import com.google.gson.GsonBuilder
-import org.bukkit.ChatColor.RED
 import java.io.*
 
 class ConfigFile(
@@ -21,7 +21,7 @@ class ConfigFile(
 		fun load(): ConfigFile {
 			val file = File(FILENAME)
 			if (!file.exists() || file.isDirectory) {
-				println("${RED}Config file could not be loaded, creating a default")
+				Util.warn("Config file could not be loaded, creating a default")
 				return ConfigFile().write()
 			}
 
@@ -56,8 +56,8 @@ class ConfigFile(
 			fileWriter.close()
 
 		} catch (ex: Exception) {
-			ex.printStackTrace()
-			println("${RED}Tried to save config file but couldn't")
+			Util.warn("Tried to save config file but couldn't")
+			Util.warn(ex)
 		}
 
 		return this

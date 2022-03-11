@@ -4,11 +4,9 @@ import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.reflect.UHCReflect
 import com.codeland.uhc.world.*
-import com.codeland.uhc.world.gen.chunkManager.*
+import com.codeland.uhc.world.gen.biomeSource.*
 import net.minecraft.world.level.biome.*
-import net.minecraft.world.level.biome.Climate.Sampler
 import net.minecraft.world.level.chunk.ChunkGenerator
-import net.minecraft.world.level.levelgen.*
 import org.bukkit.*
 import org.bukkit.craftbukkit.v1_18_R2.CraftServer
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld

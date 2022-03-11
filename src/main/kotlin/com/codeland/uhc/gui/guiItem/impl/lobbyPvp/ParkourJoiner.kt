@@ -5,6 +5,8 @@ import com.codeland.uhc.gui.guiItem.GuiItemProperty
 import com.codeland.uhc.lobbyPvp.*
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
 import com.codeland.uhc.util.UHCProperty
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor.*
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -36,7 +38,8 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) :
 
 	override fun getStackProperty(value: Int): ItemStack {
 		return if (value == -1) {
-			ItemCreator.fromType(Material.OAK_PRESSURE_PLATE).name("${ChatColor.GRAY}No parkour lobbies")
+			ItemCreator.fromType(Material.OAK_PRESSURE_PLATE)
+				.name(Component.text("No parkour lobbies", GRAY))
 
 		} else {
 			val arenaList = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)
@@ -45,8 +48,8 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) :
 
 			ItemCreator.fromType(Material.PLAYER_HEAD)
 				.customMeta<SkullMeta> { it.owningPlayer = player }
-				.name("${ChatColor.YELLOW}Join ${player.name}'s Parkour")
-				.lore(if (arenaList.size == 1) "" else "Shift click to see more arenas")
+				.name(Component.text("Join ${player.name}'s Parkour", YELLOW))
+				.lore(if (arenaList.size == 1) emptyList() else listOf(Component.text("Shift click to see more arenas")))
 
 		}.create()
 	}

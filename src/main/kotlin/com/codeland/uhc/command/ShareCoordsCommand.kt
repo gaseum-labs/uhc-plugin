@@ -5,9 +5,9 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Description
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
+import com.codeland.uhc.util.Action
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor.GOLD
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -29,7 +29,7 @@ class ShareCoordsCommand : BaseCommand() {
 		/* different message based on teams or no teams */
 		/* should never happen */
 		if (team == null) {
-			sender.sendMessage("${GOLD}You are at ${location.blockX}, ${location.blockY}, ${location.blockZ}")
+			Action.sendGameMessage(sender, "You are at ${location.blockX}, ${location.blockY}, ${location.blockZ}")
 
 		} else {
 			val message = team.apply(sender.name)

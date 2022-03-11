@@ -2,14 +2,14 @@
 
 package com.codeland.uhc.util
 
+import com.codeland.uhc.component.UHCStyle
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
-import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
-import org.bukkit.ChatColor
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
+import java.lang.Exception
+import java.util.logging.*
 import kotlin.math.*
 
 object Util {
@@ -178,27 +178,23 @@ object Util {
 		return component
 	}
 
-	fun nmsGradientString(string: String, from: TextColor, to: TextColor): MutableComponent {
+	fun nmsGradientString(string: String, from: Int, to: Int): MutableComponent {
 		var component = TextComponent("") as MutableComponent
 
 		string.forEachIndexed { i, c ->
 			val along = i.toFloat() / (string.length - 1)
-			val red = ((to.red() - from.red()) * along + from.red()).toInt()
-			val gre = ((to.green() - from.green()) * along + from.green()).toInt()
-			val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
-			
+			val red = (((to.shr(16)) - from.shr(16)) * along + from.shr(16)).toInt()
+			val gre = ((to.shr(8).and(0xff) - from.shr(8).and(0xff)) * along + from.shr(8).and(0xff)).toInt()
+			val blu = ((to.and(0xff) - from.and(0xff)) * along + from.and(0xff)).toInt()
+
 			component = component.append(
-				TextComponent("$c").setStyle(net.minecraft.network.chat.Style.EMPTY.withColor(
+				TextComponent("$c").setStyle(Style.EMPTY.withColor(
 					red.shl(16).or(gre.shl(8)).or(blu))
 				)
 			)
 		}
 
 		return component
-	}
-
-	fun coloredInGameMessage(string: String, color: ChatColor): String {
-		return "$color${ChatColor.BOLD}$string${ChatColor.GOLD}${ChatColor.BOLD}"
 	}
 
 	fun materialRange(a: Material, b: Material): List<Material> {
@@ -221,5 +217,19 @@ object Util {
 
 	fun <T> T.takeFrom(expr: Boolean): T? {
 		return if (expr) this else null
+	}
+
+	private val logger = Bukkit.getLogger()
+
+	fun log(message: String) {
+		logger.log(Level.INFO, message)
+	}
+
+	fun warn(message: String) {
+		logger.log(Level.WARNING, message)
+	}
+
+	fun warn(exception: Throwable) {
+		logger.log(Level.WARNING, exception.localizedMessage)
 	}
 }

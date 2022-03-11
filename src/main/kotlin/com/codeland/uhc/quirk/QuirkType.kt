@@ -6,6 +6,7 @@ import com.codeland.uhc.quirk.quirks.*
 import com.codeland.uhc.quirk.quirks.carePackages.CarePackages
 import com.codeland.uhc.quirk.quirks.carePackages.ChaoticCarePackages
 import com.codeland.uhc.quirk.quirks.classes.Classes
+import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
@@ -15,16 +16,16 @@ enum class QuirkType(
 	val prettyName: String,
 	val create: (QuirkType, Game) -> Quirk,
 	val representation: () -> ItemCreator,
-	val description: Array<String>,
+	val description: List<Component>,
 ) {
 	UNSHELTERED(
 		"Unsheltered",
 		::Unsheltered,
 		{ ItemCreator.fromType(Material.SHULKER_SHELL) },
-		arrayOf(
-			"Terrain cannot be modified",
-			"You cannot place or mine blocks",
-			"But you still get the block loot"
+		listOf(
+			Component.text("Terrain cannot be modified"),
+			Component.text("You cannot place or mine blocks"),
+			Component.text("But you still get the block loot")
 		)
 	),
 
@@ -32,9 +33,9 @@ enum class QuirkType(
 		"Pests",
 		::Pests,
 		{ ItemCreator.fromType(Material.WOODEN_SWORD) },
-		arrayOf(
-			"Dead players come back to exact their revenge",
-			"But they are weak and have no access to advanced tools"
+		listOf(
+			Component.text("Dead players come back to exact their revenge"),
+			Component.text("But they are weak and have no access to advanced tools")
 		)
 	),
 
@@ -42,8 +43,8 @@ enum class QuirkType(
 		"Creative",
 		::Creative,
 		{ ItemCreator.fromType(Material.BRICK) },
-		arrayOf(
-			"you may place tough to get blocks without them emptying from your inventory"
+		listOf(
+			Component.text("you may place tough to get blocks without them emptying from your inventory")
 		)
 	),
 
@@ -51,8 +52,8 @@ enum class QuirkType(
 		"Summoner",
 		::Summoner,
 		{ ItemCreator.fromType(Material.DONKEY_SPAWN_EGG) },
-		arrayOf(
-			"Mobs drop their spawn eggs when killed"
+		listOf(
+			Component.text("Mobs drop their spawn eggs when killed")
 		)
 	),
 
@@ -60,9 +61,9 @@ enum class QuirkType(
 		"Random Effects",
 		::RandomEffects,
 		{ ItemCreator.fromType(Material.DRAGON_BREATH) },
-		arrayOf(
-			"Every 3 minutes,",
-			"Everyone gets a random potion effect"
+		listOf(
+			Component.text("Every 3 minutes,"),
+			Component.text("Everyone gets a random potion effect")
 		)
 	),
 
@@ -70,8 +71,8 @@ enum class QuirkType(
 		"Low Gravity",
 		::LowGravity,
 		{ ItemCreator.fromType(Material.CHORUS_FRUIT) },
-		arrayOf(
-			"Gravity is much lower than usual"
+		listOf(
+			Component.text("Gravity is much lower than usual")
 		)
 	),
 
@@ -79,9 +80,9 @@ enum class QuirkType(
 		"Limited Inventory",
 		::Hotbar,
 		{ ItemCreator.fromType(Material.STRUCTURE_VOID) },
-		arrayOf(
-			"All players are limited to only",
-			"their hotbar to store items"
+		listOf(
+			Component.text("All players are limited to only"),
+			Component.text("their hotbar to store items")
 		)
 	),
 
@@ -89,9 +90,9 @@ enum class QuirkType(
 		"Care Packages",
 		::CarePackages,
 		{ ItemCreator.fromType(Material.CHEST_MINECART) },
-		arrayOf(
-			"Chests periodically drop containing good loot",
-			"go there and you should expect a fight"
+		listOf(
+			Component.text("Chests periodically drop containing good loot"),
+			Component.text("go there and you should expect a fight")
 		)
 	),
 
@@ -102,9 +103,9 @@ enum class QuirkType(
 			ItemCreator.fromType(Material.TIPPED_ARROW)
 				.customMeta<PotionMeta> { it.basePotionData = PotionData(PotionType.INSTANT_HEAL, false, false) }
 		},
-		arrayOf(
-			"Tons of chests drop throughout the world",
-			"Wacky loot is inside"
+		listOf(
+			Component.text("Tons of chests drop throughout the world"),
+			Component.text("Wacky loot is inside")
 		)
 	),
 
@@ -112,9 +113,9 @@ enum class QuirkType(
 		"Deathswap",
 		::Deathswap,
 		{ ItemCreator.fromType(Material.MAGENTA_GLAZED_TERRACOTTA) },
-		arrayOf(
-			"Players switch places with each other",
-			"at randomly chosen intervals"
+		listOf(
+			Component.text("Players switch places with each other"),
+			Component.text("at randomly chosen intervals")
 		)
 	),
 
@@ -122,9 +123,9 @@ enum class QuirkType(
 		"Halloween",
 		::Halloween,
 		{ ItemCreator.fromType(Material.PUMPKIN_PIE) },
-		arrayOf(
-			"Mobs drop candy",
-			"Witches?!"
+		listOf(
+			Component.text("Mobs drop candy"),
+			Component.text("Witches?!")
 		)
 	),
 
@@ -132,8 +133,8 @@ enum class QuirkType(
 		"Pumpkin",
 		::Pumpkin,
 		{ ItemCreator.fromType(Material.PUMPKIN_SEEDS) },
-		arrayOf(
-			"You are forced to have a pumpkin on your head"
+		listOf(
+			Component.text("You are forced to have a pumpkin on your head")
 		)
 	),
 
@@ -141,8 +142,8 @@ enum class QuirkType(
 		"Christmas",
 		::Christmas,
 		{ ItemCreator.fromType(Material.SNOWBALL) },
-		arrayOf(
-			"It's snowing all the time!"
+		listOf(
+			Component.text("It's snowing all the time!")
 		)
 	),
 
@@ -150,8 +151,8 @@ enum class QuirkType(
 		"Flying",
 		::Flying,
 		{ ItemCreator.fromType(Material.FIREWORK_ROCKET) },
-		arrayOf(
-			"Start with an elytra and rockets"
+		listOf(
+			Component.text("Start with an elytra and rockets")
 		)
 	),
 
@@ -159,8 +160,8 @@ enum class QuirkType(
 		"Player Compasses",
 		::PlayerCompass,
 		{ ItemCreator.fromType(Material.COMPASS) },
-		arrayOf(
-			"Track down players with a special compass"
+		listOf(
+			Component.text("Track down players with a special compass")
 		)
 	),
 
@@ -168,8 +169,8 @@ enum class QuirkType(
 		"Infinite Inventory",
 		::InfiniteInventory,
 		{ ItemCreator.fromType(Material.FEATHER) },
-		arrayOf(
-			"Your inventory is unbounded in size"
+		listOf(
+			Component.text("Your inventory is unbounded in size")
 		)
 	),
 
@@ -177,9 +178,9 @@ enum class QuirkType(
 		"Classes",
 		::Classes,
 		{ ItemCreator.fromType(Material.IRON_HELMET) },
-		arrayOf(
-			"Pick a class as the game begins",
-			"Get cool abilities"
+		listOf(
+			Component.text("Pick a class as the game begins"),
+			Component.text("Get cool abilities")
 		)
 	),
 
@@ -187,9 +188,9 @@ enum class QuirkType(
 		"Achievements",
 		::Achievements,
 		{ ItemCreator.fromType(Material.WRITABLE_BOOK) },
-		arrayOf(
-			"When you earn an achievement, you get",
-			"extra health based on its difficulty."
+		listOf(
+			Component.text("When you earn an achievement, you get"),
+			Component.text("extra health based on its difficulty.")
 		)
 	);
 

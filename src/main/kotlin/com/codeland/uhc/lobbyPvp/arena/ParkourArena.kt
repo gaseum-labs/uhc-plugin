@@ -8,6 +8,11 @@ import com.codeland.uhc.gui.ItemCreator
 import com.codeland.uhc.lobbyPvp.*
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.WorldManager
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.NamedTextColor.BLUE
+import net.kyori.adventure.text.format.NamedTextColor.YELLOW
+import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.entity.Player
@@ -90,7 +95,7 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 			}
 		}, 40)
 
-		player.sendTitle("${ChatColor.AQUA}RUN", "", 0, 20, 10)
+		player.showTitle(Title.title(Component.text("RUN", NamedTextColor.AQUA), Component.empty()))
 	}
 
 	private fun enterBuilder(player: Player) {
@@ -98,11 +103,12 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 
 		/* give items */
 		player.inventory.addItem(ItemCreator.fromType(Material.LAPIS_BLOCK)
-			.name("${ChatColor.BLUE}Lapis (Parkour Start)").create())
-		player.inventory.addItem(ItemCreator.fromType(Material.GOLD_BLOCK).name("${ChatColor.YELLOW}Gold (Checkpoint)")
+			.name(Component.text("Lapis (Parkour Start)", BLUE)).create())
+		player.inventory.addItem(ItemCreator.fromType(Material.GOLD_BLOCK)
+			.name(Component.text("Gold (Checkpoint)", YELLOW))
 			.create())
 
-		player.sendTitle("${ChatColor.GOLD}BUILD", "", 0, 20, 10)
+		player.showTitle(Title.title(Component.text("BUILD", NamedTextColor.GOLD), Component.empty()))
 	}
 
 	fun defaultStart(): Block {

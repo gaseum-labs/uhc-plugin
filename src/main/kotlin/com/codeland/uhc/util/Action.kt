@@ -1,9 +1,10 @@
 package com.codeland.uhc.util
 
 import com.codeland.uhc.core.PlayerData
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor.*
+import net.kyori.adventure.text.format.TextDecoration.*
 import org.bukkit.*
-import org.bukkit.ChatColor.BOLD
-import org.bukkit.ChatColor.GOLD
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
@@ -13,11 +14,11 @@ import java.util.*
 
 object Action {
 	fun sendGameMessage(player: Player, message: String) {
-		player.sendMessage("$GOLD$BOLD$message")
+		player.sendMessage(Component.text(message, GOLD, BOLD))
 	}
 
 	fun sendGameMessage(sender: CommandSender, message: String) {
-		sender.sendMessage("$GOLD$BOLD$message")
+		sender.sendMessage(Component.text(message, GOLD, BOLD))
 	}
 
 	fun playerAction(uuid: UUID, action: (Player) -> Unit) {

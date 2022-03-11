@@ -8,9 +8,7 @@ import com.codeland.uhc.gui.guiItem.MoveableGuiItem
 import com.codeland.uhc.lobbyPvp.LoadoutItems
 import com.codeland.uhc.lobbyPvp.Loadouts
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.NamedTextColor.*
-import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.format.TextDecoration.BOLD
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack

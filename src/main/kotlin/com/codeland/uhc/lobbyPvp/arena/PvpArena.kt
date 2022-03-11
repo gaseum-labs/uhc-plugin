@@ -1,5 +1,9 @@
 package com.codeland.uhc.lobbyPvp.arena
 
+import com.codeland.uhc.component.ComponentAction.uhcTitle
+import com.codeland.uhc.component.UHCColor
+import com.codeland.uhc.component.UHCComponent
+import com.codeland.uhc.component.UHCComponent.Companion
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.event.Packet
@@ -33,13 +37,18 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 		this.winners = winners.map { it.uniqueId }
 		pvpTimer = -10
 
-		val winnerString = if (winners.size == 1) {
-			"${ChatColor.RED}${winners.first().name} wins!"
+		val titleComponent = if (winners.size == 1) {
+			UHCComponent.text("${winners.first().name} wins!", UHCColor.U_RED)
 		} else {
-			winners.joinToString(" ", "${ChatColor.RED}", " have won!") { it.name }
+			UHCComponent.text(
+				winners.joinToString(", ", "", " have won!") { it.name },
+				UHCColor.U_RED
+			)
 		}
 
-		online().forEach { it.sendTitle(winnerString, "", 0, 160, 40) }
+		online().forEach {
+			it.uhcTitle(titleComponent, UHCComponent.text(), 0, 160, 40)
+		}
 
 		updateGlowAll()
 	}
@@ -140,8 +149,8 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 		/* give items */
 		val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
 		loadout.fillInventory(player.inventory)
-
-		player.sendTitle("${ChatColor.GOLD}FIGHT", "", 0, 20, 10)
+		
+		player.uhcTitle(UHCComponent.text("FIGHT", UHCColor.U_GOLD), UHCComponent.text(), 0, 20, 10)
 	}
 
 	override fun prepareArena(world: World) {

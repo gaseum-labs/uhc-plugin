@@ -5,9 +5,7 @@ import com.codeland.uhc.gui.ItemCreator
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.*
-import org.bukkit.ChatColor.*
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
@@ -15,23 +13,24 @@ import java.util.*
 enum class KillReward(
 	val prettyName: String,
 	val representation: Material,
-	val lore: Array<String>,
+	val lore: List<Component>,
 	val apply: (UUID, ArrayList<UUID>, Location) -> Unit,
 ) {
-	ABSORPTION("Absorption", Material.SHIELD, arrayOf(
-		"Gain 3 absorption hearts on kill",
-		"Increased to 4 if alone",
-		"1 absorption heart to teammates"
+	ABSORPTION("Absorption", Material.SHIELD, listOf(
+		Component.text("Gain 3 absorption hearts on kill"),
+		Component.text("Increased to 4 if alone"),
+		Component.text("1 absorption heart to teammates")
 	), { uuid, team, _ ->
 		forPlayer(uuid, team) { alone, player, others ->
 			player.absorptionAmount += if (alone) 8 else 6
 			others.forEach { it.absorptionAmount += 2 }
 		}
 	}),
-	REGENERATION("Regeneration", Material.GHAST_TEAR, arrayOf(
-		"Regain 3 hearts on kill",
-		"Increased to 4 if alone",
-		"1 heart to teammates"
+
+	REGENERATION("Regeneration", Material.GHAST_TEAR, listOf(
+		Component.text("Regain 3 hearts on kill"),
+		Component.text("Increased to 4 if alone"),
+		Component.text("1 heart to teammates")
 	), { uuid, team, _ ->
 		forPlayer(uuid, team) { alone, player, others ->
 			player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION,
@@ -50,15 +49,17 @@ enum class KillReward(
 			}
 		}
 	}),
-	APPLE("Apple Drop", Material.GOLDEN_APPLE, arrayOf(
-		"Killed players drop a special golden apple",
-		"6 absorption hearts",
-		"Regenerates for 2 hearts"
+
+	APPLE("Apple Drop", Material.GOLDEN_APPLE, listOf(
+		Component.text("Killed players drop a special golden apple"),
+		Component.text("6 absorption hearts"),
+		Component.text("Regenerates for 2 hearts")
 	), { _, _, location ->
 		location.world.dropItem(location, uhcAppleCreator.create())
 	}),
-	NONE("None", Material.NETHER_WART, arrayOf(
-		"No reward on kill"
+
+	NONE("None", Material.NETHER_WART, listOf(
+		Component.text("No reward on kill")
 	), { _, _, _ ->
 
 	});

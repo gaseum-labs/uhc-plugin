@@ -150,7 +150,7 @@ class Chat : Listener {
 	private fun divideMessage(
 		message: String,
 		collected: ArrayList<MentionInstance>,
-		chatColor: TextColor,
+		color: TextColor,
 	): List<Pair<TextComponent, Mention?>> {
 		return (0..collected.size).flatMap { i ->
 			val current = collected.getOrNull(i)
@@ -160,7 +160,7 @@ class Chat : Listener {
 
 			listOfNotNull(
 				if (nextStart - lastEnd > 0)
-					Component.text(message.substring(lastEnd, nextStart), chatColor) to null
+					Component.text(message.substring(lastEnd, nextStart), color) to null
 				else null,
 				current?.mention?.generate(message.substring(current.startIndex, current.endIndex))?.to(current.mention)
 			)

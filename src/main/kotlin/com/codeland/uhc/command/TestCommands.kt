@@ -96,7 +96,7 @@ class TestCommands : BaseCommand() {
 		sender as Player
 
 		blockFixType.blockFix.getInfoString(sender) { info ->
-			Action.sendGameMessage(sender, info)
+			sender.sendMessage(info)
 		}
 	}
 

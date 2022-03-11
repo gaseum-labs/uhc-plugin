@@ -1,5 +1,7 @@
 package com.codeland.uhc.core.phase.phases
 
+import com.codeland.uhc.component.*
+import com.codeland.uhc.component.UHCColor.U_WHITE
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.phase.Phase
@@ -8,8 +10,6 @@ import com.codeland.uhc.event.Portal
 import com.codeland.uhc.util.*
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket
 import org.bukkit.*
-import org.bukkit.ChatColor.BOLD
-import org.bukkit.ChatColor.*
 import org.bukkit.block.Block
 import org.bukkit.block.TileState
 import org.bukkit.craftbukkit.v1_18_R2.block.CraftBlock
@@ -85,12 +85,28 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 			(max - game.endgameHighY).toFloat() / (255 - game.endgameHighY)
 	}
 
-	override fun updateBarTitle(world: World, remainingSeconds: Int): String {
-		return if (finished) {
-			"$GOLD${BOLD}Endgame $GOLD${BOLD}${min} - $max ${RESET}Glowing in $GOLD${BOLD}${Util.timeString(ceil((GLOWING_TIME - timer) / 20.0).toInt())}"
-		} else {
-			"$GOLD${BOLD}Endgame ${RESET}Current: $GOLD${BOLD}${min.coerceAtLeast(0)} - $max ${RESET}Final: $GOLD${BOLD}${game.endgameLowY} - ${game.endgameHighY}"
-		}
+	override fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent {
+		return UHCComponent.text("Endgame", phaseType.color)
+			.andSwitch(finished) {
+				UHCComponent.text(" - ", U_WHITE)
+					.and("$max ", phaseType.color, UHCStyle.BOLD)
+					.and("Glowing in ", U_WHITE)
+					.and(
+						Util.timeString(ceil((GLOWING_TIME - timer) / 20.0).toInt()),
+						phaseType.color,
+						UHCStyle.BOLD
+					)
+			}
+			.andSwitch(true) {
+				UHCComponent.text(" Current", U_WHITE)
+					.and(min.coerceAtLeast(0).toString(), phaseType.color, UHCStyle.BOLD)
+					.and(" - ", U_WHITE)
+					.and(max.toString(), phaseType.color, UHCStyle.BOLD)
+					.and(" Final: ", U_WHITE)
+					.and(game.endgameLowY.toString(), phaseType.color, UHCStyle.BOLD)
+					.and(" - ", U_WHITE)
+					.and(game.endgameHighY.toString(), phaseType.color, UHCStyle.BOLD)
+			}
 	}
 
 	fun fillLayer(world: World, layer: Int, type: Material) {

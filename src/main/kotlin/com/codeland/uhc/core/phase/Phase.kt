@@ -1,6 +1,14 @@
 package com.codeland.uhc.core.phase
 
+import com.codeland.uhc.component.ComponentAction.uhcTitle
+import com.codeland.uhc.component.UHCColor.CNTDWN0
+import com.codeland.uhc.component.UHCColor.CNTDWN1
+import com.codeland.uhc.component.UHCColor.CNTDWN2
+import com.codeland.uhc.component.UHCColor.U_BLUE
+import com.codeland.uhc.component.UHCComponent
+import com.codeland.uhc.component.UHCStyle.BOLD
 import com.codeland.uhc.core.Game
+import net.minecraft.network.chat.*
 import org.bukkit.*
 import kotlin.math.ceil
 
@@ -33,11 +41,13 @@ abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) 
 			if (remainingSeconds() == 0) return true
 
 			if (remainingSeconds() <= 3) Bukkit.getServer().onlinePlayers.forEach { player ->
-				player.sendTitle("${countDownColor(remainingSeconds())}${ChatColor.BOLD}${remainingSeconds()}",
-					"${phaseType.chatColor}${ChatColor.BOLD}${endPhrase()}",
-					0,
-					21,
-					0)
+				val color = countDownColor(remainingSeconds())
+
+				player.uhcTitle(
+					UHCComponent.text(remainingSeconds().toString(), color, BOLD),
+					UHCComponent.text(endPhrase(), phaseType.color, BOLD),
+					0, 21, 0
+				)
 			}
 		}
 
@@ -46,18 +56,13 @@ abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) 
 		return false
 	}
 
-	private fun countDownColor(secondsLeft: Int): ChatColor {
+	private fun countDownColor(secondsLeft: Int): TextColor {
 		return when (secondsLeft) {
-			3 -> ChatColor.RED
-			2 -> ChatColor.GREEN
-			1 -> ChatColor.BLUE
-			else -> ChatColor.GRAY
+			3 -> CNTDWN0
+			2 -> CNTDWN1
+			1 -> CNTDWN2
+			else -> U_BLUE
 		}
-	}
-
-	/* bar helper functions */
-	protected fun barStatic(): String {
-		return "${phaseType.chatColor}${ChatColor.BOLD}${phaseType.prettyName}"
 	}
 
 	protected fun barLengthRemaining(remainingTicks: Int): Float {
@@ -66,7 +71,7 @@ abstract class Phase(val phaseType: PhaseType, val length: Int, val game: Game) 
 
 	/* abstract */
 
-	abstract fun updateBarTitle(world: World, remainingSeconds: Int): String
+	abstract fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent
 	abstract fun updateBarLength(remainingTicks: Int): Float
 
 	abstract fun perTick(currentTick: Int)

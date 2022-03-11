@@ -15,6 +15,11 @@ import com.codeland.uhc.team.*
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.extensions.LocationExtensions.minus
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.NamedTextColor.*
+import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.format.TextDecoration.BOLD
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Entity
@@ -95,13 +100,19 @@ class ParticipantCommands : BaseCommand() {
 		if (block == null) {
 			Commands.errorMessage(sender, "You are not looking at a block")
 		} else {
-			Action.sendGameMessage(sender, when (block.type) {
+			val goodMessage = when (block.type) {
 				Material.GRANITE -> "Granite indicates a cave to the north"
 				Material.DIORITE -> "Diorite indicates a cave to the east"
 				Material.ANDESITE -> "Andesite indicates a cave to the south"
 				Material.TUFF -> "Tuff indicates a cave to the west"
-				else -> "${ChatColor.RED}${ChatColor.BOLD}This block is not a cave indicator"
-			})
+				else -> null
+			}
+
+			if (goodMessage == null) {
+				Commands.errorMessage(sender, "This block is not a cave indicator")
+			} else {
+				Action.sendGameMessage(sender, goodMessage)
+			}
 		}
 	}
 
@@ -180,7 +191,8 @@ class ParticipantCommands : BaseCommand() {
 		val classes =
 			game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
-		if (classes.getClass(sender.uniqueId) != QuirkClass.ENGINEER) return Commands.errorMessage(sender, "Your class can't use this command.")
+		if (classes.getClass(sender.uniqueId) != QuirkClass.ENGINEER) return Commands.errorMessage(sender,
+			"Your class can't use this command.")
 
 		val control = Classes.remoteControls.find { (item, _, _) ->
 			item == sender.inventory.itemInMainHand
@@ -247,25 +259,35 @@ class ParticipantCommands : BaseCommand() {
 	fun enchantFixHelp(sender: CommandSender, enchantFixType: Enchant.EnchantType) {
 		val names = enchantFixType.options.map { it.enchantment.key.key }
 
-		sender.sendMessage("${ChatColor.GOLD}<< Enchants for ${ChatColor.GOLD}${ChatColor.BOLD}${enchantFixType.name} ${ChatColor.GOLD}>>")
+		sender.sendMessage(
+			Component.text("<< Enchants for ", GOLD)
+				.append(Component.text(enchantFixType.name, GOLD, BOLD))
+				.append(Component.text(" >>", GOLD))
+		)
+		sender.sendMessage(
+			Component.text("0  1  3  5  7  9  11 13 15", LIGHT_PURPLE, BOLD)
+				.append(Component.text(" | Shelves", WHITE))
+		)
+		sender.sendMessage(Component.empty())
 
-		sender.sendMessage("${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}0  1  3  5  7  9  11 13 15 ${ChatColor.WHITE}| ${ChatColor.WHITE}Shelves")
-		sender.sendMessage("")
 		enchantFixType.options.forEachIndexed { i, option ->
-			sender.sendMessage("${
-				option.levels.joinToString("  ") {
-					"${
-						when (it) {
-							0 -> ChatColor.BLACK
-							1 -> ChatColor.RED
-							2 -> ChatColor.GOLD
-							3 -> ChatColor.YELLOW
-							4 -> ChatColor.GREEN
-							else -> ChatColor.AQUA
-						}
-					}${ChatColor.BOLD}${it}"
-				}
-			} ${ChatColor.WHITE}| ${ChatColor.BLUE}${names[i]}")
+			var baseComponent = Component.empty()
+
+			option.levels.forEach { level ->
+				baseComponent = baseComponent.append(Component.text("$level  ", when (level) {
+					0 -> BLACK
+					1 -> RED
+					2 -> GOLD
+					3 -> YELLOW
+					4 -> GREEN
+					else -> AQUA
+				}, BOLD))
+			}
+
+			sender.sendMessage(
+				baseComponent.append(Component.text("| ", WHITE))
+					.append(Component.text(names[i], BLUE))
+			)
 		}
 	}
 }

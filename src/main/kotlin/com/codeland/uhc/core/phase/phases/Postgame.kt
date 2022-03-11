@@ -1,5 +1,6 @@
 package com.codeland.uhc.core.phase.phases
 
+import com.codeland.uhc.component.UHCComponent
 import com.codeland.uhc.core.Game
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.core.phase.Phase
@@ -15,8 +16,8 @@ class Postgame(game: Game) : Phase(PhaseType.POSTGAME, 0, game) {
 		return 1.0f
 	}
 
-	override fun updateBarTitle(world: World, remainingSeconds: Int): String {
-		return barStatic()
+	override fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent {
+		return UHCComponent.text(phaseType.prettyName, phaseType.color)
 	}
 
 	override fun perTick(currentTick: Int) {}

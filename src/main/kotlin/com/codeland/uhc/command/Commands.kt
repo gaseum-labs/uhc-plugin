@@ -4,23 +4,21 @@ import co.aikar.commands.PaperCommandManager
 import com.codeland.uhc.core.PlayerData
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.quirk.quirks.classes.QuirkClass
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor.*
+import net.kyori.adventure.text.format.TextDecoration.*
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor
 import org.bukkit.block.Biome
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 object Commands {
 	fun errorMessage(sender: CommandSender, text: String) {
-		sender.sendMessage("${ChatColor.RED}${ChatColor.BOLD}$text")
+		sender.sendMessage(Component.text(text, RED, BOLD))
 	}
 
 	fun errorMessage(player: Player, text: String) {
-		player.sendMessage("${ChatColor.RED}${ChatColor.BOLD}$text")
-	}
-
-	fun coloredInError(string: String, color: ChatColor): String {
-		return "$color${ChatColor.BOLD}$string${ChatColor.RED}${ChatColor.BOLD}"
+		player.sendMessage(Component.text(text, RED, BOLD))
 	}
 
 	/**

@@ -1,7 +1,12 @@
 package com.codeland.uhc.event
 
+import com.codeland.uhc.component.ComponentAction.uhcHotbar
+import com.codeland.uhc.component.UHCColor
+import com.codeland.uhc.component.UHCComponent
+import com.codeland.uhc.component.UHCComponent.Companion
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.arena.ParkourArena
+import com.codeland.uhc.util.extensions.BlockExtensions.samePlace
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.*
@@ -24,7 +29,7 @@ class Parkour : Listener {
 
 		val checkpointType = when {
 			under.type === Material.GOLD_BLOCK -> 0
-			under.blockKey == arena.start.blockKey -> 1
+			under.samePlace(arena.start) -> 1
 			else -> -1
 		}
 
@@ -34,18 +39,21 @@ class Parkour : Listener {
 		if (checkpointType != -1) {
 			val isBuilding = player.gameMode === GameMode.CREATIVE
 
-			if (parkourData.checkpoint.blockKey != under.blockKey) {
+			if (!parkourData.checkpoint.samePlace(under)) {
 				parkourData.checkpoint = under
-				player.sendActionBar(Component.text(
-					if (isBuilding) {
-						"${ChatColor.AQUA}Set Testing Start"
-					} else {
-						arrayOf(
-							"${ChatColor.GOLD}New Checkpoint Reached!",
-							"${ChatColor.BLUE}Reset to Start!"
-						)[checkpointType]
-					}
-				))
+
+				player.uhcHotbar(
+					UHCComponent.text()
+						.andSwitch(isBuilding) {
+							Companion.text("Set Testing Start", UHCColor.U_AQUA)
+						}
+						.andSwitch(checkpointType == 0) {
+							Companion.text("New Checkpoint Reached!", UHCColor.U_GOLD)
+						}
+						.andSwitch(true) {
+							Companion.text("Reset to Start!", UHCColor.U_BLUE)
+						}
+				)
 			}
 		}
 	}
@@ -77,7 +85,7 @@ class Parkour : Listener {
 		val player = event.player
 		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
 
-		if (event.block.blockKey == arena.start.blockKey) {
+		if (event.block.samePlace(arena.start)) {
 			arena.start = arena.defaultStart()
 			player.sendActionBar(Component.text("Parkour start reset", NamedTextColor.RED))
 		}
