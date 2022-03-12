@@ -1,5 +1,11 @@
 package com.codeland.uhc.core
 
+import com.codeland.uhc.component.ComponentAction.uhcHotbar
+import com.codeland.uhc.component.UHCColor.U_GOLD
+import com.codeland.uhc.component.UHCColor.U_WHITE
+import com.codeland.uhc.component.UHCComponent
+import com.codeland.uhc.component.UHCComponent.Companion
+import com.codeland.uhc.component.UHCStyle
 import com.codeland.uhc.gui.CommandItemType
 import com.codeland.uhc.lobbyPvp.ArenaManager
 import com.codeland.uhc.lobbyPvp.PvpQueue
@@ -105,9 +111,9 @@ object Lobby {
 			fun tip(player: Player, playerData: PlayerData) {
 				if (isFirst(6)) playerData.loadingTip = (Math.random() * loadingTips.size).toInt()
 
-				player.sendActionBar(
-					Component.text("UHC Tips: ", GOLD)
-						.append(Component.text(loadingTips[playerData.loadingTip], Style.style(BOLD)))
+				player.uhcHotbar(
+					UHCComponent.text("UHC Tips: ", U_WHITE)
+						.and(loadingTips[playerData.loadingTip], U_GOLD, UHCStyle.BOLD)
 				)
 			}
 

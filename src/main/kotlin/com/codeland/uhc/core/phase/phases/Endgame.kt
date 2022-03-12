@@ -98,13 +98,13 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 					)
 			}
 			.andSwitch(true) {
-				UHCComponent.text(" Current", U_WHITE)
+				UHCComponent.text(" Current ", U_WHITE)
 					.and(min.coerceAtLeast(0).toString(), phaseType.color, UHCStyle.BOLD)
-					.and(" - ", U_WHITE)
+					.and(" - ", phaseType.color)
 					.and(max.toString(), phaseType.color, UHCStyle.BOLD)
 					.and(" Final: ", U_WHITE)
 					.and(game.endgameLowY.toString(), phaseType.color, UHCStyle.BOLD)
-					.and(" - ", U_WHITE)
+					.and(" - ", phaseType.color)
 					.and(game.endgameHighY.toString(), phaseType.color, UHCStyle.BOLD)
 			}
 	}

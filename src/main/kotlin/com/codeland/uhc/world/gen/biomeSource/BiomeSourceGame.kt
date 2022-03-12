@@ -1,7 +1,7 @@
 package com.codeland.uhc.world.gen.biomeSource
 
 import com.codeland.uhc.world.gen.BiomeNo
-import com.codeland.uhc.world.gen.ModifiedBiomesRegistry
+import com.codeland.uhc.world.gen.CustomCarvers
 import com.codeland.uhc.world.gen.UHCArea.UHCArea
 import com.codeland.uhc.world.gen.layer.game.*
 import net.minecraft.core.Holder
@@ -15,7 +15,7 @@ class BiomeSourceGame(
 	val endRadius: Int,
 	val features: Boolean,
 	val area: UHCArea,
-) : CheckerboardColumnBiomeSource(HolderSet.direct(), 1) {
+) : CheckerboardColumnBiomeSource(BiomeNo.biomeHolderSet, 1) {
 	private val centerBiome = if (centerBiomeNo == null) null else biomeFromInt(centerBiomeNo)
 
 	override fun getNoiseBiome(x: Int, y: Int, z: Int, niose: Climate.Sampler): Holder<Biome> {
@@ -35,7 +35,7 @@ class BiomeSourceGame(
 
 	fun biomeFromInt(no: Int): Holder<Biome> {
 		return if (features) {
-			ModifiedBiomesRegistry.featureBiomes[no]!!
+			BiomeNo.featureBiomes[no]!!
 		} else {
 			BiomeNo.fromId(no)
 		}

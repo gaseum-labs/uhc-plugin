@@ -9,7 +9,7 @@ import net.minecraft.world.level.levelgen.carver.*
 import net.minecraft.world.level.levelgen.carver.CanyonCarverConfiguration.CanyonShapeConfiguration
 import net.minecraft.world.level.levelgen.heightproviders.UniformHeight
 
-object ModifiedBiomesRegistry {
+object CustomCarvers {
 	val caveCarverMaster = WorldCarver.CAVE
 	val netherCavesMaster = WorldGenCavesSuperNether()
 	val canyonCarverMaster = WorldCarver.CANYON
@@ -101,6 +101,4 @@ object ModifiedBiomesRegistry {
 			ConstantFloat.of(-1.0f)
 		)
 	)
-
-	val featureBiomes = ModifiedBiomes.genBiomes(replaceFeatures = true, replaceMobs = true)
 }

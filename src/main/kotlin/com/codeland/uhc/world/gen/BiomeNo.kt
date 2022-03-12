@@ -1,8 +1,7 @@
 package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.reflect.UHCReflect
-import net.minecraft.core.Holder
-import net.minecraft.core.Registry
+import net.minecraft.core.*
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.world.level.biome.Biome
@@ -138,34 +137,7 @@ object BiomeNo {
 		Biomes.END_BARRENS,
 	)
 
-	val dedicatedServerField = UHCReflect<CraftServer, DedicatedServer>(CraftServer::class, "console")
-
-	val biomeRegistry: Registry<Biome>
-	val noiseRegistry: Registry<NormalNoise.NoiseParameters>
-
-	init {
-		val registryHolder = dedicatedServerField.get(Bukkit.getServer() as CraftServer).registryHolder
-
-		biomeRegistry = registryHolder.ownedRegistryOrThrow(Registry.BIOME_REGISTRY)
-		noiseRegistry = registryHolder.ownedRegistryOrThrow(Registry.NOISE_REGISTRY)
-	}
-
-	val biomeHolders = HashMap<Int, Holder<Biome>>()
-
-	init {
-		resourceKeys.forEachIndexed { i, resourceKey ->
-			biomeHolders[i] = Holder.direct(biomeRegistry.get(resourceKey)!!)
-		}
-	}
-
-	private val nameMap = HashMap<String, Int>()
-
-	init {
-		biomeRegistry.entrySet().toList().forEach { entry ->
-			println(entry.key.location().path)
-			nameMap[entry.key.location().path] = toId(entry.key)
-		}
-	}
+	/* util */
 
 	fun fromName(name: String?): Int? {
 		return nameMap[name]
@@ -191,12 +163,40 @@ object BiomeNo {
 		}
 	}
 
-	fun isBadlands(no: Int): Boolean {
-		return when (no) {
-			BADLANDS,
-			ERODED_BADLANDS,
-			-> true
-			else -> false
+	/* fields */
+
+	val dedicatedServerField = UHCReflect<CraftServer, DedicatedServer>(CraftServer::class, "console")
+
+	lateinit var biomeRegistry: Registry<Biome>
+	lateinit var noiseRegistry: Registry<NormalNoise.NoiseParameters>
+	lateinit var featureBiomes: Map<Int, Holder<Biome>>
+
+	val biomeHolders = HashMap<Int, Holder<Biome>>()
+	val nameMap = HashMap<String, Int>()
+	lateinit var biomeHolderSet: HolderSet<Biome>
+
+	var initialized = false
+
+	fun delayedInit() {
+		if (initialized) return
+		initialized = true
+
+		val registryHolder = dedicatedServerField.get(Bukkit.getServer() as CraftServer).registryHolder
+
+		biomeRegistry = registryHolder.ownedRegistryOrThrow(Registry.BIOME_REGISTRY)
+		noiseRegistry = registryHolder.ownedRegistryOrThrow(Registry.NOISE_REGISTRY)
+
+		resourceKeys.forEachIndexed { i, resourceKey ->
+			biomeHolders[i] = biomeRegistry.getOrCreateHolder(resourceKey)
 		}
+
+		biomeHolderSet = HolderSet.direct(biomeHolders.entries.map { it.value })
+
+		biomeRegistry.entrySet().toList().forEach { entry ->
+			println(entry.key.location().path)
+			nameMap[entry.key.location().path] = toId(entry.key)
+		}
+
+		featureBiomes = ModifiedBiomes.genBiomes(replaceFeatures = true, replaceMobs = true)
 	}
 }

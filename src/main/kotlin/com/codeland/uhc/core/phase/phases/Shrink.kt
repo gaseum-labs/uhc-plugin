@@ -45,7 +45,7 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 					}
 			}
 			.andSwitch(true) {
-				UHCComponent.text("Endgame Y Range", phaseType.color)
+				UHCComponent.text("Endgame Y Range ", phaseType.color)
 					.and(game.endgameLowY.toString(), phaseType.color, UHCStyle.BOLD)
 					.and(" - ", UHCColor.U_WHITE)
 					.and(game.endgameHighY.toString(), phaseType.color, UHCStyle.BOLD)

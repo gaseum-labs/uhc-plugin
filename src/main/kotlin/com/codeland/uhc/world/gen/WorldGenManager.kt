@@ -3,15 +3,19 @@ package com.codeland.uhc.world.gen
 import com.codeland.uhc.core.UHC
 import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.reflect.UHCReflect
+import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.*
 import com.codeland.uhc.world.gen.biomeSource.*
+import net.minecraft.core.Holder
 import net.minecraft.world.level.biome.*
 import net.minecraft.world.level.chunk.ChunkGenerator
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator
 import org.bukkit.*
 import org.bukkit.craftbukkit.v1_18_R2.CraftServer
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
 import java.util.*
 import kotlin.Pair
+import kotlin.collections.HashMap
 
 object WorldGenManager {
 	private val serverWorldsField = UHCReflect<CraftServer, Map<String, World>>(CraftServer::class, "worlds")
@@ -19,6 +23,12 @@ object WorldGenManager {
 	private val biomeSourceField = UHCReflect<ChunkGenerator, BiomeSource>(ChunkGenerator::class, "biomeSource")
 	private val runtimeBiomeSourceField =
 		UHCReflect<ChunkGenerator, BiomeSource>(ChunkGenerator::class, "runtimeBiomeSource")
+
+	/* fields of MuliNoiseBiomeSource */
+	private val parametersField = UHCReflect<MultiNoiseBiomeSource, Climate.ParameterList<Holder<Biome>>>(
+		MultiNoiseBiomeSource::class,
+		"parameters"
+	)
 
 	fun init(server: Server) {
 
@@ -35,10 +45,22 @@ object WorldGenManager {
 	}
 
 	private fun onWorldAdded(world: World) {
+		BiomeNo.delayedInit()
+
 		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return
 
 		val generator =
 			(world as CraftWorld).handle.chunkSource.chunkMap.generator ?: return
+
+		//val originalBiomeSource = generator.biomeSource as? MultiNoiseBiomeSource ?: return
+		//val parameters = parametersField.get(originalBiomeSource)
+
+		//val biomeMap = HashMap<Int, Holder<Biome>>()
+//
+		//parameters.values().forEachIndexed { i, entry ->
+		//	biomeMap[i] = entry.second
+		//	Util.log(entry.second.value().toString())
+		//}
 
 		val seed = world.seed
 
@@ -59,7 +81,13 @@ object WorldGenManager {
 				BiomeSourceNether.createFeaturesPair(seed)
 			}
 			WorldManager.LOBBY_WORLD_NAME -> {
-				BiomeSourceSingle(seed, BiomeNo.BADLANDS) to null
+				//BiomeSourceSingle(seed, BiomeNo.BADLANDS) to null
+				//BiomeSourcePvp(seed) to null
+				BiomeSourceGame.createFeaturesPair(
+					seed,
+					BiomeNo.fromName(UHC.getConfig().centerBiome.get()?.name),
+					UHC.getConfig().endgameRadius.get(),
+				)
 			}
 			WorldManager.PVP_WORLD_NAME -> {
 				BiomeSourcePvp(seed) to null

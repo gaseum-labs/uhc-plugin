@@ -2,6 +2,7 @@ package com.codeland.uhc.world.gen
 
 import com.codeland.uhc.reflect.UHCReflect
 import net.minecraft.core.Holder
+import net.minecraft.core.HolderSet
 import net.minecraft.data.worldgen.placement.OrePlacements
 import net.minecraft.data.worldgen.placement.VegetationPlacements
 import net.minecraft.world.level.biome.*
@@ -31,17 +32,17 @@ object ModifiedBiomes {
 	)
 
 	/* fields of BiomeGenerationSettings */
-	val featuresField = UHCReflect<BiomeGenerationSettings, List<List<Supplier<PlacedFeature>>>>(
+	val featuresField = UHCReflect<BiomeGenerationSettings, List<HolderSet<PlacedFeature>>>(
 		BiomeGenerationSettings::class, "features"
 	)
 	val carversField =
-		UHCReflect<BiomeGenerationSettings, Map<Carving, List<Supplier<ConfiguredWorldCarver<*>>>>>(
+		UHCReflect<BiomeGenerationSettings, Map<Carving, HolderSet<ConfiguredWorldCarver<*>>>>(
 			BiomeGenerationSettings::class, "carvers"
 		)
 
-	val biomeGenerationSettingsConstructor = BiomeGenerationSettings::class.java.constructors[0]
-	val mobSpawnSettingsConstructor = MobSpawnSettings::class.java.constructors[0]
-	val biomeConstructor = Biome::class.java.constructors[0] as Constructor<Biome>
+	val biomeGenerationSettingsConstructor = BiomeGenerationSettings::class.java.declaredConstructors[0]
+	val mobSpawnSettingsConstructor = MobSpawnSettings::class.java.declaredConstructors[0]
+	val biomeConstructor = Biome::class.java.declaredConstructors[0] as Constructor<Biome>
 
 	init {
 		biomeGenerationSettingsConstructor.isAccessible = true
@@ -60,57 +61,55 @@ object ModifiedBiomes {
 				val originalFeatures = featuresField.get(originalSettings)
 				val originalCarvers = carversField.get(originalSettings)
 
-				val newCarvers = HashMap<Carving, List<Supplier<ConfiguredWorldCarver<*>>>>()
+				val newCarvers = HashMap<Carving, HolderSet<ConfiguredWorldCarver<*>>>()
 
 				originalCarvers.forEach { (key) ->
 					newCarvers[key] = if (BiomeNo.isNetherBiome(biomeId)) {
-						arrayListOf(
-							Supplier { ModifiedBiomesRegistry.netherSuperCaveCarver },
-							Supplier { ModifiedBiomesRegistry.netherUpperCaveCarver },
+						HolderSet.direct(
+							Holder.direct(CustomCarvers.netherSuperCaveCarver),
+							Holder.direct(CustomCarvers.netherUpperCaveCarver)
 						)
 					} else {
-						arrayListOf(
-							Supplier { ModifiedBiomesRegistry.caveLevels[0] },
-							Supplier { ModifiedBiomesRegistry.caveLevels[1] },
-							Supplier { ModifiedBiomesRegistry.caveLevels[2] },
-							Supplier { ModifiedBiomesRegistry.caveLevels[3] },
-							Supplier { ModifiedBiomesRegistry.superCanyonCarver },
+						HolderSet.direct(
+							Holder.direct(CustomCarvers.caveLevels[0]),
+							Holder.direct(CustomCarvers.caveLevels[1]),
+							Holder.direct(CustomCarvers.caveLevels[2]),
+							Holder.direct(CustomCarvers.caveLevels[3]),
+							Holder.direct(CustomCarvers.superCanyonCarver),
 						)
 					}
 				}
 
-				val newFeatures = ArrayList<List<Supplier<PlacedFeature>>>()
+				val newFeatures = ArrayList<HolderSet<PlacedFeature>>()
 
 				originalFeatures.forEach { originalSubList ->
-					val newSubList = ArrayList<Supplier<PlacedFeature>>()
+					val tempList = ArrayList<Holder<PlacedFeature>>()
 
-					originalSubList.forEach { supplier ->
-						val configured = supplier.get()
-
+					originalSubList.forEach { holder ->
 						if (
-							configured === OrePlacements.ORE_GOLD.value() || // gold ores (excluding badlands)
-							configured === OrePlacements.ORE_GOLD_LOWER.value() ||
+							holder === OrePlacements.ORE_GOLD || // gold ores (excluding badlands)
+							holder === OrePlacements.ORE_GOLD_LOWER ||
 
-							configured === OrePlacements.ORE_LAPIS.value() || // lapis ore
-							configured === OrePlacements.ORE_LAPIS_BURIED.value() ||
+							holder === OrePlacements.ORE_LAPIS || // lapis ore
+							holder === OrePlacements.ORE_LAPIS_BURIED ||
 
-							configured === OrePlacements.ORE_DIAMOND.value() || // diamond ores
-							configured === OrePlacements.ORE_DIAMOND_LARGE.value() ||
-							configured === OrePlacements.ORE_DIAMOND_BURIED.value() ||
+							holder === OrePlacements.ORE_DIAMOND || // diamond ores
+							holder === OrePlacements.ORE_DIAMOND_LARGE ||
+							holder === OrePlacements.ORE_DIAMOND_BURIED ||
 
-							configured === VegetationPlacements.PATCH_MELON.value() || // melons
-							configured === VegetationPlacements.PATCH_MELON_SPARSE.value() ||
+							holder === VegetationPlacements.PATCH_MELON || // melons
+							holder === VegetationPlacements.PATCH_MELON_SPARSE ||
 
-							configured === VegetationPlacements.PATCH_SUGAR_CANE.value() || // sugar cane (excluding badlands)
-							configured === VegetationPlacements.PATCH_SUGAR_CANE_DESERT.value() ||
-							configured === VegetationPlacements.PATCH_SUGAR_CANE_SWAMP.value()
+							holder === VegetationPlacements.PATCH_SUGAR_CANE || // sugar cane (excluding badlands)
+							holder === VegetationPlacements.PATCH_SUGAR_CANE_DESERT ||
+							holder === VegetationPlacements.PATCH_SUGAR_CANE_SWAMP
 						) {
 							//
 						} else {
-							newSubList.add(supplier)
+							tempList.add(holder)
 						}
 					}
-					newFeatures.add(newSubList)
+					newFeatures.add(HolderSet.direct(tempList))
 				}
 
 				biomeGenerationSettingsConstructor.newInstance(
@@ -135,10 +134,10 @@ object ModifiedBiomes {
 
 			ret[biomeId] = Holder.direct(biomeConstructor.newInstance(
 				climateSettingsField.get(original),
+				biomeCategoryField.get(original),
+				specialEffectsField.get(original),
 				newSettings,
 				newMobs,
-				biomeCategoryField.get(original),
-				specialEffectsField.get(original)
 			))
 		}
 

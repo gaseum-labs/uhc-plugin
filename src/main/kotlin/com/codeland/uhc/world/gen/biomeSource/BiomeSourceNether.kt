@@ -1,7 +1,7 @@
 package com.codeland.uhc.world.gen.biomeSource
 
 import com.codeland.uhc.world.gen.BiomeNo
-import com.codeland.uhc.world.gen.ModifiedBiomesRegistry
+import com.codeland.uhc.world.gen.CustomCarvers
 import com.codeland.uhc.world.gen.UHCArea.UHCArea
 import com.codeland.uhc.world.gen.layer.game.*
 import com.codeland.uhc.world.gen.layer.nether.LayerNetherBiome
@@ -17,7 +17,7 @@ class BiomeSourceNether(
 	override fun getNoiseBiome(x: Int, y: Int, z: Int, niose: Climate.Sampler): Holder<Biome> {
 		val biomeId = area.sample(x, z)
 
-		return if (features) ModifiedBiomesRegistry.featureBiomes[biomeId]!!
+		return if (features) BiomeNo.featureBiomes[biomeId]!!
 		else BiomeNo.fromId(biomeId)
 	}
 

@@ -10,7 +10,7 @@ import net.minecraft.world.level.biome.*
 
 class BiomeSourcePvp(
 	val seed: Long,
-) : CheckerboardColumnBiomeSource(HolderSet.direct(), 1) {
+) : CheckerboardColumnBiomeSource(BiomeNo.biomeHolderSet, 1) {
 	private val area = createAreaPvp(seed)
 
 	override fun getNoiseBiome(x: Int, y: Int, z: Int, niose: Climate.Sampler): Holder<Biome> {
