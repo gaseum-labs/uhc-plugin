@@ -5,7 +5,9 @@ import com.codeland.uhc.util.SchedulerUtil
 import com.codeland.uhc.reflect.UHCReflect
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.world.*
+import com.codeland.uhc.world.WorldGenOption.AMPLIFIED
 import com.codeland.uhc.world.gen.biomeSource.*
+import com.codeland.uhc.world.gen.climate.UHCNoiseGeneratorSettings
 import net.minecraft.core.Holder
 import net.minecraft.world.level.biome.*
 import net.minecraft.world.level.chunk.ChunkGenerator
@@ -50,7 +52,7 @@ object WorldGenManager {
 		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return
 
 		val generator =
-			(world as CraftWorld).handle.chunkSource.chunkMap.generator ?: return
+			(world as CraftWorld).handle.chunkSource.chunkMap.generator as? NoiseBasedChunkGenerator ?: return
 
 		//val originalBiomeSource = generator.biomeSource as? MultiNoiseBiomeSource ?: return
 		//val parameters = parametersField.get(originalBiomeSource)
@@ -98,6 +100,11 @@ object WorldGenManager {
 		if (biomeManager != null) {
 			runtimeBiomeSourceField.set(generator, biomeManager)
 			biomeSourceField.set(generator, featureManager ?: biomeManager)
+
+			UHCNoiseGeneratorSettings.inject(
+				generator,
+				UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED))
+			)
 		}
 	}
 }

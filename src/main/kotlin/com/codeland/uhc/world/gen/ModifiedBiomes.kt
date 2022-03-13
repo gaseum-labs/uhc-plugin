@@ -64,20 +64,21 @@ object ModifiedBiomes {
 				val newCarvers = HashMap<Carving, HolderSet<ConfiguredWorldCarver<*>>>()
 
 				originalCarvers.forEach { (key) ->
-					newCarvers[key] = if (BiomeNo.isNetherBiome(biomeId)) {
-						HolderSet.direct(
-							Holder.direct(CustomCarvers.netherSuperCaveCarver),
-							Holder.direct(CustomCarvers.netherUpperCaveCarver)
-						)
-					} else {
-						HolderSet.direct(
-							Holder.direct(CustomCarvers.caveLevels[0]),
-							Holder.direct(CustomCarvers.caveLevels[1]),
-							Holder.direct(CustomCarvers.caveLevels[2]),
-							Holder.direct(CustomCarvers.caveLevels[3]),
-							Holder.direct(CustomCarvers.superCanyonCarver),
-						)
-					}
+					/* no more old cave carvers */
+					//newCarvers[key] = if (BiomeNo.isNetherBiome(biomeId)) {
+					//	HolderSet.direct(
+					//		Holder.direct(CustomCarvers.netherSuperCaveCarver),
+					//		Holder.direct(CustomCarvers.netherUpperCaveCarver)
+					//	)
+					//} else {
+					//	HolderSet.direct(
+					//		Holder.direct(CustomCarvers.caveLevels[0]),
+					//		Holder.direct(CustomCarvers.caveLevels[1]),
+					//		Holder.direct(CustomCarvers.caveLevels[2]),
+					//		Holder.direct(CustomCarvers.caveLevels[3]),
+					//		Holder.direct(CustomCarvers.superCanyonCarver),
+					//	)
+					//}
 				}
 
 				val newFeatures = ArrayList<HolderSet<PlacedFeature>>()

@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceKey
 import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.world.level.biome.Biome
 import net.minecraft.world.level.biome.Biomes
+import net.minecraft.world.level.levelgen.NoiseRouter
 import net.minecraft.world.level.levelgen.synth.NormalNoise
 import org.bukkit.Bukkit
 import org.bukkit.craftbukkit.v1_18_R2.CraftServer
@@ -193,7 +194,6 @@ object BiomeNo {
 		biomeHolderSet = HolderSet.direct(biomeHolders.entries.map { it.value })
 
 		biomeRegistry.entrySet().toList().forEach { entry ->
-			println(entry.key.location().path)
 			nameMap[entry.key.location().path] = toId(entry.key)
 		}
 

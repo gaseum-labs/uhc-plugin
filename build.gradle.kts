@@ -48,6 +48,15 @@ dependencies {
 }
 
 tasks {
+	shadowJar {
+		relocate(
+			"net.minecraft.world.level.levelgen",
+			"com.codeland.uhc.fake.level.levelgen"
+		) {
+			include("net.minecraft.world.level.levelgen.UHCNoiseRouterData")
+			include("net.minecraft.world.level.levelgen.CaveRarity")
+		}
+	}
 	assemble {
 		dependsOn(reobfJar)
 	}

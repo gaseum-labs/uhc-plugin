@@ -18,7 +18,9 @@ class BiomeSourceGame(
 ) : CheckerboardColumnBiomeSource(BiomeNo.biomeHolderSet, 1) {
 	private val centerBiome = if (centerBiomeNo == null) null else biomeFromInt(centerBiomeNo)
 
-	override fun getNoiseBiome(x: Int, y: Int, z: Int, niose: Climate.Sampler): Holder<Biome> {
+	override fun getNoiseBiome(x: Int, y: Int, z: Int, noise: Climate.Sampler): Holder<Biome> {
+		//println(noise.sample(x, y, z).humidity)
+
 		/* center biome area */
 		return if (centerBiome != null && inRange(x, z, endRadius)) {
 			centerBiome
