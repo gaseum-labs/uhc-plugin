@@ -1,12 +1,22 @@
 package com.codeland.uhc.world.gen.climate
 
 import com.codeland.uhc.reflect.UHCReflect
+import com.codeland.uhc.world.gen.ClassInjector
 import net.minecraft.core.Holder
 import net.minecraft.core.Registry
 import net.minecraft.data.worldgen.SurfaceRuleData
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.levelgen.*
+import net.minecraft.world.level.levelgen.CaveRarity
+import net.minecraft.world.level.levelgen.NoiseSettings
+import net.minecraft.world.level.levelgen.NoiseSamplingSettings
+import net.minecraft.world.level.levelgen.NoiseSlider
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings
+import net.minecraft.world.level.levelgen.UHCNoiseRouterData
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator
+import net.minecraft.world.level.levelgen.NoiseRouter
+import net.minecraft.world.level.levelgen.WorldgenRandom.Algorithm
 import net.minecraft.world.level.levelgen.synth.NormalNoise.NoiseParameters
+import kotlin.random.Random
 
 object UHCNoiseGeneratorSettings {
 	private fun subCreateGame(amplified: Boolean): NoiseSettings {
@@ -24,6 +34,8 @@ object UHCNoiseGeneratorSettings {
 
 	fun createGame(amplified: Boolean): NoiseGeneratorSettings {
 		val noiseSettings = subCreateGame(amplified)
+		
+		val loader = Thread.currentThread().contextClassLoader
 
 		CaveRarity.inject()
 
@@ -50,15 +62,22 @@ object UHCNoiseGeneratorSettings {
 	private val noisesField =
 		UHCReflect<NoiseBasedChunkGenerator, Registry<NoiseParameters>>(NoiseBasedChunkGenerator::class, "noises")
 
-	fun inject(chunkGenerator: NoiseBasedChunkGenerator, settings: NoiseGeneratorSettings) {
+	fun inject(chunkGenerator: NoiseBasedChunkGenerator, seed: Long, settings: NoiseGeneratorSettings) {
 		settingsField.set(chunkGenerator, Holder.direct(settings))
+
+		val factory = Algorithm.XOROSHIRO.newInstance(Random.nextLong()).forkPositional()
 
 		routerField.set(
 			chunkGenerator,
-			settings.createNoiseRouter(
-				noisesField.get(chunkGenerator),
-				seedField.get(chunkGenerator)
+			UHCNoiseRouterData.uhcCreateNoiseRouter(
+				settings.noiseSettings,
+				seed,
+				settings.noiseRouter
 			)
+			//settings.createNoiseRouter(
+			//	noisesField.get(chunkGenerator),
+			//	seedField.get(chunkGenerator)
+			//)
 		)
 	}
 }

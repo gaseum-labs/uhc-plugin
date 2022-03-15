@@ -54,16 +54,6 @@ object WorldGenManager {
 		val generator =
 			(world as CraftWorld).handle.chunkSource.chunkMap.generator as? NoiseBasedChunkGenerator ?: return
 
-		//val originalBiomeSource = generator.biomeSource as? MultiNoiseBiomeSource ?: return
-		//val parameters = parametersField.get(originalBiomeSource)
-
-		//val biomeMap = HashMap<Int, Holder<Biome>>()
-//
-		//parameters.values().forEachIndexed { i, entry ->
-		//	biomeMap[i] = entry.second
-		//	Util.log(entry.second.value().toString())
-		//}
-
 		val seed = world.seed
 
 		val (biomeManager, featureManager) = when (world.name) {
@@ -103,6 +93,7 @@ object WorldGenManager {
 
 			UHCNoiseGeneratorSettings.inject(
 				generator,
+				seed,
 				UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED))
 			)
 		}

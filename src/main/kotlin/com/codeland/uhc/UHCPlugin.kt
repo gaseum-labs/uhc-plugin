@@ -14,6 +14,7 @@ import com.codeland.uhc.util.GoogleDDNSUpdater
 import com.codeland.uhc.util.Util
 import com.codeland.uhc.util.Util.void
 import com.codeland.uhc.world.WorldManager
+import com.codeland.uhc.world.gen.ClassInjector
 import com.codeland.uhc.world.gen.WorldGenManager
 import org.bukkit.plugin.java.JavaPlugin
 import kotlin.system.exitProcess
@@ -57,8 +58,10 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Snowball(), this)
 		server.pluginManager.registerEvents(Fishing(), this)
 		server.pluginManager.registerEvents(CaveIndicator(), this)
-		Packet.init()
 
+		Packet.init()
+		ClassInjector.injectNms(this.file)
+		
 		WorldGenManager.init(server)
 
 		GoogleDDNSUpdater.updateDomain(configFile)

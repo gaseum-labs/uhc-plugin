@@ -47,15 +47,16 @@ dependencies {
 	compileOnly("com.comphenix.protocol:ProtocolLib:4.8.0")
 }
 
+val rc = configurations.runtimeClasspath
+
 tasks {
+	val nmsJar = register<Jar>("nmsJar") {
+		archiveFileName.set("uhc-nms.jar")
+		from(sourceSets["main"].output)
+	}
 	shadowJar {
-		relocate(
-			"net.minecraft.world.level.levelgen",
-			"com.codeland.uhc.fake.level.levelgen"
-		) {
-			include("net.minecraft.world.level.levelgen.UHCNoiseRouterData")
-			include("net.minecraft.world.level.levelgen.CaveRarity")
-		}
+		exclude("net.minecraft.*")
+		dependsOn(nmsJar)
 	}
 	assemble {
 		dependsOn(reobfJar)
@@ -75,6 +76,11 @@ tasks {
 	}
 	processResources {
 		filteringCharset = Charsets.UTF_8.name()
+	}
+	runServer {
+		jvmArgs("--add-exports=java.base/jdk.internal.loader=ALL-UNNAMED")
+		jvmArgs("--add-opens=java.base/java.security=ALL-UNNAMED")
+		jvmArgs("--add-opens=java.base/java.net=ALL-UNNAMED")
 	}
 }
 

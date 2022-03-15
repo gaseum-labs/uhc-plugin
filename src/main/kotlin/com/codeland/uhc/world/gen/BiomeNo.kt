@@ -164,6 +164,10 @@ object BiomeNo {
 		}
 	}
 
+	fun isBadlands(no: Int): Boolean {
+		return false
+	}
+
 	/* fields */
 
 	val dedicatedServerField = UHCReflect<CraftServer, DedicatedServer>(CraftServer::class, "console")

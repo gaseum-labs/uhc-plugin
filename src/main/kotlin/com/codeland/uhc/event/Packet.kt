@@ -153,6 +153,10 @@ object Packet {
 	}
 
 	fun init() {
+		val ppp = Thread.currentThread().contextClassLoader
+
+		val protocolPPP = UHCPlugin::class.java.classLoader
+
 		val protocolManager = ProtocolLibrary.getProtocolManager()
 
 		protocolManager.addPacketListener(object :

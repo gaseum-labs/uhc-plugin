@@ -1,14 +1,26 @@
 package net.minecraft.world.level.levelgen
 
+import com.codeland.uhc.world.gen.BiomeNo
 import net.minecraft.core.Holder
+import net.minecraft.core.Registry
 import net.minecraft.data.BuiltinRegistries
 import net.minecraft.resources.ResourceKey
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.biome.OverworldBiomeBuilder
 import net.minecraft.world.level.dimension.DimensionType
+import net.minecraft.world.level.levelgen.DensityFunctions.*
 import net.minecraft.world.level.levelgen.DensityFunctions.TerrainShaperSpline.SplineType
+import net.minecraft.world.level.levelgen.DensityFunctions.WeirdScaledSampler.RarityValueMapper
 import net.minecraft.world.level.levelgen.DensityFunctions.WeirdScaledSampler.RarityValueMapper.TYPE1
 import net.minecraft.world.level.levelgen.DensityFunctions.WeirdScaledSampler.RarityValueMapper.TYPE2
+import net.minecraft.world.level.levelgen.WorldgenRandom.Algorithm
+import net.minecraft.world.level.levelgen.WorldgenRandom.Algorithm.LEGACY
 import net.minecraft.world.level.levelgen.synth.BlendedNoise
+import net.minecraft.world.level.levelgen.synth.NormalNoise
 import net.minecraft.world.level.levelgen.synth.NormalNoise.NoiseParameters
+import java.lang.reflect.Constructor
+import java.util.*
+import kotlin.random.Random
 
 object UHCNoiseRouterData {
 	private const val ORE_THICKNESS = 0.08f
@@ -488,83 +500,137 @@ object UHCNoiseRouterData {
 		)
 	}
 
-	private fun uhcSpaghetti(): DensityFunction {
-		val baseSpaghetti = DensityFunctions.weirdScaledSampler(
-			DensityFunctions.noise(getNoise(Noises.SPAGHETTI_2D_MODULATOR), 1.0, 16.0),
-			getNoise(Noises.SPAGHETTI_2D),
-			TYPE2
+	private fun uhcSpaghetti(randomSource: RandomSource, low: Double, high: Double): DensityFunction {
+		val noiseConstructor = Noise::class.java.declaredConstructors[0] as Constructor<Noise>
+		noiseConstructor.isAccessible = true
+
+		fun createDenseNoise(
+			key: ResourceKey<NoiseParameters>,
+			xzScale: Double,
+			yScale: Double,
+		): Noise {
+			val holder = Holder.direct(BiomeNo.noiseRegistry.get(key))//BiomeNo.noiseRegistry.getOrCreateHolder(key)
+			return noiseConstructor.newInstance(
+				holder,
+				NormalNoise.create(randomSource, holder.value()),
+				xzScale,
+				yScale,
+			)
+		}
+
+		val weirdNoiseConstructor =
+			WeirdScaledSampler::class.java.declaredConstructors[0] as Constructor<WeirdScaledSampler>
+		weirdNoiseConstructor.isAccessible = true
+
+		fun createWeirdNoise(
+			key: ResourceKey<NoiseParameters>,
+			densityFunction: DensityFunction,
+			type: RarityValueMapper,
+		): WeirdScaledSampler {
+			val holder = Holder.direct(BiomeNo.noiseRegistry.get(key))//BiomeNo.noiseRegistry.getOrCreateHolder(key)
+			return weirdNoiseConstructor.newInstance(
+				densityFunction,
+				holder,
+				NormalNoise.create(randomSource, holder.value()),
+				type
+			)
+		}
+
+		fun createMappedNoise(
+			key: ResourceKey<NoiseParameters>,
+			xzScale: Double,
+			yScale: Double,
+			d: Double,
+			e: Double,
+		): DensityFunction {
+			val f: Double = (d + e) * 0.5
+			val g: Double = (e - d) * 0.5
+			return DensityFunctions.add(
+				DensityFunctions.constant(f),
+				DensityFunctions.mul(
+					DensityFunctions.constant(g),
+					createDenseNoise(key, xzScale, yScale)
+				)
+			)
+		}
+
+		val densityFunction = createDenseNoise(Noises.SPAGHETTI_2D_MODULATOR, 2.0, 1.0)
+		val densityFunction2 = createWeirdNoise(Noises.SPAGHETTI_2D, densityFunction, TYPE2)
+
+		val densityFunction3 = createMappedNoise(
+			Noises.SPAGHETTI_2D_ELEVATION,
+			1.0,
+			0.0,
+			low,
+			high
 		)
 
-		val spaghettiThickness = DensityFunctions.cacheOnce(
-			DensityFunctions.mappedNoise(
-				getNoise(Noises.SPAGHETTI_2D_THICKNESS),
-				2.0,
-				1.0,
-				-0.6,
-				-1.3
+		val densityFunction4 = DensityFunctions.cacheOnce(
+			createMappedNoise(
+				Noises.SPAGHETTI_2D_THICKNESS,
+				2.0, 1.0, -0.6, -1.3,
 			)
 		)
 
-		val elevation = DensityFunctions.add(
-			DensityFunctions.mappedNoise(
-				getNoise(Noises.SPAGHETTI_2D_ELEVATION),
-				0.0,
-				Math.floorDiv(-64, 8).toDouble(),
-				8.0
-			),
-			DensityFunctions.yClampedGradient(-64, 64, 0.0, 32.0)
-		)
+		val densityFunction5 =
+			DensityFunctions.add(densityFunction3, DensityFunctions.yClampedGradient(-64, 320, 8.0, -40.0)).abs()
+		val densityFunction6 = DensityFunctions.add(densityFunction5, densityFunction4).cube()
 
-		val spaghettiElevationThickener = DensityFunctions.add(elevation, spaghettiThickness).cube()
-		val spaghettiThickener = DensityFunctions.add(
-			baseSpaghetti,
-			DensityFunctions.mul(DensityFunctions.constant(0.083), spaghettiThickness)
-		)
+		val densityFunction7 = DensityFunctions.add(densityFunction2,
+			DensityFunctions.mul(DensityFunctions.constant(0.083), densityFunction4))
+		return DensityFunctions.max(densityFunction7, densityFunction6).clamp(-1.0, 1.0)
+	}
 
-		val roughness = DensityFunctions.noise(getNoise(Noises.SPAGHETTI_ROUGHNESS), 1.5, 1.5)
-		val roughnessModulated = DensityFunctions.mappedNoise(
-			getNoise(Noises.SPAGHETTI_ROUGHNESS_MODULATOR), 0.0, -0.1
-		)
-		val finalRoughness = DensityFunctions.cacheOnce(
-			DensityFunctions.mul(
-				roughnessModulated,
-				DensityFunctions.add(roughness.abs(), DensityFunctions.constant(-0.4))
-			)
-		)
-
-		return DensityFunctions.add(
-			finalRoughness,
-			DensityFunctions.max(spaghettiThickener, spaghettiElevationThickener).clamp(-1.0, 1.0)
-		).clamp(-1.0, 0.5)
+	private fun uhcSpaghettiRoughnessFunction(): DensityFunction {
+		val densityFunction = DensityFunctions.noise(getNoise(Noises.SPAGHETTI_ROUGHNESS))
+		val densityFunction2 =
+			DensityFunctions.mappedNoise(getNoise(Noises.SPAGHETTI_ROUGHNESS_MODULATOR), 0.0, -0.1)
+		return DensityFunctions.cacheOnce(DensityFunctions.mul(densityFunction2,
+			DensityFunctions.add(densityFunction.abs(), DensityFunctions.constant(-0.4))))
 	}
 
 	private fun uhcCheese(): DensityFunction {
-		return DensityFunctions.mul(
-			DensityFunctions.add(
-				DensityFunctions.constant(0.05),
-				DensityFunctions.noise(getNoise(Noises.CAVE_CHEESE), 2.25, 15.0),
-			),
-			DensityFunctions.constant(1.5),
+		return DensityFunctions.add(
+			DensityFunctions.constant(0.05),
+			DensityFunctions.noise(getNoise(Noises.CAVE_CHEESE), 2.25, 15.0),
 		).clamp(-2.0, 0.5)
 	}
 
 	private fun uhcUnderground(slopes: DensityFunction): DensityFunction {
-		val lowerCaves = DensityFunctions.add(
-			uhcCheese(),
-			DensityFunctions.yClampedGradient(0, 70, 0.0, 0.5)
+		//val lowerCaves = DensityFunctions.add(
+		//uhcSpaghetti(),
+		//uhcCheese(),
+		//DensityFunctions.yClampedGradient(-64, 70, 0.0, 0.5)
+		//)
+
+		//val allCaves = DensityFunctions.min(lowerCaves, entrances())
+
+		val randomSource = Algorithm.XOROSHIRO.newInstance(Random.nextLong())
+
+		val spaghetties = DensityFunctions.min(
+			uhcSpaghetti(randomSource.fork(), -16.0, 0.0),
+			DensityFunctions.min(
+				uhcSpaghetti(randomSource.fork(), 0.0, 16.0),
+				uhcSpaghetti(randomSource.fork(), 16.0, 32.0),
+			)
 		)
 
-		val allCaves = DensityFunctions.min(lowerCaves, entrances())
+		val caves = spaghetties//DensityFunctions.add(
+		//spaghetties,
+		//uhcSpaghettiRoughnessFunction()
+		//	)
 
-		return DensityFunctions.add(
-			/* pillars minus air */
-			DensityFunctions.add(
-				uhcPillars(),
-				DensityFunctions.add(slopes, DensityFunctions.constant(-0.6)).clamp(-1000000.0, 0.0)
-			).clamp(0.0, 10.0),
-			/* land minus caves */
-			DensityFunctions.min(slopes, allCaves).clamp(-0.25, 2.0)
-		)
+		//return DensityFunctions.add(
+		//	/* pillars minus air */
+		//	DensityFunctions.add(
+		//		uhcPillars(),
+		//		DensityFunctions.add(slopes, DensityFunctions.constant(-0.6)).clamp(-1000000.0, 0.0)
+		//	).clamp(0.0, 10.0),
+		//	/* land minus caves */
+		//	DensityFunctions.min(slopes, caves).clamp(-0.25, 2.0)
+		//)
+
+		return DensityFunctions.min(slopes, caves)
 	}
 
 	fun customOverworldGame(noiseSettings: NoiseSettings): NoiseRouterWithOnlyNoises {
@@ -627,7 +693,7 @@ object UHCNoiseRouterData {
 
 		return NoiseRouterWithOnlyNoises(
 			aquiferBarrier, //barrierNoise
-			aquiferFloodedness, //fluidLevelFloodednessNoise
+			DensityFunctions.zero(), //fluidLevelFloodednessNoise
 			aquiferSpread, //fluidLevelSpreadNoise
 			aquiferLava, //lavaNoise
 
@@ -635,7 +701,7 @@ object UHCNoiseRouterData {
 			vegetation, //vegetation
 			continents, //continents
 			erosion, //erosion
-			DEPTH, //depth
+			depth, //depth
 			ridges, //ridges
 
 			initialDensity, //initialDensityWithoutJaggedness
@@ -644,6 +710,138 @@ object UHCNoiseRouterData {
 			DensityFunctions.zero(), //veinToggle
 			DensityFunctions.zero(), //veinRidged
 			DensityFunctions.zero(), //veinGap
+		)
+	}
+
+	private fun randomSeedNoise(
+		randomSource: RandomSource,
+		holder: Holder<NoiseParameters>,
+	): NormalNoise {
+		return Noises.instantiate(randomSource.forkPositional(), holder)
+		//holder.unwrapKey().flatMap { key: ResourceKey<NoiseParameters>? ->
+		//	registry.getHolder(key)
+		//}.orElse(holder)
+	}
+
+	fun uhcCreateNoiseRouter(
+		noiseSettings: NoiseSettings,
+		seed: Long,
+		noiseRouterWithOnlyNoises: NoiseRouterWithOnlyNoises,
+	): NoiseRouter {
+		/* have to use reflection because constructors are protected */
+		val noiseConstructor = Noise::class.java.declaredConstructors[0] as Constructor<Noise>
+		noiseConstructor.isAccessible = true
+
+		val weirdNoiseConstructor =
+			WeirdScaledSampler::class.java.declaredConstructors[0] as Constructor<WeirdScaledSampler>
+		weirdNoiseConstructor.isAccessible = true
+
+		val shiftedNoiseConstructor =
+			ShiftedNoise::class.java.declaredConstructors[0] as Constructor<ShiftedNoise>
+		shiftedNoiseConstructor.isAccessible = true
+
+		val slideConstructor =
+			Slide::class.java.declaredConstructors[0] as Constructor<Slide>
+		slideConstructor.isAccessible = true
+
+		val randomSource = Algorithm.XOROSHIRO.newInstance(seed)
+
+		val map: MutableMap<DensityFunction, DensityFunction> = HashMap()
+
+		val visitor = DensityFunction.Visitor { densityFunction: DensityFunction? ->
+			when (densityFunction) {
+				is Noise -> {
+					noiseConstructor.newInstance(
+						densityFunction.noiseData,
+						randomSeedNoise(randomSource, densityFunction.noiseData),
+						densityFunction.xzScale,
+						densityFunction.yScale
+					)
+				}
+				is ShiftNoise -> {
+					densityFunction.withNewNoise(
+						randomSeedNoise(randomSource, densityFunction.noiseData())
+					)
+				}
+				is ShiftedNoise -> {
+					shiftedNoiseConstructor.newInstance(
+						densityFunction.shiftX(),
+						densityFunction.shiftY(),
+						densityFunction.shiftZ(),
+						densityFunction.xzScale(),
+						densityFunction.yScale(),
+						densityFunction.noiseData(),
+						randomSeedNoise(randomSource, densityFunction.noiseData())
+					)
+				}
+				is WeirdScaledSampler -> {
+					weirdNoiseConstructor.newInstance(
+						densityFunction.input(),
+						densityFunction.noiseData(),
+						randomSeedNoise(randomSource, densityFunction.noiseData()),
+						densityFunction.rarityValueMapper()
+					)
+				}
+				is BlendedNoise -> {
+					BlendedNoise(
+						randomSource.forkPositional().fromHashOf(ResourceLocation("terrain")),
+						noiseSettings.noiseSamplingSettings(),
+						noiseSettings.cellWidth,
+						noiseSettings.cellHeight
+					)
+				}
+				is TerrainShaperSpline -> {
+					TerrainShaperSpline(
+						densityFunction.continentalness(),
+						densityFunction.erosion(),
+						densityFunction.weirdness(),
+						noiseSettings.terrainShaper(),
+						densityFunction.spline(),
+						densityFunction.minValue(),
+						densityFunction.maxValue()
+					)
+				}
+				is Slide -> {
+					slideConstructor.newInstance(
+						noiseSettings,
+						densityFunction.input()
+					)
+				}
+				else -> {
+					densityFunction
+				}
+			}
+		}
+
+		val visitor2 = DensityFunction.Visitor { densityFunction: DensityFunction ->
+			map.computeIfAbsent(densityFunction, visitor)
+		}
+
+		val noiseRouterWithOnlyNoises2 = noiseRouterWithOnlyNoises.mapAll(visitor2)
+		val positionalRandomFactory2 =
+			randomSource.forkPositional().fromHashOf(ResourceLocation("aquifer")).forkPositional()
+		val positionalRandomFactory3 =
+			randomSource.forkPositional().fromHashOf(ResourceLocation("ore")).forkPositional()
+
+		return NoiseRouter(
+			noiseRouterWithOnlyNoises2.barrierNoise(),
+			noiseRouterWithOnlyNoises2.fluidLevelFloodednessNoise(),
+			noiseRouterWithOnlyNoises2.fluidLevelSpreadNoise(),
+			noiseRouterWithOnlyNoises2.lavaNoise(),
+			positionalRandomFactory2,
+			positionalRandomFactory3,
+			noiseRouterWithOnlyNoises2.temperature(),
+			noiseRouterWithOnlyNoises2.vegetation(),
+			noiseRouterWithOnlyNoises2.continents(),
+			noiseRouterWithOnlyNoises2.erosion(),
+			noiseRouterWithOnlyNoises2.depth(),
+			noiseRouterWithOnlyNoises2.ridges(),
+			noiseRouterWithOnlyNoises2.initialDensityWithoutJaggedness(),
+			noiseRouterWithOnlyNoises2.finalDensity(),
+			noiseRouterWithOnlyNoises2.veinToggle(),
+			noiseRouterWithOnlyNoises2.veinRidged(),
+			noiseRouterWithOnlyNoises2.veinGap(),
+			OverworldBiomeBuilder().spawnTarget()
 		)
 	}
 }
