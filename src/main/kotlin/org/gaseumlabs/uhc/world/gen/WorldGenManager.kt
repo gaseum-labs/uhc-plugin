@@ -31,6 +31,8 @@ object WorldGenManager {
 	)
 
 	fun init(server: Server) {
+		BiomeNo
+		CustomNoise
 
 		/* replace worlds hashmap on server */
 		serverWorldsField.set(server as CraftServer, object : HashMap<String, World>() {
@@ -45,55 +47,51 @@ object WorldGenManager {
 	}
 
 	private fun onWorldAdded(world: World) {
-		BiomeNo.delayedInit()
-
-		if (world.name == WorldManager.BAD_NETHER_WORLD_NAME || world.name == WorldManager.END_WORLD_NAME) return
-
-		val generator =
-			(world as CraftWorld).handle.chunkSource.chunkMap.generator as? NoiseBasedChunkGenerator ?: return
-
 		val seed = world.seed
 
-		val (biomeManager, featureManager) = when (world.name) {
+		val newBiomeSource = when (world.name) {
 			WorldManager.GAME_WORLD_NAME -> {
 				if (UHC.getConfig().worldGenEnabled(WorldGenOption.CHUNK_BIOMES)) {
-					Pair(BiomeSourceChunkBiomes(seed), null)
-
+					BiomeSourceChunkBiomes(
+						seed,
+						BiomeNo.featureBiomes
+					)
 				} else {
-					BiomeSourceGame.createFeaturesPair(
+					BiomeSourceGame(
 						seed,
 						BiomeNo.fromName(UHC.getConfig().centerBiome.get()?.name),
 						UHC.getConfig().endgameRadius.get(),
+						BiomeNo.featureBiomes,
+						BiomeSourceGame.createAreaGame(seed)
 					)
 				}
 			}
 			WorldManager.NETHER_WORLD_NAME -> {
-				BiomeSourceNether.createFeaturesPair(seed)
-			}
-			WorldManager.LOBBY_WORLD_NAME -> {
-				//BiomeSourceSingle(seed, BiomeNo.BADLANDS) to null
-				//BiomeSourcePvp(seed) to null
-				BiomeSourceGame.createFeaturesPair(
+				BiomeSourceNether(
 					seed,
-					BiomeNo.fromName(UHC.getConfig().centerBiome.get()?.name),
-					UHC.getConfig().endgameRadius.get(),
+					BiomeNo.featureBiomes,
+					BiomeSourceNether.createAreaNether(seed)
 				)
 			}
-			WorldManager.PVP_WORLD_NAME -> {
-				BiomeSourcePvp(seed) to null
+			WorldManager.LOBBY_WORLD_NAME -> {
+				BiomeSourceSingle(seed, BiomeNo.featureBiomes, BiomeNo.BADLANDS)
 			}
-			else -> Pair(null, null)
+			WorldManager.PVP_WORLD_NAME -> {
+				BiomeSourcePvp(seed)
+			}
+			else -> return
 		}
 
-		if (biomeManager != null) {
-			runtimeBiomeSourceField.set(generator, biomeManager)
-			biomeSourceField.set(generator, featureManager ?: biomeManager)
+		val generator =
+			(world as CraftWorld).handle.chunkSource.chunkMap.generator as? NoiseBasedChunkGenerator ?: return
 
-			UHCNoiseGeneratorSettings.inject(
-				generator,
-				seed,
-				UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED))
-			)
-		}
+		runtimeBiomeSourceField.set(generator, newBiomeSource)
+		biomeSourceField.set(generator, newBiomeSource)
+
+		UHCNoiseGeneratorSettings.inject(
+			generator,
+			seed,
+			UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED))
+		)
 	}
 }

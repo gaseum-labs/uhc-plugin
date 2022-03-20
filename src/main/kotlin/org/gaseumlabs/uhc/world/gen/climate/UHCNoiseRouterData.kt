@@ -24,6 +24,7 @@ import net.minecraft.world.level.levelgen.synth.BlendedNoise
 import net.minecraft.world.level.levelgen.synth.NormalNoise
 import net.minecraft.world.level.levelgen.synth.NormalNoise.NoiseParameters
 import org.gaseumlabs.uhc.world.gen.BiomeNo
+import org.gaseumlabs.uhc.world.gen.CustomNoise
 import kotlin.random.Random
 
 object UHCNoiseRouterData {
@@ -138,19 +139,19 @@ object UHCNoiseRouterData {
 		mapper: RarityValueMapper
 	): DensityFunction {
 		val baseSpaghetti = weirdScaledSampler(
-			noise(getNoise(BiomeNo.UHC_SAPGHETTI_MODULATOR_KEYS[noiseIndex]), 2.0, 2.0),
-			getNoise(BiomeNo.UHC_SAPGHETTI_KEYS[noiseIndex]),
+			noise(getNoise(CustomNoise.UHC_SAPGHETTI_MODULATOR_KEYS[noiseIndex]), 2.5, 0.9),
+			getNoise(CustomNoise.UHC_SAPGHETTI_KEYS[noiseIndex]),
 			mapper
 		)
 
 		val spaghettiThickness = mappedNoise(
-			getNoise(BiomeNo.UHC_SAPGHETTI_THICKNESS_KEYS[noiseIndex]), 2.0, 1.0, -0.6, -1.3
+			getNoise(CustomNoise.UHC_SAPGHETTI_THICKNESS_KEYS[noiseIndex]), 2.0, 1.0, -0.6, -1.3
 		)
 
 		val elevation = add(
 			mul(
 				mappedNoise(/* makes the elevation level move up or down */
-					getNoise(BiomeNo.UHC_SAPGHETTI_ELEVATION_KEYS[noiseIndex]),
+					getNoise(CustomNoise.UHC_SAPGHETTI_ELEVATION_KEYS[noiseIndex]),
 					1.0,
 					0.0,
 					low,
@@ -240,7 +241,10 @@ object UHCNoiseRouterData {
 							uhcSpaghetti( 0.0, 16.0, 24.0, 3, CUSTOM0),
 							DensityFunctions.min(
 								uhcSpaghetti( 16.0, 32.0, 24.0, 4, CUSTOM0),
-								uhcSpaghetti( 32.0, 48.0, 24.0, 5, CUSTOM0),
+								DensityFunctions.min(
+									uhcSpaghetti( 32.0, 48.0, 24.0, 5, CUSTOM0),
+									uhcSpaghetti( 48.0, 64.0, 24.0, 6, CUSTOM0),
+								)
 							)
 						)
 					)
@@ -249,7 +253,7 @@ object UHCNoiseRouterData {
 			uhcSpaghettiRoughnessFunction()
 		)
 
-		return uhcPillars()
+		//return uhcPillars()
 
 		//return DensityFunctions.max(
 		//	uhcPillars(),
@@ -267,6 +271,8 @@ object UHCNoiseRouterData {
 		//	/* land minus caves */
 		//	DensityFunctions.min(slopes, spaghetties)
 		//)
+
+		return DensityFunctions.min(slopes, spaghetties)
 	}
 
 	fun customOverworldGame(noiseSettings: NoiseSettings): NoiseRouterWithOnlyNoises {
@@ -287,7 +293,7 @@ object UHCNoiseRouterData {
 		/* create normal terrain */
 		val temperature = DensityFunctions.shiftedNoise2d(shiftX, shiftZ, 0.25, getNoise(Noises.TEMPERATURE))
 		val vegetation = DensityFunctions.shiftedNoise2d(shiftX, shiftZ, 0.25, getNoise(Noises.VEGETATION))
-		val continents = DensityFunctions.shiftedNoise2d(shiftX, shiftZ, 0.25, getNoise(Noises.CONTINENTALNESS))
+		val continents = constant(1.0)//DensityFunctions.shiftedNoise2d(shiftX, shiftZ, 0.25, getNoise(Noises.CONTINENTALNESS))
 		val erosion = DensityFunctions.shiftedNoise2d(shiftX, shiftZ, 0.25, getNoise(Noises.EROSION))
 		val ridges = DensityFunctions.shiftedNoise2d(shiftX, shiftZ, 0.25, getNoise(Noises.RIDGE))
 

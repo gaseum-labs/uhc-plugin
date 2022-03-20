@@ -52,6 +52,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 import org.bukkit.util.CachedServerIcon
+import org.gaseumlabs.uhc.team.Teams
 
 class EventListener : Listener {
 	@EventHandler
@@ -503,12 +504,28 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onBreakBlock(event: BlockBreakEvent) {
+		val game = UHC.game ?: return
+
 		val block = event.block
 		val player = event.player
 
-		if (UHC.game?.quirkEnabled(QuirkType.UNSHELTERED) == true && !Util.binarySearch(block.type,
-				Unsheltered.acceptedBlocks)
-		) {
+		/* is this block part of a vein? */
+		val veinIndex = game.veinScheduler.foundVeins.indexOfFirst { (veinType, vein) ->
+			vein.blocks.any { it === block }
+		}
+
+		if (veinIndex != -1) {
+			/* remove the vein from list of found veins */
+			val (veinType, vein) = game.veinScheduler.foundVeins.removeAt(veinIndex)
+
+			/* mark the player's team as collecting this vein */
+			val team = game.teams.playersTeam(player.uniqueId)
+			if (team != null) {
+				++game.veinScheduler.getVeinData(team, veinType.type).collected
+			}
+		}
+
+		if (game.quirkEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
 			val oldBlockType = block.type
 			val oldData = block.blockData
 

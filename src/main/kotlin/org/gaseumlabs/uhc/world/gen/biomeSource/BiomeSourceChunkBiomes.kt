@@ -9,6 +9,7 @@ import kotlin.random.Random
 
 class BiomeSourceChunkBiomes(
 	val seed: Long,
+	val biomeset: Map<Int, Holder<Biome>>,
 ) : CheckerboardColumnBiomeSource(HolderSet.direct(), 1) {
 	override fun getNoiseBiome(x: Int, y: Int, z: Int, niose: Climate.Sampler): Holder<Biome> {
 		val chunkX = Util.floorDiv(x, 4)
@@ -16,7 +17,7 @@ class BiomeSourceChunkBiomes(
 
 		val random = Random(chunkX.toLong().shl(32).or(chunkZ.toLong().and(0x0000FFFF)).xor(seed))
 
-		return BiomeNo.fromId(biomeList[random.nextInt(biomeList.size)])
+		return biomeset[biomeList[random.nextInt(biomeList.size)]]!!
 	}
 
 	companion object {

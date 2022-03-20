@@ -1,23 +1,16 @@
 package org.gaseumlabs.uhc.world.gen
 
-import com.mojang.serialization.Lifecycle
-import com.sun.jna.platform.unix.Resource
-import org.gaseumlabs.uhc.util.reflect.UHCReflect
-import net.minecraft.core.*
-import net.minecraft.data.BuiltinRegistries
-import net.minecraft.data.worldgen.NoiseData
+import net.minecraft.core.Holder
+import net.minecraft.core.HolderSet
+import net.minecraft.core.Registry
+import net.minecraft.core.WritableRegistry
 import net.minecraft.resources.ResourceKey
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.world.level.biome.Biome
 import net.minecraft.world.level.biome.Biomes
-import net.minecraft.world.level.levelgen.Noises
-import net.minecraft.world.level.levelgen.synth.NormalNoise
-import net.minecraft.world.level.levelgen.synth.NormalNoise.NoiseParameters
-import net.minecraft.world.level.levelgen.synth.NormalNoise.create
 import org.bukkit.Bukkit
 import org.bukkit.craftbukkit.v1_18_R2.CraftServer
-import org.gaseumlabs.uhc.lobbyPvp.armorEnchants
+import org.gaseumlabs.uhc.util.reflect.UHCReflect
 
 object BiomeNo {
 	const val THE_VOID = 0
@@ -82,7 +75,7 @@ object BiomeNo {
 	const val SMALL_END_ISLANDS = 59
 	const val END_BARRENS = 60
 
-	val resourceKeys = arrayOf(
+	val biomeKeys = arrayOf(
 		Biomes.THE_VOID,
 		Biomes.PLAINS,
 		Biomes.SUNFLOWER_PLAINS,
@@ -146,18 +139,79 @@ object BiomeNo {
 		Biomes.END_BARRENS,
 	)
 
+	val featureBiomeKeys = arrayOf(
+		Biomes.THE_VOID_UHC ,
+		Biomes.PLAINS_UHC ,
+		Biomes.SUNFLOWER_PLAINS_UHC ,
+		Biomes.SNOWY_PLAINS_UHC ,
+		Biomes.ICE_SPIKES_UHC ,
+		Biomes.DESERT_UHC ,
+		Biomes.SWAMP_UHC,
+		Biomes.FOREST_UHC ,
+		Biomes.FLOWER_FOREST_UHC ,
+		Biomes.BIRCH_FOREST_UHC ,
+		Biomes.DARK_FOREST_UHC ,
+		Biomes.OLD_GROWTH_BIRCH_FOREST_UHC ,
+		Biomes.OLD_GROWTH_PINE_TAIGA_UHC,
+		Biomes.OLD_GROWTH_SPRUCE_TAIGA_UHC,
+		Biomes.TAIGA_UHC ,
+		Biomes.SNOWY_TAIGA_UHC ,
+		Biomes.SAVANNA_UHC,
+		Biomes.SAVANNA_PLATEAU_UHC ,
+		Biomes.WINDSWEPT_HILLS_UHC ,
+		Biomes.WINDSWEPT_GRAVELLY_HILLS_UHC,
+		Biomes.WINDSWEPT_FOREST_UHC,
+		Biomes.WINDSWEPT_SAVANNA_UHC,
+		Biomes.JUNGLE_UHC ,
+		Biomes.SPARSE_JUNGLE_UHC,
+		Biomes.BAMBOO_JUNGLE_UHC,
+		Biomes.BADLANDS_UHC,
+		Biomes.ERODED_BADLANDS_UHC,
+		Biomes.WOODED_BADLANDS_UHC,
+		Biomes.MEADOW_UHC,
+		Biomes.GROVE_UHC,
+		Biomes.SNOWY_SLOPES_UHC ,
+		Biomes.FROZEN_PEAKS_UHC ,
+		Biomes.JAGGED_PEAKS_UHC ,
+		Biomes.STONY_PEAKS_UHC ,
+		Biomes.RIVER_UHC,
+		Biomes.FROZEN_RIVER_UHC ,
+		Biomes.BEACH_UHC ,
+		Biomes.SNOWY_BEACH_UHC ,
+		Biomes.STONY_SHORE_UHC ,
+		Biomes.WARM_OCEAN_UHC,
+		Biomes.LUKEWARM_OCEAN_UHC ,
+		Biomes.DEEP_LUKEWARM_OCEAN_UHC ,
+		Biomes.OCEAN_UHC,
+		Biomes.DEEP_OCEAN_UHC,
+		Biomes.COLD_OCEAN_UHC ,
+		Biomes.DEEP_COLD_OCEAN_UHC ,
+		Biomes.FROZEN_OCEAN_UHC ,
+		Biomes.DEEP_FROZEN_OCEAN_UHC,
+		Biomes.MUSHROOM_FIELDS_UHC,
+		Biomes.DRIPSTONE_CAVES_UHC ,
+		Biomes.LUSH_CAVES_UHC,
+		Biomes.NETHER_WASTES_UHC,
+		Biomes.WARPED_FOREST_UHC ,
+		Biomes.CRIMSON_FOREST_UHC,
+		Biomes.SOUL_SAND_VALLEY_UHC,
+		Biomes.BASALT_DELTAS_UHC,
+		Biomes.THE_END_UHC,
+		Biomes.END_HIGHLANDS_UHC,
+		Biomes.END_MIDLANDS_UHC,
+		Biomes.SMALL_END_ISLANDS_UHC,
+		Biomes.END_BARRENS_UHC,
+	)
+
 	/* util */
 
 	fun fromName(name: String?): Int? {
 		return nameMap[name]
 	}
 
-	fun fromId(id: Int): Holder<Biome> {
-		return biomeHolders[id]!!
-	}
-
 	fun toId(key: ResourceKey<Biome>): Int {
-		return resourceKeys.indexOfFirst { it === key }
+		val baseId = biomeKeys.indexOfFirst { it === key }
+		return if (baseId == -1) featureBiomeKeys.indexOfFirst { it === key } else baseId
 	}
 
 	fun isNetherBiome(no: Int): Boolean {
@@ -172,90 +226,40 @@ object BiomeNo {
 		}
 	}
 
-	fun isBadlands(no: Int): Boolean {
-		return false
+	fun createHolderSet(map: Map<Int, Holder<Biome>>): HolderSet<Biome> {
+		return HolderSet.direct(map.map { it.value })
 	}
 
 	/* fields */
 
 	val dedicatedServerField = UHCReflect<CraftServer, DedicatedServer>(CraftServer::class, "console")
 
-	lateinit var biomeRegistry: WritableRegistry<Biome>
-	lateinit var noiseRegistry: WritableRegistry<NormalNoise.NoiseParameters>
-	lateinit var featureBiomes: Map<Int, Holder<Biome>>
+	val biomeRegistry: WritableRegistry<Biome>
 
-	val biomeHolders = HashMap<Int, Holder<Biome>>()
+	val biomes = HashMap<Int, Holder<Biome>>()
+	val featureBiomes = HashMap<Int, Holder<Biome>>()
+
 	val nameMap = HashMap<String, Int>()
-	lateinit var biomeHolderSet: HolderSet<Biome>
 
-	var initialized = false
+	init {
+		/* RegistryAccess builtinCopy */
 
-	fun delayedInit() {
-		if (initialized) return
-		initialized = true
-
+		/* aquire biome registry */
 		val registryAccess = (Bukkit.getServer() as CraftServer).handle.server.registryAccess()
-
 		biomeRegistry = registryAccess.ownedRegistryOrThrow(Registry.BIOME_REGISTRY) as WritableRegistry<Biome>
-		noiseRegistry = registryAccess.ownedRegistryOrThrow(Registry.NOISE_REGISTRY) as WritableRegistry<NoiseParameters>
 
-		resourceKeys.forEachIndexed { i, resourceKey ->
-			biomeHolders[i] = biomeRegistry.getOrCreateHolder(resourceKey)
+		/* create the maps from id to biome */
+		biomeKeys.forEachIndexed { i, resourceKey ->
+			biomes[i] = biomeRegistry.getOrCreateHolder(resourceKey)
 		}
-
-		biomeHolderSet = HolderSet.direct(biomeHolders.entries.map { it.value })
+		featureBiomeKeys.forEachIndexed { i, resourceKey ->
+			featureBiomes[i] = biomeRegistry.getOrCreateHolder(resourceKey)
+		}
 
 		biomeRegistry.entrySet().toList().forEach { entry ->
 			nameMap[entry.key.location().path] = toId(entry.key)
 		}
 
-		featureBiomes = ModifiedBiomes.genBiomes(replaceFeatures = true, replaceMobs = true)
-
-		newNoises()
-	}
-
-	fun noiseKey(name: String): ResourceKey<NormalNoise.NoiseParameters> {
-		return ResourceKey.create(Registry.NOISE_REGISTRY, ResourceLocation(name))
-	}
-
-	fun noiseKeyArray(baseName: String, length: Int): Array<ResourceKey<NormalNoise.NoiseParameters>> {
-		return Array(length) { i ->
-			noiseKey(baseName + "_${i}")
-		}
-	}
-
-	fun registerNoiseClone(key: ResourceKey<NoiseParameters>, original: NoiseParameters) {
-		val doubleArray = DoubleArray(original.amplitudes.size - 1) { i ->
-			original.amplitudes.getDouble(i + 1)
-		}
-
-		BuiltinRegistries.register(
-			BuiltinRegistries.NOISE,
-			key,
-			NoiseParameters(
-				original.firstOctave,
-				original.amplitudes.first(),
-				*doubleArray
-			)
-		)
-	}
-
-	fun createNoiseCloneArray(keys: Array<ResourceKey<NoiseParameters>>, originalKey: ResourceKey<NoiseParameters>) {
-		val original = noiseRegistry.getOrCreateHolder(originalKey).value()
-
-		for (key in keys) {
-			registerNoiseClone(key, original)
-		}
-	}
-	val UHC_SAPGHETTI_MODULATOR_KEYS = noiseKeyArray("uhc_spaghetti_modulator", 6)
-	val UHC_SAPGHETTI_KEYS = noiseKeyArray("uhc_spaghetti", 6)
-	val UHC_SAPGHETTI_ELEVATION_KEYS = noiseKeyArray("uhc_spaghetti_elevation", 6)
-	val UHC_SAPGHETTI_THICKNESS_KEYS = noiseKeyArray("uhc_spaghetti_thickness", 6)
-
-	fun newNoises() {
-		createNoiseCloneArray(UHC_SAPGHETTI_MODULATOR_KEYS, Noises.SPAGHETTI_2D_MODULATOR)
-		createNoiseCloneArray(UHC_SAPGHETTI_KEYS, Noises.SPAGHETTI_2D)
-		createNoiseCloneArray(UHC_SAPGHETTI_ELEVATION_KEYS, Noises.SPAGHETTI_2D_ELEVATION)
-		createNoiseCloneArray(UHC_SAPGHETTI_THICKNESS_KEYS, Noises.SPAGHETTI_2D_THICKNESS)
+		ModifiedBiomes.genBiomes(biomeRegistry, replaceFeatures = true, replaceMobs = true)
 	}
 }

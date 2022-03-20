@@ -14,6 +14,36 @@ object CustomCarvers {
 	val netherCavesMaster = WorldGenCavesSuperNether()
 	val canyonCarverMaster = WorldCarver.CANYON
 
+	val newUhcCarver = caveCarverMaster.configured(CaveCarverConfiguration(
+		0.2f,
+		UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.aboveBottom(80)), /* y levels */
+		UniformFloat.of(0.0f, 1.0f), /* y scale */
+		VerticalAnchor.aboveBottom(10), /* lava fill */
+		false,
+		UniformFloat.of(1.0f, 1.5f), /* horizontal radius */
+		UniformFloat.of(1.0f, 1.5f), /* vertical radius */
+		UniformFloat.of(-1.0f, 0.0f), /* floor level */
+	))
+
+	val superCanyonCarver = canyonCarverMaster.configured(
+		CanyonCarverConfiguration(
+			0.05F,
+			UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.aboveBottom(64)),
+			UniformFloat.of(1.5f, 3.0f),
+			VerticalAnchor.aboveBottom(10),
+			CarverDebugSettings.of(false, Blocks.OAK_BUTTON.defaultBlockState()),
+			UniformFloat.of(-1.0F, 1.0F),
+			CanyonShapeConfiguration(
+				UniformFloat.of(0.25F, 1.75F),
+				TrapezoidFloat.of(0.0F, 5.0F, 2.0F),
+				2,
+				UniformFloat.of(0.25F, 1.75F),
+				1.1f,
+				0.5F
+			)
+		)
+	)
+
 	val caveLevels = arrayOf(
 		caveCarverMaster.configured(CaveCarverConfiguration(
 			0.075f,
@@ -55,25 +85,6 @@ object CustomCarvers {
 			ConstantFloat.of(1.0f),
 			ConstantFloat.of(-1.0f)
 		)),
-	)
-
-	val superCanyonCarver = canyonCarverMaster.configured(
-		CanyonCarverConfiguration(
-			0.02F,
-			UniformHeight.of(VerticalAnchor.aboveBottom(0), VerticalAnchor.aboveBottom(48)),
-			ConstantFloat.of(3.0F),
-			VerticalAnchor.aboveBottom(6),
-			CarverDebugSettings.of(false, Blocks.OAK_BUTTON.defaultBlockState()),
-			UniformFloat.of(-2.0F, 2.0F),
-			CanyonShapeConfiguration(
-				UniformFloat.of(0.25F, 1.75F),
-				TrapezoidFloat.of(0.0F, 5.0F, 2.0F),
-				2,
-				UniformFloat.of(0.25F, 1.75F),
-				1.1f,
-				0.5F
-			)
-		)
 	)
 
 	val netherSuperCaveCarver = netherCavesMaster.configured(

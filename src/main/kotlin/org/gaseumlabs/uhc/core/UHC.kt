@@ -98,7 +98,10 @@ object UHC {
 
 					currentGame.sugarCaneRegen.tick()
 					currentGame.leatherRegen.tick()
-					currentGame.melonRegen.tick()
+
+					currentGame.veinScheduler.tick(currentTick)
+
+					//currentGame.melonRegen.tick()
 				}
 
 				Portal.portalTick(currentGame)
