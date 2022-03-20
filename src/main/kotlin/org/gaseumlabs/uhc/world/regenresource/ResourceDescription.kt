@@ -1,9 +1,9 @@
-package org.gaseumlabs.uhc.world.vein
+package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.World
 import org.bukkit.block.Block
 
-abstract class VeinType(val type: Veins) {
+abstract class ResourceDescription {
 	/**
 	 * based on how many of this vein the team has already collected
 	 * how much time should wait until the next generation

@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.event
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.blockfix.BlockFixType
 import org.gaseumlabs.uhc.core.KillReward
 import org.gaseumlabs.uhc.core.Lobby
@@ -51,8 +50,6 @@ import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
-import org.bukkit.util.CachedServerIcon
-import org.gaseumlabs.uhc.team.Teams
 
 class EventListener : Listener {
 	@EventHandler
@@ -510,18 +507,18 @@ class EventListener : Listener {
 		val player = event.player
 
 		/* is this block part of a vein? */
-		val veinIndex = game.veinScheduler.foundVeins.indexOfFirst { (veinType, vein) ->
+		val veinIndex = game.resourceScheduler.foundVeins.indexOfFirst { (veinType, vein) ->
 			vein.blocks.any { it === block }
 		}
 
 		if (veinIndex != -1) {
 			/* remove the vein from list of found veins */
-			val (veinType, vein) = game.veinScheduler.foundVeins.removeAt(veinIndex)
+			val (veinType, vein) = game.resourceScheduler.foundVeins.removeAt(veinIndex)
 
 			/* mark the player's team as collecting this vein */
 			val team = game.teams.playersTeam(player.uniqueId)
 			if (team != null) {
-				++game.veinScheduler.getVeinData(team, veinType.type).collected
+				++game.resourceScheduler.getVeinData(team, veinType).collected
 			}
 		}
 

@@ -1,4 +1,4 @@
-package org.gaseumlabs.uhc.world.vein.type
+package org.gaseumlabs.uhc.world.regenresource.type
 
 import org.bukkit.Material
 import org.bukkit.World
@@ -6,16 +6,15 @@ import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.gaseumlabs.uhc.world.WorldManager
-import org.gaseumlabs.uhc.world.vein.VeinType
-import org.gaseumlabs.uhc.world.vein.Veins
+import org.gaseumlabs.uhc.world.regenresource.ResourceDescription
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
-class VeinMelon : VeinType(Veins.MELON) {
+class ResourceMelon : ResourceDescription() {
 	override fun nextInterval(collected: Int): Int {
-		return 20 * (120 + 30 * collected)
+		return 20 * (/* 120 */30 + 30 * collected)
 	}
 
 	override fun maxCurrent(collected: Int): Int {

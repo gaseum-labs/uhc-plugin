@@ -99,7 +99,7 @@ object UHC {
 					currentGame.sugarCaneRegen.tick()
 					currentGame.leatherRegen.tick()
 
-					currentGame.veinScheduler.tick(currentTick)
+					currentGame.resourceScheduler.tick(currentTick)
 
 					//currentGame.melonRegen.tick()
 				}

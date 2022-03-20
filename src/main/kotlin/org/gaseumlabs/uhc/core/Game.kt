@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.core
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.core.phase.Phase
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.phases.*
@@ -21,7 +20,7 @@ import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.Title.Times
 import org.bukkit.*
 import org.bukkit.entity.Player
-import org.gaseumlabs.uhc.world.vein.VeinScheduler
+import org.gaseumlabs.uhc.world.regenresource.ResourceScheduler
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
@@ -46,7 +45,7 @@ class Game(
 	val leatherRegen = LeatherRegen(this)
 	//val melonRegen = MelonRegen(this)
 
-	val veinScheduler = VeinScheduler(this)
+	val resourceScheduler = ResourceScheduler(this)
 
 	val endgameLowY: Int
 	val endgameHighY: Int

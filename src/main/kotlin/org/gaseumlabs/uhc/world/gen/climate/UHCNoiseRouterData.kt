@@ -1,31 +1,21 @@
 package org.gaseumlabs.uhc.world.gen.climate
 
-import com.mojang.datafixers.util.Function4
 import com.mojang.serialization.Codec
-import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import it.unimi.dsi.fastutil.doubles.Double2DoubleFunction
 import net.minecraft.core.Holder
 import net.minecraft.data.BuiltinRegistries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.util.Mth
-import net.minecraft.world.level.biome.OverworldBiomeBuilder
-import net.minecraft.world.level.dimension.DimensionType
 import net.minecraft.world.level.levelgen.*
 import net.minecraft.world.level.levelgen.DensityFunction.FunctionContext
 import net.minecraft.world.level.levelgen.DensityFunction.SimpleFunction
 import net.minecraft.world.level.levelgen.DensityFunctions.*
 import net.minecraft.world.level.levelgen.DensityFunctions.TerrainShaperSpline.SplineType
 import net.minecraft.world.level.levelgen.DensityFunctions.WeirdScaledSampler.RarityValueMapper
-import net.minecraft.world.level.levelgen.DensityFunctions.WeirdScaledSampler.RarityValueMapper.*
-import net.minecraft.world.level.levelgen.WorldgenRandom.Algorithm
+import net.minecraft.world.level.levelgen.DensityFunctions.WeirdScaledSampler.RarityValueMapper.CUSTOM0
 import net.minecraft.world.level.levelgen.synth.BlendedNoise
-import net.minecraft.world.level.levelgen.synth.NormalNoise
 import net.minecraft.world.level.levelgen.synth.NormalNoise.NoiseParameters
-import org.gaseumlabs.uhc.world.gen.BiomeNo
 import org.gaseumlabs.uhc.world.gen.CustomNoise
-import kotlin.random.Random
 
 object UHCNoiseRouterData {
 	private fun getNoise(resourceKey: ResourceKey<NoiseParameters>): Holder<NoiseParameters> {
@@ -359,121 +349,5 @@ object UHCNoiseRouterData {
 		val densityFunction2 = slide(noiseSettings, densityFunction)
 		val densityFunction3 = blendDensity(densityFunction2)
 		return mul(interpolated(densityFunction3), constant(0.64)).squeeze()
-	}
-
-	private fun randomSeedNoise(
-		randomSource: RandomSource,
-		holder: Holder<NoiseParameters>,
-	): NormalNoise {
-		val newRandom = randomSource.fork() as XoroshiroRandomSource
-		newRandom.setSeed(Random.nextLong())
-		println(newRandom.nextInt())
-		return NormalNoise.create(newRandom, holder.value())
-	}
-
-	fun uhcCreateNoiseRouter(
-		noiseSettings: NoiseSettings,
-		seed: Long,
-		noiseRouterWithOnlyNoises: NoiseRouterWithOnlyNoises,
-	): NoiseRouter {
-		val randomSource = Algorithm.XOROSHIRO.newInstance(seed)
-		val map: MutableMap<DensityFunction, DensityFunction> = HashMap()
-
-		val visitor = DensityFunction.Visitor { densityFunction: DensityFunction? ->
-			when (densityFunction) {
-				is Noise -> {
-					Noise(
-						densityFunction.noiseData,
-						randomSeedNoise(randomSource, densityFunction.noiseData),
-						densityFunction.xzScale,
-						densityFunction.yScale
-					)
-				}
-				is ShiftNoise -> {
-					densityFunction.withNewNoise(
-						randomSeedNoise(randomSource, densityFunction.noiseData())
-					)
-				}
-				is ShiftedNoise -> {
-					ShiftedNoise(
-						densityFunction.shiftX(),
-						densityFunction.shiftY(),
-						densityFunction.shiftZ(),
-						densityFunction.xzScale(),
-						densityFunction.yScale(),
-						densityFunction.noiseData(),
-						randomSeedNoise(randomSource, densityFunction.noiseData())
-					)
-				}
-				is WeirdScaledSampler -> {
-					WeirdScaledSampler(
-						densityFunction.input(),
-						densityFunction.noiseData(),
-						randomSeedNoise(randomSource, densityFunction.noiseData()),
-						densityFunction.rarityValueMapper()
-					)
-				}
-				is BlendedNoise -> {
-					BlendedNoise(
-						randomSource.forkPositional().fromHashOf(ResourceLocation("terrain")),
-						noiseSettings.noiseSamplingSettings(),
-						noiseSettings.cellWidth,
-						noiseSettings.cellHeight
-					)
-				}
-				is TerrainShaperSpline -> {
-					TerrainShaperSpline(
-						densityFunction.continentalness(),
-						densityFunction.erosion(),
-						densityFunction.weirdness(),
-						noiseSettings.terrainShaper(),
-						densityFunction.spline(),
-						densityFunction.minValue(),
-						densityFunction.maxValue()
-					)
-				}
-				is Slide -> {
-					Slide(
-						noiseSettings,
-						densityFunction.input()
-					)
-				}
-				else -> {
-					densityFunction
-				}
-			}
-		}
-
-		//val visitor2 = DensityFunction.Visitor { densityFunction: DensityFunction ->
-		//	//map.computeIfAbsent(densityFunction, visitor)
-		//	visitor.apply(densityFunction)
-		//}
-
-		val noiseRouterWithOnlyNoises2 = noiseRouterWithOnlyNoises.mapAll(visitor)
-		val positionalRandomFactory2 =
-			randomSource.forkPositional().fromHashOf(ResourceLocation("aquifer")).forkPositional()
-		val positionalRandomFactory3 =
-			randomSource.forkPositional().fromHashOf(ResourceLocation("ore")).forkPositional()
-
-		return NoiseRouter(
-			noiseRouterWithOnlyNoises2.barrierNoise(),
-			noiseRouterWithOnlyNoises2.fluidLevelFloodednessNoise(),
-			noiseRouterWithOnlyNoises2.fluidLevelSpreadNoise(),
-			noiseRouterWithOnlyNoises2.lavaNoise(),
-			positionalRandomFactory2,
-			positionalRandomFactory3,
-			noiseRouterWithOnlyNoises2.temperature(),
-			noiseRouterWithOnlyNoises2.vegetation(),
-			noiseRouterWithOnlyNoises2.continents(),
-			noiseRouterWithOnlyNoises2.erosion(),
-			noiseRouterWithOnlyNoises2.depth(),
-			noiseRouterWithOnlyNoises2.ridges(),
-			noiseRouterWithOnlyNoises2.initialDensityWithoutJaggedness(),
-			noiseRouterWithOnlyNoises2.finalDensity(),
-			noiseRouterWithOnlyNoises2.veinToggle(),
-			noiseRouterWithOnlyNoises2.veinRidged(),
-			noiseRouterWithOnlyNoises2.veinGap(),
-			OverworldBiomeBuilder().spawnTarget()
-		)
 	}
 }

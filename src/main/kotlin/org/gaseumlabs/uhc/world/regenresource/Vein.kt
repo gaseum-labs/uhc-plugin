@@ -1,4 +1,4 @@
-package org.gaseumlabs.uhc.world.vein
+package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.block.Block
 import org.bukkit.block.data.BlockData

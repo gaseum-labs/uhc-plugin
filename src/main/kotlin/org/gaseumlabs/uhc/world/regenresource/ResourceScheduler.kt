@@ -1,4 +1,4 @@
-package org.gaseumlabs.uhc.world.vein
+package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.Bukkit
 import org.bukkit.FluidCollisionMode
@@ -8,7 +8,10 @@ import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.team.Team
 import kotlin.random.Random
 
-class VeinScheduler(val game: Game) {
+class ResourceScheduler(
+	val game: Game,
+	val resourceDescriptions: Array<ResourceDescription>
+) {
 	companion object {
 		const val FIND_RADIUS = 32.0
 	}
@@ -21,15 +24,15 @@ class VeinScheduler(val game: Game) {
 	)
 
 	val veinDataList: HashMap<Team, Array<VeinData>> = HashMap()
-	val foundVeins: ArrayList<Pair<VeinType, Vein>> = ArrayList()
+	val foundVeins: ArrayList<Pair<ResourceDescription, Vein>> = ArrayList()
 
 	private fun generateVeinDataEntry(ticks: Int): Array<VeinData> {
-		return Array(Veins.values().size) { i ->
-			VeinData(0, 0, ticks + Veins.values()[i].veinType.nextInterval(0), ArrayList())
+		return Array(resourceDescriptions.size) { i ->
+			VeinData(0, 0, ticks + resourceDescriptions[i].nextInterval(0), ArrayList())
 		}
 	}
 
-	private fun eraseVein(type: VeinType, vein: Vein) {
+	private fun eraseVein(type: ResourceDescription, vein: Vein) {
 		vein.blocks.forEachIndexed { i, block -> block.blockData = vein.originalBlocks[i] }
 	}
 
@@ -55,8 +58,8 @@ class VeinScheduler(val game: Game) {
 		}
 	}
 
-	fun getVeinData(team: Team, veins: Veins): VeinData {
-		return veinDataList[team]!![veins.ordinal]
+	fun getVeinData(team: Team, resourceDescription: ResourceDescription): VeinData {
+		return veinDataList[team]!![resourceDescriptions.indexOf(resourceDescription)]
 	}
 
 	fun tick(ticks: Int) {
@@ -75,7 +78,7 @@ class VeinScheduler(val game: Game) {
 			for (i in veinDatas.indices) {
 				val veinData = veinDatas[i]
 				val teamPlayers = playersList[i]
-				val veinType = Veins.values()[i].veinType
+				val veinType = resourceDescriptions[i]
 
 				veinData.current.removeAll { vein ->
 					/* when found, the vein remains until forcibly removed by mining */

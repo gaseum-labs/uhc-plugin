@@ -74,7 +74,7 @@ object WorldGenManager {
 				)
 			}
 			WorldManager.LOBBY_WORLD_NAME -> {
-				BiomeSourceSingle(seed, BiomeNo.featureBiomes, BiomeNo.BADLANDS)
+				BiomeSourceSingle(seed, BiomeNo.biomes, BiomeNo.BADLANDS)
 			}
 			WorldManager.PVP_WORLD_NAME -> {
 				BiomeSourcePvp(seed)

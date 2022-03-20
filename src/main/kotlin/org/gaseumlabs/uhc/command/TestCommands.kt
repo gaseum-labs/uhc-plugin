@@ -22,8 +22,10 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.world.regenresource.RegenResources
 import java.util.*
 
 @CommandAlias("uhct")
@@ -268,5 +270,27 @@ class TestCommands : BaseCommand() {
 
 		val game = UHC.game ?: return errorMessage(player, "Game is not going")
 		Portal.onPlayerPortal(player, game)
+	}
+
+	@Subcommand("seeVeins")
+	fun testSeeVeins(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
+		val player = sender as? Player ?: return
+		val game = UHC.game ?: return
+		val team = game.teams.playersTeam(player.uniqueId) ?: return
+
+		val veinData = game.resourceScheduler.veinDataList[team]!![RegenResources.MELON.ordinal]
+
+		veinData.current.forEach { vein ->
+			vein.blocks.forEach { block ->
+				val fallingBlock = block.world.spawnEntity(block.location, EntityType.FALLING_BLOCK)
+				fallingBlock.isGlowing = true
+				fallingBlock.setGravity(false)
+				fallingBlock.ticksLived = -2147483648
+			}
+		}
+
+		Action.sendGameMessage(player, "Found ${veinData.current.size} veins")
 	}
 }
