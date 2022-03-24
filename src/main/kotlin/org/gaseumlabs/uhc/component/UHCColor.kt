@@ -19,7 +19,7 @@ object UHCColor {
 	val CNTDWN1 = TextColor.fromRgb(0x4dc91c)
 	val CNTDWN2 = TextColor.fromRgb(0x2458d1)
 
-	val GRACE = TextColor.fromRgb(0x799ef2)
+	val GRACE = TextColor.fromRgb(0x1cb7ff)
 	val SHRINK = TextColor.fromRgb(0xf0377e)
 	val ENDGAME = TextColor.fromRgb(0xf29a2e)
 	val POSTGAME = TextColor.fromRgb(0x493b70)

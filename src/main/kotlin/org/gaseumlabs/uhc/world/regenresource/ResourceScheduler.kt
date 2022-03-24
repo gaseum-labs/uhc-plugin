@@ -6,6 +6,7 @@ import org.bukkit.block.Block
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.team.Team
+import org.gaseumlabs.uhc.util.Util
 import kotlin.random.Random
 
 class ResourceScheduler(
@@ -96,6 +97,7 @@ class ResourceScheduler(
 				}
 
 				/* attempt generations */
+				Util.log("for team ${team.name} | ${ticks} - ${veinData.nextTime}")
 				if (teamPlayers.isNotEmpty() && ticks >= veinData.nextTime) {
 					/* attempt to generate this vein for all the players on the team */
 					/* only one will generate, but priority is given to 1 player on a cycle */
@@ -114,6 +116,7 @@ class ResourceScheduler(
 
 					/* if this generation failed, try again sooner than usual */
 					if (generatedList == null) {
+						Util.log("failed to place ${veinType}")
 						addedTime /= 2
 					} else {
 						val originalData = generatedList.map { it.blockData }

@@ -25,7 +25,6 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.gaseumlabs.uhc.world.regenresource.RegenResources
 import java.util.*
 
 @CommandAlias("uhct")
@@ -280,14 +279,15 @@ class TestCommands : BaseCommand() {
 		val game = UHC.game ?: return
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
 
-		val veinData = game.resourceScheduler.veinDataList[team]!![RegenResources.MELON.ordinal]
+		val veinData = game.resourceScheduler.getVeinData(team, game.resourceScheduler.resourceDescriptions[0])
 
 		veinData.current.forEach { vein ->
 			vein.blocks.forEach { block ->
-				val fallingBlock = block.world.spawnEntity(block.location, EntityType.FALLING_BLOCK)
+				Action.sendGameMessage(player, "Vein at ${block.x}, ${block.y}, ${block.z} veins")
+				val fallingBlock = block.world.spawnFallingBlock(block.location, Material.MELON.createBlockData())
+				fallingBlock.dropItem = false
 				fallingBlock.isGlowing = true
 				fallingBlock.setGravity(false)
-				fallingBlock.ticksLived = -2147483648
 			}
 		}
 

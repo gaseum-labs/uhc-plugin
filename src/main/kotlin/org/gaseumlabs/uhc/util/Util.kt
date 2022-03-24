@@ -95,6 +95,10 @@ object Util {
 		return (high - low) * along + low
 	}
 
+	fun interp(low: Double, high: Double, along: Double): Double {
+		return (high - low) * along + low
+	}
+
 	fun interpClamp(low: Float, high: Float, along: Float): Float {
 		var value = (high - low) * along + low
 
@@ -106,6 +110,10 @@ object Util {
 	}
 
 	fun invInterp(low: Float, high: Float, value: Float): Float {
+		return (value - low) / (high - low)
+	}
+
+	fun invInterp(low: Double, high: Double, value: Double): Double {
 		return (value - low) / (high - low)
 	}
 

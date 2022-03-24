@@ -7,6 +7,7 @@ import org.gaseumlabs.uhc.core.phase.Phase
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.util.Util
 import org.bukkit.World
+import org.gaseumlabs.uhc.component.UHCColor
 
 class Grace(game: Game, time: Int) : Phase(PhaseType.GRACE, time, game) {
 	override fun updateBarLength(remainingTicks: Int): Float {
@@ -18,7 +19,7 @@ class Grace(game: Game, time: Int) : Phase(PhaseType.GRACE, time, game) {
 	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent {
-		return UHCComponent.text("Grade Period Ends in", phaseType.color)
+		return UHCComponent.text("Grace Period Ends in ", UHCColor.U_WHITE)
 			.and(Util.timeString(remainingSeconds), phaseType.color, BOLD)
 	}
 
