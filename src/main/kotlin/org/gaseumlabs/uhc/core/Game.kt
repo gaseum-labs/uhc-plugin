@@ -21,7 +21,6 @@ import net.kyori.adventure.title.Title.Times
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.world.regenresource.ResourceScheduler
-import org.gaseumlabs.uhc.world.regenresource.type.ResourceMelon
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
@@ -44,9 +43,8 @@ class Game(
 
 	val sugarCaneRegen = SugarCaneRegen(this)
 	val leatherRegen = LeatherRegen(this)
-	//val melonRegen = MelonRegen(this)
 
-	val resourceScheduler = ResourceScheduler(this, arrayOf(ResourceMelon()))
+	val resourceScheduler = ResourceScheduler(this)
 
 	val endgameLowY: Int
 	val endgameHighY: Int

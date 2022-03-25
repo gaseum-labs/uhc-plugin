@@ -57,11 +57,6 @@ class Generation : Listener {
 					REVERSE_IRON.addToList(chunk, placerList)
 					REVERSE_COAL.addToList(chunk, placerList)
 
-				} else if (config.worldGenEnabled(ORE_FIX)) {
-					DIAMOND.addToList(chunk, placerList)
-					GOLD.addToList(chunk, placerList)
-					LAPIS.addToList(chunk, placerList)
-					EMERALD.addToList(chunk, placerList)
 				}
 
 				if (config.worldGenEnabled(HALLOWEEN)) {

@@ -19,10 +19,6 @@ enum class ChunkPlacerHolder(val chunkPlacer: ChunkPlacer) {
 
 	/* orefix */
 	AMETHYST(AmethystPlacer()),
-	GOLD(OrePlacer(3, 3, 6, 32, 5, Material.GOLD_ORE, Material.DEEPSLATE_GOLD_ORE)),
-	LAPIS(OrePlacer(5, 5, 6, 32, 4, Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE)),
-	DIAMOND(OrePlacer(6, 6, 6, 16, 3, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE)),
-	EMERALD(OrePlacer(6, 6, 6, 32, 1, Material.EMERALD_ORE, Material.DEEPSLATE_EMERALD_ORE)),
 
 	/** CHCS */
 

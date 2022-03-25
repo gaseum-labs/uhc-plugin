@@ -1,10 +1,6 @@
 package org.gaseumlabs.uhc.event
 
 import org.gaseumlabs.uhc.blockfix.BlockFixType
-import org.gaseumlabs.uhc.core.KillReward
-import org.gaseumlabs.uhc.core.Lobby
-import org.gaseumlabs.uhc.core.PlayerData
-import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.core.phase.phases.Endgame
 import org.gaseumlabs.uhc.core.phase.phases.Grace
 import org.gaseumlabs.uhc.discord.storage.DiscordStorage
@@ -27,6 +23,7 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH
+import org.bukkit.block.Block
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -50,6 +47,10 @@ import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
+import org.gaseumlabs.uhc.core.*
+import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
+import org.gaseumlabs.uhc.world.regenresource.RegenResource
+import org.gaseumlabs.uhc.world.regenresource.ResourceDescription
 
 class EventListener : Listener {
 	@EventHandler
@@ -499,43 +500,80 @@ class EventListener : Listener {
 		}
 	}
 
+	fun regenResourceType(game: Game, brokenBlock: Block): ResourceDescription? {
+		return game.resourceScheduler.resourceDescriptions.find { resourceDescription ->
+			resourceDescription.isBlock(brokenBlock)
+		}
+	}
+
+	/**
+	 * also automatically removes the vein from the current list
+	 */
+	fun findNonFoundVein(brokenBlock: Block, type: RegenResource, game: Game): Boolean {
+		for ((_, teamVeins) in game.resourceScheduler.veinDataList) {
+			val veinData = teamVeins[type.ordinal]
+
+			for (i in veinData.current.indices) {
+				val vein = veinData.current[i]
+
+				if (vein.blocks.any { it.samePlace(brokenBlock) }) {
+					veinData.current.removeAt(i)
+
+					return true
+				}
+			}
+		}
+
+		return false
+	}
+
+	/**
+	 * also automatically removes the vein from the current list
+	 */
+	fun findFoundVein(brokenBlock: Block, game: Game): Boolean {
+		val veinIndex = game.resourceScheduler.foundVeins.indexOfFirst { (veinType, vein) ->
+			vein.blocks.any { it.samePlace(brokenBlock) }
+		}
+
+		if (veinIndex == -1) return false
+
+		game.resourceScheduler.foundVeins.removeAt(veinIndex)
+		return true
+	}
+
 	@EventHandler
 	fun onBreakBlock(event: BlockBreakEvent) {
 		val game = UHC.game ?: return
 
-		val block = event.block
+		val brokenBlock = event.block
 		val player = event.player
 
-		/* is this block part of a vein? */
-		val veinIndex = game.resourceScheduler.foundVeins.indexOfFirst { (veinType, vein) ->
-			vein.blocks.any { it === block }
-		}
-
-		if (veinIndex != -1) {
-			/* remove the vein from list of found veins */
-			val (veinType, vein) = game.resourceScheduler.foundVeins.removeAt(veinIndex)
-
-			/* mark the player's team as collecting this vein */
-			val team = game.teams.playersTeam(player.uniqueId)
-			if (team != null) {
-				++game.resourceScheduler.getVeinData(team, veinType).collected
+		val regenResource = regenResourceType(game, brokenBlock)?.regenResource
+		if (regenResource != null) {
+			/* is this block part of a vein? */
+			if (findFoundVein(brokenBlock, game) || findNonFoundVein(brokenBlock, regenResource, game)) {
+				/* mark the player's team as collecting this vein */
+				val team = game.teams.playersTeam(player.uniqueId)
+				if (team != null) {
+					++game.resourceScheduler.getVeinData(team, regenResource).collected
+				}
 			}
 		}
 
-		if (game.quirkEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
-			val oldBlockType = block.type
-			val oldData = block.blockData
+		if (game.quirkEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(brokenBlock.type, Unsheltered.acceptedBlocks)) {
+			val oldBlockType = brokenBlock.type
+			val oldData = brokenBlock.blockData
 
 			/* block has not been set as broken */
-			if (Unsheltered.isBroken(block)) {
+			if (Unsheltered.isBroken(brokenBlock)) {
 				player.sendActionBar(Component.text("Block already broken!", NamedTextColor.GOLD, TextDecoration.BOLD))
 				event.isCancelled = true
 
 			} else {
 				SchedulerUtil.nextTick {
-					block.type = oldBlockType
-					block.blockData = oldData
-					Unsheltered.setBroken(block, true)
+					brokenBlock.type = oldBlockType
+					brokenBlock.blockData = oldData
+					Unsheltered.setBroken(brokenBlock, true)
 				}
 			}
 		}

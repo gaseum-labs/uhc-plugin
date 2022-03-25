@@ -22,9 +22,9 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.command.CommandSender
-import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.world.regenresource.RegenResource
 import java.util.*
 
 @CommandAlias("uhct")
@@ -272,19 +272,19 @@ class TestCommands : BaseCommand() {
 	}
 
 	@Subcommand("seeVeins")
-	fun testSeeVeins(sender: CommandSender) {
+	fun testSeeVeins(sender: CommandSender, regenResource: RegenResource) {
 		if (Commands.opGuard(sender)) return
 
 		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
 
-		val veinData = game.resourceScheduler.getVeinData(team, game.resourceScheduler.resourceDescriptions[0])
+		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
 
 		veinData.current.forEach { vein ->
 			vein.blocks.forEach { block ->
 				Action.sendGameMessage(player, "Vein at ${block.x}, ${block.y}, ${block.z} veins")
-				val fallingBlock = block.world.spawnFallingBlock(block.location, Material.MELON.createBlockData())
+				val fallingBlock = block.world.spawnFallingBlock(block.location.add(0.5, 0.0, 0.5), Material.COPPER_BLOCK.createBlockData())
 				fallingBlock.dropItem = false
 				fallingBlock.isGlowing = true
 				fallingBlock.setGravity(false)
@@ -292,5 +292,24 @@ class TestCommands : BaseCommand() {
 		}
 
 		Action.sendGameMessage(player, "Found ${veinData.current.size} veins")
+	}
+
+	@Subcommand("veinData")
+	fun testVeinData(sender: CommandSender, regenResource: RegenResource) {
+		if (Commands.opGuard(sender)) return
+
+		val player = sender as? Player ?: return
+		val game = UHC.game ?: return
+		val team = game.teams.playersTeam(player.uniqueId) ?: return
+
+		val description = game.resourceScheduler.resourceDescriptions[regenResource.ordinal]
+		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
+
+		Action.sendGameMessage(player, "Veindata for ${regenResource}:")
+		Action.sendGameMessage(player, "Collected: ${veinData.collected}")
+		Action.sendGameMessage(player, "Interval: ${description.nextInterval(veinData.collected)}")
+		Action.sendGameMessage(player, "Num Generated: ${veinData.numGenerates}")
+		Action.sendGameMessage(player, "Max Current: ${description.maxCurrent(veinData.collected)}")
+		Action.sendGameMessage(player, "Num Current: ${veinData.current.size}")
 	}
 }

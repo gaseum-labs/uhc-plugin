@@ -16,10 +16,6 @@ import kotlin.random.Random
 
 object ModifiedBiomes {
 	val bannedPlacements = arrayOf(
-		OrePlacements.ORE_GOLD,
-		OrePlacements.ORE_GOLD_LOWER,
-		OrePlacements.ORE_LAPIS,
-		OrePlacements.ORE_LAPIS_BURIED,
 		OrePlacements.ORE_DIAMOND,
 		OrePlacements.ORE_DIAMOND_LARGE,
 		OrePlacements.ORE_DIAMOND_BURIED,
