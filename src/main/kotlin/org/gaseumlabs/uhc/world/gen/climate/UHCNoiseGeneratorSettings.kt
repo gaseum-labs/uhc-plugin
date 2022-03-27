@@ -48,14 +48,22 @@ object UHCNoiseGeneratorSettings {
 		)
 	}
 
-	private val settingsField =
-		UHCReflect<NoiseBasedChunkGenerator, Holder<NoiseGeneratorSettings>>(NoiseBasedChunkGenerator::class,
-			"settings")
-	private val routerField =
-		UHCReflect<NoiseBasedChunkGenerator, NoiseRouter>(NoiseBasedChunkGenerator::class, "router")
-	private val seedField = UHCReflect<NoiseBasedChunkGenerator, Long>(NoiseBasedChunkGenerator::class, "seed")
-	private val noisesField =
-		UHCReflect<NoiseBasedChunkGenerator, Registry<NoiseParameters>>(NoiseBasedChunkGenerator::class, "noises")
+	private val settingsField = UHCReflect<NoiseBasedChunkGenerator, Holder<NoiseGeneratorSettings>>(
+		NoiseBasedChunkGenerator::class,
+		"settings"
+	)
+	private val routerField = UHCReflect<NoiseBasedChunkGenerator, NoiseRouter>(
+		NoiseBasedChunkGenerator::class,
+		"router"
+	)
+	private val seedField = UHCReflect<NoiseBasedChunkGenerator, Long>(
+		NoiseBasedChunkGenerator::class,
+		"seed"
+	)
+	private val noisesField = UHCReflect<NoiseBasedChunkGenerator, Registry<NoiseParameters>>(
+		NoiseBasedChunkGenerator::class,
+		"noises"
+	)
 
 	fun inject(chunkGenerator: NoiseBasedChunkGenerator, seed: Long, settings: NoiseGeneratorSettings) {
 		settingsField.set(chunkGenerator, Holder.direct(settings))
@@ -64,11 +72,6 @@ object UHCNoiseGeneratorSettings {
 
 		routerField.set(
 			chunkGenerator,
-			//UHCNoiseRouterData.uhcCreateNoiseRouter(
-			//	settings.noiseSettings,
-			//	seed,
-			//	settings.noiseRouter
-			//)
 			settings.createNoiseRouter(
 				noisesField.get(chunkGenerator),
 				seedField.get(chunkGenerator)

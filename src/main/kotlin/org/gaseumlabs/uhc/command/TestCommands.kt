@@ -312,4 +312,18 @@ class TestCommands : BaseCommand() {
 		Action.sendGameMessage(player, "Max Current: ${description.maxCurrent(veinData.collected)}")
 		Action.sendGameMessage(player, "Num Current: ${veinData.current.size}")
 	}
+
+	@Subcommand("setVeinCollected")
+	fun testSetVeinCollected(sender: CommandSender, regenResource: RegenResource, amount: Int) {
+		if (Commands.opGuard(sender)) return
+
+		val player = sender as? Player ?: return
+		val game = UHC.game ?: return
+		val team = game.teams.playersTeam(player.uniqueId) ?: return
+
+		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
+		veinData.collected = amount
+
+		Action.sendGameMessage(player, "Set collected for ${regenResource.name} to $amount")
+	}
 }

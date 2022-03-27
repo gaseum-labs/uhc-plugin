@@ -141,7 +141,6 @@ class ResourceScheduler(val game: Game) {
 				}
 
 				/* attempt generations */
-				Util.log("for team ${team.name} | ${ticks} - ${veinData.nextTime}")
 				if (teamPlayers.isNotEmpty() && ticks >= veinData.nextTime) {
 					/* attempt to generate this vein for all the players on the team */
 					/* only one will generate, but priority is given to 1 player on a cycle */

@@ -21,38 +21,24 @@ object UHCTerrainShaper {
 	}
 
 	fun createGame(amplified: Boolean): TerrainShaper {
-		val toFloatFunction = if (amplified) ToFloatFunction { getAmplifiedOffset(it) } else NO_TRANSFORM
-		val toFloatFunction2 = if (amplified) ToFloatFunction { getAmplifiedFactor(it) } else NO_TRANSFORM
-		val toFloatFunction3 = if (amplified) ToFloatFunction { getAmplifiedJaggedness(it) } else NO_TRANSFORM
+		/* only do anything if amplified is true */
+		val amplifiedOffset = if (amplified) ToFloatFunction { getAmplifiedOffset(it) } else NO_TRANSFORM
+		val amplifiedFactor = if (amplified) ToFloatFunction { getAmplifiedFactor(it) } else NO_TRANSFORM
+		val amplifiedJaggedness = if (amplified) ToFloatFunction { getAmplifiedJaggedness(it) } else NO_TRANSFORM
 
-		val cubicSpline = buildErosionOffsetSpline(-0.15f,
-			0.0f,
-			0.0f,
-			0.1f,
-			0.0f,
-			-0.03f,
-			false,
-			false,
-			toFloatFunction
-		)
-		val cubicSpline2 = buildErosionOffsetSpline(-0.1f,
-			0.03f,
-			0.1f,
-			0.1f,
-			0.01f,
-			-0.03f,
-			false,
-			false,
-			toFloatFunction
-		)
-		val cubicSpline3 =
-			buildErosionOffsetSpline(-0.1f, 0.03f, 0.1f, 0.7f, 0.01f, -0.03f, true, true, toFloatFunction)
-		val cubicSpline4 =
-			buildErosionOffsetSpline(-0.05f, 0.03f, 0.1f, 1.0f, 0.01f, 0.01f, true, true, toFloatFunction)
-		val f = -0.51f
-		val g = -0.4f
-		val h = 0.1f
-		val i = -0.15f
+		//val erosionOffset0 = buildErosionOffsetSpline(
+		//	-0.15f, 0.0f, 0.0f, 0.1f, 0.0f, -0.03f, false, false, amplifiedOffset
+		//)
+		//val erosionOffset1 = buildErosionOffsetSpline(
+		//	-0.1f, 0.03f, 0.1f, 0.1f, 0.01f, -0.03f, false, false, amplifiedOffset
+		//)
+		//val erosionOffset2 = buildErosionOffsetSpline(
+		//	-0.1f, 0.03f, 0.1f, 0.7f, 0.01f, -0.03f, true, true, amplifiedOffset
+		//)
+		//val erosionOffset3 = buildErosionOffsetSpline(
+		//	-0.05f, 0.03f, 0.1f, 1.0f, 0.01f, 0.01f, true, true, amplifiedOffset
+		//)
+
 		//	.addPoint(-1.1f, 0.044f, 0.0f)
 		//	.addPoint(-1.02f, -0.2222f, 0.0f)
 		//	.addPoint(-0.51f, -0.2222f, 0.0f)
@@ -63,25 +49,33 @@ object UHCTerrainShaper {
 		//	.addPoint(-0.1f, cubicSpline2, 0.0f)
 		//	.addPoint(0.25f, cubicSpline3, 0.0f)
 		//	.addPoint(1.0f, cubicSpline4, 0.0f)
+
+		//.addPoint(-1.00f, erosionOffset0, 0.0f)
+		//.addPoint(-0.50f, erosionOffset0, 0.0f)
+		//.addPoint(-0.00f, erosionOffset1, 0.0f)
+		//.addPoint(0.50f, erosionOffset2, 0.0f)
+		//.addPoint(1.00f, erosionOffset3, 0.0f)
+
 		//	.build()
-		val cubicSpline5 = CubicSpline.builder(UHC_CONTINENTS, toFloatFunction)
-			.addPoint(-1.00f, cubicSpline, 0.0f)
-			.addPoint(-0.50f, cubicSpline, 0.0f)
-			.addPoint(-0.00f, cubicSpline2, 0.0f)
-			.addPoint(0.50f, cubicSpline3, 0.0f)
-			.addPoint(1.00f, cubicSpline4, 0.0f)
+		val offset = CubicSpline.builder(UHC_CONTINENTS, amplifiedOffset)
+			.addPoint(0.0f, 0.0f, 0.0f)
 			.build()
-		val cubicSpline6 = CubicSpline.builder(UHC_CONTINENTS, NO_TRANSFORM).addPoint(-0.19f, 3.95f, 0.0f)
+
+		val factor = CubicSpline.builder(UHC_CONTINENTS, NO_TRANSFORM)
+			.addPoint(-0.19f, 3.95f, 0.0f)
 			.addPoint(-0.15f, getErosionFactor(6.25f, true, NO_TRANSFORM), 0.0f)
-			.addPoint(-0.1f, getErosionFactor(5.47f, true, toFloatFunction2), 0.0f)
-			.addPoint(0.03f, getErosionFactor(5.08f, true, toFloatFunction2), 0.0f)
-			.addPoint(0.06f, getErosionFactor(4.69f, false, toFloatFunction2), 0.0f).build()
-		val j = 0.65f
-		val cubicSpline7 = CubicSpline.builder(UHC_CONTINENTS, toFloatFunction3).addPoint(-0.11f, 0.0f, 0.0f)
-			.addPoint(0.03f, buildErosionJaggednessSpline(1.0f, 0.5f, 0.0f, 0.0f, toFloatFunction3), 0.0f)
-			.addPoint(0.65f, buildErosionJaggednessSpline(1.0f, 1.0f, 1.0f, 0.0f, toFloatFunction3), 0.0f)
+			.addPoint(-0.1f, getErosionFactor(5.47f, true, amplifiedFactor), 0.0f)
+			.addPoint(0.03f, getErosionFactor(5.08f, true, amplifiedFactor), 0.0f)
+			.addPoint(0.06f, getErosionFactor(4.69f, false, amplifiedFactor), 0.0f)
 			.build()
-		return TerrainShaper(cubicSpline5, cubicSpline6, cubicSpline7)
+
+		val peak = CubicSpline.builder(UHC_CONTINENTS, amplifiedJaggedness)
+			.addPoint(-0.11f, 0.0f, 0.0f)
+			.addPoint(0.03f, buildErosionJaggednessSpline(1.0f, 0.5f, 0.0f, 0.0f, amplifiedJaggedness), 0.0f)
+			.addPoint(0.65f, buildErosionJaggednessSpline(1.0f, 1.0f, 1.0f, 0.0f, amplifiedJaggedness), 0.0f)
+			.build()
+
+		return TerrainShaper(offset, factor, peak)
 	}
 
 	private fun getErosionFactor(

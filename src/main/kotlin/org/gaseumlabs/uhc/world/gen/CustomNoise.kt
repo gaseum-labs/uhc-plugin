@@ -8,10 +8,10 @@ import net.minecraft.world.level.levelgen.Noises
 import net.minecraft.world.level.levelgen.synth.NormalNoise
 
 object CustomNoise {
-	val UHC_SAPGHETTI_MODULATOR_KEYS = noiseKeyArray("uhc_spaghetti_modulator", 7)
-	val UHC_SAPGHETTI_KEYS = noiseKeyArray("uhc_spaghetti", 7)
-	val UHC_SAPGHETTI_ELEVATION_KEYS = noiseKeyArray("uhc_spaghetti_elevation", 7)
-	val UHC_SAPGHETTI_THICKNESS_KEYS = noiseKeyArray("uhc_spaghetti_thickness", 7)
+	val UHC_SAPGHETTI_MODULATOR_KEYS = noiseKeyArray("uhc_spaghetti_modulator", 8)
+	val UHC_SAPGHETTI_KEYS = noiseKeyArray("uhc_spaghetti", 8)
+	val UHC_SAPGHETTI_ELEVATION_KEYS = noiseKeyArray("uhc_spaghetti_elevation", 8)
+	val UHC_SAPGHETTI_THICKNESS_KEYS = noiseKeyArray("uhc_spaghetti_thickness", 8)
 
 	init {
 		createNoiseCloneArray(UHC_SAPGHETTI_MODULATOR_KEYS, Noises.SPAGHETTI_2D_MODULATOR)

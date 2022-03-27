@@ -11,9 +11,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 		Material.DEEPSLATE_DIAMOND_ORE,
 		3,
 		-54..0,
-		30.0f,
-		8.0f,
-		60.0f,
+		10.0f, 8.0f, 90.0f,
 		12
 	)});
 
