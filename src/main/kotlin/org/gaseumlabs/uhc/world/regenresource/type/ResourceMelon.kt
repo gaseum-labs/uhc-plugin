@@ -38,9 +38,9 @@ class ResourceMelon : ResourceDescription() {
 			val biome = worldHandle.getNoiseBiome(x / 4, centerY / 4, z / 4).unwrapKey().get()
 
 			if (
-				biome === Biomes.JUNGLE_UHC ||
-				biome === Biomes.SPARSE_JUNGLE_UHC ||
-				biome === Biomes.BAMBOO_JUNGLE_UHC
+				biome === Biomes.UHC_JUNGLE ||
+				biome === Biomes.UHC_SPARSE_JUNGLE ||
+				biome === Biomes.UHC_BAMBOO_JUNGLE
 			) {
 				x to z
 			} else {
@@ -83,7 +83,8 @@ class ResourceMelon : ResourceDescription() {
 
 		return when (block.getRelative(BlockFace.UP).type) {
 			Material.OAK_LOG,
-			Material.JUNGLE_LOG -> true
+			Material.JUNGLE_LOG,
+			-> true
 			else -> false
 		}
 	}
@@ -99,7 +100,8 @@ class ResourceMelon : ResourceDescription() {
 			Material.COCOA,
 			Material.OAK_LEAVES,
 			Material.JUNGLE_LEAVES,
-			Material.GRASS -> true
+			Material.GRASS,
+			-> true
 			else -> false
 		} && !ceiling.isPassable && ceiling.type !== Material.COCOA
 	}
