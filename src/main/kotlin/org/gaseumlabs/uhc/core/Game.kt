@@ -4,7 +4,6 @@ import org.gaseumlabs.uhc.core.phase.Phase
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.phases.*
 import org.gaseumlabs.uhc.core.stats.Ledger
-import org.gaseumlabs.uhc.customSpawning.regeneration.*
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.quirk.Quirk
 import org.gaseumlabs.uhc.quirk.QuirkType
@@ -40,9 +39,6 @@ class Game(
 	val startDate: ZonedDateTime = ZonedDateTime.now()
 
 	val ledger = Ledger(initialRadius)
-
-	val sugarCaneRegen = SugarCaneRegen(this)
-	val leatherRegen = LeatherRegen(this)
 
 	val resourceScheduler = ResourceScheduler(this)
 

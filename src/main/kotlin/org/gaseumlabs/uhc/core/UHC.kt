@@ -95,13 +95,8 @@ object UHC {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.BLAZE, currentTick, currentGame)
-
-					currentGame.sugarCaneRegen.tick()
-					currentGame.leatherRegen.tick()
-
+					
 					currentGame.resourceScheduler.tick(currentTick)
-
-					//currentGame.melonRegen.tick()
 				}
 
 				Portal.portalTick(currentGame)

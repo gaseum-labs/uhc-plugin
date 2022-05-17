@@ -49,8 +49,7 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
-import org.gaseumlabs.uhc.world.regenresource.RegenResource
-import org.gaseumlabs.uhc.world.regenresource.ResourceDescription
+import org.gaseumlabs.uhc.world.regenresource.*
 
 class EventListener : Listener {
 	@EventHandler
@@ -500,10 +499,10 @@ class EventListener : Listener {
 		}
 	}
 
-	fun regenResourceType(game: Game, brokenBlock: Block): ResourceDescription? {
+	fun regenResourceType(game: Game, brokenBlock: Block): ResourceDescriptionBlock? {
 		return game.resourceScheduler.resourceDescriptions.find { resourceDescription ->
-			resourceDescription.isBlock(brokenBlock)
-		}
+			resourceDescription is ResourceDescriptionBlock && resourceDescription.isBlock(brokenBlock)
+		} as ResourceDescriptionBlock?
 	}
 
 	/**
@@ -515,6 +514,7 @@ class EventListener : Listener {
 
 			for (i in veinData.current.indices) {
 				val vein = veinData.current[i]
+				if (vein !is VeinBlock) break
 
 				if (vein.blocks.any { it.samePlace(brokenBlock) }) {
 					veinData.current.removeAt(i)
@@ -532,7 +532,7 @@ class EventListener : Listener {
 	 */
 	fun findFoundVein(brokenBlock: Block, game: Game): Boolean {
 		val veinIndex = game.resourceScheduler.foundVeins.indexOfFirst { (veinType, vein) ->
-			vein.blocks.any { it.samePlace(brokenBlock) }
+			vein is VeinBlock && vein.blocks.any { it.samePlace(brokenBlock) }
 		}
 
 		if (veinIndex == -1) return false
@@ -560,7 +560,9 @@ class EventListener : Listener {
 			}
 		}
 
-		if (game.quirkEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(brokenBlock.type, Unsheltered.acceptedBlocks)) {
+		if (game.quirkEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(brokenBlock.type,
+				Unsheltered.acceptedBlocks)
+		) {
 			val oldBlockType = brokenBlock.type
 			val oldData = brokenBlock.blockData
 

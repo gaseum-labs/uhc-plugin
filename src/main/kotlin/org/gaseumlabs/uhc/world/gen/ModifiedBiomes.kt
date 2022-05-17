@@ -1,16 +1,12 @@
 package org.gaseumlabs.uhc.world.gen
 
 import net.minecraft.core.*
-import net.minecraft.data.BuiltinRegistries
 import net.minecraft.data.worldgen.placement.OrePlacements
 import net.minecraft.data.worldgen.placement.VegetationPlacements
-import net.minecraft.world.level.biome.Biome
-import net.minecraft.world.level.biome.BiomeGenerationSettings
-import net.minecraft.world.level.biome.MobSpawnSettings
+import net.minecraft.world.level.biome.*
 import net.minecraft.world.level.levelgen.GenerationStep
 import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver
 import net.minecraft.world.level.levelgen.placement.PlacedFeature
-import kotlin.random.Random
 
 object ModifiedBiomes {
 	val bannedPlacements = arrayOf(

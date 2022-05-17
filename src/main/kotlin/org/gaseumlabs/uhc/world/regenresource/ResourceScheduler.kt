@@ -1,13 +1,14 @@
 package org.gaseumlabs.uhc.world.regenresource
 
-import org.bukkit.Bukkit
-import org.bukkit.FluidCollisionMode
+import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.util.Vector
 import org.gaseumlabs.uhc.core.Game
+import org.gaseumlabs.uhc.core.phase.phases.Grace
+import org.gaseumlabs.uhc.core.phase.phases.Shrink
 import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.util.Action
 import org.gaseumlabs.uhc.util.Util
@@ -23,7 +24,7 @@ class ResourceScheduler(val game: Game) {
 		var collected: Int,
 		var numGenerates: Int,
 		var nextTime: Int,
-		var current: ArrayList<Vein>
+		var current: ArrayList<Vein>,
 	)
 
 	val resourceDescriptions: Array<ResourceDescription> = Array(RegenResource.values().size) { i ->
@@ -35,12 +36,16 @@ class ResourceScheduler(val game: Game) {
 
 	private fun generateVeinDataEntry(ticks: Int): Array<VeinData> {
 		return Array(resourceDescriptions.size) { i ->
-			VeinData(0, 0, ticks + resourceDescriptions[i].nextInterval(0), ArrayList())
+			VeinData(0, 0, ticks + resourceDescriptions[i].interval, ArrayList())
 		}
 	}
 
 	private fun eraseVein(type: ResourceDescription, vein: Vein) {
-		vein.blocks.forEachIndexed { i, block -> block.blockData = vein.originalBlocks[i] }
+		if (type is ResourceDescriptionBlock) {
+			(vein as VeinBlock).blocks.forEachIndexed { i, block -> block.blockData = vein.originalBlocks[i] }
+		} else {
+			(vein as VeinEntity).entity.remove()
+		}
 	}
 
 	private fun availableBlockFaces(player: Player, block: Block): List<BlockFace> {
@@ -57,46 +62,88 @@ class ResourceScheduler(val game: Game) {
 		)
 	}
 
+	private fun playerLookingAt(playerEyes: Location, at: Location): Boolean {
+		val inverseLookIn = playerEyes.direction.multiply(-1)
+		val atToPlayer = playerEyes.subtract(at).toVector()
+		return inverseLookIn.angle(atToPlayer) <= PI.toFloat() / 7.0f
+	}
+
 	private fun playerFinds(player: Player, vein: Vein): Boolean {
-		val centerBlock = vein.centerBlock()
-		if (player.world !== centerBlock.world) return false
+		when (vein) {
+			is VeinBlock -> {
+				val centerBlock = vein.centerBlock()
+				if (player.world !== centerBlock.world) return false
 
-		if (player.location.distance(centerBlock.location.toCenterLocation()) > FIND_RADIUS) return false
+				val playerLocation = player.eyeLocation
+				if (playerLocation.distance(centerBlock.location.toCenterLocation()) > FIND_RADIUS) return false
 
-		val playerLocation = player.eyeLocation
-		val inverseLookIn =  playerLocation.direction.multiply(-1)
+				val inverseLookIn = playerLocation.direction.multiply(-1)
 
-		return vein.blocks.any { block ->
-			val blockLocation = block.location.toCenterLocation()
+				return vein.blocks.any { block ->
+					val blockLocation = block.location.toCenterLocation()
 
-			availableBlockFaces(player, block).any { face ->
-				val origin = blockLocation.add(Vector(face.modX, face.modY, face.modZ))
-				val blockToPlayer = playerLocation.subtract(origin).toVector()
+					availableBlockFaces(player, block).any { face ->
+						val origin = blockLocation.add(Vector(face.modX, face.modY, face.modZ))
 
-				/* player actually has to be looking at the vein */
-				if (inverseLookIn.angle(blockToPlayer) > PI.toFloat() / 8.0f) return false
+						if (!playerLookingAt(playerLocation, blockLocation)) return false
 
-				block.world.rayTrace(
-					origin,
-					blockToPlayer,
-					FIND_RADIUS,
-					FluidCollisionMode.NEVER,
-					true,
-					1.0
-				) { it.type === EntityType.PLAYER }?.hitEntity != null
+						block.world.rayTrace(
+							origin,
+							blockLocation.subtract(origin).toVector(),
+							FIND_RADIUS,
+							FluidCollisionMode.NEVER,
+							true,
+							1.0
+						) { it.type === EntityType.PLAYER }?.hitEntity != null
+					}
+				}
+			}
+			is VeinEntity -> {
+				val playerLocation = player.eyeLocation
+
+				if (playerLocation.distance(vein.entity.location) > FIND_RADIUS) return false
+				if (!playerLookingAt(playerLocation, vein.entity.location)) return false
+
+				return player.hasLineOfSight(vein.entity)
+			}
+			else -> {
+				return false
 			}
 		}
 	}
 
 	/**
-	 *  when a vein is destroyed in some way not by player breaking
+	 *  when a vein is destroyed in some way not by player breaking/killing
 	 */
 	private fun inSomeWayModified(type: ResourceDescription, vein: Vein): Boolean {
-		return vein.blocks.any { block -> !type.isBlock(block) }
+		return if (type is ResourceDescriptionBlock) {
+			(vein as VeinBlock).blocks.any { block -> !type.isBlock(block) }
+		} else {
+			!(vein as VeinEntity).isLoaded()
+		}
 	}
 
 	fun getVeinData(team: Team, regenResource: RegenResource): VeinData {
 		return veinDataList[team]!![regenResource.ordinal]
+	}
+
+	fun releasedCurrently(resource: ResourceDescription): Int {
+		/* how long grace + shrink takes in ticks */
+		val totalLength = (game.config.graceTime.get() + game.config.shrinkTime.get()) * 20.0f
+
+		val along = when (game.phase) {
+			is Grace ->
+				(game.config.graceTime.get() - game.phase.remainingTicks) / totalLength
+			is Shrink ->
+				(game.config.graceTime.get() + (game.config.shrinkTime.get() - game.phase.remainingTicks)) / totalLength
+			else -> 1.0f
+		}
+
+		return Util.interp(
+			resource.initialReleased.toFloat(),
+			resource.maxReleased.toFloat(),
+			along
+		).toInt()
 	}
 
 	fun tick(ticks: Int) {
@@ -107,14 +154,11 @@ class ResourceScheduler(val game: Game) {
 
 		/* veinDatas for all active teams during this tick */
 		val currentTeams = game.teams.teams().map { team ->
-			Triple(
-				team,
-				veinDataList.getOrPut(team) { generateVeinDataEntry(ticks) },
-				team.members.mapNotNull { Bukkit.getPlayer(it) },
-			)
+			veinDataList.getOrPut(team) { generateVeinDataEntry(ticks) } to
+			team.members.mapNotNull { Bukkit.getPlayer(it) }
 		}
 
-		currentTeams.forEach { (team, veinDatas, teamPlayers) ->
+		currentTeams.forEach { (veinDatas, teamPlayers) ->
 			for (i in veinDatas.indices) {
 				val veinData = veinDatas[i]
 				val veinType = resourceDescriptions[i]
@@ -123,11 +167,13 @@ class ResourceScheduler(val game: Game) {
 					if (inSomeWayModified(veinType, vein)) return@removeAll true
 
 					/* when found, the vein remains until forcibly removed by mining */
-					if (currentTeams.any { (_, _, otherPlayers) -> otherPlayers.any { player ->
-							val res = playerFinds(player, vein)
-							if (res) Action.sendGameMessage(player, "found vein $vein")
-							res
-					} }) {
+					if (currentTeams.any { (_, otherPlayers) ->
+							otherPlayers.any { player ->
+								val res = playerFinds(player, vein)
+								if (res) Action.sendGameMessage(player, "found vein $vein")
+								res
+							}
+						}) {
 						foundVeins.add(veinType to vein)
 
 					} else {
@@ -136,12 +182,16 @@ class ResourceScheduler(val game: Game) {
 				}
 
 				/* remove the oldest veins to make room for new ones */
-				while (veinData.current.size > veinType.maxCurrent(veinData.collected)) {
+				while (veinData.current.size > veinType.maxCurrent) {
 					eraseVein(veinType, veinData.current.removeFirst())
 				}
 
 				/* attempt generations */
-				if (teamPlayers.isNotEmpty() && ticks >= veinData.nextTime) {
+				if (
+					teamPlayers.isNotEmpty() &&
+					ticks >= veinData.nextTime &&
+					veinData.collected < releasedCurrently(veinType)
+				) {
 					/* attempt to generate this vein for all the players on the team */
 					/* only one will generate, but priority is given to 1 player on a cycle */
 					var generatedList: List<Block>? = null
@@ -149,13 +199,17 @@ class ResourceScheduler(val game: Game) {
 					for (j in teamPlayers.indices) {
 						val generateAround = teamPlayers[(j + veinData.numGenerates) % teamPlayers.size].location.block
 
-						generatedList = veinType.generateVein(generateAround.world, generateAround.x, generateAround.y, generateAround.z)
+						generatedList = veinType.generateVein(generateAround.world,
+							generateAround.x,
+							generateAround.y,
+							generateAround.z)
 						if (generatedList != null) break
 					}
 
 					/* dividing by the number of team players esentially multiplies the rate */
 					/* this results in the rates being the same per player on any size team */
-					var addedTime = veinType.nextInterval(veinData.collected) / teamPlayers.size + Random.nextInt(-20, 20)
+					var addedTime =
+						(veinType.interval / teamPlayers.size) + Random.nextInt(-20, 20)
 
 					/* if this generation failed, try again sooner than usual */
 					if (generatedList == null) {
@@ -166,7 +220,7 @@ class ResourceScheduler(val game: Game) {
 						val originalData = generatedList.map { it.blockData }
 						generatedList.forEach { veinType.setBlock(it) }
 
-						veinData.current.add(Vein(
+						veinData.current.add(VeinBlock(
 							originalData,
 							generatedList,
 							ticks,

@@ -88,10 +88,13 @@ object WorldGenManager {
 		runtimeBiomeSourceField.set(generator, newBiomeSource)
 		biomeSourceField.set(generator, newBiomeSource)
 
-		UHCNoiseGeneratorSettings.inject(
-			generator,
-			seed,
-			UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED))
-		)
+		//TODO manipulate the nether noise
+		if (world.name != WorldManager.NETHER_WORLD_NAME) {
+			UHCNoiseGeneratorSettings.inject(
+				generator,
+				seed,
+				UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED))
+			)
+		}
 	}
 }

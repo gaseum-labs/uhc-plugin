@@ -24,7 +24,7 @@ import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.gaseumlabs.uhc.world.regenresource.RegenResource
+import org.gaseumlabs.uhc.world.regenresource.*
 import java.util.*
 
 @CommandAlias("uhct")
@@ -282,12 +282,22 @@ class TestCommands : BaseCommand() {
 		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
 
 		veinData.current.forEach { vein ->
-			vein.blocks.forEach { block ->
-				Action.sendGameMessage(player, "Vein at ${block.x}, ${block.y}, ${block.z} veins")
-				val fallingBlock = block.world.spawnFallingBlock(block.location.add(0.5, 0.0, 0.5), Material.COPPER_BLOCK.createBlockData())
-				fallingBlock.dropItem = false
-				fallingBlock.isGlowing = true
-				fallingBlock.setGravity(false)
+			when (vein) {
+				is VeinBlock -> {
+					vein.blocks.forEach { block ->
+						Action.sendGameMessage(player, "Vein at ${block.x}, ${block.y}, ${block.z} veins")
+						val fallingBlock = block.world.spawnFallingBlock(block.location.add(0.5, 0.0, 0.5),
+							Material.COPPER_BLOCK.createBlockData())
+						fallingBlock.dropItem = false
+						fallingBlock.isGlowing = true
+						fallingBlock.setGravity(false)
+					}
+				}
+				is VeinEntity -> {
+					vein.entity.isGlowing = true
+				}
+				else -> {
+				}
 			}
 		}
 
@@ -306,11 +316,12 @@ class TestCommands : BaseCommand() {
 		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
 
 		Action.sendGameMessage(player, "Veindata for ${regenResource}:")
+		Action.sendGameMessage(player, "Total Generated: ${veinData.numGenerates}")
+		Action.sendGameMessage(player, "Num Released: ${game.resourceScheduler.releasedCurrently(description)}")
 		Action.sendGameMessage(player, "Collected: ${veinData.collected}")
-		Action.sendGameMessage(player, "Interval: ${description.nextInterval(veinData.collected)}")
-		Action.sendGameMessage(player, "Num Generated: ${veinData.numGenerates}")
-		Action.sendGameMessage(player, "Max Current: ${description.maxCurrent(veinData.collected)}")
+		Action.sendGameMessage(player, "Max Current: ${description.maxCurrent}")
 		Action.sendGameMessage(player, "Num Current: ${veinData.current.size}")
+		Action.sendGameMessage(player, "Interval: ${description.interval}")
 	}
 
 	@Subcommand("setVeinCollected")

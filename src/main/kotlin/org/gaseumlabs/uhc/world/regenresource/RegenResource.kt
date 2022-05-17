@@ -3,18 +3,61 @@ package org.gaseumlabs.uhc.world.regenresource
 import org.bukkit.Material
 import org.gaseumlabs.uhc.world.regenresource.type.ResourceMelon
 import org.gaseumlabs.uhc.world.regenresource.type.ResourceOre
+import org.gaseumlabs.uhc.world.regenresource.type.ResourceSugarCane
+import org.gaseumlabs.uhc.world.regenresource.type.ResourceLeather
 
 enum class RegenResource(createDescription: () -> ResourceDescription) {
 	MELON({ ResourceMelon() }),
-	DIAMOND({ ResourceOre(
-		Material.DIAMOND_ORE,
-		Material.DEEPSLATE_DIAMOND_ORE,
-		3,
-		-54..0,
-		10.0f, 8.0f, 90.0f,
-		12
-	)});
+	SUGAR_CANE({
+		ResourceSugarCane()
+	}),
+	LEATHER({
+		ResourceLeather()
+	}),
+	DIAMOND({
+		ResourceOre(
+			Material.DIAMOND_ORE,
+			Material.DEEPSLATE_DIAMOND_ORE,
+			3,
+			-54..0,
+
+			3, 20, 4, 10 * 20
+		)
+	}),
+	GOLD({
+		ResourceOre(
+			Material.GOLD_ORE,
+			Material.DEEPSLATE_GOLD_ORE,
+			3,
+			-54..32,
+
+			3, 20, 4, 10 * 20
+		)
+	}),
+	LAPIS({
+		ResourceOre(
+			Material.LAPIS_ORE,
+			Material.DEEPSLATE_LAPIS_ORE,
+			3,
+			-54..32,
+
+			3, 20, 4, 10 * 20
+		)
+	}),
+	EMERALD({
+		ResourceOre(
+			Material.EMERALD_ORE,
+			Material.DEEPSLATE_EMERALD_ORE,
+			3,
+			-54..48,
+
+			3, 20, 4, 10 * 20
+		)
+	});
 
 	val description = createDescription()
-	init { description.regenResource = this }
+
+	init {
+		description.regenResource = this
+	}
 }

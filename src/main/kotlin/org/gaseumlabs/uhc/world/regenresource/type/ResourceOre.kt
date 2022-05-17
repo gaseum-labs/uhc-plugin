@@ -7,8 +7,7 @@ import org.bukkit.block.BlockFace
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapFirstNotNullPrefer
 import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
 import org.gaseumlabs.uhc.util.extensions.IntRangeExtensions.rangeIntersection
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil
-import org.gaseumlabs.uhc.world.regenresource.ResourceDescription
+import org.gaseumlabs.uhc.world.regenresource.*
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -17,23 +16,21 @@ class ResourceOre(
 	val deepType: Material,
 	val veinSize: Int,
 	val genRange: IntRange,
-	val baseTime: Float,
-	val untilDesired: Float,
-	val desiredTime: Float,
-	val maxCurrent: Int,
-) : ResourceDescription() {
+
+	initialReleased: Int,
+	maxReleased: Int,
+	maxCurrent: Int,
+	interval: Int,
+) : ResourceDescriptionBlock(
+	initialReleased,
+	maxReleased,
+	maxCurrent,
+	interval,
+) {
 	companion object {
-		val Y_RANGE = 20
-		val MIN_Y = -54
-		val MAX_Y = 100
-	}
-
-	override fun nextInterval(collected: Int): Int {
-		return (20 * (baseTime + (1 + (desiredTime - (baseTime + untilDesired)) / untilDesired) * (collected * collected / untilDesired))).roundToInt()
-	}
-
-	override fun maxCurrent(collected: Int): Int {
-		return maxCurrent
+		const val Y_RANGE = 20
+		const val MIN_Y = -54
+		const val MAX_Y = 100
 	}
 
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
@@ -137,13 +134,13 @@ class ResourceOre(
 
 	private fun isStone(block: Block): Boolean {
 		return block.type === Material.STONE ||
-			block.type === Material.ANDESITE ||
-			block.type === Material.GRANITE ||
-			block.type === Material.DIORITE ||
-			block.type === Material.TUFF ||
-			block.type === Material.DEEPSLATE ||
-			block.type === Material.BLACKSTONE ||
-			block.type === Material.BASALT ||
-			block.type === Material.MAGMA_BLOCK
+		block.type === Material.ANDESITE ||
+		block.type === Material.GRANITE ||
+		block.type === Material.DIORITE ||
+		block.type === Material.TUFF ||
+		block.type === Material.DEEPSLATE ||
+		block.type === Material.BLACKSTONE ||
+		block.type === Material.BASALT ||
+		block.type === Material.MAGMA_BLOCK
 	}
 }
