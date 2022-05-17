@@ -234,7 +234,7 @@ object BiomeNo {
 
 	val dedicatedServerField = UHCReflect<CraftServer, DedicatedServer>(CraftServer::class, "console")
 
-	val biomeRegistry: WritableRegistry<Biome>
+	val biomeRegistry: Registry<Biome>
 
 	val biomes = HashMap<Int, Holder<Biome>>()
 	val featureBiomes = HashMap<Int, Holder<Biome>>()
@@ -246,7 +246,7 @@ object BiomeNo {
 
 		/* aquire biome registry */
 		val registryAccess = (Bukkit.getServer() as CraftServer).handle.server.registryAccess()
-		biomeRegistry = registryAccess.ownedRegistryOrThrow(Registry.BIOME_REGISTRY) as WritableRegistry<Biome>
+		biomeRegistry = registryAccess.ownedRegistryOrThrow(Registry.BIOME_REGISTRY)
 
 		/* create the maps from id to biome */
 		biomeKeys.forEachIndexed { i, resourceKey ->

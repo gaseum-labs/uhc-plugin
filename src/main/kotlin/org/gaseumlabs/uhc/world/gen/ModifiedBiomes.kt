@@ -1,8 +1,6 @@
 package org.gaseumlabs.uhc.world.gen
 
-import net.minecraft.core.Holder
-import net.minecraft.core.HolderSet
-import net.minecraft.core.WritableRegistry
+import net.minecraft.core.*
 import net.minecraft.data.BuiltinRegistries
 import net.minecraft.data.worldgen.placement.OrePlacements
 import net.minecraft.data.worldgen.placement.VegetationPlacements
@@ -30,7 +28,7 @@ object ModifiedBiomes {
 		VegetationPlacements.PATCH_SUGAR_CANE_SWAMP,
 	)
 
-	fun genBiomes(biomeRegistry: WritableRegistry<Biome>, replaceFeatures: Boolean, replaceMobs: Boolean) {
+	fun genBiomes(biomeRegistry: Registry<Biome>, replaceFeatures: Boolean, replaceMobs: Boolean) {
 		val biomeHolders = BiomeNo.featureBiomeKeys.map {
 			it to biomeRegistry.getOrCreateHolder(it)
 		}.forEach { (key, originalBiomeHolder) ->
