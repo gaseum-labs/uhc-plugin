@@ -28,7 +28,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 		ResourceOre(
 			Material.GOLD_ORE,
 			Material.DEEPSLATE_GOLD_ORE,
-			3,
+			5,
 			-54..32,
 
 			3, 20, 4, 10 * 20
@@ -38,7 +38,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 		ResourceOre(
 			Material.LAPIS_ORE,
 			Material.DEEPSLATE_LAPIS_ORE,
-			3,
+			4,
 			-54..32,
 
 			3, 20, 4, 10 * 20
@@ -48,7 +48,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 		ResourceOre(
 			Material.EMERALD_ORE,
 			Material.DEEPSLATE_EMERALD_ORE,
-			3,
+			1,
 			-54..48,
 
 			3, 20, 4, 10 * 20

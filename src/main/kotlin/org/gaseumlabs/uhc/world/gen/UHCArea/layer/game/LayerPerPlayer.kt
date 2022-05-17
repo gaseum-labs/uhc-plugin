@@ -12,8 +12,8 @@ class LayerPerPlayer(seed: Long) : UHCLayer(seed) {
 		Region.FORESTED,
 		Region.FORESTED,
 		Region.FORESTED,
-		Region.AQUATIC,
 		Region.JUNGLEY,
+		null,
 		null
 	)
 

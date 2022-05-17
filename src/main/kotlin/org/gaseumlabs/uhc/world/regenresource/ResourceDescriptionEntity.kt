@@ -1,5 +1,8 @@
 package org.gaseumlabs.uhc.world.regenresource
 
+import org.bukkit.block.Block
+import org.bukkit.entity.Entity
+
 abstract class ResourceDescriptionEntity(
 	initialReleased: Int,
 	maxReleased: Int,
@@ -10,4 +13,8 @@ abstract class ResourceDescriptionEntity(
 	maxReleased,
 	maxCurrent,
 	interval
-)
+) {
+	abstract fun setEntity(block: Block): Entity
+
+	abstract fun isEntity(entity: Entity): Boolean
+}

@@ -13,6 +13,8 @@ abstract class ResourceDescriptionBlock(
 	maxCurrent,
 	interval
 ) {
+	abstract fun setBlock(block: Block)
+
 	/**
 	 * IMPORTANT! THESE SHOULD NEVER OVERLAP BETWEEN ANY OTHER BLOCK RESOURCE DESCRIPTIONS
 	 */

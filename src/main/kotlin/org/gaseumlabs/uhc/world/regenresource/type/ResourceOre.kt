@@ -4,9 +4,11 @@ import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapFirstNotNullPrefer
 import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
 import org.gaseumlabs.uhc.util.extensions.IntRangeExtensions.rangeIntersection
+import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.*
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -34,6 +36,8 @@ class ResourceOre(
 	}
 
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
+		if (world !== WorldManager.gameWorld) return null
+
 		val playerYRange = ((centerY - Y_RANGE).coerceIn(MIN_Y..MAX_Y)..(centerY + Y_RANGE).coerceIn(MIN_Y..MAX_Y))
 			.rangeIntersection(genRange)
 

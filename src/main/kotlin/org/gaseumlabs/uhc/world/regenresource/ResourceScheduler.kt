@@ -77,28 +77,18 @@ class ResourceScheduler(val game: Game) {
 				val playerLocation = player.eyeLocation
 				if (playerLocation.distance(centerBlock.location.toCenterLocation()) > FIND_RADIUS) return false
 
-				val inverseLookIn = playerLocation.direction.multiply(-1)
-
 				return vein.blocks.any { block ->
 					val blockLocation = block.location.toCenterLocation()
 
-					availableBlockFaces(player, block).any { face ->
+					playerLookingAt(playerLocation, blockLocation) && availableBlockFaces(player, block).any { face ->
 						val origin = blockLocation.add(Vector(face.modX, face.modY, face.modZ))
 
-						if (!playerLookingAt(playerLocation, blockLocation)) return false
-
-						block.world.rayTrace(
-							origin,
-							blockLocation.subtract(origin).toVector(),
-							FIND_RADIUS,
-							FluidCollisionMode.NEVER,
-							true,
-							1.0
-						) { it.type === EntityType.PLAYER }?.hitEntity != null
+						player.hasLineOfSight(origin)
 					}
 				}
 			}
 			is VeinEntity -> {
+				if (player.world !== vein.entity.world) return false
 				val playerLocation = player.eyeLocation
 
 				if (playerLocation.distance(vein.entity.location) > FIND_RADIUS) return false
@@ -133,9 +123,9 @@ class ResourceScheduler(val game: Game) {
 
 		val along = when (game.phase) {
 			is Grace ->
-				(game.config.graceTime.get() - game.phase.remainingTicks) / totalLength
+				(game.config.graceTime.get() * 20 - game.phase.remainingTicks) / totalLength
 			is Shrink ->
-				(game.config.graceTime.get() + (game.config.shrinkTime.get() - game.phase.remainingTicks)) / totalLength
+				(game.config.graceTime.get() * 20 + (game.config.shrinkTime.get() * 20 - game.phase.remainingTicks)) / totalLength
 			else -> 1.0f
 		}
 
@@ -186,6 +176,11 @@ class ResourceScheduler(val game: Game) {
 					eraseVein(veinType, veinData.current.removeFirst())
 				}
 
+				/* gradually remove veins if you have met your collected */
+				if (veinData.current.isNotEmpty() && veinData.collected >= releasedCurrently(veinType)) {
+					eraseVein(veinType, veinData.current.removeFirst())
+				}
+
 				/* attempt generations */
 				if (
 					teamPlayers.isNotEmpty() &&
@@ -217,14 +212,21 @@ class ResourceScheduler(val game: Game) {
 						addedTime /= 2
 					} else {
 						Util.log("placed $veinType")
-						val originalData = generatedList.map { it.blockData }
-						generatedList.forEach { veinType.setBlock(it) }
+						if (veinType is ResourceDescriptionBlock) {
+							val originalData = generatedList.map { it.blockData }
+							generatedList.forEach { veinType.setBlock(it) }
 
-						veinData.current.add(VeinBlock(
-							originalData,
-							generatedList,
-							ticks,
-						))
+							veinData.current.add(VeinBlock(
+								originalData,
+								generatedList,
+								ticks,
+							))
+						} else {
+							veinData.current.add(VeinEntity(
+								(veinType as ResourceDescriptionEntity).setEntity(generatedList[0]),
+								ticks
+							))
+						}
 
 						++veinData.numGenerates
 					}

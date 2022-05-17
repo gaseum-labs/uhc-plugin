@@ -57,9 +57,10 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Snowball(), this)
 		server.pluginManager.registerEvents(Fishing(), this)
 		server.pluginManager.registerEvents(CaveIndicator(), this)
+		server.pluginManager.registerEvents(ResourceEvents(), this)
 
 		Packet.init()
-		
+
 		WorldGenManager.init(server)
 
 		GoogleDDNSUpdater.updateDomain(configFile)

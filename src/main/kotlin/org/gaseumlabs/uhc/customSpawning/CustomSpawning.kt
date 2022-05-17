@@ -1,15 +1,14 @@
 package org.gaseumlabs.uhc.customSpawning
 
-import org.gaseumlabs.uhc.UHCPlugin
-import org.gaseumlabs.uhc.core.Game
-import org.gaseumlabs.uhc.core.PlayerData
-import org.gaseumlabs.uhc.util.Util
-import org.gaseumlabs.uhc.world.WorldManager
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.entity.*
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.util.RayTraceResult
+import org.gaseumlabs.uhc.core.Game
+import org.gaseumlabs.uhc.core.PlayerData
+import org.gaseumlabs.uhc.util.Util
+import org.gaseumlabs.uhc.world.WorldManager
 import java.util.*
 import kotlin.math.*
 import kotlin.random.Random
@@ -101,8 +100,8 @@ object CustomSpawning {
 		spawnPlayers: List<Pair<Player, SpawningPlayerData>>,
 		spawnEntry: SpawnEntry,
 	): Pair<SpawnInfo<*>, Block>? {
-		val minY = (player.location.y - type.verticalRadius).toInt().coerceAtLeast(0).coerceAtMost(255)
-		val maxY = (player.location.y + type.verticalRadius).toInt().coerceAtMost(255).coerceAtLeast(0)
+		val minY = (player.location.y - type.verticalRadius).toInt().coerceAtLeast(-64).coerceAtMost(255)
+		val maxY = (player.location.y + type.verticalRadius).toInt().coerceAtMost(255).coerceAtLeast(-64)
 
 		val ys = Array(maxY - minY) { minY + it }
 		ys.shuffle()

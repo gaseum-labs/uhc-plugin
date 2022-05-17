@@ -6,6 +6,7 @@ import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
+import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
@@ -18,6 +19,7 @@ class ResourceMelon : ResourceDescriptionBlock(
 	interval = 20 * 10
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
+		if (centerY < SpawnUtil.SURFACE_Y) return null
 		if (world !== WorldManager.gameWorld) return null
 
 		val worldHandle = (world as CraftWorld).handle

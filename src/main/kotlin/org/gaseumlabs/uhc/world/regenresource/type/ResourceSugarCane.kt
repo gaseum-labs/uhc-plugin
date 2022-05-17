@@ -6,6 +6,7 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockFace.UP
 import org.gaseumlabs.uhc.customSpawning.SpawnUtil
+import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreader
@@ -17,6 +18,9 @@ class ResourceSugarCane : ResourceDescriptionBlock(
 	20 * 10,
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
+		if (centerY < SpawnUtil.SURFACE_Y) return null
+		if (world !== WorldManager.gameWorld) return null
+		
 		val potentialBlocks = locateAround(world, centerX, centerZ, 11, 32.0, 80.0, 8) { x, z ->
 			if (RegenUtil.insideWorldBorder(world, x, z)) x to z else null
 		}

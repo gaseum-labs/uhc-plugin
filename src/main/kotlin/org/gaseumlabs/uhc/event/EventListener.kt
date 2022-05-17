@@ -499,66 +499,12 @@ class EventListener : Listener {
 		}
 	}
 
-	fun regenResourceType(game: Game, brokenBlock: Block): ResourceDescriptionBlock? {
-		return game.resourceScheduler.resourceDescriptions.find { resourceDescription ->
-			resourceDescription is ResourceDescriptionBlock && resourceDescription.isBlock(brokenBlock)
-		} as ResourceDescriptionBlock?
-	}
-
-	/**
-	 * also automatically removes the vein from the current list
-	 */
-	fun findNonFoundVein(brokenBlock: Block, type: RegenResource, game: Game): Boolean {
-		for ((_, teamVeins) in game.resourceScheduler.veinDataList) {
-			val veinData = teamVeins[type.ordinal]
-
-			for (i in veinData.current.indices) {
-				val vein = veinData.current[i]
-				if (vein !is VeinBlock) break
-
-				if (vein.blocks.any { it.samePlace(brokenBlock) }) {
-					veinData.current.removeAt(i)
-
-					return true
-				}
-			}
-		}
-
-		return false
-	}
-
-	/**
-	 * also automatically removes the vein from the current list
-	 */
-	fun findFoundVein(brokenBlock: Block, game: Game): Boolean {
-		val veinIndex = game.resourceScheduler.foundVeins.indexOfFirst { (veinType, vein) ->
-			vein is VeinBlock && vein.blocks.any { it.samePlace(brokenBlock) }
-		}
-
-		if (veinIndex == -1) return false
-
-		game.resourceScheduler.foundVeins.removeAt(veinIndex)
-		return true
-	}
-
 	@EventHandler
 	fun onBreakBlock(event: BlockBreakEvent) {
 		val game = UHC.game ?: return
 
 		val brokenBlock = event.block
 		val player = event.player
-
-		val regenResource = regenResourceType(game, brokenBlock)?.regenResource
-		if (regenResource != null) {
-			/* is this block part of a vein? */
-			if (findFoundVein(brokenBlock, game) || findNonFoundVein(brokenBlock, regenResource, game)) {
-				/* mark the player's team as collecting this vein */
-				val team = game.teams.playersTeam(player.uniqueId)
-				if (team != null) {
-					++game.resourceScheduler.getVeinData(team, regenResource).collected
-				}
-			}
-		}
 
 		if (game.quirkEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(brokenBlock.type,
 				Unsheltered.acceptedBlocks)

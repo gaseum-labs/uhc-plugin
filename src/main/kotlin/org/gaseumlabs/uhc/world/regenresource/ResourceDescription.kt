@@ -12,6 +12,4 @@ abstract class ResourceDescription(
 	lateinit var regenResource: RegenResource
 
 	abstract fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>?
-
-	abstract fun setBlock(block: Block)
 }
