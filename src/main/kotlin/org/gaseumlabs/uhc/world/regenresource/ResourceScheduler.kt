@@ -3,9 +3,7 @@ package org.gaseumlabs.uhc.world.regenresource
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
-import org.bukkit.util.Vector
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.phase.phases.Grace
 import org.gaseumlabs.uhc.core.phase.phases.Shrink
@@ -17,7 +15,8 @@ import kotlin.random.Random
 
 class ResourceScheduler(val game: Game) {
 	companion object {
-		const val FIND_RADIUS = 32.0
+		const val NEAR_RADIUS = 32.0
+		const val LOOKING_RADIUS = 48.0
 	}
 
 	data class VeinData(
@@ -32,7 +31,6 @@ class ResourceScheduler(val game: Game) {
 	}
 
 	val veinDataList: HashMap<Team, Array<VeinData>> = HashMap()
-	val foundVeins: ArrayList<Pair<ResourceDescription, Vein>> = ArrayList()
 
 	private fun generateVeinDataEntry(ticks: Int): Array<VeinData> {
 		return Array(resourceDescriptions.size) { i ->
@@ -65,40 +63,26 @@ class ResourceScheduler(val game: Game) {
 	private fun playerLookingAt(playerEyes: Location, at: Location): Boolean {
 		val inverseLookIn = playerEyes.direction.multiply(-1)
 		val atToPlayer = playerEyes.subtract(at).toVector()
-		return inverseLookIn.angle(atToPlayer) <= PI.toFloat() / 7.0f
+		return inverseLookIn.angle(atToPlayer) <= PI.toFloat() / 8.0f
 	}
 
-	private fun playerFinds(player: Player, vein: Vein): Boolean {
-		when (vein) {
+	private fun playerNearbyFrom(players: List<Player>, vein: Vein): Boolean {
+		val otherLocation = when (vein) {
 			is VeinBlock -> {
-				val centerBlock = vein.centerBlock()
-				if (player.world !== centerBlock.world) return false
-
-				val playerLocation = player.eyeLocation
-				if (playerLocation.distance(centerBlock.location.toCenterLocation()) > FIND_RADIUS) return false
-
-				return vein.blocks.any { block ->
-					val blockLocation = block.location.toCenterLocation()
-
-					playerLookingAt(playerLocation, blockLocation) && availableBlockFaces(player, block).any { face ->
-						val origin = blockLocation.add(Vector(face.modX, face.modY, face.modZ))
-
-						player.hasLineOfSight(origin)
-					}
-				}
+				vein.centerBlock().location.toCenterLocation()
 			}
 			is VeinEntity -> {
-				if (player.world !== vein.entity.world) return false
-				val playerLocation = player.eyeLocation
-
-				if (playerLocation.distance(vein.entity.location) > FIND_RADIUS) return false
-				if (!playerLookingAt(playerLocation, vein.entity.location)) return false
-
-				return player.hasLineOfSight(vein.entity)
+				vein.entity.location
 			}
-			else -> {
-				return false
-			}
+			else -> return false
+		}
+
+		return players.any { player ->
+			if (player.world !== otherLocation.world) return false
+
+			if (playerLookingAt(player.eyeLocation, otherLocation)) return true
+
+			return player.location.distance(otherLocation) < NEAR_RADIUS
 		}
 	}
 
@@ -153,36 +137,63 @@ class ResourceScheduler(val game: Game) {
 				val veinData = veinDatas[i]
 				val veinType = resourceDescriptions[i]
 
-				veinData.current.removeAll { vein ->
-					if (inSomeWayModified(veinType, vein)) return@removeAll true
+				/* remove invalid veins */
+				veinData.current.removeAll { vein -> inSomeWayModified(veinType, vein) }
 
-					/* when found, the vein remains until forcibly removed by mining */
-					if (currentTeams.any { (_, otherPlayers) ->
-							otherPlayers.any { player ->
-								val res = playerFinds(player, vein)
-								if (res) Action.sendGameMessage(player, "found vein $vein")
-								res
+				/** @return number of veins removed */
+				fun removeExcessVeins(quota: Int, allowSelfOwnership: Boolean): Int {
+					var numRemoved = 0
+
+					veinData.current.removeIf { vein ->
+						/* limit number that can be removed */
+						if (numRemoved >= quota) return@removeIf false
+
+						/* first see which veins can still be owned by the team */
+						/* no transfer, no delete */
+						val removeResult = if (
+							allowSelfOwnership &&
+							playerNearbyFrom(teamPlayers, vein)
+						) {
+							Action.sendGameMessage(teamPlayers[0], "maintained ownership of ${vein}")
+							false
+
+						} else {
+							/* remove if no team can have this vein transferred */
+							currentTeams.none { (otherVeinDatas, otherPlayers) ->
+								if (otherPlayers === teamPlayers) return@none false
+
+								if (playerNearbyFrom(otherPlayers, vein)) {
+									otherVeinDatas[i].current.add(vein)
+									true
+								} else {
+									false
+								}
 							}
-						}) {
-						foundVeins.add(veinType to vein)
+						}
 
-					} else {
-						false
+						if (removeResult) {
+							eraseVein(veinType, vein)
+							++numRemoved
+						}
+
+						removeResult
 					}
+
+					return numRemoved
 				}
 
-				/* remove the oldest veins to make room for new ones */
-				while (veinData.current.size > veinType.maxCurrent) {
-					eraseVein(veinType, veinData.current.removeFirst())
-				}
-
-				/* gradually remove veins if you have met your collected */
+				/* remove all your veins if you have collected all released */
 				if (veinData.current.isNotEmpty() && veinData.collected >= releasedCurrently(veinType)) {
-					eraseVein(veinType, veinData.current.removeFirst())
+					removeExcessVeins(100000, false)
+
+					/* or remove excess veins (you will be left with exactly the max current) */
+				} else if (veinData.current.size > veinType.maxCurrent) {
+					removeExcessVeins(veinData.current.size - veinType.maxCurrent, true)
 				}
 
 				/* attempt generations */
 				if (
+					veinData.current.size <= veinType.maxCurrent && /* can be equal because one can be removed */
 					teamPlayers.isNotEmpty() &&
 					ticks >= veinData.nextTime &&
 					veinData.collected < releasedCurrently(veinType)
@@ -211,24 +222,31 @@ class ResourceScheduler(val game: Game) {
 						Util.log("failed to place $veinType")
 						addedTime /= 2
 					} else {
-						Util.log("placed $veinType")
-						if (veinType is ResourceDescriptionBlock) {
-							val originalData = generatedList.map { it.blockData }
-							generatedList.forEach { veinType.setBlock(it) }
+						Util.log("found a spot to place $veinType")
 
-							veinData.current.add(VeinBlock(
-								originalData,
-								generatedList,
-								ticks,
-							))
+						/* do we have to make room for the new vein? */
+						if (veinData.current.size < veinType.maxCurrent || removeExcessVeins(1, true) == 1) {
+							if (veinType is ResourceDescriptionBlock) {
+								val originalData = generatedList.map { it.blockData }
+								generatedList.forEach { veinType.setBlock(it) }
+
+								veinData.current.add(VeinBlock(
+									originalData,
+									generatedList,
+									ticks,
+								))
+							} else {
+								veinData.current.add(VeinEntity(
+									(veinType as ResourceDescriptionEntity).setEntity(generatedList[0]),
+									ticks
+								))
+							}
+
+							Util.log("generated $veinType")
+							++veinData.numGenerates
 						} else {
-							veinData.current.add(VeinEntity(
-								(veinType as ResourceDescriptionEntity).setEntity(generatedList[0]),
-								ticks
-							))
+							Util.log("could not generate $veinType")
 						}
-
-						++veinData.numGenerates
 					}
 
 					veinData.nextTime = ticks + addedTime

@@ -8,8 +8,13 @@ abstract class ResourceDescription(
 	val maxReleased: Int,
 	val maxCurrent: Int,
 	val interval: Int,
+	val prettyName: String,
 ) {
 	lateinit var regenResource: RegenResource
 
 	abstract fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>?
+
+	override fun toString(): String {
+		return prettyName
+	}
 }

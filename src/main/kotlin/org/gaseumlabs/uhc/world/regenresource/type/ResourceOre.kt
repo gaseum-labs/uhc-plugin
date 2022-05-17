@@ -28,6 +28,7 @@ class ResourceOre(
 	maxReleased,
 	maxCurrent,
 	interval,
+	type.name
 ) {
 	companion object {
 		const val Y_RANGE = 20

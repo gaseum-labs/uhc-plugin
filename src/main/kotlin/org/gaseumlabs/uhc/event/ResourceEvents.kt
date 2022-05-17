@@ -6,6 +6,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.UHC
@@ -26,7 +27,7 @@ class ResourceEvents : Listener {
 	}
 
 	@EventHandler
-	fun onBreakBlock(event: BlockBreakEvent) {
+	fun onBreakBlock(event: BlockDamageEvent) {
 		val game = UHC.game ?: return
 
 		val brokenBlock = event.block
@@ -79,12 +80,6 @@ class ResourceEvents : Listener {
 			}
 		}
 
-		val veinIndex = game.resourceScheduler.foundVeins.indexOfFirst { (_, vein) ->
-			compare(vein)
-		}
-		if (veinIndex == -1) return false
-
-		game.resourceScheduler.foundVeins.removeAt(veinIndex)
-		return true
+		return false
 	}
 }

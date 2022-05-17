@@ -8,11 +8,13 @@ abstract class ResourceDescriptionEntity(
 	maxReleased: Int,
 	maxCurrent: Int,
 	interval: Int,
+	prettyName: String,
 ) : ResourceDescription(
 	initialReleased,
 	maxReleased,
 	maxCurrent,
-	interval
+	interval,
+	prettyName
 ) {
 	abstract fun setEntity(block: Block): Entity
 

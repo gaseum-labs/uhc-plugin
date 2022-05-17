@@ -21,7 +21,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			3,
 			-54..0,
 
-			3, 20, 4, 10 * 20
+			1, 12, 4, 10 * 20
 		)
 	}),
 	GOLD({
@@ -31,7 +31,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			5,
 			-54..32,
 
-			3, 20, 4, 10 * 20
+			3, 26, 4, 10 * 20
 		)
 	}),
 	LAPIS({
@@ -41,7 +41,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			4,
 			-54..32,
 
-			3, 20, 4, 10 * 20
+			1, 8, 4, 10 * 20
 		)
 	}),
 	EMERALD({
@@ -51,7 +51,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			1,
 			-54..48,
 
-			3, 20, 4, 10 * 20
+			6, 21, 4, 10 * 20
 		)
 	});
 

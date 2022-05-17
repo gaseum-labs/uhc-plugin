@@ -16,7 +16,8 @@ class ResourceMelon : ResourceDescriptionBlock(
 	initialReleased = 2,
 	maxReleased = 5,
 	maxCurrent = 2,
-	interval = 20 * 10
+	interval = 20 * 10,
+	"Melon"
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
 		if (centerY < SpawnUtil.SURFACE_Y) return null

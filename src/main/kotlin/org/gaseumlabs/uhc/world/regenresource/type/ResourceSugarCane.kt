@@ -16,11 +16,12 @@ class ResourceSugarCane : ResourceDescriptionBlock(
 	45,
 	10,
 	20 * 10,
+	"Sugar Cane"
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
 		if (centerY < SpawnUtil.SURFACE_Y) return null
 		if (world !== WorldManager.gameWorld) return null
-		
+
 		val potentialBlocks = locateAround(world, centerX, centerZ, 11, 32.0, 80.0, 8) { x, z ->
 			if (RegenUtil.insideWorldBorder(world, x, z)) x to z else null
 		}

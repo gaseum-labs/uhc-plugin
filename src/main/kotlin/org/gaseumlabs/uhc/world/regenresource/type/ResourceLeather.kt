@@ -22,6 +22,7 @@ class ResourceLeather : ResourceDescriptionEntity(
 	45,
 	5,
 	10 * 20,
+	"Leather"
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
 		if (centerY < SpawnUtil.SURFACE_Y) return null
