@@ -62,7 +62,8 @@ object WorldGenManager {
 						BiomeNo.fromName(UHC.getConfig().centerBiome.get()?.name),
 						UHC.getConfig().endgameRadius.get(),
 						BiomeNo.featureBiomes,
-						BiomeSourceGame.createAreaGame(seed)
+						BiomeSourceGame.createAreaGame(seed),
+						BiomeSourceGame.createAreaCaves(seed)
 					)
 				}
 			}

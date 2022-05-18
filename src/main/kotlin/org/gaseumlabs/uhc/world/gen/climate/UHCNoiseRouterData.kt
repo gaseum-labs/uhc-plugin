@@ -130,44 +130,36 @@ object UHCNoiseRouterData {
 	private fun uhcSpaghetti(
 		low: Double,
 		high: Double,
-		caveHeight: Double,
 		noiseIndex: Int,
-		mapper: RarityValueMapper,
 	): DensityFunction {
-		//val baseSpaghetti = weirdScaledSampler(
-		//	noise(getNoise(CustomNoise.UHC_SAPGHETTI_MODULATOR_KEYS[noiseIndex]), 2.5, 0.8), //0.9
-		//	getNoise(CustomNoise.UHC_SAPGHETTI_KEYS[noiseIndex]),
-		//	mapper
-		//)
-
-		val baseSpaghetti = noise(getNoise(CustomNoise.UHC_SAPGHETTI_KEYS[noiseIndex]), 1.5, 0.5) //2.5, 0.9
-
-		val spaghettiThickness = mappedNoise(
-			getNoise(CustomNoise.UHC_SAPGHETTI_THICKNESS_KEYS[noiseIndex]), 2.0, 1.0, -1.0, -1.5 //-0.6, -1.3
-		)
-
-		val elevation = add(
-			mul(
-				mappedNoise(
-					/* makes the elevation level move up or down */
-					getNoise(CustomNoise.UHC_SAPGHETTI_ELEVATION_KEYS[noiseIndex]),
-					1.0,
-					0.0,
-					low,
-					high,
-				),
-				constant(-1.0)
-			),
-			YContinualGradient(1.0, 0.0)
-		).abs()
-
-		return add(
-			mul(elevation, constant(1.0 / caveHeight)).cube(),
+		val spaghetties =
 			add(
-				baseSpaghetti,
-				mul(constant(0.083), spaghettiThickness)
-			)
-		).clamp(-1.0, 1.0)
+				constant(-1.0),
+				mul(
+					mappedNoise(getNoise(CustomNoise.UHC_SAPGHETTI_KEYS[noiseIndex]), 2.0, 0.9, -1.0, 1.0).abs(),
+					constant(8.0)
+				)
+			).clamp(-1.0, 1.0)
+
+		val elevation = mul(
+			add(
+				mul(
+					mappedNoise(
+						/* makes the elevation level move up or down */
+						getNoise(CustomNoise.UHC_SAPGHETTI_ELEVATION_KEYS[noiseIndex]),
+						1.0,
+						0.0,
+						low, //low
+						high, //high
+					),
+					constant(-1.0)
+				),
+				YContinualGradient(1.0, 0.0)
+			).abs(),
+			constant(1.0 / 8.0 /* cave height*/)
+		).cube()
+
+		return add(spaghetties, elevation)
 	}
 
 	class YContinualGradient(
@@ -204,66 +196,18 @@ object UHCNoiseRouterData {
 		}
 	}
 
-	class FullWeirdNoise(
-		val baseNoise: NormalNoise,
-		val scaleNoise: NormalNoise,
-		val minScale: Double,
-		val maxScale: Double,
-	) : SimpleFunction {
-		override fun compute(pos: FunctionContext): Double {
-			val baseScale = scaleNoise.getValue(
-				pos.blockX().toDouble(),
-				pos.blockY().toDouble(),
-				pos.blockZ().toDouble()
-			)
-
-			val scale = ((baseScale / (scaleNoise.maxValue() * 2.0)) + 0.5) * (maxScale - minScale) + minScale
-
-			return baseNoise.getValue(pos.blockX() * scale, pos.blockY().toDouble(), pos.blockZ() * scale)
-		}
-
-		override fun minValue(): Double {
-			return -baseNoise.maxValue()
-		}
-
-		override fun maxValue(): Double {
-			return baseNoise.maxValue()
-		}
-
-		override fun codec(): Codec<out DensityFunction> {
-			return CODEC
-		}
-
-		companion object {
-			val CODEC: Codec<FullWeirdNoise> = makeCodec(RecordCodecBuilder.mapCodec { instance ->
-				instance.group(
-					Codec.doubleRange(-10000.0, 10000.0).fieldOf("scale").forGetter { obj -> obj.minScale },
-				).apply(instance) { scale ->
-					FullWeirdNoise(null as NormalNoise, null as NormalNoise, scale, scale)
-				}
-			})
-		}
-	}
-
 	private fun uhcSpaghettiRoughnessFunction(): DensityFunction {
 		return mul(
 			mappedNoise(
 				getNoise(Noises.SPAGHETTI_ROUGHNESS_MODULATOR),
 				0.0,
-				-0.5,//-0.1
+				-1.0,//-0.1
 			),
 			add(
 				noise(getNoise(Noises.SPAGHETTI_ROUGHNESS)).abs(),
 				constant(-0.4)
 			)
 		)
-	}
-
-	private fun uhcCheese(): DensityFunction {
-		return add(
-			constant(0.05),
-			noise(getNoise(Noises.CAVE_CHEESE), 2.25, 15.0),
-		).clamp(-2.0, 0.5)
 	}
 
 	private fun minChain(vararg densityFunctions: DensityFunction): DensityFunction {
@@ -279,53 +223,19 @@ object UHCNoiseRouterData {
 	}
 
 	private fun uhcUnderground(slopes: DensityFunction): DensityFunction {
-		CUSTOM0.mapper = Double2DoubleFunction { 1.0 }
-		CUSTOM0.maxRarity = 1.0
-
-		//val spaghetties = add(
-		//	minChain(
-		//		uhcSpaghetti(-64.0, -48.0, 16.0, 0, CUSTOM0),
-		//		uhcSpaghetti(-48.0, -32.0, 16.0, 1, CUSTOM0),
-		//		uhcSpaghetti(-32.0, -16.0, 16.0, 2, CUSTOM0),
-		//		uhcSpaghetti(-16.0, 0.0, 16.0, 3, CUSTOM0),
-		//		uhcSpaghetti(0.0, 16.0, 16.0, 4, CUSTOM0),
-		//		uhcSpaghetti(16.0, 32.0, 16.0, 5, CUSTOM0),
-		//		uhcSpaghetti(32.0, 48.0, 16.0, 6, CUSTOM0),
-		//		uhcSpaghetti(48.0, 64.0, 16.0, 7, CUSTOM0),
-		//	),
-		//	uhcSpaghettiRoughnessFunction()
-		//)
-
-		//75
-
-		var spaghetties =
-			add(
-				constant(-1.0),
-				mul(
-					mappedNoise(getNoise(CustomNoise.UHC_SAPGHETTI_KEYS[0]), 2.0, 0.9, -1.0, 1.0).abs(),
-					constant(8.0)
-				)
-			).clamp(-1.0, 1.0)
-
-		val elevation = mul(
-			add(
-				mul(
-					mappedNoise(
-						/* makes the elevation level move up or down */
-						getNoise(CustomNoise.UHC_SAPGHETTI_ELEVATION_KEYS[0]),
-						1.0,
-						0.0,
-						-32.0, //low
-						32.0, //high
-					),
-					constant(-1.0)
-				),
-				YContinualGradient(1.0, 0.0)
-			).abs(),
-			constant(1.0 / 8.0 /* cave height*/)
-		).cube()
-
-		spaghetties = add(spaghetties, elevation)
+		val spaghetties = add(
+			minChain(
+				uhcSpaghetti(-64.0, -48.0, 0),
+				uhcSpaghetti(-48.0, -32.0, 1),
+				uhcSpaghetti(-32.0, -16.0, 2),
+				uhcSpaghetti(-16.0, 0.0, 3),
+				uhcSpaghetti(0.0, 16.0, 4),
+				uhcSpaghetti(16.0, 32.0, 5),
+				//uhcSpaghetti(32.0, 48.0, 6),
+				//uhcSpaghetti(48.0, 64.0, 7),
+			),
+			uhcSpaghettiRoughnessFunction()
+		)
 
 		//return uhcPillars()
 
@@ -357,7 +267,7 @@ object UHCNoiseRouterData {
 		val aquiferBarrier = noise(getNoise(Noises.AQUIFER_BARRIER), 1.0, 1.0)
 		val aquiferFloodedness = noise(getNoise(Noises.AQUIFER_FLUID_LEVEL_FLOODEDNESS), 1.0, 8.0)
 		val aquiferSpread = noise(getNoise(Noises.AQUIFER_FLUID_LEVEL_SPREAD), 2.0, 1.0)
-		val aquiferLava = noise(getNoise(Noises.AQUIFER_LAVA), 8.0, 1.0)
+		val aquiferLava = add(noise(getNoise(Noises.AQUIFER_LAVA), 2.0, 1.0), constant(-0.5))
 
 		/* shift */
 		val shiftX = DensityFunctions.flatCache(

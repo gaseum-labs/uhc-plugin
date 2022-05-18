@@ -154,7 +154,7 @@ class ResourceScheduler(val game: Game) {
 							allowSelfOwnership &&
 							playerNearbyFrom(teamPlayers, vein)
 						) {
-							Action.sendGameMessage(teamPlayers[0], "maintained ownership of ${vein}")
+							//Action.sendGameMessage(teamPlayers[0], "maintained ownership of ${vein}")
 							false
 
 						} else {
@@ -219,10 +219,10 @@ class ResourceScheduler(val game: Game) {
 
 					/* if this generation failed, try again sooner than usual */
 					if (generatedList == null) {
-						Util.log("failed to place $veinType")
+						//Util.log("failed to place $veinType")
 						addedTime /= 2
 					} else {
-						Util.log("found a spot to place $veinType")
+						//Util.log("found a spot to place $veinType")
 
 						/* do we have to make room for the new vein? */
 						if (veinData.current.size < veinType.maxCurrent || removeExcessVeins(1, true) == 1) {
@@ -242,10 +242,10 @@ class ResourceScheduler(val game: Game) {
 								))
 							}
 
-							Util.log("generated $veinType")
+							//Util.log("generated $veinType")
 							++veinData.numGenerates
 						} else {
-							Util.log("could not generate $veinType")
+							//Util.log("could not generate $veinType")
 						}
 					}
 

@@ -51,7 +51,8 @@ object ModifiedBiomes {
 					GenerationStep.Carving.LIQUID to HolderSet.direct(),
 					GenerationStep.Carving.AIR to HolderSet.direct(
 						Holder.direct(CustomCarvers.newUhcCarver),
-						Holder.direct(CustomCarvers.superCanyonCarver)
+						Holder.direct(CustomCarvers.superCanyonCarver),
+						Holder.direct(CustomCarvers.entranceCaves),
 					)
 				)
 

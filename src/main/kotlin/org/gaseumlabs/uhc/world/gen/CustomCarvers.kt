@@ -15,14 +15,25 @@ object CustomCarvers {
 	val canyonCarverMaster = WorldCarver.CANYON
 
 	val newUhcCarver = caveCarverMaster.configured(CaveCarverConfiguration(
-		0.2f, /* commonness */
-		UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(80)), /* y levels */
+		0.75f, /* commonness */
+		UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(64)), /* y levels */
 		UniformFloat.of(0.0f, 1.0f), /* y scale */
 		VerticalAnchor.aboveBottom(10), /* lava fill */
 		false,
-		UniformFloat.of(1.0f, 1.5f), /* horizontal radius */
-		UniformFloat.of(1.0f, 1.5f), /* vertical radius */
+		UniformFloat.of(1.0f, 1.75f), /* horizontal radius */
+		UniformFloat.of(1.0f, 1.75f), /* vertical radius */
 		UniformFloat.of(-1.0f, 0.0f), /* floor level */
+	))
+
+	val entranceCaves = caveCarverMaster.configured(CaveCarverConfiguration(
+		0.4f, /* commonness */
+		UniformHeight.of(VerticalAnchor.absolute(58), VerticalAnchor.absolute(90)), /* y levels */
+		UniformFloat.of(1.5f, 3.0f), /* y scale */
+		VerticalAnchor.aboveBottom(10), /* lava fill */
+		false,
+		ConstantFloat.of(1.0f), /* horizontal radius */
+		ConstantFloat.of(1.1f), /* vertical radius */
+		ConstantFloat.of(-1.0f), /* floor level */
 	))
 
 	val superCanyonCarver = canyonCarverMaster.configured(
