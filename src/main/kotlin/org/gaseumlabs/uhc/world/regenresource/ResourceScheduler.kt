@@ -5,11 +5,8 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.Game
-import org.gaseumlabs.uhc.core.phase.phases.Grace
-import org.gaseumlabs.uhc.core.phase.phases.Shrink
+import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.team.Team
-import org.gaseumlabs.uhc.util.Action
-import org.gaseumlabs.uhc.util.Util
 import kotlin.math.PI
 import kotlin.random.Random
 
@@ -20,7 +17,7 @@ class ResourceScheduler(val game: Game) {
 	}
 
 	data class VeinData(
-		var collected: Int,
+		var collected: HashMap<PhaseType, Int>,
 		var numGenerates: Int,
 		var nextTime: Int,
 		var current: ArrayList<Vein>,
@@ -34,7 +31,7 @@ class ResourceScheduler(val game: Game) {
 
 	private fun generateVeinDataEntry(ticks: Int): Array<VeinData> {
 		return Array(resourceDescriptions.size) { i ->
-			VeinData(0, 0, ticks + resourceDescriptions[i].interval, ArrayList())
+			VeinData(HashMap(), 0, ticks + resourceDescriptions[i].interval * 20, ArrayList())
 		}
 	}
 
@@ -102,24 +99,12 @@ class ResourceScheduler(val game: Game) {
 	}
 
 	fun releasedCurrently(resource: ResourceDescription): Int {
-		/* how long grace + shrink takes in ticks */
-		val totalLength = (game.config.graceTime.get() + game.config.shrinkTime.get()) * 20.0f
-
-		val along = when (game.phase) {
-			is Grace ->
-				(game.config.graceTime.get() * 20 - game.phase.remainingTicks) / totalLength
-			is Shrink ->
-				(game.config.graceTime.get() * 20 + (game.config.shrinkTime.get() * 20 - game.phase.remainingTicks)) / totalLength
-			else -> 1.0f
-		}
-
-		return Util.interp(
-			resource.initialReleased.toFloat(),
-			resource.maxReleased.toFloat(),
-			along
-		).toInt()
+		val phaseType = game.phase.phaseType
+		val result = resource.released[phaseType] ?: 0
+		return if (result == -1) 10000000 else result
 	}
 
+	//TODO eliminate excess veins by one farthest away from player
 	fun tick(ticks: Int) {
 		//TODO distributed timing
 
@@ -182,21 +167,23 @@ class ResourceScheduler(val game: Game) {
 					return numRemoved
 				}
 
+				val collectedThisPhase = veinData.collected.getOrDefault(game.phase.phaseType, 0)
+
 				/* remove all your veins if you have collected all released */
-				if (veinData.current.isNotEmpty() && veinData.collected >= releasedCurrently(veinType)) {
+				if (veinData.current.isNotEmpty() && collectedThisPhase >= releasedCurrently(veinType)) {
 					removeExcessVeins(100000, false)
 
 					/* or remove excess veins (you will be left with exactly the max current) */
-				} else if (veinData.current.size > veinType.maxCurrent) {
-					removeExcessVeins(veinData.current.size - veinType.maxCurrent, true)
+				} else if (veinData.current.size > veinType.current) {
+					removeExcessVeins(veinData.current.size - veinType.current, true)
 				}
 
 				/* attempt generations */
 				if (
-					veinData.current.size <= veinType.maxCurrent && /* can be equal because one can be removed */
+					veinData.current.size <= veinType.current && /* can be equal because one can be removed */
 					teamPlayers.isNotEmpty() &&
 					ticks >= veinData.nextTime &&
-					veinData.collected < releasedCurrently(veinType)
+					collectedThisPhase < releasedCurrently(veinType)
 				) {
 					/* attempt to generate this vein for all the players on the team */
 					/* only one will generate, but priority is given to 1 player on a cycle */
@@ -215,7 +202,7 @@ class ResourceScheduler(val game: Game) {
 					/* dividing by the number of team players esentially multiplies the rate */
 					/* this results in the rates being the same per player on any size team */
 					var addedTime =
-						(veinType.interval / teamPlayers.size) + Random.nextInt(-20, 20)
+						((veinType.interval * 20) / teamPlayers.size) + Random.nextInt(-20, 20)
 
 					/* if this generation failed, try again sooner than usual */
 					if (generatedList == null) {
@@ -225,7 +212,7 @@ class ResourceScheduler(val game: Game) {
 						//Util.log("found a spot to place $veinType")
 
 						/* do we have to make room for the new vein? */
-						if (veinData.current.size < veinType.maxCurrent || removeExcessVeins(1, true) == 1) {
+						if (veinData.current.size < veinType.current || removeExcessVeins(1, true) == 1) {
 							if (veinType is ResourceDescriptionBlock) {
 								val originalData = generatedList.map { it.blockData }
 								generatedList.forEachIndexed { j, block -> veinType.setBlock(block, j) }

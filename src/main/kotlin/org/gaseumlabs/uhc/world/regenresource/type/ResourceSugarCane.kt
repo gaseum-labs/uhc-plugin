@@ -5,18 +5,23 @@ import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockFace.UP
+import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
 
-class ResourceSugarCane : ResourceDescriptionBlock(
-	5,
-	45,
-	10,
-	20 * 10,
-	"Sugar Cane"
+class ResourceSugarCane(
+	released: HashMap<PhaseType, Int>,
+	current: Int,
+	interval: Int,
+	prettyName: String,
+) : ResourceDescriptionBlock(
+	released,
+	current,
+	interval,
+	prettyName
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
 		if (centerY < SpawnUtil.SURFACE_Y) return null

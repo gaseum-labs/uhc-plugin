@@ -1,13 +1,17 @@
 package org.gaseumlabs.uhc.world.gen.biomeSource
 
+import com.google.common.collect.ImmutableList
+import com.mojang.datafixers.util.Pair
 import net.minecraft.core.Holder
-import net.minecraft.world.level.biome.Biome
-import net.minecraft.world.level.biome.CheckerboardColumnBiomeSource
-import net.minecraft.world.level.biome.Climate
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.level.biome.*
+import net.minecraft.world.level.biome.Climate.ParameterList
+import net.minecraft.world.level.biome.Climate.ParameterPoint
 import org.gaseumlabs.uhc.world.gen.BiomeNo
 import org.gaseumlabs.uhc.world.gen.UHCArea.UHCArea
 import org.gaseumlabs.uhc.world.gen.UHCArea.layer.cave.LayerCave
 import org.gaseumlabs.uhc.world.gen.UHCArea.layer.game.*
+import java.util.function.*
 import kotlin.math.abs
 
 class BiomeSourceGame(

@@ -6,18 +6,23 @@ import org.bukkit.block.BlockFace.UP
 import org.bukkit.entity.Blaze
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType.BLAZE
+import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.spawnInfos.SpawnBlaze
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderNether
 import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionEntity
 
-class ResourceBlaze : ResourceDescriptionEntity(
-	2,
-	7,
-	3,
-	30 * 20,
-	"Blaze"
+class ResourceBlaze(
+	released: HashMap<PhaseType, Int>,
+	current: Int,
+	interval: Int,
+	prettyName: String,
+) : ResourceDescriptionEntity(
+	released,
+	current,
+	interval,
+	prettyName
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
 		if (world !== WorldManager.netherWorld) return null

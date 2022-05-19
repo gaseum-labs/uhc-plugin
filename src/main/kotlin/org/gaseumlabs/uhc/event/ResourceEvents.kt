@@ -47,7 +47,8 @@ class ResourceEvents : Listener {
 	fun markCollected(game: Game, player: Player, regenResource: RegenResource) {
 		val team = game.teams.playersTeam(player.uniqueId)
 		if (team != null) {
-			++game.resourceScheduler.getVeinData(team, regenResource).collected
+			val collected = game.resourceScheduler.getVeinData(team, regenResource).collected
+			collected[game.phase.phaseType] = collected.getOrPut(game.phase.phaseType) { 0 } + 1
 		}
 	}
 

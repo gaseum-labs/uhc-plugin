@@ -1,9 +1,12 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
 import org.bukkit.Material
+import org.bukkit.Material.GOLD_ORE
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.entity.FallingBlock
+import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapFirstNotNullPrefer
 import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
@@ -17,45 +20,30 @@ class ResourceOre(
 	val type: Material,
 	val deepType: Material,
 	val veinSize: Int,
-	val genRange: IntRange,
+	val genRange: (y: Int) -> Boolean,
 	val worldName: String,
 
-	initialReleased: Int,
-	maxReleased: Int,
-	maxCurrent: Int,
+	released: HashMap<PhaseType, Int>,
+	current: Int,
 	interval: Int,
+	prettyName: String,
 ) : ResourceDescriptionBlock(
-	initialReleased,
-	maxReleased,
-	maxCurrent,
+	released,
+	current,
 	interval,
-	type.name
+	prettyName
 ) {
-	companion object {
-		const val Y_RANGE = 20
-		const val MIN_Y = -54
-		const val MAX_Y = 100
-	}
-
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
 		if (world.name != worldName) return null
 
-		val playerYRange = ((centerY - Y_RANGE).coerceIn(MIN_Y..MAX_Y)..(centerY + Y_RANGE).coerceIn(MIN_Y..MAX_Y))
-			.rangeIntersection(genRange)
-
-		if (playerYRange.isEmpty()) return null
-
-		/* sampling approximately every 8 blocks in each column */
-		val tries = ceil((playerYRange.last - playerYRange.first + 1) / 8.0f).toInt()
-
-		/* spots in caves around you, near your y level and in the gen y level */
-		val around = RegenUtil.locateAround(world, centerX, centerZ, 9, 64.0, 96.0, 6) { x, z ->
-			for (i in 0 until tries) {
-				val block = world.getBlockAt(x, playerYRange.random(), z)
-				if (block.isPassable) return@locateAround block
+		val around = RegenUtil.sphereAround(world, centerX, centerY, centerZ, 48.0f, 64.0f, 20) { x, y, z ->
+			if (!genRange(y)) return@sphereAround null
+			val block = world.getBlockAt(x, y, z)
+			if (block.isPassable) {
+				block
+			} else {
+				null
 			}
-
-			return@locateAround null
 		}
 
 		val oreSource = around.firstNotNullOfOrNull { startBlock ->

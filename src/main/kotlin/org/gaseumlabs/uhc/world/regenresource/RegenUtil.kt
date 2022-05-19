@@ -72,6 +72,39 @@ object RegenUtil {
 		return ret
 	}
 
+	fun <T> sphereAround(
+		world: World,
+		centerX: Int,
+		centerY: Int,
+		centerZ: Int,
+		minRadius: Float,
+		maxRadius: Float,
+		tries: Int,
+		isGood: (x: Int, y: Int, z: Int) -> T?,
+	): ArrayList<T> {
+		val ret = ArrayList<T>()
+		val lowFraction = minRadius / maxRadius
+
+		for (i in 0 until tries) {
+			/* random points on a sphere */
+			val theta = Random.nextFloat() * 2.0f * Math.PI.toFloat()
+			val phi = acos((2 * Random.nextFloat()) - 1)
+			val r = (Random.nextFloat() * (1.0f - lowFraction) + lowFraction).pow(1.0f / 3.0f)
+
+			/* from unit to world coordinates */
+			val x = floor(centerX + (r * sin(phi) * cos(theta)) * maxRadius).toInt()
+			val y = floor(centerY + (r * sin(phi) * sin(theta)) * maxRadius).toInt()
+			val z = floor(centerZ + (r * cos(phi) /*        */) * maxRadius).toInt()
+
+			if (!insideWorldBorder(world, x, z)) continue
+
+			val result = isGood(x, y, z) ?: continue
+			ret.add(result)
+		}
+
+		return ret
+	}
+
 	fun insideWorldBorder(world: World, x: Int, z: Int): Boolean {
 		val radius = (world.worldBorder.size / 2.0).toInt()
 		return x in -radius..radius && z in -radius..radius

@@ -23,7 +23,6 @@ import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.gaseumlabs.uhc.quirk.quirks.LowGravity
 import org.gaseumlabs.uhc.world.regenresource.*
 import java.util.*
 
@@ -312,8 +311,8 @@ class TestCommands : BaseCommand() {
 		Action.sendGameMessage(player, "Veindata for ${regenResource}:")
 		Action.sendGameMessage(player, "Total Generated: ${veinData.numGenerates}")
 		Action.sendGameMessage(player, "Num Released: ${game.resourceScheduler.releasedCurrently(description)}")
-		Action.sendGameMessage(player, "Collected: ${veinData.collected}")
-		Action.sendGameMessage(player, "Max Current: ${description.maxCurrent}")
+		Action.sendGameMessage(player, "Collected: ${veinData.collected.getOrDefault(game.phase.phaseType, 0)}")
+		Action.sendGameMessage(player, "Max Current: ${description.current}")
 		Action.sendGameMessage(player, "Num Current: ${veinData.current.size}")
 		Action.sendGameMessage(player, "Interval: ${description.interval}")
 	}
@@ -327,7 +326,7 @@ class TestCommands : BaseCommand() {
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
 
 		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
-		veinData.collected = amount
+		veinData.collected[game.phase.phaseType] = amount
 
 		Action.sendGameMessage(player, "Set collected for ${regenResource.name} to $amount")
 	}

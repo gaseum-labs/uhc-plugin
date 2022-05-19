@@ -6,17 +6,22 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockFace.DOWN
 import org.bukkit.block.data.Ageable
+import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderNether
 import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionBlock
 
-class ResourceNetherWart : ResourceDescriptionBlock(
-	initialReleased = 1,
-	maxReleased = 7,
-	maxCurrent = 3,
-	interval = 20 * 10,
-	"Nether Wart"
+class ResourceNetherWart(
+	released: HashMap<PhaseType, Int>,
+	current: Int,
+	interval: Int,
+	prettyName: String,
+) : ResourceDescriptionBlock(
+	released,
+	current,
+	interval,
+	prettyName
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
 		if (world !== WorldManager.netherWorld) return null

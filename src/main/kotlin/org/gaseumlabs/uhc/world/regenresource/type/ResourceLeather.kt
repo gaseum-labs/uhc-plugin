@@ -9,6 +9,7 @@ import org.bukkit.entity.EntityType.COW
 import org.bukkit.entity.EntityType.HORSE
 import org.bukkit.entity.EntityType.LLAMA
 import org.bukkit.entity.EntityType.DONKEY
+import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.customSpawning.spawnInfos.SpawnHorse
 import org.gaseumlabs.uhc.world.WorldManager
@@ -17,12 +18,16 @@ import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
 import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionEntity
 import kotlin.random.Random
 
-class ResourceLeather : ResourceDescriptionEntity(
-	5,
-	45,
-	5,
-	10 * 20,
-	"Leather"
+class ResourceLeather(
+	released: HashMap<PhaseType, Int>,
+	current: Int,
+	interval: Int,
+	prettyName: String,
+) : ResourceDescriptionEntity(
+	released,
+	current,
+	interval,
+	prettyName
 ) {
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
 		if (centerY < SpawnUtil.SURFACE_Y) return null

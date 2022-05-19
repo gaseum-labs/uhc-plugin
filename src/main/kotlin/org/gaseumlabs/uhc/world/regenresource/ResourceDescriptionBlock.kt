@@ -1,17 +1,16 @@
 package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.block.Block
+import org.gaseumlabs.uhc.core.phase.PhaseType
 
 abstract class ResourceDescriptionBlock(
-	initialReleased: Int,
-	maxReleased: Int,
-	maxCurrent: Int,
+	released: HashMap<PhaseType, Int>,
+	current: Int,
 	interval: Int,
 	prettyName: String,
 ) : ResourceDescription(
-	initialReleased,
-	maxReleased,
-	maxCurrent,
+	released,
+	current,
 	interval,
 	prettyName
 ) {
