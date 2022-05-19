@@ -77,21 +77,51 @@ object RegenUtil {
 		return x in -radius..radius && z in -radius..radius
 	}
 
-	fun surfaceSpreader(
+	fun surfaceSpreaderOverworld(
 		world: World,
 		x: Int,
 		z: Int,
 		spread: Int,
 		isGood: (block: Block) -> Boolean,
 	): Block? {
-		var initialBlock: Block?
-		do {
-			initialBlock = findInitialSurfaceAt(
+		return surfaceSpreader(world, x, 0, z, spread, ::initialSurfaceOverworld, isGood)
+	}
+
+	fun surfaceSpreaderNether(
+		world: World,
+		x: Int,
+		y: Int,
+		z: Int,
+		spread: Int,
+		isGood: (block: Block) -> Boolean,
+	): Block? {
+		return surfaceSpreader(world, x, y, z, spread, ::initialSurfaceNether, isGood)
+	}
+
+	private fun surfaceSpreader(
+		world: World,
+		x: Int,
+		y: Int,
+		z: Int,
+		spread: Int,
+		initialSurface: (world: World, x: Int, y: Int, z: Int) -> Block?,
+		isGood: (block: Block) -> Boolean,
+	): Block? {
+		var initialBlock = world.getBlockAt(x, 0, z)
+		/* try ot find initial block */
+		for (i in 0..spread) {
+			if (i == spread) return null
+			val block = initialSurface(
 				world,
 				x + Random.nextInt(-spread, spread),
+				y + Random.nextInt(-spread, spread),
 				z + Random.nextInt(-spread, spread)
-			) ?: return null
-		} while (initialBlock == null)
+			)
+			if (block != null) {
+				initialBlock = block
+				break
+			}
+		}
 
 		if (isGood(initialBlock)) return initialBlock
 
@@ -212,13 +242,14 @@ object RegenUtil {
 		Material.SPRUCE_LOG,
 		Material.JUNGLE_LOG,
 		Material.DARK_OAK_LOG,
+		Material.BAMBOO,
 	)
 
 	fun surfacePassable(block: Block): Boolean {
 		return (block.isPassable && !block.isLiquid) || treeParts.contains(block.type)
 	}
 
-	fun findInitialSurfaceAt(world: World, x: Int, z: Int): Block? {
+	fun initialSurfaceOverworld(world: World, x: Int, y: Int, z: Int): Block? {
 		var currentBlock = world.getBlockAt(x, Random.nextInt(START_RANGE), z)
 
 		/* start in air perhaps?, reach down to the ground */
@@ -245,6 +276,29 @@ object RegenUtil {
 
 			return surfaceBlock
 		}
+	}
+
+	fun initialSurfaceNether(world: World, x: Int, y: Int, z: Int): Block? {
+		var lastUp = world.getBlockAt(x, y, z)
+		var lastDown = lastUp
+
+		for (i in 0 until 20) {
+			val up = lastUp.getRelative(UP)
+			if (!lastUp.isPassable && up.isPassable) {
+				return lastUp
+			} else {
+				lastUp = up
+			}
+
+			val down = lastDown.getRelative(DOWN)
+			if (lastDown.isPassable && !down.isPassable) {
+				return down
+			} else {
+				lastDown = down
+			}
+		}
+
+		return null
 	}
 
 	fun findSurfaceFrom(block: Block, yRange: Int): Block? {

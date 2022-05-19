@@ -25,15 +25,16 @@ object ModifiedBiomes {
 	)
 
 	fun genBiomes(biomeRegistry: Registry<Biome>, replaceFeatures: Boolean, replaceMobs: Boolean) {
-		val biomeHolders = BiomeNo.featureBiomeKeys.map {
+		BiomeNo.featureBiomeKeys.map {
 			it to biomeRegistry.getOrCreateHolder(it)
 		}.forEach { (key, originalBiomeHolder) ->
 			val originalBiome = originalBiomeHolder.value()
 			val biomeId = BiomeNo.toId(key)
 			val originalSettings = originalBiome.generationSettings
 
-			val newSettings = if (!replaceFeatures) {
+			val newSettings = if (!replaceFeatures || BiomeNo.isNetherBiome(biomeId)) {
 				originalSettings
+
 			} else {
 				val originalFeatures = originalSettings.features
 				val newFeatures = ArrayList<HolderSet<PlacedFeature>>()
@@ -52,7 +53,6 @@ object ModifiedBiomes {
 					GenerationStep.Carving.AIR to HolderSet.direct(
 						Holder.direct(CustomCarvers.newUhcCarver),
 						Holder.direct(CustomCarvers.superCanyonCarver),
-						Holder.direct(CustomCarvers.entranceCaves),
 					)
 				)
 

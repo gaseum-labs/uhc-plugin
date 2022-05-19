@@ -49,13 +49,13 @@ object WorldGenManager {
 	private fun onWorldAdded(world: World) {
 		val seed = world.seed
 
-		val newBiomeSource = when (world.name) {
+		val (newBiomeSource, newSurfaceRule) = when (world.name) {
 			WorldManager.GAME_WORLD_NAME -> {
 				if (UHC.getConfig().worldGenEnabled(WorldGenOption.CHUNK_BIOMES)) {
 					BiomeSourceChunkBiomes(
 						seed,
 						BiomeNo.featureBiomes
-					)
+					) to UHCSurfaceRule.uhcOverworld()
 				} else {
 					BiomeSourceGame(
 						seed,
@@ -64,21 +64,22 @@ object WorldGenManager {
 						BiomeNo.featureBiomes,
 						BiomeSourceGame.createAreaGame(seed),
 						BiomeSourceGame.createAreaCaves(seed)
-					)
+					) to UHCSurfaceRule.uhcOverworld()
 				}
 			}
 			WorldManager.NETHER_WORLD_NAME -> {
-				BiomeSourceNether(
-					seed,
-					BiomeNo.featureBiomes,
-					BiomeSourceNether.createAreaNether(seed)
-				)
+				return
+				//BiomeSourceNether(
+				//	seed,
+				//	BiomeNo.featureBiomes,
+				//	BiomeSourceNether.createAreaNether(seed)
+				//) to UHCSurfaceRule.uhcNether()
 			}
 			WorldManager.LOBBY_WORLD_NAME -> {
-				BiomeSourceSingle(seed, BiomeNo.biomes, BiomeNo.BADLANDS)
+				BiomeSourceSingle(seed, BiomeNo.biomes, BiomeNo.BADLANDS) to UHCSurfaceRule.uhcOverworld()
 			}
 			WorldManager.PVP_WORLD_NAME -> {
-				BiomeSourcePvp(seed)
+				BiomeSourcePvp(seed) to UHCSurfaceRule.uhcOverworld()
 			}
 			else -> return
 		}
@@ -90,12 +91,11 @@ object WorldGenManager {
 		biomeSourceField.set(generator, newBiomeSource)
 
 		//TODO manipulate the nether noise
-		if (world.name != WorldManager.NETHER_WORLD_NAME) {
-			UHCNoiseGeneratorSettings.inject(
-				generator,
-				seed,
-				UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED))
-			)
-		}
+		UHCNoiseGeneratorSettings.inject(
+			generator,
+			UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED)),
+			world.name != WorldManager.NETHER_WORLD_NAME,
+			newSurfaceRule,
+		)
 	}
 }

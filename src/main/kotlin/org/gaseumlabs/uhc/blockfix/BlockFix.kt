@@ -2,6 +2,8 @@ package org.gaseumlabs.uhc.blockfix
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.Material.AIR
+import org.bukkit.block.Block
 import org.bukkit.block.BlockState
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Item
@@ -20,8 +22,8 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<org.gaseumlabs
 
 		ranges.forEach { range ->
 			onString(when (range) {
-				is org.gaseumlabs.uhc.blockfix.SingleRange -> Component.text(range.prettyName, NamedTextColor.YELLOW)
-				is org.gaseumlabs.uhc.blockfix.CountingRange -> {
+				is SingleRange -> Component.text(range.prettyName, NamedTextColor.YELLOW)
+				is CountingRange -> {
 					val metadata = range.getMeta(player)
 					Component.text(
 						"${range.prettyName} count: ${metadata.count} next drop: ${metadata.index}",
@@ -30,6 +32,32 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<org.gaseumlabs
 				}
 			})
 		}
+	}
+
+	fun onNaturalBreakBlock(
+		block: Block,
+		drops: MutableList<ItemStack>,
+		onItem: (ItemStack?) -> Unit,
+	): Boolean {
+		val tool = ItemStack(AIR)
+		if (isBlock(block.state) && !reject(tool, drops)) {
+			drops.clear()
+
+			if (allowTool(tool)) ranges.forEach { range ->
+				when (range) {
+					is SingleRange -> {
+						onItem(range.onDrop(block.type, drops, 0))
+					}
+					/* no multi ranges */
+					else -> {
+					}
+				}
+			}
+
+			return true
+		}
+
+		return false
 	}
 
 	fun onBreakBlock(
@@ -42,15 +70,15 @@ abstract class BlockFix(val prettyName: String, val ranges: Array<org.gaseumlabs
 		val stackDrops = drops.map { it.itemStack } as MutableList<ItemStack>
 
 		if (isBlock(blockState) && !reject(tool, stackDrops)) {
-			val fortune = org.gaseumlabs.uhc.blockfix.BlockFix.Companion.getFortune(player.inventory.itemInMainHand)
+			val fortune = getFortune(player.inventory.itemInMainHand)
 			drops.clear()
 
 			if (allowTool(player.inventory.itemInMainHand)) ranges.forEach { range ->
 				when (range) {
-					is org.gaseumlabs.uhc.blockfix.SingleRange -> {
+					is SingleRange -> {
 						onItem(range.onDrop(blockState.type, stackDrops, fortune))
 					}
-					is org.gaseumlabs.uhc.blockfix.CountingRange -> {
+					is CountingRange -> {
 						val metadata = range.getMeta(player)
 
 						for (i in 0 until 1 + fortune) {

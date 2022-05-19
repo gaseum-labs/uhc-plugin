@@ -9,7 +9,7 @@ import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreader
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
 
 class ResourceSugarCane : ResourceDescriptionBlock(
 	5,
@@ -27,7 +27,7 @@ class ResourceSugarCane : ResourceDescriptionBlock(
 		}
 
 		for ((x, z) in potentialBlocks) {
-			val surface = surfaceSpreader(world, x, z, 5, ::sugarCaneGood)
+			val surface = surfaceSpreaderOverworld(world, x, z, 5, ::sugarCaneGood)
 			if (surface != null) {
 				return listOf(
 					surface.getRelative(0, 1, 0),
@@ -40,7 +40,7 @@ class ResourceSugarCane : ResourceDescriptionBlock(
 		return null
 	}
 
-	override fun setBlock(block: Block) {
+	override fun setBlock(block: Block, index: Int) {
 		block.setType(SUGAR_CANE, false)
 	}
 

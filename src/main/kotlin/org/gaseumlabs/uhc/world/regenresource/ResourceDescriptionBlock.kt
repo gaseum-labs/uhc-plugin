@@ -15,7 +15,7 @@ abstract class ResourceDescriptionBlock(
 	interval,
 	prettyName
 ) {
-	abstract fun setBlock(block: Block)
+	abstract fun setBlock(block: Block, index: Int)
 
 	/**
 	 * IMPORTANT! THESE SHOULD NEVER OVERLAP BETWEEN ANY OTHER BLOCK RESOURCE DESCRIPTIONS

@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.blockfix
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack

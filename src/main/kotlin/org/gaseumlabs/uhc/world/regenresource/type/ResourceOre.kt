@@ -18,6 +18,7 @@ class ResourceOre(
 	val deepType: Material,
 	val veinSize: Int,
 	val genRange: IntRange,
+	val worldName: String,
 
 	initialReleased: Int,
 	maxReleased: Int,
@@ -37,7 +38,7 @@ class ResourceOre(
 	}
 
 	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
-		if (world !== WorldManager.gameWorld) return null
+		if (world.name != worldName) return null
 
 		val playerYRange = ((centerY - Y_RANGE).coerceIn(MIN_Y..MAX_Y)..(centerY + Y_RANGE).coerceIn(MIN_Y..MAX_Y))
 			.rangeIntersection(genRange)
@@ -48,7 +49,7 @@ class ResourceOre(
 		val tries = ceil((playerYRange.last - playerYRange.first + 1) / 8.0f).toInt()
 
 		/* spots in caves around you, near your y level and in the gen y level */
-		val around = RegenUtil.locateAround(world, centerX, centerZ, 9, 24.0, 72.0, 6) { x, z ->
+		val around = RegenUtil.locateAround(world, centerX, centerZ, 9, 64.0, 96.0, 6) { x, z ->
 			for (i in 0 until tries) {
 				val block = world.getBlockAt(x, playerYRange.random(), z)
 				if (block.isPassable) return@locateAround block
@@ -70,7 +71,7 @@ class ResourceOre(
 		return createOreFrom(oreSource)
 	}
 
-	override fun setBlock(block: Block) {
+	override fun setBlock(block: Block, index: Int) {
 		block.setType(if (block.type === Material.DEEPSLATE) deepType else type, false)
 	}
 
@@ -144,6 +145,9 @@ class ResourceOre(
 		block.type === Material.DIORITE ||
 		block.type === Material.TUFF ||
 		block.type === Material.DEEPSLATE ||
+		block.type === Material.SOUL_SAND ||
+		block.type === Material.SOUL_SOIL ||
+		block.type === Material.NETHERRACK ||
 		block.type === Material.BLACKSTONE ||
 		block.type === Material.BASALT ||
 		block.type === Material.MAGMA_BLOCK

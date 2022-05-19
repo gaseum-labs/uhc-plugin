@@ -1,5 +1,6 @@
 package org.gaseumlabs.uhc.event
 
+import io.papermc.paper.event.block.BlockBreakBlockEvent
 import org.gaseumlabs.uhc.blockfix.BlockFixType
 import org.gaseumlabs.uhc.core.phase.phases.Endgame
 import org.gaseumlabs.uhc.core.phase.phases.Grace
@@ -463,6 +464,15 @@ class EventListener : Listener {
 				blockFixType.blockFix.onBreakBlock(blockState, drops, player) { drop ->
 					if (drop != null) block.world.dropItemNaturally(block.location, drop)
 				}
+			}
+		}
+	}
+	
+	@EventHandler
+	fun onBlockDropEnv(event: BlockBreakBlockEvent) {
+		BlockFixType.values().any { blockFixType ->
+			blockFixType.blockFix.onNaturalBreakBlock(event.block, event.drops) { drop ->
+				if (drop != null) event.block.world.dropItemNaturally(event.block.location, drop)
 			}
 		}
 	}

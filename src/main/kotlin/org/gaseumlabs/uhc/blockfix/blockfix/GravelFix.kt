@@ -1,10 +1,9 @@
 package org.gaseumlabs.uhc.blockfix.blockfix
 
-import org.gaseumlabs.uhc.blockfix.BlockFix
-import org.gaseumlabs.uhc.blockfix.CountingRange
 import org.bukkit.Material
 import org.bukkit.block.BlockState
 import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.blockfix.CountingRange
 
 class GravelFix : org.gaseumlabs.uhc.blockfix.BlockFix("Gravel", arrayOf(
 	CountingRange("Flint", 10, { _, _ -> ItemStack(Material.FLINT) }, { _, _ -> ItemStack(Material.GRAVEL) })

@@ -228,7 +228,7 @@ class ResourceScheduler(val game: Game) {
 						if (veinData.current.size < veinType.maxCurrent || removeExcessVeins(1, true) == 1) {
 							if (veinType is ResourceDescriptionBlock) {
 								val originalData = generatedList.map { it.blockData }
-								generatedList.forEach { veinType.setBlock(it) }
+								generatedList.forEachIndexed { j, block -> veinType.setBlock(block, j) }
 
 								veinData.current.add(VeinBlock(
 									originalData,

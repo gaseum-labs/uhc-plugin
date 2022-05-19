@@ -10,7 +10,7 @@ import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreader
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
 
 class ResourceMelon : ResourceDescriptionBlock(
 	initialReleased = 2,
@@ -40,7 +40,7 @@ class ResourceMelon : ResourceDescriptionBlock(
 		}
 
 		for ((x, z) in potentialSpots) {
-			val melonSurface = surfaceSpreader(world, x, z, 5, ::melonGood)
+			val melonSurface = surfaceSpreaderOverworld(world, x, z, 5, ::melonGood)
 			if (melonSurface != null) {
 				return listOf(melonSurface.getRelative(BlockFace.UP))
 			}
@@ -49,7 +49,7 @@ class ResourceMelon : ResourceDescriptionBlock(
 		return null
 	}
 
-	override fun setBlock(block: Block) {
+	override fun setBlock(block: Block, index: Int) {
 		block.setType(Material.MELON, false)
 	}
 

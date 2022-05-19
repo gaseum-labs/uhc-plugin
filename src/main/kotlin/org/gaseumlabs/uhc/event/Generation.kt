@@ -46,19 +46,6 @@ class Generation : Listener {
 			val placerList = ArrayList<ChunkPlacer>()
 
 			if (world.name == WorldManager.GAME_WORLD_NAME) {
-				AMETHYST.addToList(chunk, placerList)
-
-				if (config.worldGenEnabled(REVERSE_ORE_FIX)) {
-					REVERSE_DIAMOND.addToList(chunk, placerList)
-					REVERSE_GOLD.addToList(chunk, placerList)
-					REVERSE_LAPIS.addToList(chunk, placerList)
-					REVERSE_COPPER.addToList(chunk, placerList)
-					REVERSE_REDSTONE.addToList(chunk, placerList)
-					REVERSE_IRON.addToList(chunk, placerList)
-					REVERSE_COAL.addToList(chunk, placerList)
-
-				}
-
 				if (config.worldGenEnabled(HALLOWEEN)) {
 					PUMPKIN.addToList(chunk, placerList)
 					DEAD_BUSH.addToList(chunk, placerList)
@@ -77,14 +64,7 @@ class Generation : Listener {
 				}
 
 			} else if (world.name == WorldManager.NETHER_WORLD_NAME) {
-				if (config.worldGenEnabled(NETHER_FIX)) {
-					BLACKSTONE.addToList(chunk, placerList)
-					DEBRIS.addToList(chunk, placerList)
-					MAGMA.addToList(chunk, placerList)
-					LAVA_STREAM.addToList(chunk, placerList)
-					BASALT.addToList(chunk, placerList)
-					WART.addToList(chunk, placerList)
-				}
+				
 			}
 
 			suspendedChunks[world]?.removeIf { (key, currentList) ->

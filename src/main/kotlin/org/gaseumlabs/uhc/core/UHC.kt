@@ -94,8 +94,7 @@ object UHC {
 				if (currentGame.phase is Grace || currentGame.phase is Shrink) {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
-					CustomSpawning.spawnTick(CustomSpawningType.BLAZE, currentTick, currentGame)
-					
+
 					currentGame.resourceScheduler.tick(currentTick)
 				}
 

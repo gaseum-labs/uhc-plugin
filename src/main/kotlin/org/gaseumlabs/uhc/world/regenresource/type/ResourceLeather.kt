@@ -13,7 +13,7 @@ import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.customSpawning.spawnInfos.SpawnHorse
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreader
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
 import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionEntity
 import kotlin.random.Random
 
@@ -31,7 +31,7 @@ class ResourceLeather : ResourceDescriptionEntity(
 		val potentialSpots = locateAround(world, centerX, centerZ, 11, 32.0, 80.0, 8) { x, z -> x to z }
 
 		for ((x, z) in potentialSpots) {
-			val surface = surfaceSpreader(world, x, z, 5, ::cowHorseGood)
+			val surface = surfaceSpreaderOverworld(world, x, z, 5, ::cowHorseGood)
 			if (surface != null) {
 				return listOf(surface.getRelative(UP))
 			}

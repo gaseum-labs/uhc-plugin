@@ -48,13 +48,7 @@ enum class CustomSpawningType(
 		),
 		emptyArray(),
 		{ 20.0 },
-	),
-
-	BLAZE(32, 64, 10, 3600, emptyArray(), arrayOf(
-		SpawnEntry.BLAZE
-	), { player ->
-		if (player.location.block.y <= SpawnUtil.NETHER_CAVE_Y) 0.0 else 1.0
-	});
+	);
 
 	val spawnTag = "_UCS_${this.name}"
 }

@@ -6,7 +6,6 @@ enum class BlockFixType(createBlockFix: () -> org.gaseumlabs.uhc.blockfix.BlockF
 	LEAVES(::LeavesFix),
 	GRAVEL(::GravelFix),
 	MELON(::MelonFix),
-	NETHER_WART(::NetherWartFix),
 	GILDED(::GildedFix);
 
 	val blockFix = createBlockFix()
