@@ -1,0 +1,20 @@
+package org.gaseumlabs.uhc.world.regenresource
+
+import org.bukkit.World
+import org.bukkit.block.Block
+
+abstract class ResourceDescription(
+	val initialReleased: Int,
+	val maxReleased: Int,
+	val maxCurrent: Int,
+	val interval: Int,
+	val prettyName: String,
+) {
+	lateinit var regenResource: RegenResource
+
+	abstract fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>?
+
+	override fun toString(): String {
+		return prettyName
+	}
+}

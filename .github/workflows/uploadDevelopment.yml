@@ -2,7 +2,7 @@ name: UploadDevelopment
 
 on:
   push:
-    branches: [development]
+    branches: [ development ]
 
 jobs:
   build:

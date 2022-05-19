@@ -2,7 +2,7 @@ name: UploadMaster
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
 
 jobs:
   build:
