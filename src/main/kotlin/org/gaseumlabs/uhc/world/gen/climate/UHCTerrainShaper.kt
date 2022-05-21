@@ -21,7 +21,7 @@ object UHCTerrainShaper {
 	}
 
 	private fun offsetUHC(f: Float): Float {
-		return if (f < -0.01f) -0.01f else f
+		return if (f < -0.1f) -0.1f else f
 	}
 
 	fun createGame(amplified: Boolean): TerrainShaper {
@@ -76,15 +76,12 @@ object UHCTerrainShaper {
 		//	amplifiedOffset
 		//)
 
-		val cubicSplineUHC = buildErosionOffsetSpline(
-			-0.01f,
+		val cubicSplineUHC = buildErosionOffsetSplineUHC(
+			0.00f,
 			0.01f,
-			0.03f,
-			0.12f,
-			0.04f,
-			0.01f,
-			false,
-			false,
+			0.25f,
+			0.02f,
+			0.08f,
 			amplifiedOffset
 		)
 
@@ -154,6 +151,28 @@ object UHCTerrainShaper {
 		return builder.build()
 	}
 
+	private fun buildErosionOffsetSplineUHC(
+		p0: Float,
+		p1: Float,
+		p2: Float,
+		p3: Float,
+		p4: Float,
+		amplified: ToFloatFunction<Float>,
+	): CubicSpline<Point> {
+		val builder = CubicSpline.builder(UHC_EROSION, amplified)
+
+		return builder.addPoint(-1.00f, ridgeSpline(p0, p1, p2, p3, p4, 0.5f, amplified), 0.0f)
+			.addPoint(-0.75f, ridgeSpline(p0 * 0.7f, p1 * 0.7f, p2 * 0.7f, p3 * 0.7f, p4 * 0.7f, 0.5f, amplified), 0.0f)
+			.addPoint(-0.50f, -0.15f, 0.0f) //river
+			.addPoint(-0.25f, ridgeSpline(p0, p1, p2, p3, p4, 0.5f, amplified), 0.0f)
+			.addPoint(0.00f, ridgeSpline(p0 * 1.2f, p1 * 1.2f, p2 * 1.2f, p3 * 1.2f, p4 * 1.2f, 0.5f, amplified), 0.0f)
+			.addPoint(0.25f, ridgeSpline(p0, p1, p2, p3, p4, 0.5f, amplified), 0.0f)
+			.addPoint(0.50f, -0.1f, 0.0f) //river
+			.addPoint(0.75f, ridgeSpline(p0 * 0.6f, p1 * 0.6f, p2 * 0.6f, p3 * 0.6f, p4 * 0.6f, 0.5f, amplified), 0.0f)
+			.addPoint(1.00f, ridgeSpline(p0, p1, p2, p3, p4, 0.5f, amplified), 0.0f)
+			.build()
+	}
+
 	private fun buildErosionOffsetSpline(
 		p0: Float,
 		p1: Float,
@@ -166,11 +185,11 @@ object UHCTerrainShaper {
 		toFloatFunction: ToFloatFunction<Float>,
 	): CubicSpline<Point> {
 
-		val cubicSpline =
+		val mountains0 =
 			buildMountainRidgeSplineWithPoints(Mth.lerp(p3, 0.6f, 1.5f), extraMountainRidge, toFloatFunction)
-		val cubicSpline2 =
+		val mountains1 =
 			buildMountainRidgeSplineWithPoints(Mth.lerp(p3, 0.6f, 1.0f), extraMountainRidge, toFloatFunction)
-		val cubicSpline3 = buildMountainRidgeSplineWithPoints(p3, extraMountainRidge, toFloatFunction)
+		val mountains2 = buildMountainRidgeSplineWithPoints(p3, extraMountainRidge, toFloatFunction)
 
 		val lowLands = ridgeSpline(p0 - 0.15f, 0.5f * p3, 0.5f * p3, 0.5f * p3, 0.6f * p3, 0.5f, toFloatFunction)
 		val cubicSpline5 = ridgeSpline(p0, p4 * p3, p1 * p3, 0.5f * p3, 0.6f * p3, 0.5f, toFloatFunction)
@@ -186,13 +205,12 @@ object UHCTerrainShaper {
 		val cubicSpline9 = ridgeSpline(-0.02f, pSuperLow, pSuperLow, p1, p2, 0.0f, toFloatFunction)
 
 		val builder = CubicSpline.builder(UHC_EROSION, toFloatFunction)
-			.addPoint(-0.85f, cubicSpline, 0.0f)
-			.addPoint(-0.7f, cubicSpline2, 0.0f)
-			.addPoint(-0.4f, cubicSpline3, 0.0f)
-			.addPoint(-0.35f, lowLands, 0.0f)
-			.addPoint(-0.1f, cubicSpline5, 0.0f)
+			.addPoint(-0.85f, mountains0, 0.0f)
+			.addPoint(-0.7f, mountains1, 0.0f)
+			.addPoint(-0.4f, mountains2, 0.0f)
+			.addPoint(-0.35f, lowLands, 0.0f) //-0.35
+			.addPoint(-0.30f, cubicSpline5, 0.0f) //-0.1
 			.addPoint(0.2f, cubicSpline6, 0.0f)
-
 		if (extraRidge) {
 			builder.addPoint(0.4f, cubicSpline7, 0.0f)
 				.addPoint(0.45f, cubicSpline8, 0.0f)
