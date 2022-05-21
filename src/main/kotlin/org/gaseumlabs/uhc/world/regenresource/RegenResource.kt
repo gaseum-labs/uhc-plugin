@@ -35,7 +35,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			hashMapOf(PhaseType.GRACE to 14, PhaseType.SHRINK to 34, PhaseType.ENDGAME to 4),
 			4,
 			WorldManager.GAME_WORLD_NAME,
-			1.0f / 7.0f,
+			1.0f / 8.0f,
 			"Leather"
 		)
 	}),
@@ -50,10 +50,10 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 	}),
 	NETHER_WART({
 		ResourceNetherWart(
-			hashMapOf(PhaseType.GRACE to 3, PhaseType.SHRINK to 7, PhaseType.ENDGAME to 0),
+			hashMapOf(PhaseType.GRACE to 3, PhaseType.SHRINK to 6, PhaseType.ENDGAME to 0),
 			4,
 			WorldManager.NETHER_WORLD_NAME,
-			1.0f / 8.0f,
+			1.0f / 9.0f,
 			"Nether wart"
 		)
 	}),
@@ -65,7 +65,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			{ y -> RegenUtil.yRangeLinear(y, 0.0f, 1.0f, -54, 0) },
 
 			hashMapOf(PhaseType.GRACE to 4, PhaseType.SHRINK to 8, PhaseType.ENDGAME to 4),
-			4,
+			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 6.0f,
 			"Diamond"
@@ -82,7 +82,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			},
 
 			hashMapOf(PhaseType.GRACE to -1, PhaseType.SHRINK to -1, PhaseType.ENDGAME to -1),
-			4,
+			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 3.0f,
 			"Gold"
@@ -99,7 +99,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			},
 
 			hashMapOf(PhaseType.GRACE to -1, PhaseType.SHRINK to -1, PhaseType.ENDGAME to -1),
-			4,
+			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 3.0f,
 			"Emerald"
@@ -113,9 +113,9 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			{ y -> RegenUtil.yRangeLinear(y, 0.0f, 1.0f, 32, 110) },
 
 			hashMapOf(PhaseType.GRACE to 4, PhaseType.SHRINK to 8, PhaseType.ENDGAME to 4),
-			4,
+			5,
 			WorldManager.NETHER_WORLD_NAME,
-			1.0f / 6.0f,
+			1.0f / 5.0f,
 			"Ancient debris"
 		)
 	});

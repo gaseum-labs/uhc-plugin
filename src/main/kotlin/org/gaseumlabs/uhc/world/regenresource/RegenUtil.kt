@@ -136,30 +136,13 @@ object RegenUtil {
 		low: Int,
 		high: Int,
 	): Int {
-		return if (inputY < inputLow || inputY >= inputHigh) {
-			0
-		} else {
-			Util.invInterp(
+		return if (inputY >= inputLow && inputY < inputHigh) {
+			Util.interp(
 				low.toFloat(), high + 1.0f,
 				Util.invInterp(inputLow, inputHigh, inputY)
 			).toInt()
-		}
-	}
-
-	fun yRangeLowBias(
-		inputY: Float,
-		inputLow: Float,
-		inputHigh: Float,
-		low: Int,
-		high: Int,
-	): Int {
-		return if (inputY < inputLow || inputY >= inputHigh) {
-			0
 		} else {
-			Util.invInterp(
-				low.toFloat(), high + 1.0f,
-				Util.invInterp(inputLow, inputHigh, inputY).pow(2)
-			).toInt()
+			0
 		}
 	}
 
@@ -170,13 +153,13 @@ object RegenUtil {
 		low: Int,
 		high: Int,
 	): Int {
-		return if (inputY < inputLow || inputY >= inputHigh) {
-			0
-		} else {
-			Util.invInterp(
+		return if (inputY >= inputLow && inputY < inputHigh) {
+			Util.interp(
 				low.toFloat(), high + 1.0f,
 				4.0f * (Util.invInterp(inputLow, inputHigh, inputY) - 0.5f).pow(3) + 0.5f
 			).toInt()
+		} else {
+			0
 		}
 	}
 
@@ -269,9 +252,9 @@ object RegenUtil {
 	}
 
 	/**
-	 * expands in a 26 directions from a center block until a good block is found
+	 * expands in ~~26~~ 6 directions from a center block until a good block is found
 	 *
-	 * @param isGood return true is 4the block is good, false if the block is not good yet, null if the path is unrecoverable
+	 * @param isGood return true is the block is good, false if the block is not good yet, null if the path is unrecoverable
 	 */
 	fun expandFrom(centerBlock: Block, range: Int, isGood: (block: Block) -> Boolean?): Block? {
 		val previousBlocks: Array<Block?> = Array(26) { centerBlock }
@@ -279,34 +262,14 @@ object RegenUtil {
 		data class O(val ox: Int, val oy: Int, val oz: Int)
 
 		for (i in 1..range) {
-			for (j in 0 until 26) {
+			for (j in 0 until 6) {
 				val (ox, oy, oz) = when (j) {
 					0 -> O(1, 0, 0)
 					1 -> O(0, 1, 0)
 					2 -> O(0, 0, 1)
-					3 -> O(1, 1, 0)
-					4 -> O(0, 1, 1)
-					5 -> O(1, 0, 1)
-					6 -> O(1, 1, 1)
-					7 -> O(-1, 0, 0)
-					8 -> O(0, -1, 0)
-					9 -> O(0, 0, -1)
-					10 -> O(-1, -1, 0)
-					11 -> O(0, -1, -1)
-					12 -> O(-1, 0, -1)
-					13 -> O(-1, -1, -1)
-					14 -> O(1, -1, 0)
-					15 -> O(-1, 1, 0)
-					16 -> O(0, 1, -1)
-					17 -> O(0, -1, 1)
-					18 -> O(1, 0, -1)
-					19 -> O(-1, 0, 1)
-					20 -> O(1, 1, -1)
-					21 -> O(1, -1, 1)
-					22 -> O(-1, 1, 1)
-					23 -> O(-1, -1, 1)
-					24 -> O(-1, 1, -1)
-					else -> O(1, -1, -1)
+					3 -> O(-1, 0, 0)
+					4 -> O(0, -1, 1)
+					else -> O(1, 0, -1)
 				}
 
 				val previousBlock = previousBlocks[j] ?: continue

@@ -35,10 +35,10 @@ class ResourceMelon(
 
 		var count = 0
 
-		if (BiomeNo.isJungleBiome(Util.biomeAt(worldHandle, chunk.x * 2, 70, chunk.z * 16 + 2))) ++count
-		if (BiomeNo.isJungleBiome(Util.biomeAt(worldHandle, chunk.x * 13, 70, chunk.z * 16 + 2))) ++count
-		if (BiomeNo.isJungleBiome(Util.biomeAt(worldHandle, chunk.x * 2, 70, chunk.z * 16 + 13))) ++count
-		if (BiomeNo.isJungleBiome(Util.biomeAt(worldHandle, chunk.x * 13, 70, chunk.z * 16 + 13))) ++count
+		if (BiomeNo.isJungleBiome(BiomeNo.biomeAt(worldHandle, chunk.x * 16 + 2, 70, chunk.z * 16 + 2))) ++count
+		if (BiomeNo.isJungleBiome(BiomeNo.biomeAt(worldHandle, chunk.x * 16 + 2, 70, chunk.z * 16 + 13))) ++count
+		if (BiomeNo.isJungleBiome(BiomeNo.biomeAt(worldHandle, chunk.x * 16 + 13, 70, chunk.z * 16 + 2))) ++count
+		if (BiomeNo.isJungleBiome(BiomeNo.biomeAt(worldHandle, chunk.x * 16 + 13, 70, chunk.z * 16 + 13))) ++count
 
 		return count >= 3
 	}

@@ -15,11 +15,16 @@ data class Bounds(val x: Int, val y: Int, val width: Int, val height: Int) {
 	}
 
 	fun intersection(other: Bounds): Bounds {
+		val left = max(x, other.x)
+		val up = max(y, other.y)
+		val right = min(right(), other.right())
+		val down = min(down(), other.down())
+
 		return Bounds(
-			max(x, other.x),
-			max(y, other.y),
-			min(right(), other.right()),
-			min(down(), other.down()),
+			left,
+			up,
+			right - left,
+			down - up,
 		)
 	}
 

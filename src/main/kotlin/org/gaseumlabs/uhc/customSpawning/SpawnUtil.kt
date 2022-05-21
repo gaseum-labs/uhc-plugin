@@ -100,30 +100,4 @@ object SpawnUtil {
 		spawnIn(block.getRelative(0, 1, 1)) &&
 		spawnIn(block.getRelative(1, 1, 1))
 	}
-
-	/* animal spawning biome categories */
-
-	fun desert(biome: Biome) = biome === Biome.DESERT ||
-	biome === Biome.BADLANDS ||
-	biome === Biome.ERODED_BADLANDS
-
-	fun mountains(biome: Biome) = biome === Biome.WINDSWEPT_HILLS ||
-	biome === Biome.WINDSWEPT_GRAVELLY_HILLS ||
-	biome === Biome.WINDSWEPT_SAVANNA
-
-	fun snowy(biome: Biome) = biome === Biome.SNOWY_BEACH ||
-	biome === Biome.SNOWY_PLAINS ||
-	biome === Biome.SNOWY_SLOPES
-
-	fun plains(biome: Biome) = biome === Biome.PLAINS ||
-	biome === Biome.SUNFLOWER_PLAINS ||
-	biome === Biome.MEADOW
-
-	fun taiga(biome: Biome) = biome === Biome.TAIGA ||
-	biome === Biome.OLD_GROWTH_PINE_TAIGA ||
-	biome === Biome.OLD_GROWTH_SPRUCE_TAIGA
-
-	fun jungle(biome: Biome) = biome === Biome.JUNGLE ||
-	biome === Biome.BAMBOO_JUNGLE ||
-	biome === Biome.SPARSE_JUNGLE
 }

@@ -4,6 +4,8 @@ import org.gaseumlabs.uhc.customSpawning.spawnInfos.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.Biome
+import org.gaseumlabs.uhc.world.gen.BiomeNo
+import net.minecraft.world.level.biome.Biomes
 
 enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> SpawnInfo<*>) {
 	ZOMBIE({ block, spawnCycle ->
@@ -11,14 +13,14 @@ enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> Spawn
 			SpawnDrowned()
 		} else if (SpawnUtil.onCycle(spawnCycle, 20)) {
 			SpawnZombieVillager()
-		} else if (SpawnUtil.desert(block.biome) && block.y >= SpawnUtil.SURFACE_Y) {
+		} else if (BiomeNo.isDesertBiome(BiomeNo.biomeAt(block)) && block.y >= SpawnUtil.SURFACE_Y) {
 			SpawnHusk()
 		} else {
 			SpawnZombie()
 		}
 	}),
 	SKELETON({ block, _ ->
-		if (SpawnUtil.snowy(block.biome) && block.y >= SpawnUtil.SURFACE_Y) {
+		if (BiomeNo.isSnowyBiome(BiomeNo.biomeAt(block)) && block.y >= SpawnUtil.SURFACE_Y) {
 			SpawnStray()
 		} else {
 			SpawnSkeleton()
@@ -37,10 +39,6 @@ enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> Spawn
 		} else {
 			SpawnSpider()
 		}
-	}),
-
-	BLAZE({ _, _ ->
-		SpawnBlaze()
 	}),
 
 	NETHER_DEFAULT({ block, spawnCycle ->
@@ -76,68 +74,71 @@ enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> Spawn
 	}),
 
 	CHICKEN({ block, spawnCycle ->
+		val biome = BiomeNo.biomeAt(block)
 		when {
-			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 3) {
+			BiomeNo.isJungleBiome(biome) -> when (spawnCycle % 3) {
 				0 -> SpawnChicken()
 				1 -> SpawnChicken()
 				else -> SpawnParrot()
 			}
-			SpawnUtil.snowy(block.biome) -> when (spawnCycle % 3) {
-				0 -> SpawnRabbit()
-				1 -> SpawnRabbit()
-				else -> SpawnPolarBear()
-			}
-			SpawnUtil.taiga(block.biome) -> when (spawnCycle % 3) {
+			BiomeNo.isTaigaBiome(biome) -> when (spawnCycle % 3) {
 				0 -> SpawnChicken()
 				1 -> SpawnChicken()
 				else -> SpawnRabbit()
 			}
-			SpawnUtil.desert(block.biome) -> SpawnRabbit()
+			BiomeNo.isSnowyBiome(biome) -> when (spawnCycle % 3) {
+				0 -> SpawnRabbit()
+				1 -> SpawnRabbit()
+				else -> SpawnPolarBear()
+			}
+			BiomeNo.isDesertBiome(biome) -> SpawnRabbit()
 			else -> SpawnChicken()
 		}
 	}),
 	PIG({ block, spawnCycle ->
+		val biome = BiomeNo.biomeAt(block)
 		when {
-			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 3) {
+			BiomeNo.isJungleBiome(biome) -> when (spawnCycle % 3) {
 				0 -> SpawnPig()
 				1 -> SpawnPig()
 				else -> SpawnPanda()
 			}
-			SpawnUtil.snowy(block.biome) -> when (spawnCycle % 3) {
-				0 -> SpawnRabbit()
-				1 -> SpawnRabbit()
-				else -> SpawnPolarBear()
-			}
-			SpawnUtil.taiga(block.biome) -> when (spawnCycle % 3) {
+			BiomeNo.isTaigaBiome(biome) -> when (spawnCycle % 3) {
 				0 -> SpawnRabbit()
 				1 -> SpawnRabbit()
 				else -> SpawnPig()
 			}
-			SpawnUtil.desert(block.biome) -> SpawnRabbit()
-			block.biome === Biome.BEACH -> SpawnTurtle()
-			else -> SpawnPig()
-		}
-	}),
-	SHEEP({ block, spawnCycle ->
-		when {
-			SpawnUtil.jungle(block.biome) -> when (spawnCycle % 3) {
-				0 -> SpawnSheep()
-				1 -> SpawnSheep()
-				else -> SpawnOcelot()
-			}
-			SpawnUtil.snowy(block.biome) -> when (spawnCycle % 3) {
+			BiomeNo.isSnowyBiome(biome) -> when (spawnCycle % 3) {
 				0 -> SpawnRabbit()
 				1 -> SpawnRabbit()
 				else -> SpawnPolarBear()
 			}
-			SpawnUtil.taiga(block.biome) -> when (spawnCycle % 3) {
+			BiomeNo.isDesertBiome(biome) -> SpawnRabbit()
+			biome === Biomes.UHC_BEACH -> SpawnTurtle()
+			else -> SpawnPig()
+		}
+	}),
+	SHEEP({ block, spawnCycle ->
+		val biome = BiomeNo.biomeAt(block)
+		when {
+			BiomeNo.isJungleBiome(biome) -> when (spawnCycle % 3) {
+				0 -> SpawnSheep()
+				1 -> SpawnSheep()
+				else -> SpawnOcelot()
+			}
+			BiomeNo.isTaigaBiome(biome) -> when (spawnCycle % 3) {
 				0 -> SpawnFox()
 				1 -> SpawnWolf()
 				else -> SpawnSheep()
 			}
-			SpawnUtil.mountains(block.biome) -> SpawnGoat()
-			SpawnUtil.desert(block.biome) -> SpawnRabbit()
-			block.biome === Biome.BEACH -> SpawnTurtle()
+			BiomeNo.isSnowyBiome(biome) -> when (spawnCycle % 3) {
+				0 -> SpawnRabbit()
+				1 -> SpawnRabbit()
+				else -> SpawnPolarBear()
+			}
+			BiomeNo.isMountainsBiome(biome) -> SpawnGoat()
+			BiomeNo.isDesertBiome(biome) -> SpawnRabbit()
+			biome === Biomes.UHC_BEACH -> SpawnTurtle()
 			else -> SpawnSheep()
 		}
 	});

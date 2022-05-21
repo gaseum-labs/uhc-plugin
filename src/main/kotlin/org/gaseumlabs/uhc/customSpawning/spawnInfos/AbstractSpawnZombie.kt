@@ -25,7 +25,7 @@ abstract class AbstractSpawnZombie<E : Zombie>(type: Class<E>) : SpawnInfo<E>(ty
 		entity.setAdult()
 		entity.canPickupItems = false
 
-		val equipment = entity.equipment ?: return
+		val equipment = entity.equipment
 		equipment.clear()
 		giveEquipment(count, equipment)
 	}

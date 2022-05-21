@@ -6,10 +6,14 @@ import net.minecraft.core.Registry
 import net.minecraft.core.WritableRegistry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.dedicated.DedicatedServer
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.biome.Biome
 import net.minecraft.world.level.biome.Biomes
 import org.bukkit.Bukkit
+import org.bukkit.World
+import org.bukkit.block.Block
 import org.bukkit.craftbukkit.v1_18_R2.CraftServer
+import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
 import org.gaseumlabs.uhc.util.reflect.UHCReflect
 
 object BiomeNo {
@@ -214,24 +218,6 @@ object BiomeNo {
 		return if (baseId == -1) featureBiomeKeys.indexOfFirst { it === key } else baseId
 	}
 
-	fun isNetherBiome(no: Int): Boolean {
-		return when (no) {
-			NETHER_WASTES,
-			SOUL_SAND_VALLEY,
-			CRIMSON_FOREST,
-			WARPED_FOREST,
-			BASALT_DELTAS,
-			-> true
-			else -> false
-		}
-	}
-
-	fun isJungleBiome(biome: ResourceKey<Biome>): Boolean {
-		return biome === Biomes.UHC_JUNGLE ||
-		biome === Biomes.UHC_SPARSE_JUNGLE ||
-		biome === Biomes.UHC_BAMBOO_JUNGLE
-	}
-
 	fun createHolderSet(map: Map<Int, Holder<Biome>>): HolderSet<Biome> {
 		return HolderSet.direct(map.map { it.value })
 	}
@@ -267,5 +253,77 @@ object BiomeNo {
 		}
 
 		ModifiedBiomes.genBiomes(biomeRegistry, replaceFeatures = true, replaceMobs = true)
+	}
+
+	fun biomeAt(worldHandle: ServerLevel, x: Int, y: Int, z: Int): ResourceKey<Biome> {
+		return worldHandle.getNoiseBiome(x / 4, y / 4, z / 4).unwrapKey().get()
+	}
+
+	fun biomeAt(world: World, x: Int, y: Int, z: Int): ResourceKey<Biome> {
+		return (world as CraftWorld).handle.getNoiseBiome(x / 4, y / 4, z / 4).unwrapKey().get()
+	}
+
+	fun biomeAt(block: Block): ResourceKey<Biome> {
+		return (block.world as CraftWorld).handle.getNoiseBiome(block.x / 4, block.y / 4, block.z / 4).unwrapKey().get()
+	}
+
+	/* is biome type */
+
+	fun isNetherBiome(no: Int): Boolean {
+		return when (no) {
+			NETHER_WASTES,
+			SOUL_SAND_VALLEY,
+			CRIMSON_FOREST,
+			WARPED_FOREST,
+			BASALT_DELTAS,
+			-> true
+			else -> false
+		}
+	}
+
+	fun isDesertBiome(biome: ResourceKey<Biome>): Boolean {
+		return biome === Biomes.UHC_DESERT ||
+		biome === Biomes.UHC_BADLANDS ||
+		biome === Biomes.UHC_ERODED_BADLANDS
+	}
+
+	fun isMountainsBiome(biome: ResourceKey<Biome>): Boolean {
+		return biome === Biomes.UHC_SNOWY_SLOPES ||
+		biome === Biomes.UHC_JAGGED_PEAKS ||
+		biome === Biomes.UHC_FROZEN_PEAKS ||
+		biome === Biomes.WINDSWEPT_HILLS ||
+		biome === Biomes.WINDSWEPT_GRAVELLY_HILLS ||
+		biome === Biomes.STONY_PEAKS
+	}
+
+	fun isSnowyBiome(biome: ResourceKey<Biome>): Boolean {
+		return biome === Biomes.SNOWY_PLAINS ||
+		biome === Biomes.ICE_SPIKES ||
+		biome === Biomes.SNOWY_BEACH ||
+		biome === Biomes.SNOWY_TAIGA ||
+		biome === Biomes.GROVE ||
+		biome === Biomes.UHC_SNOWY_SLOPES ||
+		biome === Biomes.UHC_JAGGED_PEAKS ||
+		biome === Biomes.UHC_FROZEN_PEAKS
+	}
+
+	fun isPlainsBiome(biome: ResourceKey<Biome>): Boolean {
+		return biome === Biomes.UHC_PLAINS ||
+		biome === Biomes.UHC_SUNFLOWER_PLAINS ||
+		biome === Biomes.UHC_MEADOW
+	}
+
+	fun isTaigaBiome(biome: ResourceKey<Biome>): Boolean {
+		return biome === Biomes.SNOWY_TAIGA ||
+		biome === Biomes.GROVE ||
+		biome === Biomes.TAIGA ||
+		biome === Biomes.OLD_GROWTH_PINE_TAIGA ||
+		biome === Biomes.OLD_GROWTH_SPRUCE_TAIGA
+	}
+
+	fun isJungleBiome(biome: ResourceKey<Biome>): Boolean {
+		return biome === Biomes.UHC_JUNGLE ||
+		biome === Biomes.UHC_SPARSE_JUNGLE ||
+		biome === Biomes.UHC_BAMBOO_JUNGLE
 	}
 }

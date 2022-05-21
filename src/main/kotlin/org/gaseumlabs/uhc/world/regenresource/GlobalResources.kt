@@ -20,11 +20,11 @@ class GlobalResources(initialTick: Int) {
 		var clearVeinsNextTick: Int,
 	)
 
-	/* when next to create resources, in 10 to 15 seconds */
+	/* when next to create resources, in 5 to 7 seconds */
 	fun nextTick(currentTick: Int): Int {
 		return currentTick + Random.nextInt(
-			10 * 20,
-			15 * 20,
+			5 * 20,
+			7 * 20,
 		)
 	}
 

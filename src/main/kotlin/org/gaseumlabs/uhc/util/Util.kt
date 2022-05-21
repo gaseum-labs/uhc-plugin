@@ -2,16 +2,11 @@
 
 package org.gaseumlabs.uhc.util
 
-import org.gaseumlabs.uhc.component.UHCStyle
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
-import net.minecraft.resources.ResourceKey
-import net.minecraft.server.level.ServerLevel
-import net.minecraft.world.level.biome.Biome
 import org.bukkit.*
-import java.lang.Exception
 import java.util.logging.*
 import kotlin.math.*
 
@@ -103,7 +98,7 @@ object Util {
 	}
 
 	fun interpClamp(low: Float, high: Float, along: Float): Float {
-		var value = (high - low) * along + low
+		val value = (high - low) * along + low
 
 		return when {
 			value < low -> low
@@ -242,9 +237,5 @@ object Util {
 
 	fun warn(exception: Throwable) {
 		logger.log(Level.WARNING, exception.localizedMessage)
-	}
-
-	fun biomeAt(worldHandle: ServerLevel, x: Int, y: Int, z: Int): ResourceKey<Biome> {
-		return worldHandle.getNoiseBiome(x / 4, y / 4, z / 4).unwrapKey().get()
 	}
 }
