@@ -91,13 +91,12 @@ object UHC {
 			if (currentGame != null) {
 				val switchResult = currentGame.phase.tick(currentTick)
 
-				if (currentGame.phase is Grace || currentGame.phase is Shrink) {
+				if (currentGame.phase is Grace || currentGame.phase is Shrink || currentGame.phase is Endgame) {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
-
-					currentGame.resourceScheduler.tick(currentTick)
+					currentGame.globalResources.tick(currentGame, currentTick)
 				}
-
+				
 				Portal.portalTick(currentGame)
 				PlayerData.zombieBorderTick(currentTick, currentGame)
 				ledgerTrailTick(currentGame, currentTick)

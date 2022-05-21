@@ -5,7 +5,6 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.gaseumlabs.uhc.core.Game
@@ -38,49 +37,41 @@ class ResourceEvents : Listener {
 		/* is this block part of a vein? */
 		if (findVein(regenResource, game) { vein ->
 				vein is VeinBlock && vein.blocks.any { it.samePlace(brokenBlock) }
-			})
-		/* mark the player's team as collecting this vein */
+			}) {
+			/* mark the player's team as collecting this vein */
 			markCollected(game, player, regenResource)
-
+		}
 	}
 
-	fun markCollected(game: Game, player: Player, regenResource: RegenResource) {
+	private fun markCollected(game: Game, player: Player, regenResource: RegenResource) {
 		val team = game.teams.playersTeam(player.uniqueId)
 		if (team != null) {
-			val collected = game.resourceScheduler.getVeinData(team, regenResource).collected
+			val collected = game.globalResources.getTeamVeinData(team, regenResource).collected
 			collected[game.phase.phaseType] = collected.getOrPut(game.phase.phaseType) { 0 } + 1
 		}
 	}
 
-	fun regenResourceTypeBlock(game: Game, brokenBlock: Block): ResourceDescriptionBlock? {
-		return game.resourceScheduler.resourceDescriptions.find { resourceDescription ->
-			resourceDescription is ResourceDescriptionBlock && resourceDescription.isBlock(brokenBlock)
-		} as ResourceDescriptionBlock?
+	private fun regenResourceTypeBlock(game: Game, brokenBlock: Block): ResourceDescriptionBlock? {
+		return RegenResource.values().find {
+			val description = it.description
+			description is ResourceDescriptionBlock && description.isBlock(brokenBlock)
+		}?.description as ResourceDescriptionBlock?
 	}
 
-	fun regenResourceTypeEntity(game: Game, entity: Entity): ResourceDescriptionEntity? {
-		return game.resourceScheduler.resourceDescriptions.find { resourceDescription ->
-			resourceDescription is ResourceDescriptionEntity && resourceDescription.isEntity(entity)
-		} as ResourceDescriptionEntity?
+	private fun regenResourceTypeEntity(game: Game, entity: Entity): ResourceDescriptionEntity? {
+		return RegenResource.values().find {
+			val description = it.description
+			description is ResourceDescriptionEntity && description.isEntity(entity)
+		}?.description as ResourceDescriptionEntity?
 	}
 
 	/**
 	 * also automatically removes the vein from the current list
 	 */
-	fun findVein(type: RegenResource, game: Game, compare: (vein: Vein) -> Boolean): Boolean {
-		for ((_, teamVeins) in game.resourceScheduler.veinDataList) {
-			val veinData = teamVeins[type.ordinal]
-
-			for (i in veinData.current.indices) {
-				val vein = veinData.current[i]
-
-				if (compare(vein)) {
-					veinData.current.removeAt(i)
-					return true
-				}
-			}
-		}
-
-		return false
+	private fun findVein(type: RegenResource, game: Game, compare: (vein: Vein) -> Boolean): Boolean {
+		val veinList = game.globalResources.getVeinList(type)
+		val veinIndex = veinList.indexOfFirst { vein -> compare(vein) }
+		if (veinIndex != -1) veinList.removeAt(veinIndex)
+		return veinIndex != -1
 	}
 }

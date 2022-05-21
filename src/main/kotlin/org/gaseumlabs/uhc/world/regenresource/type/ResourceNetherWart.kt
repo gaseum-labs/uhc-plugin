@@ -1,39 +1,53 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
+import org.bukkit.Chunk
 import org.bukkit.Material.*
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockFace.DOWN
+import org.bukkit.block.BlockFace.UP
 import org.bukkit.block.data.Ageable
+import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.world.WorldManager
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderNether
 import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionBlock
 
 class ResourceNetherWart(
 	released: HashMap<PhaseType, Int>,
-	current: Int,
-	interval: Int,
+	chunkRadius: Int,
+	worldName: String,
+	chunkSpawnChance: Float,
 	prettyName: String,
 ) : ResourceDescriptionBlock(
 	released,
-	current,
-	interval,
-	prettyName
+	chunkRadius,
+	worldName,
+	chunkSpawnChance,
+	prettyName,
 ) {
-	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
-		if (world !== WorldManager.netherWorld) return null
+	override fun eligable(player: Player): Boolean {
+		return true
+	}
 
-		val potentialSpots = locateAround(world, centerX, centerZ, 11, 32.0, 80.0, 8) { x, z -> x to z }
+	override fun generateInChunk(chunk: Chunk): List<Block>? {
+		val potentialSpots = RegenUtil.aroundInChunk(
+			chunk,
+			{ y -> RegenUtil.yRangeCenterBias(y, 0.0f, 1.0f, 32, 110) },
+			32
+		) { block ->
+			if (block.isPassable) block else null
+		}
 
-		for ((x, z) in potentialSpots) {
-			val surface = surfaceSpreaderNether(world, x, centerY, z, 5, ::wartGood)
+		for (block in potentialSpots) {
+			val surface = surfaceSpreaderNether(chunk.world, block.x, block.y, block.z, 5, ::wartGood)
 			if (surface != null) {
 				return listOf(
 					surface,
-					surface.getRelative(BlockFace.UP)
+					surface.getRelative(UP)
 				)
 			}
 		}

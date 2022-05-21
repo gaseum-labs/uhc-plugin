@@ -1,54 +1,54 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
-import net.minecraft.world.level.biome.Biomes
+import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
+import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.phase.PhaseType
-import org.gaseumlabs.uhc.customSpawning.SpawnUtil
-import org.gaseumlabs.uhc.world.WorldManager
-import org.gaseumlabs.uhc.world.regenresource.*
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
+import org.gaseumlabs.uhc.util.Util
+import org.gaseumlabs.uhc.world.gen.BiomeNo
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
+import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionBlock
 
 class ResourceMelon(
 	released: HashMap<PhaseType, Int>,
-	current: Int,
-	interval: Int,
+	chunkRadius: Int,
+	worldName: String,
+	chunkSpawnChance: Float,
 	prettyName: String,
 ) : ResourceDescriptionBlock(
 	released,
-	current,
-	interval,
-	prettyName
+	chunkRadius,
+	worldName,
+	chunkSpawnChance,
+	prettyName,
 ) {
-	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
-		if (centerY < SpawnUtil.SURFACE_Y) return null
-		if (world !== WorldManager.gameWorld) return null
+	override fun eligable(player: Player): Boolean {
+		return player.location.y >= 58
+	}
 
-		val worldHandle = (world as CraftWorld).handle
+	/* man, implementing this function yet again */
+	fun chunkHasJungle(chunk: Chunk): Boolean {
+		val worldHandle = (chunk.world as CraftWorld).handle
 
-		val potentialSpots = locateAround(world, centerX, centerZ, 11, 32.0, 80.0, 8) { x, z ->
-			val biome = worldHandle.getNoiseBiome(x / 4, centerY / 4, z / 4).unwrapKey().get()
+		var count = 0
 
-			if (
-				biome === Biomes.UHC_JUNGLE ||
-				biome === Biomes.UHC_SPARSE_JUNGLE ||
-				biome === Biomes.UHC_BAMBOO_JUNGLE
-			) {
-				x to z
-			} else {
-				null
-			}
-		}
+		if (BiomeNo.isJungleBiome(Util.biomeAt(worldHandle, chunk.x * 2, 70, chunk.z * 16 + 2))) ++count
+		if (BiomeNo.isJungleBiome(Util.biomeAt(worldHandle, chunk.x * 13, 70, chunk.z * 16 + 2))) ++count
+		if (BiomeNo.isJungleBiome(Util.biomeAt(worldHandle, chunk.x * 2, 70, chunk.z * 16 + 13))) ++count
+		if (BiomeNo.isJungleBiome(Util.biomeAt(worldHandle, chunk.x * 13, 70, chunk.z * 16 + 13))) ++count
 
-		for ((x, z) in potentialSpots) {
-			val melonSurface = surfaceSpreaderOverworld(world, x, z, 5, ::melonGood)
-			if (melonSurface != null) {
-				return listOf(melonSurface.getRelative(BlockFace.UP))
-			}
+		return count >= 3
+	}
+
+	override fun generateInChunk(chunk: Chunk): List<Block>? {
+		if (!chunkHasJungle(chunk)) return null
+
+		val melonSurface = surfaceSpreaderOverworld(chunk.world, chunk.x * 16 + 8, chunk.z * 16 + 8, 7, ::melonGood)
+		if (melonSurface != null) {
+			return listOf(melonSurface.getRelative(BlockFace.UP))
 		}
 
 		return null

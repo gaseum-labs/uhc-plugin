@@ -270,11 +270,10 @@ class TestCommands : BaseCommand() {
 
 		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
-		val team = game.teams.playersTeam(player.uniqueId) ?: return
 
-		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
+		val veins = game.globalResources.getVeinList(regenResource)
 
-		veinData.current.forEach { vein ->
+		veins.forEach { vein ->
 			when (vein) {
 				is VeinBlock -> {
 					vein.blocks.forEach { block ->
@@ -294,7 +293,7 @@ class TestCommands : BaseCommand() {
 			}
 		}
 
-		Action.sendGameMessage(player, "Found ${veinData.current.size} veins")
+		Action.sendGameMessage(player, "Found ${veins.size} veins")
 	}
 
 	@Subcommand("veinData")
@@ -305,16 +304,12 @@ class TestCommands : BaseCommand() {
 		val game = UHC.game ?: return
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
 
-		val description = game.resourceScheduler.resourceDescriptions[regenResource.ordinal]
-		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
+		val description = regenResource.description
+		val veinData = game.globalResources.getTeamVeinData(team, regenResource)
 
 		Action.sendGameMessage(player, "Veindata for ${regenResource}:")
-		Action.sendGameMessage(player, "Total Generated: ${veinData.numGenerates}")
-		Action.sendGameMessage(player, "Num Released: ${game.resourceScheduler.releasedCurrently(description)}")
+		Action.sendGameMessage(player, "Num Released: ${game.globalResources.releasedCurrently(game, description)}")
 		Action.sendGameMessage(player, "Collected: ${veinData.collected.getOrDefault(game.phase.phaseType, 0)}")
-		Action.sendGameMessage(player, "Max Current: ${description.current}")
-		Action.sendGameMessage(player, "Num Current: ${veinData.current.size}")
-		Action.sendGameMessage(player, "Interval: ${description.interval}")
 	}
 
 	@Subcommand("setVeinCollected")
@@ -325,7 +320,7 @@ class TestCommands : BaseCommand() {
 		val game = UHC.game ?: return
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
 
-		val veinData = game.resourceScheduler.getVeinData(team, regenResource)
+		val veinData = game.globalResources.getTeamVeinData(team, regenResource)
 		veinData.collected[game.phase.phaseType] = amount
 
 		Action.sendGameMessage(player, "Set collected for ${regenResource.name} to $amount")

@@ -19,7 +19,7 @@ import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.Title.Times
 import org.bukkit.*
 import org.bukkit.entity.Player
-import org.gaseumlabs.uhc.world.regenresource.ResourceScheduler
+import org.gaseumlabs.uhc.world.regenresource.GlobalResources
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
@@ -40,13 +40,13 @@ class Game(
 
 	val ledger = Ledger(initialRadius)
 
-	val resourceScheduler = ResourceScheduler(this)
+	val globalResources = GlobalResources(0)
 
 	val endgameLowY: Int
 	val endgameHighY: Int
 
 	init {
-		val (low, high) = Endgame.determineMinMax(world, config.endgameRadius.get(), 100)
+		val (low, high) = Endgame.determineMinMax(world, config.endgameRadius.get(), 120)
 		endgameLowY = low
 		endgameHighY = high
 	}

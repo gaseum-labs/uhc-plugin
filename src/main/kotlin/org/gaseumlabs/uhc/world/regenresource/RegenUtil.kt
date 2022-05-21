@@ -1,9 +1,13 @@
 package org.gaseumlabs.uhc.world.regenresource
 
+import net.minecraft.resources.ResourceKey
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.biome.Biome
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace.DOWN
 import org.bukkit.block.BlockFace.UP
+import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
 import org.gaseumlabs.uhc.util.Util
 import kotlin.math.*
 import kotlin.random.Random
@@ -103,6 +107,77 @@ object RegenUtil {
 		}
 
 		return ret
+	}
+
+	fun <T> aroundInChunk(
+		chunk: Chunk,
+		yMapper: (along: Float) -> Int,
+		tries: Int,
+		isGood: (block: Block) -> T?,
+	): ArrayList<T> {
+		val ret = ArrayList<T>(tries)
+
+		for (i in 0 until tries) {
+			val y = yMapper(Random.nextFloat())
+			val x = Random.nextInt(16)
+			val z = Random.nextInt(16)
+
+			val result = isGood(chunk.getBlock(x, y, z))
+			if (result != null) ret.add(result)
+		}
+
+		return ret
+	}
+
+	fun yRangeLinear(
+		inputY: Float,
+		inputLow: Float,
+		inputHigh: Float,
+		low: Int,
+		high: Int,
+	): Int {
+		return if (inputY < inputLow || inputY >= inputHigh) {
+			0
+		} else {
+			Util.invInterp(
+				low.toFloat(), high + 1.0f,
+				Util.invInterp(inputLow, inputHigh, inputY)
+			).toInt()
+		}
+	}
+
+	fun yRangeLowBias(
+		inputY: Float,
+		inputLow: Float,
+		inputHigh: Float,
+		low: Int,
+		high: Int,
+	): Int {
+		return if (inputY < inputLow || inputY >= inputHigh) {
+			0
+		} else {
+			Util.invInterp(
+				low.toFloat(), high + 1.0f,
+				Util.invInterp(inputLow, inputHigh, inputY).pow(2)
+			).toInt()
+		}
+	}
+
+	fun yRangeCenterBias(
+		inputY: Float,
+		inputLow: Float,
+		inputHigh: Float,
+		low: Int,
+		high: Int,
+	): Int {
+		return if (inputY < inputLow || inputY >= inputHigh) {
+			0
+		} else {
+			Util.invInterp(
+				low.toFloat(), high + 1.0f,
+				4.0f * (Util.invInterp(inputLow, inputHigh, inputY) - 0.5f).pow(3) + 0.5f
+			).toInt()
+		}
 	}
 
 	fun insideWorldBorder(world: World, x: Int, z: Int): Boolean {
@@ -266,6 +341,8 @@ object RegenUtil {
 		Material.SPRUCE_LEAVES,
 		Material.JUNGLE_LEAVES,
 		Material.DARK_OAK_LEAVES,
+		Material.AZALEA_LEAVES,
+		Material.FLOWERING_AZALEA_LEAVES,
 		Material.RED_MUSHROOM_BLOCK,
 		Material.BROWN_MUSHROOM_BLOCK,
 		Material.MUSHROOM_STEM,
@@ -317,7 +394,8 @@ object RegenUtil {
 
 		for (i in 0 until 20) {
 			val up = lastUp.getRelative(UP)
-			if (!lastUp.isPassable && up.isPassable) {
+			/* prevent going onto nether roof */
+			if (up.y < 127 && !lastUp.isPassable && up.isPassable) {
 				return lastUp
 			} else {
 				lastUp = up

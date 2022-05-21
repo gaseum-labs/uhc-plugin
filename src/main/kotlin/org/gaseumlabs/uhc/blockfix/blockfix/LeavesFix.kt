@@ -1,12 +1,11 @@
 package org.gaseumlabs.uhc.blockfix.blockfix
 
-import org.gaseumlabs.uhc.blockfix.BlockFix
-import org.gaseumlabs.uhc.blockfix.CountingRange
-import org.gaseumlabs.uhc.util.Util
-import org.gaseumlabs.uhc.util.Util.binarySearch
 import org.bukkit.Material
 import org.bukkit.block.BlockState
 import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.blockfix.CountingRange
+import org.gaseumlabs.uhc.util.Util
+import org.gaseumlabs.uhc.util.Util.binarySearch
 
 class LeavesFix : org.gaseumlabs.uhc.blockfix.BlockFix("Leaves", arrayOf(
 	CountingRange(
@@ -62,7 +61,8 @@ class LeavesFix : org.gaseumlabs.uhc.blockfix.BlockFix("Leaves", arrayOf(
 			LeafInfo(Material.BIRCH_LEAVES, Material.BIRCH_SAPLING),
 			LeafInfo(Material.JUNGLE_LEAVES, Material.JUNGLE_SAPLING),
 			LeafInfo(Material.ACACIA_LEAVES, Material.ACACIA_SAPLING),
-			LeafInfo(Material.DARK_OAK_LEAVES, Material.DARK_OAK_SAPLING)
+			LeafInfo(Material.DARK_OAK_LEAVES, Material.DARK_OAK_SAPLING),
+			LeafInfo(Material.AZALEA_LEAVES, Material.AZALEA),
 		)
 	}
 }

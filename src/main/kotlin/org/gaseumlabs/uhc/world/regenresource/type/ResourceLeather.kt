@@ -1,10 +1,10 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
+import org.bukkit.Chunk
 import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace.UP
-import org.bukkit.entity.Animals
-import org.bukkit.entity.Entity
+import org.bukkit.entity.*
 import org.bukkit.entity.EntityType.COW
 import org.bukkit.entity.EntityType.HORSE
 import org.bukkit.entity.EntityType.LLAMA
@@ -20,26 +20,25 @@ import kotlin.random.Random
 
 class ResourceLeather(
 	released: HashMap<PhaseType, Int>,
-	current: Int,
-	interval: Int,
+	chunkRadius: Int,
+	worldName: String,
+	chunkSpawnChance: Float,
 	prettyName: String,
 ) : ResourceDescriptionEntity(
 	released,
-	current,
-	interval,
-	prettyName
+	chunkRadius,
+	worldName,
+	chunkSpawnChance,
+	prettyName,
 ) {
-	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
-		if (centerY < SpawnUtil.SURFACE_Y) return null
-		if (world !== WorldManager.gameWorld) return null
+	override fun eligable(player: Player): Boolean {
+		return player.location.y >= 58
+	}
 
-		val potentialSpots = locateAround(world, centerX, centerZ, 11, 32.0, 80.0, 8) { x, z -> x to z }
-
-		for ((x, z) in potentialSpots) {
-			val surface = surfaceSpreaderOverworld(world, x, z, 5, ::cowHorseGood)
-			if (surface != null) {
-				return listOf(surface.getRelative(UP))
-			}
+	override fun generateInChunk(chunk: Chunk): List<Block>? {
+		val surface = surfaceSpreaderOverworld(chunk.world, chunk.x * 16 + 8, chunk.z * 16 + 8, 7, ::cowHorseGood)
+		if (surface != null) {
+			return listOf(surface.getRelative(UP))
 		}
 
 		return null

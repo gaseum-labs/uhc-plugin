@@ -226,6 +226,12 @@ object BiomeNo {
 		}
 	}
 
+	fun isJungleBiome(biome: ResourceKey<Biome>): Boolean {
+		return biome === Biomes.UHC_JUNGLE ||
+		biome === Biomes.UHC_SPARSE_JUNGLE ||
+		biome === Biomes.UHC_BAMBOO_JUNGLE
+	}
+
 	fun createHolderSet(map: Map<Int, Holder<Biome>>): HolderSet<Biome> {
 		return HolderSet.direct(map.map { it.value })
 	}

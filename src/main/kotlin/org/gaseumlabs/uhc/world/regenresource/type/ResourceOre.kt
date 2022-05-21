@@ -1,11 +1,11 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
-import org.bukkit.Material
+import org.bukkit.*
 import org.bukkit.Material.GOLD_ORE
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.FallingBlock
+import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapFirstNotNullPrefer
@@ -20,33 +20,34 @@ class ResourceOre(
 	val type: Material,
 	val deepType: Material,
 	val veinSize: Int,
-	val genRange: (y: Int) -> Boolean,
-	val worldName: String,
+	val yDistribution: (y: Float) -> Int,
 
 	released: HashMap<PhaseType, Int>,
-	current: Int,
-	interval: Int,
+	chunkRadius: Int,
+	worldName: String,
+	chunkSpawnChance: Float,
 	prettyName: String,
 ) : ResourceDescriptionBlock(
 	released,
-	current,
-	interval,
-	prettyName
+	chunkRadius,
+	worldName,
+	chunkSpawnChance,
+	prettyName,
 ) {
-	override fun generateVein(world: World, centerX: Int, centerY: Int, centerZ: Int): List<Block>? {
-		if (world.name != worldName) return null
+	override fun eligable(player: Player): Boolean {
+		return true
+	}
 
-		val around = RegenUtil.sphereAround(world, centerX, centerY, centerZ, 48.0f, 64.0f, 20) { x, y, z ->
-			if (!genRange(y)) return@sphereAround null
-			val block = world.getBlockAt(x, y, z)
-			if (block.isPassable) {
-				block
-			} else {
-				null
-			}
+	override fun generateInChunk(chunk: Chunk): List<Block>? {
+		val potentialSpots = RegenUtil.aroundInChunk(
+			chunk,
+			yDistribution,
+			32
+		) { block ->
+			if (block.isPassable) block else null
 		}
 
-		val oreSource = around.firstNotNullOfOrNull { startBlock ->
+		val oreSource = potentialSpots.firstNotNullOfOrNull { startBlock ->
 			RegenUtil.expandFrom(startBlock, 4) { block ->
 				if (block.isPassable) {
 					false

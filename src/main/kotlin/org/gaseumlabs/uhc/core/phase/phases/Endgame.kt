@@ -20,17 +20,11 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, game) {
-	var min = 0
-	var max = 255
-
-	val GLOWING_TIME = 20 * 20
-	val CLEAR_TIME = 5 * 60 * 20
+	var min = WORLD_MIN
+	var max = WORLD_MAX
 
 	var finished = false
 	var timer = 0
-
-	val MAX_DECAY = 400
-	val DECLINE = 4
 
 	var fakeEntityID = Int.MAX_VALUE
 
@@ -82,7 +76,7 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 		return if (finished)
 			(timer / GLOWING_TIME.toFloat())
 		else
-			(max - game.endgameHighY).toFloat() / (255 - game.endgameHighY)
+			(max - game.endgameHighY).toFloat() / (WORLD_MAX - game.endgameHighY)
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent {
@@ -137,8 +131,8 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 		} else {
 			val along = timer / CLEAR_TIME.toFloat()
 
-			val newMin = Util.interp(0.0f, game.endgameLowY.toFloat(), along).toInt()
-			val newMax = Util.interp(255.0f, game.endgameHighY.toFloat(), along).toInt()
+			val newMin = Util.interp(WORLD_MIN.toFloat(), game.endgameLowY.toFloat(), along).toInt()
+			val newMax = Util.interp(WORLD_MAX.toFloat(), game.endgameHighY.toFloat(), along).toInt()
 
 			if (newMin != min) {
 				min = newMin
@@ -156,14 +150,14 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 				}
 
 				/* fill in with bedrock from below */
-				if (min > 0) fillLayer(game.world, min - 1, Material.BEDROCK)
+				if (min > WORLD_MIN) fillLayer(game.world, min - 1, Material.BEDROCK)
 			}
 
 			if (newMax != max) {
 				max = newMax
 
 				/* clear all blocks above the top level */
-				if (max < 255) fillLayer(game.world, max + 1, Material.AIR)
+				if (max < WORLD_MAX) fillLayer(game.world, max + 1, Material.AIR)
 			}
 
 			/* finish */
@@ -172,7 +166,7 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 				finished = true
 
 				/* teleport all sky zombies to the surface */
-				PlayerData.playerDataList.mapNotNull { (uuid, playerData) -> playerData.offlineZombie }
+				PlayerData.playerDataList.mapNotNull { (_, playerData) -> playerData.offlineZombie }
 					.filter { it.location.y > max }
 					.forEach { zombie ->
 						val x = zombie.location.blockX
@@ -218,6 +212,15 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 	override fun endPhrase() = ""
 
 	companion object {
+		const val WORLD_MIN = -64
+		const val WORLD_MAX = 319
+
+		const val GLOWING_TIME = 20 * 20
+		const val CLEAR_TIME = 5 * 60 * 20
+
+		const val MAX_DECAY = 400
+		const val DECLINE = 4
+
 		val RANGE = 24
 
 		fun determineMinMax(world: World, radius: Int, maxHeight: Int): Pair<Int, Int> {
