@@ -1,65 +1,42 @@
 <img src="uhc icon.png" alt="UHC Enchanting Table Icon" width="200"/> 
 
 # UHC Plugin
-A Minecraft 1.17 UHC plugin built in Kotlin for PaperMC
 
-**UHC Plugin is built exclusively for private games and is not general-purpose. It is probably not what you are looking for**
+A Minecraft 1.18 UHC plugin built in Kotlin running on a custom PaperMC server
 
-## Continuous Beta Releases!
+**UHC Plugin is not general use. If you are looking to host games of UHC yourself, you have come to the wrong place.**
 
-Check out the [Automatic Release](https://github.com/Codeland473/uhc-plugin/releases/tag/auto) for the latest version of the Plugin Jar
+## Developers: How to setup
 
-**WARNING:** Releases are not guaranteed to work and bugs are expected
+### 1. Install paperweight to Mavel Local
 
-### Hosting the Plugin Yourself
+* Clone the https://github.com/PaperMC/paperweight repo to your local machine
+* Run `./gradlew publishToMavenLocal` inside the paperweight root directory
 
-1. Set up a 1.17.1 [PaperMC server](https://papermc.io/downloads#Paper-1.17)
-2. Download the latest [UHC Plugin Jar](https://github.com/Codeland473/uhc-plugin/releases/download/auto/uhc-plugin-all.jar)
-3. Also download the latest [Protocollib Plugin Jar](https://github.com/dmulloy2/ProtocolLib/releases)
-4. Place both plugin jars into the `plugins/` directory in your Server
+### 2. Build UHC Paper
 
-### Starting A Game
+* Clone the https://github.com/gaseum-labs/uhc-paper repo to your local machine if you are using Linux. If you are using
+  Windows, clone the repo to WSL.
+* Run `./gradlew applyPatches` inside the uhc-paper root directory
+* Next, run `./gradlew createReobfPaperclipJar` and `./gradlew publishDevBundlePublicationToMavenLocal`
+
+### 3. Move UHC Paper artifacts to UHC Plugin project
+
+* Clone this repo to your local machine
+* If it doesn't exist already, create a folder named `run` in this project's root directory
+* Copy the `./build/libs/paper-paperclip-1.18.2-R0.1-SNAPSHOT-reobf.jar` jar file to this project's `run` folder and
+  rename it to `server.jar`
+* If you are running the server on Windows and built uhc-paper on WSL,
+  copy `.m2\repository\org\gaseumlabs\uhcpaper\dev-bundle` from your WSL to the corresponding files in your Windows
+  local Maven directory
+
+### 4. Run the UHC Server
+
+* Run `gradle build runServer` inside this project
+
+## Running the Game (Not Complete)
 
 1. Add yourself and other players to teams using the `/uhca team random [team size]` command
-2. Right click while holding the `Open UHC Settings` item in your inventory 
+2. Right click while holding the `Open UHC Settings` item in your inventory
 3. Click on the `Start Game` item in the opened inventory
-
-## For Developers
-### Requirements
-
-* Kotlin 1.5
-* Java 16
-* Gradle 7.0
-* [PaperMC 1.17.1](https://papermc.io/downloads#Paper-1.17)
-* [Protocollib 4.7.0](https://github.com/dmulloy2/ProtocolLib/releases)
-* [Spigot 1.17.1 BuildTools](https://www.spigotmc.org/wiki/buildtools)
-
-### Setting up the Project
-
-Clone the repo: `git clone https://github.com/Codeland473/uhc-plugin`
-
-Create the file `user.gradle` in the project directory
-
-### Building
-
-The two main ways of building the project are through an IntelliJ configuration or using `gradle` in the command line. In either case, the built jar will be located at `build/libs/uhc-plugin-all.jar`.
-
-#### In IntelliJ
-
-Open the project directory in Intellij IDEA
-
-Click `Add Configuration..` then `+ (Add New Configuration)`
-
-Select `Gradle` from the dropdown
-
-In the `Gradle Project` field type `uhc-plugin` or the project directory
-
-In the `Tasks` field type `shadowJar`
-
-Click Apply
-
-Now you can run the configuration to build the jar
-
-#### In the command line
-
-Navigate to the directory of the project and run `gradle build`
+4. *Explore features for yourself lol*
