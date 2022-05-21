@@ -184,3 +184,6 @@ server
 
 # local build scripts
 /build.sh
+
+# wtf i don't remember this huge gitignore
+/run
