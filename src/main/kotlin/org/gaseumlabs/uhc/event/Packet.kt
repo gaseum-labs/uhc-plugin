@@ -14,6 +14,7 @@ import net.minecraft.ChatFormatting.*
 import net.minecraft.core.Registry
 import net.minecraft.network.chat.*
 import net.minecraft.network.protocol.game.*
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.Action.ADD_PLAYER
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.PlayerUpdate
 import net.minecraft.network.syncher.*
@@ -73,18 +74,6 @@ object Packet {
 		}
 
 		return nameIndex
-	}
-
-	private fun createNominalTeam(
-		sendPlayer: CraftPlayer,
-		teamPlayerName: String,
-	) {
-		val sentTeam = PlayerTeam(Scoreboard(), teamPlayerName)
-		sentTeam.players.add(teamPlayerName)
-
-		sendPlayer.handle.connection.send(
-			ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(sentTeam, true)
-		)
 	}
 
 	private fun coloredNameComponent(playerRealName: String, team: AbstractTeam?): Component {
@@ -176,13 +165,12 @@ object Packet {
 				val sendPlayer = event.player as CraftPlayer
 				val oldPacket = event.packet.handle as ClientboundPlayerInfoPacket
 
-				/* only look for add player packets */
-				if (oldPacket.action != ClientboundPlayerInfoPacket.Action.ADD_PLAYER) return
+				if (oldPacket.action != ADD_PLAYER) return
 
 				/* new packet with game profiles to be modified */
 				/* have to create it first with real player data since that's the only constructor */
 				val modifiedPacket = ClientboundPlayerInfoPacket(
-					ClientboundPlayerInfoPacket.Action.ADD_PLAYER,
+					oldPacket.action,
 					oldPacket.entries.mapNotNull { oldEntry ->
 						(Bukkit.getPlayer(oldEntry.profile.id) as? CraftPlayer)?.handle
 					}
@@ -194,7 +182,12 @@ object Packet {
 					val oldEntry = modifiedPacket.entries[i]
 
 					if (oldEntry.profile.id == sendPlayer.uniqueId) {
-						createNominalTeam(sendPlayer, oldEntry.profile.name)
+						updateNominalTeamColor(
+							sendPlayer,
+							sendPlayer,
+							sendPlayer.name,
+							UHC.getTeams().playersTeam(sendPlayer.uniqueId)
+						)
 					} else {
 						val idName = playersIdName(oldEntry.profile.id)
 
@@ -205,7 +198,14 @@ object Packet {
 							oldEntry.displayName
 						)
 
-						createNominalTeam(sendPlayer, idName)
+						val updatePlayer = Bukkit.getPlayer(oldEntry.profile.id) as? CraftPlayer ?: return
+
+						updateNominalTeamColor(
+							sendPlayer,
+							updatePlayer,
+							idName,
+							UHC.getTeams().playersTeam(updatePlayer.uniqueId)
+						)
 					}
 				}
 
