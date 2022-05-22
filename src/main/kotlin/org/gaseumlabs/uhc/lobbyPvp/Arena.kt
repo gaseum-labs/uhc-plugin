@@ -99,7 +99,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 		customStartPlayer(player, playerData)
 
-		NameManager.updateName(player, UHC.getTeams().playersTeam(player.uniqueId))
+		NameManager.updateNominalTeams(player, UHC.getTeams().playersTeam(player.uniqueId), false)
 		player.teleport(location)
 
 		/* fake border */

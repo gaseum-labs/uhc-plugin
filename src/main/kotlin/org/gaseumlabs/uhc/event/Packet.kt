@@ -2,7 +2,6 @@ package org.gaseumlabs.uhc.event
 
 import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.core.UHC
-import org.gaseumlabs.uhc.discord.storage.DiscordStorage
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
 import org.gaseumlabs.uhc.team.AbstractTeam
@@ -11,28 +10,29 @@ import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.*
 import com.mojang.authlib.GameProfile
-import net.kyori.adventure.text.format.TextColor
 import net.minecraft.ChatFormatting.*
 import net.minecraft.core.Registry
-import net.minecraft.network.chat.TextComponent
+import net.minecraft.network.chat.*
 import net.minecraft.network.protocol.game.*
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.PlayerUpdate
 import net.minecraft.network.syncher.*
-import net.minecraft.world.Containers
+import net.minecraft.network.syncher.SynchedEntityData.DataItem
 import net.minecraft.world.inventory.MenuType
 import net.minecraft.world.scores.*
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.entity.Player
-import org.bukkit.event.server.ServerListPingEvent
+import org.gaseumlabs.uhc.util.reflect.UHCReflect
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.experimental.or
 
 object Packet {
-	val playerNames = arrayListOf<UUID>()
+	private val playerNames = arrayListOf<UUID>()
 
-	fun intToName(int: Int, length: Int): String {
+	private fun intToName(int: Int, length: Int): String {
 		var countDown = int
 
 		val name = CharArray(length * 2)
@@ -46,7 +46,7 @@ object Packet {
 		return String(name)
 	}
 
-	fun nameToInt(name: String, length: Int): Int? {
+	private fun nameToInt(name: String, length: Int): Int? {
 		if (name.length < length * 2) return null
 
 		var int = 0
@@ -64,7 +64,7 @@ object Packet {
 		return int
 	}
 
-	fun playersIndex(uuid: UUID): Int {
+	private fun playersIndex(uuid: UUID): Int {
 		var nameIndex = playerNames.indexOf(uuid)
 
 		if (nameIndex == -1) {
@@ -75,15 +75,37 @@ object Packet {
 		return nameIndex
 	}
 
-	fun playersNewName(uuid: UUID): String {
+	private fun createNominalTeam(
+		sendPlayer: CraftPlayer,
+		teamPlayerName: String,
+	) {
+		val sentTeam = PlayerTeam(Scoreboard(), teamPlayerName)
+		sentTeam.players.add(teamPlayerName)
+
+		sendPlayer.handle.connection.send(
+			ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(sentTeam, true)
+		)
+	}
+
+	private fun coloredNameComponent(playerRealName: String, team: AbstractTeam?): Component {
+		return if (team != null) {
+			Util.nmsGradientString(
+				playerRealName,
+				team.colors[0].value(),
+				team.colors[1].value(),
+			)
+		} else {
+			TextComponent(playerRealName).setStyle(Style.EMPTY.withColor(0xffffff))
+		}
+	}
+
+	/* INTERFACE */
+
+	fun playersIdName(uuid: UUID): String {
 		return intToName(playersIndex(uuid), 8)
 	}
 
-	/**
-	 *  creates a metadata packet for the specified player
-	 *  that only contains the first byte field
-	 */
-	fun metadataPacketDefaultState(player: Player): ClientboundSetEntityDataPacket {
+	fun playersMetadataPacket(player: Player): ClientboundSetEntityDataPacket {
 		player as CraftPlayer
 
 		return ClientboundSetEntityDataPacket(
@@ -93,111 +115,101 @@ object Packet {
 		)
 	}
 
-	fun initFakeTeam(
-		teamPlayerUuid: UUID,
-		teamPlayerRealName: String,
+	fun updateNominalTeamColor(
+		sendPlayer: CraftPlayer,
+		teamPlayer: CraftPlayer,
 		teamPlayerIdName: String,
-		sentPlayer: Player,
+		teamPlayerTeam: AbstractTeam?,
 	) {
-		fun createFakeTeam(name: String) {
-			val sentTeam = PlayerTeam(Scoreboard(), name)
-			sentTeam.players.add(name)
+		val teamPlayerRealName = teamPlayer.name
 
-			(sentPlayer as CraftPlayer).handle.connection.send(
-				ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(sentTeam, true)
+		/* only update a self-player's display name */
+		if (sendPlayer.uniqueId == teamPlayer.uniqueId) {
+			val updateDisplayNamePacket = ClientboundPlayerInfoPacket(UPDATE_DISPLAY_NAME, sendPlayer.handle)
+
+			val originalEntry = updateDisplayNamePacket.entries[0]
+			updateDisplayNamePacket.entries[0] = PlayerUpdate(
+				originalEntry.profile,
+				originalEntry.latency,
+				originalEntry.gameMode,
+				coloredNameComponent(teamPlayerRealName, teamPlayerTeam),
 			)
-		}
 
-		createFakeTeam(teamPlayerIdName)
-		if (sentPlayer.uniqueId == teamPlayerUuid) createFakeTeam(teamPlayerRealName)
-	}
+			sendPlayer.handle.connection.send(updateDisplayNamePacket)
 
-	fun updateTeamColor(
-		teamPlayer: Player,
-		uhcTeam: AbstractTeam?,
-		newName: String,
-		sentPlayer: Player,
-	) {
-		sentPlayer as CraftPlayer
-		val trueName = teamPlayer.name
+			/* make player's self nominal team blue */
+			val nominalTeam = PlayerTeam(Scoreboard(), teamPlayerRealName)
+			nominalTeam.color = AQUA
+			nominalTeam.players.add(teamPlayerRealName)
 
-		val arena = ArenaManager.playersArena(teamPlayer.uniqueId)
+			sendPlayer.handle.connection.send(ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(nominalTeam, true))
 
-		val isOneSameTeam = when {
-			teamPlayer.uniqueId == sentPlayer.uniqueId -> true
-			arena == null -> uhcTeam?.members?.contains(sentPlayer.uniqueId) == true
-			else -> arena is PvpArena && ArenaManager.playersTeam(arena, teamPlayer.uniqueId)
-				?.contains(sentPlayer.uniqueId) == true
-		}
-
-		/* update fake scoreboard team */
-		fun updateTeam(idName: String) {
-			val playerTeam = PlayerTeam(Scoreboard(), idName)
-			playerTeam.color = if (isOneSameTeam) AQUA else RED
-
-			playerTeam.playerPrefix = if (uhcTeam != null) {
-				Util.nmsGradientString(trueName, uhcTeam.colors[0].value(), uhcTeam.colors[1].value())
+		} else {
+			//TODO delegate this out to code somewhere else
+			val arena = ArenaManager.playersArena(teamPlayer.uniqueId)
+			val isOnSameTeam = if (arena == null) {
+				teamPlayerTeam?.members?.contains(sendPlayer.uniqueId) == true
 			} else {
-				TextComponent(trueName)
+				arena is PvpArena && ArenaManager.playersTeam(arena, teamPlayer.uniqueId)
+					?.contains(sendPlayer.uniqueId) == true
 			}
 
-			playerTeam.players.add(idName)
+			val nominalTeam = PlayerTeam(Scoreboard(), teamPlayerIdName)
 
-			sentPlayer.handle.connection.send(
-				ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(playerTeam, true)
-			)
+			nominalTeam.color = if (isOnSameTeam) AQUA else RED
+			nominalTeam.playerPrefix = coloredNameComponent(teamPlayerRealName, teamPlayerTeam)
+			nominalTeam.players.add(teamPlayerIdName)
+
+			sendPlayer.handle.connection.send(ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(nominalTeam, true))
 		}
-
-		updateTeam(newName)
-		if (teamPlayer.uniqueId == sentPlayer.uniqueId) updateTeam(trueName)
 	}
 
-	fun init() {
-		val ppp = Thread.currentThread().contextClassLoader
+	/* INIT */
 
-		val protocolPPP = org.gaseumlabs.uhc.UHCPlugin::class.java.classLoader
-
+	fun registerListeners() {
 		val protocolManager = ProtocolLibrary.getProtocolManager()
 
+		/* set players id names when first seen */
 		protocolManager.addPacketListener(object :
-			PacketAdapter(org.gaseumlabs.uhc.UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.PLAYER_INFO) {
+			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.PLAYER_INFO) {
 			override fun onPacketSending(event: PacketEvent) {
-				/* this packet should not be modified */
+				val sendPlayer = event.player as CraftPlayer
 				val oldPacket = event.packet.handle as ClientboundPlayerInfoPacket
 
 				/* only look for add player packets */
 				if (oldPacket.action != ClientboundPlayerInfoPacket.Action.ADD_PLAYER) return
 
-				/* create a new packet to modify */
-				val modifyPacket = ClientboundPlayerInfoPacket(
-					oldPacket.action,
+				/* new packet with game profiles to be modified */
+				/* have to create it first with real player data since that's the only constructor */
+				val modifiedPacket = ClientboundPlayerInfoPacket(
+					ClientboundPlayerInfoPacket.Action.ADD_PLAYER,
 					oldPacket.entries.mapNotNull { oldEntry ->
 						(Bukkit.getPlayer(oldEntry.profile.id) as? CraftPlayer)?.handle
 					}
 				)
 
-				for (i in 0 until modifyPacket.entries.size) {
-					val original = modifyPacket.entries[i]
+				/* replace PlayerUpdates inside packet with new ones which have the id names */
+				/* except that players will always know themselves by their real name */
+				for (i in modifiedPacket.entries.indices) {
+					val oldEntry = modifiedPacket.entries[i]
 
-					val idName = playersNewName(original.profile.id)
+					if (oldEntry.profile.id == sendPlayer.uniqueId) {
+						createNominalTeam(sendPlayer, oldEntry.profile.name)
+					} else {
+						val idName = playersIdName(oldEntry.profile.id)
 
-					modifyPacket.entries[i] = PlayerUpdate(
-						GameProfile(original.profile.id, idName),
-						original.latency,
-						original.gameMode,
-						original.displayName
-					)
+						modifiedPacket.entries[i] = PlayerUpdate(
+							GameProfile(oldEntry.profile.id, idName),
+							oldEntry.latency,
+							oldEntry.gameMode,
+							oldEntry.displayName
+						)
 
-					initFakeTeam(
-						original.profile.id,
-						original.profile.name,
-						idName,
-						event.player
-					)
+						createNominalTeam(sendPlayer, idName)
+					}
 				}
 
-				/* the event now acts on the modify packet only for the sent player */
-				event.packet = PacketContainer.fromPacket(modifyPacket)
+				event.packet = PacketContainer.fromPacket(modifiedPacket)
 			}
 		})
 
@@ -205,100 +217,111 @@ object Packet {
 			return Bukkit.getOnlinePlayers().find { player -> player.entityId == id }
 		}
 
+		//TODO move this block somewhere else
+		fun playerShouldGlow(sendPlayer: Player, dataPlayer: Player): Boolean {
+			val metaPlayersArena = ArenaManager.playersArena(dataPlayer.uniqueId)
+
+			if (sendPlayer.uniqueId == dataPlayer.uniqueId) return false
+
+			/* arena glowing */
+			return if (metaPlayersArena is PvpArena) {
+				ArenaManager.playersTeam(
+					metaPlayersArena,
+					dataPlayer.uniqueId
+				)?.contains(sendPlayer.uniqueId) == true || (
+				metaPlayersArena.shouldGlow() &&
+				metaPlayersArena.teams.flatten().contains(sendPlayer.uniqueId)
+				)
+
+			} else {
+				/* teammate glowing */
+				val sendPlayerTeam = UHC.game?.teams?.playersTeam(sendPlayer.uniqueId)
+
+				sendPlayerTeam != null &&
+				sendPlayerTeam.members.contains(dataPlayer.uniqueId)
+			}
+		}
+
+		val packedItemsField = UHCReflect<ClientboundSetEntityDataPacket, List<DataItem<*>>>(
+			ClientboundSetEntityDataPacket::class,
+			"packedItems"
+		)
+
+		/* make players glow when they should */
 		protocolManager.addPacketListener(object :
-			PacketAdapter(org.gaseumlabs.uhc.UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.ENTITY_METADATA) {
+			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.ENTITY_METADATA) {
 			override fun onPacketSending(event: PacketEvent) {
-				val originalPacket = event.packet.handle as ClientboundSetEntityDataPacket
+				val sendPlayer = event.player as CraftPlayer
+				val oldPacket = event.packet.handle as ClientboundSetEntityDataPacket
 
-				val dataList = originalPacket.unpackedData ?: return
-				val dataPlayer = playerFromEntityId(originalPacket.id) ?: return
+				val oldDataList = oldPacket.unpackedData ?: return
+				val dataPlayer = playerFromEntityId(oldPacket.id) ?: return
 
-				val newData = SynchedEntityData((dataPlayer as CraftPlayer).handle)
-				if (dataList.isNotEmpty()) newData.assignValues(dataList)
+				val modifiedEntityData = SynchedEntityData((dataPlayer as CraftPlayer).handle)
+				val modifiedPacket = ClientboundSetEntityDataPacket(
+					oldPacket.id,
+					modifiedEntityData,
+					false
+				)
+				packedItemsField.set(modifiedPacket, ArrayList())
 
-				fun setGlowing() {
-					val originalByte = newData.get(EntityDataAccessor(0, EntityDataSerializers.BYTE))
-					newData.set(EntityDataAccessor(0, EntityDataSerializers.BYTE), originalByte.or(0x40))
-				}
-
-				val sentPlayer = event.player as CraftPlayer
-
-				/* determine whether player should be glowing */
-
-				/* only set when the game is going */
-				val sentPlayerTeam = UHC.game?.teams?.playersTeam(sentPlayer.uniqueId)
-				val metaPlayersArena = ArenaManager.playersArena(dataPlayer.uniqueId)
-
-				/* glowing in games */
-				if (metaPlayersArena is PvpArena) {
-					/* if on same team as meta player (not same player), or if game is in glow phase */
-					if (
-						(
-						dataPlayer.uniqueId != sentPlayer.uniqueId &&
-						ArenaManager.playersTeam(metaPlayersArena, dataPlayer.uniqueId)
-							?.contains(sentPlayer.uniqueId) == true
-						) ||
-						(metaPlayersArena.shouldGlow() && metaPlayersArena.teams.flatten()
-							.contains(sentPlayer.uniqueId))
-					) {
-						setGlowing()
+				for (oldDataEntry in oldDataList) {
+					/* modify the byte flag */
+					val value = if (oldDataEntry.accessor.id == 0 && playerShouldGlow(sendPlayer, dataPlayer)) {
+						(oldDataEntry.value as Byte).or(0x40)
+					} else {
+						oldDataEntry.value
 					}
 
-					/* teammate glowing */
-				} else if (
-					UHC.game != null &&
-					sentPlayer.uniqueId != dataPlayer.uniqueId &&
-					sentPlayerTeam != null &&
-					sentPlayerTeam.members.contains(dataPlayer.uniqueId)
-				) {
-					setGlowing()
+					modifiedPacket.unpackedData?.add(DataItem(oldDataEntry.accessor as EntityDataAccessor<Any>, value))
 				}
 
-				event.packet = PacketContainer.fromPacket(ClientboundSetEntityDataPacket(
-					originalPacket.id,
-					newData,
-					false
-				))
+				event.packet = PacketContainer.fromPacket(modifiedPacket)
 			}
 		})
 
 		/* redirect hearts objective packets to target the fake player names */
 		protocolManager.addPacketListener(object :
-			PacketAdapter(org.gaseumlabs.uhc.UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.SCOREBOARD_SCORE) {
+			PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.SCOREBOARD_SCORE) {
 			override fun onPacketSending(event: PacketEvent) {
+				val sendPlayer = event.player
 				val packet = event.packet.handle as ClientboundSetScorePacket
 
 				if (packet.objectiveName != UHC.heartsObjective.name) return
-				val player = Bukkit.getPlayer(packet.owner) ?: return
+				val objectivePlayer = Bukkit.getPlayer(packet.owner) ?: return
+
+				/* players know themselves on the scoreboard by their own names */
+				if (sendPlayer.uniqueId == objectivePlayer.uniqueId) return
 
 				event.packet = PacketContainer.fromPacket(ClientboundSetScorePacket(
 					packet.method,
 					UHC.heartsObjective.name,
-					playersNewName(player.uniqueId),
+					playersIdName(objectivePlayer.uniqueId),
 					packet.score
 				))
 			}
 		})
 
-		val enchantmentMenuId = Registry.MENU.getId(MenuType.ENCHANTMENT)
+		//val enchantmentMenuId = Registry.MENU.getId(MenuType.ENCHANTMENT)
 
 		/* set the name of every enchanting table gui */
-		protocolManager.addPacketListener(object :
-			PacketAdapter(org.gaseumlabs.uhc.UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.OPEN_WINDOW) {
-			override fun onPacketSending(event: PacketEvent) {
-				val packet = event.packet.handle as ClientboundOpenScreenPacket
-
-				/* enchantment table id: 12 */
-				if (packet.containerId != enchantmentMenuId) return
-
-				event.packet = PacketContainer.fromPacket(
-					ClientboundOpenScreenPacket(
-						packet.containerId,
-						MenuType.ENCHANTMENT,
-						Util.nmsGradientString("Replace Item to Cycle Enchants", 0xc40a0a, 0x820874)
-					)
-				)
-			}
-		})
+		/* QUARANTIED */
+		//protocolManager.addPacketListener(object :
+		//	PacketAdapter(UHCPlugin.plugin, ListenerPriority.HIGH, PacketType.Play.Server.OPEN_WINDOW) {
+		//	override fun onPacketSending(event: PacketEvent) {
+		//		val packet = event.packet.handle as ClientboundOpenScreenPacket
+//
+		//		/* enchantment table id: 12 */
+		//		if (packet.containerId != enchantmentMenuId) return
+//
+		//		event.packet = PacketContainer.fromPacket(
+		//			ClientboundOpenScreenPacket(
+		//				packet.containerId,
+		//				MenuType.ENCHANTMENT,
+		//				Util.nmsGradientString("Replace Item to Cycle Enchants", 0xc40a0a, 0x820874)
+		//			)
+		//		)
+		//	}
+		//})
 	}
 }

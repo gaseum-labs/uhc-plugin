@@ -46,13 +46,13 @@ class ResourceLeather(
 		val entityType = when {
 			BiomeNo.isMountainsBiome(biome) && Random.nextBoolean() -> LLAMA
 			BiomeNo.isPlainsBiome(biome) && Random.nextBoolean() -> {
-				val random = Random.nextInt(500)
+				val random = Random.nextInt(1000)
 				/* easter egg */
 				when {
 					random == 0 -> ZOMBIE_HORSE
 					random == 1 -> SKELETON_HORSE
 					random == 2 -> MULE
-					random < 166 -> DONKEY
+					random < 333 -> DONKEY
 					else -> HORSE
 				}
 			}

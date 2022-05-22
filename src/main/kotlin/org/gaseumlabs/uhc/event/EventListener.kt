@@ -59,7 +59,7 @@ class EventListener : Listener {
 			val player = event.player
 			val playerData = PlayerData.getPlayerData(player.uniqueId)
 
-			NameManager.updateName(event.player, UHC.getTeams().playersTeam(player.uniqueId))
+			NameManager.onPlayerLogin(event.player, UHC.getTeams().playersTeam(player.uniqueId))
 
 			/* lobby spawn */
 			if (!playerData.participating) {
@@ -467,7 +467,7 @@ class EventListener : Listener {
 			}
 		}
 	}
-	
+
 	@EventHandler
 	fun onBlockDropEnv(event: BlockBreakBlockEvent) {
 		BlockFixType.values().any { blockFixType ->

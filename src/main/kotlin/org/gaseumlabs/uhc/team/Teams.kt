@@ -141,7 +141,7 @@ class Teams<T : AbstractTeam>(
 
 	companion object {
 		fun updateNames(uuids: List<UUID>, team: AbstractTeam?) {
-			uuids.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateName(it, team) }
+			uuids.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateNominalTeams(it, team, false) }
 		}
 
 		fun randomMemberLists(players: List<OfflinePlayer>, teamSize: Int): Array<List<OfflinePlayer?>> {

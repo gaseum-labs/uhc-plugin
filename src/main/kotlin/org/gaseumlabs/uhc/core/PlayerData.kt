@@ -120,9 +120,9 @@ class PlayerData(val uuid: UUID) {
 	): Zombie {
 		val zombie = location.world.spawn(location, Zombie::class.java)
 
-		zombie.setMetadata(INVENTORY_TAG, FixedMetadataValue(org.gaseumlabs.uhc.UHCPlugin.plugin, inventory))
-		zombie.setMetadata(XP_TAG, FixedMetadataValue(org.gaseumlabs.uhc.UHCPlugin.plugin, experience))
-		zombie.setMetadata(UUID_TAG, FixedMetadataValue(org.gaseumlabs.uhc.UHCPlugin.plugin, uuid))
+		zombie.setMetadata(INVENTORY_TAG, FixedMetadataValue(UHCPlugin.plugin, inventory))
+		zombie.setMetadata(XP_TAG, FixedMetadataValue(UHCPlugin.plugin, experience))
+		zombie.setMetadata(UUID_TAG, FixedMetadataValue(UHCPlugin.plugin, uuid))
 
 		zombie.customName(name)
 		zombie.setAI(false)

@@ -59,7 +59,7 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(CaveIndicator(), this)
 		server.pluginManager.registerEvents(ResourceEvents(), this)
 
-		Packet.init()
+		Packet.registerListeners()
 
 		WorldGenManager.init(server)
 

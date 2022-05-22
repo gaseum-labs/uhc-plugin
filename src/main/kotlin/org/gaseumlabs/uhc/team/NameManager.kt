@@ -2,7 +2,7 @@ package org.gaseumlabs.uhc.team
 
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.event.Packet
-import org.gaseumlabs.uhc.event.Packet.metadataPacketDefaultState
+import org.gaseumlabs.uhc.event.Packet.playersMetadataPacket
 import net.minecraft.network.protocol.game.ClientboundSetScorePacket
 import net.minecraft.server.ServerScoreboard
 import org.bukkit.Bukkit
@@ -12,54 +12,60 @@ import org.bukkit.entity.Player
 import kotlin.math.ceil
 
 object NameManager {
-	fun updateName(player: Player, team: AbstractTeam?) {
-		player as CraftPlayer
+	fun onPlayerLogin(updatePlayer: Player, team: AbstractTeam?) {
+		updatePlayer as CraftPlayer
 
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		val newName = Packet.playersNewName(player.uniqueId)
+		val playerData = PlayerData.getPlayerData(updatePlayer.uniqueId)
 
-		playerData.setSkull(player)
+		/* 1. misc login actions */
+		playerData.setSkull(updatePlayer)
+		while (playerData.actionsQueue.isNotEmpty()) playerData.actionsQueue.remove()(updatePlayer)
+		playerData.replaceZombieWithPlayer(updatePlayer)
+		UHCBar.addBossBar(updatePlayer)
 
-		while (playerData.actionsQueue.isNotEmpty()) playerData.actionsQueue.remove()(player)
-
-		playerData.replaceZombieWithPlayer(player)
-
-		UHCBar.addBossBar(player)
-
-		/* add to hearts objective */
-		val playerHealthScore = ceil(player.health).toInt()
+		/* 2. add to hearts objective */
+		val playerHealthScore = ceil(updatePlayer.health).toInt()
 		val scoreboard = (Bukkit.getScoreboardManager().mainScoreboard as CraftScoreboard).handle
-
 		val nmsObjective = scoreboard.getObjective(UHC.heartsObjective.name)!!
-		scoreboard.getPlayerScores(player.name)[nmsObjective]?.score = playerHealthScore
+		scoreboard.getPlayerScores(updatePlayer.name)[nmsObjective]?.score = playerHealthScore
 
-		/* team name updating */
+		/* 3. update nominal teams */
+		updateNominalTeams(updatePlayer, team, true)
+	}
 
-		/* refresh the entity for the updated player for each other player */
-		Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
-			onlinePlayer as CraftPlayer
+	fun updateNominalTeams(updatePlayer: Player, team: AbstractTeam?, loggingIn: Boolean) {
+		updatePlayer as CraftPlayer
 
-			/* tell other players this player's name & update glowing */
-			Packet.updateTeamColor(player, team, newName, onlinePlayer)
-			onlinePlayer.handle.connection.send(metadataPacketDefaultState(player))
+		val updatePlayerIdName = Packet.playersIdName(updatePlayer.uniqueId)
 
-			/* send heart packet on joining */
-			onlinePlayer.handle.connection.send(ClientboundSetScorePacket(
+		Bukkit.getOnlinePlayers().forEach { sendPlayer ->
+			sendPlayer as CraftPlayer
+
+			/* tell other players updatePlayer's name color */
+			Packet.updateNominalTeamColor(sendPlayer, updatePlayer, updatePlayerIdName, team)
+			/* tell other players to glow updatePlayer if applicable */
+			sendPlayer.handle.connection.send(playersMetadataPacket(updatePlayer))
+
+			/* tell other players about updatePlayer's health */
+			sendPlayer.handle.connection.send(ClientboundSetScorePacket(
 				ServerScoreboard.Method.CHANGE,
 				UHC.heartsObjective.name,
-				player.name,
-				playerHealthScore
+				updatePlayer.name,
+				ceil(updatePlayer.health).toInt()
 			))
 
-			/* tell this player about other players' names & update glowing */
-			if (player != onlinePlayer) {
-				Packet.updateTeamColor(onlinePlayer,
-					UHC.getTeams().playersTeam(onlinePlayer.uniqueId),
-					Packet.playersNewName(onlinePlayer.uniqueId),
-					player)
-				player.handle.connection.send(metadataPacketDefaultState(onlinePlayer))
+			/* UNO REVERSE: tell updatePlayer about other players */
+			if (updatePlayer != sendPlayer) {
+				/* only need to tell updatePlayer about other team colors if they are just logging in */
+				if (loggingIn) Packet.updateNominalTeamColor(
+					updatePlayer,
+					sendPlayer,
+					Packet.playersIdName(sendPlayer.uniqueId),
+					UHC.getTeams().playersTeam(sendPlayer.uniqueId),
+				)
+
+				updatePlayer.handle.connection.send(playersMetadataPacket(sendPlayer))
 			}
 		}
 	}
-
 }

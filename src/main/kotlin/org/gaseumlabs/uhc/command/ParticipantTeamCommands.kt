@@ -48,7 +48,7 @@ class ParticipantTeamCommands : BaseCommand() {
 		val message = team.apply("Updated your team's color")
 
 		team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach {
-			NameManager.updateName(it, team)
+			NameManager.updateNominalTeams(it, team, false)
 			it.sendMessage(message)
 		}
 	}
@@ -90,7 +90,7 @@ class ParticipantTeamCommands : BaseCommand() {
 			team.colors[slot] = colorCube.colorFromIndex(colorIndex)
 		}
 
-		team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateName(it, team) }
+		team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateNominalTeams(it, team, false) }
 
 		sender.performCommand("colorPicker $slot")
 	}

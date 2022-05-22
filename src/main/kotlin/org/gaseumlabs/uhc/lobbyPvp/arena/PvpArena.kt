@@ -3,7 +3,6 @@ package org.gaseumlabs.uhc.lobbyPvp.arena
 import org.gaseumlabs.uhc.component.ComponentAction.uhcTitle
 import org.gaseumlabs.uhc.component.UHCColor
 import org.gaseumlabs.uhc.component.UHCComponent
-import org.gaseumlabs.uhc.component.UHCComponent.Companion
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.event.Packet
@@ -79,7 +78,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 
 		online.forEach { player1 ->
 			online.forEach { player2 ->
-				(player1 as CraftPlayer).handle.connection.send(Packet.metadataPacketDefaultState(player2))
+				(player1 as CraftPlayer).handle.connection.send(Packet.playersMetadataPacket(player2))
 			}
 		}
 	}
@@ -149,7 +148,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 		/* give items */
 		val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
 		loadout.fillInventory(player.inventory)
-		
+
 		player.uhcTitle(UHCComponent.text("FIGHT", UHCColor.U_GOLD), UHCComponent.text(), 0, 20, 10)
 	}
 
