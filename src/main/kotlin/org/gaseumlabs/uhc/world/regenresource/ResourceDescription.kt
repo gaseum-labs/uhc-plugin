@@ -18,7 +18,7 @@ abstract class ResourceDescription(
 
 	abstract fun eligable(player: Player): Boolean
 
-	abstract fun generateInChunk(chunk: Chunk): List<Block>?
+	abstract fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>?
 
 	override fun toString(): String {
 		return prettyName
@@ -38,7 +38,7 @@ abstract class ResourceDescriptionBlock(
 	chunkSpawnChance,
 	prettyName,
 ) {
-	abstract fun setBlock(block: Block, index: Int)
+	abstract fun setBlock(block: Block, index: Int, fullVein: Boolean)
 
 	/**
 	 * IMPORTANT! THESE SHOULD NEVER OVERLAP BETWEEN ANY OTHER BLOCK RESOURCE DESCRIPTIONS
@@ -59,7 +59,7 @@ abstract class ResourceDescriptionEntity(
 	chunkSpawnChance,
 	prettyName,
 ) {
-	abstract fun setEntity(block: Block): Entity
+	abstract fun setEntity(block: Block, fullVein: Boolean): Entity
 
 	/**
 	 * IMPORTANT! THESE SHOULD NEVER OVERLAP BETWEEN ANY OTHER BLOCK RESOURCE DESCRIPTIONS

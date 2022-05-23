@@ -6,6 +6,7 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace.UP
 import org.bukkit.entity.*
 import org.bukkit.entity.EntityType.BLAZE
+import org.bukkit.entity.EntityType.WITHER_SKELETON
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.spawnInfos.SpawnBlaze
 import org.gaseumlabs.uhc.world.WorldManager
@@ -30,7 +31,7 @@ class ResourceBlaze(
 		return true
 	}
 
-	override fun generateInChunk(chunk: Chunk): List<Block>? {
+	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
 		val potentialSpots = RegenUtil.aroundInChunk(
 			chunk,
 			{ y -> RegenUtil.yRangeCenterBias(y, 0.0f, 1.0f, 32, 110) },
@@ -49,14 +50,17 @@ class ResourceBlaze(
 		return null
 	}
 
-	override fun setEntity(block: Block): Entity {
-		val blaze = block.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), BLAZE) as Blaze
-		blaze.removeWhenFarAway = false
-		return blaze
+	override fun setEntity(block: Block, fullVein: Boolean): Entity {
+		val entity = block.world.spawnEntity(
+			block.location.add(0.5, 0.0, 0.5),
+			if (fullVein) BLAZE else WITHER_SKELETON
+		) as Monster
+		entity.removeWhenFarAway = false
+		return entity
 	}
-
+	
 	override fun isEntity(entity: Entity): Boolean {
-		return entity.type === BLAZE
+		return entity.type === BLAZE || entity.type === WITHER_SKELETON
 	}
 
 	private val spawnBlaze = SpawnBlaze()

@@ -2,6 +2,8 @@ package org.gaseumlabs.uhc.world.regenresource.type
 
 import org.bukkit.Chunk
 import org.bukkit.Material
+import org.bukkit.Material.CARVED_PUMPKIN
+import org.bukkit.Material.JACK_O_LANTERN
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
@@ -43,7 +45,7 @@ class ResourceMelon(
 		return count >= 3
 	}
 
-	override fun generateInChunk(chunk: Chunk): List<Block>? {
+	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
 		if (!chunkHasJungle(chunk)) return null
 
 		val melonSurface = surfaceSpreaderOverworld(chunk.world, chunk.x * 16 + 8, chunk.z * 16 + 8, 7, ::melonGood)
@@ -54,12 +56,12 @@ class ResourceMelon(
 		return null
 	}
 
-	override fun setBlock(block: Block, index: Int) {
-		block.setType(Material.MELON, false)
+	override fun setBlock(block: Block, index: Int, fullVein: Boolean) {
+		block.setType(if (fullVein) Material.MELON else CARVED_PUMPKIN, false)
 	}
 
 	override fun isBlock(block: Block): Boolean {
-		return block.type === Material.MELON
+		return block.type === Material.MELON || block.type === CARVED_PUMPKIN
 	}
 
 	/* placement */

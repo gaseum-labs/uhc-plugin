@@ -40,7 +40,7 @@ class Game(
 
 	val ledger = Ledger(initialRadius)
 
-	val globalResources = GlobalResources(0)
+	val globalResources = GlobalResources()
 
 	val endgameLowY: Int
 	val endgameHighY: Int

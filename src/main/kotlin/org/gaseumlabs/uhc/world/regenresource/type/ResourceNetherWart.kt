@@ -33,7 +33,7 @@ class ResourceNetherWart(
 		return true
 	}
 
-	override fun generateInChunk(chunk: Chunk): List<Block>? {
+	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
 		val potentialSpots = RegenUtil.aroundInChunk(
 			chunk,
 			{ y -> RegenUtil.yRangeCenterBias(y, 0.0f, 1.0f, 32, 110) },
@@ -55,13 +55,13 @@ class ResourceNetherWart(
 		return null
 	}
 
-	override fun setBlock(block: Block, index: Int) {
+	override fun setBlock(block: Block, index: Int, fullVein: Boolean) {
 		if (index == 0) {
 			block.setType(SOUL_SAND, false)
 		} else {
 			block.setType(NETHER_WART, false)
 			val data = block.blockData as Ageable
-			data.age = 3
+			data.age = if (fullVein) 3 else 0
 			block.setBlockData(data, false)
 		}
 	}

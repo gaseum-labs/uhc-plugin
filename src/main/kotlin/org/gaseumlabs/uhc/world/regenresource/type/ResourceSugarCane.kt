@@ -31,20 +31,22 @@ class ResourceSugarCane(
 		return player.location.y >= 58
 	}
 
-	override fun generateInChunk(chunk: Chunk): List<Block>? {
+	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
 		val surface = surfaceSpreaderOverworld(chunk.world, chunk.x * 16 + 8, chunk.z * 16 + 7, 7, ::sugarCaneGood)
 		if (surface != null) {
-			return listOf(
+			return if (fullVein) listOf(
 				surface.getRelative(0, 1, 0),
 				surface.getRelative(0, 2, 0),
 				surface.getRelative(0, 3, 0),
+			) else listOf(
+				surface.getRelative(0, 1, 0)
 			)
 		}
 
 		return null
 	}
 
-	override fun setBlock(block: Block, index: Int) {
+	override fun setBlock(block: Block, index: Int, fullVein: Boolean) {
 		block.setType(SUGAR_CANE, false)
 	}
 

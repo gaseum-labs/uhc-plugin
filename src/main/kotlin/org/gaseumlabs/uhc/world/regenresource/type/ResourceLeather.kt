@@ -32,7 +32,7 @@ class ResourceLeather(
 		return player.location.y >= 58
 	}
 
-	override fun generateInChunk(chunk: Chunk): List<Block>? {
+	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
 		val surface = surfaceSpreaderOverworld(chunk.world, chunk.x * 16 + 8, chunk.z * 16 + 8, 7, ::cowHorseGood)
 		if (surface != null) {
 			return listOf(surface.getRelative(UP))
@@ -41,7 +41,7 @@ class ResourceLeather(
 		return null
 	}
 
-	override fun setEntity(block: Block): Entity {
+	override fun setEntity(block: Block, fullVein: Boolean): Entity {
 		val biome = BiomeNo.biomeAt(block)
 		val entityType = when {
 			BiomeNo.isMountainsBiome(biome) && Random.nextBoolean() -> LLAMA
@@ -60,10 +60,10 @@ class ResourceLeather(
 		}
 
 		val animal = block.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType) as Animals
-		animal.setAdult()
+		if (fullVein) animal.setAdult() else animal.setBaby()
 		if (animal is Tameable && Random.nextInt(100) == 0) {
 			animal.isTamed = true
-			if (animal is InventoryHolder && animal.inventory is ArmoredHorseInventory && Random.nextInt(10) == 0) {
+			if (animal is InventoryHolder && animal.inventory is ArmoredHorseInventory && Random.nextInt(100) == 0) {
 				val inventory = animal.inventory as ArmoredHorseInventory
 				inventory.saddle = ItemStack(SADDLE)
 				inventory.armor = ItemStack(GOLDEN_HORSE_ARMOR)

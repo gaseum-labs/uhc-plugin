@@ -2,6 +2,7 @@ package org.gaseumlabs.uhc.world.regenresource.type
 
 import org.bukkit.*
 import org.bukkit.Material.GOLD_ORE
+import org.bukkit.Material.TUFF
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.FallingBlock
@@ -38,7 +39,7 @@ class ResourceOre(
 		return true
 	}
 
-	override fun generateInChunk(chunk: Chunk): List<Block>? {
+	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
 		val potentialSpots = RegenUtil.aroundInChunk(
 			chunk,
 			yDistribution,
@@ -57,11 +58,11 @@ class ResourceOre(
 			}
 		} ?: return null
 
-		return createOreFrom(oreSource)
+		return createOreFrom(oreSource, if (fullVein) veinSize else 1)
 	}
 
-	override fun setBlock(block: Block, index: Int) {
-		block.setType(if (block.type === Material.DEEPSLATE) deepType else type, false)
+	override fun setBlock(block: Block, index: Int, fullVein: Boolean) {
+		block.setType(if (block.type === Material.DEEPSLATE || block.type === TUFF) deepType else type, false)
 	}
 
 	override fun isBlock(block: Block): Boolean {
@@ -70,14 +71,14 @@ class ResourceOre(
 
 	/* placement */
 
-	fun createOreFrom(origin: Block): List<Block> {
+	fun createOreFrom(origin: Block, numBlocks: Int): List<Block> {
 		/* keep track of all the ores that will be placed */
 		/* to decide the next location to spread to */
-		val veinBlocks = ArrayList<Block>(veinSize)
+		val veinBlocks = ArrayList<Block>(numBlocks)
 		veinBlocks.add(origin)
 
 		/* place the rest in a contiguous cluster */
-		for (j in 1 until veinSize) {
+		for (j in 1 until numBlocks) {
 			veinBlocks.shuffle()
 			veinBlocks.add(
 				veinBlocks.mapFirstNotNullPrefer { oreBlock ->

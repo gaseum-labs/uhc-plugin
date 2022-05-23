@@ -1,6 +1,8 @@
 package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
+import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.world.regenresource.type.ResourceMelon
 import org.gaseumlabs.uhc.world.regenresource.type.ResourceOre
 import org.gaseumlabs.uhc.world.regenresource.type.ResourceSugarCane
@@ -24,7 +26,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 	SUGAR_CANE({
 		ResourceSugarCane(
 			hashMapOf(PhaseType.GRACE to 14, PhaseType.SHRINK to 34, PhaseType.ENDGAME to 4),
-			4,
+			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 4.0f,
 			"Sugar cane"
@@ -33,7 +35,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 	LEATHER({
 		ResourceLeather(
 			hashMapOf(PhaseType.GRACE to 14, PhaseType.SHRINK to 34, PhaseType.ENDGAME to 4),
-			4,
+			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 8.0f,
 			"Leather"
@@ -121,6 +123,8 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 	});
 
 	val description = createDescription()
+
+	val chunkKey = NamespacedKey(UHCPlugin.plugin, name)
 
 	init {
 		description.regenResource = this
