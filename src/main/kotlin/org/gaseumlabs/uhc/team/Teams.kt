@@ -109,10 +109,11 @@ class Teams<T : AbstractTeam>(
 	}
 
 	fun <R : AbstractTeam> transfer(otherTeams: Teams<R>, convert: (T) -> R) {
-		teams.removeIf { (team, _) ->
-			otherTeams.addTeam(convert(team))
-			true
-		}
+		teams.forEach { (team) -> otherTeams.addTeam(convert(team)) }
+	}
+
+	fun clear() {
+		teams.clear()
 	}
 
 	/* internal */

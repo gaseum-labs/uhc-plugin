@@ -96,7 +96,7 @@ object UHC {
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
 					currentGame.globalResources.tick(currentGame, currentTick)
 				}
-				
+
 				Portal.portalTick(currentGame)
 				PlayerData.zombieBorderTick(currentTick, currentGame)
 				ledgerTrailTick(currentGame, currentTick)
@@ -140,7 +140,7 @@ object UHC {
 
 					/* add people to team vcs */
 					/* make teams finalized */
-					val teams: Teams<Team> = Teams({ action ->
+					val gameTeams: Teams<Team> = Teams({ action ->
 						Teams.updateNames(action.uuids, action.team)
 
 						val bot = UHC.bot ?: return@Teams
@@ -154,12 +154,12 @@ object UHC {
 						colorCube.removeTeam(team.colors)
 					})
 
-					preGameTeams.transfer(teams, PreTeam::toTeam)
+					preGameTeams.transfer(gameTeams, PreTeam::toTeam)
 
 					/* GAME OBJECT */
 					val newGame = Game(
 						preGameConfig,
-						teams,
+						gameTeams,
 						worldRadius,
 						gameWorld,
 						netherWorld
@@ -181,6 +181,7 @@ object UHC {
 					}
 
 					game = newGame
+					preGameTeams.clear()
 				}
 			}
 
