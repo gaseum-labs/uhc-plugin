@@ -16,6 +16,7 @@ import java.util.*
 object ArenaManager {
 	const val ARENA_STRIDE = 96
 	const val BORDER = 64
+	const val EDGE = (ARENA_STRIDE - BORDER) / 2
 	const val GUTTER = 8
 	const val START_BUFFER = 5
 	const val TEAM_BUFFER = 3
@@ -76,6 +77,7 @@ object ArenaManager {
 	}
 
 	fun perTick(currentTick: Int) {
+		/* prevent shooting cross arena */
 		if (currentTick % 4 == 0) {
 			WorldManager.pvpWorld.entities.forEach { entity ->
 				if (

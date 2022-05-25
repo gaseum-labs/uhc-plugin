@@ -6,8 +6,6 @@ import org.gaseumlabs.uhc.customSpawning.SpawningPlayerData
 import org.gaseumlabs.uhc.gui.gui.LoadoutGui
 import org.gaseumlabs.uhc.gui.gui.LobbyPvpGui
 import org.gaseumlabs.uhc.lobbyPvp.*
-import org.gaseumlabs.uhc.lobbyPvp.arena.ParkourArena
-import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
 import org.gaseumlabs.uhc.quirk.Quirk
 import org.gaseumlabs.uhc.quirk.QuirkType
 import org.gaseumlabs.uhc.util.UHCProperty
@@ -20,7 +18,9 @@ import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.metadata.FixedMetadataValue
+import org.gaseumlabs.uhc.lobbyPvp.arena.*
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -33,17 +33,19 @@ class PlayerData(val uuid: UUID) {
 	/* lobby pvp stuff */
 
 	var lobbyInventory = emptyArray<ItemStack?>()
+	val recentPlatforms = ArrayList<UUID>()
 	var lastPlayed: UUID? = null
 	var loadoutSlot = UHCProperty(0)
 	var inLobbyPvpQueue = UHCProperty(0) { set ->
 		when (set) {
 			0 -> PvpQueue.remove(uuid)
-			PvpArena.TYPE_1V1 -> PvpQueue.add(uuid, PvpArena.TYPE_1V1)
-			PvpArena.TYPE_2V2 -> PvpQueue.add(uuid, PvpArena.TYPE_2V2)
+			PvpQueue.TYPE_1V1 -> PvpQueue.add(uuid, PvpQueue.TYPE_1V1)
+			PvpQueue.TYPE_2V2 -> PvpQueue.add(uuid, PvpQueue.TYPE_2V2)
+			PvpQueue.TYPE_GAP -> PvpQueue.add(uuid, PvpQueue.TYPE_GAP)
 		}
 		set
 	}
-	var slotCosts = Array(Loadouts.NUM_SLOTS) { i ->
+	var slotCosts = Array(Loadouts.NUM_SLOTS) {
 		UHCProperty(0)
 	}
 	val parkourIndex = UHCProperty(-1)
@@ -239,6 +241,15 @@ class PlayerData(val uuid: UUID) {
 
 	fun getQuirkData(quirk: Quirk): Any {
 		return quirkDataList.getOrPut(quirk.type) { QuirkDataHolder(false, quirk.defaultData()) }.data
+	}
+
+	fun addRecentPlatform(uuid: UUID) {
+		val oldIndex = recentPlatforms.indexOf(uuid)
+		if (oldIndex != -1) recentPlatforms.removeAt(oldIndex)
+		recentPlatforms.add(0, uuid)
+		while (recentPlatforms.size > 5) {
+			recentPlatforms.removeLast()
+		}
 	}
 
 	companion object {

@@ -15,7 +15,6 @@ import org.gaseumlabs.uhc.team.HideManager
 import org.gaseumlabs.uhc.team.NameManager
 import org.gaseumlabs.uhc.util.SchedulerUtil
 import org.gaseumlabs.uhc.util.Util
-import org.gaseumlabs.uhc.world.WorldGenOption
 import org.gaseumlabs.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -24,7 +23,6 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH
-import org.bukkit.block.Block
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -49,8 +47,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 import org.gaseumlabs.uhc.core.*
-import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
-import org.gaseumlabs.uhc.world.regenresource.*
+import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
 
 class EventListener : Listener {
 	@EventHandler
@@ -161,6 +158,12 @@ class EventListener : Listener {
 			arena.checkEnd()
 
 			/* players dying in the game */
+		} else if (arena is GapSlapArena) {
+			event.isCancelled = true
+			bloodCloud(player.location)
+
+			player.gameMode = GameMode.SPECTATOR
+
 		} else if (playerData.participating) {
 			event.isCancelled = true
 			bloodCloud(player.location)
@@ -613,9 +616,9 @@ class EventListener : Listener {
 				}
 			}
 		} else {
-			val pvpGame = ArenaManager.playersArena(player.uniqueId)
+			val arena = ArenaManager.playersArena(player.uniqueId) as? PvpArena
 
-			if (pvpGame != null && event.blockPlaced.y > 100) {
+			if (arena != null && event.blockPlaced.y > 100) {
 				event.player.sendActionBar(Component.text("Height limit for building is 100",
 					NamedTextColor.RED,
 					TextDecoration.BOLD))
@@ -709,8 +712,7 @@ class EventListener : Listener {
 	fun onGrow(event: BlockGrowEvent) {
 		if (
 			event.newState.type === Material.SUGAR_CANE &&
-			WorldManager.isGameWorld(event.newState.world) &&
-			UHC.getConfig().worldGenEnabled(WorldGenOption.SUGAR_CANE_REGEN)
+			WorldManager.isGameWorld(event.newState.world)
 		) {
 			event.isCancelled = true
 		}

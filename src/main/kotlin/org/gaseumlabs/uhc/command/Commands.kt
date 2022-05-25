@@ -57,5 +57,20 @@ object Commands {
 		commandManager.commandCompletions.registerCompletion("biome") {
 			Biome.values().map { it.name.lowercase() }
 		}
+
+		commandManager.commandCompletions.registerCompletion("uhcblockx") { context ->
+			val block = context.player.getTargetBlock(10)
+			if (block == null) emptyList() else listOf(block.x.toString())
+		}
+
+		commandManager.commandCompletions.registerCompletion("uhcblocky") { context ->
+			val block = context.player.getTargetBlock(10)
+			if (block == null) emptyList() else listOf(block.y.toString())
+		}
+
+		commandManager.commandCompletions.registerCompletion("uhcblockz") { context ->
+			val block = context.player.getTargetBlock(10)
+			if (block == null) emptyList() else listOf(block.z.toString())
+		}
 	}
 }

@@ -17,20 +17,25 @@ import org.bukkit.*
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.lobbyPvp.ArenaManager.ARENA_STRIDE
+import org.gaseumlabs.uhc.lobbyPvp.ArenaManager.BORDER
+import org.gaseumlabs.uhc.lobbyPvp.ArenaManager.EDGE
 import java.util.*
+import kotlin.collections.ArrayList
 
 abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>) {
 	var x = 0
 	var z = 0
 	var startTime = -4
 
-	data class Position(val x: Int, val z: Int, val rotation: Float)
+	data class Position(val x: Int, val z: Int, val rotation: Float, val y: Int?)
 
 	fun perSecond(): Boolean {
 		++startTime
+		val onlinePlayers = online()
 
 		return if (startTime < 0) {
-			online().forEach { player ->
+			onlinePlayers.forEach { player ->
 				player.uhcTitle(
 					UHCComponent.text((-startTime).toString(), UHCColor.U_RED),
 					UHCComponent.text(startText(), UHCColor.U_RED),
@@ -44,7 +49,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		} else if (startTime == 0) {
 			/* everyone must be there to start */
 			if (all().any { Bukkit.getPlayer(it) == null }) {
-				online().forEach { player -> Commands.errorMessage(player, "Game cancelled! A player left") }
+				onlinePlayers.forEach { player -> Commands.errorMessage(player, "Game cancelled! A player left") }
 
 				true
 
@@ -54,13 +59,20 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 				val positions = startingPositions(teams)
 
 				val teamLocations = positions.map {
-					it.map { (x, z, rotation) ->
-						val (liquidY, solidY) = Util.topLiquidSolidY(world, x, z)
-						if (liquidY != -1) world.getBlockAt(x, liquidY, z).type = Material.STONE
+					it.map { (x, z, rotation, fixedY) ->
+						val y = if (fixedY != null) {
+							fixedY
+						} else {
+							val (liquidY, solidY) = Util.topLiquidSolidY(world, x, z)
+							if (liquidY != -1) world.getBlockAt(x, liquidY, z).type = Material.STONE
+
+							(if (liquidY == -1) solidY else liquidY) + 1
+						}
+
 						Location(
 							world,
 							x + 0.5,
-							(if (liquidY == -1) solidY else liquidY) + 1.0,
+							y.toDouble(),
 							z + 0.5,
 							rotation,
 							0.0f
@@ -75,6 +87,8 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 					}
 				}
 
+				arenaStart(onlinePlayers)
+
 				false
 			}
 		} else {
@@ -83,7 +97,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 				team.removeIf { !playerIsParticipating(it) }
 			}
 
-			customPerSecond() || (shutdownOnLeave() && all().isEmpty())
+			(shutdownOnLeave() && onlinePlayers.isEmpty()) || customPerSecond(onlinePlayers)
 		}
 	}
 
@@ -97,17 +111,16 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 		Lobby.resetPlayerStats(player)
 
-		customStartPlayer(player, playerData)
-
-		NameManager.updateNominalTeams(player, UHC.getTeams().playersTeam(player.uniqueId), false)
 		player.teleport(location)
+		customStartPlayer(player, playerData)
+		NameManager.updateNominalTeams(player, UHC.getTeams().playersTeam(player.uniqueId), false)
 
 		/* fake border */
 		val border = WorldBorder()
 		border.world = (WorldManager.pvpWorld as CraftWorld).handle
 		val (centerX, centerZ) = getCenter()
 		border.setCenter(centerX.toDouble(), centerZ.toDouble())
-		border.size = ArenaManager.BORDER.toDouble()
+		border.size = BORDER.toDouble()
 
 		player as CraftPlayer
 		player.handle.connection.send(ClientboundSetBorderCenterPacket(border))
@@ -123,8 +136,8 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		return if (saveData != null) {
 			WorldStorage.save(
 				world,
-				x * ArenaManager.ARENA_STRIDE,
-				z * ArenaManager.ARENA_STRIDE,
+				x * ARENA_STRIDE,
+				z * ARENA_STRIDE,
 				"${type.name}|${saveData}"
 			)
 
@@ -134,13 +147,15 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		}
 	}
 
-	abstract fun customPerSecond(): Boolean
+	abstract fun customPerSecond(onlinePlayers: List<Player>): Boolean
 
 	abstract fun startingPositions(teams: ArrayList<ArrayList<UUID>>): List<List<Position>>
 
 	abstract fun customStartPlayer(player: Player, playerData: PlayerData)
 
 	abstract fun prepareArena(world: World)
+
+	abstract fun arenaStart(onlinePlayers: List<Player>)
 
 	abstract fun startText(): String
 
@@ -178,19 +193,24 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 	fun getCenter(): Pair<Int, Int> = Companion.getCenter(x, z)
 
+	fun inBorder(testX: Int, testZ: Int): Boolean {
+		return testX in x * ARENA_STRIDE + EDGE until x * ARENA_STRIDE + EDGE + BORDER &&
+		testZ in z * ARENA_STRIDE + EDGE until z * ARENA_STRIDE + EDGE + BORDER
+	}
+
 	companion object {
 		fun getCenter(x: Int, z: Int): Pair<Int, Int> {
 			return Pair(
-				x * ArenaManager.ARENA_STRIDE + (ArenaManager.ARENA_STRIDE / 2),
-				z * ArenaManager.ARENA_STRIDE + (ArenaManager.ARENA_STRIDE / 2)
+				x * ARENA_STRIDE + (ARENA_STRIDE / 2),
+				z * ARENA_STRIDE + (ARENA_STRIDE / 2)
 			)
 		}
 
 		fun load(world: World, x: Int, z: Int): Arena? {
 			val data = WorldStorage.load(
 				world,
-				x * ArenaManager.ARENA_STRIDE,
-				z * ArenaManager.ARENA_STRIDE
+				x * ARENA_STRIDE,
+				z * ARENA_STRIDE
 			) ?: return null
 
 			val parts = data.split('|')
@@ -209,27 +229,32 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 
 	fun outsideBorder(onOutside: (Player, Int) -> Unit) {
 		online().forEach { player ->
-			val minX = (x * ArenaManager.ARENA_STRIDE) + (ArenaManager.ARENA_STRIDE - ArenaManager.BORDER) / 2
-			val maxX =
-				(x * ArenaManager.ARENA_STRIDE) + ((ArenaManager.ARENA_STRIDE / 2) + (ArenaManager.BORDER / 2)) - 1
-			val minZ = (z * ArenaManager.ARENA_STRIDE) + (ArenaManager.ARENA_STRIDE - ArenaManager.BORDER) / 2
-			val maxZ =
-				(z * ArenaManager.ARENA_STRIDE) + ((ArenaManager.ARENA_STRIDE / 2) + (ArenaManager.BORDER / 2)) - 1
-
-			val playerX = player.location.blockX
-			val playerZ = player.location.blockZ
-
-			val outside = when {
-				playerX < minX -> minX - playerX
-				playerX > maxX -> playerX - maxX
-				else -> 0
-			} + when {
-				playerZ < minZ -> minZ - playerZ
-				playerZ > maxZ -> playerZ - maxZ
-				else -> 0
-			}
-
-			if (outside > 0) onOutside(player, outside)
+			val amount = playerOutsideBorderBy(player)
+			if (amount > 0) onOutside(player, amount)
 		}
+	}
+
+	fun playerOutsideBorderBy(player: Player): Int {
+		val minX = (x * ARENA_STRIDE) + (ARENA_STRIDE - BORDER) / 2
+		val maxX =
+			(x * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (BORDER / 2)) - 1
+		val minZ = (z * ARENA_STRIDE) + (ARENA_STRIDE - BORDER) / 2
+		val maxZ =
+			(z * ARENA_STRIDE) + ((ARENA_STRIDE / 2) + (BORDER / 2)) - 1
+
+		val playerX = player.location.blockX
+		val playerZ = player.location.blockZ
+
+		val outside = when {
+			playerX < minX -> minX - playerX
+			playerX > maxX -> playerX - maxX
+			else -> 0
+		} + when {
+			playerZ < minZ -> minZ - playerZ
+			playerZ > maxZ -> playerZ - maxZ
+			else -> 0
+		}
+
+		return outside
 	}
 }

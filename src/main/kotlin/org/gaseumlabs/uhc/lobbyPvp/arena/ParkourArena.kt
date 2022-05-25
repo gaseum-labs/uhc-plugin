@@ -53,8 +53,6 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 		}
 	}
 
-	/* override */
-
 	fun enterPlayer(player: Player, forceParticipate: Boolean, teleport: Boolean) {
 		Lobby.resetPlayerStats(player)
 
@@ -118,7 +116,7 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 		return world.getBlockAt(centerX, Util.topBlockY(world, centerX, centerZ), centerZ)
 	}
 
-	override fun customPerSecond(): Boolean {
+	override fun customPerSecond(onlinePlayers: List<Player>): Boolean {
 		return false
 	}
 
@@ -127,7 +125,7 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 
 		return teams.map { team ->
 			team.map {
-				Position(centerX, centerZ, 0.0f)
+				Position(centerX, centerZ, 0.0f, null)
 			}
 		}
 	}
@@ -139,6 +137,8 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 	override fun prepareArena(world: World) {
 		start = defaultStart()
 	}
+
+	override fun arenaStart(onlinePlayers: List<Player>) {}
 
 	override fun startText() = "Starting parkour in"
 

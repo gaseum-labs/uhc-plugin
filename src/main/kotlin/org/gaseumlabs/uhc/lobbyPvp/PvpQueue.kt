@@ -1,17 +1,35 @@
 package org.gaseumlabs.uhc.lobbyPvp
 
+import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.PlayerData
+import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
+import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena.Platform
 import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
 import org.gaseumlabs.uhc.util.UHCProperty
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.math.min
 
 object PvpQueue {
+	const val TYPE_NONE = 0
+	const val TYPE_1V1 = 1
+	const val TYPE_2V2 = 2
+	const val TYPE_GAP = 3
+
 	const val QUEUE_TIME = 10
 	const val QUEUE_EXTEND_TIME = 20
 
 	data class QueueElement(val uuid: UUID, var type: Int, var time: Int)
+
+	fun queueName(type: Int): String {
+		return when (type) {
+			TYPE_1V1 -> "1v1"
+			TYPE_2V2 -> "2v2"
+			TYPE_GAP -> "Gap Slap"
+			else -> "???"
+		}
+	}
 
 	val enabled = UHCProperty(true) { set ->
 		if (!set) queue.removeIf {
@@ -66,7 +84,7 @@ object PvpQueue {
 				val element1 = queue[i]
 				val element2 = queue[j]
 
-				if (element1.type == PvpArena.TYPE_1V1 && element2.type == PvpArena.TYPE_1V1) {
+				if (element1.type == TYPE_1V1 && element2.type == TYPE_1V1) {
 					val greatestTime = max(element1.time, element2.time)
 					val leastTime = min(element1.time, element2.time)
 
@@ -128,14 +146,14 @@ object PvpQueue {
 				/* create pvp game */
 				ArenaManager.addArena(
 					PvpArena(
-						arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)), PvpArena.TYPE_1V1
+						arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)), TYPE_1V1
 					)
 				)
 			}
 		}
 
 		/* 2v2 queue */
-		val availablePlayers = ArrayList(queue.filter { it.type == PvpArena.TYPE_2V2 }.sortedBy { it.time })
+		val availablePlayers = ArrayList(queue.filter { it.type == TYPE_2V2 }.sortedBy { it.time })
 
 		/* try to create games in sections of 4 */
 		while (true) {
@@ -155,13 +173,68 @@ object PvpQueue {
 				/* create pvp game */
 				ArenaManager.addArena(
 					PvpArena(
-						arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])), PvpArena.TYPE_2V2
+						arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])), TYPE_2V2
 					)
 				)
 			}
 		}
 
+		/* gap slap queue */
+		val availableGapSlappers =
+			ArrayList(queue.filter { it.type == TYPE_GAP }.sortedBy { it.time })
+
+		while (true) {
+			if (availableGapSlappers.size < 2) {
+				break
+			} else if (availableGapSlappers.size < 4) {
+				/* only make a game if all players have been waiting for 10 seconds */
+				if (availableGapSlappers.any { it.time < QUEUE_TIME }) break
+
+				startGapSlapArena(Array(availableGapSlappers.size) { availableGapSlappers.removeLast().uuid })
+			} else {
+				startGapSlapArena(Array(4) { availableGapSlappers.removeLast().uuid })
+			}
+		}
+
 		/* time increase */
 		queue.forEach { ++it.time }
+	}
+
+	fun startGapSlapArena(group: Array<UUID>) {
+		val playerDatas = group.map { PlayerData.getPlayerData(it) }
+
+		/* remove them from the queue */
+		playerDatas.forEach { it.inLobbyPvpQueue.set(0) }
+
+		val platformUUID = determinePlatform(playerDatas) ?: return
+		val platform = GapSlapArena.submittedPlatforms[platformUUID] ?: return
+
+		playerDatas.forEach { it.addRecentPlatform(platformUUID) }
+
+		ArenaManager.addArena(
+			GapSlapArena(
+				group.map { arrayListOf(it) } as ArrayList<ArrayList<UUID>>,
+				platform,
+			)
+		)
+	}
+
+	fun determinePlatform(playerDatas: List<PlayerData>): UUID? {
+		if (GapSlapArena.submittedPlatforms.isEmpty()) return null
+
+		class KeyPair(val uuid: UUID, var negativeWeight: Int)
+
+		val negativeWeights = GapSlapArena.submittedPlatforms.keys.associateWith { uuid -> KeyPair(uuid, 0) }
+
+		playerDatas.forEach { playerData ->
+			playerData.recentPlatforms.forEachIndexed { i, uuid ->
+				val keyPair = negativeWeights[uuid]
+				if (keyPair != null) keyPair.negativeWeight += 5 - i
+			}
+		}
+
+		val keyPair = negativeWeights.values.maxByOrNull { it.negativeWeight } ?: return null
+
+		return keyPair.uuid
 	}
 }

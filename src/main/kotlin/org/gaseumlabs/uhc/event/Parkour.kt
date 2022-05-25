@@ -11,51 +11,70 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.*
 import org.bukkit.block.BlockFace
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerMoveEvent
+import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
 
 class Parkour : Listener {
-	/* checkpoints */
 	@EventHandler
 	fun onMove(event: PlayerMoveEvent) {
 		val player = event.player
-		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
 
-		val under = event.to.block.getRelative(BlockFace.DOWN)
+		when (val arena = ArenaManager.playersArena(player.uniqueId)) {
+			is ParkourArena -> {
+				val under = event.to.block.getRelative(BlockFace.DOWN)
 
-		val checkpointType = when {
-			under.type === Material.GOLD_BLOCK -> 0
-			under.samePlace(arena.start) -> 1
-			else -> -1
-		}
+				val checkpointType = when {
+					under.type === Material.GOLD_BLOCK -> 0
+					under.samePlace(arena.start) -> 1
+					else -> -1
+				}
 
-		val parkourData = arena.getParkourData(player.uniqueId)
-		parkourData.timerGoing = true
+				val parkourData = arena.getParkourData(player.uniqueId)
+				parkourData.timerGoing = true
 
-		if (checkpointType != -1) {
-			val isBuilding = player.gameMode === GameMode.CREATIVE
+				if (checkpointType != -1) {
+					val isBuilding = player.gameMode === GameMode.CREATIVE
 
-			if (!parkourData.checkpoint.samePlace(under)) {
-				parkourData.checkpoint = under
+					if (!parkourData.checkpoint.samePlace(under)) {
+						parkourData.checkpoint = under
 
-				player.uhcHotbar(
-					UHCComponent.text()
-						.andSwitch(isBuilding) {
-							Companion.text("Set Testing Start", UHCColor.U_AQUA)
-						}
-						.andSwitch(checkpointType == 0) {
-							Companion.text("New Checkpoint Reached!", UHCColor.U_GOLD)
-						}
-						.andSwitch(true) {
-							Companion.text("Reset to Start!", UHCColor.U_BLUE)
-						}
-				)
+						player.uhcHotbar(
+							UHCComponent.text()
+								.andSwitch(isBuilding) {
+									Companion.text("Set Testing Start", UHCColor.U_AQUA)
+								}
+								.andSwitch(checkpointType == 0) {
+									Companion.text("New Checkpoint Reached!", UHCColor.U_GOLD)
+								}
+								.andSwitch(true) {
+									Companion.text("Reset to Start!", UHCColor.U_BLUE)
+								}
+						)
+					}
+				}
+			}
+			is GapSlapArena -> {
+				if (arena.playersShouldBeFrozen()) {
+					event.to = event.from.setDirection(event.to.direction)
+				}
+			}
+			else -> {
 			}
 		}
+	}
+
+	@EventHandler
+	fun onDamage(event: EntityDamageEvent) {
+		val player = event.entity as? Player ?: return
+		val arena = ArenaManager.playersArena(player.uniqueId) as? GapSlapArena ?: return
+		if (arena.playersShouldBeFrozen()) event.isCancelled = true
 	}
 
 	@EventHandler

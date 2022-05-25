@@ -128,7 +128,7 @@ object Lobby {
 						val queueType = playerData.inLobbyPvpQueue.get()
 
 						player.sendActionBar(Util.gradientString(
-							"${PvpArena.typeName(queueType)} | " +
+							"${PvpQueue.queueName(queueType)} | " +
 							"Queue Time: ${Util.timeString(queueTime)} | " +
 							"Players in Queue: ${PvpQueue.size(queueType)}",
 							TextColor.color(0x750c0c), TextColor.color(0xeb1f0c)

@@ -21,7 +21,7 @@ object UHCTerrainShaper {
 	}
 
 	private fun offsetUHC(f: Float): Float {
-		return if (f < -0.1f) -0.1f else f
+		return if (f < -0.2f) -0.2f else f
 	}
 
 	fun createGame(amplified: Boolean): TerrainShaper {
@@ -76,12 +76,31 @@ object UHCTerrainShaper {
 		//	amplifiedOffset
 		//)
 
-		val cubicSplineUHC = buildErosionOffsetSplineUHC(
+		val cubicSplineUHC0 = buildErosionOffsetSplineUHC(
 			0.00f,
 			0.01f,
-			0.25f,
+			0.23f,
 			0.02f,
 			0.08f,
+			1.0f,
+			amplifiedOffset
+		)
+		val cubicSplineUHC1 = buildErosionOffsetSplineUHC(
+			0.00f,
+			0.01f,
+			0.23f,
+			0.02f,
+			0.08f,
+			1.2f,
+			amplifiedOffset
+		)
+		val cubicSplineUHC2 = buildErosionOffsetSplineUHC(
+			0.00f,
+			0.01f,
+			0.23f,
+			0.02f,
+			0.08f,
+			1.1f,
 			amplifiedOffset
 		)
 
@@ -96,7 +115,9 @@ object UHCTerrainShaper {
 			//.addPoint(-0.1f, cubicSpline2, 0.0f)
 			//.addPoint(0.25f, cubicSpline3, 0.0f)
 			//.addPoint(1.0f, cubicSpline4, 0.0f)
-			.addPoint(0.0f, cubicSplineUHC, 0.0f)
+			.addPoint(-1.0f, cubicSplineUHC0, 0.0f)
+			.addPoint(0.0f, cubicSplineUHC1, 0.0f)
+			.addPoint(1.0f, cubicSplineUHC2, 0.0f)
 			.build()
 
 		val cubicSpline6 = CubicSpline.builder(UHC_CONTINENTS, NO_TRANSFORM)
@@ -157,17 +178,22 @@ object UHCTerrainShaper {
 		p2: Float,
 		p3: Float,
 		p4: Float,
+		mountain: Float,
 		amplified: ToFloatFunction<Float>,
 	): CubicSpline<Point> {
 		val builder = CubicSpline.builder(UHC_EROSION, amplified)
 
 		return builder.addPoint(-1.00f, ridgeSpline(p0, p1, p2, p3, p4, 0.5f, amplified), 0.0f)
 			.addPoint(-0.75f, ridgeSpline(p0 * 0.7f, p1 * 0.7f, p2 * 0.7f, p3 * 0.7f, p4 * 0.7f, 0.5f, amplified), 0.0f)
-			.addPoint(-0.50f, -0.15f, 0.0f) //river
+			.addPoint(-0.50f, -0.2f, 0.0f) //river
 			.addPoint(-0.25f, ridgeSpline(p0, p1, p2, p3, p4, 0.5f, amplified), 0.0f)
-			.addPoint(0.00f, ridgeSpline(p0 * 1.2f, p1 * 1.2f, p2 * 1.2f, p3 * 1.2f, p4 * 1.2f, 0.5f, amplified), 0.0f)
+			.addPoint(
+				0.00f,
+				ridgeSpline(p0 * mountain, p1 * mountain, p2 * mountain, p3 * mountain, p4 * mountain, 0.5f, amplified),
+				0.0f
+			)
 			.addPoint(0.25f, ridgeSpline(p0, p1, p2, p3, p4, 0.5f, amplified), 0.0f)
-			.addPoint(0.50f, -0.1f, 0.0f) //river
+			.addPoint(0.50f, -0.15f, 0.0f) //river
 			.addPoint(0.75f, ridgeSpline(p0 * 0.6f, p1 * 0.6f, p2 * 0.6f, p3 * 0.6f, p4 * 0.6f, 0.5f, amplified), 0.0f)
 			.addPoint(1.00f, ridgeSpline(p0, p1, p2, p3, p4, 0.5f, amplified), 0.0f)
 			.build()

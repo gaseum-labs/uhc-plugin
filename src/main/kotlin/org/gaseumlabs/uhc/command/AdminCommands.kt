@@ -12,6 +12,7 @@ import org.gaseumlabs.uhc.world.WorldManager
 import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
 
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
@@ -170,5 +171,19 @@ class AdminCommands : BaseCommand() {
 
 		Lobby.saveRadius(WorldManager.lobbyWorld, radius)
 		Action.sendGameMessage(sender, "Set the lobby radius to $radius")
+	}
+
+	@Subcommand("banPlatform")
+	@CommandCompletion("@uhcplayer")
+	fun bad(sender: CommandSender, banPlayer: OfflinePlayer) {
+		sender as Player
+		if (Commands.opGuard(sender)) return
+
+		val removed = GapSlapArena.submittedPlatforms.remove(banPlayer.uniqueId)
+
+		Action.sendGameMessage(sender,
+			if (removed == null) "${banPlayer.name} has not submitted a platform"
+			else "Removed ${banPlayer.name}'s platform"
+		)
 	}
 }

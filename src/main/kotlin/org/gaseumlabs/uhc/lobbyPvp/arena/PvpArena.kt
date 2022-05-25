@@ -15,10 +15,7 @@ import kotlin.math.*
 
 class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(ArenaType.PVP, teams) {
 	companion object {
-		const val TYPE_1V1 = 1
-		const val TYPE_2V2 = 2
-
-		fun typeName(type: Int) = if (type == TYPE_1V1) "1v1" else "2v2"
+		fun typeName(type: Int) = if (type == PvpQueue.TYPE_1V1) "1v1" else "2v2"
 
 		fun load(data: String, world: World): Arena? {
 			return null
@@ -89,7 +86,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 
 	/* override */
 
-	override fun customPerSecond(): Boolean {
+	override fun customPerSecond(onlinePlayers: List<Player>): Boolean {
 		++pvpTimer
 
 		/* postgame length until game is destroyed */
@@ -137,7 +134,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 				val x = floor(centerX + (cos(angle) * radius)).toInt()
 				val z = floor(centerZ + (sin(angle) * radius)).toInt()
 
-				Position(x, z, angle * 180.0f)
+				Position(x, z, angle * 180.0f, null)
 			}
 		}
 	}
@@ -170,6 +167,8 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 			}
 		}
 	}
+
+	override fun arenaStart(onlinePlayers: List<Player>) {}
 
 	override fun startText() = "Entering PVP in"
 

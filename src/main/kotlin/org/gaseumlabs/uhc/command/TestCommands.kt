@@ -23,6 +23,7 @@ import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.lobbyPvp.PvpQueue
 import org.gaseumlabs.uhc.world.regenresource.*
 import java.util.*
 
@@ -198,7 +199,7 @@ class TestCommands : BaseCommand() {
 			PvpArena(
 				arrayListOf(arrayListOf(player1.uniqueId),
 					arrayListOf(player2.uniqueId)
-				), PvpArena.TYPE_1V1)
+				), PvpQueue.TYPE_1V1)
 		)
 
 		Action.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")
