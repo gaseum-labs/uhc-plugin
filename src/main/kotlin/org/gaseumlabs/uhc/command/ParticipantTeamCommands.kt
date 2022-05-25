@@ -15,10 +15,10 @@ class ParticipantTeamCommands : BaseCommand() {
 	@CommandAlias("teamName")
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
-		val filteredName = newName.trim().filter { it in ' '..'~' }
+		val filteredName = newName.trim()
 
-		if (filteredName.length > 20) {
-			return Commands.errorMessage(sender, "Maximum name length is 20, you entered ${filteredName.length}")
+		if (filteredName.length !in 3..20) {
+			return Commands.errorMessage(sender, "Please enter a name 3 to 20 characters long")
 		}
 
 		val team = UHC.getTeams().playersTeam((sender as Player).uniqueId)
