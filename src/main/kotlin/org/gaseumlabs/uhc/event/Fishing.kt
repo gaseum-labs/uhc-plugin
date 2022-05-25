@@ -1,8 +1,7 @@
 package org.gaseumlabs.uhc.event
 
-import org.gaseumlabs.uhc.UHCPlugin
-import org.gaseumlabs.uhc.gui.ItemCreator
 import org.bukkit.Material
+import org.bukkit.Material.SADDLE
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Item
 import org.bukkit.entity.Player
@@ -11,6 +10,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerFishEvent
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import org.bukkit.metadata.FixedMetadataValue
+import org.gaseumlabs.uhc.gui.ItemCreator
 import kotlin.random.Random
 
 class Fishing : Listener {
@@ -36,13 +36,13 @@ class Fishing : Listener {
 	}
 
 	companion object {
-		fun enchant(player: Player, enchantment: Enchantment): Int {
+		private fun enchant(player: Player, enchantment: Enchantment): Int {
 			val rod = player.inventory.itemInMainHand
 			if (rod.type !== Material.FISHING_ROD) return 0
 			return rod.itemMeta.enchants[enchantment] ?: 0
 		}
 
-		data class FishingData(var index: Int, val list: Array<Int>) {
+		private data class FishingData(var index: Int, val list: Array<Int>) {
 			fun get() = list[index]
 
 			init {
@@ -56,9 +56,9 @@ class Fishing : Listener {
 			}
 		}
 
-		val metaKey = "_U_Fish"
+		private val metaKey = "_U_Fish"
 
-		fun getFishIndex(player: Player): Int {
+		private fun getFishIndex(player: Player): Int {
 			val fishMeta = player.getMetadata(metaKey)
 
 			return if (fishMeta.isEmpty()) {
@@ -84,9 +84,8 @@ class Fishing : Listener {
 			}
 		}
 
-		val junk = arrayOf(
+		private val junk = arrayOf(
 			Material.NAUTILUS_SHELL,
-			Material.SADDLE,
 			Material.NAME_TAG,
 			Material.BOWL,
 			Material.LEATHER_BOOTS,
@@ -101,71 +100,74 @@ class Fishing : Listener {
 			Material.PUFFERFISH,
 		)
 
-		val food = arrayOf(
+		private val food = arrayOf(
 			Material.COD,
 			Material.SALMON,
 		)
 
-		val fishingEnchants = arrayOf(
-			Pair(Enchantment.LURE, 1),
-			Pair(Enchantment.LUCK, 1),
-			Pair(Enchantment.DURABILITY, 1),
+		private val fishingEnchants = arrayOf(
+			Pair(Enchantment.LURE, 2),
+			Pair(Enchantment.LUCK, 2),
 		)
 
-		val bowEnchants = arrayOf(
+		private val bowEnchants = arrayOf(
 			Pair(Enchantment.ARROW_DAMAGE, 1),
 			Pair(Enchantment.ARROW_KNOCKBACK, 1),
 			Pair(Enchantment.DURABILITY, 1),
 		)
 
-		val bookEnchants = arrayOf(
-			Pair(Enchantment.ARROW_DAMAGE, 1),
-			Pair(Enchantment.DAMAGE_ALL, 1),
-			Pair(Enchantment.PROTECTION_ENVIRONMENTAL, 1),
-			Pair(Enchantment.DIG_SPEED, 1),
-			Pair(Enchantment.THORNS, 1),
+		private val bookEnchants = arrayOf(
+			Pair(Enchantment.ARROW_DAMAGE, 2),
+			Pair(Enchantment.DAMAGE_ALL, 2),
+			Pair(Enchantment.PROTECTION_ENVIRONMENTAL, 2),
+			Pair(Enchantment.DIG_SPEED, 2),
+			Pair(Enchantment.THORNS, 2),
 		)
 
-		fun junkEntry(random: Random): ItemCreator {
-			return ItemCreator.fromType(junk[random.nextInt(junk.size)], false)
+		private fun junkEntry(random: Random): ItemCreator {
+			return ItemCreator.regular(junk[random.nextInt(junk.size)])
 		}
 
-		fun foodEntry(random: Random): ItemCreator {
-			return ItemCreator.fromType(food[random.nextInt(food.size)], false)
+		private fun saddleEntry(random: Random): ItemCreator {
+			return ItemCreator.regular(SADDLE)
 		}
 
-		fun sugarCaneEntry(random: Random): ItemCreator {
-			return ItemCreator.fromType(Material.SUGAR_CANE, false)
+		private fun foodEntry(random: Random): ItemCreator {
+			return ItemCreator.regular(food[random.nextInt(food.size)])
 		}
 
-		fun leatherEntry(random: Random): ItemCreator {
-			return ItemCreator.fromType(Material.LEATHER, false)
+		private fun sugarCaneEntry(random: Random): ItemCreator {
+			return ItemCreator.regular(Material.SUGAR_CANE)
 		}
 
-		fun stringEntry(random: Random): ItemCreator {
-			return ItemCreator.fromType(Material.STRING, false)
+		private fun leatherEntry(random: Random): ItemCreator {
+			return ItemCreator.regular(Material.LEATHER)
 		}
 
-		fun rodEntry(random: Random): ItemCreator {
+		private fun stringEntry(random: Random): ItemCreator {
+			return ItemCreator.regular(Material.STRING)
+		}
+
+		private fun rodEntry(random: Random): ItemCreator {
 			val (enchant, level) = fishingEnchants[random.nextInt(fishingEnchants.size)]
-			return ItemCreator.fromType(Material.FISHING_ROD, false)
+			return ItemCreator.regular(Material.FISHING_ROD)
 				.enchant(enchant, level)
 		}
 
-		fun bowEntry(random: Random): ItemCreator {
+		private fun bowEntry(random: Random): ItemCreator {
 			val (enchant, level) = bowEnchants[random.nextInt(bowEnchants.size)]
-			return ItemCreator.fromType(Material.BOW, false)
+			return ItemCreator.regular(Material.BOW)
 				.enchant(enchant, level)
 		}
 
-		fun bookEntry(random: Random): ItemCreator {
+		private fun bookEntry(random: Random): ItemCreator {
 			val (enchant, level) = bookEnchants[random.nextInt(bookEnchants.size)]
-			return ItemCreator.fromType(Material.ENCHANTED_BOOK, false).customMeta<EnchantmentStorageMeta> { meta ->
+			return ItemCreator.regular(Material.ENCHANTED_BOOK).customMeta<EnchantmentStorageMeta> { meta ->
 				meta.addStoredEnchant(enchant, level, true)
 			}
 		}
 
-		fun specialEntry(random: Random): ItemCreator {
+		private fun specialEntry(random: Random): ItemCreator {
 			return arrayOf(
 				::rodEntry,
 				::bowEntry,
@@ -173,7 +175,7 @@ class Fishing : Listener {
 			)[random.nextInt(3)](random)
 		}
 
-		fun materialEntry(random: Random): ItemCreator {
+		private fun materialEntry(random: Random): ItemCreator {
 			return arrayOf(
 				::sugarCaneEntry,
 				::leatherEntry,
@@ -181,13 +183,12 @@ class Fishing : Listener {
 			)[random.nextInt(3)](random)
 		}
 
-		val fishEntries = arrayOf(
+		private val fishEntries = arrayOf(
 			arrayOf(
+				::saddleEntry,
 				::junkEntry,
 				::junkEntry,
 				::junkEntry,
-				::junkEntry,
-				::foodEntry,
 				::foodEntry,
 				::foodEntry,
 				::foodEntry,
@@ -201,10 +202,9 @@ class Fishing : Listener {
 				::bookEntry,
 			),
 			arrayOf(
+				::saddleEntry,
 				::junkEntry,
 				::junkEntry,
-				::junkEntry,
-				::foodEntry,
 				::foodEntry,
 				::foodEntry,
 				::materialEntry,
@@ -219,10 +219,9 @@ class Fishing : Listener {
 				::bookEntry,
 			),
 			arrayOf(
+				::saddleEntry,
 				::junkEntry,
 				::junkEntry,
-				::junkEntry,
-				::foodEntry,
 				::foodEntry,
 				::materialEntry,
 				::materialEntry,
@@ -237,9 +236,8 @@ class Fishing : Listener {
 				::specialEntry,
 			),
 			arrayOf(
+				::saddleEntry,
 				::junkEntry,
-				::junkEntry,
-				::foodEntry,
 				::foodEntry,
 				::materialEntry,
 				::materialEntry,

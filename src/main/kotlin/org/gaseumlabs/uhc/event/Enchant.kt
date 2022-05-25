@@ -283,13 +283,15 @@ class Enchant : Listener {
 			EnchantOption(Enchantment.LOOT_BONUS_MOBS, arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
 			EnchantOption(Enchantment.RIPTIDE, arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3)),
 			EnchantOption(Enchantment.QUICK_CHARGE, arrayOf(0, 0, 0, 1, 1, 2, 2, 3, 3))
+		)),
+		FISHING(arrayOf(
+			Material.FISHING_ROD
+		), arrayOf(
+			EnchantOption(Enchantment.LURE, arrayOf(1, 1, 2, 2, 3, 3, 3, 3, 3, 3)),
+			EnchantOption(Enchantment.LUCK, arrayOf(1, 1, 2, 2, 3, 3, 3, 3, 3, 3)),
 		));
 
 		companion object {
-			val ITEMS_SIZE = values().map { it.items.size }.maxOrNull() ?: 0
-			val SHELVES_SIZE = 16
-			val TYPE_SIZE = values().size
-
 			fun get(material: Material): Pair<EnchantType?, Int> {
 				for (type in values()) {
 					for (i in type.items.indices) {
