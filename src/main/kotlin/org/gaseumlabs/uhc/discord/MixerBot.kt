@@ -24,7 +24,7 @@ import java.util.*
 import java.util.concurrent.*
 import javax.imageio.ImageIO
 
-class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
+class MixerBot(val jda: JDA, val guild: Guild, address: String?) : ListenerAdapter() {
 	companion object {
 		fun createMixerBot(configFile: ConfigFile): CompletableFuture<MixerBot> {
 			return CompletableFuture.supplyAsync {
@@ -44,7 +44,7 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 				if (guild == null) {
 					throw Exception("Could not find the guild by id ${configFile.serverId}")
 				} else {
-					MixerBot(jda, guild)
+					MixerBot(jda, guild, configFile.ddnsDomain)
 				}
 			}
 		}
@@ -61,7 +61,7 @@ class MixerBot(val jda: JDA, val guild: Guild) : ListenerAdapter() {
 	val SummaryManager: SummaryManager = SummaryManager(this)
 
 	init {
-		val ip = WebAddress.getLocalAddress()
+		val ip = address ?: WebAddress.getLocalAddress()
 
 		jda.presence.activity = Activity.playing("UHC at $ip")
 		jda.addEventListener(this)

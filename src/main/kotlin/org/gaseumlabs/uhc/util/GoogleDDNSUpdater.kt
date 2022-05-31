@@ -54,7 +54,11 @@ object GoogleDDNSUpdater {
 			configFile.ddnsDomain ?: return CompletableFuture.failedFuture(Exception("No ddnsDomain in config file"))
 
 		return WebAddress.getLocalAddressAsync().thenApply { newAddress ->
-			val oldAddress = InetAddress.getByName(domain)?.hostAddress
+			val oldAddress = try {
+				InetAddress.getByName(domain)?.hostAddress
+			} catch (ex: Exception) {
+				null
+			}
 
 			if (newAddress != oldAddress) {
 				sendRequest(username, password, domain, newAddress, oldAddress).get()
