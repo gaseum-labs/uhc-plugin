@@ -19,6 +19,8 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.scoreboard.*
+import org.gaseumlabs.uhc.UHCPlugin
+import org.gaseumlabs.uhc.UHCPlugin.Companion
 import java.time.Duration
 import java.util.*
 import kotlin.math.*
@@ -40,7 +42,7 @@ object UHC {
 	var teleportGroups = HashMap<UUID, Location>()
 	var worldRadius: Int = 375
 
-	var dataManager: DataManager = DataManager.offlineDataManager()
+	var dataManager: DataManager = DataManager.createDataManager(UHCPlugin.configFile, UHCPlugin.uhcDbFile)
 	var bot: MixerBot? = null
 
 	lateinit var heartsObjective: Objective

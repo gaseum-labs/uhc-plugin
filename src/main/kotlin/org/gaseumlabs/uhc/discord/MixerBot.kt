@@ -51,11 +51,8 @@ class MixerBot(val jda: JDA, val guild: Guild, address: String?) : ListenerAdapt
 	}
 
 	val commands = arrayOf(
-		LinkCommand(),
-		UnlinkCommand(),
 		EditSummaryCommand(),
 		PublishSummaryCommand(),
-		SeasonCommand()
 	)
 
 	val SummaryManager: SummaryManager = SummaryManager(this)

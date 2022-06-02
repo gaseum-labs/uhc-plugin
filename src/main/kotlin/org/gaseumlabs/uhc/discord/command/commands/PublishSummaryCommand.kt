@@ -45,14 +45,7 @@ class PublishSummaryCommand : MixerCommand(true) {
 					}
 
 					if (doDatabase) {
-						val connection = UHC.dataManager.connection
-						if (connection != null) {
-							r.value.pushToDatabase(connection, season, game).exceptionally { ex ->
-								errorMessage(event, ex.message)
-							}
-						} else {
-							errorMessage(event, "Summary was not pushed to the database | No connection")
-						}
+
 					}
 				}
 				is Bad -> errorMessage(event, r.error)

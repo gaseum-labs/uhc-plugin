@@ -238,23 +238,6 @@ class TestCommands : BaseCommand() {
 		Trader.spawnTraderForPlayer(sender.uniqueId)
 	}
 
-	@Subcommand("link")
-	fun linkTest(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		val (discordToMinecraft, inverse) = UHC.dataManager.linkData.maps()
-
-		discordToMinecraft.forEach { (discordId, uuid) ->
-			sender.sendMessage("$discordId -> $uuid")
-		}
-
-		sender.sendMessage("--------------")
-
-		inverse.forEach { (uuid, discordId) ->
-			sender.sendMessage("$uuid -> $discordId")
-		}
-	}
-
 	@Subcommand("portal")
 	fun testPortal(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return

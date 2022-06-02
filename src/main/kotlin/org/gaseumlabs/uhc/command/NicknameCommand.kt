@@ -3,8 +3,6 @@ package org.gaseumlabs.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import org.gaseumlabs.uhc.core.UHC
-import org.gaseumlabs.uhc.database.DataManager
-import org.gaseumlabs.uhc.database.file.NicknamesFile
 import org.gaseumlabs.uhc.util.Action
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor.*
@@ -32,7 +30,6 @@ class NicknameCommand : BaseCommand() {
 				"Cannot find player by the name $targetName")
 
 		if (UHC.dataManager.nicknames.addNick(target.uniqueId, validated)) {
-			UHC.dataManager.push(DataManager.nicknamesFile, NicknamesFile.NicknameEntry(target.uniqueId, validated))
 			sender.sendMessage(
 				Component.text(targetName, GRAY)
 					.append(Component.text(" can now be called ", GOLD))
@@ -54,7 +51,6 @@ class NicknameCommand : BaseCommand() {
 			)
 
 		if (UHC.dataManager.nicknames.removeNick(target.uniqueId, nickname)) {
-			UHC.dataManager.remove(DataManager.nicknamesFile, NicknamesFile.NicknameEntry(target.uniqueId, nickname))
 			sender.sendMessage(
 				Component.text(targetName, GRAY)
 					.append(Component.text(" can no longer be called ", GOLD))

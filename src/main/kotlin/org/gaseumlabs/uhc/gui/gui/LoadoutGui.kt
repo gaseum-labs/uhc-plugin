@@ -3,7 +3,7 @@ package org.gaseumlabs.uhc.gui.gui
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.database.DataManager
-import org.gaseumlabs.uhc.database.file.LoadoutsFile
+import org.gaseumlabs.uhc.database.LoadoutsFile
 import org.gaseumlabs.uhc.gui.GuiType
 import org.gaseumlabs.uhc.gui.MoveableGuiPage
 import org.gaseumlabs.uhc.gui.guiItem.MoveableGuiItem
@@ -65,11 +65,6 @@ class LoadoutGui(val playerData: PlayerData, val loadoutSlot: Int) :
 	}
 
 	override fun save() {
-		UHC.dataManager.push(
-			DataManager.loadoutsFile,
-			LoadoutsFile.LoadoutEntry(playerData.uuid,
-				loadoutSlot,
-				UHC.dataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot])
-		)
+		//
 	}
 }
