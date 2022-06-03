@@ -3,6 +3,8 @@ package org.gaseumlabs.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import com.google.gson.JsonObject
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.ClickEvent
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.UHC
@@ -22,9 +24,10 @@ class LinkCommands : BaseCommand() {
 			"api/bot/createVerifyLink",
 			body
 		).thenAccept {
-			player.sendMessage(it.body())
 			val link = it.body().split("\"")[3]
-			player.sendMessage("Navigate to the following link to continue: $link")
+			// TODO: Add click events to UHCComponents.
+			val message = Component.text("Navigate to the following link to continue: \n$link")
+			message.clickEvent(ClickEvent.openUrl(link))
 		}.exceptionally { ex ->
 			when (ex) {
 				is OfflineException -> Commands.errorMessage(player, "The server is in offline mode")
