@@ -1,0 +1,9 @@
+{
+	"production": false,
+	"botToken": "NzU3MDg5OTg2NDkwMjY5NzE2.X2bU_g.y13e2oGDAvtJC1bPODLQpyoWp2U",
+	"serverId": "698352624063217725",
+	"ddnsUsername": "jAu4WRIQMZJPVSbr",
+	"ddnsPassword": "pwaGRMzyws9anr9Y",
+	"ddnsDomain": "uhcsaturday.net",
+	"dbUrl": "http://localhost:8080"
+}

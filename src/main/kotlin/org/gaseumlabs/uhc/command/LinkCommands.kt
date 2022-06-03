@@ -12,14 +12,14 @@ import org.gaseumlabs.uhc.util.Action
 class LinkCommands : BaseCommand() {
 	@CommandAlias("link")
 	@Description("use to link your minecraft account with your uhcsaturday account")
-	fun linkCommand(sender: CommandSender, code: String) {
+	fun linkCommand(sender: CommandSender) {
 		val player = sender as? Player ?: return
 
 		val body = JsonObject()
 		body.addProperty("uuid", player.uniqueId.toString())
 		body.addProperty("username", player.name)
 		val response = UHC.dataManager.postRequest(
-			"api/bot/createVerifyLink",
+			"/api/bot/createVerifyLink",
 			body
 		).thenAccept {
 			player.sendMessage(it.body())
