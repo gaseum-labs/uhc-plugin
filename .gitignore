@@ -187,3 +187,7 @@ server
 
 # wtf i don't remember this huge gitignore
 /run
+
+# never again
+config.json
+**/config.json
