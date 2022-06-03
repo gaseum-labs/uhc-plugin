@@ -25,9 +25,7 @@ class LinkCommands : BaseCommand() {
 			body
 		).thenAccept {
 			val link = it.body().split("\"")[3]
-			// TODO: Add click events to UHCComponents.
-			val message = Component.text("Navigate to the following link to continue: \n$link")
-			message.clickEvent(ClickEvent.openUrl(link))
+			// TODO: Send message to player with link
 		}.exceptionally { ex ->
 			when (ex) {
 				is OfflineException -> Commands.errorMessage(player, "The server is in offline mode")
