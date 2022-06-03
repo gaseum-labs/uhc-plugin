@@ -49,6 +49,21 @@ dependencies {
 }
 
 abstract class WslIpTask : DefaultTask() {
+	fun streamToString(inputStream: java.io.InputStream): String {
+		var output = ""
+		val stdout = BufferedReader(InputStreamReader(inputStream))
+		while (true) {
+			val next = stdout.readLine()
+			if (next == null) {
+				break
+			} else {
+				output += next
+			}
+		}
+		stdout.close()
+		return output
+	}
+
 	@org.gradle.api.tasks.TaskAction
 	fun getIp() {
 		val command = """powershell.exe wsl -- ip -o -4 -json addr list eth0 `
@@ -58,19 +73,11 @@ abstract class WslIpTask : DefaultTask() {
 		val powerShellProcess: Process = Runtime.getRuntime().exec(command)
 		powerShellProcess.outputStream.close()
 
-		var output = ""
-		val stdout = BufferedReader(InputStreamReader(powerShellProcess.inputStream))
-		while (stdout.readLine().also { output += it } != null) {
-		}
-		println(output)
-		stdout.close()
-
-		var errLine: String?
-		val stderr = BufferedReader(InputStreamReader(powerShellProcess.errorStream))
-		while (stderr.readLine().also { errLine = it } != null) {
-			println(errLine)
-		}
-		stderr.close()
+		println(
+			streamToString(powerShellProcess.inputStream) +
+			'\n' +
+			streamToString(powerShellProcess.errorStream)
+		)
 	}
 }
 

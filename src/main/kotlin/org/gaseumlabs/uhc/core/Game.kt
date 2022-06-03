@@ -3,7 +3,7 @@ package org.gaseumlabs.uhc.core
 import org.gaseumlabs.uhc.core.phase.Phase
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.phases.*
-import org.gaseumlabs.uhc.core.stats.Ledger
+import org.gaseumlabs.uhc.database.summary.SummaryBuilder
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.quirk.Quirk
 import org.gaseumlabs.uhc.quirk.QuirkType
@@ -38,7 +38,7 @@ class Game(
 
 	val startDate: ZonedDateTime = ZonedDateTime.now()
 
-	val ledger = Ledger(initialRadius)
+	val summaryBuilder = SummaryBuilder()
 
 	val globalResources = GlobalResources()
 
@@ -138,13 +138,15 @@ class Game(
 	fun end(winningTeam: Team?) {
 		/* game summary */
 		if (winningTeam != null) {
-			ledger.publish(
-				config.gameType.get(),
+			val summary = summaryBuilder.toSummary(config.gameType.get(),
 				startDate,
 				UHC.timer,
 				teams.teams(),
 				winningTeam.members.filter { PlayerData.isAlive(it) }
 			)
+
+			SummaryBuilder.saveSummaryLocally(summary)
+			UHC.dataManager.uploadSummary(summary)
 		}
 
 		val endTitle = createEndTitle(winningTeam)
@@ -234,7 +236,7 @@ class Game(
 		}
 
 		/* add to ledger */
-		ledger.addEntry(uuid, UHC.timer, killer?.uniqueId)
+		summaryBuilder.addEntry(uuid, UHC.timer, killer?.uniqueId)
 
 		/* does the UHC end here? */
 		if (numRemaining <= 1) {

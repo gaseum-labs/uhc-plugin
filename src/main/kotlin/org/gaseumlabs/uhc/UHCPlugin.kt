@@ -2,8 +2,7 @@ package org.gaseumlabs.uhc
 
 import co.aikar.commands.PaperCommandManager
 import org.gaseumlabs.uhc.command.*
-import org.gaseumlabs.uhc.core.stats.Tracker
-import org.gaseumlabs.uhc.database.DataManager
+import org.gaseumlabs.uhc.database.summary.Tracker
 import org.gaseumlabs.uhc.discord.MixerBot
 import org.gaseumlabs.uhc.event.*
 import org.gaseumlabs.uhc.gui.GuiManager
@@ -83,7 +82,7 @@ class UHCPlugin : JavaPlugin() {
 				Util.warn("Bot setup failed")
 				Util.warn(ex).void()
 			}
-		
+
 		Tracker.loadCharacters()
 
 		server.scheduler.scheduleSyncDelayedTask(this) {

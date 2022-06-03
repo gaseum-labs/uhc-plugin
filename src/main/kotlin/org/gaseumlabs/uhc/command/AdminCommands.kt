@@ -186,10 +186,4 @@ class AdminCommands : BaseCommand() {
 			else "Removed ${banPlayer.name}'s platform"
 		)
 	}
-
-	@Subcommand("reconnect")
-	fun reconnedCommand(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-	}
 }

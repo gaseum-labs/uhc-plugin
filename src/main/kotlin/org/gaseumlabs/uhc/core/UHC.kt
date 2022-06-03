@@ -101,7 +101,7 @@ object UHC {
 
 				Portal.portalTick(currentGame)
 				PlayerData.zombieBorderTick(currentTick, currentGame)
-				ledgerTrailTick(currentGame, currentTick)
+				//ledgerTrailTick(currentGame, currentTick)
 
 				if (currentTick % 20 == 0) {
 					currentGame.updateMobCaps(currentGame.world)
@@ -207,7 +207,7 @@ object UHC {
 
 			if (playerData.participating && (player == null || player.gameMode !== GameMode.SPECTATOR)) {
 				val block = Action.getPlayerLocation(uuid)?.block
-				if (block != null) game.ledger.tracker.addPlayerPosition(uuid, block)
+				//if (block != null) game.ledger.tracker.addPlayerPosition(uuid, block)
 			}
 		}
 	}
