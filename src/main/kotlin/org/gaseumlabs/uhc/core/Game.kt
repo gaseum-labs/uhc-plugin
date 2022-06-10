@@ -42,15 +42,6 @@ class Game(
 
 	val globalResources = GlobalResources()
 
-	val endgameLowY: Int
-	val endgameHighY: Int
-
-	init {
-		val (low, high) = Endgame.determineMinMax(world, config.endgameRadius.get(), 120)
-		endgameLowY = low
-		endgameHighY = high
-	}
-
 	var quirks = Array(QuirkType.values().size) { i ->
 		if (config.quirksEnabled[i].get()) {
 			QuirkType.values()[i].createQuirk(this)
@@ -120,7 +111,8 @@ class Game(
 		return when (phaseType) {
 			PhaseType.GRACE -> Grace(this, config.graceTime.get())
 			PhaseType.SHRINK -> Shrink(this, config.shrinkTime.get())
-			PhaseType.ENDGAME -> Endgame(this, config.collapseTime.get())
+			PhaseType.BATTLEGROUND -> Battleground(this, config.battlegroundTime.get())
+			PhaseType.ENDGAME -> Endgame(this, config.battlegroundRadius.get(), config.collapseTime.get())
 			PhaseType.POSTGAME -> Postgame(this)
 		}
 	}

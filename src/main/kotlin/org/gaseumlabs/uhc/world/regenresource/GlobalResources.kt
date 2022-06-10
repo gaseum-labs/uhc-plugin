@@ -2,11 +2,11 @@ package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.*
 import org.bukkit.persistence.PersistentDataType
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.phase.PhaseType
+import org.gaseumlabs.uhc.core.phase.PhaseType.BATTLEGROUND
 import org.gaseumlabs.uhc.team.Team
-import org.gaseumlabs.uhc.world.regenresource.RegenResource.LEATHER
+import org.gaseumlabs.uhc.world.WorldManager
 import kotlin.random.Random
 
 class GlobalResources {
@@ -86,7 +86,15 @@ class GlobalResources {
 			val regenResource = RegenResource.values()[i]
 
 			if (currentTick >= resourceData.nextTick) {
-				update(game, resourceData, regenResource)
+				if (
+					game.phase.phaseType === BATTLEGROUND &&
+					regenResource.description.worldName != WorldManager.NETHER_WORLD_NAME
+				) {
+					updateBattleground(game, resourceData, regenResource)
+				} else {
+					update(game, resourceData, regenResource)
+				}
+
 				resourceData.nextTick = nextTick(currentTick)
 			}
 		}
@@ -143,28 +151,7 @@ class GlobalResources {
 						oldChunkRound != resourceData.round - 1
 					) {
 						if (Random.nextFloat() < description.chunkSpawnChance) {
-							val generatedList = description.generateInChunk(testChunk, quotaReached == 0)
-
-							if (generatedList != null) {
-								if (description is ResourceDescriptionBlock) {
-									val originalData = generatedList.map { it.blockData }
-									generatedList.forEachIndexed { j, block ->
-										description.setBlock(
-											block,
-											j,
-											quotaReached == 0
-										)
-									}
-
-									resourceData.veins.add(VeinBlock(
-										originalData, generatedList, x, z,
-									))
-								} else if (description is ResourceDescriptionEntity) {
-									resourceData.veins.add(VeinEntity(
-										description.setEntity(generatedList[0], quotaReached == 0), x, z,
-									))
-								}
-							}
+							generateInChunk(testChunk, resourceData, description, quotaReached == 0)
 						}
 					}
 
@@ -183,6 +170,109 @@ class GlobalResources {
 				true
 			} else {
 				false
+			}
+		}
+	}
+
+	fun generateInChunk(
+		chunk: Chunk,
+		resourceData: ResourceData,
+		description: ResourceDescription,
+		full: Boolean,
+	): Boolean {
+		val generatedList = description.generateInChunk(chunk, full)
+
+		if (generatedList != null) {
+			if (description is ResourceDescriptionBlock) {
+				val originalData = generatedList.map { it.blockData }
+				generatedList.forEachIndexed { j, block ->
+					description.setBlock(
+						block,
+						j,
+						full
+					)
+				}
+
+				resourceData.veins.add(VeinBlock(
+					originalData, generatedList, chunk.x, chunk.z,
+				))
+			} else if (description is ResourceDescriptionEntity) {
+				resourceData.veins.add(VeinEntity(
+					description.setEntity(generatedList[0], full), chunk.x, chunk.z,
+				))
+			}
+
+			return true
+		}
+
+		return false
+	}
+
+	fun updateBattleground(game: Game, resourceData: ResourceData, regenResource: RegenResource) {
+		val world = Bukkit.getWorld(regenResource.description.worldName)!!
+		val description = regenResource.description
+
+		++resourceData.round
+
+		val chunkRadius = ((world.worldBorder.size / 2) / 16).toInt()
+
+		/* mark chunks around players that should not despawn veins */
+		game.teams.teams().flatMap { team ->
+			team.members.mapNotNull { uuid ->
+				val player = Bukkit.getPlayer(uuid)
+
+				/* eligible to spawn */
+				if (
+					player != null &&
+					player.world === world &&
+					description.eligable(player)
+				) {
+					player
+				} else {
+					null
+				}
+			}
+		}.forEach { player ->
+			val chunk = player.chunk
+			val despawnRadius = 1
+
+			val bounds = Bounds(
+				chunk.x - despawnRadius,
+				chunk.z - despawnRadius,
+				despawnRadius * 2 + 1,
+				despawnRadius * 2 + 1
+			)
+
+			for (z in bounds.yRange()) {
+				for (x in bounds.xRange()) {
+					markChunkRound(chunk, regenResource, resourceData.round)
+				}
+			}
+		}
+
+		/* tries to spawn */
+		for (t in 0 until chunkRadius) {
+			val chunkX = Random.nextInt(-chunkRadius, chunkRadius + 1)
+			val chunkZ = Random.nextInt(-chunkRadius, chunkRadius + 1)
+
+			val chunk = world.getChunkAt(chunkX, chunkZ)
+			if (generateInChunk(chunk, resourceData, description, true)) {
+				break
+			}
+		}
+
+		/* despawn excess veins */
+		while (resourceData.veins.size > (description.released[BATTLEGROUND] ?: 0)) {
+			val removeIndex = resourceData.veins.indexOfFirst { vein ->
+				val chunk = world.getChunkAt(vein.x, vein.z)
+				getChunkRound(chunk, regenResource) != resourceData.round
+			}
+
+			if (removeIndex == -1) {
+				break
+			} else {
+				val excessVein = resourceData.veins.removeAt(removeIndex)
+				eraseVein(description, excessVein)
 			}
 		}
 	}

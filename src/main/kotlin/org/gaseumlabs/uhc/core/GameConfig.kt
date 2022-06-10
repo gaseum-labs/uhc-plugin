@@ -37,9 +37,10 @@ class GameConfig {
 
 	/* border settings */
 	val scale = UHCProperty(1.0f, ::lockedProperty)
-	val endgameRadius = UHCProperty(30, ::lockedProperty)
+	val battlegroundRadius = UHCProperty(72, ::lockedProperty)
 	val graceTime = UHCProperty(1200, ::lockedProperty)
-	val shrinkTime = UHCProperty(3000, ::lockedProperty)
+	val shrinkTime = UHCProperty(1200, ::lockedProperty)
+	val battlegroundTime = UHCProperty(1200, ::lockedProperty)
 	val collapseTime = UHCProperty(300, ::lockedProperty)
 
 	/* quirks settings */
@@ -78,9 +79,10 @@ class GameConfig {
 		defaultWorldEnvironment.reset()
 		usingBot.reset()
 		scale.reset()
-		endgameRadius.reset()
+		battlegroundRadius.reset()
 		graceTime.reset()
 		shrinkTime.reset()
+		battlegroundTime.reset()
 		collapseTime.reset()
 		quirksEnabled.forEach { it.reset() }
 		centerBiome.reset()

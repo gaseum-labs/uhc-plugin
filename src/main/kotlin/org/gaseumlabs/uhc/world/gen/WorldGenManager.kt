@@ -6,7 +6,6 @@ import org.gaseumlabs.uhc.util.reflect.UHCReflect
 import org.gaseumlabs.uhc.world.*
 import org.gaseumlabs.uhc.world.WorldGenOption.AMPLIFIED
 import org.gaseumlabs.uhc.world.gen.biomeSource.*
-import org.gaseumlabs.uhc.world.gen.climate.UHCNoiseGeneratorSettings
 import net.minecraft.core.Holder
 import net.minecraft.world.level.biome.*
 import net.minecraft.world.level.chunk.ChunkGenerator
@@ -14,7 +13,6 @@ import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator
 import org.bukkit.*
 import org.bukkit.craftbukkit.v1_18_R2.CraftServer
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
-import kotlin.Pair
 import kotlin.collections.HashMap
 
 object WorldGenManager {
@@ -60,7 +58,7 @@ object WorldGenManager {
 					BiomeSourceGame(
 						seed,
 						BiomeNo.fromName(UHC.getConfig().centerBiome.get()?.name),
-						UHC.getConfig().endgameRadius.get(),
+						UHC.getConfig().battlegroundRadius.get(),
 						BiomeNo.featureBiomes,
 						BiomeSourceGame.createAreaGame(seed),
 						BiomeSourceGame.createAreaCaves(seed)

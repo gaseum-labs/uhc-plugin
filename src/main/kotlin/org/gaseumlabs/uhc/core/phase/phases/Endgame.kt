@@ -10,23 +10,94 @@ import org.gaseumlabs.uhc.event.Portal
 import org.gaseumlabs.uhc.util.*
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket
 import org.bukkit.*
+import org.bukkit.Material.*
 import org.bukkit.block.Block
 import org.bukkit.block.TileState
 import org.bukkit.craftbukkit.v1_18_R2.block.CraftBlock
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import kotlin.math.ceil
-import kotlin.math.roundToInt
+import kotlin.math.*
 
-class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, game) {
-	var min = WORLD_MIN
-	var max = WORLD_MAX
+class Endgame(game: Game, val radius: Int, private val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, game) {
+	val finalHighLimit: Int
+	var highLimit: Int
+	var lowLimit: Int
 
 	var finished = false
 	var timer = 0
 
 	var fakeEntityID = Int.MAX_VALUE
+
+	val bedrockHeights = IntArray((radius * 2 + 1) * (radius * 2 + 1))
+	val MIN_HEIGHT = 61
+	val MAX_HEIGHT = 255
+	val CHECK_ABOVE = 5
+
+	val treeParts = arrayOf(
+		OAK_LEAVES,
+		BIRCH_LEAVES,
+		ACACIA_LEAVES,
+		SPRUCE_LEAVES,
+		JUNGLE_LEAVES,
+		DARK_OAK_LEAVES,
+		AZALEA_LEAVES,
+		FLOWERING_AZALEA_LEAVES,
+		RED_MUSHROOM_BLOCK,
+		BROWN_MUSHROOM_BLOCK,
+		MUSHROOM_STEM,
+		OAK_LOG,
+		BIRCH_LOG,
+		ACACIA_LOG,
+		SPRUCE_LOG,
+		JUNGLE_LOG,
+		DARK_OAK_LOG,
+		BAMBOO,
+		COCOA,
+		LILY_PAD,
+	)
+
+	private fun air(block: Block): Boolean {
+		return block.isPassable || treeParts.contains(block.type)
+	}
+
+	private fun topOfColumnFrom(world: World, x: Int, initialY: Int, z: Int): Int {
+		for (y in initialY until MAX_HEIGHT) {
+			if (air(world.getBlockAt(x, y, z))) {
+				return y - 1
+			}
+		}
+
+		return MAX_HEIGHT
+	}
+
+	private fun columnHeight(world: World, x: Int, z: Int): Int {
+		var runningTop = MIN_HEIGHT + 1
+
+		while (true) {
+			runningTop = topOfColumnFrom(world, x, runningTop, z)
+			if (runningTop == MAX_HEIGHT) return MAX_HEIGHT
+
+			var terrainAbove = false
+
+			for (y in runningTop + 2..runningTop + CHECK_ABOVE) {
+				if (!air(world.getBlockAt(x, y, z))) {
+					runningTop = y
+					terrainAbove = true
+					break
+				}
+			}
+
+			if (!terrainAbove) break
+		}
+
+		return runningTop - 1
+	}
+
+	private fun columnIndex(x: Int, z: Int): Int {
+		val width = radius * 2 + 1
+		return (z + radius) * width + (x + radius)
+	}
 
 	init {
 		/* send players in nether back to the overworld */
@@ -46,7 +117,25 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 			}
 		}
 
-		game.world.worldBorder.size = (game.config.endgameRadius.get() * 2 + 1).toDouble()
+		game.world.worldBorder.size = (radius * 2 + 1).toDouble()
+
+		for (x in -radius..radius) {
+			for (z in -radius..radius) {
+				bedrockHeights[columnIndex(x, z)] = columnHeight(game.world, x, z)
+			}
+		}
+
+		val minHeight = bedrockHeights.minOrNull()!!
+		finalHighLimit = minHeight + RANGE
+
+		for (i in bedrockHeights.indices) {
+			if (bedrockHeights[i] > finalHighLimit - 1) {
+				bedrockHeights[i] = finalHighLimit - 1
+			}
+		}
+
+		highLimit = WORLD_MAX
+		lowLimit = WORLD_MIN
 
 		timer = 0
 	}
@@ -55,36 +144,23 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 		var timer = 0
 	}
 
-	fun skybaseTicks(y: Int): Int {
-		val distance = y - game.endgameHighY
-
-		return if (distance <= 0) {
-			-1
-		} else {
-			val result = MAX_DECAY - DECLINE * distance
-			return if (result < 0) 0 else result
-		}
-	}
-
 	private val skybaseBlocks = ArrayList<SkybaseBlock>()
 
 	fun addSkybaseBlock(block: Block) {
-		skybaseBlocks.add(SkybaseBlock(skybaseTicks(block.y), block, true, fakeEntityID--))
+		skybaseBlocks.add(SkybaseBlock(SKY_DECAY, block, true, fakeEntityID--))
 	}
 
 	override fun updateBarLength(remainingTicks: Int): Float {
 		return if (finished)
-			(timer / GLOWING_TIME.toFloat())
+			timer / GLOWING_TIME.toFloat()
 		else
-			(max - game.endgameHighY).toFloat() / (WORLD_MAX - game.endgameHighY)
+			timer / (collapseTime * 20.0f)
 	}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent {
 		return UHCComponent.text("Endgame", phaseType.color)
 			.andSwitch(finished) {
-				UHCComponent.text(" - ", U_WHITE)
-					.and("$max ", phaseType.color, UHCStyle.BOLD)
-					.and("Glowing in ", U_WHITE)
+				UHCComponent.text(" Glowing in ", U_WHITE)
 					.and(
 						Util.timeString(ceil((GLOWING_TIME - timer) / 20.0).toInt()),
 						phaseType.color,
@@ -92,25 +168,31 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 					)
 			}
 			.andSwitch(true) {
-				UHCComponent.text(" Current ", U_WHITE)
-					.and(min.coerceAtLeast(WORLD_MIN).toString(), phaseType.color, UHCStyle.BOLD)
-					.and(" - ", phaseType.color)
-					.and(max.toString(), phaseType.color, UHCStyle.BOLD)
-					.and(" Final: ", U_WHITE)
-					.and(game.endgameLowY.toString(), phaseType.color, UHCStyle.BOLD)
-					.and(" - ", phaseType.color)
-					.and(game.endgameHighY.toString(), phaseType.color, UHCStyle.BOLD)
+				UHCComponent.text(" High Limit ", U_WHITE)
+					.and(highLimit.toString(), phaseType.color, UHCStyle.BOLD)
+					.and(" Final ", U_WHITE)
+					.and(finalHighLimit.toString(), phaseType.color, UHCStyle.BOLD)
 			}
 	}
 
-	fun fillLayer(world: World, layer: Int, type: Material) {
-		val extrema = game.config.endgameRadius.get()
-
-		for (x in -extrema..extrema) {
-			for (z in -extrema..extrema) {
+	fun fillLayerAir(world: World, layer: Int) {
+		for (x in -radius..radius) {
+			for (z in -radius..radius) {
 				val block = world.getBlockAt(x, layer, z)
 				if (block.getState(false) is TileState) block.breakNaturally()
-				block.setType(type, false)
+				block.setType(AIR, false)
+			}
+		}
+	}
+
+	fun fillLayerBedrock(world: World, layer: Int) {
+		for (x in -radius..radius) {
+			for (z in -radius..radius) {
+				if (layer <= bedrockHeights[columnIndex(x, z)]) {
+					val block = world.getBlockAt(x, layer, z)
+					if (block.getState(false) is TileState) block.breakNaturally()
+					block.setType(BEDROCK, false)
+				}
 			}
 		}
 	}
@@ -129,59 +211,59 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 			}
 
 		} else {
-			val along = timer / CLEAR_TIME.toFloat()
+			val along = timer / (collapseTime * 20.0f)
 
-			val newMin = Util.interp(WORLD_MIN.toFloat(), game.endgameLowY.toFloat(), along).toInt()
-			val newMax = Util.interp(WORLD_MAX.toFloat(), game.endgameHighY.toFloat(), along).toInt()
+			val newHighLimit = Util.interp(WORLD_MAX.toFloat() - 1, finalHighLimit.toFloat(), along).toInt()
+			val newLowLimit = Util.interp(WORLD_MIN.toFloat() + 1, finalHighLimit.toFloat(), along).toInt()
 
-			if (newMin != min) {
-				min = newMin
+			if (newLowLimit != lowLimit) {
+				lowLimit = newLowLimit
 
-				/* teleport players up so they don't fall out the world */
-				PlayerData.playerDataList.forEach { (uuid, playerData) ->
+				/* fill in with bedrock from below */
+				fillLayerBedrock(game.world, lowLimit - 1)
+
+				/* teleport players up out of bedrock */
+				for ((uuid, playerData) in PlayerData.playerDataList) {
 					if (playerData.participating) {
-						val location = Action.getPlayerLocation(uuid)
-
-						if (location != null && location.y < min) {
-							location.y = min.toDouble()
-							Action.teleportPlayer(uuid, location)
+						val player = Bukkit.getPlayer(uuid) ?: continue
+						if (player.location.block.type === BEDROCK) {
+							Action.teleportPlayer(uuid, player.location.add(0.0, 1.0, 0.0))
 						}
 					}
 				}
-
-				/* fill in with bedrock from below */
-				if (min > WORLD_MIN) fillLayer(game.world, min - 1, Material.BEDROCK)
 			}
 
-			if (newMax != max) {
-				max = newMax
+			if (newHighLimit != highLimit) {
+				highLimit = newHighLimit
 
 				/* clear all blocks above the top level */
-				if (max < WORLD_MAX) fillLayer(game.world, max + 1, Material.AIR)
+				fillLayerAir(game.world, highLimit + 1)
 			}
 
 			/* finish */
-			if (timer == CLEAR_TIME) {
+			if (timer >= collapseTime * 20) {
 				timer = 0
 				finished = true
 
 				/* teleport all sky zombies to the surface */
 				PlayerData.playerDataList.mapNotNull { (_, playerData) -> playerData.offlineZombie }
-					.filter { it.location.y > max }
+					.filter { it.location.y > highLimit }
 					.forEach { zombie ->
 						val x = zombie.location.blockX
 						val z = zombie.location.blockX
-						zombie.teleport(Location(game.world,
+						zombie.teleport(Location(
+							game.world,
 							x + 0.5,
 							Util.topBlockY(game.world, x, z).toDouble(),
-							z + 0.5))
+							z + 0.5
+						))
 					}
 			}
 		}
 
 		skybaseBlocks.removeIf { skybaseBlock ->
 			val breakProgress = if (++skybaseBlock.timer >= skybaseBlock.time || skybaseBlock.block.type.isAir) {
-				skybaseBlock.block.setType(Material.AIR, skybaseBlock.updateOnDestroy)
+				skybaseBlock.block.setType(AIR, skybaseBlock.updateOnDestroy)
 				10
 			} else {
 				ticksLeftToAnim(skybaseBlock)
@@ -216,10 +298,11 @@ class Endgame(game: Game, val collapseTime: Int) : Phase(PhaseType.ENDGAME, 0, g
 		const val WORLD_MAX = 319
 
 		const val GLOWING_TIME = 20 * 20
-		const val CLEAR_TIME = 5 * 60 * 20
 
-		const val MAX_DECAY = 400
+		const val SKY_DECAY = 300
 		const val DECLINE = 4
+
+		const val BUILD_ADD = 9
 
 		val RANGE = 24
 

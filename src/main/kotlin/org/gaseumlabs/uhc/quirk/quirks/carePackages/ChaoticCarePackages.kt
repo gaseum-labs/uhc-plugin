@@ -110,7 +110,7 @@ class ChaoticCarePackages(type: QuirkType, game: Game) : Quirk(type, game) {
 	 */
 	fun chaoticDropBlock(world: World): Block {
 		val maxRadius = (((world.worldBorder.size - 1.0) / 2.0) - 10.0).roundToInt()
-		val minRadius = game.config.endgameRadius.get()
+		val minRadius = game.config.battlegroundRadius.get() / 2
 
 		return when (Random.nextInt(4)) {
 			0 -> CarePackageUtil.dropBlock(world,

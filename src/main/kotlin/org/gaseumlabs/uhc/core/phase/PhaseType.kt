@@ -10,15 +10,11 @@ import org.bukkit.Material
 
 enum class PhaseType(
 	val prettyName: String,
-	val representation: () -> ItemCreator,
-	val hasTimer: Boolean,
 	val barColor: BossBarColor,
 	val color: TextColor,
 	val description: Array<String>,
 ) {
 	GRACE("Grace period",
-		{ ItemCreator.fromType(Material.PAPER) },
-		true,
 		BLUE,
 		UHCColor.GRACE,
 		arrayOf(
@@ -28,8 +24,6 @@ enum class PhaseType(
 			"Border is static",
 		)),
 	SHRINK("Shrinking",
-		{ ItemCreator.fromType(Material.GLOWSTONE_DUST) },
-		true,
 		RED,
 		UHCColor.SHRINK,
 		arrayOf(
@@ -38,9 +32,15 @@ enum class PhaseType(
 			"Pvp is enabled",
 			"Border closes in",
 		)),
+	BATTLEGROUND("Battleground",
+		PINK,
+		UHCColor.BATTLEGROUND,
+		arrayOf(
+			"Small static border",
+			"Try to kill each other",
+			"Can still collect resources",
+		)),
 	ENDGAME("Endgame",
-		{ ItemCreator.fromType(Material.PHANTOM_MEMBRANE) },
-		true,
 		YELLOW,
 		UHCColor.ENDGAME,
 		arrayOf(
@@ -49,8 +49,6 @@ enum class PhaseType(
 			"Fight on the surface",
 		)),
 	POSTGAME("Postgame",
-		{ ItemCreator.fromType(Material.FILLED_MAP) },
-		true,
 		PURPLE,
 		UHCColor.POSTGAME,
 		arrayOf(

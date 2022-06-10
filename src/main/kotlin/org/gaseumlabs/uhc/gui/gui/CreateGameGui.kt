@@ -93,15 +93,15 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 					.create()
 			}
 		})
-		addItem(object : GuiItemCounter(coords(1, 1), gameConfig.endgameRadius, 10, 80, 5) {
+		addItem(object : GuiItemCounter(coords(1, 1), gameConfig.battlegroundRadius, 10, 200, 5) {
 			override fun getStackProperty(value: Int): ItemStack {
 				return ItemCreator.fromType(Material.WARPED_DOOR)
 					.enchant(value != property.default)
-					.name(ItemCreator.stateName("Endgame Radius", "$value"))
+					.name(ItemCreator.stateName("Battleground Radius", "$value"))
 					.create()
 			}
 		})
-		addItem(object : GuiItemCounter(coords(2, 1), gameConfig.graceTime, 60, 2400, 60) {
+		addItem(object : GuiItemCounter(coords(2, 1), gameConfig.graceTime, 60, 6000, 60) {
 			override fun getStackProperty(value: Int): ItemStack {
 				return ItemCreator.fromType(Material.SUNFLOWER)
 					.enchant(value != property.default)
@@ -117,7 +117,15 @@ class CreateGameGui(val gameConfig: GameConfig) : GuiPage(
 					.create()
 			}
 		})
-		addItem(object : GuiItemCounter(coords(4, 1), gameConfig.collapseTime, 100, 1000, 30) {
+		addItem(object : GuiItemCounter(coords(4, 1), gameConfig.battlegroundTime, 60, 6000, 60) {
+			override fun getStackProperty(value: Int): ItemStack {
+				return ItemCreator.fromType(Material.CAMPFIRE)
+					.enchant(value != property.default)
+					.name(ItemCreator.stateName("Battleground Time", Util.timeString(value)))
+					.create()
+			}
+		})
+		addItem(object : GuiItemCounter(coords(5, 1), gameConfig.collapseTime, 60, 1000, 30) {
 			override fun getStackProperty(value: Int): ItemStack {
 				return ItemCreator.fromType(Material.HORN_CORAL)
 					.enchant(value != property.default)

@@ -20,14 +20,16 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.title.Title
 import org.bukkit.*
+import org.bukkit.Material.ENDER_EYE
+import org.bukkit.Material.TNT
 import org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause.*
 import org.bukkit.event.inventory.CraftItemEvent
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -46,7 +48,10 @@ import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
+import org.gaseumlabs.uhc.command.Commands
 import org.gaseumlabs.uhc.core.*
+import org.gaseumlabs.uhc.core.phase.PhaseType.GRACE
+import org.gaseumlabs.uhc.core.phase.PhaseType.POSTGAME
 import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
 
 class EventListener : Listener {
@@ -94,25 +99,53 @@ class EventListener : Listener {
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
 		val stack = event.item ?: return
+		val player = event.player
 
 		if ((UHC.game?.getQuirk<Summoner>(QuirkType.SUMMONER))?.onSummon(event) == true) {
 			event.isCancelled = true
 
-		} else if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
+		} else if (event.action === Action.RIGHT_CLICK_AIR || event.action === Action.RIGHT_CLICK_BLOCK) {
 			CommandItemType.values().any { type ->
 				if (type.isItem(stack)) {
-					type.execute(event.player)
+					type.execute(player)
 					true
 
 				} else false
 			}
 		}
-	}
 
-	@EventHandler
-	fun onDropItem(event: ItemSpawnEvent) {
-		/* items despawn faster in PVP and Lobby */
-		if (WorldManager.isNonGameWorld(event.entity.world)) event.entity.ticksLived = 5000
+		if (
+			stack.type === ENDER_EYE &&
+			(event.action === Action.RIGHT_CLICK_AIR || event.action === Action.RIGHT_CLICK_BLOCK) &&
+			PlayerData.isAlive(player.uniqueId)
+		) {
+			val playerTeam = UHC.getTeams().playersTeam(player.uniqueId)
+
+			event.isCancelled = true
+			stack.amount -= 1
+
+			val nearPlayer = PlayerData.playerDataList.filter { (_, data) -> data.alive }
+				.mapNotNull { (uuid) ->
+					val otherPlayer = Bukkit.getPlayer(uuid) ?: return@mapNotNull null
+					val team = UHC.getTeams().playersTeam(uuid) ?: return@mapNotNull null
+					if (otherPlayer === player || otherPlayer.world !== player.world || team === playerTeam) {
+						return@mapNotNull null
+					}
+					player
+				}
+				.minByOrNull { player.location.distance(it.location) }
+				?: return
+
+			val eye = event.player.world.spawnEntity(
+				event.player.location.add(0.0, 1.0, 0.0),
+				EntityType.ENDER_SIGNAL)
+			as EnderSignal
+			eye.targetLocation = nearPlayer.location
+			eye.setItem(ItemStack(Material.COMPASS))
+			eye.dropItem = false
+
+			player.playSound(player.location, Sound.ENTITY_ENDER_EYE_LAUNCH, 1.0f, 1.0f)
+		}
 	}
 
 	@EventHandler
@@ -265,12 +298,7 @@ class EventListener : Listener {
 			event.recipe.result.type === Material.RESPAWN_ANCHOR
 			)
 		) {
-			event.isCancelled = true
-			event.inventory.matrix?.forEach { it?.amount = 0 }
-
-			player.closeInventory()
-			player.showTitle(Title.title(Component.text("BRUH", TextColor.color(0x791ee8)), Component.empty()))
-			player.playSound(player.location, Sound.ENTITY_GHAST_DEATH, 1.0f, 0.5f)
+			event.currentItem = ItemStack(TNT, 3)
 		}
 	}
 
@@ -313,8 +341,13 @@ class EventListener : Listener {
 			event.isCancelled = true
 		} else {
 			/* health total freezes after the pvp game */
-			val game = ArenaManager.playersArena(player.uniqueId)
-			if ((game as? PvpArena)?.isOver() == true) {
+			/* also freezes after the uhc game */
+			val arena = ArenaManager.playersArena(player.uniqueId)
+
+			if (
+				(arena as? PvpArena)?.isOver() == true ||
+				(UHC.game?.phase?.phaseType === POSTGAME && player.world === WorldManager.gameWorld)
+			) {
 				event.isCancelled = true
 			}
 		}
@@ -395,10 +428,18 @@ class EventListener : Listener {
 
 		/* stuff that happens during the game */
 		if (playerData.participating) {
-			if (UHC.game?.quirkEnabled(QuirkType.LOW_GRAVITY) == true && event.cause == EntityDamageEvent.DamageCause.FALL) {
+			val game = UHC.game ?: return
+
+			if (
+				game.phase.phaseType === GRACE &&
+				(event.cause === LAVA || event.cause === FIRE || event.cause === FIRE_TICK)
+			) {
 				event.isCancelled = true
 
-			} else if (event.entity is Player && UHC.game?.quirkEnabled(QuirkType.DEATHSWAP) == true && Deathswap.untilNextSequence < Deathswap.IMMUNITY) {
+			} else if (game.quirkEnabled(QuirkType.LOW_GRAVITY) && event.cause == FALL) {
+				event.isCancelled = true
+
+			} else if (game.quirkEnabled(QuirkType.DEATHSWAP) && Deathswap.untilNextSequence < Deathswap.IMMUNITY) {
 				event.isCancelled = true
 			}
 
@@ -406,7 +447,9 @@ class EventListener : Listener {
 		} else {
 			val arena = ArenaManager.playersArena(player.uniqueId)
 
-			if ((arena as? PvpArena)?.isOver() == true || arena == null) event.isCancelled = true
+			if ((arena as? PvpArena)?.isOver() == true || arena == null) {
+				event.isCancelled = true
+			}
 		}
 	}
 
@@ -571,8 +614,14 @@ class EventListener : Listener {
 		val phase = game.phase as? Endgame ?: return
 		val block = event.block
 
-		if (PlayerData.getPlayerData(event.player.uniqueId).participating && block.y > phase.max) {
-			phase.addSkybaseBlock(block)
+		if (PlayerData.getPlayerData(event.player.uniqueId).participating) {
+			if (block.y > phase.highLimit + Endgame.BUILD_ADD) {
+				event.isCancelled = true
+				Commands.errorMessage(event.player, "Height limit for endgame reached")
+
+			} else if (block.y > phase.highLimit) {
+				phase.addSkybaseBlock(block)
+			}
 		}
 	}
 
@@ -586,8 +635,15 @@ class EventListener : Listener {
 		if (game != null && playerData.participating) {
 			/* trying to build above endgame top level */
 			val phase = game.phase
-			if (phase is Endgame && event.blockPlaced.y > phase.max) {
-				phase.addSkybaseBlock(event.blockPlaced)
+			if (phase is Endgame) {
+				val block = event.blockPlaced
+				if (block.y > phase.highLimit + Endgame.BUILD_ADD) {
+					event.isCancelled = true
+					Commands.errorMessage(event.player, "Height limit for endgame reached")
+
+				} else if (block.y > phase.highLimit) {
+					phase.addSkybaseBlock(block)
+				}
 			}
 
 			/* creative block replenishing */
@@ -749,7 +805,7 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun serverListPint(event: ServerListPingEvent) {
+	fun serverListPing(event: ServerListPingEvent) {
 		/* do not attempt to modify MOTD if discordstorage is not set */
 		val splashText = DiscordStorage.splashText ?: return
 

@@ -21,6 +21,7 @@ object UHCColor {
 
 	val GRACE = TextColor.fromRgb(0x1cb7ff)
 	val SHRINK = TextColor.fromRgb(0xf0377e)
+	val BATTLEGROUND = TextColor.fromRgb(0xe64900)
 	val ENDGAME = TextColor.fromRgb(0xf29a2e)
 	val POSTGAME = TextColor.fromRgb(0x493b70)
 }

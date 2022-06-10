@@ -19,6 +19,8 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.scoreboard.*
+import org.gaseumlabs.uhc.core.phase.PhaseType.ENDGAME
+import org.gaseumlabs.uhc.core.phase.PhaseType.POSTGAME
 import java.time.Duration
 import java.util.*
 import kotlin.math.*
@@ -38,7 +40,7 @@ object UHC {
 	var countdownTimerGoing = false
 
 	var teleportGroups = HashMap<UUID, Location>()
-	var worldRadius: Int = 375
+	var worldRadius: Int = 0
 
 	var dataManager: DataManager = DataManager.offlineDataManager()
 	var bot: MixerBot? = null
@@ -46,7 +48,7 @@ object UHC {
 	lateinit var heartsObjective: Objective
 
 	/* 3 biomes times 6 chunks per biome times 16 blocks per chunk */
-	val areaPerTeam = (3 * 6 * 16) * (3 * 6 * 16)
+	val areaPerPlayer = (3 * 6 * 16) * (3 * 6 * 16) / 2
 	fun area(radius: Float) = ((radius * 2) + 1).pow(2)
 	fun radius(area: Float) = (sqrt(area) - 1) / 2
 
@@ -91,24 +93,27 @@ object UHC {
 			if (currentGame != null) {
 				val switchResult = currentGame.phase.tick(currentTick)
 
-				if (currentGame.phase is Grace || currentGame.phase is Shrink || currentGame.phase is Endgame) {
+				if (currentGame.phase.phaseType !== POSTGAME) {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
-					currentGame.globalResources.tick(currentGame, currentTick)
+
+					if (currentGame.phase.phaseType !== ENDGAME) {
+						currentGame.globalResources.tick(currentGame, currentTick)
+					}
+
+					PlayerData.zombieBorderTick(currentTick, currentGame)
+					ledgerTrailTick(currentGame, currentTick)
+
+					if (currentTick % 20 == 0) {
+						currentGame.updateMobCaps(currentGame.world)
+						currentGame.updateMobCaps(currentGame.otherWorld)
+						containSpecs()
+					}
 				}
 
 				Portal.portalTick(currentGame)
-				PlayerData.zombieBorderTick(currentTick, currentGame)
-				ledgerTrailTick(currentGame, currentTick)
 
-				if (currentTick % 20 == 0) {
-					currentGame.updateMobCaps(currentGame.world)
-					currentGame.updateMobCaps(currentGame.otherWorld)
-					containSpecs()
-				}
-
-				val halfWay = (currentGame.config.graceTime.get() + currentGame.config.shrinkTime.get()) * 20 / 2
-
+				val halfWay = (currentGame.config.graceTime.get() + currentGame.config.shrinkTime.get() / 2) * 20
 				if (timer == halfWay) {
 					Trader.deployTraders(currentGame)
 				}
@@ -221,14 +226,15 @@ object UHC {
 
 		val teams = preGameTeams.teams()
 
-		val numTeams = teams.size
-		if (numTeams == 0) {
+		val numPlayers = teams.fold(0) { i, team -> i + team.members.size }
+		if (numPlayers == 0) {
 			return messageStream(true, "No one is playing")
 		}
+		val effectivePlayers = numPlayers.coerceAtLeast(2)
 
-		messageStream(false, "Creating game worlds for $numTeams team${if (numTeams == 1) "" else "s"}")
+		messageStream(false, "Creating game worlds for the size of $effectivePlayers players")
 
-		worldRadius = radius(numTeams * preGameConfig.scale.get() * areaPerTeam).toInt()
+		worldRadius = radius(effectivePlayers * preGameConfig.scale.get() * areaPerPlayer).toInt()
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()

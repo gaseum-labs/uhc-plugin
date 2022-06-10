@@ -14,14 +14,14 @@ import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
 import org.gaseumlabs.uhc.util.extensions.IntRangeExtensions.rangeIntersection
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.*
-import kotlin.math.ceil
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 class ResourceOre(
 	val type: Material,
 	val deepType: Material,
 	val veinSize: Int,
 	val yDistribution: (y: Float) -> Int,
+	val yEligable: (y: Int) -> Boolean,
 
 	released: HashMap<PhaseType, Int>,
 	chunkRadius: Int,
@@ -36,7 +36,7 @@ class ResourceOre(
 	prettyName,
 ) {
 	override fun eligable(player: Player): Boolean {
-		return true
+		return yEligable(player.location.y.toInt())
 	}
 
 	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {

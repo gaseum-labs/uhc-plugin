@@ -16,7 +16,7 @@ import org.gaseumlabs.uhc.core.phase.PhaseType
 enum class RegenResource(createDescription: () -> ResourceDescription) {
 	MELON({
 		ResourceMelon(
-			hashMapOf(PhaseType.GRACE to 2, PhaseType.SHRINK to 2, PhaseType.ENDGAME to 2),
+			hashMapOf(PhaseType.GRACE to 2, PhaseType.SHRINK to 2, PhaseType.BATTLEGROUND to 1),
 			3,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 9.0f,
@@ -25,7 +25,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 	}),
 	SUGAR_CANE({
 		ResourceSugarCane(
-			hashMapOf(PhaseType.GRACE to 14, PhaseType.SHRINK to 34, PhaseType.ENDGAME to 4),
+			hashMapOf(PhaseType.GRACE to 16, PhaseType.SHRINK to 16, PhaseType.BATTLEGROUND to 5),
 			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 4.0f,
@@ -34,16 +34,16 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 	}),
 	LEATHER({
 		ResourceLeather(
-			hashMapOf(PhaseType.GRACE to 14, PhaseType.SHRINK to 34, PhaseType.ENDGAME to 4),
+			hashMapOf(PhaseType.GRACE to 16, PhaseType.SHRINK to 16, PhaseType.BATTLEGROUND to 5),
 			5,
 			WorldManager.GAME_WORLD_NAME,
-			1.0f / 8.0f,
+			1.0f / 10.0f,
 			"Leather"
 		)
 	}),
 	BLAZE({
 		ResourceBlaze(
-			hashMapOf(PhaseType.GRACE to 2, PhaseType.SHRINK to 4, PhaseType.ENDGAME to 0),
+			hashMapOf(PhaseType.GRACE to 2, PhaseType.SHRINK to 2, PhaseType.BATTLEGROUND to 2),
 			4,
 			WorldManager.NETHER_WORLD_NAME,
 			1.0f / 13.0f,
@@ -52,7 +52,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 	}),
 	NETHER_WART({
 		ResourceNetherWart(
-			hashMapOf(PhaseType.GRACE to 3, PhaseType.SHRINK to 6, PhaseType.ENDGAME to 0),
+			hashMapOf(PhaseType.GRACE to 3, PhaseType.SHRINK to 3, PhaseType.BATTLEGROUND to 3),
 			4,
 			WorldManager.NETHER_WORLD_NAME,
 			1.0f / 9.0f,
@@ -65,8 +65,9 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			Material.DEEPSLATE_DIAMOND_ORE,
 			3,
 			{ y -> RegenUtil.yRangeLinear(y, 0.0f, 1.0f, -54, 0) },
+			{ y -> y < 16 },
 
-			hashMapOf(PhaseType.GRACE to 4, PhaseType.SHRINK to 8, PhaseType.ENDGAME to 4),
+			hashMapOf(PhaseType.GRACE to 6, PhaseType.SHRINK to 6, PhaseType.BATTLEGROUND to 12),
 			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 6.0f,
@@ -82,8 +83,9 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 				RegenUtil.yRangeLinear(y, 0.0f, 0.8f, -54, 32) +
 				RegenUtil.yRangeLinear(y, 0.8f, 1.0f, 87, 130)
 			},
+			{ true },
 
-			hashMapOf(PhaseType.GRACE to -1, PhaseType.SHRINK to -1, PhaseType.ENDGAME to -1),
+			hashMapOf(PhaseType.GRACE to -1, PhaseType.SHRINK to -1, PhaseType.BATTLEGROUND to 16),
 			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 3.0f,
@@ -99,8 +101,9 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 				RegenUtil.yRangeLinear(y, 0.0f, 0.7f, -54, 48) +
 				RegenUtil.yRangeLinear(y, 0.7f, 1.0f, 76, 130)
 			},
+			{ true },
 
-			hashMapOf(PhaseType.GRACE to -1, PhaseType.SHRINK to -1, PhaseType.ENDGAME to -1),
+			hashMapOf(PhaseType.GRACE to -1, PhaseType.SHRINK to -1, PhaseType.BATTLEGROUND to 16),
 			5,
 			WorldManager.GAME_WORLD_NAME,
 			1.0f / 3.0f,
@@ -113,11 +116,12 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			Material.ANCIENT_DEBRIS,
 			2,
 			{ y -> RegenUtil.yRangeLinear(y, 0.0f, 1.0f, 32, 110) },
+			{ true },
 
-			hashMapOf(PhaseType.GRACE to 4, PhaseType.SHRINK to 8, PhaseType.ENDGAME to 4),
+			hashMapOf(PhaseType.GRACE to -1, PhaseType.SHRINK to -1, PhaseType.BATTLEGROUND to -1),
 			5,
 			WorldManager.NETHER_WORLD_NAME,
-			1.0f / 5.0f,
+			1.0f / 4.0f,
 			"Ancient debris"
 		)
 	});
