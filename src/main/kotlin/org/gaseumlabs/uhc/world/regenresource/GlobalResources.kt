@@ -1,12 +1,16 @@
 package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.*
+import org.bukkit.block.Block
 import org.bukkit.persistence.PersistentDataType
 import org.gaseumlabs.uhc.core.Game
+import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.PhaseType.BATTLEGROUND
+import org.gaseumlabs.uhc.core.phase.PhaseType.ENDGAME
 import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.world.WorldManager
+import kotlin.math.min
 import kotlin.random.Random
 
 class GlobalResources {
@@ -87,7 +91,7 @@ class GlobalResources {
 
 			if (currentTick >= resourceData.nextTick) {
 				if (
-					game.phase.phaseType === BATTLEGROUND &&
+					(game.phase.phaseType === BATTLEGROUND || game.phase.phaseType === ENDGAME) &&
 					regenResource.description.worldName != WorldManager.NETHER_WORLD_NAME
 				) {
 					updateBattleground(game, resourceData, regenResource)
@@ -106,26 +110,18 @@ class GlobalResources {
 
 		++resourceData.round
 
-		val players = game.teams.teams().flatMap { team ->
-			team.members.mapNotNull { uuid ->
-				val player = Bukkit.getPlayer(uuid)
+		val players = PlayerData.playerDataList.mapNotNull { (uuid, playerData) ->
+			if (playerData.alive) return@mapNotNull null
 
-				/* eligible to spawn */
-				if (
-					player != null &&
-					player.world === world &&
-					description.eligable(player)
-				) {
-					/* have they reached quota? */
-					player to if (
-						getTeamVeinData(team, regenResource).collected[game.phase.phaseType]!! <
-						releasedCurrently(game, description)
-					) 0 else 1
-				} else {
-					null
-				}
-			}
-			/* players who have resources left get prioritized */
+			val player = Bukkit.getPlayer(uuid) ?: return@mapNotNull null
+			if (player.world !== world) return@mapNotNull null
+
+			val team = game.teams.playersTeam(uuid) ?: return@mapNotNull null
+
+			player to if (
+				getTeamVeinData(team, regenResource).collected[game.phase.phaseType]!! <
+				releasedCurrently(game, description)
+			) 0 else 1
 		}.sortedBy { (_, sort) -> sort }
 
 		/* find new chunks around players to generate in */
@@ -151,7 +147,10 @@ class GlobalResources {
 						oldChunkRound != resourceData.round - 1
 					) {
 						if (Random.nextFloat() < description.chunkSpawnChance) {
-							generateInChunk(testChunk, resourceData, description, quotaReached == 0)
+							val generatedList = description.generateInChunk(testChunk, quotaReached == 0)
+							if (generatedList != null) {
+								generateInChunk(testChunk, generatedList, resourceData, description, quotaReached == 0)
+							}
 						}
 					}
 
@@ -176,104 +175,95 @@ class GlobalResources {
 
 	fun generateInChunk(
 		chunk: Chunk,
+		generatedList: List<Block>,
 		resourceData: ResourceData,
 		description: ResourceDescription,
 		full: Boolean,
-	): Boolean {
-		val generatedList = description.generateInChunk(chunk, full)
-
-		if (generatedList != null) {
-			if (description is ResourceDescriptionBlock) {
-				val originalData = generatedList.map { it.blockData }
-				generatedList.forEachIndexed { j, block ->
-					description.setBlock(
-						block,
-						j,
-						full
-					)
-				}
-
-				resourceData.veins.add(VeinBlock(
-					originalData, generatedList, chunk.x, chunk.z,
-				))
-			} else if (description is ResourceDescriptionEntity) {
-				resourceData.veins.add(VeinEntity(
-					description.setEntity(generatedList[0], full), chunk.x, chunk.z,
-				))
+	) {
+		if (description is ResourceDescriptionBlock) {
+			val originalData = generatedList.map { it.blockData }
+			generatedList.forEachIndexed { j, block ->
+				description.setBlock(
+					block,
+					j,
+					full
+				)
 			}
 
-			return true
+			resourceData.veins.add(VeinBlock(
+				originalData, generatedList, chunk.x, chunk.z,
+			))
+		} else if (description is ResourceDescriptionEntity) {
+			resourceData.veins.add(VeinEntity(
+				description.setEntity(generatedList[0], full), chunk.x, chunk.z,
+			))
 		}
-
-		return false
 	}
 
 	fun updateBattleground(game: Game, resourceData: ResourceData, regenResource: RegenResource) {
 		val world = Bukkit.getWorld(regenResource.description.worldName)!!
+		val chunkRadius = ((world.worldBorder.size / 2) / 16).toInt()
 		val description = regenResource.description
 
-		++resourceData.round
+		/* don't attempt to generate if none can exist */
+		val maxCurrent = description.released[game.phase.phaseType] ?: 0
+		if (maxCurrent <= 0) return
 
-		val chunkRadius = ((world.worldBorder.size / 2) / 16).toInt()
+		val players = PlayerData.playerDataList.mapNotNull { (uuid, playerData) ->
+			if (playerData.alive) return@mapNotNull null
 
-		/* mark chunks around players that should not despawn veins */
-		game.teams.teams().flatMap { team ->
-			team.members.mapNotNull { uuid ->
-				val player = Bukkit.getPlayer(uuid)
+			val player = Bukkit.getPlayer(uuid) ?: return@mapNotNull null
+			if (player.world !== world) return@mapNotNull null
 
-				/* eligible to spawn */
-				if (
-					player != null &&
-					player.world === world &&
-					description.eligable(player)
-				) {
-					player
-				} else {
-					null
-				}
-			}
-		}.forEach { player ->
-			val chunk = player.chunk
-			val despawnRadius = 1
-
-			val bounds = Bounds(
-				chunk.x - despawnRadius,
-				chunk.z - despawnRadius,
-				despawnRadius * 2 + 1,
-				despawnRadius * 2 + 1
-			)
-
-			for (z in bounds.yRange()) {
-				for (x in bounds.xRange()) {
-					markChunkRound(chunk, regenResource, resourceData.round)
-				}
-			}
+			player
 		}
+		if (players.isEmpty()) return
 
 		/* tries to spawn */
+		var generatedList: List<Block>? = null
+		var generatedChunk: Chunk? = null
 		for (t in 0 until chunkRadius) {
 			val chunkX = Random.nextInt(-chunkRadius, chunkRadius + 1)
 			val chunkZ = Random.nextInt(-chunkRadius, chunkRadius + 1)
 
 			val chunk = world.getChunkAt(chunkX, chunkZ)
-			if (generateInChunk(chunk, resourceData, description, true)) {
+			generatedList = description.generateInChunk(chunk, true)
+
+			if (generatedList != null) {
+				generatedChunk = chunk
 				break
 			}
 		}
+		if (generatedList == null || generatedChunk == null) return
 
-		/* despawn excess veins */
-		while (resourceData.veins.size > (description.released[BATTLEGROUND] ?: 0)) {
-			val removeIndex = resourceData.veins.indexOfFirst { vein ->
-				val chunk = world.getChunkAt(vein.x, vein.z)
-				getChunkRound(chunk, regenResource) != resourceData.round
-			}
+		var couldNotDelete = false
 
-			if (removeIndex == -1) {
-				break
-			} else {
-				val excessVein = resourceData.veins.removeAt(removeIndex)
-				eraseVein(description, excessVein)
+		/* another is going to spawn, so make room for it */
+		if (resourceData.veins.size >= maxCurrent) {
+			val minDistances = resourceData.veins.indices.zip(
+				resourceData.veins.map { vein ->
+					players.minOf { player ->
+						vein.centerLocation().distance(player.location)
+					}
+				}
+			).sortedByDescending { (_, distance) -> distance }
+
+			val numDeletes = (resourceData.veins.size - maxCurrent) + 1
+			for (i in 0 until numDeletes) {
+				val (deleteIndex, distance) = minDistances[i]
+
+				/* all veins are protected within 24 blocks of a player */
+				if (distance < 24.0) {
+					couldNotDelete = true
+					break
+				} else {
+					resourceData.veins.removeAt(deleteIndex)
+				}
 			}
+		}
+
+		if (!couldNotDelete) {
+			generateInChunk(generatedChunk, generatedList, resourceData, description, true)
 		}
 	}
 }

@@ -42,6 +42,8 @@ class Game(
 
 	val globalResources = GlobalResources()
 
+	val heightmap = Heightmap(config.battlegroundRadius.get(), 24)
+
 	var quirks = Array(QuirkType.values().size) { i ->
 		if (config.quirksEnabled[i].get()) {
 			QuirkType.values()[i].createQuirk(this)
@@ -61,6 +63,8 @@ class Game(
 				}
 			}
 		}
+
+		heightmap.generate(world)
 	}
 
 	/* getters */
@@ -112,7 +116,7 @@ class Game(
 			PhaseType.GRACE -> Grace(this, config.graceTime.get())
 			PhaseType.SHRINK -> Shrink(this, config.shrinkTime.get())
 			PhaseType.BATTLEGROUND -> Battleground(this, config.battlegroundTime.get())
-			PhaseType.ENDGAME -> Endgame(this, config.battlegroundRadius.get(), config.collapseTime.get())
+			PhaseType.ENDGAME -> Endgame(this, heightmap, config.battlegroundRadius.get(), config.collapseTime.get())
 			PhaseType.POSTGAME -> Postgame(this)
 		}
 	}

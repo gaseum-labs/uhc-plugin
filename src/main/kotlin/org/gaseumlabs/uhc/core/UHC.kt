@@ -96,11 +96,8 @@ object UHC {
 				if (currentGame.phase.phaseType !== POSTGAME) {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
-
-					if (currentGame.phase.phaseType !== ENDGAME) {
-						currentGame.globalResources.tick(currentGame, currentTick)
-					}
-
+					currentGame.globalResources.tick(currentGame, currentTick)
+					
 					PlayerData.zombieBorderTick(currentTick, currentGame)
 					ledgerTrailTick(currentGame, currentTick)
 

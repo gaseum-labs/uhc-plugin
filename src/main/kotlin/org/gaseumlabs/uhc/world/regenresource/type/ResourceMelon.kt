@@ -2,8 +2,7 @@ package org.gaseumlabs.uhc.world.regenresource.type
 
 import org.bukkit.Chunk
 import org.bukkit.Material
-import org.bukkit.Material.CARVED_PUMPKIN
-import org.bukkit.Material.JACK_O_LANTERN
+import org.bukkit.Material.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
@@ -57,11 +56,11 @@ class ResourceMelon(
 	}
 
 	override fun setBlock(block: Block, index: Int, fullVein: Boolean) {
-		block.setType(if (fullVein) Material.MELON else CARVED_PUMPKIN, false)
+		block.setType(if (fullVein) MELON else CARVED_PUMPKIN, false)
 	}
 
 	override fun isBlock(block: Block): Boolean {
-		return block.type === Material.MELON || block.type === CARVED_PUMPKIN
+		return block.type === MELON || block.type === CARVED_PUMPKIN
 	}
 
 	/* placement */
@@ -70,16 +69,21 @@ class ResourceMelon(
 		val above = surfaceBlock.getRelative(BlockFace.UP)
 		val ceiling = above.getRelative(BlockFace.UP)
 
-		return when (surfaceBlock.getRelative(BlockFace.UP).type) {
-			Material.AIR,
-			Material.FERN,
-			Material.VINE,
-			Material.COCOA,
-			Material.OAK_LEAVES,
-			Material.JUNGLE_LEAVES,
-			Material.GRASS,
+		return when (surfaceBlock.type) {
+			GRASS_BLOCK,
+			DIRT,
 			-> true
 			else -> false
-		} && !ceiling.isPassable && ceiling.type !== Material.COCOA
+		} && when (above.type) {
+			AIR,
+			FERN,
+			VINE,
+			COCOA,
+			OAK_LEAVES,
+			JUNGLE_LEAVES,
+			GRASS,
+			-> true
+			else -> false
+		} && !ceiling.isPassable && ceiling.type !== COCOA
 	}
 }

@@ -122,7 +122,6 @@ class EventListener : Listener {
 			val playerTeam = UHC.getTeams().playersTeam(player.uniqueId)
 
 			event.isCancelled = true
-			stack.amount -= 1
 
 			val nearPlayer = PlayerData.playerDataList.filter { (_, data) -> data.alive }
 				.mapNotNull { (uuid) ->
@@ -135,6 +134,8 @@ class EventListener : Listener {
 				}
 				.minByOrNull { player.location.distance(it.location) }
 				?: return
+
+			stack.amount -= 1
 
 			val eye = event.player.world.spawnEntity(
 				event.player.location.add(0.0, 1.0, 0.0),
