@@ -44,6 +44,8 @@ class Game(
 
 	val heightmap = Heightmap(config.battlegroundRadius.get(), 24)
 
+	val trader = Trader()
+
 	var quirks = Array(QuirkType.values().size) { i ->
 		if (config.quirksEnabled[i].get()) {
 			QuirkType.values()[i].createQuirk(this)

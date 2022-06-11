@@ -98,6 +98,7 @@ object UHC {
 
 					PlayerData.zombieBorderTick(currentTick, currentGame)
 					ledgerTrailTick(currentGame, currentTick)
+					currentGame.trader.traderTick(currentTick)
 
 					if (currentTick % 20 == 0) {
 						currentGame.updateMobCaps(currentGame.world)
@@ -107,11 +108,6 @@ object UHC {
 				}
 
 				Portal.portalTick(currentGame)
-
-				val halfWay = (currentGame.config.graceTime.get() + currentGame.config.shrinkTime.get() / 2) * 20
-				if (timer == halfWay) {
-					Trader.deployTraders(currentGame)
-				}
 
 				if (switchResult) currentGame.nextPhase()
 				if (currentGame.phase !is Postgame) ++timer

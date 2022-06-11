@@ -235,7 +235,12 @@ class TestCommands : BaseCommand() {
 	fun testTrader(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 		if (sender !is Player) return
-		Trader.spawnTraderForPlayer(sender.uniqueId)
+		val game = UHC.game ?: return
+
+		val trader = game.trader.currentTrader
+			?: return errorMessage(sender, "Trader not spawned")
+
+		sender.teleport(trader.location)
 	}
 
 	@Subcommand("link")
