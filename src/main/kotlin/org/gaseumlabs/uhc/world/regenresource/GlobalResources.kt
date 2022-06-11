@@ -9,6 +9,9 @@ import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.PhaseType.BATTLEGROUND
 import org.gaseumlabs.uhc.core.phase.PhaseType.ENDGAME
 import org.gaseumlabs.uhc.team.Team
+import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.inPlaceReplace
+import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapUHC
+import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.removeFirst
 import org.gaseumlabs.uhc.world.WorldManager
 import kotlin.math.min
 import kotlin.random.Random
@@ -20,7 +23,7 @@ class GlobalResources {
 
 	data class ResourceData(
 		val teamVeinData: HashMap<Team, TeamVeinData>,
-		val veins: ArrayList<Vein>,
+		var veins: ArrayList<Vein>,
 		var round: Int,
 		var nextTick: Int,
 	)
@@ -58,14 +61,6 @@ class GlobalResources {
 		val phaseType = game.phase.phaseType
 		val result = resource.released[phaseType] ?: 0
 		return if (result == -1) 10000000 else result
-	}
-
-	private fun eraseVein(type: ResourceDescription, vein: Vein) {
-		if (type is ResourceDescriptionBlock) {
-			(vein as VeinBlock).blocks.forEachIndexed { i, block -> block.blockData = vein.originalBlocks[i] }
-		} else {
-			(vein as VeinEntity).entity.remove()
-		}
 	}
 
 	private fun inSomeWayModified(type: ResourceDescription, vein: Vein): Boolean {
@@ -111,7 +106,7 @@ class GlobalResources {
 		++resourceData.round
 
 		val players = PlayerData.playerDataList.mapNotNull { (uuid, playerData) ->
-			if (playerData.alive) return@mapNotNull null
+			if (!playerData.alive) return@mapNotNull null
 
 			val player = Bukkit.getPlayer(uuid) ?: return@mapNotNull null
 			if (player.world !== world) return@mapNotNull null
@@ -165,7 +160,7 @@ class GlobalResources {
 				getChunkRound(world.getChunkAt(vein.x, vein.z), regenResource) != resourceData.round ||
 				inSomeWayModified(regenResource.description, vein)
 			) {
-				eraseVein(regenResource.description, vein)
+				vein.erase()
 				true
 			} else {
 				false
@@ -210,7 +205,7 @@ class GlobalResources {
 		if (maxCurrent <= 0) return
 
 		val players = PlayerData.playerDataList.mapNotNull { (uuid, playerData) ->
-			if (playerData.alive) return@mapNotNull null
+			if (!playerData.alive) return@mapNotNull null
 
 			val player = Bukkit.getPlayer(uuid) ?: return@mapNotNull null
 			if (player.world !== world) return@mapNotNull null
@@ -240,26 +235,28 @@ class GlobalResources {
 
 		/* another is going to spawn, so make room for it */
 		if (resourceData.veins.size >= maxCurrent) {
-			val minDistances = resourceData.veins.indices.zip(
-				resourceData.veins.map { vein ->
-					players.minOf { player ->
-						vein.centerLocation().distance(player.location)
-					}
+			val minDistances = resourceData.veins.mapUHC { vein ->
+				vein to players.minOf { player ->
+					vein.centerLocation().distance(player.location)
 				}
-			).sortedByDescending { (_, distance) -> distance }
+			}
+			minDistances.sortBy { (_, distance) -> distance }
 
 			val numDeletes = (resourceData.veins.size - maxCurrent) + 1
 			for (i in 0 until numDeletes) {
-				val (deleteIndex, distance) = minDistances[i]
+				val (lastVein, distance) = minDistances.last()
 
 				/* all veins are protected within 24 blocks of a player */
 				if (distance < 24.0) {
 					couldNotDelete = true
 					break
 				} else {
-					resourceData.veins.removeAt(deleteIndex)
+					lastVein.erase()
+					minDistances.removeLast()
 				}
 			}
+
+			resourceData.veins.inPlaceReplace(minDistances) { (vein) -> vein }
 		}
 
 		if (!couldNotDelete) {

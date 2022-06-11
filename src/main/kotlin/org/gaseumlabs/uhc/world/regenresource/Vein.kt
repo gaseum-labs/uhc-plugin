@@ -10,6 +10,8 @@ abstract class Vein(
 	val z: Int,
 ) {
 	abstract fun centerLocation(): Location
+
+	abstract fun erase()
 }
 
 class VeinBlock(
@@ -20,6 +22,10 @@ class VeinBlock(
 ) : Vein(x, z) {
 	override fun centerLocation(): Location {
 		return blocks[blocks.size / 2].location.toCenterLocation()
+	}
+
+	override fun erase() {
+		blocks.forEachIndexed { i, block -> block.blockData = originalBlocks[i] }
 	}
 }
 
@@ -34,5 +40,9 @@ class VeinEntity(
 
 	override fun centerLocation(): Location {
 		return entity.location
+	}
+
+	override fun erase() {
+		entity.remove()
 	}
 }

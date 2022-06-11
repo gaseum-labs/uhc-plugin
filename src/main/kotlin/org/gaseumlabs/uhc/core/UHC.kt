@@ -6,7 +6,6 @@ import org.gaseumlabs.uhc.customSpawning.CustomSpawningType
 import org.gaseumlabs.uhc.database.DataManager
 import org.gaseumlabs.uhc.discord.MixerBot
 import org.gaseumlabs.uhc.event.Portal
-import org.gaseumlabs.uhc.event.Trader
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.team.*
 import org.gaseumlabs.uhc.team.Team
@@ -19,7 +18,6 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.scoreboard.*
-import org.gaseumlabs.uhc.core.phase.PhaseType.ENDGAME
 import org.gaseumlabs.uhc.core.phase.PhaseType.POSTGAME
 import java.time.Duration
 import java.util.*
@@ -97,7 +95,7 @@ object UHC {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
 					currentGame.globalResources.tick(currentGame, currentTick)
-					
+
 					PlayerData.zombieBorderTick(currentTick, currentGame)
 					ledgerTrailTick(currentGame, currentTick)
 

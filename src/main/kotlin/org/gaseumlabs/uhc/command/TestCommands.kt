@@ -9,7 +9,7 @@ import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.customSpawning.CustomSpawning
 import org.gaseumlabs.uhc.customSpawning.CustomSpawningType
 import org.gaseumlabs.uhc.event.Portal
-import org.gaseumlabs.uhc.event.Trader
+import org.gaseumlabs.uhc.core.Trader
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
 import org.gaseumlabs.uhc.quirk.QuirkType
