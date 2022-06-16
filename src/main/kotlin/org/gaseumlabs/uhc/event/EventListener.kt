@@ -525,7 +525,6 @@ class EventListener : Listener {
 	}
 
 	private val hoes = arrayOf(
-		Material.SHEARS,
 		Material.WOODEN_HOE,
 		Material.GOLDEN_HOE,
 		Material.STONE_HOE,

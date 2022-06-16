@@ -246,42 +246,6 @@ class ParticipantCommands : BaseCommand() {
 		arena.enterPlayer(sender, true, true)
 	}
 
-	@Subcommand("enchantFix")
-	fun enchantFixHelp(sender: CommandSender, enchantFixType: Enchant.EnchantType) {
-		val names = enchantFixType.options.map { it.enchantment.key.key }
-
-		sender.sendMessage(
-			Component.text("<< Enchants for ", GOLD)
-				.append(Component.text(enchantFixType.name, GOLD, BOLD))
-				.append(Component.text(" >>", GOLD))
-		)
-		sender.sendMessage(
-			Component.text("0  1  3  5  7  9  11 13 15", LIGHT_PURPLE, BOLD)
-				.append(Component.text(" | Shelves", WHITE))
-		)
-		sender.sendMessage(Component.empty())
-
-		enchantFixType.options.forEachIndexed { i, option ->
-			var baseComponent = Component.empty()
-
-			option.levels.forEach { level ->
-				baseComponent = baseComponent.append(Component.text("$level  ", when (level) {
-					0 -> BLACK
-					1 -> RED
-					2 -> GOLD
-					3 -> YELLOW
-					4 -> GREEN
-					else -> AQUA
-				}, BOLD))
-			}
-
-			sender.sendMessage(
-				baseComponent.append(Component.text("| ", WHITE))
-					.append(Component.text(names[i], BLUE))
-			)
-		}
-	}
-
 	@CommandCompletion("@uhcblockx @uhcblocky @uhcblockz @uhcblockx @uhcblocky @uhcblockz")
 	@Subcommand("definePlatform")
 	fun definePlatformCommand(

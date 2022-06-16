@@ -48,7 +48,9 @@ class Trader {
 		val world = WorldManager.gameWorld!!
 
 		if (trader == null) {
-			val spawnRadius = (world.worldBorder.size / 2.0).toInt() - 16
+			if (currentTick % 27 != 0) return
+
+			val spawnRadius = ((world.worldBorder.size / 2.0).toInt() - 16).coerceAtMost(250)
 
 			var spawnSurface: Block? = null
 			for (tries in 0 until 10) {

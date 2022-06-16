@@ -26,7 +26,8 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 	override fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent {
 		val borderRadius = ((game.world.worldBorder.size - 1) / 2).toInt()
 
-		return UHCComponent.text("Border Radius: ", UHCColor.U_WHITE)
+		return UHCComponent.text("Shrink", phaseType.color)
+			.and(" Border Radius ", UHCColor.U_WHITE)
 			.and(borderRadius.toString(), phaseType.color, UHCStyle.BOLD)
 			.and(" Reaching ", UHCColor.U_WHITE)
 			.and(game.config.battlegroundRadius.get().toString(), phaseType.color, UHCStyle.BOLD)
@@ -57,6 +58,6 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 	}
 
 	override fun endPhrase(): String {
-		return "Endgame Starting"
+		return "Battleground Starting"
 	}
 }

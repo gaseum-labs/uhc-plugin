@@ -9,7 +9,6 @@ import org.gaseumlabs.uhc.quirk.Quirk
 import org.gaseumlabs.uhc.quirk.QuirkType
 import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.team.Teams
-import org.gaseumlabs.uhc.util.*
 import org.gaseumlabs.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.*
@@ -19,11 +18,15 @@ import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.Title.Times
 import org.bukkit.*
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.event.Enchant
+import org.gaseumlabs.uhc.util.*
 import org.gaseumlabs.uhc.world.regenresource.GlobalResources
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.roundToInt
+import kotlin.random.Random
+import kotlin.random.Random.Default.nextLong
 
 class Game(
 	val config: GameConfig,
@@ -67,6 +70,8 @@ class Game(
 		}
 
 		heightmap.generate(world)
+
+		Enchant.seed = nextLong()
 	}
 
 	/* getters */

@@ -33,7 +33,7 @@ enum class PhaseType(
 			"Border closes in",
 		)),
 	BATTLEGROUND("Battleground",
-		PINK,
+		GREEN,
 		UHCColor.BATTLEGROUND,
 		arrayOf(
 			"Small static border",

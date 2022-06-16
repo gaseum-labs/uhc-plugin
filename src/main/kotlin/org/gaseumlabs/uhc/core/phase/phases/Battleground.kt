@@ -23,7 +23,8 @@ class Battleground(game: Game, time: Int) : Phase(PhaseType.BATTLEGROUND, time, 
 	override fun perSecond(remainingSeconds: Int) {}
 
 	override fun updateBarTitle(world: World, remainingSeconds: Int): UHCComponent {
-		return UHCComponent.text("Battleground Ends in ", UHCColor.U_WHITE)
+		return UHCComponent.text("Battleground", phaseType.color)
+			.and(" Ends in ", UHCColor.U_WHITE)
 			.and(Util.timeString(remainingSeconds), phaseType.color, BOLD)
 	}
 
