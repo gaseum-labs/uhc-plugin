@@ -9,6 +9,7 @@ import org.bukkit.Bukkit
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.craftbukkit.v1_18_R2.scoreboard.CraftScoreboard
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.database.DataManager
 import kotlin.math.ceil
 
 object NameManager {
@@ -31,6 +32,9 @@ object NameManager {
 
 		/* 3. update nominal teams */
 		updateNominalTeams(updatePlayer, team, true)
+
+		/* 4. try to get player's link */
+		UHC.dataManager.linkData.playersIndividualLink(updatePlayer.uniqueId)
 	}
 
 	fun updateNominalTeams(updatePlayer: Player, team: AbstractTeam?, loggingIn: Boolean) {

@@ -1,15 +1,12 @@
 package org.gaseumlabs.uhc.database
 
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonObject
+import com.google.gson.*
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.ConfigFile
 import org.gaseumlabs.uhc.core.UHCDbFile
 import org.gaseumlabs.uhc.database.summary.Summary
 import org.gaseumlabs.uhc.lobbyPvp.Loadouts
 import org.gaseumlabs.uhc.util.Util
-import org.gaseumlabs.uhc.util.Util.void
-import java.io.*
 import java.net.*
 import java.net.http.*
 import java.net.http.HttpClient.Redirect.ALWAYS
@@ -19,6 +16,7 @@ import java.net.http.HttpResponse.BodyHandlers
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.*
+import kotlin.collections.HashMap
 
 class DataManager(
 	val dbUrl: String,
@@ -33,7 +31,7 @@ class DataManager(
 	val gson = GsonBuilder().create()
 	val loadouts = Loadouts(HashMap())
 	val nicknames = Nicknames(HashMap())
-	val linkData = LinkData(HashMap(), HashMap())
+	val linkData = LinkData()
 
 	class OfflineException : Exception()
 	class UnauthorizedException : Exception()
@@ -56,11 +54,7 @@ class DataManager(
 		}.start()
 	}
 
-	fun isLinked(uuid: UUID): Boolean {
-		return if (!online) true else linkData.isLinked(uuid)
-	}
-
-	fun postRequest(endpoint: String, body: JsonObject? = null): CompletableFuture<HttpResponse<String>> {
+	fun postRequest(endpoint: String, body: JsonElement? = null): CompletableFuture<HttpResponse<String>> {
 		val request = HttpRequest
 			.newBuilder()
 			.uri(URI.create(dbUrl + endpoint))
@@ -115,6 +109,33 @@ class DataManager(
 	fun uploadSummary(summary: Summary): CompletableFuture<HttpResponse<String>> {
 		if (poisoned) return CompletableFuture.failedFuture(OfflineException())
 		return postRequest("/api/bot/summary", summary.serialize())
+	}
+
+	fun getSingleDiscordId(uuid: UUID): CompletableFuture<Long?> {
+		val body = JsonObject()
+		body.addProperty("uuid", uuid.toString())
+
+		return postRequest("/api/bot/discordId", body).thenApply { response ->
+			val responseBody = JsonParser.parseString(response.body()) as JsonObject
+
+			responseBody.get("discordId")?.asString?.toLong()
+		}
+	}
+
+	fun getMassDiscordIds(uuids: List<UUID>): CompletableFuture<HashMap<UUID, Long>> {
+		val body = JsonArray()
+		for (uuid in uuids) body.add(uuid.toString())
+
+		return postRequest("/api/bot/discordIds", body).thenApply { response ->
+			val responseBody = JsonParser.parseString(response.body()) as JsonObject
+
+			val map = HashMap<UUID, Long>()
+			for ((uuidString, element) in responseBody.entrySet()) {
+				map[UUID.fromString(uuidString)] = element.asString.toLong()
+			}
+
+			map
+		}
 	}
 
 	companion object {

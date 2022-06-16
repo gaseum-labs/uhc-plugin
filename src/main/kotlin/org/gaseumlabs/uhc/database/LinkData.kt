@@ -1,70 +1,79 @@
 package org.gaseumlabs.uhc.database
 
+import org.bukkit.Bukkit
+import org.gaseumlabs.uhc.core.UHC
+import org.gaseumlabs.uhc.database.LinkData.Status.*
+import org.gaseumlabs.uhc.util.Util
+import org.gaseumlabs.uhc.util.Util.void
 import java.util.*
 import kotlin.collections.HashMap
 
-class LinkData(
-	private val discordToMinecraft: HashMap<Long, UUID>,
-	private val inverseMap: HashMap<UUID, Long>,
-) {
-	enum class LinkStatus {
-		ALREADY_LINKED,
-		TAKEN,
-		SUCCESSFUL
+class LinkData {
+	private val linkStatuses = HashMap<UUID, LinkStatus>()
+
+	enum class Status {
+		UNKNOWN,
+		UNLINKED,
+		LINKED,
 	}
 
-	/**
-	 * @return if the link was successful
-	 *
-	 * can reject if the uuid has already been taken
-	 * or if the discordId is already linked to the uuid
-	 */
-	fun addLink(discordId: Long, uuid: UUID): LinkStatus {
-		val existingLinker = inverseMap[uuid]
-		if (existingLinker == discordId) return LinkStatus.ALREADY_LINKED
-		else if (existingLinker != null) return LinkStatus.TAKEN
+	class LinkStatus(
+		var status: Status,
+		var discordId: Long,
+	)
 
-		val oldUuid = discordToMinecraft[discordId]
-		discordToMinecraft[discordId] = uuid
-
-		if (oldUuid != null) inverseMap.remove(oldUuid)
-		inverseMap[uuid] = discordId
-
-		return LinkStatus.SUCCESSFUL
+	private fun defaultLinkStatus(): LinkStatus {
+		return LinkStatus(UNKNOWN, 0)
 	}
 
-	/**
-	 * @return if the discordId was linked
-	 */
-	fun revokeLink(discordId: Long): UUID? {
-		val oldUuid = discordToMinecraft.remove(discordId) ?: return null
-		inverseMap.remove(oldUuid)
-		return oldUuid
+	private fun internalGet(uuid: UUID): LinkStatus {
+		return linkStatuses.getOrPut(uuid) { defaultLinkStatus() }
 	}
 
-	/**
-	 * @return if the uuid was linked
-	 */
-	fun revokeLink(uuid: UUID): Long? {
-		val oldDiscordId = inverseMap.remove(uuid) ?: return null
-		discordToMinecraft.remove(oldDiscordId)
-		return oldDiscordId
-	}
-
-	fun getUuid(discordId: Long): UUID? {
-		return discordToMinecraft[discordId]
-	}
-
-	fun getDiscordId(uuid: UUID): Long? {
-		return inverseMap[uuid]
+	fun updateLink(uuid: UUID, discordId: Long?) {
+		if (discordId == null) {
+			internalGet(uuid).status = UNLINKED
+		} else {
+			val linkStatus = internalGet(uuid)
+			linkStatus.status = LINKED
+			linkStatus.discordId = discordId
+		}
 	}
 
 	fun isLinked(uuid: UUID): Boolean {
-		return getDiscordId(uuid) != null
+		return internalGet(uuid).status == LINKED
+	}
+
+	fun isUnlinked(uuid: UUID): Boolean {
+		return internalGet(uuid).status == UNLINKED
+	}
+
+	fun getDiscordId(uuid: UUID): Long? {
+		val linkStatus = internalGet(uuid)
+		return if (linkStatus.status == LINKED) linkStatus.discordId else null
+	}
+
+	fun playersIndividualLink(uuid: UUID) {
+		UHC.dataManager.getSingleDiscordId(uuid).thenAccept { discordId ->
+			updateLink(uuid, discordId)
+		}.exceptionally { ex ->
+			Util.warn("Bad request? $ex").void()
+		}
+	}
+
+	fun massPlayersLink() {
+		val playerList = Bukkit.getOnlinePlayers().map { it.uniqueId }
+		if (playerList.isEmpty()) return
+		
+		UHC.dataManager.getMassDiscordIds(playerList).thenAccept { linkMap ->
+			for ((uuid, discordId) in linkMap.entries) {
+				updateLink(uuid, discordId)
+			}
+		}.exceptionally { ex -> Util.warn("Bad request? $ex").void() }
 	}
 
 	/* for debug purposes */
-	fun maps(): Pair<HashMap<Long, UUID>, HashMap<UUID, Long>> {
-		return Pair(discordToMinecraft, inverseMap)
+	fun maps(): HashMap<UUID, LinkStatus> {
+		return linkStatuses
 	}
 }

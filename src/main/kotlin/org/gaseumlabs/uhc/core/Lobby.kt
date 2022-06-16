@@ -145,12 +145,12 @@ object Lobby {
 						} else {
 							player.sendActionBar(Component.empty())
 						}
-					} else if (!UHC.dataManager.isLinked(player.uniqueId)) {
+					} else if (UHC.dataManager.linkData.isUnlinked(player.uniqueId)) {
 						player.sendActionBar(
 							Component.text("You are not linked! ", RED, BOLD)
-								.append(Component.text("Use ", GOLD))
-								.append(Component.text("\"%link [your minecraft username]\" ", Style.style(BOLD)))
-								.append(Component.text("in Discord", GOLD))
+								.append(Component.text("Visit ", GOLD))
+								.append(Component.text("\"web.uhcsaturday.net\"", Style.style(BOLD)))
+								.append(Component.text(" to link", GOLD))
 						)
 
 					} else if (team != null && team.name == null) {

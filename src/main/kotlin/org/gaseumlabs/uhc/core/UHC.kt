@@ -187,6 +187,10 @@ object UHC {
 				}
 			}
 
+			if (game == null && currentTick % 1200 == 0) {
+				dataManager.linkData.massPlayersLink()
+			}
+
 			Lobby.lobbyTipsTick(currentTick)
 			ArenaManager.perTick(currentTick)
 
