@@ -148,8 +148,8 @@ object Lobby {
 					} else if (UHC.dataManager.linkData.isUnlinked(player.uniqueId)) {
 						player.sendActionBar(
 							Component.text("You are not linked! ", RED, BOLD)
-								.append(Component.text("Visit ", GOLD))
-								.append(Component.text("\"web.uhcsaturday.net\"", Style.style(BOLD)))
+								.append(Component.text("Type ", GOLD))
+								.append(Component.text("/link", Style.style(BOLD)))
 								.append(Component.text(" to link", GOLD))
 						)
 

@@ -64,12 +64,14 @@ class LinkData {
 	fun massPlayersLink() {
 		val playerList = Bukkit.getOnlinePlayers().map { it.uniqueId }
 		if (playerList.isEmpty()) return
-		
+
 		UHC.dataManager.getMassDiscordIds(playerList).thenAccept { linkMap ->
 			for ((uuid, discordId) in linkMap.entries) {
 				updateLink(uuid, discordId)
 			}
-		}.exceptionally { ex -> Util.warn("Bad request? $ex").void() }
+		}.exceptionally { ex ->
+			Util.warn("Bad request? $ex").void()
+		}
 	}
 
 	/* for debug purposes */

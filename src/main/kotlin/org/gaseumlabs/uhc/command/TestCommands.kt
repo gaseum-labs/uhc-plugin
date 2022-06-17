@@ -309,4 +309,9 @@ class TestCommands : BaseCommand() {
 
 		Action.sendGameMessage(player, "Set collected for ${regenResource.name} to $amount")
 	}
+
+	@Subcommand("refreshLinks")
+	fun refreshLinksCommand(sender: CommandSender) {
+		UHC.dataManager.linkData.massPlayersLink()
+	}
 }
