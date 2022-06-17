@@ -1,6 +1,6 @@
 package org.gaseumlabs.uhc.core
 
-import org.gaseumlabs.uhc.core.stats.GameType
+import org.gaseumlabs.uhc.database.summary.GameType
 import org.gaseumlabs.uhc.gui.GuiManager
 import org.gaseumlabs.uhc.gui.gui.CreateGameGui
 import org.gaseumlabs.uhc.quirk.QuirkType

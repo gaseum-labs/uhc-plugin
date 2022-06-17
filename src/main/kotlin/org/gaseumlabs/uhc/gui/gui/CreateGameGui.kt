@@ -2,7 +2,7 @@ package org.gaseumlabs.uhc.gui.gui
 
 import org.gaseumlabs.uhc.command.Commands
 import org.gaseumlabs.uhc.core.*
-import org.gaseumlabs.uhc.core.stats.GameType
+import org.gaseumlabs.uhc.database.summary.GameType
 import org.gaseumlabs.uhc.gui.*
 import org.gaseumlabs.uhc.gui.guiItem.*
 import org.gaseumlabs.uhc.gui.guiItem.impl.CloseButton

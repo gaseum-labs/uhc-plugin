@@ -1,25 +1,21 @@
 package org.gaseumlabs.uhc.discord
 
-import org.gaseumlabs.uhc.core.ConfigFile
-import org.gaseumlabs.uhc.core.UHC
-import org.gaseumlabs.uhc.discord.command.MixerCommand
-import org.gaseumlabs.uhc.discord.command.commands.*
-import org.gaseumlabs.uhc.discord.storage.DiscordStorage
-import org.gaseumlabs.uhc.util.WebAddress
-import org.gaseumlabs.uhc.util.extensions.RestActionExtensions
-import org.gaseumlabs.uhc.util.extensions.RestActionExtensions.submitAsync
-import io.netty.buffer.ByteBufOutputStream
-import io.netty.buffer.Unpooled
 import net.dv8tion.jda.api.*
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
+import org.gaseumlabs.uhc.core.ConfigFile
+import org.gaseumlabs.uhc.core.UHC
+import org.gaseumlabs.uhc.discord.command.MixerCommand
+import org.gaseumlabs.uhc.discord.storage.DiscordStorage
+import org.gaseumlabs.uhc.util.WebAddress
+import org.gaseumlabs.uhc.util.extensions.RestActionExtensions
+import org.gaseumlabs.uhc.util.extensions.RestActionExtensions.submitAsync
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.net.URI
 import java.net.http.*
-import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.*
 import javax.imageio.ImageIO
@@ -50,13 +46,7 @@ class MixerBot(val jda: JDA, val guild: Guild, address: String?) : ListenerAdapt
 		}
 	}
 
-	val commands = arrayOf(
-		LinkCommand(),
-		UnlinkCommand(),
-		EditSummaryCommand(),
-		PublishSummaryCommand(),
-		SeasonCommand()
-	)
+	val commands = emptyArray<MixerCommand>()
 
 	val SummaryManager: SummaryManager = SummaryManager(this)
 

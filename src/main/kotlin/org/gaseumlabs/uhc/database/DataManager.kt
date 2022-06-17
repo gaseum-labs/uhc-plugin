@@ -1,86 +1,159 @@
 package org.gaseumlabs.uhc.database
 
+import com.google.gson.*
+import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.ConfigFile
-import org.gaseumlabs.uhc.database.file.*
+import org.gaseumlabs.uhc.core.UHCDbFile
+import org.gaseumlabs.uhc.database.summary.Summary
 import org.gaseumlabs.uhc.lobbyPvp.Loadouts
-import com.microsoft.sqlserver.jdbc.SQLServerDriver
-import java.sql.Connection
-import java.sql.DriverManager
+import org.gaseumlabs.uhc.util.Util
+import java.net.*
+import java.net.http.*
+import java.net.http.HttpClient.Redirect.ALWAYS
+import java.net.http.HttpClient.Version.HTTP_2
+import java.net.http.HttpRequest.BodyPublishers
+import java.net.http.HttpResponse.BodyHandlers
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.*
+import kotlin.collections.HashMap
 
 class DataManager(
-	var connection: Connection?,
-	var linkData: LinkDataFile.LinkData,
-	var loadouts: Loadouts,
-	var nicknames: NicknamesFile.Nicknames,
+	val dbUrl: String,
+	val client: HttpClient,
+	val token: String,
 ) {
-	fun isOnline(): Boolean {
-		return connection != null
+	var online = false
+
+	/* initial poisioned state */
+	var poisoned = dbUrl == ""
+
+	val gson = GsonBuilder().create()
+	val loadouts = Loadouts(HashMap())
+	val nicknames = Nicknames(HashMap())
+	val linkData = LinkData()
+
+	class OfflineException : Exception()
+	class UnauthorizedException : Exception()
+	class BadRequestException : Exception()
+
+	init {
+		object : Thread() {
+			override fun run() {
+				while (!poisoned) {
+					if (!online) {
+						makePing().thenAccept {
+							Util.log("Reconnected to UHC database")
+							online = true
+						}
+					}
+
+					sleep(Duration.ofMinutes(5).toMillis())
+				}
+			}
+		}.start()
 	}
 
-	/* treat everyone as linked in offline mode */
-	fun isLinked(uuid: UUID): Boolean {
-		return if (isOnline()) linkData.isLinked(uuid) else true
+	fun postRequest(endpoint: String, body: JsonElement? = null): CompletableFuture<HttpResponse<String>> {
+		val request = HttpRequest
+			.newBuilder()
+			.uri(URI.create(dbUrl + endpoint))
+			.setHeader("Content-type", "application/json")
+			.setHeader("Authorization", "Bearer $token")
+			.POST(if (body == null) BodyPublishers.noBody() else BodyPublishers.ofString(gson.toJson(body)))
+			.build()
+
+		return client.sendAsync(request, BodyHandlers.ofString()).thenApply { response ->
+			when (response.statusCode()) {
+				400 -> throw BadRequestException()
+				401 -> throw UnauthorizedException()
+			}
+			response
+		}.exceptionally { ex ->
+			when (ex.cause) {
+				is BadRequestException -> {
+					Util.log("Bad request to ${request.uri()}")
+				}
+				is UnauthorizedException -> {
+					Util.log("Not authorized to connect to UHC database, shutting down")
+					poisoned = true
+					online = false
+				}
+				else -> {
+					Util.log("Lost connection to UHC database")
+					online = false
+				}
+			}
+			throw ex
+		}
 	}
 
-	fun <T> push(file: DatabaseFile<*, T>, entry: T): CompletableFuture<Boolean> {
-		return CompletableFuture.supplyAsync { file.push(connection ?: return@supplyAsync false, entry) }
+	/* ENDPOINTS */
+
+	fun makePing(): CompletableFuture<HttpResponse<String>> {
+		if (poisoned) return CompletableFuture.failedFuture(OfflineException())
+		return postRequest("/api/bot/ping")
 	}
 
-	fun <T> remove(file: DatabaseFile<*, T>, entry: T): CompletableFuture<Boolean> {
-		return CompletableFuture.supplyAsync { file.remove(connection ?: return@supplyAsync false, entry) }
+	fun verifyCode(player: Player, code: String): CompletableFuture<HttpResponse<String>> {
+		if (poisoned) return CompletableFuture.failedFuture(OfflineException())
+
+		val body = JsonObject()
+		body.addProperty("code", code)
+		body.addProperty("uuid", player.uniqueId.toString())
+		body.addProperty("username", player.name)
+
+		return postRequest("/api/bot/verifyMinecraftCode", body)
+	}
+
+	fun uploadSummary(summary: Summary): CompletableFuture<HttpResponse<String>> {
+		if (poisoned) return CompletableFuture.failedFuture(OfflineException())
+		return postRequest("/api/bot/summary", summary.serialize())
+	}
+
+	fun getSingleDiscordId(uuid: UUID): CompletableFuture<Long?> {
+		val body = JsonObject()
+		body.addProperty("uuid", uuid.toString())
+
+		return postRequest("/api/bot/discordId", body).thenApply { response ->
+			val responseBody = JsonParser.parseString(response.body()) as JsonObject
+
+			responseBody.get("discordId")?.asString?.toLong()
+		}
+	}
+
+	fun getMassDiscordIds(uuids: List<UUID>): CompletableFuture<HashMap<UUID, Long>> {
+		val body = JsonArray()
+		for (uuid in uuids) body.add(uuid.toString())
+
+		return postRequest("/api/bot/discordIds", body).thenApply { response ->
+			val responseBody = JsonParser.parseString(response.body()) as JsonObject
+
+			val map = HashMap<UUID, Long>()
+			for ((uuidString, element) in responseBody.entrySet()) {
+				map[UUID.fromString(uuidString)] = element.asString.toLong()
+			}
+
+			map
+		}
 	}
 
 	companion object {
-		val linkDataFile = LinkDataFile()
-		val loadoutsFile = LoadoutsFile()
-		val nicknamesFile = NicknamesFile()
+		fun createDataManager(configFile: ConfigFile, uhcDbFile: UHCDbFile): DataManager {
+			val token = uhcDbFile.token ?: ""
+			val dbUrl = configFile.dbUrl ?: ""
 
-		fun createDataManager(configFile: ConfigFile): CompletableFuture<DataManager> {
-			val url =
-				configFile.databaseUrl ?: return CompletableFuture.failedFuture(Exception("No URL in config file"))
-			val databaseName = configFile.databaseName
-				?: return CompletableFuture.failedFuture(Exception("No database name in config file"))
-			val username = configFile.databaseUsername
-				?: return CompletableFuture.failedFuture(Exception("No username in config file"))
-			val password = configFile.databasePassword
-				?: return CompletableFuture.failedFuture(Exception("No password in config file"))
-
-			return CompletableFuture.supplyAsync {
-				DriverManager.registerDriver(SQLServerDriver())
-				val connection = DriverManager.getConnection(
-					"jdbc:sqlserver://${url};DatabaseName=${databaseName};", username, password
-				)
-
-				fun <T> load(file: DatabaseFile<T, *>): T {
-					val statement = connection.createStatement()
-
-					return try {
-						val results = statement.executeQuery(file.query())
-						file.parseResults(results)
-					} catch (ex: Exception) {
-						ex.printStackTrace()
-						file.defaultData()
-					} finally {
-						statement.close()
-					}
-				}
-
-				DataManager(
-					connection,
-					load(linkDataFile),
-					load(loadoutsFile),
-					load(nicknamesFile)
-				)
+			if (token == "" || dbUrl == "") {
+				Util.warn("Bad input files for datamanager")
 			}
-		}
 
-		fun offlineDataManager(): DataManager {
-			return DataManager(null,
-				linkDataFile.defaultData(),
-				loadoutsFile.defaultData(),
-				nicknamesFile.defaultData())
+			val client = HttpClient
+				.newBuilder()
+				.followRedirects(ALWAYS)
+				.version(HTTP_2)
+				.build()
+
+			return DataManager(dbUrl, client, token)
 		}
 	}
 }

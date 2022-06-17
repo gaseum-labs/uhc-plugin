@@ -1,7 +1,6 @@
 package org.gaseumlabs.uhc.team
 
-import org.gaseumlabs.uhc.util.*
-import org.gaseumlabs.uhc.util.Util.fieldError
+import com.google.gson.*
 import net.kyori.adventure.text.format.TextColor
 import java.util.*
 
@@ -14,13 +13,17 @@ class Team(
 	arrayOf(color0, color1),
 	members
 ) {
-	fun serialize(): HashMap<String, *> {
-		return hashMapOf(
-			Pair("name", name),
-			Pair("color0", colors[0].value()),
-			Pair("color1", colors[1].value()),
-			Pair("members", members.map { it.toString() }),
-		)
+	fun serialize(): JsonObject {
+		val obj = JsonObject()
+		obj.addProperty("name", name)
+		obj.addProperty("color0", colors[0].value())
+		obj.addProperty("color1", colors[1].value())
+
+		val membersArray = JsonArray(members.size)
+		for (member in members) membersArray.add(member.toString())
+		obj.add("members", membersArray)
+
+		return obj
 	}
 
 	override fun grabName(): String {
@@ -32,20 +35,15 @@ class Team(
 	}
 
 	companion object {
-		fun deserialize(map: AbstractMap<String, *>): Result<Team> {
-			val name = map["name"] as? String ?: return fieldError("name", "string")
-			val color0 = (map["color0"] as? Double ?: return fieldError("color0", "int")).toInt()
-			val color1 = (map["color1"] as? Double ?: return fieldError("color1", "int")).toInt()
-			val members = (map["members"] as? ArrayList<String> ?: return fieldError("members", "array"))
-				.map {
-					try {
-						UUID.fromString(it)
-					} catch (ex: Exception) {
-						return Bad(ex.message)
-					}
-				}
+		fun deserialize(jsonElement: JsonElement): Team {
+			jsonElement as JsonObject
 
-			return Good(Team(name, TextColor.color(color0), TextColor.color(color1), members as ArrayList<UUID>))
+			val name = jsonElement.get("name").asString
+			val color0 = TextColor.color(jsonElement.get("color0").asInt)
+			val color1 = TextColor.color(jsonElement.get("color1").asInt)
+			val members = ArrayList(jsonElement.get("members").asJsonArray.map { UUID.fromString(it.asString) })
+
+			return Team(name, color0, color1, members)
 		}
 	}
 }

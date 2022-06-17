@@ -3,6 +3,7 @@ package org.gaseumlabs.uhc.component
 import org.gaseumlabs.uhc.component.UHCStyle.*
 import org.gaseumlabs.uhc.util.Util
 import net.minecraft.network.chat.*
+import net.minecraft.network.chat.ClickEvent.Action.OPEN_URL
 
 class UHCComponent(private var internalComponent: MutableComponent) {
 	var locked = false
@@ -89,6 +90,10 @@ class UHCComponent(private var internalComponent: MutableComponent) {
 	}
 
 	companion object {
+		fun text(): UHCComponent {
+			return UHCComponent(TextComponent(""))
+		}
+
 		fun text(string: String, color: TextColor): UHCComponent {
 			return UHCComponent(
 				TextComponent(string).setStyle(Style.EMPTY.withColor(color))
@@ -121,8 +126,12 @@ class UHCComponent(private var internalComponent: MutableComponent) {
 			return UHCComponent(component)
 		}
 
-		fun text(): UHCComponent {
-			return UHCComponent(TextComponent(""))
+		fun link(string: String, link: String, color: TextColor): UHCComponent {
+			val component = TextComponent(string)
+
+			component.style = component.style.withClickEvent(ClickEvent(OPEN_URL, link)).withColor(color)
+
+			return UHCComponent(component)
 		}
 	}
 }

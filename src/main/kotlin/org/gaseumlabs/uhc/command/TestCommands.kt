@@ -243,23 +243,6 @@ class TestCommands : BaseCommand() {
 		sender.teleport(trader.location)
 	}
 
-	@Subcommand("link")
-	fun linkTest(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		val (discordToMinecraft, inverse) = UHC.dataManager.linkData.maps()
-
-		discordToMinecraft.forEach { (discordId, uuid) ->
-			sender.sendMessage("$discordId -> $uuid")
-		}
-
-		sender.sendMessage("--------------")
-
-		inverse.forEach { (uuid, discordId) ->
-			sender.sendMessage("$uuid -> $discordId")
-		}
-	}
-
 	@Subcommand("portal")
 	fun testPortal(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
@@ -330,5 +313,10 @@ class TestCommands : BaseCommand() {
 		veinData.collected[game.phase.phaseType] = amount
 
 		Action.sendGameMessage(player, "Set collected for ${regenResource.name} to $amount")
+	}
+
+	@Subcommand("refreshLinks")
+	fun refreshLinksCommand(sender: CommandSender) {
+		UHC.dataManager.linkData.massPlayersLink()
 	}
 }

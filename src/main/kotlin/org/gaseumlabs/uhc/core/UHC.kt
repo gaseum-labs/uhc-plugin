@@ -19,6 +19,7 @@ import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.scoreboard.*
 import org.gaseumlabs.uhc.core.phase.PhaseType.POSTGAME
+import org.gaseumlabs.uhc.UHCPlugin
 import java.time.Duration
 import java.util.*
 import kotlin.math.*
@@ -40,7 +41,7 @@ object UHC {
 	var teleportGroups = HashMap<UUID, Location>()
 	var worldRadius: Int = 0
 
-	var dataManager: DataManager = DataManager.offlineDataManager()
+	var dataManager: DataManager = DataManager.createDataManager(UHCPlugin.configFile, UHCPlugin.uhcDbFile)
 	var bot: MixerBot? = null
 
 	lateinit var heartsObjective: Objective
@@ -181,6 +182,10 @@ object UHC {
 				}
 			}
 
+			if (game == null && currentTick % 1200 == 0) {
+				dataManager.linkData.massPlayersLink()
+			}
+
 			Lobby.lobbyTipsTick(currentTick)
 			ArenaManager.perTick(currentTick)
 
@@ -201,7 +206,7 @@ object UHC {
 
 			if (playerData.participating && (player == null || player.gameMode !== GameMode.SPECTATOR)) {
 				val block = Action.getPlayerLocation(uuid)?.block
-				if (block != null) game.ledger.tracker.addPlayerPosition(uuid, block)
+				//if (block != null) game.ledger.tracker.addPlayerPosition(uuid, block)
 			}
 		}
 	}

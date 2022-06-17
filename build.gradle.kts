@@ -1,5 +1,6 @@
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaTarget
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 plugins {
 	`java-library`
@@ -15,7 +16,6 @@ version = project.property("pluginVersion")!!
 description = "Runs games of UHC"
 
 java {
-	// Configure the java toolchain. This allows gradle to auto-provision JDK 17 on systems that only have JDK 8 installed for example.
 	toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
@@ -27,8 +27,7 @@ repositories {
 	maven(url = "https://repo.aikar.co/content/groups/aikar/")
 	/* discord */
 	maven(url = "https://m2.dv8tion.net/releases")
-	/* transact-sql driver */
-	maven(url = "https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc")
+	/* ? */
 	maven(url = "https://repo.maven.apache.org/maven2")
 	/* reflection remapper */
 	maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots/")
@@ -42,7 +41,6 @@ dependencies {
 
 	implementation("net.dv8tion:JDA:5.0.0-alpha.9")
 	implementation("co.aikar:acf-paper:0.5.0-SNAPSHOT")
-	implementation("com.microsoft.sqlserver:mssql-jdbc:10.2.0.jre17")
 	implementation("xyz.jpenilla:reflection-remapper:0.1.0-SNAPSHOT")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.10")
 
@@ -50,7 +48,45 @@ dependencies {
 	compileOnly("com.comphenix.protocol:ProtocolLib:4.8.0")
 }
 
+abstract class WslIpTask : DefaultTask() {
+	fun streamToString(inputStream: java.io.InputStream): String {
+		var output = ""
+		val stdout = BufferedReader(InputStreamReader(inputStream))
+		while (true) {
+			val next = stdout.readLine()
+			if (next == null) {
+				break
+			} else {
+				output += next
+			}
+		}
+		stdout.close()
+		return output
+	}
+
+	@org.gradle.api.tasks.TaskAction
+	fun getIp() {
+		val command = """powershell.exe wsl -- ip -o -4 -json addr list eth0 `
+			| ConvertFrom-Json `
+			| %{ ${"$"}_.addr_info.local } `
+			| ?{ ${"$"}_ }"""
+		val powerShellProcess: Process = Runtime.getRuntime().exec(command)
+		powerShellProcess.outputStream.close()
+
+		println(
+			streamToString(powerShellProcess.inputStream) +
+			'\n' +
+			streamToString(powerShellProcess.errorStream)
+		)
+	}
+}
+
+tasks.register<WslIpTask>("wslIp")
+
 tasks {
+	jar {
+		enabled = false
+	}
 	assemble {
 		dependsOn(reobfJar)
 	}
@@ -70,9 +106,6 @@ tasks {
 	}
 	runServer {
 		serverJar(File("run/server.jar"))
-		//jvmArgs("--add-exports=java.base/jdk.internal.loader=ALL-UNNAMED")
-		//jvmArgs("--add-opens=java.base/java.security=ALL-UNNAMED")
-		//jvmArgs("--add-opens=java.base/java.net=ALL-UNNAMED")
 	}
 }
 

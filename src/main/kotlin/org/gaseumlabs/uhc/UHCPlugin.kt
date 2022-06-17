@@ -2,10 +2,7 @@ package org.gaseumlabs.uhc
 
 import co.aikar.commands.PaperCommandManager
 import org.gaseumlabs.uhc.command.*
-import org.gaseumlabs.uhc.core.ConfigFile
-import org.gaseumlabs.uhc.core.UHC
-import org.gaseumlabs.uhc.core.stats.Tracker
-import org.gaseumlabs.uhc.database.DataManager
+import org.gaseumlabs.uhc.database.summary.Tracker
 import org.gaseumlabs.uhc.discord.MixerBot
 import org.gaseumlabs.uhc.event.*
 import org.gaseumlabs.uhc.gui.GuiManager
@@ -16,6 +13,7 @@ import org.gaseumlabs.uhc.util.Util.void
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.gen.WorldGenManager
 import org.bukkit.plugin.java.JavaPlugin
+import org.gaseumlabs.uhc.core.*
 import kotlin.system.exitProcess
 
 class UHCPlugin : JavaPlugin() {
@@ -25,7 +23,8 @@ class UHCPlugin : JavaPlugin() {
 
 	companion object {
 		lateinit var plugin: JavaPlugin
-		val configFile = ConfigFile.load()
+		val configFile = JsonFiles.load(ConfigFile::class.java, "./config.json")
+		val uhcDbFile = JsonFiles.load(UHCDbFile::class.java, "./uhcdb.json")
 	}
 
 	override fun onEnable() {
@@ -40,6 +39,7 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(ParticipantTeamCommands(), true)
 		commandManager.registerCommand(ShareCoordsCommand(), true)
 		commandManager.registerCommand(NicknameCommand(), true)
+		commandManager.registerCommand(LinkCommands(), true)
 
 		/* register all events */
 		server.pluginManager.registerEvents(ClassesEvents(), this)
@@ -79,15 +79,7 @@ class UHCPlugin : JavaPlugin() {
 				}
 
 			}.exceptionally { ex ->
-				Util.warn("}Bot setup failed")
-				Util.warn(ex).void()
-			}
-
-		DataManager.createDataManager(configFile)
-			.thenAccept { dataManager ->
-				UHC.dataManager = dataManager
-			}.exceptionally { ex ->
-				Util.warn("Database connection failed")
+				Util.warn("Bot setup failed")
 				Util.warn(ex).void()
 			}
 
