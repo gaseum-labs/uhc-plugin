@@ -2,6 +2,7 @@ package org.gaseumlabs.uhc.database
 
 import com.google.gson.*
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.command.Commands
 import org.gaseumlabs.uhc.core.ConfigFile
 import org.gaseumlabs.uhc.core.UHCDbFile
 import org.gaseumlabs.uhc.database.summary.Summary
@@ -33,9 +34,11 @@ class DataManager(
 	val nicknames = Nicknames(HashMap())
 	val linkData = LinkData()
 
-	class OfflineException : Exception()
-	class UnauthorizedException : Exception()
-	class BadRequestException : Exception()
+	abstract class ResponseCodeException(val code: Int) : Exception()
+	class OfflineException : ResponseCodeException(0)
+	class UnauthorizedException : ResponseCodeException(401)
+	class BadRequestException : ResponseCodeException(400)
+	class NotFoundException : ResponseCodeException(404)
 
 	init {
 		object : Thread() {
@@ -67,13 +70,19 @@ class DataManager(
 			when (response.statusCode()) {
 				400 -> throw BadRequestException()
 				401 -> throw UnauthorizedException()
+				404 -> throw NotFoundException()
 			}
 			response
 		}.exceptionally { ex ->
 			when (ex.cause) {
+				/* expected errors, nothing bad */
 				is BadRequestException -> {
 					Util.log("Bad request to ${request.uri()}")
 				}
+				is NotFoundException -> {
+					Util.log("404 request to ${request.uri()}")
+				}
+				/* catastrophic errors */
 				is UnauthorizedException -> {
 					Util.log("Not authorized to connect to UHC database, shutting down")
 					poisoned = true
@@ -84,7 +93,7 @@ class DataManager(
 					online = false
 				}
 			}
-			throw ex
+			throw ex.cause!!
 		}
 	}
 
@@ -122,16 +131,16 @@ class DataManager(
 		}
 	}
 
-	fun getMassDiscordIds(uuids: List<UUID>): CompletableFuture<HashMap<UUID, Long>> {
+	fun getMassDiscordIds(uuids: List<UUID>): CompletableFuture<HashMap<UUID, Long?>> {
 		val body = JsonArray()
 		for (uuid in uuids) body.add(uuid.toString())
 
 		return postRequest("/api/bot/discordIds", body).thenApply { response ->
 			val responseBody = JsonParser.parseString(response.body()) as JsonObject
-
-			val map = HashMap<UUID, Long>()
+			
+			val map = HashMap<UUID, Long?>()
 			for ((uuidString, element) in responseBody.entrySet()) {
-				map[UUID.fromString(uuidString)] = element.asString.toLong()
+				map[UUID.fromString(uuidString)] = if (element.isJsonNull) null else element.asString.toLong()
 			}
 
 			map
@@ -154,6 +163,16 @@ class DataManager(
 				.build()
 
 			return DataManager(dbUrl, client, token)
+		}
+
+		fun clientFacingErrorMessage(ex: Throwable, errorMap: Map<Int, String>, onString: (String) -> Unit): Void? {
+			when (val err = ex.cause) {
+				is OfflineException -> onString("The server is in offline mode")
+				is UnauthorizedException -> onString("Website connection has been disabled on this server")
+				is ResponseCodeException -> onString(errorMap[err.code] ?: "Unknown error")
+				else -> onString("Unknown error")
+			}
+			return null
 		}
 	}
 }

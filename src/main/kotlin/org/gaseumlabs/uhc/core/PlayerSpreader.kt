@@ -3,7 +3,6 @@ package org.gaseumlabs.uhc.core
 import org.gaseumlabs.uhc.customSpawning.SpawnUtil
 import org.gaseumlabs.uhc.lobbyPvp.Spiral
 import org.gaseumlabs.uhc.team.AbstractTeam
-import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.util.Util
 import org.bukkit.*
 import org.bukkit.Material.*

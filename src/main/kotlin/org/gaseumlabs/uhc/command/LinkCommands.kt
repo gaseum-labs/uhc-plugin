@@ -13,12 +13,14 @@ import org.gaseumlabs.uhc.component.UHCColor
 import org.gaseumlabs.uhc.component.UHCComponent
 import org.gaseumlabs.uhc.component.UHCComponent.Companion
 import org.gaseumlabs.uhc.core.UHC
+import org.gaseumlabs.uhc.database.DataManager
+import org.gaseumlabs.uhc.database.DataManager.NotFoundException
 import org.gaseumlabs.uhc.database.DataManager.OfflineException
 import org.gaseumlabs.uhc.util.Action
 
 class LinkCommands : BaseCommand() {
 	@CommandAlias("link")
-	@Description("use to link your minecraft account with your uhcsaturday account")
+	@Description("Use to link your Minecraft account with your Uhcsaturday account")
 	fun linkCommand(sender: CommandSender) {
 		val player = sender as? Player ?: return
 
@@ -34,13 +36,32 @@ class LinkCommands : BaseCommand() {
 
 			player.uhcMessage(UHCComponent.text("Please visit ", UHCColor.U_WHITE)
 				.and(Companion.link(link, link, UHCColor.U_GOLD)).and(" to link", UHCColor.U_WHITE))
+			Action.sendGameMessage(player, "After linking, please wait up to a minute for the link to take effect")
 
 		}.exceptionally { ex ->
-			when (ex) {
-				is OfflineException -> Commands.errorMessage(player, "The server is in offline mode")
-				else -> Commands.errorMessage(player, "The code you entered was incorrect or expired")
-			}
-			null
+			DataManager.clientFacingErrorMessage(
+				ex,
+				mapOf(400 to "The code you entered was incorrect or expired")
+			) { Commands.errorMessage(player, it) }
+		}
+	}
+
+	@CommandAlias("unlink")
+	@Description("If you are already linked, your uhcsaturday account is unlinked from your Minecraft account")
+	fun unlinkCommand(sender: CommandSender) {
+		val player = sender as? Player ?: return
+
+		UHC.dataManager.postRequest("/api/bot/unlink/${player.uniqueId}").thenAccept { response ->
+			UHC.dataManager.linkData.updateLink(player.uniqueId, null)
+
+			val discordUsername = JsonParser.parseString(response.body()).asJsonObject.get("discordUsername").asString
+			Action.sendGameMessage(player, "You have been unlinked from account $discordUsername")
+
+		}.exceptionally { ex ->
+			DataManager.clientFacingErrorMessage(
+				ex,
+				mapOf(404 to "You are not linked")
+			) { Commands.errorMessage(player, it) }
 		}
 	}
 }
