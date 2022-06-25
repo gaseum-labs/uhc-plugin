@@ -16,6 +16,8 @@ import org.gaseumlabs.uhc.dropFix.DropEntry.Companion.lootUpTo
 import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.EntityType.PHANTOM
+import org.bukkit.entity.EntityType.SLIME
 import org.bukkit.potion.PotionType
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.bukkit.inventory.meta.PotionMeta
@@ -152,7 +154,11 @@ enum class DropFixType(val dropFix: DropFix) {
 
 	HOGLIN(DropFix(EntityType.HOGLIN, 1,
 		arrayOf(item(LEATHER, lootMulti(2)), item(noBaby(onFire(PORKCHOP, COOKED_PORKCHOP)), lootMulti(3)))
-	));
+	)),
+
+	SLIME(DropFix(EntityType.SLIME, 1, arrayOf(
+		item(isSize(SLIME_BALL, 1), ::lootItem)
+	)));
 
 	companion object {
 		val list = values()

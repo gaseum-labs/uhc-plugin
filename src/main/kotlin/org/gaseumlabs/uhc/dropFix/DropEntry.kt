@@ -154,7 +154,7 @@ class DropEntry(val onDrop: (entity: Entity, looting: Int, cycle: Int) -> Array<
 
 		fun isSize(material: Material, size: Int): (Entity) -> Material? {
 			return { entity ->
-				entity as MagmaCube
+				entity as Slime
 				if (entity.size == size) material else null
 			}
 		}
