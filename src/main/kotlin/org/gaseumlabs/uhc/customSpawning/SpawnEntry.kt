@@ -20,7 +20,7 @@ enum class SpawnEntry(val getSpawnInfo: (block: Block, spawnCycle: Int) -> Spawn
 		}
 	}),
 	SKELETON({ block, spawnCycle ->
-		if (SpawnUtil.onCycle(spawnCycle, 16)) {
+		if (SpawnUtil.onCycle(spawnCycle, 16) && block.y < 0) {
 			SpawnSlime()
 		} else if (BiomeNo.isSnowyBiome(BiomeNo.biomeAt(block)) && block.y >= SpawnUtil.SURFACE_Y) {
 			SpawnStray()

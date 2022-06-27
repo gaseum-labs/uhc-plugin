@@ -1,69 +1,30 @@
 package org.gaseumlabs.uhc.team
 
-import net.kyori.adventure.text.format.TextColor
+import org.bukkit.DyeColor
 import kotlin.random.Random
 
-class ColorCube(val subdivisions: Int) {
-	private val cube = Array(subdivisions * subdivisions * subdivisions) { defaultTaken(it) }
+class ColorCube {
+	companion object {
+		const val NUM_COLORS = 16
 
-	private val subSize = 256 / subdivisions
-
-	private fun defaultTaken(index: Int): Boolean {
-		val (x, y, z) = positionFromIndex(index)
-		return x == y && y == z && z == x
+		fun otherSlot(slot: Int): Int {
+			return if (slot == 0) 1 else 0
+		}
 	}
 
-	private fun findIndex(random: Random): Int? {
-		val offset = random.nextInt(0, cube.size)
+	private val takenSlot0 = Array(NUM_COLORS) { false }
+	private val takenSlot1 = Array(NUM_COLORS) { false }
+	private val slots = arrayOf(takenSlot0, takenSlot1)
 
-		for (i in cube.indices) {
-			val index = (i + offset) % cube.size
-			if (!cube[index]) return index
+	private fun findEmptyIndex(random: Random, slotTaken: Array<Boolean>): Int? {
+		val offset = random.nextInt(0, NUM_COLORS)
+
+		for (i in 0 until NUM_COLORS) {
+			val index = (i + offset) % NUM_COLORS
+			if (!slotTaken[index]) return index
 		}
 
 		return null
-	}
-
-	/* position -> index -> color conversion */
-
-	fun positionFromIndex(index: Int): Triple<Int, Int, Int> {
-		return Triple(
-			index % subdivisions,
-			(index / subdivisions) % subdivisions,
-			((index / subdivisions) / subdivisions) % subdivisions
-		)
-	}
-
-	fun indexFromPosition(x: Int, y: Int, z: Int): Int {
-		return x + (y * subdivisions) + (z * subdivisions * subdivisions)
-	}
-
-	fun colorFromIndex(index: Int): TextColor {
-		return colorFromPosition(positionFromIndex(index))
-	}
-
-	fun colorFromPosition(x: Int, y: Int, z: Int): TextColor {
-		return TextColor.color(
-			(x * subSize) + (subSize / 2),
-			(y * subSize) + (subSize / 2),
-			(z * subSize) + (subSize / 2)
-		)
-	}
-
-	fun indexFromColor(red: Int, gre: Int, blu: Int): Int {
-		return indexFromPosition(
-			red / (256 / subdivisions),
-			gre / (256 / subdivisions),
-			blu / (256 / subdivisions)
-		)
-	}
-
-	fun colorFromPosition(xyz: Triple<Int, Int, Int>): TextColor {
-		return colorFromPosition(xyz.first, xyz.second, xyz.third)
-	}
-
-	fun indexFromColor(color: TextColor): Int {
-		return indexFromColor(color.red(), color.green(), color.blue())
 	}
 
 	/* team interface */
@@ -74,37 +35,29 @@ class ColorCube(val subdivisions: Int) {
 	 *
 	 * @return the two team colors, or null if no team could be created
 	 */
-	fun pickTeam(): Pair<TextColor, TextColor>? {
+	fun pickTeam(): Pair<DyeColor, DyeColor>? {
 		val random = Random((Math.random() * Int.MAX_VALUE).toInt())
 
-		val index0 = findIndex(random) ?: return null
-		val index1 = findIndex(random) ?: return null
+		val index0 = findEmptyIndex(random, takenSlot0) ?: return null
+		val index1 = findEmptyIndex(random, takenSlot1) ?: return null
 
-		cube[index0] = true
-		cube[index1] = true
+		takenSlot0[index0] = true
+		takenSlot1[index1] = true
 
-		return Pair(colorFromPosition(positionFromIndex(index0)), colorFromPosition(positionFromIndex(index1)))
+		return DyeColor.values()[index0] to DyeColor.values()[index1]
 	}
 
-	/**
-	 * unmarks the colors as taken from the internal cube
-	 */
-	fun removeTeam(colors: Array<TextColor>) {
-		colors.forEach { color ->
-			cube[indexFromColor(color.red(), color.green(), color.blue())] = false
-		}
+	fun removeTeam(colors: Array<DyeColor>) {
+		takenSlot0[colors[0].ordinal] = false
+		takenSlot1[colors[1].ordinal] = false
 	}
 
-	fun switchColor(from: Int, to: Int) {
-		cube[from] = false
-		cube[to] = true
+	fun switchColor(colorFrom: DyeColor, colorTo: DyeColor, slot: Int) {
+		slots[slot][colorFrom.ordinal] = false
+		slots[slot][colorTo.ordinal] = true
 	}
 
-	fun taken(r: Int, g: Int, b: Int): Boolean {
-		return cube[indexFromPosition(r, g, b)]
-	}
-
-	fun taken(index: Int): Boolean {
-		return cube[index]
+	fun taken(color: DyeColor, slot: Int): Boolean {
+		return slots[slot][color.ordinal]
 	}
 }

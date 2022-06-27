@@ -25,7 +25,7 @@ import java.util.*
 import kotlin.math.*
 
 object UHC {
-	val colorCube: ColorCube = ColorCube(4)
+	val colorCube: ColorCube = ColorCube()
 
 	private var preGameConfig: GameConfig = GameConfig()
 	var preGameTeams: Teams<PreTeam> = Teams({ action ->
@@ -199,16 +199,16 @@ object UHC {
 	}
 
 	private fun ledgerTrailTick(game: Game, currentTick: Int) {
-		if (currentTick % 40 != 0) return
-
-		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			val player = Bukkit.getPlayer(uuid)
-
-			if (playerData.participating && (player == null || player.gameMode !== GameMode.SPECTATOR)) {
-				val block = Action.getPlayerLocation(uuid)?.block
-				//if (block != null) game.ledger.tracker.addPlayerPosition(uuid, block)
-			}
-		}
+		//if (currentTick % 40 != 0) return
+//
+		//PlayerData.playerDataList.forEach { (uuid, playerData) ->
+		//	val player = Bukkit.getPlayer(uuid)
+//
+		//	if (playerData.participating && (player == null || player.gameMode !== GameMode.SPECTATOR)) {
+		//		//val block = Action.getPlayerLocation(uuid)?.block
+		//		//if (block != null) game.ledger.tracker.addPlayerPosition(uuid, block)
+		//	}
+		//}
 	}
 
 	/**

@@ -6,13 +6,31 @@ import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.team.NameManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
+import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
-import org.bukkit.Bukkit
+import net.kyori.adventure.text.format.TextDecoration.BOLD
+import net.minecraft.core.BlockPos
+import net.minecraft.world.SimpleMenuProvider
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.LoomMenu
+import net.minecraft.world.level.block.Blocks
+import org.bukkit.*
 import org.bukkit.command.CommandSender
+import org.bukkit.craftbukkit.v1_18_R2.CraftServer
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftHumanEntity
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.InventoryType.LOOM
+import org.bukkit.inventory.*
+import org.bukkit.material.Dye
+import org.gaseumlabs.uhc.component.UHCColor
+import org.gaseumlabs.uhc.component.UHCComponent
+import org.gaseumlabs.uhc.event.TeamShield
+import org.gaseumlabs.uhc.gui.ItemCreator
+import org.gaseumlabs.uhc.team.ColorCube
+import org.gaseumlabs.uhc.util.Util
 
 class ParticipantTeamCommands : BaseCommand() {
-	@CommandAlias("teamName")
+	@CommandAlias("teamname")
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
 		val filteredName = newName.trim()
@@ -31,10 +49,13 @@ class ParticipantTeamCommands : BaseCommand() {
 		team.members.forEach { uuid -> Bukkit.getPlayer(uuid)?.sendMessage(message) }
 	}
 
-	@CommandAlias("teamColor random")
+	@CommandAlias("teamcolorrandom")
 	@Description("get a new team color")
 	fun teamColor(sender: CommandSender) {
-		val team = UHC.getTeams().playersTeam((sender as Player).uniqueId)
+		if (UHC.game != null)
+			return Commands.errorMessage(sender, "Game has already started")
+
+		val team = UHC.preGameTeams.playersTeam((sender as Player).uniqueId)
 			?: return Commands.errorMessage(sender, "You are not on a team")
 
 		val (color0, color1) = UHC.colorCube.pickTeam()
@@ -44,6 +65,7 @@ class ParticipantTeamCommands : BaseCommand() {
 
 		team.colors[0] = color0
 		team.colors[1] = color1
+		team.bannerPattern = TeamShield.randomBannerPattern(color0, color1)
 
 		val message = team.apply("Updated your team's color")
 
@@ -53,90 +75,113 @@ class ParticipantTeamCommands : BaseCommand() {
 		}
 	}
 
-	@CommandAlias("teamColor")
-	@CommandCompletion("@range:0-1")
+	@CommandAlias("teamcolor")
+	@CommandCompletion("@range:0-1 @range:0-15")
 	fun teamColor(sender: CommandSender, slot: Int, colorIndex: Int) {
 		val colorCube = UHC.colorCube
 
 		if (slot !in 0..1) return Commands.errorMessage(sender, "Teams can only have colors for 0 and 1")
-		val otherSlot = if (slot == 1) 0 else 1
 
-		if (colorIndex !in 0 until colorCube.subdivisions * colorCube.subdivisions * colorCube.subdivisions) {
+		if (colorIndex !in 0 until ColorCube.NUM_COLORS) {
 			return Commands.errorMessage(sender, "Color out of range")
 		}
 
-		val team = UHC.getTeams().playersTeam((sender as Player).uniqueId)
+		if (UHC.game != null)
+			return Commands.errorMessage(sender, "Game has already started")
+
+		val team = UHC.preGameTeams.playersTeam((sender as Player).uniqueId)
 			?: return Commands.errorMessage(sender, "You are not on a team")
 
-		val currentIndex = colorCube.indexFromColor(team.colors[slot])
-		val otherIndex = colorCube.indexFromColor(team.colors[otherSlot])
+		val currentColor = team.colors[slot]
+		val otherColor = team.colors[ColorCube.otherSlot(slot)]
+		val nextColor = DyeColor.values()[colorIndex]
 
-		if (currentIndex == colorIndex) {
+		if (nextColor === currentColor) {
 			return Commands.errorMessage(sender, "You are already using this color in this slot")
 		}
 
-		if (otherIndex == colorIndex) {
-			/* swap team colors */
-			val temp = team.colors[slot]
-			team.colors[slot] = team.colors[otherSlot]
-			team.colors[otherSlot] = temp
+		if (nextColor === otherColor) {
+			team.swapColors()
 
-		} else if (colorCube.taken(colorIndex)) {
+		} else if (colorCube.taken(nextColor, slot)) {
 			return Commands.errorMessage(sender, "This color has already been taken")
 
 		} else {
 			/* replace color in this slot */
-			colorCube.switchColor(currentIndex, colorIndex)
-			team.colors[slot] = colorCube.colorFromIndex(colorIndex)
+			colorCube.switchColor(currentColor, nextColor, slot)
+			team.colors[slot] = nextColor
 		}
 
+		team.bannerPattern = null
 		team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateNominalTeams(it, team, false) }
 
-		sender.performCommand("colorPicker $slot")
+		sender.performCommand("colorpicker")
 	}
 
-	@CommandAlias("colorPicker")
-	@CommandCompletion("@range:0-1")
-	fun colorpicker(sender: CommandSender, slot: Int) {
-		if (slot !in 0..1) return Commands.errorMessage(sender, "Teams can only have colors for 0 and 1")
-		val otherSlot = if (slot == 1) 0 else 1
-
+	@CommandAlias("colorpicker")
+	fun colorPickerCommand(sender: CommandSender) {
 		val colorCube = UHC.colorCube
-		val sub = colorCube.subdivisions
-
-		val taken = 0x2b1c.toChar()
-		val available = 0x2b1b.toChar()
-		val selected = 0x20de.toChar()
 
 		val team = UHC.getTeams().playersTeam((sender as Player).uniqueId)
 			?: return Commands.errorMessage(sender, "You are not on a team")
 
-		for (b in 0 until sub) {
-			var component = Component.empty()
+		for (slot in 0..1) {
+			var component = Component.text("Color $slot", NamedTextColor.GRAY)
+				.append(Component.text(" : ", NamedTextColor.GOLD, BOLD))
 
-			for (rg in 0 until sub * sub) {
-				val r = rg / sub
-				val g = rg % sub
-
-				val colorIndex = colorCube.indexFromPosition(r, g, b)
-				val color = colorCube.colorFromPosition(r, g, b)
-
+			for (color in DyeColor.values()) {
 				val char = when {
-					colorCube.indexFromColor(team.colors[slot]) == colorIndex -> selected
-					colorCube.indexFromColor(team.colors[otherSlot]) == colorIndex -> available
-					colorCube.taken(colorIndex) -> taken
-					else -> available
+					team.colors[slot] === color -> CHAR_SELEC
+					colorCube.taken(color, slot) -> CHAR_TAKEN
+					else -> CHAR_AVAIL
 				}
 
-				var colorBlock = Component.text(char, TextColor.color(color))
-				if (char == available) colorBlock =
+				var colorBlock = Component.text(char, TextColor.color(color.color.asRGB()))
+				if (char == CHAR_AVAIL) colorBlock =
 					colorBlock.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-						"/teamColor $slot $colorIndex"))
+						"/teamcolor $slot ${color.ordinal}"))
 
 				component = component.append(colorBlock)
 			}
 
 			sender.sendMessage(component)
 		}
+	}
+
+	@CommandAlias("teambanner")
+	fun teamBannerCommand(sender: CommandSender) {
+		val player = sender as? Player ?: return
+
+		if (UHC.game != null)
+			return Commands.errorMessage(sender, "Game is already going")
+
+		val team = UHC.preGameTeams.playersTeam(player.uniqueId)
+			?: return Commands.errorMessage(sender, "You are not on a team")
+
+		player.inventory.addItem(ItemStack(TeamShield.dyeColorToBanner(team.colors[0]), 16))
+		player.inventory.addItem(ItemStack(TeamShield.dyeColorToBanner(team.colors[1]), 16))
+		player.inventory.addItem(ItemStack(TeamShield.dyeColorToDye(team.colors[0]), 64))
+		player.inventory.addItem(ItemStack(TeamShield.dyeColorToDye(team.colors[1]), 64))
+		val teamBanner = team.bannerPattern
+		if (teamBanner != null) {
+			player.inventory.addItem(TeamShield.blockDataToBannerMeta(teamBanner))
+		}
+
+		val craftHuman = player as CraftHumanEntity
+		val location = craftHuman.location
+
+		val level = craftHuman.handle.level
+		val pos = BlockPos(location.blockX, location.blockY, location.blockZ)
+		val menuProvider = SimpleMenuProvider({ syncId, inventory, _ ->
+			LoomMenu(syncId, inventory, ContainerLevelAccess.create(level, pos))
+		}, Util.nmsGradientString("Customize team banner", team.colors[0].color.asRGB(), team.colors[1].color.asRGB()))
+		craftHuman.handle.openMenu(menuProvider)
+		craftHuman.handle.containerMenu.checkReachable = false
+	}
+
+	companion object {
+		private const val CHAR_TAKEN = 0x2b1c.toChar()
+		private const val CHAR_AVAIL = 0x2b1b.toChar()
+		private const val CHAR_SELEC = 0x20de.toChar()
 	}
 }

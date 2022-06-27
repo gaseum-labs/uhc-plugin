@@ -80,8 +80,8 @@ object Packet {
 		return if (team != null) {
 			Util.nmsGradientString(
 				playerRealName,
-				team.colors[0].value(),
-				team.colors[1].value(),
+				team.colors[0].color.asRGB(),
+				team.colors[1].color.asRGB(),
 			)
 		} else {
 			TextComponent(playerRealName).setStyle(Style.EMPTY.withColor(0xffffff))

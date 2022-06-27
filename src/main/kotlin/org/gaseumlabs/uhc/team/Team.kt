@@ -2,13 +2,17 @@ package org.gaseumlabs.uhc.team
 
 import com.google.gson.*
 import net.kyori.adventure.text.format.TextColor
+import org.bukkit.Color
+import org.bukkit.DyeColor
+import org.bukkit.block.Banner
 import java.util.*
 
 class Team(
 	var name: String,
-	color0: TextColor,
-	color1: TextColor,
+	color0: DyeColor,
+	color1: DyeColor,
 	members: ArrayList<UUID>,
+	val bannerPattern: Banner,
 ) : AbstractTeam(
 	arrayOf(color0, color1),
 	members
@@ -16,8 +20,8 @@ class Team(
 	fun serialize(): JsonObject {
 		val obj = JsonObject()
 		obj.addProperty("name", name)
-		obj.addProperty("color0", colors[0].value())
-		obj.addProperty("color1", colors[1].value())
+		obj.addProperty("color0", colors[0].color.asRGB())
+		obj.addProperty("color1", colors[1].color.asRGB())
 
 		val membersArray = JsonArray(members.size)
 		for (member in members) membersArray.add(member.toString())
@@ -32,18 +36,5 @@ class Team(
 
 	override fun giveName(name: String) {
 		this.name = name
-	}
-
-	companion object {
-		fun deserialize(jsonElement: JsonElement): Team {
-			jsonElement as JsonObject
-
-			val name = jsonElement.get("name").asString
-			val color0 = TextColor.color(jsonElement.get("color0").asInt)
-			val color1 = TextColor.color(jsonElement.get("color1").asInt)
-			val members = ArrayList(jsonElement.get("members").asJsonArray.map { UUID.fromString(it.asString) })
-
-			return Team(name, color0, color1, members)
-		}
 	}
 }

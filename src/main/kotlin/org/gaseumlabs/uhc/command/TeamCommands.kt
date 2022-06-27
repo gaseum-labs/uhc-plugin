@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.*
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
+import org.gaseumlabs.uhc.event.TeamShield
 import java.util.*
 
 @CommandAlias("uhca")
@@ -54,7 +55,11 @@ class TeamCommands : BaseCommand() {
 			UHC.preGameTeams.addTeam(PreTeam(color0, color1, uuids))
 
 		} else {
-			game.teams.addTeam(Team(PreTeam.randomName(), color0, color1, uuids))
+			game.teams.addTeam(Team(PreTeam.randomName(),
+				color0,
+				color1,
+				uuids,
+				TeamShield.randomBannerPattern(color0, color1)))
 		}
 
 		Action.sendGameMessage(sender,

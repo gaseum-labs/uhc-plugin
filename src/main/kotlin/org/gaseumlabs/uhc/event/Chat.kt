@@ -234,7 +234,9 @@ class Chat : Listener {
 				NamedTextColor.WHITE) to Bukkit.getOnlinePlayers()
 
 		} else if (gameTeam != null && collected.firstOrNull()?.startIndex != 0 && !exclaiming) {
-			divideMessage(message, collected, gameTeam.colors.last()) to gameTeam.members.mapNotNull {
+			divideMessage(message,
+				collected,
+				TextColor.color(gameTeam.colors.last().color.asRGB())) to gameTeam.members.mapNotNull {
 				Bukkit.getPlayer(it)
 			}
 

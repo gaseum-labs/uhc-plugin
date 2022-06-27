@@ -239,10 +239,6 @@ class EventListener : Listener {
 		if (event.entity.entitySpawnReason === CreatureSpawnEvent.SpawnReason.REINFORCEMENTS) {
 			event.isCancelled = true
 
-		} else if (event.entity.world === WorldManager.lobbyWorld) {
-			event.isCancelled = true
-
-			/* witch poison nerf */
 		} else if (UHC.game?.naturalRegeneration?.get() == false && WorldManager.isGameWorld(event.entity.world)) {
 			val potion = event.entity as? ThrownPotion
 

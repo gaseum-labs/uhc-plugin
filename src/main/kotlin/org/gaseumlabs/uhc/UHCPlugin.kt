@@ -58,6 +58,7 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Fishing(), this)
 		server.pluginManager.registerEvents(CaveIndicator(), this)
 		server.pluginManager.registerEvents(ResourceEvents(), this)
+		server.pluginManager.registerEvents(TeamShield(), this)
 
 		Packet.registerListeners()
 

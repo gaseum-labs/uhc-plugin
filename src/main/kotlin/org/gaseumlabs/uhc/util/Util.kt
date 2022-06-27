@@ -165,11 +165,30 @@ object Util {
 		return (2 * r - d).coerceAtLeast(0.0)
 	}
 
+	fun interpColor(along: Float, from: Color, to: Color): TextColor {
+		val red = ((to.red - from.red) * along + from.red).toInt()
+		val gre = ((to.green - from.green) * along + from.green).toInt()
+		val blu = ((to.blue - from.blue) * along + from.blue).toInt()
+		return TextColor.color(red, gre, blu)
+	}
+
 	fun interpColor(along: Float, from: TextColor, to: TextColor): TextColor {
 		val red = ((to.red() - from.red()) * along + from.red()).toInt()
 		val gre = ((to.green() - from.green()) * along + from.green()).toInt()
 		val blu = ((to.blue() - from.blue()) * along + from.blue()).toInt()
 		return TextColor.color(red, gre, blu)
+	}
+
+	fun gradientString(string: String, from: DyeColor, to: DyeColor): TextComponent {
+		var component = Component.empty()
+
+		string.forEachIndexed { i, c ->
+			component = component.append(
+				Component.text(c, interpColor(i.toFloat() / (string.length - 1), from.color, to.color))
+			)
+		}
+
+		return component
 	}
 
 	fun gradientString(string: String, from: TextColor, to: TextColor): TextComponent {

@@ -91,19 +91,5 @@ class Summary(
 	fun playersTeam(uuid: UUID): Team? {
 		return teams.find { team -> team.members.contains(uuid) }
 	}
-
-	companion object {
-		fun parseSummary(jsonObject: JsonElement): Summary {
-			if (jsonObject !is JsonObject) throw Exception("Not a JSON object")
-
-			val gameType = GameType.fromString(jsonObject.get("gameType").asString)
-			val date = ZonedDateTime.parse(jsonObject.get("date").asString)
-			val gameLength = jsonObject.get("gameLength").asInt
-			val teams = jsonObject.getAsJsonArray("teams").map { Team.deserialize(it) }
-			val players = jsonObject.getAsJsonArray("players").map { SummaryEntry.deserialize(it) }
-
-			return Summary(gameType, date, gameLength, teams, players)
-		}
-	}
 }
 
