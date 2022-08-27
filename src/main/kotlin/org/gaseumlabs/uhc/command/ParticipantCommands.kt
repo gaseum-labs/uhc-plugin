@@ -3,19 +3,18 @@ package org.gaseumlabs.uhc.command
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import org.gaseumlabs.uhc.core.*
-import org.gaseumlabs.uhc.event.Enchant
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
-import org.gaseumlabs.uhc.quirk.QuirkType
-import org.gaseumlabs.uhc.quirk.quirks.classes.Classes
-import org.gaseumlabs.uhc.quirk.quirks.classes.QuirkClass
+import org.gaseumlabs.uhc.chc.chcs.classes.Classes
+import org.gaseumlabs.uhc.chc.chcs.classes.QuirkClass
 import org.gaseumlabs.uhc.util.Action
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor.*
-import net.kyori.adventure.text.format.TextDecoration.BOLD
 import org.bukkit.*
 import org.bukkit.Material.EMERALD_BLOCK
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.gui.GuiManager
+import org.gaseumlabs.uhc.gui.gui.CreateGameGui
+import org.gaseumlabs.uhc.gui.gui.QueueGUI
 import org.gaseumlabs.uhc.lobbyPvp.ArenaType.PARKOUR
 import org.gaseumlabs.uhc.lobbyPvp.arena.*
 import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena.Platform
@@ -26,26 +25,27 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
-		UHC.getConfig().gui.open(sender as Player)
+		GuiManager.openGui(sender as Player, CreateGameGui())
 	}
 
 	@Subcommand("pvp")
 	fun openPvp(sender: CommandSender) {
 		sender as Player
+		val playerData = PlayerData.get(sender)
 
 		if (
-			PlayerData.isParticipating(sender.uniqueId) ||
+			playerData.participating ||
 			ArenaManager.playersArena(sender.uniqueId) is PvpArena
 		) return Commands.errorMessage(sender, "You can't use this menu right now")
 
-		PlayerData.getPlayerData(sender.uniqueId).lobbyPvpGui.open(sender)
+		GuiManager.openGui(sender, QueueGUI(playerData))
 	}
 
 	@Subcommand("optOut")
 	@Description("opt out from participating")
 	fun optOutCommand(sender: CommandSender) {
 		sender as Player
-		val playerData = PlayerData.getPlayerData(sender.uniqueId)
+		val playerData = PlayerData.get(sender.uniqueId)
 
 		if (playerData.participating) {
 			Commands.errorMessage(sender, "You are already in the game!")
@@ -66,7 +66,7 @@ class ParticipantCommands : BaseCommand() {
 	@Description("opt back into participating")
 	fun optInCommand(sender: CommandSender) {
 		sender as Player
-		val playerData = PlayerData.getPlayerData(sender.uniqueId)
+		val playerData = PlayerData.get(sender.uniqueId)
 
 		if (playerData.participating) {
 			Commands.errorMessage(sender, "You are already in the game!")
@@ -113,7 +113,7 @@ class ParticipantCommands : BaseCommand() {
 		sender as Player
 
 		/* only non players can use this command */
-		if (PlayerData.isParticipating(sender.uniqueId))
+		if (PlayerData.get(sender).participating)
 			return Commands.errorMessage(sender, "You can't use this command in game")
 
 		/* forfeit */
@@ -128,7 +128,8 @@ class ParticipantCommands : BaseCommand() {
 	fun spectate(sender: CommandSender) {
 		sender as Player
 
-		if (PlayerData.isParticipating(sender.uniqueId)) return
+		if (PlayerData.get(sender.uniqueId).participating)
+			return Commands.errorMessage(sender, "You can't use this command in game")
 
 		val game = UHC.game
 
@@ -151,8 +152,7 @@ class ParticipantCommands : BaseCommand() {
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
 
-		val classes =
-			game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes = game.chc as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (classes.getClass(sender.uniqueId) != QuirkClass.NO_CLASS) {
 			return Commands.errorMessage(sender, "You've already chosen a class")
@@ -160,7 +160,7 @@ class ParticipantCommands : BaseCommand() {
 
 		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "You must pick a class")
 
-		val playerData = PlayerData.getPlayerData(sender.uniqueId)
+		val playerData = PlayerData.get(sender.uniqueId)
 		val oldClass = classes.getClass(playerData)
 
 		/* always set their class, even during waiting */
@@ -179,8 +179,7 @@ class ParticipantCommands : BaseCommand() {
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
 
-		val classes =
-			game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes = game.chc as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (classes.getClass(sender.uniqueId) != QuirkClass.ENGINEER) return Commands.errorMessage(sender,
 			"Your class can't use this command.")
@@ -200,7 +199,7 @@ class ParticipantCommands : BaseCommand() {
 	fun tpHereCommand(sender: CommandSender, toPlayer: OfflinePlayer) {
 		sender as Player
 
-		val playerData = PlayerData.getPlayerData(sender.uniqueId)
+		val playerData = PlayerData.get(sender.uniqueId)
 
 		if (UHC.game != null && !playerData.participating && sender.gameMode == GameMode.SPECTATOR) {
 			val location = Action.getPlayerLocation(toPlayer.uniqueId)

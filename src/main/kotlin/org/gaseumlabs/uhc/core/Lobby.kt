@@ -8,7 +8,6 @@ import org.gaseumlabs.uhc.component.UHCStyle
 import org.gaseumlabs.uhc.gui.CommandItemType
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.lobbyPvp.PvpQueue
-import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
 import org.gaseumlabs.uhc.util.Util
 import org.gaseumlabs.uhc.util.WorldStorage
 import org.gaseumlabs.uhc.world.WorldManager
@@ -84,16 +83,13 @@ object Lobby {
 
 		player.gameMode = GameMode.ADVENTURE
 
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 
 		playerData.participating = false
 		playerData.alive = false
 
 		/* reset applied status for all active quirks, if the game is active */
-		val game = UHC.game
-		game?.quirks?.filterNotNull()?.forEach { quirk ->
-			PlayerData.getQuirkDataHolder(playerData, quirk.type, game).applied = false
-		}
+		UHC.game?.chc?.let { playerData.getQuirkDataHolder(it).applied = false }
 
 		CommandItemType.GUI_OPENER.giveItem(player.inventory)
 		CommandItemType.PVP_OPENER.giveItem(player.inventory)
@@ -117,7 +113,7 @@ object Lobby {
 			}
 
 			Bukkit.getOnlinePlayers().forEach { player ->
-				val playerData = PlayerData.getPlayerData(player.uniqueId)
+				val playerData = PlayerData.get(player.uniqueId)
 				val game = ArenaManager.playersArena(player.uniqueId)
 
 				if (!playerData.participating && game == null) {
@@ -125,7 +121,7 @@ object Lobby {
 					val queueTime = PvpQueue.queueTime(player.uniqueId)
 
 					if (queueTime != null) {
-						val queueType = playerData.inLobbyPvpQueue.get()
+						val queueType = playerData.inLobbyPvpQueue
 
 						player.sendActionBar(Util.gradientString(
 							"${PvpQueue.queueName(queueType)} | " +

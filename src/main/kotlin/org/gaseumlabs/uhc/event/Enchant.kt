@@ -1,29 +1,19 @@
 package org.gaseumlabs.uhc.event
 
-import com.destroystokyo.paper.event.inventory.PrepareGrindstoneEvent
-import com.destroystokyo.paper.event.inventory.PrepareResultEvent
 import org.gaseumlabs.uhc.core.PlayerData
 import org.bukkit.Material
-import org.bukkit.Material.AIR
 import org.bukkit.enchantments.EnchantmentOffer
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.EntityType.EXPERIENCE_ORB
-import org.bukkit.entity.ExperienceOrb
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent
 import org.bukkit.event.entity.EntityDeathEvent
-import org.bukkit.event.inventory.*
-import org.bukkit.event.inventory.InventoryAction.*
-import org.bukkit.event.inventory.InventoryType.GRINDSTONE
 import org.bukkit.inventory.ItemStack
 import org.gaseumlabs.uhc.event.Enchant2.EnchantItem
 import org.gaseumlabs.uhc.event.Enchant2.getSlotEnchantPreview
 import org.gaseumlabs.uhc.event.Enchant2.getSlotEnchantments
-import kotlin.math.ceil
 import kotlin.random.Random
 
 class Enchant : Listener {
@@ -33,7 +23,7 @@ class Enchant : Listener {
 
 	@EventHandler
 	fun onPrepareEnchant(event: PrepareItemEnchantEvent) {
-		val playerData = PlayerData.getPlayerData(event.enchanter.uniqueId)
+		val playerData = PlayerData.get(event.enchanter.uniqueId)
 		playerData.shelves = event.enchantmentBonus
 		val generatedOffers = createOffers(event.item, event.enchantmentBonus, playerData.enchantCycle)
 
@@ -48,7 +38,7 @@ class Enchant : Listener {
 
 	@EventHandler
 	fun onGiveEnchants(event: EnchantItemEvent) {
-		val playerData = PlayerData.getPlayerData(event.enchanter.uniqueId)
+		val playerData = PlayerData.get(event.enchanter.uniqueId)
 
 		val (enchantItem, itemId) = EnchantItem.get(event.item) ?: return
 

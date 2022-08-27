@@ -1,28 +1,20 @@
 package org.gaseumlabs.uhc.core
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.customSpawning.CustomSpawningType
 import org.gaseumlabs.uhc.customSpawning.SpawningPlayerData
 import org.gaseumlabs.uhc.gui.gui.LoadoutGui
-import org.gaseumlabs.uhc.gui.gui.LobbyPvpGui
+import org.gaseumlabs.uhc.gui.gui.QueueGUI
 import org.gaseumlabs.uhc.lobbyPvp.*
-import org.gaseumlabs.uhc.quirk.Quirk
-import org.gaseumlabs.uhc.quirk.QuirkType
-import org.gaseumlabs.uhc.util.UHCProperty
-import net.kyori.adventure.text.Component
+import org.gaseumlabs.uhc.chc.CHC
 import org.bukkit.*
-import org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH
-import org.bukkit.block.BlockFace
-import org.bukkit.enchantments.EnchantmentOffer
 import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
-import org.bukkit.metadata.FixedMetadataValue
+import org.gaseumlabs.uhc.gui.GuiManager
 import org.gaseumlabs.uhc.lobbyPvp.arena.*
+import org.gaseumlabs.uhc.util.PropertyGroup
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.math.abs
-import kotlin.math.max
 
 class PlayerData(val uuid: UUID) {
 	/* the main 3 */
@@ -32,30 +24,33 @@ class PlayerData(val uuid: UUID) {
 
 	/* lobby pvp stuff */
 
+	private val queueGroup = PropertyGroup { GuiManager.update(QueueGUI::class) }
+	private val slotGroups = Array(Loadouts.NUM_SLOTS) { i -> PropertyGroup {
+		GuiManager.update(LoadoutGui::class, Bukkit.getPlayer(uuid))
+	} }
+
 	var lobbyInventory = emptyArray<ItemStack?>()
 	val recentPlatforms = ArrayList<UUID>()
 	var lastPlayed: UUID? = null
-	var loadoutSlot = UHCProperty(0)
-	var inLobbyPvpQueue = UHCProperty(0) { set ->
-		when (set) {
+
+	var loadoutSlot by queueGroup.delegate(0)
+	var inLobbyPvpQueue by queueGroup.delegate(0, onChange = {
+		when (it) {
 			0 -> PvpQueue.remove(uuid)
 			PvpQueue.TYPE_1V1 -> PvpQueue.add(uuid, PvpQueue.TYPE_1V1)
 			PvpQueue.TYPE_2V2 -> PvpQueue.add(uuid, PvpQueue.TYPE_2V2)
 			PvpQueue.TYPE_GAP -> PvpQueue.add(uuid, PvpQueue.TYPE_GAP)
 		}
-		set
-	}
-	var slotCosts = Array(Loadouts.NUM_SLOTS) {
-		UHCProperty(0)
-	}
-	val parkourIndex = UHCProperty(-1)
-	var lobbyPvpGui = LobbyPvpGui(this)
-	val slotGuis = Array(Loadouts.NUM_SLOTS) { i -> LoadoutGui(this, i) }
-
-	val guis = arrayOf(lobbyPvpGui, *slotGuis)
-
-	init {
-		parkourIndex.set(ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR).lastIndex)
+	})
+	var parkourIndex by queueGroup.delegate(ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR).lastIndex)
+	var slotCost0 by slotGroups[0].delegate(0)
+	var slotCost1 by slotGroups[1].delegate(0)
+	var slotCost2 by slotGroups[2].delegate(0)
+	fun getSlotCost(i: Int) = when (i) {
+		0 -> this::slotCost0
+		1 -> this::slotCost1
+		2 -> this::slotCost2
+		else -> throw Error()
 	}
 
 	/* custom spawning */
@@ -64,9 +59,9 @@ class PlayerData(val uuid: UUID) {
 	}
 
 	/* other stuff */
-	class QuirkDataHolder(var applied: Boolean, var data: Any)
+	class QuirkDataHolder<DataType>(var applied: Boolean, var data: DataType)
 
-	var quirkDataList = HashMap<QuirkType, QuirkDataHolder>()
+	var quirkData: QuirkDataHolder<*>? = null
 
 	var skull = ItemStack(Material.PLAYER_HEAD)
 
@@ -83,23 +78,20 @@ class PlayerData(val uuid: UUID) {
 
 	var offlineZombie: Zombie? = null
 		set(value) {
-			field = if (value == null) {
+			if (value == null) {
 				val oldValue = offlineZombie
-
-				if (oldValue != null) {
+				if (oldValue != null && oldValue.isValid) {
 					oldValue.remove()
 					oldValue.world.unloadChunk(oldValue.chunk)
 					oldValue.world.setChunkForceLoaded(oldValue.chunk.x, oldValue.chunk.z, false)
 				}
-
-				null
 			} else {
 				value.world.setChunkForceLoaded(value.chunk.x, value.chunk.z, true)
 				value.world.loadChunk(value.chunk)
-
-				value
 			}
+			field = value
 		}
+	init { offlineZombie }
 
 	/* begin functions */
 
@@ -113,134 +105,27 @@ class PlayerData(val uuid: UUID) {
 		skull.itemMeta = meta
 	}
 
-	private fun internalCreateZombie(
-		location: Location,
-		uuid: UUID,
-		name: Component,
-		inventory: Array<ItemStack>,
-		experience: Int,
-	): Zombie {
-		val zombie = location.world.spawn(location, Zombie::class.java)
-
-		zombie.setMetadata(INVENTORY_TAG, FixedMetadataValue(UHCPlugin.plugin, inventory))
-		zombie.setMetadata(XP_TAG, FixedMetadataValue(UHCPlugin.plugin, experience))
-		zombie.setMetadata(UUID_TAG, FixedMetadataValue(UHCPlugin.plugin, uuid))
-
-		zombie.customName(name)
-		zombie.setAI(false)
-		zombie.canPickupItems = false
-		zombie.setShouldBurnInDay(false)
-		zombie.conversionTime = -1
-		zombie.removeWhenFarAway = false
-
-		zombie.equipment.helmet = skull
-		zombie.equipment.helmetDropChance = 0.0f
-		zombie.equipment.chestplateDropChance = 0.0f
-		zombie.equipment.leggingsDropChance = 0.0f
-		zombie.equipment.bootsDropChance = 0.0f
-		zombie.equipment.itemInMainHandDropChance = 0.0f
-		zombie.equipment.itemInOffHandDropChance = 0.0f
-
-		/* small zombie when disconnecting while crouching */
-		if (!location.world.getBlockAt(location).getRelative(BlockFace.UP).isPassable) zombie.setBaby()
-
-		return zombie
+	fun <DataType>setQuirkData(quirk: CHC<DataType>, data: DataType) {
+		val holder = getQuirkDataHolder(quirk)
+		holder.data = data
 	}
 
-	fun getZombieInventory(): Array<ItemStack?>? {
-		val zombie = offlineZombie ?: return null
-
-		val inventoryMeta = zombie.getMetadata(INVENTORY_TAG)
-		if (inventoryMeta.isEmpty()) return null
-		return inventoryMeta[0].value() as Array<ItemStack?>
+	inline fun <DataType>setQuirkData(quirk: CHC<DataType>, set: (DataType) -> Unit) {
+		val holder = getQuirkDataHolder(quirk)
+		set(holder.data)
 	}
 
-	/**
-	 * @param player the online player right before they log out
-	 * @return a zombie that represents the player when offline
-	 *
-	 * place this into the offlineZombie field in PlayerData
-	 */
-	fun createZombie(player: Player): Zombie {
-		val inventoryContents = player.inventory.contents!!
+	fun <DataType>getQuirkData(quirk: CHC<DataType>): DataType {
+		return getQuirkDataHolder(quirk).data
+	}
 
-		val clonedInventory = Array(inventoryContents.size) { i ->
-			inventoryContents[i]?.clone()
+	fun <DataType>getQuirkDataHolder(quirk: CHC<DataType>): QuirkDataHolder<DataType> {
+		var holder = quirkData
+		if (holder == null) {
+			holder = QuirkDataHolder(false, quirk.defaultData())
+			quirkData = holder
 		}
-
-		val team = UHC.getTeams().playersTeam(player.uniqueId)
-
-		val zombie = internalCreateZombie(
-			player.location,
-			player.uniqueId,
-			team?.apply(player.name) ?: Component.text(player.name),
-			clonedInventory as Array<ItemStack>,
-			player.totalExperience
-		)
-
-		zombie.getAttribute(GENERIC_MAX_HEALTH)?.baseValue = player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
-		zombie.health = player.health
-		zombie.fireTicks = player.fireTicks
-		zombie.addPotionEffects(player.activePotionEffects)
-
-		zombie.equipment.chestplate = player.inventory.chestplate?.clone()
-		zombie.equipment.leggings = player.inventory.leggings?.clone()
-		zombie.equipment.boots = player.inventory.boots?.clone()
-		zombie.equipment.setItemInMainHand(player.inventory.itemInMainHand.clone())
-		zombie.equipment.setItemInOffHand(player.inventory.itemInOffHand.clone())
-
-		return zombie
-	}
-
-	/**
-	 * @return a zombie that represents the player when offline with no inventory
-	 *
-	 * place this into the offlineZombie field in PlayerData
-	 */
-	fun createDefaultZombie(uuid: UUID, location: Location): Zombie {
-		val team = UHC.getTeams().playersTeam(uuid)
-		val playerName = Bukkit.getOfflinePlayer(uuid).name ?: "NULL"
-
-		return internalCreateZombie(location,
-			uuid,
-			team?.apply(playerName) ?: Component.text(playerName),
-			emptyArray(),
-			0)
-	}
-
-	fun replaceZombieWithPlayer(player: Player) {
-		val zombie = offlineZombie ?: return
-
-		val (inventory, experience) = getZombieData(zombie)
-
-		player.teleport(zombie.location)
-		player.inventory.setContents(inventory)
-		player.totalExperience = experience
-		player.fireTicks = zombie.fireTicks
-		player.health = zombie.health
-		player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue = zombie.getAttribute(GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
-
-		player.activePotionEffects.clear()
-		player.addPotionEffects(zombie.activePotionEffects)
-
-		/* load chunk */
-		zombie.world.getChunkAt(zombie.location)
-
-		/* no more offline zombie */
-		zombie.remove()
-		offlineZombie = null
-	}
-
-	fun setQuirkData(quirkType: QuirkType, data: Any): QuirkDataHolder {
-		val dataHolder = quirkDataList.getOrPut(quirkType) { QuirkDataHolder(false, 0) }
-
-		dataHolder.data = data
-
-		return dataHolder
-	}
-
-	fun getQuirkData(quirk: Quirk): Any {
-		return quirkDataList.getOrPut(quirk.type) { QuirkDataHolder(false, quirk.defaultData()) }.data
+		return holder as QuirkDataHolder<DataType>
 	}
 
 	fun addRecentPlatform(uuid: UUID) {
@@ -253,10 +138,6 @@ class PlayerData(val uuid: UUID) {
 	}
 
 	companion object {
-		const val INVENTORY_TAG = "_UHC_Zombie_inv"
-		const val XP_TAG = "_UHC_Zombie_xp"
-		const val UUID_TAG = "_UHC_Zombie_uuid"
-
 		/* THE player data list */
 		var playerDataList = HashMap<UUID, PlayerData>()
 			private set
@@ -267,116 +148,9 @@ class PlayerData(val uuid: UUID) {
 			} as HashMap<UUID, PlayerData>
 		}
 
-		/**
-		 * @return -1 experience if this is not a valid offline zombie
-		 */
-		fun getZombieData(entity: Entity): Triple<Array<ItemStack>, Int, UUID> {
-			val badReturn = Triple(emptyArray<ItemStack>(), -1, UUID.randomUUID())
-
-			if (entity.type != EntityType.ZOMBIE) return badReturn
-
-			val inventoryMeta = entity.getMetadata(INVENTORY_TAG)
-			if (inventoryMeta.isEmpty()) return badReturn
-			val inventory = inventoryMeta[0].value() as Array<ItemStack>
-
-			val xpMeta = entity.getMetadata(XP_TAG)
-			if (xpMeta.isEmpty()) return badReturn
-			val xp = xpMeta[0].asInt()
-
-			val uuidMeta = entity.getMetadata(UUID_TAG)
-			if (uuidMeta.isEmpty()) return badReturn
-			val uuid = uuidMeta[0].value() as UUID
-
-			return Triple(inventory, xp, uuid)
-		}
-
-		fun isZombie(entity: Entity): Boolean {
-			if (entity.type != EntityType.ZOMBIE) return false
-			if (entity.getMetadata(INVENTORY_TAG).size == 0) return false
-
-			return true
-		}
-
-		fun zombieBorderTick(currentTick: Int, game: Game) {
-			if (currentTick % 20 == 0) {
-				val borderWorld = game.world
-				val borderRadius = borderWorld.worldBorder.size / 2.0
-
-				playerDataList.forEach { (_, playerData) ->
-					val zombie = playerData.offlineZombie
-
-					if (zombie != null && zombie.world === borderWorld) {
-						val x = abs(zombie.location.x)
-						val z = abs(zombie.location.z)
-
-						val dist = max(x - borderRadius, z - borderRadius)
-						if (dist > 0) zombie.damage(dist)
-					}
-				}
-			}
-		}
-
-		/* access operations for player data list */
-
-		fun isParticipating(uuid: UUID): Boolean {
-			return getPlayerData(uuid).participating
-		}
-
-		fun isAlive(uuid: UUID): Boolean {
-			return getPlayerData(uuid).alive
-		}
-
-		fun isOptingOut(uuid: UUID): Boolean {
-			return getPlayerData(uuid).optingOut
-		}
-
-		fun isCurrent(uuid: UUID): Boolean {
-			val playerData = getPlayerData(uuid)
-			return playerData.participating && playerData.alive
-		}
-
-		fun isUndead(uuid: UUID): Boolean {
-			val playerData = getPlayerData(uuid)
-			return playerData.participating && !playerData.alive
-		}
-
-		/* setter operations for player data list */
-
-		fun setAlive(uuid: UUID, alive: Boolean) {
-			getPlayerData(uuid).alive = alive
-		}
-
-		fun setParticipating(uuid: UUID, participating: Boolean) {
-			getPlayerData(uuid).participating = participating
-		}
-
-		fun setOptOut(uuid: UUID, optOut: Boolean) {
-			getPlayerData(uuid).optingOut = optOut
-		}
-
-		fun getPlayerData(uuid: UUID): PlayerData {
-			return playerDataList.getOrPut(uuid) { PlayerData(uuid) }
-		}
-
-		/* quirkData getters */
-
-		fun getQuirkDataHolder(uuid: UUID, type: QuirkType, game: Game): QuirkDataHolder {
-			return getQuirkDataHolder(getPlayerData(uuid), type, game)
-		}
-
-		fun getQuirkDataHolder(playerData: PlayerData, type: QuirkType, game: Game): QuirkDataHolder {
-			return playerData.quirkDataList.getOrPut(type) {
-				QuirkDataHolder(false,
-					game.getQuirk<Quirk>(type)?.defaultData() ?: 0)
-			}
-		}
-
-		fun <DataType> getQuirkData(uuid: UUID, type: QuirkType, game: Game): DataType {
-			return getQuirkDataHolder(uuid, type, game).data as DataType
-		}
-
-		fun <DataType> getQuirkData(playerData: PlayerData, type: QuirkType, game: Game): DataType {
-			return getQuirkDataHolder(playerData, type, game).data as DataType
-		}
+		fun get(uuid: UUID) = playerDataList.getOrPut(uuid) { PlayerData(uuid) }
+		fun get(player: Player) = get(player.uniqueId)
+		fun get(player: OfflinePlayer) = get(player.uniqueId)
+		fun get(player: HumanEntity) = get(player.uniqueId)
 	}
 }

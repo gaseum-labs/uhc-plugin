@@ -9,19 +9,18 @@ import org.bukkit.Bukkit
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.craftbukkit.v1_18_R2.scoreboard.CraftScoreboard
 import org.bukkit.entity.Player
-import org.gaseumlabs.uhc.database.DataManager
 import kotlin.math.ceil
 
 object NameManager {
 	fun onPlayerLogin(updatePlayer: Player, team: AbstractTeam?) {
 		updatePlayer as CraftPlayer
 
-		val playerData = PlayerData.getPlayerData(updatePlayer.uniqueId)
+		val playerData = PlayerData.get(updatePlayer.uniqueId)
 
 		/* 1. misc login actions */
 		playerData.setSkull(updatePlayer)
 		while (playerData.actionsQueue.isNotEmpty()) playerData.actionsQueue.remove()(updatePlayer)
-		playerData.replaceZombieWithPlayer(updatePlayer)
+		OfflineZombie.replaceZombieWithPlayer(updatePlayer)
 		UHCBar.addBossBar(updatePlayer)
 
 		/* 2. add to hearts objective */

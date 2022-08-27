@@ -1,10 +1,7 @@
 package org.gaseumlabs.uhc.world
 
-import org.gaseumlabs.uhc.core.Lobby
 import org.gaseumlabs.uhc.core.PlayerData
-import org.gaseumlabs.uhc.event.Generation
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
-import org.gaseumlabs.uhc.world.chunkPlacer.ChunkPlacerHolder
 import org.bukkit.*
 import org.bukkit.entity.SpawnCategory.ANIMAL
 import org.bukkit.entity.SpawnCategory.MONSTER
@@ -77,8 +74,6 @@ object WorldManager {
 		world.difficulty = Difficulty.NORMAL
 		world.setSpawnLimit(MONSTER, 0)
 		world.setSpawnLimit(ANIMAL, 0)
-
-		Generation.cleanSuspended(world)
 
 		if (world.name == LOBBY_WORLD_NAME || world.name == PVP_WORLD_NAME) {
 			world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)

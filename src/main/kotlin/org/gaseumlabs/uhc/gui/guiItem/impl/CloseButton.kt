@@ -6,16 +6,13 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 
 class CloseButton(index: Int) : GuiItem(index) {
 	override fun onClick(player: Player, shift: Boolean) {
-		gui.close(player)
+		player.closeInventory()
 	}
 
-	override fun getStack(): ItemStack {
-		return ItemCreator.fromType(Material.BARRIER)
+	override fun render() =
+		ItemCreator.display(Material.BARRIER)
 			.name(Component.text("Close", NamedTextColor.RED))
-			.create()
-	}
 }

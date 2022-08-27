@@ -12,6 +12,8 @@ import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.gaseumlabs.uhc.event.TeamShield
+import org.gaseumlabs.uhc.util.Util.trueThrough
+import org.gaseumlabs.uhc.util.Util.void
 import java.util.*
 
 @CommandAlias("uhca")
@@ -27,19 +29,14 @@ class TeamCommands : BaseCommand() {
 		Action.sendGameMessage(sender, "Cleared all teams")
 	}
 
-	private fun teamPlayerList(sender: CommandSender, players: List<OfflinePlayer>): List<OfflinePlayer>? {
-		return players.filter { player ->
-			if (PlayerData.isOptingOut(player.uniqueId)) {
+	private fun teamPlayerList(sender: CommandSender, players: List<OfflinePlayer>) =
+		players.filter { player ->
+			!trueThrough(PlayerData.get(player).optingOut) {
 				Commands.errorMessage(sender, "${player.name} is opting out of participating")
-				false
-			} else {
-				true
 			}
 		}.ifEmpty {
-			Commands.errorMessage(sender, "No valid players selected")
-			null
+			Commands.errorMessage(sender, "No valid players selected").void()
 		}
-	}
 
 	private fun internalCreateTeam(sender: CommandSender, players: List<OfflinePlayer>) {
 		if (Commands.opGuard(sender)) return
@@ -130,7 +127,7 @@ class TeamCommands : BaseCommand() {
 		val teams = UHC.getTeams()
 
 		val memberLists = Teams.randomMemberLists(sender.server.onlinePlayers.filter { player ->
-			!teams.isOnTeam(player.uniqueId) && !PlayerData.isOptingOut(player.uniqueId)
+			!teams.isOnTeam(player.uniqueId) && !PlayerData.get(player.uniqueId).optingOut
 		}, teamSize)
 
 		memberLists.forEach { memberList ->

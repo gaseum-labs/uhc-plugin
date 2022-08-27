@@ -1,15 +1,15 @@
 package org.gaseumlabs.uhc.lobbyPvp
 
-import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.PlayerData
+import org.gaseumlabs.uhc.gui.GuiManager
+import org.gaseumlabs.uhc.gui.gui.QueueGUI
 import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
-import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena.Platform
 import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
-import org.gaseumlabs.uhc.util.UHCProperty
-import java.util.*
+import org.gaseumlabs.uhc.util.PropertyGroup
 import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.math.min
+import java.util.UUID
 
 object PvpQueue {
 	const val TYPE_NONE = 0
@@ -31,14 +31,13 @@ object PvpQueue {
 		}
 	}
 
-	val enabled = UHCProperty(true) { set ->
-		if (!set) queue.removeIf {
-			PlayerData.getPlayerData(it.uuid).inLobbyPvpQueue.unsafeSet(0)
+	private val propGroup = PropertyGroup { GuiManager.update(QueueGUI::class) }
+	var enabled by propGroup.delegate(true, onChange = {
+		if (!it) queue.removeIf { entry ->
+			PlayerData.get(entry.uuid).inLobbyPvpQueue = TYPE_NONE
 			true
 		}
-
-		set
-	}
+	})
 
 	private val queue = ArrayList<QueueElement>()
 
@@ -89,8 +88,8 @@ object PvpQueue {
 					val leastTime = min(element1.time, element2.time)
 
 					if (greatestTime >= QUEUE_TIME) {
-						val playerData1 = PlayerData.getPlayerData(element1.uuid)
-						val playerData2 = PlayerData.getPlayerData(element2.uuid)
+						val playerData1 = PlayerData.get(element1.uuid)
+						val playerData2 = PlayerData.get(element2.uuid)
 
 						/* last played each other before */
 						if (playerData1.lastPlayed == element2.uuid || playerData2.lastPlayed == element1.uuid) {
@@ -140,8 +139,8 @@ object PvpQueue {
 				}
 
 				/* remove them from the queue */
-				PlayerData.getPlayerData(pairFound.player1).inLobbyPvpQueue.set(0)
-				PlayerData.getPlayerData(pairFound.player2).inLobbyPvpQueue.set(0)
+				PlayerData.get(pairFound.player1).inLobbyPvpQueue = TYPE_NONE
+				PlayerData.get(pairFound.player2).inLobbyPvpQueue = TYPE_NONE
 
 				/* create pvp game */
 				ArenaManager.addArena(
@@ -168,7 +167,7 @@ object PvpQueue {
 				availablePlayers.removeIf { element -> group.any { it == element.uuid } }
 
 				/* remove them from the queue */
-				group.forEach { PlayerData.getPlayerData(it).inLobbyPvpQueue.set(0) }
+				group.forEach { PlayerData.get(it).inLobbyPvpQueue = TYPE_NONE }
 
 				/* create pvp game */
 				ArenaManager.addArena(
@@ -201,10 +200,10 @@ object PvpQueue {
 	}
 
 	fun startGapSlapArena(group: Array<UUID>) {
-		val playerDatas = group.map { PlayerData.getPlayerData(it) }
+		val playerDatas = group.map { PlayerData.get(it) }
 
 		/* remove them from the queue */
-		playerDatas.forEach { it.inLobbyPvpQueue.set(0) }
+		playerDatas.forEach { it.inLobbyPvpQueue = TYPE_NONE }
 
 		val platformUUID = determinePlatform(playerDatas) ?: return
 		val platform = GapSlapArena.submittedPlatforms[platformUUID] ?: return

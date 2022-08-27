@@ -36,7 +36,7 @@ class Chat : Listener {
 
 		val mentionParticipating = object : Mention {
 			override fun matches() = "participating"
-			override fun includes(player: Player) = PlayerData.isParticipating(player.uniqueId)
+			override fun includes(player: Player) = PlayerData.get(player.uniqueId).participating
 			override fun generate(string: String) = defaultGenerator(string)
 			override fun needsOp() = true
 		}
@@ -44,7 +44,7 @@ class Chat : Listener {
 		val mentionSpectating = object : Mention {
 			override fun matches() = "spectating"
 			override fun includes(player: Player) =
-				!PlayerData.isParticipating(player.uniqueId) && player.gameMode == GameMode.SPECTATOR
+				!PlayerData.get(player.uniqueId).participating && player.gameMode == GameMode.SPECTATOR
 
 			override fun generate(string: String) = defaultGenerator(string)
 			override fun needsOp() = false

@@ -14,7 +14,7 @@ import org.bukkit.inventory.ItemStack
 
 class ParkourCreator(index: Int) : GuiItem(index) {
 	override fun onClick(player: Player, shift: Boolean) {
-		if (!PvpQueue.enabled.get()) return
+		if (!PvpQueue.enabled) return
 
 		/* already in an arena, do nothing */
 		if (ArenaManager.playersArena(player.uniqueId) != null) return
@@ -31,13 +31,12 @@ class ParkourCreator(index: Int) : GuiItem(index) {
 		player.closeInventory()
 	}
 
-	override fun getStack(): ItemStack {
-		return ItemCreator.fromType(
-			if (PvpQueue.enabled.get()) Material.HEAVY_WEIGHTED_PRESSURE_PLATE
+	override fun render() =
+		ItemCreator.display(
+			if (PvpQueue.enabled) Material.HEAVY_WEIGHTED_PRESSURE_PLATE
 			else Material.STONE_PRESSURE_PLATE
 		).name(
-			if (PvpQueue.enabled.get()) Component.text("Create Parkour", GREEN)
+			if (PvpQueue.enabled) Component.text("Create Parkour", GREEN)
 			else Component.text("Parkour is closed", GRAY)
-		).create()
-	}
+		)
 }

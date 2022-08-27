@@ -1,18 +1,14 @@
 package org.gaseumlabs.uhc.event
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.UHC
-import org.gaseumlabs.uhc.quirk.QuirkType
-import org.gaseumlabs.uhc.quirk.quirks.classes.Classes
-import org.gaseumlabs.uhc.quirk.quirks.classes.Classes.Companion.HUNTER_SPAWN_META
-import org.gaseumlabs.uhc.quirk.quirks.classes.QuirkClass
+import org.gaseumlabs.uhc.chc.CHCType
+import org.gaseumlabs.uhc.chc.chcs.classes.Classes
+import org.gaseumlabs.uhc.chc.chcs.classes.Classes.Companion.HUNTER_SPAWN_META
+import org.gaseumlabs.uhc.chc.chcs.classes.QuirkClass
 import org.gaseumlabs.uhc.util.SchedulerUtil
-import org.gaseumlabs.uhc.util.Util
-import org.gaseumlabs.uhc.util.Util.materialRange
 import org.gaseumlabs.uhc.util.extensions.LocationExtensions.minus
 import org.gaseumlabs.uhc.util.extensions.LocationExtensions.plus
-import org.gaseumlabs.uhc.util.extensions.VectorExtensions.plus
 import net.kyori.adventure.text.Component
 import org.bukkit.*
 import org.bukkit.ChatColor.*
@@ -20,14 +16,11 @@ import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.World
-import org.bukkit.attribute.Attribute
-import org.bukkit.block.Biome
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Levelled
 import org.bukkit.block.data.type.Stairs
 import org.bukkit.block.data.type.Switch
-import org.bukkit.block.data.type.Wall
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -45,10 +38,8 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
 import org.bukkit.util.Vector
-import kotlin.math.abs
-import kotlin.random.Random
 
-class ClassesEvents : Listener {
+class ClassesEvents(val classes: Classes) : Listener {
 	private fun surface(block: Block): Boolean {
 		return BlockFace.values().take(6).any { d ->
 			block.getRelative(d).type.isAir
@@ -82,8 +73,6 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun playerDamage(event: EntityDamageEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		val player = if (event.entity is Player) event.entity as Player else return
 
 		if (classes.getClass(player.uniqueId) === QuirkClass.DIVER && event.cause === EntityDamageEvent.DamageCause.FALL) {
@@ -128,46 +117,43 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun playerMove(event: PlayerMoveEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		val player = event.player
 
-		when (classes.getClass(player.uniqueId)) {
-			QuirkClass.LAVACASTER -> {
-				auraReplacer(player,
-					Classes.obsidianifiedLava,
-					Material.LAVA,
-					Material.OBSIDIAN,
-					3,
-					-2,
-					-1,
-					3,
-					{ block ->
-						Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0)
-					},
-					{})
-			}
-			QuirkClass.DIVER -> {
-				if (player.world.environment != World.Environment.NETHER) {
-					val velocity = player.velocity.length()
+		val g = PlayerData.get(player).getQuirkData(classes)
 
-					val motion = event.to.toVector().subtract(event.from.toVector())
-					val horz = motion.clone().setY(0)
+		val playersClass = classes.getClass(player.uniqueId)
+		if (playersClass === QuirkClass.LAVACASTER) {
+			auraReplacer(
+				player,
+				Classes.obsidianifiedLava,
+				Material.LAVA,
+				Material.OBSIDIAN,
+				3,
+				-2,
+				-1,
+				3,
+				{ block -> Classes.ObsidianifiedLava(block, (block.blockData as Levelled).level != 0) },
+				{}
+			)
+		} else if (playersClass === QuirkClass.DIVER) {
+			if (player.world.environment != World.Environment.NETHER) {
+				val velocity = player.velocity.length()
 
-					if (player.isSwimming) {
-						player.velocity = player.location.direction.multiply((1.5 - velocity) * 0.1 + velocity)
-					}
+				val motion = event.to.toVector().subtract(event.from.toVector())
 
-					val from = event.from.block.type
-					val to = event.to.block.type
+				if (player.isSwimming) {
+					player.velocity = player.location.direction.multiply((1.5 - velocity) * 0.1 + velocity)
+				}
 
-					if (from === Material.WATER && to.isAir) {
-						player.velocity = motion.clone().multiply(3)
+				val from = event.from.block.type
+				val to = event.to.block.type
 
-					} else if (from.isAir && to === Material.WATER) {
-						player.velocity = motion.clone().normalize().multiply(3).setY(motion.y)
-						player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 40, 2, false, false, false))
-					}
+				if (from === Material.WATER && to.isAir) {
+					player.velocity = motion.clone().multiply(3)
+
+				} else if (from.isAir && to === Material.WATER) {
+					player.velocity = motion.clone().normalize().multiply(3).setY(motion.y)
+					player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 40, 2, false, false, false))
 				}
 			}
 		}
@@ -175,56 +161,53 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun entityDamageEntity(event: EntityDamageByEntityEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		val player = event.damager as? Player ?: return
 
-		when (classes.getClass(player.uniqueId)) {
-			QuirkClass.LAVACASTER -> {
-				event.entity.fireTicks = 80
-			}
-			QuirkClass.ENCHANTER -> {
-				val hurtPlayer = event.entity as? Player ?: return
+		val playersClass = classes.getClass(player.uniqueId)
+		if (playersClass === QuirkClass.LAVACASTER) {
+			event.entity.fireTicks = 80
+		} else if (playersClass === QuirkClass.ENCHANTER) {
+			val hurtPlayer = event.entity as? Player ?: return
 
-				val enchantColors = arrayOf(RED, GOLD, YELLOW, GREEN, AQUA, BLUE, LIGHT_PURPLE)
-				fun enchantColor(index: Int) = enchantColors[index % enchantColors.size]
+			val enchantColors = arrayOf(RED, GOLD, YELLOW, GREEN, AQUA, BLUE, LIGHT_PURPLE)
+			fun enchantColor(index: Int) = enchantColors[index % enchantColors.size]
 
-				fun tellItem(itemStack: ItemStack?) {
-					val meta = itemStack?.itemMeta ?: return
+			fun tellItem(itemStack: ItemStack?) {
+				val meta = itemStack?.itemMeta ?: return
 
-					player.sendActionBar(Component.text(
+				player.sendActionBar(
+					Component.text(
 						meta.enchants.asIterable().mapIndexed { index, (enchant, level) ->
 							"${enchantColor(index)}$BOLD${enchant.key.key} ${enchantColor(index)}$level"
-						}.joinToString(", ",
+						}.joinToString(
+							", ",
 							"$WHITE${hurtPlayer.name}'s $WHITE$BOLD${itemStack.type.name.lowercase()}: "
 						)
-					))
-				}
+					)
+				)
+			}
 
-				fun validItem(itemStack: ItemStack?) = itemStack != null &&
+			fun validItem(itemStack: ItemStack?) = itemStack != null &&
 				itemStack.itemMeta?.enchants?.isNotEmpty() == true
 
-				fun tellSlot(slot: Int): Boolean {
-					val item = if (slot == 3)
-						hurtPlayer.inventory.itemInMainHand
-					else
-						hurtPlayer.inventory.armorContents!![slot]
+			fun tellSlot(slot: Int): Boolean {
+				val item = if (slot == 3)
+					hurtPlayer.inventory.itemInMainHand
+				else
+					hurtPlayer.inventory.armorContents[slot]
 
-					return if (validItem(item)) {
-						tellItem(item); true
-					} else false
-				}
-
-				val offset = (Math.random() * 4).toInt()
-				(0..3).any { slot -> tellSlot((slot + offset) % 4) }
+				return if (validItem(item)) {
+					tellItem(item); true
+				} else false
 			}
+
+			val offset = (Math.random() * 4).toInt()
+			(0..3).any { slot -> tellSlot((slot + offset) % 4) }
 		}
 	}
 
 	@EventHandler
 	fun onXP(event: PlayerExpChangeEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER) {
 			event.amount = event.amount * 2
 		}
@@ -232,8 +215,6 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onBlockDrop(event: BlockBreakEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENCHANTER && event.block.type == Material.GRINDSTONE) {
 			event.isDropItems = false
 			event.block.world.dropItem(event.block.location.toCenterLocation(), ItemStack(Material.COBBLESTONE))
@@ -242,8 +223,6 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onEnchant(event: EnchantItemEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		if (classes.getClass(event.enchanter.uniqueId) == QuirkClass.ENCHANTER) {
 			val inventory = event.view.topInventory as EnchantingInventory
 
@@ -293,8 +272,6 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		if (classes.getClass(event.whoClicked.uniqueId) == QuirkClass.ENCHANTER) {
 			val item = event.currentItem ?: return
 
@@ -317,8 +294,6 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun blockBreak(event: BlockBreakEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.ENGINEER) {
 			val logs = listOf(
 				Material.OAK_LOG,
@@ -380,8 +355,6 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun interactEvent(event: PlayerInteractEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		when (event.action) {
 			Action.LEFT_CLICK_BLOCK -> {
 				if (classes.getClass(event.player.uniqueId) == QuirkClass.ENGINEER) {
@@ -423,6 +396,7 @@ class ClassesEvents : Listener {
 					event.player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
 				}
 			}
+			else -> {}
 		}
 
 		if (
@@ -503,8 +477,6 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun itemBreak(event: PlayerItemBreakEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		if (classes.getClass(event.player.uniqueId) == QuirkClass.MINER && pickaxes.contains(event.brokenItem.type)) {
 			xray(event.player)
 		}
@@ -565,17 +537,13 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onMobSpawn(event: EntitySpawnEvent) {
-		if (UHC.game?.quirkEnabled(QuirkType.CLASSES) == true) {
-			if (event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) {
-				event.entity.setMetadata(HUNTER_SPAWN_META, FixedMetadataValue(org.gaseumlabs.uhc.UHCPlugin.plugin, true))
-			}
+		if (event.entity.entitySpawnReason == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) {
+			event.entity.setMetadata(HUNTER_SPAWN_META, FixedMetadataValue(org.gaseumlabs.uhc.UHCPlugin.plugin, true))
 		}
 	}
 
 	@EventHandler
 	fun onMobAnger(event: EntityTargetLivingEntityEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		val player = event.target as? Player ?: return
 
 		if (classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
@@ -585,9 +553,6 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onUseItem(event: PlayerInteractEvent) {
-		val game = UHC.game ?: return
-		val classes = game.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		val player = event.player
 
 		if (classes.getClass(player.uniqueId) == QuirkClass.HUNTER) {
@@ -596,7 +561,7 @@ class ClassesEvents : Listener {
 
 				if (item != null && item.type == Material.COMPASS) {
 					fun onSameTeam(otherUUID: UUID): Boolean {
-						val team = game.teams.playersTeam(otherUUID)
+						val team = classes.game.teams.playersTeam(otherUUID)
 						return team != null && team.members.contains(player.uniqueId)
 					}
 
@@ -644,11 +609,9 @@ class ClassesEvents : Listener {
 
 	@EventHandler
 	fun onBlockPlace(event: BlockPlaceEvent) {
-		val classes = UHC.game?.getQuirk<Classes>(QuirkType.CLASSES) ?: return
-
 		val player = event.player
 
-		if (classes.getClass(player.uniqueId) == QuirkClass.ENGINEER) {
+		if (classes.getClass(player.uniqueId) === QuirkClass.ENGINEER) {
 			when (event.block.type) {
 				Material.LIGHT_WEIGHTED_PRESSURE_PLATE -> {
 					for (x in -1..1) for (y in 1..7) for (z in -1..1) {
@@ -707,8 +670,7 @@ class ClassesEvents : Listener {
 						}
 					}
 				}
-				else -> {
-				}
+				else -> {}
 			}
 		}
 	}

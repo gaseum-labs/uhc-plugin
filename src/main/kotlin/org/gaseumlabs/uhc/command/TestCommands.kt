@@ -9,12 +9,10 @@ import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.customSpawning.CustomSpawning
 import org.gaseumlabs.uhc.customSpawning.CustomSpawningType
 import org.gaseumlabs.uhc.event.Portal
-import org.gaseumlabs.uhc.core.Trader
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
-import org.gaseumlabs.uhc.quirk.QuirkType
-import org.gaseumlabs.uhc.quirk.quirks.Deathswap
-import org.gaseumlabs.uhc.quirk.quirks.carePackages.CarePackages
+import org.gaseumlabs.uhc.chc.CHCType
+import org.gaseumlabs.uhc.chc.chcs.carePackages.CarePackages
 import org.gaseumlabs.uhc.util.Action
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -23,6 +21,7 @@ import org.bukkit.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.core.OfflineZombie
 import org.gaseumlabs.uhc.lobbyPvp.PvpQueue
 import org.gaseumlabs.uhc.world.regenresource.*
 import java.util.*
@@ -68,13 +67,6 @@ class TestCommands : BaseCommand() {
 
 	}
 
-	@Subcommand("deathswap swap")
-	@Description("swap all players")
-	fun testDsSwap(sender: CommandSender) {
-		val game = UHC.game ?: return errorMessage(sender, "Game has not started")
-		game.getQuirk<Deathswap>(QuirkType.DEATHSWAP)?.doSwaps()
-	}
-
 	@Subcommand("insomnia")
 	@Description("get the insomnia of the sender")
 	fun testExhaustion(sender: CommandSender) {
@@ -109,7 +101,7 @@ class TestCommands : BaseCommand() {
 	@CommandCompletion("@uhcplayer")
 	@Description("get this player's playerData")
 	fun testPlayerData(sender: CommandSender, player: OfflinePlayer) {
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 		val team = UHC.getTeams().playersTeam(player.uniqueId)
 
 		Action.sendGameMessage(sender, "PlayerData for ${player.name}:")
@@ -130,8 +122,7 @@ class TestCommands : BaseCommand() {
 
 		val onlinePlayer = player.player ?: return errorMessage(sender, "${player.name} is offline!")
 
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
-		playerData.createZombie(onlinePlayer)
+		OfflineZombie.createZombie(onlinePlayer)
 
 		Action.sendGameMessage(sender, "Created a zombie for ${player.name}")
 	}
@@ -141,24 +132,12 @@ class TestCommands : BaseCommand() {
 	fun testDrop(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		val carePackages = UHC.game?.getQuirk<CarePackages>(QuirkType.CARE_PACKAGES)
+		val carePackages = UHC.game?.chc as? CarePackages
 			?: return errorMessage(sender, "Care packages is not going!")
 
 		val result = carePackages.forceDrop()
 
 		if (!result) return errorMessage(sender, "All care packages have been dropped!")
-	}
-
-	@Subcommand("minecraftmobcaps")
-	@Description("query the current spawn limit coefficient")
-	fun getMobCaps(sender: CommandSender) {
-		sender as Player
-
-		Action.sendGameMessage(sender, "Monster spawn limit: ${sender.world.monsterSpawnLimit}")
-		Action.sendGameMessage(sender, "Animal spawn limit: ${sender.world.animalSpawnLimit}")
-		Action.sendGameMessage(sender, "Ambient spawn limit: ${sender.world.ambientSpawnLimit}")
-		Action.sendGameMessage(sender, "Water animal spawn limit: ${sender.world.waterAnimalSpawnLimit}")
-		Action.sendGameMessage(sender, "Water ambient spawn limit: ${sender.world.waterAmbientSpawnLimit}")
 	}
 
 	@Subcommand("mobcap")
@@ -171,7 +150,7 @@ class TestCommands : BaseCommand() {
 		val number = CustomSpawning.calcPlayerMobs(type, testPlayer)
 
 		Action.sendGameMessage(sender, "${testPlayer.name}'s ${type.name.lowercase()} mobcap: $number out of ${
-			PlayerData.getPlayerData(testPlayer.uniqueId).spawningData[type.ordinal].intCap()
+			PlayerData.get(testPlayer.uniqueId).spawningData[type.ordinal].intCap()
 		}")
 	}
 
@@ -192,8 +171,8 @@ class TestCommands : BaseCommand() {
 		if (ArenaManager.playersArena(player2.uniqueId) != null) return errorMessage(sender,
 			"${player2.name} is already in a game")
 
-		PlayerData.getPlayerData(player1.uniqueId).inLobbyPvpQueue.set(0)
-		PlayerData.getPlayerData(player2.uniqueId).inLobbyPvpQueue.set(0)
+		PlayerData.get(player1.uniqueId).inLobbyPvpQueue = 0
+		PlayerData.get(player2.uniqueId).inLobbyPvpQueue = 0
 
 		ArenaManager.addArena(
 			PvpArena(
@@ -224,7 +203,7 @@ class TestCommands : BaseCommand() {
 		sender as Player
 
 		val game = UHC.game ?: return errorMessage(sender, "Game is not going")
-		val killReward = game.config.killReward.get()
+		val killReward = game.config.killReward
 
 		killReward.apply(sender.uniqueId,
 			game.teams.playersTeam(sender.uniqueId)?.members ?: arrayListOf(),

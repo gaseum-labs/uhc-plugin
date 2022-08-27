@@ -9,11 +9,9 @@ import org.gaseumlabs.uhc.dropFix.DropFixType
 import org.gaseumlabs.uhc.gui.CommandItemType
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
-import org.gaseumlabs.uhc.quirk.QuirkType
-import org.gaseumlabs.uhc.quirk.quirks.*
+import org.gaseumlabs.uhc.chc.chcs.*
 import org.gaseumlabs.uhc.team.HideManager
 import org.gaseumlabs.uhc.team.NameManager
-import org.gaseumlabs.uhc.util.SchedulerUtil
 import org.gaseumlabs.uhc.util.Util
 import org.gaseumlabs.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
@@ -23,7 +21,6 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.Material.ENDER_EYE
 import org.bukkit.Material.TNT
-import org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -31,15 +28,10 @@ import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause.*
 import org.bukkit.event.inventory.CraftItemEvent
-import org.bukkit.event.inventory.InventoryAction
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.*
 import org.bukkit.event.server.ServerListPingEvent
-import org.bukkit.event.vehicle.VehicleCreateEvent
 import org.bukkit.event.weather.WeatherChangeEvent
 import org.bukkit.event.world.WorldSaveEvent
-import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.metadata.FixedMetadataValue
@@ -59,7 +51,7 @@ class EventListener : Listener {
 	fun onPlayerJoin(event: PlayerJoinEvent) {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(org.gaseumlabs.uhc.UHCPlugin.plugin) {
 			val player = event.player
-			val playerData = PlayerData.getPlayerData(player.uniqueId)
+			val playerData = PlayerData.get(player.uniqueId)
 
 			NameManager.onPlayerLogin(event.player, UHC.getTeams().playersTeam(player.uniqueId))
 
@@ -78,14 +70,13 @@ class EventListener : Listener {
 	@EventHandler
 	fun onLogOut(event: PlayerQuitEvent) {
 		val player = event.player
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 		val pvpGame = ArenaManager.playersArena(player.uniqueId)
 
 		if (pvpGame != null) {
 			ArenaManager.removePlayer(player.uniqueId)
-
 		} else if (playerData.participating && player.gameMode != GameMode.SPECTATOR) {
-			playerData.offlineZombie = playerData.createZombie(player)
+			OfflineZombie.createZombie(player, playerData)
 		}
 	}
 
@@ -101,23 +92,14 @@ class EventListener : Listener {
 		val stack = event.item ?: return
 		val player = event.player
 
-		if ((UHC.game?.getQuirk<Summoner>(QuirkType.SUMMONER))?.onSummon(event) == true) {
-			event.isCancelled = true
-
-		} else if (event.action === Action.RIGHT_CLICK_AIR || event.action === Action.RIGHT_CLICK_BLOCK) {
-			CommandItemType.values().any { type ->
-				if (type.isItem(stack)) {
-					type.execute(player)
-					true
-
-				} else false
-			}
-		}
-
 		if (
+			!(
+				(event.action === Action.RIGHT_CLICK_AIR || event.action === Action.RIGHT_CLICK_BLOCK) &&
+				CommandItemType.values().find { it.isItem(stack) }?.execute(player) != null
+			) &&
 			stack.type === ENDER_EYE &&
 			(event.action === Action.RIGHT_CLICK_AIR || event.action === Action.RIGHT_CLICK_BLOCK) &&
-			PlayerData.isAlive(player.uniqueId)
+			PlayerData.get(player).alive
 		) {
 			val playerTeam = UHC.getTeams().playersTeam(player.uniqueId)
 
@@ -172,7 +154,7 @@ class EventListener : Listener {
 
 		val player = event.entity
 		val uuid = player.uniqueId
-		val playerData = PlayerData.getPlayerData(uuid)
+		val playerData = PlayerData.get(uuid)
 		val arena = ArenaManager.playersArena(uuid)
 
 		/* dying in lobby pvp */
@@ -202,14 +184,6 @@ class EventListener : Listener {
 			event.isCancelled = true
 			bloodCloud(player.location)
 
-			/* remove chc specific items from drops */
-			val game = UHC.game
-			if (game != null) {
-				game.getQuirk<Hotbar>(QuirkType.HOTBAR)?.filterDrops(event.drops)
-				game.getQuirk<PlayerCompass>(QuirkType.HOTBAR)?.filterDrops(event.drops)
-				game.getQuirk<InfiniteInventory>(QuirkType.HOTBAR)?.filterDrops(event.drops, player)
-			}
-
 			/* drop items */
 			event.drops.forEach { drop ->
 				player.location.world.dropItem(player.location, drop)
@@ -220,12 +194,11 @@ class EventListener : Listener {
 			orb.experience = event.droppedExp
 
 			val deathMessage = event.deathMessage()
-			if (deathMessage != null) Bukkit.getOnlinePlayers().filter { !WorldManager.isNonGameWorld(it.world) }
-				.forEach { player ->
-					player.sendMessage(deathMessage)
-				}
+			if (deathMessage != null) Bukkit.getOnlinePlayers()
+				.filter { !WorldManager.isNonGameWorld(it.world) }
+				.forEach { it.sendMessage(deathMessage) }
 
-			game?.playerDeath(uuid, player.killer, playerData, false)
+			UHC.game?.playerDeath(uuid, player.killer, playerData, false)
 		}
 	}
 
@@ -239,7 +212,7 @@ class EventListener : Listener {
 		if (event.entity.entitySpawnReason === CreatureSpawnEvent.SpawnReason.REINFORCEMENTS) {
 			event.isCancelled = true
 
-		} else if (UHC.game?.naturalRegeneration?.get() == false && WorldManager.isGameWorld(event.entity.world)) {
+		} else if (UHC.game?.config?.naturalRegeneration == false && WorldManager.isGameWorld(event.entity.world)) {
 			val potion = event.entity as? ThrownPotion
 
 			if (
@@ -258,23 +231,10 @@ class EventListener : Listener {
 		/* offline zombie targeting */
 		val target = event.target ?: return
 
-		if (PlayerData.isZombie(target) && (event.entity.type == EntityType.IRON_GOLEM || event.entity.type == EntityType.SNOWMAN)) {
+		if (OfflineZombie.getZombieUUID(target) != null) {
 			event.isCancelled = true
 
 		} else if (target is Player) {
-			val game = UHC.game
-			if (game?.quirkEnabled(QuirkType.SUMMONER) == true) {
-				val team = game.teams.playersTeam(target.uniqueId)
-
-				if (team != null && Summoner.isCommandedBy(event.entity, team)) {
-					event.isCancelled = true
-				}
-			}
-
-			if (game?.quirkEnabled(QuirkType.PESTS) == true && PlayerData.isUndead(target.uniqueId)) {
-				event.isCancelled = true
-			}
-
 			if (event.entityType === EntityType.BLAZE) {
 				if (event.entity.location.distance(target.location) >= 24) event.isCancelled = true
 			}
@@ -283,44 +243,25 @@ class EventListener : Listener {
 
 	@EventHandler
 	fun onCraft(event: CraftItemEvent) {
-		val player = event.whoClicked as Player
-
-		/* prevent pest crafting */
-		if (UHC.game?.quirkEnabled(QuirkType.PESTS) == true && PlayerData.isUndead(player.uniqueId)) {
-			if (Util.binarySearch(event.recipe.result.type, Pests.banList)) event.isCancelled = true
-
-		} else if (
-			PlayerData.isParticipating(player.uniqueId) && (
-			event.recipe.result.type === Material.END_CRYSTAL ||
-			event.recipe.result.type === Material.RESPAWN_ANCHOR
-			)
-		) {
-			event.currentItem = ItemStack(TNT, 3)
-		}
-	}
-
-	@EventHandler
-	fun onPlayerDropItem(event: PlayerDropItemEvent) {
-		val stack = event.itemDrop.itemStack
-
 		if (
-			CommandItemType.values().any { it.isItem(stack) }
-			|| (UHC.game?.quirkEnabled(QuirkType.PLAYER_COMPASS) == true && PlayerCompass.isCompass(stack))
-		) {
-			event.isCancelled = true
-		}
+			PlayerData.get(event.whoClicked).participating && (
+				event.recipe.result.type === Material.END_CRYSTAL ||
+				event.recipe.result.type === Material.RESPAWN_ANCHOR
+			)
+		)
+			event.currentItem = ItemStack(TNT, 3)
 	}
 
 	fun shouldHealthCancelled(player: Player): Boolean {
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 		val game = UHC.game
 
 		return ArenaManager.playersArena(player.uniqueId) is PvpArena || (
-		game != null &&
-		!game.config.naturalRegeneration.get() &&
-		playerData.participating &&
-		game.phase !is Grace &&
-		!(game.quirkEnabled(QuirkType.PESTS) && playerData.undead())
+			game != null &&
+			game.phase !is Grace &&
+			!game.config.naturalRegeneration &&
+			playerData.participating &&
+			!(game.chc is Pests && playerData.undead())
 		)
 	}
 
@@ -366,7 +307,7 @@ class EventListener : Listener {
 		/* they don't lose food */
 		if (
 			!shouldHealthCancelled(event.entity as Player) &&
-			!PlayerData.isParticipating(event.entity.uniqueId)
+			!PlayerData.get(event.entity).participating
 		) {
 			event.foodLevel = 20
 			event.isCancelled = true
@@ -376,21 +317,18 @@ class EventListener : Listener {
 	@EventHandler
 	fun onEntityDeath(event: EntityDeathEvent) {
 		val game = UHC.game ?: return
-
 		val killer = event.entity.killer
-
-		/* test if offline zombie was killed */
-		val (inventory, experience, uuid) = PlayerData.getZombieData(event.entity)
+		val zombieData = OfflineZombie.getZombieData(event.entity)
 
 		/* offline zombie was killed */
-		if (experience != -1) {
-			val playerData = PlayerData.getPlayerData(uuid)
+		if (zombieData != null) {
+			val (inventory, experience, uuid) = zombieData
+			val playerData = PlayerData.get(uuid)
 
-			/* lose reference to old offline zombie */
 			playerData.offlineZombie = null
-			event.drops.clear()
 
 			/* drop they player's inventory and experience */
+			event.drops.clear()
 			inventory.forEach { drop -> event.drops.add(drop) }
 			val droppedExperience = experience.coerceAtMost(100)
 			event.droppedExp = droppedExperience
@@ -398,20 +336,11 @@ class EventListener : Listener {
 			game.playerDeath(uuid, killer, playerData, false)
 
 		} else {
-			/* find a quirk that has a dropfix for this entity */
-			/* if not fallback to default list of dropfixes */
-			(game.quirks.filterNotNull().filter { quirk ->
-				quirk.customDrops != null
-			}.map { quirk ->
-				Util.binaryFind(event.entityType, quirk.customDrops!!) { dropFix -> dropFix.entityType }
-			}.firstOrNull()
-				?: Util.binaryFind(event.entityType,
-					DropFixType.list) { dropFixType -> dropFixType.dropFix.entityType }?.dropFix
-			)?.onDeath(event.entity, killer, event.drops)
+			game.chc?.customDrops?.let { list -> Util.binaryFind(event.entityType, list) { it.entityType } }
+				?: Util.binaryFind(event.entityType, DropFixType.list) { it.dropFix.entityType }
+				?.dropFix?.onDeath(event.entity, killer, event.drops)
 
-			game.quirks.filterNotNull().any { quirk ->
-				quirk.modifyEntityDrops(event.entity, killer, event.drops)
-			}
+			game.chc?.modifyEntityDrops(event.entity, killer, event.drops)
 		}
 	}
 
@@ -421,7 +350,7 @@ class EventListener : Listener {
 	@EventHandler
 	fun entityDamage(event: EntityDamageEvent) {
 		val player = event.entity as? Player ?: return
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 
 		/* stuff that happens during the game */
 		if (playerData.participating) {
@@ -430,15 +359,8 @@ class EventListener : Listener {
 			if (
 				game.phase.phaseType === GRACE &&
 				(event.cause === LAVA || event.cause === FIRE || event.cause === FIRE_TICK)
-			) {
+			)
 				event.isCancelled = true
-
-			} else if (game.quirkEnabled(QuirkType.LOW_GRAVITY) && event.cause == FALL) {
-				event.isCancelled = true
-
-			} else if (game.quirkEnabled(QuirkType.DEATHSWAP) && Deathswap.untilNextSequence < Deathswap.IMMUNITY) {
-				event.isCancelled = true
-			}
 
 			/* prevent lobby and postgame damage */
 		} else {
@@ -466,17 +388,17 @@ class EventListener : Listener {
 			else -> null
 		}
 
-		if ((
-			attackingPlayer != null &&
-			PlayerData.isParticipating(attackingPlayer.uniqueId) &&
-			defender is Player &&
-			PlayerData.isParticipating(defender.uniqueId)
+		val attackingData = attackingPlayer?.let(PlayerData::get) ?: return
+		val defendingData = if (defender !is Player) return else defender.let(PlayerData::get)
+
+		if (
+			(
+				attackingData.participating &&
+				defendingData.participating
 			) && (
-			game.phase is Grace || (
-			game.quirkEnabled(QuirkType.PESTS) &&
-			!PlayerData.isAlive(attackingPlayer.uniqueId) &&
-			!PlayerData.isAlive(defender.uniqueId)
-			)
+				game.phase is Grace || (
+					game.chc is Pests && !attackingData.alive && !defendingData.alive
+				)
 			)
 		) event.isCancelled = true
 	}
@@ -552,34 +474,6 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onBreakBlock(event: BlockBreakEvent) {
-		val game = UHC.game ?: return
-
-		val brokenBlock = event.block
-		val player = event.player
-
-		if (game.quirkEnabled(QuirkType.UNSHELTERED) && !Util.binarySearch(brokenBlock.type,
-				Unsheltered.acceptedBlocks)
-		) {
-			val oldBlockType = brokenBlock.type
-			val oldData = brokenBlock.blockData
-
-			/* block has not been set as broken */
-			if (Unsheltered.isBroken(brokenBlock)) {
-				player.sendActionBar(Component.text("Block already broken!", NamedTextColor.GOLD, TextDecoration.BOLD))
-				event.isCancelled = true
-
-			} else {
-				SchedulerUtil.nextTick {
-					brokenBlock.type = oldBlockType
-					brokenBlock.blockData = oldData
-					Unsheltered.setBroken(brokenBlock, true)
-				}
-			}
-		}
-	}
-
-	@EventHandler
 	fun onDecay(event: LeavesDecayEvent) {
 		/* prevent default drops */
 		event.isCancelled = true
@@ -587,9 +481,8 @@ class EventListener : Listener {
 		val leavesLocation = event.block.location.toCenterLocation()
 
 		val dropPlayer = Bukkit.getOnlinePlayers()
-			.filter { PlayerData.isParticipating(it.uniqueId) && it.world === leavesLocation.world }.minByOrNull {
-				it.location.distance(leavesLocation)
-			}
+			.filter { PlayerData.get(it).participating && it.world === leavesLocation.world }
+			.minByOrNull { it.location.distance(leavesLocation) }
 
 		/* apply applefix to this leaves block for the nearest player */
 		if (dropPlayer != null) BlockFixType.LEAVES.blockFix.onBreakBlock(
@@ -610,7 +503,7 @@ class EventListener : Listener {
 		val phase = game.phase as? Endgame ?: return
 		val block = event.block
 
-		if (PlayerData.getPlayerData(event.player.uniqueId).participating) {
+		if (PlayerData.get(event.player.uniqueId).participating) {
 			if (block.y > phase.highLimit + Endgame.BUILD_ADD) {
 				event.isCancelled = true
 				Commands.errorMessage(event.player, "Height limit for endgame reached")
@@ -625,7 +518,7 @@ class EventListener : Listener {
 	fun onPlaceBlock(event: BlockPlaceEvent) {
 		val game = UHC.game
 		val player = event.player
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 
 		/* things that affect players playing the game */
 		if (game != null && playerData.participating) {
@@ -641,41 +534,16 @@ class EventListener : Listener {
 					phase.addSkybaseBlock(block)
 				}
 			}
-
-			/* creative block replenishing */
-			if (UHC.game?.quirkEnabled(QuirkType.CREATIVE) == true) {
-				val material = event.itemInHand.type
-
-				/* replace these blocks */
-				if (Util.binarySearch(material, Creative.blocks)) {
-
-					val inHand: ItemStack = event.itemInHand.clone()
-
-					SchedulerUtil.nextTick {
-						if (event.hand === EquipmentSlot.HAND)
-							event.player.inventory.setItemInMainHand(inHand)
-						else
-							event.player.inventory.setItemInOffHand(inHand)
-					}
-				}
-
-				/* unsheltered block place prevention */
-			} else if (UHC.game?.quirkEnabled(QuirkType.UNSHELTERED) == true) {
-				val block = event.block
-
-				if (!Util.binarySearch(block.type, Unsheltered.acceptedBlocks)) {
-					event.isCancelled = true
-				}
-			}
-		} else {
-			val arena = ArenaManager.playersArena(player.uniqueId) as? PvpArena
-
-			if (arena != null && event.blockPlaced.y > 100) {
-				event.player.sendActionBar(Component.text("Height limit for building is 100",
-					NamedTextColor.RED,
-					TextDecoration.BOLD))
-				event.isCancelled = true
-			}
+		} else if (
+			ArenaManager.playersArena(player.uniqueId) is PvpArena &&
+			event.blockPlaced.y > 100
+		) {
+			event.player.sendActionBar(
+				Component.text("Height limit for building is 100",
+				NamedTextColor.RED,
+				TextDecoration.BOLD)
+			)
+			event.isCancelled = true
 		}
 	}
 
@@ -692,49 +560,10 @@ class EventListener : Listener {
 	}
 
 	@EventHandler
-	fun onVehiclePlace(event: VehicleCreateEvent) {
-		if (event.vehicle.world === WorldManager.lobbyWorld) event.isCancelled = true
-	}
-
-	@EventHandler
-	fun onInventoryClick(event: InventoryClickEvent) {
-		val game = UHC.game ?: return
-
-		if (game.quirkEnabled(QuirkType.HOTBAR))
-			if (event.clickedInventory?.type == InventoryType.PLAYER && event.slot in 9..35) {
-				event.isCancelled = true
-			}
-		if (game.quirkEnabled(QuirkType.INFINITE_INVENTORY) && event.clickedInventory?.type == InventoryType.PLAYER && event.action != InventoryAction.NOTHING) {
-			val player = event.whoClicked as Player
-			if (event.slot == InfiniteInventory.BACK_BUTTON) {
-				InfiniteInventory.prevPage(player)
-				event.isCancelled = true
-			} else if (event.slot == InfiniteInventory.FORWARD_BUTTON) {
-				InfiniteInventory.nextPage(player)
-				event.isCancelled = true
-			}
-		}
-	}
-
-	@EventHandler
 	fun onPickUpItem(event: EntityPickupItemEvent) {
 		/* prevent piglins from wearing their bartered boots */
 		if (event.entity is Piglin && event.item.itemStack.type != Material.GOLD_INGOT) {
 			event.isCancelled = true
-
-		} else {
-			val halloween = UHC.game?.getQuirk<Halloween>(QuirkType.HALLOWEEN) ?: return
-
-			if (
-				event.entityType === EntityType.PLAYER &&
-				event.item.itemStack.type === Material.DIAMOND &&
-				event.entity.name != "balduvian"
-			) {
-				if (!halloween.hasGottenDiamonds) {
-					Halloween.jumpScare(event.entity as Player)
-					halloween.hasGottenDiamonds = true
-				}
-			}
 		}
 	}
 
@@ -756,7 +585,7 @@ class EventListener : Listener {
 			event.player.foodLevel += 4
 
 			event.player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 100, 1, false, true, true))
-			event.player.addPotionEffect(PotionEffect(PotionEffectType.ABSORPTION, 2400, 2, false, true, true))
+			event.player.addPotionEffect(PotionEffect(PotionEffectType.ABSORPTION, 2400, 1, false, true, true))
 		}
 	}
 
@@ -777,26 +606,6 @@ class EventListener : Listener {
 			event.entityType === EntityType.WANDERING_TRADER
 		) {
 			event.isCancelled = true
-		}
-	}
-
-	@EventHandler
-	fun advancement(event: PlayerAdvancementDoneEvent) {
-		if (UHC.game?.quirkEnabled(QuirkType.ACHIEVEMENTS) == true) {
-			val key = event.advancement.key.key
-			if (key == "husbandry/complete_catalogue") {
-				UHC.game?.end(
-					UHC.game?.teams?.playersTeam(event.player.uniqueId)
-				)
-				return
-			}
-			val prefixes = listOf("story", "nether", "end", "husbandry", "adventure")
-			if (prefixes.any { key.startsWith(it) } && !key.endsWith("root")) {
-				val hearts = Achievements.achievementMap[event.advancement.key.key] ?: 1
-				event.player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue =
-					(event.player.getAttribute(GENERIC_MAX_HEALTH)?.baseValue ?: 20.0) + hearts
-				event.player.health += hearts
-			}
 		}
 	}
 

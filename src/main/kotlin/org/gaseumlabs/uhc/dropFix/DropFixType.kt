@@ -16,8 +16,6 @@ import org.gaseumlabs.uhc.dropFix.DropEntry.Companion.lootUpTo
 import org.bukkit.Material
 import org.bukkit.Material.*
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.EntityType.PHANTOM
-import org.bukkit.entity.EntityType.SLIME
 import org.bukkit.potion.PotionType
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.bukkit.inventory.meta.PotionMeta
@@ -117,7 +115,7 @@ enum class DropFixType(val dropFix: DropFix) {
 			item(SUGAR),
 			item(STICK),
 			DropEntry { _, _, cycle ->
-				arrayOf(ItemCreator.fromType(POTION, false)
+				arrayOf(ItemCreator.regular(POTION)
 					.customMeta<PotionMeta> {
 						it.basePotionData = org.bukkit.potion.PotionData(arrayOf(
 							PotionType.INSTANT_HEAL,

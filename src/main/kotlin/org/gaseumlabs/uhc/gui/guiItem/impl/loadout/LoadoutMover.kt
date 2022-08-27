@@ -55,7 +55,7 @@ class LoadoutMover(
 		return creator
 	}
 
-	override fun onShiftClick(player: Player, stack: ItemStack) {
+	override fun onShiftClick(player: Player, itemStack: ItemStack) {
 		/* only change enchantments in the top inventory */
 		if (rawSlot >= gui.inventory.size) return
 
@@ -67,7 +67,7 @@ class LoadoutMover(
 		if (optionIndex == enchantOptions.size) optionIndex = -1
 
 		/* change itemstack to match new enchantments */
-		generate().modify(stack)
+		generate().modify(itemStack)
 	}
 
 	override fun onPickUp(player: Player, inventorySlot: Int) {
@@ -77,7 +77,7 @@ class LoadoutMover(
 			loadout.ids[inventorySlot] = -1
 			loadout.options[inventorySlot] = -1
 
-			playerData.slotCosts[loadoutSlot].set(loadout.calculateCost())
+			playerData.getSlotCost(loadoutSlot).set(loadout.calculateCost())
 		}
 	}
 
@@ -124,7 +124,7 @@ class LoadoutMover(
 		loadout.ids[inventorySlot] = loadoutItem.ordinal
 		loadout.options[inventorySlot] = optionIndex
 
-		playerData.slotCosts[loadoutSlot].set(cost)
+		playerData.getSlotCost(loadoutSlot).set(cost)
 
 		return true
 	}

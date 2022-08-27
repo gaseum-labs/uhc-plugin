@@ -2,9 +2,6 @@ package org.gaseumlabs.uhc.gui.gui
 
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.UHC
-import org.gaseumlabs.uhc.database.DataManager
-import org.gaseumlabs.uhc.database.LoadoutsFile
-import org.gaseumlabs.uhc.gui.GuiType
 import org.gaseumlabs.uhc.gui.MoveableGuiPage
 import org.gaseumlabs.uhc.gui.guiItem.MoveableGuiItem
 import org.gaseumlabs.uhc.gui.guiItem.impl.CloseButton
@@ -14,18 +11,20 @@ import org.gaseumlabs.uhc.lobbyPvp.LoadoutItems
 import org.gaseumlabs.uhc.lobbyPvp.Loadouts
 import org.gaseumlabs.uhc.util.Util
 import net.kyori.adventure.text.format.TextColor
+import org.gaseumlabs.uhc.gui.guiItem.GuiItem
 
-class LoadoutGui(val playerData: PlayerData, val loadoutSlot: Int) :
-	MoveableGuiPage(
-		4,
-		Util.gradientString("Edit Loadout", TextColor.color(0x7d0580), TextColor.color(0x910d40)),
-		GuiType.PERSONAL
-	) {
-	val costCounter = addItem(CostCounter(coords(7, 3), playerData.slotCosts[loadoutSlot]))
-	val closeButton = addItem(CloseButton(coords(8, 3)))
+class LoadoutGui(val playerData: PlayerData, val loadoutSlot: Int) : MoveableGuiPage(
+	4,
+	Util.gradientString("Edit Loadout", TextColor.color(0x7d0580), TextColor.color(0x910d40)),
+	false,
+) {
+	override fun createItems() = arrayOf(
+		CostCounter(coords(7, 3), playerData, loadoutSlot),
+		CloseButton(coords(8, 3)),
+	)
 
 	override fun createMoveableGuiItems(): ArrayList<MoveableGuiItem> {
-		var list = ArrayList<MoveableGuiItem>()
+		val list = ArrayList<MoveableGuiItem>()
 
 		val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(playerData.uuid)[loadoutSlot]
 
@@ -59,12 +58,8 @@ class LoadoutGui(val playerData: PlayerData, val loadoutSlot: Int) :
 		}
 
 		/* init cost display */
-		playerData.slotCosts[loadoutSlot].set(loadout.calculateCost())
+		playerData.getSlotCost(loadoutSlot).set(loadout.calculateCost())
 
 		return list
-	}
-
-	override fun save() {
-		//
 	}
 }

@@ -143,7 +143,7 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 		player.gameMode = GameMode.SURVIVAL
 
 		/* give items */
-		val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(player.uniqueId)[playerData.loadoutSlot.get()]
+		val loadout = UHC.dataManager.loadouts.getPlayersLoadouts(player.uniqueId)[playerData.loadoutSlot]
 		loadout.fillInventory(player.inventory)
 
 		player.uhcTitle(UHCComponent.text("FIGHT", UHCColor.U_GOLD), UHCComponent.text(), 0, 20, 10)

@@ -19,7 +19,7 @@ class Tracker {
 		val position = packPosition(block.x.toShort(),
 			block.z.toShort(),
 			block.world.environment,
-			PlayerData.getPlayerData(uuid).lifeNo)
+			PlayerData.get(uuid).lifeNo)
 
 		val list = playerLocations.getOrPut(uuid) {
 			val firstChunk = LinkedList<ArrayList<Int>>()

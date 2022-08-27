@@ -66,24 +66,11 @@ class ResourceMelon(
 	/* placement */
 
 	private fun melonGood(surfaceBlock: Block): Boolean {
-		val above = surfaceBlock.getRelative(BlockFace.UP)
-		val ceiling = above.getRelative(BlockFace.UP)
-
 		return when (surfaceBlock.type) {
 			GRASS_BLOCK,
 			DIRT,
 			-> true
 			else -> false
-		} && when (above.type) {
-			AIR,
-			FERN,
-			VINE,
-			COCOA,
-			OAK_LEAVES,
-			JUNGLE_LEAVES,
-			GRASS,
-			-> true
-			else -> false
-		} && !ceiling.isPassable && ceiling.type !== COCOA
+		}
 	}
 }

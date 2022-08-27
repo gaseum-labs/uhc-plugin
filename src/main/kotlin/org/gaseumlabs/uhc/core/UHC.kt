@@ -20,6 +20,9 @@ import org.bukkit.*
 import org.bukkit.scoreboard.*
 import org.gaseumlabs.uhc.core.phase.PhaseType.POSTGAME
 import org.gaseumlabs.uhc.UHCPlugin
+import org.gaseumlabs.uhc.gui.GuiManager
+import org.gaseumlabs.uhc.gui.gui.CHCGui
+import org.gaseumlabs.uhc.gui.gui.CreateGameGui
 import java.time.Duration
 import java.util.*
 import kotlin.math.*
@@ -97,7 +100,7 @@ object UHC {
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
 					currentGame.globalResources.tick(currentGame, currentTick)
 
-					PlayerData.zombieBorderTick(currentTick, currentGame)
+					OfflineZombie.zombieBorderTick(currentTick, currentGame)
 					ledgerTrailTick(currentGame, currentTick)
 					currentGame.trader.traderTick(currentTick)
 
@@ -142,7 +145,7 @@ object UHC {
 
 						val bot = UHC.bot ?: return@Teams
 
-						if (getConfig().usingBot.get()) when (action) {
+						if (getConfig().usingBot) when (action) {
 							is Teams.ClearAction -> bot.clearTeamVCs()
 							is Teams.AddAction -> bot.addToTeamChannel(action.id, action.uuids)
 							is Teams.RemoveAction -> bot.removeFromTeamChannel(action.id, action.size, action.uuids)
@@ -216,7 +219,7 @@ object UHC {
 	 * true indicates an error
 	 */
 	fun startGame(messageStream: (Boolean, String) -> Unit) {
-		if (game != null) {
+		if (game != null || countdownTimerGoing) {
 			return messageStream(true, "Game has already started")
 		}
 
@@ -230,7 +233,7 @@ object UHC {
 
 		messageStream(false, "Creating game worlds for the size of $effectivePlayers players")
 
-		worldRadius = radius(effectivePlayers * preGameConfig.scale.get() * areaPerPlayer).toInt()
+		worldRadius = radius(effectivePlayers * preGameConfig.scale * areaPerPlayer).toInt()
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
@@ -266,16 +269,19 @@ object UHC {
 	}
 
 	fun destroyGame() {
-		game?.teams?.clearTeams()
-		game?.quirks?.forEach { quirk -> quirk?.onDestroy() }
+		val runningGame = game
+		if (runningGame != null) {
+			runningGame.destroy()
+			game = null
+			preGameConfig = GameConfig()
 
-		game = null
-		preGameConfig = GameConfig()
+			PlayerData.prune()
+			Bukkit.getOnlinePlayers().forEach { player ->
+				if (WorldManager.isGameWorld(player.world)) Lobby.onSpawnLobby(player)
+			}
+			WorldManager.destroyGameWorlds()
+		}
 
-		PlayerData.prune()
-		Bukkit.getOnlinePlayers().forEach { player -> Lobby.onSpawnLobby(player) }
-
-		WorldManager.destroyGameWorlds()
 	}
 
 	fun containSpecs() {

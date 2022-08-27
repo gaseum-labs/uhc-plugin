@@ -1,7 +1,7 @@
 package org.gaseumlabs.uhc.util.extensions
 
 object ArrayListExtensions {
-	fun <T> ArrayList<T>.removeFirst(predicate: (T) -> Boolean): T? {
+	inline fun <T> ArrayList<T>.removeFirst(predicate: (T) -> Boolean): T? {
 		/* find the first and only element that matched predicate */
 		for (i in this.indices) {
 			if (predicate(this[i])) {
@@ -12,7 +12,7 @@ object ArrayListExtensions {
 		return null
 	}
 
-	fun <T, R> ArrayList<T>.mapFirstNotNullPrefer(predicate: (T) -> Pair<R?, R?>): R? {
+	inline fun <T, R> ArrayList<T>.mapFirstNotNullPrefer(predicate: (T) -> Pair<R?, R?>): R? {
 		var fallback: R? = null
 
 		for (element in this) {
@@ -29,7 +29,7 @@ object ArrayListExtensions {
 		return fallback
 	}
 
-	fun <T, R> ArrayList<T>.mapUHC(transform: (T) -> R): ArrayList<R> {
+	inline fun <T, R> ArrayList<T>.mapUHC(transform: (T) -> R): ArrayList<R> {
 		val transformed = ArrayList<R>(this.size)
 
 		for (element in this) {
@@ -39,7 +39,7 @@ object ArrayListExtensions {
 		return transformed
 	}
 
-	fun <T, R> ArrayList<T>.mapNotNullUHC(transform: (T) -> R?): ArrayList<R> {
+	inline fun <T, R> ArrayList<T>.mapNotNullUHC(transform: (T) -> R?): ArrayList<R> {
 		val transformed = ArrayList<R>(this.size)
 
 		for (element in this) {
@@ -52,7 +52,7 @@ object ArrayListExtensions {
 		return transformed
 	}
 
-	fun <T, R> ArrayList<T>.inPlaceReplace(other: ArrayList<R>, transform: (R) -> T) {
+	inline fun <T, R> ArrayList<T>.inPlaceReplace(other: ArrayList<R>, transform: (R) -> T) {
 		this.ensureCapacity(other.size)
 
 		for (i in other.indices) {

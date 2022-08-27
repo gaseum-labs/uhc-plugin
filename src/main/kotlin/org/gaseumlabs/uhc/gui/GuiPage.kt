@@ -6,8 +6,9 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
+import org.gaseumlabs.uhc.gui.guiItem.GuiItemProperty
 
-open class GuiPage(val height: Int, val name: Component, val type: GuiType) {
+abstract class GuiPage(val height: Int, val name: Component, val needsOp: Boolean) {
 	companion object {
 		const val WIDTH = 9
 
@@ -23,6 +24,12 @@ open class GuiPage(val height: Int, val name: Component, val type: GuiType) {
 	val inventory = Bukkit.createInventory(null, WIDTH * height, name)
 	val guiItems = arrayOfNulls<GuiItem>(inventory.size)
 
+	fun update() {
+		guiItems.filterNotNull().forEach { guiItem ->
+			if (guiItem is GuiItemProperty<*>) guiItem.render()
+		}
+	}
+
 	open fun open(player: Player) {
 		player.openInventory(inventory)
 	}
@@ -33,22 +40,16 @@ open class GuiPage(val height: Int, val name: Component, val type: GuiType) {
 
 	open fun onClose(player: Player) {}
 
-	fun <G : GuiItem> addItem(guiItem: G): G {
-		guiItems[guiItem.index] = guiItem
+	abstract fun createItems(): Array<GuiItem>
 
-		guiItem.giveGui(this)
-
-		guiItem.updateDisplay()
-
-		return guiItem
+	fun addAllItems(items: Array<GuiItem>) {
+		items.forEach { guiItem ->
+			guiItems[guiItem.index] = guiItem
+			inventory.setItem(guiItem.index, guiItem.render().create())
+		}
 	}
 
-	fun removeItem(index: Int) {
-		inventory.setItem(index, null)
-		guiItems[index] = null
-	}
-
-	open fun onClick(event: InventoryClickEvent, needsOp: Boolean): Boolean {
+	open fun onClick(event: InventoryClickEvent): Boolean {
 		val slot = event.rawSlot
 		val player = event.whoClicked as Player
 

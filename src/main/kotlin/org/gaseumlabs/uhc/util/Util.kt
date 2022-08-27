@@ -11,9 +11,12 @@ import java.util.logging.*
 import kotlin.math.*
 
 object Util {
-	fun Any?.unit() = Unit
-	fun Any?.void() = null
-	fun Any?.bool(b: Boolean) = b
+	inline fun Any?.unit() = Unit
+	inline fun Any?.void() = null
+	inline fun <V>Any?.comma(v: V) = v
+	inline fun trueThrough(value: Boolean, onTrue: () -> Unit)
+		= if (value) onTrue().comma(true) else false
+	inline fun <T> T?.and(check: () -> Boolean) = if (check()) this else null
 
 	/**
 	 * positive mod

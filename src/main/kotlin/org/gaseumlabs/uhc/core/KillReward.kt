@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.core
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.gui.ItemCreator
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -67,10 +66,10 @@ enum class KillReward(
 	companion object {
 		val uhcAppleKey = NamespacedKey(org.gaseumlabs.uhc.UHCPlugin.plugin, "_U_ua")
 
-		val uhcAppleCreator = ItemCreator.fromType(Material.ENCHANTED_GOLDEN_APPLE)
+		val uhcAppleCreator = ItemCreator.display(Material.ENCHANTED_GOLDEN_APPLE)
 			.setData(uhcAppleKey, 1)
 			.name(Component.text("UHC Apple", NamedTextColor.GOLD))
-			.lore(listOf(Component.text("6 absorption hearts"), Component.text("2 regeneration hearts")))
+			.lore(listOf(Component.text("4 absorption hearts"), Component.text("2 regeneration hearts")))
 
 		fun forPlayer(uuid: UUID, team: ArrayList<UUID>, on: (Boolean, Player, List<Player>) -> Unit) {
 			val player = Bukkit.getPlayer(uuid) ?: return

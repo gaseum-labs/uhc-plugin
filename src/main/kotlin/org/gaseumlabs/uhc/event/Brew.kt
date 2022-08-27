@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.event
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.gaseumlabs.uhc.util.SchedulerUtil
 import net.kyori.adventure.text.Component
@@ -25,7 +24,7 @@ class Brew : Listener {
 		): ItemCreator {
 			val effectType = potionType.effectType ?: PotionEffectType.POISON
 
-			return ItemCreator.fromType(material).name(Component.text("Potion of $name"))
+			return ItemCreator.display(material).name(Component.text("Potion of $name"))
 				.customMeta<PotionMeta> { meta ->
 					meta.color = effectType.color
 					meta.addCustomEffect(PotionEffect(effectType, duration, amplifier), true)
@@ -47,7 +46,7 @@ class Brew : Listener {
 		}
 
 		fun createDefaultPotion(material: Material, potionData: PotionData): ItemCreator {
-			return ItemCreator.fromType(material).customMeta<PotionMeta> { it.basePotionData = potionData }
+			return ItemCreator.display(material).customMeta<PotionMeta> { it.basePotionData = potionData }
 		}
 
 		class PotionInfo(

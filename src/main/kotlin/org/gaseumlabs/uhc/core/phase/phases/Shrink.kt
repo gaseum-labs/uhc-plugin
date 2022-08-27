@@ -14,7 +14,7 @@ import kotlin.math.abs
 
 class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 	init {
-		game.world.worldBorder.setSize(game.config.battlegroundRadius.get() * 2.0 + 1.0, length.toLong())
+		game.world.worldBorder.setSize(game.config.battlegroundRadius * 2.0 + 1.0, length.toLong())
 		game.world.worldBorder.damageBuffer = 0.0
 
 		Bukkit.getOnlinePlayers().forEach { player ->
@@ -30,7 +30,7 @@ class Shrink(game: Game, time: Int) : Phase(PhaseType.SHRINK, time, game) {
 			.and(" Border Radius ", UHCColor.U_WHITE)
 			.and(borderRadius.toString(), phaseType.color, UHCStyle.BOLD)
 			.and(" Reaching ", UHCColor.U_WHITE)
-			.and(game.config.battlegroundRadius.get().toString(), phaseType.color, UHCStyle.BOLD)
+			.and(game.config.battlegroundRadius.toString(), phaseType.color, UHCStyle.BOLD)
 			.and(" in ", UHCColor.U_WHITE)
 			.and(Util.timeString(remainingSeconds), phaseType.color, UHCStyle.BOLD)
 	}

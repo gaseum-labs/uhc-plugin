@@ -1,14 +1,15 @@
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	`java-library`
 	id("com.github.johnrengelman.shadow") version "7.1.2"
-	id("org.jetbrains.kotlin.jvm") version "1.6.10"
 	id("io.papermc.paperweight.userdev") version "1.3.7-LOCAL-SNAPSHOT"
 	id("xyz.jpenilla.run-paper") version "1.0.6" // Adds runServer and runMojangMappedServer tasks for testing
 	id("net.minecrell.plugin-yml.bukkit") version "0.5.1" // Generates plugin.yml
+	kotlin("jvm") version "1.7.10"
 }
 
 group = project.property("pluginGroup")!!
@@ -31,6 +32,7 @@ repositories {
 	maven(url = "https://repo.maven.apache.org/maven2")
 	/* reflection remapper */
 	maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots/")
+	mavenCentral()
 }
 
 dependencies {
@@ -46,6 +48,7 @@ dependencies {
 
 	compileOnly("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT")
 	compileOnly("com.comphenix.protocol:ProtocolLib:4.8.0")
+	implementation(kotlin("reflect"))
 }
 
 abstract class WslIpTask : DefaultTask() {
@@ -115,4 +118,12 @@ bukkit {
 	apiVersion = "1.18"
 	authors = listOf("balduvian")
 	depend = listOf("ProtocolLib")
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+	jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+	jvmTarget = "1.8"
 }

@@ -4,7 +4,6 @@ import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.util.SchedulerUtil
 import org.gaseumlabs.uhc.util.reflect.UHCReflect
 import org.gaseumlabs.uhc.world.*
-import org.gaseumlabs.uhc.world.WorldGenOption.AMPLIFIED
 import org.gaseumlabs.uhc.world.gen.biomeSource.*
 import net.minecraft.core.Holder
 import net.minecraft.world.level.biome.*
@@ -49,7 +48,7 @@ object WorldGenManager {
 
 		val (newBiomeSource, newSurfaceRule) = when (world.name) {
 			WorldManager.GAME_WORLD_NAME -> {
-				if (UHC.getConfig().worldGenEnabled(WorldGenOption.CHUNK_BIOMES)) {
+				if (false /* TODO chunk generation options */) {
 					BiomeSourceChunkBiomes(
 						seed,
 						BiomeNo.featureBiomes
@@ -57,8 +56,7 @@ object WorldGenManager {
 				} else {
 					BiomeSourceGame(
 						seed,
-						BiomeNo.fromName(UHC.getConfig().centerBiome.get()?.name),
-						UHC.getConfig().battlegroundRadius.get(),
+						UHC.getConfig().battlegroundRadius,
 						BiomeNo.featureBiomes,
 						BiomeSourceGame.createAreaGame(seed),
 						BiomeSourceGame.createAreaCaves(seed)
@@ -91,7 +89,7 @@ object WorldGenManager {
 		//TODO manipulate the nether noise
 		UHCNoiseGeneratorSettings.inject(
 			generator,
-			UHCNoiseGeneratorSettings.createGame(UHC.getConfig().worldGenEnabled(AMPLIFIED)),
+			UHCNoiseGeneratorSettings.createGame(false),
 			world.name != WorldManager.NETHER_WORLD_NAME,
 			newSurfaceRule,
 		)

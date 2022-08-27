@@ -223,7 +223,7 @@ class Portal : Listener {
 
 		fun sendThroughPortal(uuid: UUID, player: Player?): Boolean {
 			val game = UHC.game ?: return false
-			val entity = player ?: PlayerData.getPlayerData(uuid).offlineZombie ?: return false
+			val entity = player ?: PlayerData.get(uuid).offlineZombie ?: return false
 
 			/* override default portal creation behavior */
 

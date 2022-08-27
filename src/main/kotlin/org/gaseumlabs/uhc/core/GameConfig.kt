@@ -1,116 +1,51 @@
 package org.gaseumlabs.uhc.core
 
-import org.gaseumlabs.uhc.database.summary.GameType
+import org.bukkit.World
+import org.gaseumlabs.uhc.chc.CHCType
 import org.gaseumlabs.uhc.gui.GuiManager
 import org.gaseumlabs.uhc.gui.gui.CreateGameGui
-import org.gaseumlabs.uhc.quirk.QuirkType
-import org.gaseumlabs.uhc.util.UHCProperty
-import org.gaseumlabs.uhc.world.WorldGenOption
+import org.gaseumlabs.uhc.util.*
+import org.gaseumlabs.uhc.util.Set
 import org.gaseumlabs.uhc.world.WorldManager
-import org.bukkit.World
-import org.bukkit.block.Biome
 
 class GameConfig {
+	private val group = PropertyGroup { GuiManager.update(CreateGameGui::class) }
+
 	/* lock is set to true when game is running */
 	var lock = false
 
-	private fun <T> lockedProperty(set: T): T? {
-		return if (lock) null else set
-	}
+	private fun <T> locked(set: T) = if (lock) DontSet() else Set(set)
 
-	val gameType = UHCProperty(GameType.UHC)
-	val naturalRegeneration = UHCProperty(false)
-	val killReward = UHCProperty(KillReward.APPLE)
-	val usingBot = UHCProperty(UHC.bot != null) { set ->
-		val bot = UHC.bot
+	var naturalRegeneration by group.delegate(false)
+	var killReward by group.delegate(KillReward.APPLE)
+	var usingBot by group.delegate(UHC.bot != null, { set ->
+		Set(if ( UHC.bot == null) false else set)
+	}, { value ->
+		if (!value) UHC.bot?.clearTeamVCs()
+	})
 
-		if (bot == null) {
-			false
-
-		} else {
-			if (!set) bot.clearTeamVCs()
-			set
-		}
-	}
-
-	val defaultWorldEnvironment = UHCProperty(World.Environment.NORMAL, ::lockedProperty)
+	var defaultWorldEnvironment by group.delegate(World.Environment.NORMAL, ::locked)
+	var chcType by group.delegate<CHCType?>(null, ::locked)
 
 	/* border settings */
-	val scale = UHCProperty(1.0f, ::lockedProperty)
-	val battlegroundRadius = UHCProperty(72, ::lockedProperty)
-	val graceTime = UHCProperty(1200, ::lockedProperty)
-	val shrinkTime = UHCProperty(1200, ::lockedProperty)
-	val battlegroundTime = UHCProperty(1200, ::lockedProperty)
-	val collapseTime = UHCProperty(300, ::lockedProperty)
-
-	/* quirks settings */
-	val quirksEnabled = ArrayList<UHCProperty<Boolean>>(QuirkType.values().size)
-
-	init {
-		QuirkType.values().forEach { quirkType ->
-			quirksEnabled.add(
-				UHCProperty(false) { set ->
-					if (set) {
-						quirkType.incompatibilities.forEach { otherType ->
-							if (quirksEnabled[otherType.ordinal].get()) {
-								quirksEnabled[otherType.ordinal].set(false)
-							}
-						}
-
-						true
-
-					} else {
-						false
-					}
-				}
-			)
-		}
-	}
-
-	/* world gen */
-	val centerBiome = UHCProperty<Biome?>(null)
-	val worldGenEnabled = WorldGenOption.values().map { UHCProperty(it.defaultEnabled) }
+	var scale by group.delegate(1.0f, ::locked)
+	var battlegroundRadius by group.delegate(72, ::locked)
+	var graceTime by group.delegate(1200, ::locked)
+	var shrinkTime by group.delegate(1200, ::locked)
+	var battlegroundTime by group.delegate(1200, ::locked)
+	var collapseTime by group.delegate(300, ::locked)
 
 	/* functions */
 
-	fun reset() {
-		naturalRegeneration.reset()
-		killReward.reset()
-		defaultWorldEnvironment.reset()
-		usingBot.reset()
-		scale.reset()
-		battlegroundRadius.reset()
-		graceTime.reset()
-		shrinkTime.reset()
-		battlegroundTime.reset()
-		collapseTime.reset()
-		quirksEnabled.forEach { it.reset() }
-		centerBiome.reset()
-		worldGenEnabled.forEach { it.reset() }
-	}
+	fun reset() = group.reset()
 
 	/* getters */
 
 	fun getWorlds(): Pair<World?, World?> {
-		return if (defaultWorldEnvironment.get() === World.Environment.NORMAL) {
+		return if (defaultWorldEnvironment === World.Environment.NORMAL) {
 			Pair(WorldManager.gameWorld, WorldManager.netherWorld)
 		} else {
 			Pair(WorldManager.netherWorld, WorldManager.gameWorld)
 		}
 	}
-
-	fun worldGenEnabled(type: WorldGenOption): Boolean {
-		return worldGenEnabled[type.ordinal].get()
-	}
-
-	//fun phaseTime(phaseType: PhaseType): Int {
-	//	return when (phaseType) {
-	//		PhaseType.GRACE -> graceTime.get()
-	//		PhaseType.SHRINK -> shrinkTime.get()
-	//		PhaseType.ENDGAME -> collapseTime.get()
-	//		PhaseType.POSTGAME -> 0
-	//	}
-	//}
-
-	var gui = GuiManager.register(CreateGameGui(this))
 }

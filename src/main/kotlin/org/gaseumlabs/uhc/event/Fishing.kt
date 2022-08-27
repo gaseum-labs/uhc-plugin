@@ -32,6 +32,7 @@ class Fishing : Listener {
 				val item = event.caught as Item? ?: return
 				item.itemStack = fishEntries[luck][getFishIndex(event.player)](Random(event.hashCode())).create()
 			}
+			else -> {}
 		}
 	}
 

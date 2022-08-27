@@ -11,7 +11,7 @@ import org.gaseumlabs.uhc.component.UHCColor
 
 class Battleground(game: Game, time: Int) : Phase(PhaseType.BATTLEGROUND, time, game) {
 	init {
-		game.world.worldBorder.size = (game.config.battlegroundRadius.get() * 2 + 1).toDouble()
+		game.world.worldBorder.size = (game.config.battlegroundRadius * 2 + 1).toDouble()
 	}
 
 	override fun updateBarLength(remainingTicks: Int): Float {

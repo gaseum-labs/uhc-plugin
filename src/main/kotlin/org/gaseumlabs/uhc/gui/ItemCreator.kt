@@ -3,7 +3,6 @@ package org.gaseumlabs.uhc.gui
 import org.gaseumlabs.uhc.util.ItemUtil
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
-import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.NamedTextColor.*
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.format.TextDecoration.BOLD
@@ -111,8 +110,8 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 			return ItemCreator(type, Bukkit.getItemFactory().getItemMeta(type), false)
 		}
 
-		fun fromType(type: Material, clean: Boolean = true): ItemCreator {
-			return ItemCreator(type, Bukkit.getItemFactory().getItemMeta(type), clean)
+		fun display(type: Material): ItemCreator {
+			return ItemCreator(type, Bukkit.getItemFactory().getItemMeta(type), true)
 		}
 
 		fun fromStack(stack: ItemStack, clean: Boolean = true): ItemCreator {

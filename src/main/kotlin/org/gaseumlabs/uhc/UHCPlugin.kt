@@ -42,10 +42,8 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(LinkCommands(), true)
 
 		/* register all events */
-		server.pluginManager.registerEvents(ClassesEvents(), this)
 		server.pluginManager.registerEvents(Chat(), this)
 		server.pluginManager.registerEvents(EventListener(), this)
-		server.pluginManager.registerEvents(Generation(), this)
 		server.pluginManager.registerEvents(Portal(), this)
 		server.pluginManager.registerEvents(PvpListener(), this)
 		server.pluginManager.registerEvents(Brew(), this)
@@ -74,7 +72,7 @@ class UHCPlugin : JavaPlugin() {
 		MixerBot.createMixerBot(configFile)
 			.thenAccept { bot ->
 				UHC.bot = bot
-				UHC.getConfig().usingBot.set(true)
+				UHC.getConfig().usingBot = true
 				bot.loadIcon().thenAccept { image ->
 					server.loadServerIcon(image)
 				}

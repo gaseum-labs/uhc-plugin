@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.gui
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.util.Util
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor.*
@@ -86,7 +85,7 @@ enum class CommandItemType(
 	}
 
 	private fun createItem(): ItemStack {
-		return ItemCreator.fromType(material)
+		return ItemCreator.display(material)
 			.name(displayName)
 			.lore(Component.text("Shortcut: ").append(Component.text("/${command}", Style.style(BOLD))))
 			.setData(key, ordinal)

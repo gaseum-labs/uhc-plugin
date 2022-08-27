@@ -22,7 +22,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			),
 			3,
 			WorldManager.GAME_WORLD_NAME,
-			1.0f / 9.0f,
+			1.0f / 13.0f,
 			"Melon"
 		)
 	}),

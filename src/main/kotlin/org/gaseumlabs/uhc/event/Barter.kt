@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.event;
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.bukkit.Material
@@ -85,7 +84,7 @@ class Barter : Listener {
 		var nearestPlayer: Player? = null
 
 		event.entity.world.players.forEach { player ->
-			val playerData = PlayerData.getPlayerData(player.uniqueId)
+			val playerData = PlayerData.get(player.uniqueId)
 
 			if (playerData.participating) {
 				val distance = player.location.distance(event.entity.location)

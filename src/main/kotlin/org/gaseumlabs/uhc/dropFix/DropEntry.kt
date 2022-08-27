@@ -73,7 +73,7 @@ class DropEntry(val onDrop: (entity: Entity, looting: Int, cycle: Int) -> Array<
 
 		fun potion(potionType: PotionType) = DropEntry { _, _, _ ->
 			arrayOf(
-				ItemCreator.fromType(Material.POTION, false)
+				ItemCreator.regular(Material.POTION)
 					.customMeta<PotionMeta> { it.basePotionData = PotionData(potionType, false, false) }
 					.create()
 			)

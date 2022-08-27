@@ -7,31 +7,35 @@ import org.gaseumlabs.uhc.util.UHCProperty
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.gui.GuiManager
+import org.gaseumlabs.uhc.gui.gui.LoadoutGui
 
-class LoadoutSlotPicker(index: Int, val slot: Int, slotProperty: UHCProperty<Int>) :
-	GuiItemProperty<Int>(index, slotProperty) {
-	override fun onClick(player: Player, shift: Boolean) {
+class LoadoutSlotPicker(
+	index: Int,
+	val loadoutSlot: Int,
+	val playerData: PlayerData
+) : GuiItemProperty<Int>(index) {
+	override fun property() = playerData::loadoutSlot
+
+	override fun onClickProperty(player: Player, shift: Boolean, property: UHCProperty<Int>) {
 		/* edit */
 		if (shift) {
-			PlayerData.getPlayerData(player.uniqueId).slotGuis[slot].open(player)
-			/* select */
+			GuiManager.openGui(player, LoadoutGui(playerData, loadoutSlot))
 		} else {
-			property.set(slot)
+			property.set(loadoutSlot)
 		}
 	}
 
-	override fun getStackProperty(value: Int): ItemStack {
-		val namedSlot = slot + 1
+	val namedSlot = loadoutSlot + 1
 
-		return ItemCreator.fromType(
-			if (value == slot) Material.LIME_CONCRETE
+	override fun renderProperty(value: Int) =
+		ItemCreator.display(
+			if (value == loadoutSlot) Material.LIME_CONCRETE
 			else Material.RED_CONCRETE
 		).lore(listOf(
 			Component.text("Click to select loadout $namedSlot"),
 			Component.text("Shift click to edit")
 		)).name(
-			ItemCreator.enabledName("Loadout $namedSlot", value == slot)
-		).amount(namedSlot).create()
-	}
+			ItemCreator.enabledName("Loadout $namedSlot", value == loadoutSlot)
+		).amount(namedSlot)
 }

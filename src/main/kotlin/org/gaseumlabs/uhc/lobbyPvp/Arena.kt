@@ -104,7 +104,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 	fun startPlayer(player: Player, location: Location) {
 		player.closeInventory()
 
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 
 		/* save before pvp state */
 		playerData.lobbyInventory = player.inventory.contents!!.clone()

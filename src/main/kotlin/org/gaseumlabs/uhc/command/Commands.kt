@@ -3,7 +3,7 @@ package org.gaseumlabs.uhc.command
 import co.aikar.commands.PaperCommandManager
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.UHC
-import org.gaseumlabs.uhc.quirk.quirks.classes.QuirkClass
+import org.gaseumlabs.uhc.chc.chcs.classes.QuirkClass
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor.*
 import net.kyori.adventure.text.format.TextDecoration.*
@@ -35,19 +35,15 @@ object Commands {
 		return false
 	}
 
-	fun notGoingGuard(sender: CommandSender): Boolean {
-		if (UHC.game != null) {
-			errorMessage(sender, "This command cannot be used while the game is running")
-
-			return true
-		}
-
-		return false
-	}
-
 	fun registerCompletions(commandManager: PaperCommandManager) {
 		commandManager.commandCompletions.registerCompletion("uhcplayer") {
 			PlayerData.playerDataList.map { (uuid, _) -> Bukkit.getOfflinePlayer(uuid).name }
+		}
+
+		commandManager.commandCompletions.registerCompletion("uhcteamplayer") { context ->
+			val team = UHC.getTeams().playersTeam(context.player.uniqueId)
+				?: return@registerCompletion listOf(context.player.name)
+			team.members.map { Bukkit.getOfflinePlayer(it).name }
 		}
 
 		commandManager.commandCompletions.registerCompletion("quirkclass") {

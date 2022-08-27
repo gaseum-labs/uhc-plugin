@@ -7,8 +7,6 @@ import org.gaseumlabs.uhc.util.Util
 import org.gaseumlabs.uhc.util.WorldStorage
 import org.gaseumlabs.uhc.world.WorldManager
 import org.bukkit.*
-import org.bukkit.block.Structure
-import org.bukkit.block.structure.UsageMode
 import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
 import java.util.*
@@ -44,8 +42,8 @@ object ArenaManager {
 			val otherTeamIndex = arena.teams.indices.firstOrNull { it != i } ?: continue
 
 			arena.teams[i].zip(arena.teams[otherTeamIndex]).forEach { (playerA, playerB) ->
-				PlayerData.getPlayerData(playerA).lastPlayed = playerB
-				PlayerData.getPlayerData(playerB).lastPlayed = playerA
+				PlayerData.get(playerA).lastPlayed = playerB
+				PlayerData.get(playerB).lastPlayed = playerA
 			}
 		}
 
@@ -56,7 +54,7 @@ object ArenaManager {
 
 		if (arena.type === ArenaType.PARKOUR) {
 			PlayerData.playerDataList.forEach { (_, playerData) ->
-				if (playerData.parkourIndex.get() == -1) playerData.parkourIndex.set(0)
+				if (playerData.parkourIndex == -1) playerData.parkourIndex = 0
 			}
 		}
 	}
@@ -170,7 +168,7 @@ object ArenaManager {
 		arena.online().forEach { player ->
 			removePlayer(player.uniqueId)
 
-			val playerData = PlayerData.getPlayerData(player.uniqueId)
+			val playerData = PlayerData.get(player.uniqueId)
 			Lobby.onSpawnLobby(player)
 			player.inventory.setContents(playerData.lobbyInventory)
 		}
@@ -183,8 +181,8 @@ object ArenaManager {
 		if (arena.type === ArenaType.PARKOUR) {
 			typeList as ArrayList<ParkourArena>
 			PlayerData.playerDataList.forEach { (_, playerData) ->
-				if (playerData.parkourIndex.get() >= typeList.size) {
-					playerData.parkourIndex.set(typeList.lastIndex)
+				if (playerData.parkourIndex >= typeList.size) {
+					playerData.parkourIndex = typeList.lastIndex
 				}
 			}
 		}

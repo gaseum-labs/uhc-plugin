@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.lobbyPvp.arena
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.core.Lobby
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.gui.CommandItemType
@@ -100,9 +99,9 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 		player.gameMode = GameMode.CREATIVE
 
 		/* give items */
-		player.inventory.addItem(ItemCreator.fromType(Material.LAPIS_BLOCK)
+		player.inventory.addItem(ItemCreator.display(Material.LAPIS_BLOCK)
 			.name(Component.text("Lapis (Parkour Start)", BLUE)).create())
-		player.inventory.addItem(ItemCreator.fromType(Material.GOLD_BLOCK)
+		player.inventory.addItem(ItemCreator.display(Material.GOLD_BLOCK)
 			.name(Component.text("Gold (Checkpoint)", YELLOW))
 			.create())
 

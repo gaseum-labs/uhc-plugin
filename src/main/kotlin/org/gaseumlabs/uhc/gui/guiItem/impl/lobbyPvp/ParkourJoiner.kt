@@ -9,12 +9,13 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor.*
 import org.bukkit.*
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
+import org.gaseumlabs.uhc.core.PlayerData
 
-class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) :
-	GuiItemProperty<Int>(index, parkourIndexProperty) {
-	override fun onClick(player: Player, shift: Boolean) {
+class ParkourJoiner(index: Int, val playerData: PlayerData) : GuiItemProperty<Int>(index) {
+	override fun property() = playerData::parkourIndex
+
+	override fun onClickProperty(player: Player, shift: Boolean, property: UHCProperty<Int>) {
 		if (shift) {
 			val arenaList = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)
 
@@ -25,7 +26,7 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) :
 				property.set((property.get() + 1) % arenaList.size)
 			}
 		} else {
-			if (!PvpQueue.enabled.get()) return
+			if (!PvpQueue.enabled) return
 			if (property.get() == -1) return
 			if (ArenaManager.playersArena(player.uniqueId) != null) return
 
@@ -36,21 +37,19 @@ class ParkourJoiner(index: Int, parkourIndexProperty: UHCProperty<Int>) :
 		}
 	}
 
-	override fun getStackProperty(value: Int): ItemStack {
-		return if (value == -1) {
-			ItemCreator.fromType(Material.OAK_PRESSURE_PLATE)
+	override fun renderProperty(value: Int) =
+		if (value == -1) {
+			ItemCreator.display(Material.OAK_PRESSURE_PLATE)
 				.name(Component.text("No parkour lobbies", GRAY))
 
 		} else {
 			val arenaList = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)
-			val arena = arenaList[property.get()]
+			val arena = arenaList[value]
 			val player = Bukkit.getOfflinePlayer(arena.owner)
 
-			ItemCreator.fromType(Material.PLAYER_HEAD)
+			ItemCreator.display(Material.PLAYER_HEAD)
 				.customMeta<SkullMeta> { it.owningPlayer = player }
 				.name(Component.text("Join ${player.name}'s Parkour", YELLOW))
 				.lore(if (arenaList.size == 1) emptyList() else listOf(Component.text("Shift click to see more arenas")))
-
-		}.create()
-	}
+		}
 }

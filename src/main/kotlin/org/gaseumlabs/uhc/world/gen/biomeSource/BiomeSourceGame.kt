@@ -1,22 +1,17 @@
 package org.gaseumlabs.uhc.world.gen.biomeSource
 
-import com.google.common.collect.ImmutableList
-import com.mojang.datafixers.util.Pair
 import net.minecraft.core.Holder
-import net.minecraft.resources.ResourceKey
-import net.minecraft.world.level.biome.*
-import net.minecraft.world.level.biome.Climate.ParameterList
-import net.minecraft.world.level.biome.Climate.ParameterPoint
+import net.minecraft.world.level.biome.Biome
+import net.minecraft.world.level.biome.CheckerboardColumnBiomeSource
+import net.minecraft.world.level.biome.Climate
 import org.gaseumlabs.uhc.world.gen.BiomeNo
 import org.gaseumlabs.uhc.world.gen.UHCArea.UHCArea
 import org.gaseumlabs.uhc.world.gen.UHCArea.layer.cave.LayerCave
 import org.gaseumlabs.uhc.world.gen.UHCArea.layer.game.*
-import java.util.function.*
 import kotlin.math.abs
 
 class BiomeSourceGame(
 	val seed: Long,
-	val centerBiomeNo: Int?,
 	val endRadius: Int,
 	val biomeset: Map<Int, Holder<Biome>>,
 	val area: UHCArea,
@@ -25,10 +20,7 @@ class BiomeSourceGame(
 	BiomeNo.createHolderSet(biomeset),
 	1
 ) {
-	private val centerBiome = if (centerBiomeNo == null) null else biomeset[centerBiomeNo]!!
-
 	override fun getNoiseBiome(x: Int, y: Int, z: Int, noise: Climate.Sampler): Holder<Biome> {
-		/* center biome area */
 		return if (y < 8) {
 			val caveBiome = caveArea.sample(x, z)
 			if (caveBiome == BiomeNo.THE_VOID) {
@@ -37,11 +29,7 @@ class BiomeSourceGame(
 				biomeset[caveBiome]!!
 			}
 
-		} else if (centerBiome != null && inRange(x, z, endRadius)) {
-			centerBiome
-
 		} else {
-			/* regular game area */
 			biomeset[area.sample(x, z)]!!
 		}
 	}

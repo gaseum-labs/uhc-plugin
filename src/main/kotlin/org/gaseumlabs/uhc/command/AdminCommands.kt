@@ -4,9 +4,9 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
-import org.gaseumlabs.uhc.quirk.QuirkType
-import org.gaseumlabs.uhc.quirk.quirks.classes.Classes
-import org.gaseumlabs.uhc.quirk.quirks.classes.QuirkClass
+import org.gaseumlabs.uhc.chc.CHCType
+import org.gaseumlabs.uhc.chc.chcs.classes.Classes
+import org.gaseumlabs.uhc.chc.chcs.classes.QuirkClass
 import org.gaseumlabs.uhc.util.Action
 import org.gaseumlabs.uhc.world.WorldManager
 import org.bukkit.*
@@ -17,7 +17,7 @@ import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
 @CommandAlias("uhca")
 class AdminCommands : BaseCommand() {
 	@Subcommand("reset")
-	@Description("reset things to the waiting stage")
+	@Description("destroy the game")
 	fun testReset(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
@@ -37,7 +37,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game needs to be going")
 
-		if (PlayerData.isOptingOut(latePlayer.uniqueId)) return Commands.errorMessage(sender,
+		if (PlayerData.get(latePlayer).optingOut) return Commands.errorMessage(sender,
 			"${latePlayer.name} is opting out of participating")
 
 		val team = game.teams.playersTeam(latePlayer.uniqueId) ?: return Commands.errorMessage(sender,
@@ -48,7 +48,7 @@ class AdminCommands : BaseCommand() {
 		}
 
 		/* find a team member who is not the added player, and who is participating */
-		val teammate = team.members.filter { it != latePlayer.uniqueId }.find { PlayerData.isParticipating(it) }
+		val teammate = team.members.filter { it != latePlayer.uniqueId }.find { PlayerData.get(it).participating }
 
 		/* teleport to the teammate if possible */
 		val startLocation = if (teammate == null) {
@@ -69,7 +69,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game needs to be going")
 
-		val playerData = PlayerData.getPlayerData(offlinePlayer.uniqueId)
+		val playerData = PlayerData.get(offlinePlayer.uniqueId)
 
 		if (!playerData.participating) return Commands.errorMessage(sender, "${offlinePlayer.name} is not in the game")
 		if (!playerData.alive) return Commands.errorMessage(sender, "${offlinePlayer.name} is already dead")
@@ -132,12 +132,11 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
-		val classes =
-			game.getQuirk<Classes>(QuirkType.CLASSES) ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes = game.chc as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
 
-		val playerData = PlayerData.getPlayerData(player.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 		val oldClass = classes.getClass(playerData)
 
 		classes.setClass(player.uniqueId, quirkClass)

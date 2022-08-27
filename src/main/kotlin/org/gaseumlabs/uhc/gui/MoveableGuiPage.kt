@@ -1,7 +1,5 @@
 package org.gaseumlabs.uhc.gui
 
-import org.gaseumlabs.uhc.UHCPlugin
-import org.gaseumlabs.uhc.gui.guiItem.MoveableGuiItem
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -9,8 +7,9 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction.*
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.gui.guiItem.MoveableGuiItem
 
-abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType) : GuiPage(height, name, type) {
+abstract class MoveableGuiPage(height: Int, name: Component, needsOp: Boolean) : GuiPage(height, name, needsOp) {
 	var moveableGuiItems = ArrayList<MoveableGuiItem>()
 	val savedIventory = arrayOfNulls<ItemStack>(36)
 
@@ -19,7 +18,6 @@ abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType) : Gu
 	}
 
 	abstract fun createMoveableGuiItems(): ArrayList<MoveableGuiItem>
-	abstract fun save()
 
 	override fun open(player: Player) {
 		super.open(player)
@@ -37,6 +35,7 @@ abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType) : Gu
 			moveable.id = index
 			val creator = moveable.generate().setData(key, index)
 
+
 			if (moveable.rawSlot < inventory.size) {
 				inventory.setItem(moveable.rawSlot, creator.create())
 			} else {
@@ -46,8 +45,6 @@ abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType) : Gu
 	}
 
 	override fun onClose(player: Player) {
-		save()
-
 		/* restore player's inventory */
 		for (i in 0..35) {
 			player.inventory.setItem(i, savedIventory[i])
@@ -67,8 +64,8 @@ abstract class MoveableGuiPage(height: Int, name: Component, type: GuiType) : Gu
 		return moveableGuiItems[id]
 	}
 
-	override fun onClick(event: InventoryClickEvent, needsOp: Boolean): Boolean {
-		if (!super.onClick(event, needsOp)) {
+	override fun onClick(event: InventoryClickEvent): Boolean {
+		if (!super.onClick(event)) {
 			event.isCancelled = true
 
 			val rawSlot = event.rawSlot

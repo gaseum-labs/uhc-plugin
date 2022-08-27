@@ -5,8 +5,7 @@ import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.phases.*
 import org.gaseumlabs.uhc.database.summary.SummaryBuilder
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
-import org.gaseumlabs.uhc.quirk.Quirk
-import org.gaseumlabs.uhc.quirk.QuirkType
+import org.gaseumlabs.uhc.chc.CHCType
 import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.team.Teams
 import org.gaseumlabs.uhc.world.WorldManager
@@ -18,6 +17,11 @@ import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.Title.Times
 import org.bukkit.*
 import org.bukkit.entity.Player
+import org.bukkit.entity.SpawnCategory
+import org.bukkit.event.HandlerList
+import org.gaseumlabs.uhc.UHCPlugin
+import org.gaseumlabs.uhc.chc.CHC
+import org.gaseumlabs.uhc.database.summary.GameType
 import org.gaseumlabs.uhc.event.Enchant
 import org.gaseumlabs.uhc.util.*
 import org.gaseumlabs.uhc.world.regenresource.GlobalResources
@@ -25,7 +29,6 @@ import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.roundToInt
-import kotlin.random.Random
 import kotlin.random.Random.Default.nextLong
 
 class Game(
@@ -37,67 +40,35 @@ class Game(
 ) {
 	var phase = getPhase(PhaseType.GRACE)
 
-	var naturalRegeneration = UHCProperty(false)
-
 	val startDate: ZonedDateTime = ZonedDateTime.now()
 
 	val summaryBuilder = SummaryBuilder()
 
 	val globalResources = GlobalResources()
 
-	val heightmap = Heightmap(config.battlegroundRadius.get(), 24)
+	val heightmap = Heightmap(config.battlegroundRadius, 24)
 
 	val trader = Trader()
 
-	var quirks = Array(QuirkType.values().size) { i ->
-		if (config.quirksEnabled[i].get()) {
-			QuirkType.values()[i].createQuirk(this)
-		} else {
-			null
-		}
-	}
+	var chc: CHC<*>? = config.chcType?.createQuirk(this)
+	var chcListener = chc?.eventListener()
 
 	init {
-		config.quirksEnabled.forEachIndexed { i, property ->
-			property.watch {
-				quirks[i] = if (property.get()) {
-					QuirkType.values()[i].createQuirk(this)
-				} else {
-					quirks[i]?.onDestroy()
-					null
-				}
-			}
-		}
-
+		chcListener?.let { Bukkit.getServer().pluginManager.registerEvents(it, UHCPlugin.plugin) }
 		heightmap.generate(world)
-
 		Enchant.seed = nextLong()
-	}
-
-	/* getters */
-
-	fun <T : Quirk> getQuirk(quirkType: QuirkType): T? {
-		return quirks[quirkType.ordinal] as T?
-	}
-
-	fun quirkEnabled(quirkType: QuirkType): Boolean {
-		return getQuirk<Quirk>(quirkType) != null
-	}
-
-	fun isOver(): Boolean {
-		return phase is Postgame
 	}
 
 	/* flow */
 
 	fun startPlayer(uuid: UUID, location: Location) {
-		val playerData = PlayerData.getPlayerData(uuid)
+		val playerData = PlayerData.get(uuid)
 
 		playerData.lifeNo = 0
 		playerData.alive = true
 		playerData.participating = true
+		playerData.inLobbyPvpQueue = 0
 
-		playerData.inLobbyPvpQueue.set(0)
 		ArenaManager.removePlayer(uuid)
 
 		Action.teleportPlayer(uuid, location)
@@ -115,15 +86,15 @@ class Game(
 			player.gameMode = GameMode.SURVIVAL
 		}
 
-		quirks.forEach { quirk -> quirk?.onStartPlayer(uuid) }
+		chc?.onStartPlayer(uuid)
 	}
 
 	private fun getPhase(phaseType: PhaseType): Phase {
 		return when (phaseType) {
-			PhaseType.GRACE -> Grace(this, config.graceTime.get())
-			PhaseType.SHRINK -> Shrink(this, config.shrinkTime.get())
-			PhaseType.BATTLEGROUND -> Battleground(this, config.battlegroundTime.get())
-			PhaseType.ENDGAME -> Endgame(this, heightmap, config.battlegroundRadius.get(), config.collapseTime.get())
+			PhaseType.GRACE -> Grace(this, config.graceTime)
+			PhaseType.SHRINK -> Shrink(this, config.shrinkTime)
+			PhaseType.BATTLEGROUND -> Battleground(this, config.battlegroundTime)
+			PhaseType.ENDGAME -> Endgame(this, heightmap, config.battlegroundRadius, config.collapseTime)
 			PhaseType.POSTGAME -> Postgame(this)
 		}
 	}
@@ -141,11 +112,12 @@ class Game(
 	fun end(winningTeam: Team?) {
 		/* game summary */
 		if (winningTeam != null) {
-			val summary = summaryBuilder.toSummary(config.gameType.get(),
+			val summary = summaryBuilder.toSummary(
+				if (chc == null) GameType.UHC else GameType.CHC,
 				startDate,
 				UHC.timer,
 				teams.teams(),
-				winningTeam.members.filter { PlayerData.isAlive(it) }
+				winningTeam.members.filter { PlayerData.get(it).alive }
 			)
 
 			SummaryBuilder.saveSummaryLocally(summary)
@@ -183,11 +155,17 @@ class Game(
 		} else {
 			Title.title(
 				winningTeam.apply("${winningTeam.name} has won!"),
-				winningTeam.apply(winningTeam.members.filter { PlayerData.isAlive(it) }
+				winningTeam.apply(winningTeam.members.filter { PlayerData.get(it).alive }
 					.joinToString(", ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }),
 				Times.times(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
 			)
 		}
+	}
+
+	fun destroy() {
+		teams.clearTeams()
+		chc?.onDestroy()
+		chcListener?.let { HandlerList.unregisterAll(it) }
 	}
 
 	/* death */
@@ -196,7 +174,7 @@ class Game(
 		if (!forcePermaDeath && shouldRespawn(playerData)) {
 			playerRespawn(uuid)
 		} else {
-			playerPermaDeath(uuid, killer, respawn = quirkEnabled(QuirkType.PESTS)) { teams.leaveTeam(uuid) }
+			playerPermaDeath(uuid, killer, chc?.type === CHCType.PESTS) { teams.leaveTeam(uuid) }
 		}
 	}
 
@@ -208,7 +186,7 @@ class Game(
 	 * and if a provided team is among the remaining
 	 */
 	private fun remainingTeamsFocusOn(focusTeam: Team?): RemainingTeamsReturn {
-		val remainingTeams = teams.teams().filter { it.members.any { member -> PlayerData.isAlive(member) } }
+		val remainingTeams = teams.teams().filter { it.members.any { member -> PlayerData.get(member).alive } }
 
 		return RemainingTeamsReturn(
 			remainingTeams.size,
@@ -222,7 +200,7 @@ class Game(
 	}
 
 	private fun playerPermaDeath(uuid: UUID, killer: Player?, respawn: Boolean, setupRespawn: (UUID) -> Unit) {
-		val playerData = PlayerData.getPlayerData(uuid)
+		val playerData = PlayerData.get(uuid)
 		val playerTeam = teams.playersTeam(uuid)
 		val killerTeam = if (killer == null) null else teams.playersTeam(killer.uniqueId)
 
@@ -250,7 +228,7 @@ class Game(
 		} else {
 			/* apply kill reward (no team kills) */
 			if (killer != null && playerTeam !== killerTeam) {
-				config.killReward.get().apply(
+				config.killReward.apply(
 					killer.uniqueId,
 					killerTeam?.members ?: arrayListOf(),
 					Action.getPlayerLocation(uuid) ?: spectatorSpawnLocation()
@@ -308,13 +286,13 @@ class Game(
 		Action.playerAction(uuid) { deathTitle(it, null, true) }
 
 		Bukkit.getScheduler().scheduleSyncDelayedTask(org.gaseumlabs.uhc.UHCPlugin.plugin, {
-			++PlayerData.getPlayerData(uuid).lifeNo
+			++PlayerData.get(uuid).lifeNo
 
 			Action.teleportPlayer(uuid, respawnLocation())
 
 			Action.playerAction(uuid) { it.gameMode = GameMode.SURVIVAL }
 
-			quirks.filterNotNull().forEach { it.onStartPlayer(uuid) }
+			chc?.onStartPlayer(uuid)
 		}, 100)
 	}
 
@@ -359,16 +337,21 @@ class Game(
 		return Location(world, 0.5, 100.0, 0.5)
 	}
 
+	private fun spawnLimit(max: Int, borderRadius: Double) =
+		(max * (borderRadius / 128.0).coerceAtMost(1.0))
+			.roundToInt().coerceAtLeast(1)
+
 	fun updateMobCaps(world: World) {
 		val borderRadius = world.worldBorder.size / 2
 
-		var spawnModifier = borderRadius / 128.0
-		if (spawnModifier > 1.0) spawnModifier = 1.0
+		world.setSpawnLimit(SpawnCategory.MONSTER, 0)
+		world.setSpawnLimit(SpawnCategory.ANIMAL, 0)
+		world.setSpawnLimit(SpawnCategory.MISC, 0)
 
-		world.monsterSpawnLimit = 0
-		world.animalSpawnLimit = 0
-		world.ambientSpawnLimit = (15 * spawnModifier).roundToInt().coerceAtLeast(1)
-		world.waterAnimalSpawnLimit = (5 * spawnModifier).roundToInt().coerceAtLeast(1)
-		world.waterAmbientSpawnLimit = (20 * spawnModifier).roundToInt().coerceAtLeast(1)
+		world.setSpawnLimit(SpawnCategory.AMBIENT, spawnLimit(15, borderRadius))
+		world.setSpawnLimit(SpawnCategory.WATER_AMBIENT, spawnLimit(20, borderRadius))
+		world.setSpawnLimit(SpawnCategory.AXOLOTL, spawnLimit(5, borderRadius))
+		world.setSpawnLimit(SpawnCategory.WATER_ANIMAL, spawnLimit(5, borderRadius))
+		world.setSpawnLimit(SpawnCategory.WATER_UNDERGROUND_CREATURE, spawnLimit(5, borderRadius))
 	}
 }

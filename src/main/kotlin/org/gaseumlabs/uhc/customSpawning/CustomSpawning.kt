@@ -8,6 +8,7 @@ import org.bukkit.util.RayTraceResult
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.util.Util
+import org.gaseumlabs.uhc.util.Util.and
 import org.gaseumlabs.uhc.world.WorldManager
 import java.util.*
 import kotlin.math.*
@@ -24,16 +25,9 @@ object CustomSpawning {
 			WorldManager.gameWorld -> {
 				if (type.overworldEntries.isEmpty()) return null
 
-				val supplementalList = ArrayList<SpawnEntry>()
-				if (type === CustomSpawningType.HOSTILE) {
-					game.quirks.filterNotNull().forEach { quirk ->
-						if (quirk.spawnInfos != null) quirk.spawnInfos.forEach { spawnInfo ->
-							supplementalList.add(
-								spawnInfo
-							)
-						}
-					}
-				}
+				val supplementalList = game.chc?.spawnInfos?.and {
+					type === CustomSpawningType.HOSTILE
+				} ?: emptyArray()
 
 				/* wrap spawn index */
 				if (spawningData.index >= type.overworldEntries.size + supplementalList.size) {

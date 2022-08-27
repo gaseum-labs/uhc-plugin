@@ -6,11 +6,9 @@ import org.gaseumlabs.uhc.lobbyPvp.Arena
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.world.WorldManager
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.NamedTextColor.BLUE
 import org.bukkit.*
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 
 class SpectatePvp(index: Int) : GuiItem(index) {
 	override fun onClick(player: Player, shift: Boolean) {
@@ -28,10 +26,8 @@ class SpectatePvp(index: Int) : GuiItem(index) {
 		}
 	}
 
-	override fun getStack(): ItemStack {
-		return ItemCreator.fromType(Material.HEART_OF_THE_SEA)
+	override fun render() =
+		ItemCreator.display(Material.HEART_OF_THE_SEA)
 			.name(Component.text("Spectate", BLUE))
 			.lore(Component.text("Click to spectate lobby pvp"))
-			.create()
-	}
 }

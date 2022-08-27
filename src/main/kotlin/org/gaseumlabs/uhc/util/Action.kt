@@ -1,15 +1,17 @@
 package org.gaseumlabs.uhc.util
 
-import org.gaseumlabs.uhc.core.PlayerData
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor.*
-import net.kyori.adventure.text.format.TextDecoration.*
-import org.bukkit.*
+import net.kyori.adventure.text.format.NamedTextColor.GOLD
+import net.kyori.adventure.text.format.TextDecoration.BOLD
+import org.bukkit.Bukkit
+import org.bukkit.Location
+import org.bukkit.NamespacedKey
 import org.bukkit.command.CommandSender
-import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
+import org.gaseumlabs.uhc.command.Commands
+import org.gaseumlabs.uhc.core.OfflineZombie
+import org.gaseumlabs.uhc.core.PlayerData
 import java.util.*
 
 object Action {
@@ -21,10 +23,17 @@ object Action {
 		sender.sendMessage(Component.text(message, GOLD, BOLD))
 	}
 
+	fun messageOrError(player: Player, message: String, error: Boolean) {
+		if (error)
+			Commands.errorMessage(player, message)
+		else
+			sendGameMessage(player, message)
+	}
+
 	fun playerAction(uuid: UUID, action: (Player) -> Unit) {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
-		if (onlinePlayer == null) PlayerData.getPlayerData(uuid).actionsQueue.add(action)
+		if (onlinePlayer == null) PlayerData.get(uuid).actionsQueue.add(action)
 		else action(onlinePlayer)
 	}
 
@@ -32,11 +41,11 @@ object Action {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
 		if (onlinePlayer == null) {
-			val playerData = PlayerData.getPlayerData(uuid)
+			val playerData = PlayerData.get(uuid)
 
 			val zombie = playerData.offlineZombie
 			if (zombie == null)
-				playerData.offlineZombie = playerData.createDefaultZombie(uuid, location)
+				playerData.offlineZombie = OfflineZombie.createDefaultZombie(uuid, location)
 			else
 				zombie.teleport(location)
 
@@ -49,7 +58,7 @@ object Action {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
 		if (onlinePlayer == null) {
-			val playerData = PlayerData.getPlayerData(uuid)
+			val playerData = PlayerData.get(uuid)
 			playerData.offlineZombie?.addPotionEffect(effect)
 
 		} else {
@@ -57,37 +66,15 @@ object Action {
 		}
 	}
 
-	fun damagePlayer(uuid: UUID, damage: Double, source: Entity? = null) {
-		val onlinePlayer = Bukkit.getPlayer(uuid)
-
-		if (onlinePlayer == null) {
-			val playerData = PlayerData.getPlayerData(uuid)
-			playerData.offlineZombie?.damage(damage, source)
-
-		} else {
-			onlinePlayer.damage(damage, source)
-		}
-	}
-
 	fun getPlayerLocation(uuid: UUID): Location? {
 		val onlinePlayer = Bukkit.getPlayer(uuid)
 
 		return if (onlinePlayer == null) {
-			val playerData = PlayerData.getPlayerData(uuid)
+			val playerData = PlayerData.get(uuid)
 			playerData.offlineZombie?.location
 
 		} else {
 			onlinePlayer.location
-		}
-	}
-
-	fun playerInventory(uuid: UUID): Array<ItemStack?>? {
-		val player = Bukkit.getPlayer(uuid)
-
-		return if (player == null) {
-			PlayerData.getPlayerData(uuid).getZombieInventory()
-		} else {
-			player.inventory.contents
 		}
 	}
 
