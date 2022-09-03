@@ -11,9 +11,7 @@ import org.gaseumlabs.uhc.core.phase.PhaseType.ENDGAME
 import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.inPlaceReplace
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapUHC
-import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.removeFirst
 import org.gaseumlabs.uhc.world.WorldManager
-import kotlin.math.min
 import kotlin.random.Random
 
 class GlobalResources {

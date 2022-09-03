@@ -11,14 +11,15 @@ import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent
 import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.event.Enchant2.EnchantItem
 import org.gaseumlabs.uhc.event.Enchant2.getSlotEnchantPreview
 import org.gaseumlabs.uhc.event.Enchant2.getSlotEnchantments
 import kotlin.random.Random
 
 class Enchant : Listener {
-	companion object {
-		var seed = Random.nextLong()
+	private fun seed(): Long {
+		return UHC.game?.world?.seed ?: Random.nextLong()
 	}
 
 	@EventHandler
@@ -43,7 +44,7 @@ class Enchant : Listener {
 		val (enchantItem, itemId) = EnchantItem.get(event.item) ?: return
 
 		val slotEnchants = getSlotEnchantments(
-			seed,
+			seed(),
 			playerData.enchantCycle,
 			itemId,
 			event.whichButton(),
@@ -61,6 +62,7 @@ class Enchant : Listener {
 	}
 
 	private fun createOffers(item: ItemStack, shelves: Int, cycle: Int): List<EnchantmentOffer?>? {
+		val seed = seed()
 		val (enchantItem, itemId) = EnchantItem.get(item) ?: return null
 
 		return arrayOf(
@@ -79,37 +81,6 @@ class Enchant : Listener {
 			}
 		}
 	}
-
-	//@EventHandler
-	//fun onGrindstone(event: InventoryClickEvent) {
-	//	val clickedInventory = event.clickedInventory ?: return
-	//	if (clickedInventory.type !== GRINDSTONE) return
-//
-	//	println(event.slotType)
-	//	println(event.slot)
-	//	println(event.action)
-	//	println(event.currentItem)
-//
-	//	if (
-	//		event.slot == 2 && (
-	//		event.action === PICKUP_ALL ||
-	//		event.action === PICKUP_HALF ||
-	//		event.action === PICKUP_ONE ||
-	//		event.action === PICKUP_SOME ||
-	//		event.action === MOVE_TO_OTHER_INVENTORY
-	//		) &&
-	//		event.currentItem != null &&
-	//		event.currentItem?.type !== AIR
-	//	) {
-	//		println(event.currentItem?.itemMeta?.enchants?.entries?.joinToString { (e, f) ->
-	//			e.displayName(f).toString()
-	//		})
-//
-	//		val player = event.whoClicked
-	//		val orb = player.world.spawnEntity(player.location, EXPERIENCE_ORB) as ExperienceOrb
-	//		orb.experience = 10
-	//	}
-	//}
 
 	val blockToXp = hashMapOf(
 		Material.COAL_ORE to 1,

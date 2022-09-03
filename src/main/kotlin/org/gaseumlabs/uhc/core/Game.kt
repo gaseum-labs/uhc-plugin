@@ -5,7 +5,6 @@ import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.phases.*
 import org.gaseumlabs.uhc.database.summary.SummaryBuilder
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
-import org.gaseumlabs.uhc.chc.CHCType
 import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.team.Teams
 import org.gaseumlabs.uhc.world.WorldManager
@@ -18,48 +17,33 @@ import net.kyori.adventure.title.Title.Times
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.entity.SpawnCategory
-import org.bukkit.event.HandlerList
 import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.chc.CHC
+import org.gaseumlabs.uhc.chc.chcs.Pests
 import org.gaseumlabs.uhc.database.summary.GameType
-import org.gaseumlabs.uhc.event.Enchant
 import org.gaseumlabs.uhc.util.*
 import org.gaseumlabs.uhc.world.regenresource.GlobalResources
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.roundToInt
-import kotlin.random.Random.Default.nextLong
 
 class Game(
 	val config: GameConfig,
 	val teams: Teams<Team>,
-	val initialRadius: Int,
+	val heightmap: Heightmap,
+	val chc: CHC<*>?,
 	val world: World,
 	val otherWorld: World,
+	val worldRadius: Int,
 ) {
-	var phase = getPhase(PhaseType.GRACE)
-
-	val startDate: ZonedDateTime = ZonedDateTime.now()
-
-	val summaryBuilder = SummaryBuilder()
+	private val startDate: ZonedDateTime = ZonedDateTime.now()
+	private val summaryBuilder = SummaryBuilder()
 
 	val globalResources = GlobalResources()
-
-	val heightmap = Heightmap(config.battlegroundRadius, 24)
-
 	val trader = Trader()
 
-	var chc: CHC<*>? = config.chcType?.createQuirk(this)
-	var chcListener = chc?.eventListener()
-
-	init {
-		chcListener?.let { Bukkit.getServer().pluginManager.registerEvents(it, UHCPlugin.plugin) }
-		heightmap.generate(world)
-		Enchant.seed = nextLong()
-	}
-
-	/* flow */
+	var phase = getPhase(PhaseType.GRACE)
 
 	fun startPlayer(uuid: UUID, location: Location) {
 		val playerData = PlayerData.get(uuid)
@@ -85,8 +69,7 @@ class Game(
 
 			player.gameMode = GameMode.SURVIVAL
 		}
-
-		chc?.onStartPlayer(uuid)
+		chc?.onStartPlayer(this, uuid)
 	}
 
 	private fun getPhase(phaseType: PhaseType): Phase {
@@ -101,21 +84,20 @@ class Game(
 
 	fun setPhase(phaseType: PhaseType) {
 		phase = getPhase(phaseType)
+		chc?.onPhaseSwitch(this, phase)
 	}
 
-	fun nextPhase() {
-		phase = getPhase(
-			PhaseType.values()[(phase.phaseType.ordinal + 1) % PhaseType.values().size]
-		)
-	}
+	fun nextPhase() = setPhase(
+		PhaseType.values()[(phase.phaseType.ordinal + 1) % PhaseType.values().size]
+	)
 
-	fun end(winningTeam: Team?) {
+	private fun end(winningTeam: Team?) {
 		/* game summary */
 		if (winningTeam != null) {
 			val summary = summaryBuilder.toSummary(
 				if (chc == null) GameType.UHC else GameType.CHC,
 				startDate,
-				UHC.timer,
+				UHC.timer.get(),
 				teams.teams(),
 				winningTeam.members.filter { PlayerData.get(it).alive }
 			)
@@ -145,7 +127,7 @@ class Game(
 		setPhase(PhaseType.POSTGAME)
 	}
 
-	fun createEndTitle(winningTeam: Team?): Title {
+	private fun createEndTitle(winningTeam: Team?): Title {
 		return if (winningTeam == null) {
 			Title.title(
 				Component.text("No one wins?", GOLD, BOLD),
@@ -162,19 +144,13 @@ class Game(
 		}
 	}
 
-	fun destroy() {
-		teams.clearTeams()
-		chc?.onDestroy()
-		chcListener?.let { HandlerList.unregisterAll(it) }
-	}
-
 	/* death */
 
 	fun playerDeath(uuid: UUID, killer: Player?, playerData: PlayerData, forcePermaDeath: Boolean) {
 		if (!forcePermaDeath && shouldRespawn(playerData)) {
 			playerRespawn(uuid)
 		} else {
-			playerPermaDeath(uuid, killer, chc?.type === CHCType.PESTS) { teams.leaveTeam(uuid) }
+			playerPermaDeath(uuid, killer, chc is Pests) { teams.leaveTeam(uuid) }
 		}
 	}
 
@@ -217,7 +193,10 @@ class Game(
 		}
 
 		/* add to ledger */
-		summaryBuilder.addEntry(uuid, UHC.timer, killer?.uniqueId)
+		summaryBuilder.addEntry(uuid, UHC.timer.get(), killer?.uniqueId)
+
+		/* chc undoes them */
+		chc?.onEndPlayer(this, uuid)
 
 		/* does the UHC end here? */
 		if (numRemaining <= 1) {
@@ -285,14 +264,13 @@ class Game(
 	private fun playerRespawn(uuid: UUID) {
 		Action.playerAction(uuid) { deathTitle(it, null, true) }
 
-		Bukkit.getScheduler().scheduleSyncDelayedTask(org.gaseumlabs.uhc.UHCPlugin.plugin, {
+		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin, {
 			++PlayerData.get(uuid).lifeNo
 
 			Action.teleportPlayer(uuid, respawnLocation())
-
 			Action.playerAction(uuid) { it.gameMode = GameMode.SURVIVAL }
 
-			chc?.onStartPlayer(uuid)
+			chc?.onStartPlayer(this, uuid)
 		}, 100)
 	}
 
@@ -346,7 +324,6 @@ class Game(
 
 		world.setSpawnLimit(SpawnCategory.MONSTER, 0)
 		world.setSpawnLimit(SpawnCategory.ANIMAL, 0)
-		world.setSpawnLimit(SpawnCategory.MISC, 0)
 
 		world.setSpawnLimit(SpawnCategory.AMBIENT, spawnLimit(15, borderRadius))
 		world.setSpawnLimit(SpawnCategory.WATER_AMBIENT, spawnLimit(20, borderRadius))

@@ -11,7 +11,7 @@ import org.bukkit.inventory.ItemStack
 import org.gaseumlabs.uhc.core.PlayerData
 
 class CostCounter(index: Int, val playerData: PlayerData, val slot: Int) : GuiItemProperty<Int>(index) {
-	override fun property() = playerData.getSlotCost(slot)
+	override fun getProperty() = playerData.getSlotCost(slot)
 
 	override fun onClickProperty(player: Player, shift: Boolean, property: UHCProperty<Int>) {}
 

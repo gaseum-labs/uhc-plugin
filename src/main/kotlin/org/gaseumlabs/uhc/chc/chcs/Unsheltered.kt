@@ -5,16 +5,11 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
-import org.gaseumlabs.uhc.chc.CHC
-import org.gaseumlabs.uhc.chc.CHCType
-import org.gaseumlabs.uhc.core.Game
+import org.gaseumlabs.uhc.chc.NoDataCHC
 import org.gaseumlabs.uhc.util.SchedulerUtil
 import org.gaseumlabs.uhc.util.Util
 
-class Unsheltered(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
-	override fun customDestroy() {}
-	override fun defaultData() = null
-
+class Unsheltered : NoDataCHC() {
 	override fun eventListener() = object : Listener {
 		@EventHandler
 		fun onBreakBlock(event: BlockBreakEvent) {
@@ -38,7 +33,7 @@ class Unsheltered(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 	}
 
 	companion object {
-		val acceptedBlocks = arrayOf(
+		val acceptedBlocks = Util.sortedArrayOf(
 			Material.CRAFTING_TABLE,
 			Material.FURNACE,
 			Material.BREWING_STAND,
@@ -60,6 +55,5 @@ class Unsheltered(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 			Material.WET_SPONGE,
 			Material.TNT
 		)
-		init { acceptedBlocks.sort() }
 	}
 }

@@ -1,9 +1,10 @@
 package org.gaseumlabs.uhc.dropFix
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
-import org.bukkit.entity.*
+import org.bukkit.entity.Entity
+import org.bukkit.entity.EntityType
+import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 import kotlin.random.Random

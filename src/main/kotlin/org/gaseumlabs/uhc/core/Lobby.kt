@@ -88,9 +88,6 @@ object Lobby {
 		playerData.participating = false
 		playerData.alive = false
 
-		/* reset applied status for all active quirks, if the game is active */
-		UHC.game?.chc?.let { playerData.getQuirkDataHolder(it).applied = false }
-
 		CommandItemType.GUI_OPENER.giveItem(player.inventory)
 		CommandItemType.PVP_OPENER.giveItem(player.inventory)
 		CommandItemType.SPECTATE.giveItem(player.inventory)

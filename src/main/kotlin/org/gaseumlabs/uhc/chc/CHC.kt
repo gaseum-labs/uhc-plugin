@@ -1,58 +1,35 @@
 package org.gaseumlabs.uhc.chc
 
-import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.phase.Phase
-import org.gaseumlabs.uhc.customSpawning.SpawnEntry
-import org.gaseumlabs.uhc.dropFix.DropFix
-import org.bukkit.entity.Entity
-import org.bukkit.entity.Player
 import org.bukkit.event.Listener
-import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.core.Game
 import java.util.*
 
-abstract class CHC<DataType>(val type: CHCType, val game: Game) {
-	/* when this quirk is created, start for all players already in the game */
-	init {
+abstract class CHC<DataType> {
+	fun onDestroy(game: Game) {
+		customDestroy(game)
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.participating) {
-				onStartPlayer(uuid)
-				playerData.getQuirkDataHolder(this).applied = true
-			}
+			if (playerData.participating) onEndPlayer(game, uuid)
+			playerData.deleteQuirkData()
 		}
 	}
 
-	/* when this quirk is destroyed, end for all players still in the game */
-	fun onDestroy() {
-		customDestroy()
+	fun onStartGame(game: Game) {
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
-			if (playerData.participating) {
-				val quirkDataHolder = playerData.getQuirkDataHolder(this)
-				if (quirkDataHolder.applied) {
-					onEndPlayer(uuid)
-					quirkDataHolder.applied = false
-				}
-			}
+			if (playerData.participating) onStartPlayer(game, uuid)
 		}
 	}
-
-	open fun customDestroy() {}
-
-	open fun onStartPlayer(uuid: UUID) {}
-	open fun onEndPlayer(uuid: UUID) {}
-	open fun eventListener(): Listener? = null
 
 	abstract fun defaultData(): DataType
-	open fun onPhaseSwitch(phase: Phase) {}
 
-	protected open fun customDrops(): Array<DropFix>? = null
-	protected open fun customSpawnInfos(): Array<SpawnEntry>? = null
+	open fun onPhaseSwitch(game: Game, phase: Phase) {}
+	open fun onStartPlayer(game: Game, uuid: UUID) {}
+	open fun onEndPlayer(game: Game, uuid: UUID) {}
+	open fun eventListener(): Listener? = null
+	open fun customDestroy(game: Game) {}
+}
 
-	val customDrops = customDrops()
-	val spawnInfos = customSpawnInfos()
-
-	/**
-	 * @return true if it replaces drops entirely and dropfix should not be applied
-	 */
-	open fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>) = false
+abstract class NoDataCHC: CHC<Nothing?>() {
+	final override fun defaultData() = null
 }

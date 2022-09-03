@@ -12,6 +12,7 @@ import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator
 import org.bukkit.*
 import org.bukkit.craftbukkit.v1_18_R2.CraftServer
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
+import org.gaseumlabs.uhc.chc.CHCType
 import kotlin.collections.HashMap
 
 object WorldGenManager {
@@ -89,7 +90,7 @@ object WorldGenManager {
 		//TODO manipulate the nether noise
 		UHCNoiseGeneratorSettings.inject(
 			generator,
-			UHCNoiseGeneratorSettings.createGame(false),
+			UHCNoiseGeneratorSettings.createGame(false, UHC.getConfig().chcType === CHCType.FLOATING_ISLANDS),
 			world.name != WorldManager.NETHER_WORLD_NAME,
 			newSurfaceRule,
 		)

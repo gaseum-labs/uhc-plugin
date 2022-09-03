@@ -1,6 +1,5 @@
 package org.gaseumlabs.uhc.chc
 
-import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.gaseumlabs.uhc.chc.chcs.*
 import org.gaseumlabs.uhc.chc.chcs.carePackages.CarePackages
@@ -14,7 +13,7 @@ import org.bukkit.potion.PotionType
 
 enum class CHCType(
 	val prettyName: String,
-	val create: (CHCType, Game) -> CHC<*>,
+	val create: () -> CHC<*>,
 	val representation: () -> ItemCreator,
 	val description: List<Component>,
 ) {
@@ -71,8 +70,8 @@ enum class CHCType(
 		)
 	),
 
-	FLYING(
-		"Flying",
+	FLOATING_ISLANDS(
+		"Floating Islands",
 		::FloatingIslands,
 		{ ItemCreator.display(Material.FIREWORK_ROCKET) },
 		listOf(
@@ -88,7 +87,14 @@ enum class CHCType(
 			Component.text("Pick a class as the game begins"),
 			Component.text("Get cool abilities")
 		)
-	);
+	),
 
-	fun createQuirk(game: Game) = create(this, game)
+	BANANA(
+		"Banana",
+		::Banana,
+		{ ItemCreator.display(Material.GOLDEN_PICKAXE) },
+		listOf(
+			Component.text("Banana")
+		)
+	);
 }

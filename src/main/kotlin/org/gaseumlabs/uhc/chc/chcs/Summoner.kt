@@ -1,46 +1,30 @@
 package org.gaseumlabs.uhc.chc.chcs
 
-import org.gaseumlabs.uhc.core.Game
-import org.gaseumlabs.uhc.chc.CHC
-import org.gaseumlabs.uhc.chc.CHCType
-import org.gaseumlabs.uhc.team.Team
-import org.gaseumlabs.uhc.util.Util
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.Material.*
-import org.bukkit.entity.*
+import org.bukkit.entity.Entity
+import org.bukkit.entity.EntityType
 import org.bukkit.entity.EntityType.*
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.entity.CreatureSpawnEvent
+import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
+import org.gaseumlabs.uhc.chc.NoDataCHC
+import org.gaseumlabs.uhc.core.UHC
+import org.gaseumlabs.uhc.team.Team
+import org.gaseumlabs.uhc.util.Util
 
-class Summoner(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
-	override fun defaultData() = null
-
-	override fun customDestroy() {
-		/* remove commanded tag from all commanded mobs */
-		Bukkit.getWorlds().forEach { world ->
-			world.entities.forEach { entity ->
-				if (isCommanded(entity)) setCommandedByNone(entity)
-			}
-		}
-	}
-
-	override fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
-		val spawnEgg = getSpawnEgg(entity.type)
-		if (spawnEgg != null) drops.add(ItemStack(spawnEgg))
-
-		return false
-	}
-
+class Summoner : NoDataCHC() {
 	override fun eventListener() = object : Listener {
 		@EventHandler
 		fun onMobAnger(event: EntityTargetLivingEntityEvent) {
+			val game = UHC.game ?: return
 			val target = event.target as? Player ?: return
 			val team = game.teams.playersTeam(target.uniqueId)
 			if (team != null && isCommandedBy(event.entity, team)) {
@@ -50,36 +34,34 @@ class Summoner(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 
 		@EventHandler
 		fun onUseItem(event: PlayerInteractEvent) {
-			if (onSummon(event)) event.isCancelled = true
+			val game = UHC.game ?: return
+			if (event.action != Action.RIGHT_CLICK_BLOCK) return
+			val item = event.item ?: return
+			val block = event.clickedBlock ?: return
+			val type = getSpawnEntity(item.type, true, true) ?: return
+
+			val location = block.location.add(event.blockFace.direction).toCenterLocation()
+			val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)
+
+			val team = game.teams.playersTeam(event.player.uniqueId)
+			if (team != null) {
+				setCommandedBy(entity, team)
+				entity.customName(team.apply("${team.name} ${entity.name}"))
+			}
+
+			--item.amount
+			event.isCancelled = true
+		}
+
+		@EventHandler
+		fun onEntityDeath(event: EntityDeathEvent) {
+			val spawnEgg = getSpawnEgg(event.entity.type)
+			if (spawnEgg != null) event.drops.add(ItemStack(spawnEgg))
 		}
 	}
 
 	fun getSpawnEgg(entity: EntityType): Material? {
 		return getSpawnEgg(entity, true, true)
-	}
-
-	fun onSummon(event: PlayerInteractEvent): Boolean {
-		if (event.action != Action.RIGHT_CLICK_BLOCK) return false
-
-		val item = event.item ?: return false
-
-		val block = event.clickedBlock ?: return false
-
-		val type = getSpawnEntity(item.type, true, true) ?: return false
-
-		val location = block.location.add(event.blockFace.direction).toCenterLocation()
-		val entity = event.player.world.spawnEntity(location, type, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)
-
-		val team = game.teams.playersTeam(event.player.uniqueId)
-		if (team != null) {
-			setCommandedBy(entity, team)
-
-			entity.customName(team.apply("${team.name} ${entity.name}"))
-		}
-
-		--item.amount
-
-		return true
 	}
 
 	companion object {
@@ -200,7 +182,7 @@ class Summoner(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 		fun setCommandedByNone(entity: Entity) {
 			entity.removeMetadata(META_TAG, org.gaseumlabs.uhc.UHCPlugin.plugin)
 
-			entity.customName = null
+			entity.customName(null)
 		}
 
 		fun isCommandedBy(entity: Entity, team: Team): Boolean {

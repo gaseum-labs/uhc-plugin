@@ -16,6 +16,7 @@ import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.gaseumlabs.uhc.core.*
+import org.gaseumlabs.uhc.core.Game
 import kotlin.math.*
 
 class Endgame(game: Game, private val heightmap: Heightmap, val radius: Int, private val collapseTime: Int) :

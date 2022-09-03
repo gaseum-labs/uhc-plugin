@@ -15,7 +15,7 @@ class LoadoutSlotPicker(
 	val loadoutSlot: Int,
 	val playerData: PlayerData
 ) : GuiItemProperty<Int>(index) {
-	override fun property() = playerData::loadoutSlot
+	override fun getProperty() = playerData::loadoutSlot
 
 	override fun onClickProperty(player: Player, shift: Boolean, property: UHCProperty<Int>) {
 		/* edit */

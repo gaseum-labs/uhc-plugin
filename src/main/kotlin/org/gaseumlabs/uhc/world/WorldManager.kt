@@ -3,8 +3,10 @@ package org.gaseumlabs.uhc.world
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.bukkit.*
+import org.bukkit.World.Environment
 import org.bukkit.entity.SpawnCategory.ANIMAL
 import org.bukkit.entity.SpawnCategory.MONSTER
+import org.gaseumlabs.uhc.core.UHC
 import java.io.File
 
 object WorldManager {
@@ -29,16 +31,12 @@ object WorldManager {
 
 	/* */
 
-	fun init(): String? {
+	fun init() {
 		pvpWorld = recoverWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
-			?: return "PVP world could not be loaded"
-
+			?: throw Error("PVP world could not be loaded")
 		lobbyWorld = Bukkit.getWorld(LOBBY_WORLD_NAME)
-			?: return "Lobby world could not be loaded"
-
+			?: throw Error("Lobby world could not be loaded")
 		prepareWorld(lobbyWorld)
-
-		return null
 	}
 
 	fun refreshGameWorlds() {
@@ -136,5 +134,11 @@ object WorldManager {
 		} else {
 			refreshWorld(name, environment, structures)
 		}
+	}
+
+	fun getGameWorldsBy(environment: Environment) = if (environment === Environment.NORMAL) {
+		(gameWorld ?: throw Error("no game world")) to (netherWorld ?: throw Error("no nether world"))
+	} else {
+		(netherWorld ?: throw Error("no nether world")) to (gameWorld ?: throw Error("no game world"))
 	}
 }

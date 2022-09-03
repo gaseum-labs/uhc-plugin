@@ -14,6 +14,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerPortalEvent
+import org.gaseumlabs.uhc.core.Game
 import java.util.*
 
 class Portal : Listener {

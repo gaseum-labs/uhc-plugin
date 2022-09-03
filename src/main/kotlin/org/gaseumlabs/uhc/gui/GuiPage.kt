@@ -26,7 +26,9 @@ abstract class GuiPage(val height: Int, val name: Component, val needsOp: Boolea
 
 	fun update() {
 		guiItems.filterNotNull().forEach { guiItem ->
-			if (guiItem is GuiItemProperty<*>) guiItem.render()
+			if (guiItem is GuiItemProperty<*>) {
+				inventory.setItem(guiItem.index, guiItem.render().create())
+			}
 		}
 	}
 

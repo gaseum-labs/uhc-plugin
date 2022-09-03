@@ -1,5 +1,16 @@
 package org.gaseumlabs.uhc.core
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.title.Title
+import org.bukkit.*
+import org.bukkit.event.HandlerList
+import org.bukkit.event.Listener
+import org.bukkit.scoreboard.*
+import org.gaseumlabs.uhc.UHCPlugin
+import org.gaseumlabs.uhc.chc.CHC
+import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.phases.*
 import org.gaseumlabs.uhc.customSpawning.CustomSpawning
 import org.gaseumlabs.uhc.customSpawning.CustomSpawningType
@@ -12,23 +23,13 @@ import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.util.*
 import org.gaseumlabs.uhc.util.Util.void
 import org.gaseumlabs.uhc.world.WorldManager
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.TextColor
-import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.title.Title
-import org.bukkit.*
-import org.bukkit.scoreboard.*
-import org.gaseumlabs.uhc.core.phase.PhaseType.POSTGAME
-import org.gaseumlabs.uhc.UHCPlugin
-import org.gaseumlabs.uhc.gui.GuiManager
-import org.gaseumlabs.uhc.gui.gui.CHCGui
-import org.gaseumlabs.uhc.gui.gui.CreateGameGui
 import java.time.Duration
 import java.util.*
 import kotlin.math.*
 
 object UHC {
 	val colorCube: ColorCube = ColorCube()
+	val timer = GameTimer()
 
 	private var preGameConfig: GameConfig = GameConfig()
 	var preGameTeams: Teams<PreTeam> = Teams({ action ->
@@ -38,8 +39,9 @@ object UHC {
 	})
 
 	var game: Game? = null
-	var timer = 0
-	var countdownTimerGoing = false
+	var chc: CHC<*>? = null
+	var chcListener: Listener? = null
+	var heightmap: Heightmap? = null
 
 	var teleportGroups = HashMap<UUID, Location>()
 	var worldRadius: Int = 0
@@ -68,7 +70,7 @@ object UHC {
 		return Util.interpColor(1.0f - (number / 10.0f), TextColor.color(0xebd80c), TextColor.color(0xeb0c0c))
 	}
 
-	fun startLobby() {
+	fun start() {
 		/* register hearts objective */
 		val scoreboard = Bukkit.getServer().scoreboardManager.mainScoreboard
 
@@ -92,126 +94,61 @@ object UHC {
 
 		SchedulerUtil.everyTick {
 			val currentGame = game
-			if (currentGame != null) {
-				val switchResult = currentGame.phase.tick(currentTick)
 
-				if (currentGame.phase.phaseType !== POSTGAME) {
+			if (currentGame != null) {
+				if (currentGame.phase !is Postgame) {
 					CustomSpawning.spawnTick(CustomSpawningType.HOSTILE, currentTick, currentGame)
 					CustomSpawning.spawnTick(CustomSpawningType.PASSIVE, currentTick, currentGame)
 					currentGame.globalResources.tick(currentGame, currentTick)
 
 					OfflineZombie.zombieBorderTick(currentTick, currentGame)
-					ledgerTrailTick(currentGame, currentTick)
 					currentGame.trader.traderTick(currentTick)
-
-					if (currentTick % 20 == 0) {
-						currentGame.updateMobCaps(currentGame.world)
-						currentGame.updateMobCaps(currentGame.otherWorld)
-						containSpecs()
-					}
 				}
 
 				Portal.portalTick(currentGame)
 
-				if (switchResult) currentGame.nextPhase()
-				if (currentGame.phase !is Postgame) ++timer
-
-			} else if (currentTick % 20 == 0 && countdownTimerGoing) {
-				++timer
-
-				if (timer < 0) {
-					val countdownTitle = Title.title(
-						Component.text("${-timer}", countdownColor(-timer), TextDecoration.BOLD),
-						Component.text("Game starts in"),
-						Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
-					)
-
-					preGameTeams.teams().forEach {
-						it.members.forEach { uuid ->
-							Bukkit.getPlayer(uuid)?.showTitle(countdownTitle)
-						}
-					}
-
-				} else if (timer == 0) {
-					countdownTimerGoing = false
-
-					val (gameWorld, netherWorld) = preGameConfig.getWorlds()
-					if (gameWorld == null || netherWorld == null) return@everyTick
-
-					/* add people to team vcs */
-					/* make teams finalized */
-					val gameTeams: Teams<Team> = Teams({ action ->
-						Teams.updateNames(action.uuids, action.team)
-
-						val bot = UHC.bot ?: return@Teams
-
-						if (getConfig().usingBot) when (action) {
-							is Teams.ClearAction -> bot.clearTeamVCs()
-							is Teams.AddAction -> bot.addToTeamChannel(action.id, action.uuids)
-							is Teams.RemoveAction -> bot.removeFromTeamChannel(action.id, action.size, action.uuids)
-						}
-					}, { team ->
-						colorCube.removeTeam(team.colors)
-					})
-
-					preGameTeams.transfer(gameTeams, PreTeam::toTeam)
-
-					/* GAME OBJECT */
-					val newGame = Game(
-						preGameConfig,
-						gameTeams,
-						worldRadius,
-						gameWorld,
-						netherWorld
-					)
-
-					/* set border in each game dimension */
-					listOf(gameWorld, netherWorld).forEach { world ->
-						world.worldBorder.setCenter(0.5, 0.5)
-						world.worldBorder.size = worldRadius * 2 + 1.0
-
-						world.time = 0
-						world.isThundering = false
-						world.setStorm(false)
-					}
-
-					/* teleport and set playerData to current */
-					teleportGroups.forEach { (uuid, location) ->
-						newGame.startPlayer(uuid, location)
-					}
-
-					game = newGame
-					preGameTeams.clear()
+				if (currentGame.phase.tick(currentTick)) {
+					currentGame.nextPhase()
 				}
 			}
 
-			if (game == null && currentTick % 1200 == 0) {
-				dataManager.linkData.massPlayersLink()
+			if (currentTick % 20 == 0) {
+				if (currentGame != null && currentGame.phase !is Postgame) {
+					currentGame.updateMobCaps(currentGame.world)
+					currentGame.updateMobCaps(currentGame.otherWorld)
+					containSpecs()
+
+					timer.tick()
+
+				} else if (currentGame == null && timer.onMode(GameTimer.Mode.GAMING)) {
+					if (timer.get() < 0) {
+						val countdownTitle = Title.title(
+							Component.text("${-timer.get()}", countdownColor(-timer.get()), TextDecoration.BOLD),
+							Component.text("Game starts in"),
+							Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(2))
+						)
+
+						preGameTeams.teams().forEach {
+							it.members.forEach { uuid ->
+								Bukkit.getPlayer(uuid)?.showTitle(countdownTitle)
+							}
+						}
+					} else {
+						gameStartTick()
+					}
+
+					timer.tick()
+				}
+			} else if (currentTick % 1200 == 0) {
+				if (game == null) dataManager.linkData.massPlayersLink()
 			}
 
 			Lobby.lobbyTipsTick(currentTick)
 			ArenaManager.perTick(currentTick)
+			Bukkit.getOnlinePlayers().forEach(UHCBar::updateBar)
 
-			Bukkit.getOnlinePlayers().forEach { player ->
-				UHCBar.updateBar(player)
-			}
-
-			/* highly composite number */
-			currentTick = (currentTick + 1) % 294053760
+			++currentTick
 		}
-	}
-
-	private fun ledgerTrailTick(game: Game, currentTick: Int) {
-		//if (currentTick % 40 != 0) return
-//
-		//PlayerData.playerDataList.forEach { (uuid, playerData) ->
-		//	val player = Bukkit.getPlayer(uuid)
-//
-		//	if (playerData.participating && (player == null || player.gameMode !== GameMode.SPECTATOR)) {
-		//		//val block = Action.getPlayerLocation(uuid)?.block
-		//		//if (block != null) game.ledger.tracker.addPlayerPosition(uuid, block)
-		//	}
-		//}
 	}
 
 	/**
@@ -219,34 +156,43 @@ object UHC {
 	 * true indicates an error
 	 */
 	fun startGame(messageStream: (Boolean, String) -> Unit) {
-		if (game != null || countdownTimerGoing) {
-			return messageStream(true, "Game has already started")
+		fun badExit(message: String) {
+			timer.reset()
+			messageStream(true, message)
 		}
 
+		if (timer.mode !== GameTimer.Mode.NONE) return badExit("Game has already started")
+		timer.launch()
+
+		/* whoever is on a team pregame will be who participates, count players for world size */
 		val teams = preGameTeams.teams()
-
 		val numPlayers = teams.fold(0) { i, team -> i + team.members.size }
-		if (numPlayers == 0) {
-			return messageStream(true, "No one is playing")
-		}
-		val effectivePlayers = numPlayers.coerceAtLeast(2)
+		if (numPlayers == 0) return badExit("No one is playing")
 
-		messageStream(false, "Creating game worlds for the size of $effectivePlayers players")
+		val worldSizePlayers = numPlayers.coerceAtLeast(2)
+		worldRadius = radius(worldSizePlayers * preGameConfig.scale * areaPerPlayer).toInt()
+		messageStream(false, "Creating game worlds for the size of $worldSizePlayers players")
 
-		worldRadius = radius(effectivePlayers * preGameConfig.scale * areaPerPlayer).toInt()
+		/* initiate chc before worlds initialize */
+		chc = preGameConfig.chcType?.create?.let { it() }
+		chcListener = chc?.eventListener()
+		chcListener?.let { Bukkit.getPluginManager().registerEvents(it, UHCPlugin.plugin) }
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
+		heightmap = Heightmap(worldRadius, preGameConfig.battlegroundRadius)
 
-		/* get where players are teleporting */
-		val (defaultWorld, otherWorld) = preGameConfig.getWorlds()
-		if (defaultWorld == null || otherWorld == null) {
-			return messageStream(true, "Worlds did not initialize")
+		val (world, otherWorld) = WorldManager.getGameWorldsBy(preGameConfig.defaultWorldEnvironment)
+
+		/* set border in each game dimension */
+		arrayOf(world, otherWorld).forEach {
+			it.worldBorder.setCenter(0.5, 0.5)
+			it.worldBorder.size = worldRadius * 2 + 1.0
 		}
 
 		messageStream(false, "Finding starting locations")
 
-		PlayerSpreader.spreadPlayers(defaultWorld, worldRadius, teams).thenAccept { teleports ->
+		PlayerSpreader.spreadPlayers(world, worldRadius, teams).thenAccept { teleports ->
 			/* create the master map of teleport locations */
 			teleportGroups = HashMap()
 
@@ -257,41 +203,86 @@ object UHC {
 				}
 			}
 
-			timer = -11
-			countdownTimerGoing = true
+			timer.start()
 			preGameConfig.lock = true
 
 			messageStream(false, "Starting UHC")
-
 		}.exceptionally { ex ->
 			messageStream(true, "Could not start | ${ex.message}").void()
 		}
 	}
 
-	fun destroyGame() {
-		val runningGame = game
-		if (runningGame != null) {
-			runningGame.destroy()
-			game = null
-			preGameConfig = GameConfig()
+	fun gameStartTick() {
+		/* add people to team vcs */
+		/* make teams finalized */
+		val gameTeams: Teams<Team> = Teams({ action ->
+			Teams.updateNames(action.uuids, action.team)
 
-			PlayerData.prune()
-			Bukkit.getOnlinePlayers().forEach { player ->
-				if (WorldManager.isGameWorld(player.world)) Lobby.onSpawnLobby(player)
+			val bot = UHC.bot ?: return@Teams
+
+			if (getConfig().usingBot) when (action) {
+				is Teams.ClearAction -> bot.clearTeamVCs()
+				is Teams.AddAction -> bot.addToTeamChannel(action.id, action.uuids)
+				is Teams.RemoveAction -> bot.removeFromTeamChannel(action.id, action.size, action.uuids)
 			}
-			WorldManager.destroyGameWorlds()
+		}, { team ->
+			colorCube.removeTeam(team.colors)
+		})
+		preGameTeams.transfer(gameTeams, PreTeam::toTeam)
+
+		val (world, otherWorld) = if (preGameConfig.defaultWorldEnvironment === World.Environment.NORMAL)
+			WorldManager.gameWorld to WorldManager.netherWorld
+		else
+			WorldManager.netherWorld to WorldManager.gameWorld
+
+		/* GAME OBJECT */
+		val newGame = Game(
+			preGameConfig,
+			gameTeams,
+			heightmap ?: throw Error("No heightmap?"),
+			chc,
+			world ?: throw Error("No world?"),
+			otherWorld ?: throw Error("No otherWorld?"),
+			worldRadius
+		)
+
+		/* teleport and set playerData to current */
+		teleportGroups.forEach { (uuid, location) ->
+			newGame.startPlayer(uuid, location)
 		}
 
+		newGame.setPhase(PhaseType.GRACE)
+
+		arrayOf(world, otherWorld).forEach { it.time = 0 }
+
+		game = newGame
+		preGameTeams.clear()
+	}
+
+	fun destroyGame() {
+		val runningGame = game ?: return
+
+		runningGame.teams.clearTeams()
+		chc?.onDestroy(runningGame)
+		chcListener?.let { HandlerList.unregisterAll(it) }
+		game = null
+		preGameConfig = GameConfig()
+
+		PlayerData.prune()
+		Bukkit.getOnlinePlayers().forEach { player ->
+			if (WorldManager.isGameWorld(player.world)) Lobby.onSpawnLobby(player)
+		}
+		WorldManager.destroyGameWorlds()
 	}
 
 	fun containSpecs() {
 		val currentGame = game ?: return
-		val radius = currentGame.initialRadius
+		val radius = worldRadius
 
 		Bukkit.getOnlinePlayers()
 			.filter { it.world === currentGame.world || it.world === currentGame.otherWorld }
 			.forEach { player ->
-				if (player.gameMode == GameMode.SPECTATOR) {
+				if (player.gameMode === GameMode.SPECTATOR) {
 					val locX = player.location.blockX.toDouble()
 					val locZ = player.location.blockZ.toDouble()
 

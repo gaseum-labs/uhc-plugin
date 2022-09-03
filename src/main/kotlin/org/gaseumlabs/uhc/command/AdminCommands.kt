@@ -132,7 +132,7 @@ class AdminCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
-		val classes = game.chc as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes = UHC.chc as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
 
 		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
 

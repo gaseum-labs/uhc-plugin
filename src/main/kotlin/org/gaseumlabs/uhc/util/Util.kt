@@ -1,5 +1,3 @@
-@file:Suppress("NonAsciiCharacters")
-
 package org.gaseumlabs.uhc.util
 
 import net.kyori.adventure.text.Component
@@ -57,7 +55,7 @@ object Util {
 		return Pair(-1, -1)
 	}
 
-	fun <T, E : Enum<E>> binaryFind(value: E, array: Array<T>, getValue: (T) -> E): T? {
+	inline fun <T, E : Enum<E>> binaryFind(value: E, array: Array<T>, getValue: (T) -> E): T? {
 		var start = 0
 		var end = array.size
 
@@ -66,7 +64,7 @@ object Util {
 			val currentValue = getValue(array[position])
 
 			when {
-				currentValue == value -> return array[position]
+				currentValue === value -> return array[position]
 				end - start == 1 -> return null
 				value < currentValue -> end = position
 				value > currentValue -> start = position
@@ -74,11 +72,11 @@ object Util {
 		}
 	}
 
-	fun <T, E : Enum<E>> binarySearch(value: E, array: Array<T>, getValue: (T) -> E): Boolean {
+	inline fun <T, E : Enum<E>> binarySearch(value: E, array: Array<T>, getValue: (T) -> E): Boolean {
 		return binaryFind(value, array, getValue) != null
 	}
 
-	fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
+	inline fun <T : Enum<T>> binarySearch(value: T, array: Array<T>): Boolean {
 		return binaryFind(value, array) { it } != null
 	}
 
@@ -235,13 +233,13 @@ object Util {
 
 	fun floorDiv(a: Int, b: Int) = if (a < 0) (a - b + 1) / b else a / b
 
-	fun 앝리스트어프(리콰이르드: Int, vararg 트라이스: Boolean): Boolean {
-		var 교느트 = 0
-		for (ㅌ in 트라이스) {
-			if (ㅌ && ++교느트 == 리콰이르드) return true
-		}
-		return false
-	}
+	//fun atLeastOf(required: Int, vararg tries: Boolean): Boolean {
+	//	//var count = 0
+	//	//for (t in tries) {
+	//	//	if (t && ++count == tries) return true
+	//	//}
+	//	//return false
+	//}
 
 	fun <T> T.takeFrom(expr: Boolean): T? {
 		return if (expr) this else null
@@ -259,5 +257,18 @@ object Util {
 
 	fun warn(exception: Throwable) {
 		logger.log(Level.WARNING, exception.localizedMessage)
+	}
+
+	inline fun <reified T : Enum<T>> sortedArrayOf(vararg array: T): Array<T> {
+		array.sort()
+		return array as Array<T>
+	}
+
+	inline fun <reified R, reified T : Enum<T>>sortedArrayOf(
+		vararg array: R,
+		crossinline mapping: (R) -> T
+	): Array<R> {
+		array.sortBy { mapping(it) }
+		return array as Array<R>
 	}
 }

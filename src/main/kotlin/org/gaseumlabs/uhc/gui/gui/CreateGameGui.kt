@@ -24,7 +24,7 @@ class CreateGameGui : GuiPage(
 ) {
 	override fun createItems(): Array<GuiItem> = arrayOf(
 		object : GuiItemToggle(coords(0, 0)) {
-			override fun property() = UHC.getConfig()::naturalRegeneration
+			override fun getProperty() = UHC.getConfig()::naturalRegeneration
 			override fun renderProperty(value: Boolean) =
 				ItemCreator.display(
 					if (value) Material.BEEF else Material.ROTTEN_FLESH
@@ -38,7 +38,7 @@ class CreateGameGui : GuiPage(
 			coords(1, 0),
 			arrayOf(KillReward.APPLE, KillReward.ABSORPTION, KillReward.REGENERATION, KillReward.NONE)
 		) {
-			override fun property() = UHC.getConfig()::killReward
+			override fun getProperty() = UHC.getConfig()::killReward
 			override fun renderProperty(value: KillReward) =
 				ItemCreator.display(value.representation)
 					.name(ItemCreator.stateName("Kill Reward", value.prettyName))
@@ -48,7 +48,7 @@ class CreateGameGui : GuiPage(
 			coords(2, 0),
 			arrayOf(World.Environment.NORMAL, World.Environment.NETHER)
 		) {
-			override fun property() = UHC.getConfig()::defaultWorldEnvironment
+			override fun getProperty() = UHC.getConfig()::defaultWorldEnvironment
 			override fun renderProperty(value: World.Environment) =
 				ItemCreator.display(
 					if (value === World.Environment.NORMAL) Material.GRASS_BLOCK
@@ -63,7 +63,7 @@ class CreateGameGui : GuiPage(
 		object : GuiItemToggle(
 			coords(3, 0),
 		) {
-			override fun property() = UHC.getConfig()::usingBot
+			override fun getProperty() = UHC.getConfig()::usingBot
 			override fun renderProperty(value: Boolean) =
 				ItemCreator.display(
 					if (UHC.bot == null) Material.GUNPOWDER
@@ -76,42 +76,42 @@ class CreateGameGui : GuiPage(
 		},
 
 		object : GuiItemCounterF(coords(0, 1), 0.5f, 6.0f, 0.1f) {
-			override fun property() = UHC.getConfig()::scale
+			override fun getProperty() = UHC.getConfig()::scale
 			override fun renderProperty(value: Float) =
 				ItemCreator.display(Material.WARPED_TRAPDOOR)
 					.enchant(value != default())
 					.name(ItemCreator.stateName("Scale", "%.2f".format(value)))
 		},
 		object : GuiItemCounter(coords(1, 1), 10, 200, 5) {
-			override fun property() = UHC.getConfig()::battlegroundRadius
+			override fun getProperty() = UHC.getConfig()::battlegroundRadius
 			override fun renderProperty(value: Int) =
 				ItemCreator.display(Material.WARPED_DOOR)
 					.enchant(value != default())
 					.name(ItemCreator.stateName("Battleground Radius", "$value"))
 		},
 		object : GuiItemCounter(coords(2, 1), 60, 6000, 60) {
-			override fun property() = UHC.getConfig()::graceTime
+			override fun getProperty() = UHC.getConfig()::graceTime
 			override fun renderProperty(value: Int) =
 				ItemCreator.display(Material.SUNFLOWER)
 					.enchant(value != default())
 					.name(ItemCreator.stateName("Grace Time", Util.timeString(value)))
 		},
 		object : GuiItemCounter(coords(3, 1), 60, 6000, 60) {
-			override fun property() = UHC.getConfig()::shrinkTime
+			override fun getProperty() = UHC.getConfig()::shrinkTime
 			override fun renderProperty(value: Int) =
 				ItemCreator.display(Material.BELL)
 					.enchant(value != default())
 					.name(ItemCreator.stateName("Shrink Time", Util.timeString(value)))
 		},
 		object : GuiItemCounter(coords(4, 1), 60, 6000, 60) {
-			override fun property() = UHC.getConfig()::battlegroundTime
+			override fun getProperty() = UHC.getConfig()::battlegroundTime
 			override fun renderProperty(value: Int) =
 				ItemCreator.display(Material.CAMPFIRE)
 					.enchant(value != default())
 					.name(ItemCreator.stateName("Battleground Time", Util.timeString(value)))
 		},
 		object : GuiItemCounter(coords(5, 1), 60, 1000, 30) {
-			override fun property() = UHC.getConfig()::collapseTime
+			override fun getProperty() = UHC.getConfig()::collapseTime
 			override fun renderProperty(value: Int) =
 				ItemCreator.display(Material.HORN_CORAL)
 					.enchant(value != default())

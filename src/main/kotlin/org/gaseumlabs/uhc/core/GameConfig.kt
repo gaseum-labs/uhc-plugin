@@ -38,14 +38,4 @@ class GameConfig {
 	/* functions */
 
 	fun reset() = group.reset()
-
-	/* getters */
-
-	fun getWorlds(): Pair<World?, World?> {
-		return if (defaultWorldEnvironment === World.Environment.NORMAL) {
-			Pair(WorldManager.gameWorld, WorldManager.netherWorld)
-		} else {
-			Pair(WorldManager.netherWorld, WorldManager.gameWorld)
-		}
-	}
 }

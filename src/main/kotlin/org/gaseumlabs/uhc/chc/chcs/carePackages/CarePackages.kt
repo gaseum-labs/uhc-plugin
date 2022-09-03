@@ -6,7 +6,6 @@ import org.gaseumlabs.uhc.core.phase.phases.*
 import org.gaseumlabs.uhc.event.Brew
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.gaseumlabs.uhc.chc.CHC
-import org.gaseumlabs.uhc.chc.CHCType
 import org.gaseumlabs.uhc.chc.chcs.carePackages.CarePackageUtil.SPIRE_DIAMOND
 import org.gaseumlabs.uhc.chc.chcs.carePackages.CarePackageUtil.SPIRE_GOLD
 import org.gaseumlabs.uhc.chc.chcs.carePackages.CarePackageUtil.SPIRE_IRON
@@ -19,10 +18,10 @@ import org.bukkit.Material.*
 import org.bukkit.inventory.Inventory
 import org.bukkit.potion.*
 import org.bukkit.potion.PotionType.*
+import org.gaseumlabs.uhc.UHCPlugin
 import kotlin.math.*
-import kotlin.random.Random
 
-class CarePackages(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
+class CarePackages : CHC<Nothing?>() {
 	val NUM_DROPS = 2
 
 	var taskID = -1
@@ -37,8 +36,6 @@ class CarePackages(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 	lateinit var dropTimes: Array<Int>
 
 	var dropIndex = 0
-
-	val random = Random(game.world.seed)
 
 	/*
 	 * example scoreboard:
@@ -58,28 +55,24 @@ class CarePackages(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 	 * Awaiting
 	 */
 
-	init {
-		if (game.phase is Grace || game.phase is Shrink) onStart()
-	}
-
 	override fun defaultData() = null
 
-	override fun customDestroy() {
-		onEnd()
-	}
+	override fun customDestroy(game: Game) = onEnd()
 
-	override fun onPhaseSwitch(phase: Phase) {
-		if (phase is Grace) onStart()
+	override fun onPhaseSwitch(game: Game, phase: Phase) {
+		if (phase is Grace) onStart(game)
 		else if (phase is Endgame || phase is Postgame) onEnd()
 	}
 
-	private fun onStart() {
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(org.gaseumlabs.uhc.UHCPlugin.plugin, ::perSecond, 20, 20)
+	private fun onStart(game: Game) {
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(
+			UHCPlugin.plugin, ::perSecond, 20, 20
+		)
 
 		scoreboardDisplay = ScoreboardDisplay("Care Packages", NUM_DROPS * 4)
 		scoreboardDisplay?.show()
 
-		if (generateDrops()) prepareDrop(0) else onEnd()
+		if (generateDrops(game)) prepareDrop(0) else onEnd()
 	}
 
 	private fun onEnd() {
@@ -92,56 +85,38 @@ class CarePackages(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 		scoreboardDisplay = null
 	}
 
-	private fun generateDrops(): Boolean {
-		fun findLocations(findCurrentRadius: (Int) -> Double) {
-			val initialAngle = Math.random() * PI * 2
-			val angleAdance = PI * 2 / NUM_DROPS
+	private inline fun findLocations(world: World, findCurrentRadius: (Int) -> Double): Array<Location> {
+		val initialAngle = Math.random() * PI * 2
+		val angleAdance = PI * 2 / NUM_DROPS
 
-			dropLocations = Array(NUM_DROPS) { i ->
-				val currentRadius = findCurrentRadius(i)
+		return Array(NUM_DROPS) { i ->
+			val currentRadius = findCurrentRadius(i)
 
-				val x = cos(initialAngle + angleAdance * i) * currentRadius / 2
-				val z = sin(initialAngle + angleAdance * i) * currentRadius / 2
+			val x = cos(initialAngle + angleAdance * i) * currentRadius / 2
+			val z = sin(initialAngle + angleAdance * i) * currentRadius / 2
 
-				Location(game.world, x, 0.0, z)
-			}
+			Location(world, x, 0.0, z)
 		}
+	}
 
+	private fun generateDrops(game: Game): Boolean {
 		/* find drop times */
-		if (game.phase is Grace) {
-			val remaining = game.phase.remainingSeconds()
+		val remaining = game.phase.remainingSeconds()
 
-			/* distribute drops over shrinking phase so that if there were another, */
-			/* it would fall exactly at the end of shrinking phase */
+		/* distribute drops over shrinking phase so that if there were another, */
+		/* it would fall exactly at the end of shrinking phase */
 
-			val dropPeriod = game.config.shrinkTime * (NUM_DROPS / (NUM_DROPS + 1.0))
-			val dropInterval = (dropPeriod / NUM_DROPS).toInt()
+		val dropPeriod = game.config.shrinkTime * (NUM_DROPS / (NUM_DROPS + 1.0))
+		val dropInterval = (dropPeriod / NUM_DROPS).toInt()
 
-			/* all drops are equally spaced by dropInterval */
-			dropTimes = Array(NUM_DROPS) { dropInterval }
+		/* all drops are equally spaced by dropInterval */
+		dropTimes = Array(NUM_DROPS) { dropInterval }
 
-			/* the first drop has to wait for the end of grace period */
-			dropTimes[0] += remaining
+		/* the first drop has to wait for the end of grace period */
+		dropTimes[0] += remaining
 
-			findLocations { i ->
-				game.initialRadius * (1 - ((dropInterval * i).toDouble() / game.config.shrinkTime))
-			}
-
-		} else if (game.phase is Shrink) {
-			val elapsed = game.config.shrinkTime - game.phase.remainingSeconds()
-
-			val cutOff = game.config.shrinkTime * (NUM_DROPS / (NUM_DROPS + 1.0)).toInt()
-
-			val available = (cutOff - elapsed)
-			val dropInterval = (available / NUM_DROPS)
-
-			/* there must be at least 1 second left for each care package to drop */
-			if (available <= NUM_DROPS) dropTimes = Array(NUM_DROPS) { available / NUM_DROPS }
-			else return false
-
-			findLocations { i ->
-				game.initialRadius * (1 - ((elapsed + dropInterval * i).toDouble() / game.config.shrinkTime))
-			}
+		dropLocations = findLocations(game.world) { i ->
+			game.worldRadius * (1 - ((dropInterval * i).toDouble() / game.config.shrinkTime))
 		}
 
 		return true

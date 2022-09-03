@@ -59,7 +59,7 @@ class PlayerData(val uuid: UUID) {
 	}
 
 	/* other stuff */
-	class QuirkDataHolder<DataType>(var applied: Boolean, var data: DataType)
+	class QuirkDataHolder<DataType>(var data: DataType)
 
 	var quirkData: QuirkDataHolder<*>? = null
 
@@ -122,10 +122,14 @@ class PlayerData(val uuid: UUID) {
 	fun <DataType>getQuirkDataHolder(quirk: CHC<DataType>): QuirkDataHolder<DataType> {
 		var holder = quirkData
 		if (holder == null) {
-			holder = QuirkDataHolder(false, quirk.defaultData())
+			holder = QuirkDataHolder(quirk.defaultData())
 			quirkData = holder
 		}
 		return holder as QuirkDataHolder<DataType>
+	}
+
+	fun deleteQuirkData() {
+		quirkData = QuirkDataHolder(null)
 	}
 
 	fun addRecentPlatform(uuid: UUID) {

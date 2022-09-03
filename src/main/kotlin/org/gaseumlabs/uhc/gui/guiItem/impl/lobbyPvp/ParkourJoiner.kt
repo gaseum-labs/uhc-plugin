@@ -13,7 +13,7 @@ import org.bukkit.inventory.meta.SkullMeta
 import org.gaseumlabs.uhc.core.PlayerData
 
 class ParkourJoiner(index: Int, val playerData: PlayerData) : GuiItemProperty<Int>(index) {
-	override fun property() = playerData::parkourIndex
+	override fun getProperty() = playerData::parkourIndex
 
 	override fun onClickProperty(player: Player, shift: Boolean, property: UHCProperty<Int>) {
 		if (shift) {

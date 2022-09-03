@@ -24,6 +24,32 @@ object UHCTerrainShaper {
 		return if (f < -0.2f) -0.2f else f
 	}
 
+	fun createFloatingIslands(): TerrainShaper {
+		return TerrainShaper(
+			CubicSpline.builder(UHC_CONTINENTS, NO_TRANSFORM).addPoint(0.0f,
+				CubicSpline.builder(UHC_EROSION, NO_TRANSFORM).addPoint(0.0f,
+					CubicSpline.builder(UHC_WEIRDNESS, NO_TRANSFORM).addPoint(0.0f,
+						CubicSpline.builder(UHC_RIDGES, NO_TRANSFORM).addPoint(0.0f, 0.0f, 0.0f).build(),
+						0.0f).build(),
+				0.0f).build(),
+			0.0f).build(),
+			CubicSpline.builder(UHC_CONTINENTS, NO_TRANSFORM).addPoint(0.0f,
+				CubicSpline.builder(UHC_EROSION, NO_TRANSFORM).addPoint(0.0f,
+					CubicSpline.builder(UHC_WEIRDNESS, NO_TRANSFORM).addPoint(0.0f,
+						CubicSpline.builder(UHC_RIDGES, NO_TRANSFORM).addPoint(0.0f, 0.0f, 0.0f).build(),
+						0.0f).build(),
+					0.0f).build(),
+				0.0f).build(),
+			CubicSpline.builder(UHC_CONTINENTS, NO_TRANSFORM).addPoint(0.0f,
+				CubicSpline.builder(UHC_EROSION, NO_TRANSFORM).addPoint(0.0f,
+					CubicSpline.builder(UHC_WEIRDNESS, NO_TRANSFORM).addPoint(0.0f,
+						CubicSpline.builder(UHC_RIDGES, NO_TRANSFORM).addPoint(0.0f, 0.0f, 0.0f).build(),
+						0.0f).build(),
+					0.0f).build(),
+				0.0f).build(),
+		)
+	}
+
 	fun createGame(amplified: Boolean): TerrainShaper {
 		/* only do anything if amplified is true */
 		val amplifiedOffset =

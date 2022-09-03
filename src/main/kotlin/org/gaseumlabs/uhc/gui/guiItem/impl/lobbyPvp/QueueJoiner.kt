@@ -30,7 +30,7 @@ class QueueJoiner(index: Int, val type: Int, val playerData: PlayerData) : GuiIt
 		else -> BEDROCK
 	}
 
-	override fun property() = playerData::inLobbyPvpQueue
+	override fun getProperty() = playerData::inLobbyPvpQueue
 
 	override fun onClickProperty(player: Player, shift: Boolean, property: UHCProperty<Int>) {
 		/* don't let players leave during the countdown */

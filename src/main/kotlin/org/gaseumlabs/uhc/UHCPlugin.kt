@@ -14,7 +14,7 @@ import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.gen.WorldGenManager
 import org.bukkit.plugin.java.JavaPlugin
 import org.gaseumlabs.uhc.core.*
-import kotlin.system.exitProcess
+import org.gaseumlabs.uhc.util.SchedulerUtil
 
 class UHCPlugin : JavaPlugin() {
 	init {
@@ -41,9 +41,9 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(NicknameCommand(), true)
 		commandManager.registerCommand(LinkCommands(), true)
 
-		/* register all events */
+		server.pluginManager.registerEvents(LobbyEvents(), this)
+		server.pluginManager.registerEvents(GameEvents(), this)
 		server.pluginManager.registerEvents(Chat(), this)
-		server.pluginManager.registerEvents(EventListener(), this)
 		server.pluginManager.registerEvents(Portal(), this)
 		server.pluginManager.registerEvents(PvpListener(), this)
 		server.pluginManager.registerEvents(Brew(), this)
@@ -84,14 +84,9 @@ class UHCPlugin : JavaPlugin() {
 
 		Tracker.loadCharacters()
 
-		server.scheduler.scheduleSyncDelayedTask(this) {
-			val initError = WorldManager.init()
-			if (initError != null) {
-				println(initError)
-				exitProcess(3)
-			}
-
-			UHC.startLobby()
+		SchedulerUtil.nextTick {
+			WorldManager.init()
+			UHC.start()
 		}
 	}
 

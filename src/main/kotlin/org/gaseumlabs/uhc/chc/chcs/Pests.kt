@@ -1,10 +1,5 @@
 package org.gaseumlabs.uhc.chc.chcs
 
-import org.gaseumlabs.uhc.core.Game
-import org.gaseumlabs.uhc.core.PlayerData
-import org.gaseumlabs.uhc.chc.CHC
-import org.gaseumlabs.uhc.chc.CHCType
-import org.gaseumlabs.uhc.util.Action
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.attribute.Attribute
@@ -13,13 +8,15 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent
 import org.bukkit.event.inventory.CraftItemEvent
+import org.gaseumlabs.uhc.chc.NoDataCHC
+import org.gaseumlabs.uhc.core.Game
+import org.gaseumlabs.uhc.core.PlayerData
+import org.gaseumlabs.uhc.util.Action
 import org.gaseumlabs.uhc.util.Util
 import java.util.*
 
-class Pests(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
-	override fun defaultData() = null
-
-	override fun customDestroy() {
+class Pests : NoDataCHC() {
+	override fun customDestroy(game: Game) {
 		/* remove all pests from the game */
 		PlayerData.playerDataList.filter { (_, playerData) -> playerData.undead() }.forEach { (uuid, _) ->
 			Action.playerAction(uuid) { player ->
@@ -28,7 +25,7 @@ class Pests(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 		}
 	}
 
-	override fun onStartPlayer(uuid: UUID) {
+	override fun onStartPlayer(game: Game, uuid: UUID) {
 		Action.playerAction(uuid) { player ->
 			if (PlayerData.get(player).undead()) {
 				player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 4.0
@@ -52,7 +49,7 @@ class Pests(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 	}
 
 	companion object {
-		val banList = arrayOf(
+		val banList = Util.sortedArrayOf(
 			Material.BOW,
 			Material.DIAMOND_PICKAXE,
 			Material.DIAMOND_AXE,
@@ -64,9 +61,5 @@ class Pests(type: CHCType, game: Game) : CHC<Nothing?>(type, game) {
 			Material.DIAMOND_LEGGINGS,
 			Material.DIAMOND_BOOTS
 		)
-
-		init {
-			banList.sort()
-		}
 	}
 }

@@ -3,14 +3,17 @@ package org.gaseumlabs.uhc.util
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
+import kotlin.reflect.jvm.isAccessible
 
 interface Resettable<T> {
 	fun reset()
 	fun default(): T
 }
 
-abstract class UHCProperty<T> : KMutableProperty0<T> {
-	abstract override fun getDelegate(): Resettable<T>
+typealias UHCProperty<T> = KMutableProperty0<T>
+inline fun <T>UHCProperty<T>.uhcDelegate(): Resettable<T> {
+	this.isAccessible = true
+	return this.getDelegate() as Resettable<T>
 }
 
 open class SetResult<S>

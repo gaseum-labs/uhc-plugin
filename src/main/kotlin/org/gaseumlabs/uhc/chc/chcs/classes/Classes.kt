@@ -3,7 +3,6 @@ package org.gaseumlabs.uhc.chc.chcs.classes
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.chc.CHC
-import org.gaseumlabs.uhc.chc.CHCType
 import org.gaseumlabs.uhc.chc.chcs.Summoner
 import org.gaseumlabs.uhc.util.Action
 import org.gaseumlabs.uhc.util.SchedulerUtil
@@ -14,7 +13,9 @@ import org.bukkit.block.data.type.Switch
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.Damageable
 import java.util.*
@@ -22,7 +23,9 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.random.Random
 
-class Classes(type: CHCType, game: Game) : CHC<QuirkClass>(type, game) {
+class Classes : CHC<QuirkClass>() {
+	override fun defaultData() = QuirkClass.NO_CLASS
+
 	init {
 		var currentTick = 0
 
@@ -164,7 +167,7 @@ class Classes(type: CHCType, game: Game) : CHC<QuirkClass>(type, game) {
 		}
 	}
 
-	override fun customDestroy() {
+	override fun customDestroy(game: Game) {
 		Bukkit.getScheduler().cancelTask(timerId)
 
 		PlayerData.playerDataList.forEach { (uuid, playerData) ->
@@ -175,11 +178,12 @@ class Classes(type: CHCType, game: Game) : CHC<QuirkClass>(type, game) {
 		}
 	}
 
-	override fun onStartPlayer(uuid: UUID) {
+	override fun onStartPlayer(game: Game, uuid: UUID) {
 		Action.playerAction(uuid) { player ->
 			val quirkClass = getClass(uuid)
-
-			if (quirkClass != QuirkClass.NO_CLASS) startAsClass(player, quirkClass, QuirkClass.NO_CLASS)
+			if (quirkClass != QuirkClass.NO_CLASS) {
+				startAsClass(player, quirkClass, QuirkClass.NO_CLASS)
+			}
 		}
 	}
 
@@ -191,15 +195,9 @@ class Classes(type: CHCType, game: Game) : CHC<QuirkClass>(type, game) {
 		setClass(PlayerData.get(uuid), quirkClass)
 	}
 
-	inline fun getClass(playerData: PlayerData) = playerData.getQuirkData<QuirkClass>(this)
+	inline fun getClass(playerData: PlayerData) = playerData.getQuirkData(this)
 	inline fun getClass(uuid: UUID) = getClass(PlayerData.get(uuid))
 	inline fun getClass(player: OfflinePlayer) = getClass(player.uniqueId)
-
-	override fun onEndPlayer(uuid: UUID) {
-		Action.playerAction(uuid) { player -> removeHead(player) }
-		val playerData = PlayerData.get(uuid)
-		playerData.setQuirkData(this, QuirkClass.NO_CLASS)
-	}
 
 	private fun generateSuperbreakMessage(percent: Double, overflow: Boolean): String {
 		val message = StringBuilder("${ChatColor.GRAY}Superbreak - ")
@@ -213,20 +211,19 @@ class Classes(type: CHCType, game: Game) : CHC<QuirkClass>(type, game) {
 		return message.toString()
 	}
 
-	override fun defaultData() = QuirkClass.NO_CLASS
-
-	override fun modifyEntityDrops(entity: Entity, killer: Player?, drops: MutableList<ItemStack>): Boolean {
-		if (killer != null && getClass(killer.uniqueId) == QuirkClass.HUNTER) {
-			return if (entity.getMetadata(HUNTER_SPAWN_META).isNotEmpty()) {
-				drops.clear()
-				true
-			} else {
-				drops.addAll((0..0).mapNotNull { Summoner.getSpawnEgg(entity.type, true, false) }.map { ItemStack(it) })
-				false
+	override fun eventListener() = object : Listener {
+		@EventHandler
+		fun onEntityDeath(event: EntityDeathEvent) {
+			val entity = event.entity
+			val killer = event.entity.killer
+			if (killer != null && getClass(killer.uniqueId) == QuirkClass.HUNTER) {
+				if (entity.getMetadata(HUNTER_SPAWN_META).isNotEmpty()) {
+					event.drops.clear()
+				} else {
+					event.drops.addAll((0..0).mapNotNull { Summoner.getSpawnEgg(entity.type, true, false) }.map { ItemStack(it) })
+				}
 			}
 		}
-
-		return false
 	}
 
 	data class ObsidianifiedLava(val block: Block, val flowing: Boolean)

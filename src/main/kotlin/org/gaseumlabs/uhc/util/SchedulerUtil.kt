@@ -1,10 +1,10 @@
 package org.gaseumlabs.uhc.util
 
-import org.gaseumlabs.uhc.UHCPlugin
 import org.bukkit.Bukkit
+import org.gaseumlabs.uhc.UHCPlugin
 
 object SchedulerUtil {
-	val plugin = org.gaseumlabs.uhc.UHCPlugin.plugin
+	val plugin = UHCPlugin.plugin
 
 	fun nextTick(runnable: () -> Unit) {
 		Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable)

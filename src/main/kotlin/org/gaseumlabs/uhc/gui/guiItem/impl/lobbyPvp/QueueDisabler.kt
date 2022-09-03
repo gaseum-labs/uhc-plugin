@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack
 import org.gaseumlabs.uhc.lobbyPvp.PvpQueue
 
 class QueueDisabler(index: Int) : GuiItemProperty<Boolean>(index) {
-	override fun property() = PvpQueue::enabled
+	override fun getProperty() = PvpQueue::enabled
 
 	override fun onClickProperty(player: Player, shift: Boolean, property: UHCProperty<Boolean>) {
 		if (!player.isOp) return

@@ -2,79 +2,80 @@ package org.gaseumlabs.uhc.chc.chcs.carePackages
 
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.core.phase.Phase
-import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.phases.Endgame
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.gaseumlabs.uhc.chc.CHC
-import org.gaseumlabs.uhc.chc.CHCType
 import org.gaseumlabs.uhc.util.Action
 import org.bukkit.*
 import org.bukkit.block.Block
+import org.gaseumlabs.uhc.core.Game
+import org.gaseumlabs.uhc.core.phase.phases.Grace
 import java.util.*
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-class ChaoticCarePackages(type: CHCType, game: Game) : CHC<Array<Int>>(type, game) {
+class ChaoticCarePackages : CHC<Array<Int>>() {
 	private val itemsList = genItemsList(CarePackageUtil.genReferenceItems())
 
-	val PER_CHEST = 13
-	val NUM_DROPS = ceil(itemsList.size / 13.0).toInt()
+	private val PER_CHEST = 13
+	private val NUM_DROPS = ceil(itemsList.size / 13.0).toInt()
 
 	/**
 	 * time that drops are spread out over
 	 * grace + shrink - 10 minutes
 	 * subtract any time that has already happened if quirk started late
 	 */
-	val TIME = (game.config.graceTime + game.config.shrinkTime - 600) * 20 - (UHC.timer)
-	val TIME_PER_DROP = TIME / NUM_DROPS
+	private var TIME = 0
+	private var TIME_PER_DROP = 0
 
-	init {
-		if (game.phase.phaseType.ordinal < PhaseType.ENDGAME.ordinal) startDropping()
-	}
+	var taskId = -1
+	var timer = 0
+	var dropNum = 0
 
-	override fun customDestroy() {
+	override fun customDestroy(game: Game) {
 		stopDropping()
 	}
 
-	override fun onPhaseSwitch(phase: Phase) {
+	override fun onPhaseSwitch(game: Game, phase: Phase) {
+		if (phase is Grace) {
+			TIME = (game.config.graceTime + game.config.shrinkTime - 600) * 20
+			TIME_PER_DROP = TIME / NUM_DROPS
+			startDropping(game)
+		}
 		if (phase is Endgame) stopDropping()
 	}
 
-	override fun onStartPlayer(uuid: UUID) {
+	override fun onStartPlayer(game: Game, uuid: UUID) {
 		val playerData = PlayerData.get(uuid)
 		playerData.setQuirkData(this, genPlayerIndices(itemsList))
 	}
 
 	override fun defaultData() = emptyArray<Int>()
 
-	private fun startDropping() {
+	private fun startDropping(game: Game) {
 		timer = 0
 		dropNum = 0
-		taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(org.gaseumlabs.uhc.UHCPlugin.plugin, ::tick, 0, 1)
+		taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(org.gaseumlabs.uhc.UHCPlugin.plugin, { tick(game) }, 0, 1)
 	}
 
 	private fun stopDropping() {
 		Bukkit.getScheduler().cancelTask(taskId)
 	}
 
-	var taskId = -1
-	var timer = 0
-	var dropNum = 0
-
-	private fun tick() {
+	private fun tick(game: Game) {
 		++timer
 
 		if (timer >= TIME_PER_DROP) {
-			if (dropNum >= NUM_DROPS) return startDropping()
+			if (dropNum >= NUM_DROPS) return stopDropping()
 
 			PlayerData.playerDataList.filter { (_, playerData) ->
 				playerData.participating
 			}.forEach { (uuid, playerData) ->
-				val indexList = playerData.getQuirkData<Array<Int>>(this)
+				val indexList = playerData.getQuirkData(this)
 
 				if (indexList.isNotEmpty()) {
-					val block = chaoticDropBlock(game.world)
+					val block = chaoticDropBlock(game, game.world)
 
 					val inventory = CarePackageUtil.generateChest(game.world,
 						block,
@@ -105,7 +106,7 @@ class ChaoticCarePackages(type: CHCType, game: Game) : CHC<Array<Int>>(type, gam
 	 *
 	 * avoids the center radius
 	 */
-	private fun chaoticDropBlock(world: World): Block {
+	private fun chaoticDropBlock(game: Game, world: World): Block {
 		val maxRadius = (((world.worldBorder.size - 1.0) / 2.0) - 10.0).roundToInt()
 		val minRadius = game.config.battlegroundRadius / 2
 
