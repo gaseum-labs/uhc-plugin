@@ -6,6 +6,7 @@ import org.bukkit.*
 import org.bukkit.World.Environment
 import org.bukkit.entity.SpawnCategory.ANIMAL
 import org.bukkit.entity.SpawnCategory.MONSTER
+import org.bukkit.persistence.PersistentDataHolder
 import org.gaseumlabs.uhc.core.UHC
 import java.io.File
 
@@ -32,16 +33,14 @@ object WorldManager {
 	/* */
 
 	fun init() {
-		pvpWorld = recoverWorld(PVP_WORLD_NAME, World.Environment.NORMAL, true)
-			?: throw Error("PVP world could not be loaded")
-		lobbyWorld = Bukkit.getWorld(LOBBY_WORLD_NAME)
-			?: throw Error("Lobby world could not be loaded")
+		pvpWorld = loadWorld(PVP_WORLD_NAME, Environment.NORMAL, true)
+		lobbyWorld = loadWorld(LOBBY_WORLD_NAME, Environment.NORMAL, true)
 		prepareWorld(lobbyWorld)
 	}
 
 	fun refreshGameWorlds() {
-		gameWorld = refreshWorld(GAME_WORLD_NAME, World.Environment.NORMAL, false)
-		netherWorld = refreshWorld(NETHER_WORLD_NAME, World.Environment.NETHER, false)
+		gameWorld = refreshWorld(GAME_WORLD_NAME, Environment.NORMAL, false)
+		netherWorld = refreshWorld(NETHER_WORLD_NAME, Environment.NETHER, false)
 	}
 
 	fun destroyGameWorlds() {
@@ -78,17 +77,16 @@ object WorldManager {
 			world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false)
 			world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false)
 
-			world.time = 6000
-			world.isThundering = false
-			world.setStorm(false)
-
 			if (world.name == PVP_WORLD_NAME) {
+				world.time = 6000
+				world.isThundering = false
+				world.setStorm(false)
 				ArenaManager.loadWorldInfo(world)
 			}
 		}
 	}
 
-	fun destroyWorld(name: String): World? {
+	fun destroyWorld(name: String) {
 		val oldWorld = Bukkit.getServer().getWorld(name)
 
 		if (oldWorld != null) {
@@ -107,33 +105,22 @@ object WorldManager {
 
 		val file = File(name)
 		if (file.exists() && file.isDirectory) file.deleteRecursively()
-
-		return oldWorld
 	}
 
-	fun refreshWorld(name: String, environment: World.Environment, structures: Boolean): World? {
-		destroyWorld(name)
+	fun loadWorld(name: String, environment: Environment, structures: Boolean): World {
+		val existing = Bukkit.getWorld(name)
+		if (existing != null) return existing
 
 		val creator = WorldCreator(name).environment(environment).generateStructures(structures)
 
-		val world = creator.createWorld()
-
-		if (world != null) prepareWorld(world)
-
+		val world = creator.createWorld() ?: throw Error("Could not create world \"${name}\"")
+		prepareWorld(world)
 		return world
 	}
 
-	fun recoverWorld(name: String, environment: World.Environment, structures: Boolean): World? {
-		return if (existsUnloaded(name)) {
-			val world = WorldCreator(name).createWorld()
-
-			if (world != null) prepareWorld(world)
-
-			world
-
-		} else {
-			refreshWorld(name, environment, structures)
-		}
+	fun refreshWorld(name: String, environment: Environment, structures: Boolean): World {
+		destroyWorld(name)
+		return loadWorld(name, environment, structures)
 	}
 
 	fun getGameWorldsBy(environment: Environment) = if (environment === Environment.NORMAL) {

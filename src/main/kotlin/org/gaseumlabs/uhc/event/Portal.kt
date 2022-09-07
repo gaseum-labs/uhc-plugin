@@ -1,10 +1,5 @@
 package org.gaseumlabs.uhc.event
 
-import org.gaseumlabs.uhc.command.Commands
-import org.gaseumlabs.uhc.core.*
-import org.gaseumlabs.uhc.core.phase.phases.Endgame
-import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
-import org.gaseumlabs.uhc.util.Action
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -14,7 +9,17 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerPortalEvent
-import org.gaseumlabs.uhc.core.Game
+import org.gaseumlabs.uhc.command.Commands
+import org.gaseumlabs.uhc.core.Lobby
+import org.gaseumlabs.uhc.core.PlayerData
+import org.gaseumlabs.uhc.core.UHC
+import org.gaseumlabs.uhc.core.phase.phases.Endgame
+import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
+import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
+import org.gaseumlabs.uhc.lobbyPvp.arena.ParkourArena
+import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
+import org.gaseumlabs.uhc.util.Action
+import org.gaseumlabs.uhc.world.WorldManager
 import java.util.*
 
 class Portal : Listener {
@@ -25,11 +30,11 @@ class Portal : Listener {
 
 		val PORTAL_TIME = 80
 
-		fun portalTick(game: Game) {
+		fun portalTick() {
 			Bukkit.getOnlinePlayers().forEach { player ->
 				if (player.location.block.type === Material.NETHER_PORTAL) {
 					val entry = portalEntries.getOrPut(player.uniqueId) { PortalEntry(PORTAL_TIME + 1) }
-					if (--entry.time == 0) onPlayerPortal(player, game)
+					if (--entry.time == 0) onPlayerPortal(player)
 
 				} else {
 					portalEntries.remove(player.uniqueId)
@@ -201,14 +206,16 @@ class Portal : Listener {
 			}
 		}
 
-		fun onPlayerPortal(player: Player, game: Game) {
-			val pvpGame = ArenaManager.playersArena(player.uniqueId)
+		fun onPlayerPortal(player: Player) {
+			val game = UHC.game
+			val arena = ArenaManager.playersArena(player.uniqueId)
 
 			/* lobby pvpers can't escape through the nether */
-			if (pvpGame != null) {
+			if (arena is PvpArena || arena is GapSlapArena) {
+				Commands.errorMessage(player, "Trying to escape?")
 
-				/* prevent going to the nether after nether closes */
-			} else if (game.phase is Endgame) {
+			/* prevent going to the nether after nether closes */
+			} else if (game?.phase is Endgame) {
 				val location = player.location
 				val world = location.world
 
@@ -216,27 +223,41 @@ class Portal : Listener {
 				world.getBlockAt(location).type = Material.AIR
 				Commands.errorMessage(player, "Nether is closed!")
 
-				/* portal coordinate fix */
+			} else if (WorldManager.isNonGameWorld(player.world)) {
+				sendThroughPortalLobby(player)
+
 			} else {
 				sendThroughPortal(player.uniqueId, player)
 			}
 		}
 
-		fun sendThroughPortal(uuid: UUID, player: Player?): Boolean {
-			val game = UHC.game ?: return false
-			val entity = player ?: PlayerData.get(uuid).offlineZombie ?: return false
+		private fun sendThroughPortalLobby(player: Player) {
+			val entranceWorld = player.world
 
-			/* override default portal creation behavior */
+			if (entranceWorld === WorldManager.lobbyWorld) {
+				val premiereArena = ParkourArena.premiereArena
+					?: return Commands.errorMessage(player, "No premiere parkour arena selected, ask an admin")
+				premiereArena.startPlayer(player, premiereArena.playerLocation(player))
+			} else {
+				ArenaManager.removePlayer(player.uniqueId)
+				Lobby.onSpawnLobby(player)
+			}
+		}
+
+		/**
+		 * @return were we able to send them through
+		 */
+		fun sendThroughPortal(uuid: UUID, player: Player?): Boolean {
+			val entity = player ?: PlayerData.get(uuid).offlineZombie ?: return false
+			val entranceWorld = entity.world
+			val game = UHC.game ?: return false
 
 			/* going to the nether if in the game world */
 			/* going to the game world if in nether */
-			val exitWorld = if (entity.world === game.getOverworld()) {
-				game.getNetherWorld()
-			} else {
-				game.getOverworld()
-			}
+			val exitWorld = if (entranceWorld === game.getOverworld())
+				game.getNetherWorld() else game.getOverworld()
 
-			val entrancePortalBlock = findPlayersPortal(entity.world, entity.location)
+			val entrancePortalBlock = findPlayersPortal(entranceWorld, entity.location)
 
 			val (exitPortalX, exitPortalZ) = setWithinBorder(exitWorld.worldBorder,
 				entrancePortalBlock.x,

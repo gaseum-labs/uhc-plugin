@@ -1,12 +1,12 @@
 package org.gaseumlabs.uhc.chc.chcs
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import org.bukkit.Axis
-import org.bukkit.Bukkit
-import org.bukkit.Location
-import org.bukkit.Material
+import net.minecraft.commands.Commands
+import org.bukkit.*
 import org.bukkit.block.data.Orientable
 import org.bukkit.entity.Cow
 import org.bukkit.entity.Entity
@@ -15,25 +15,28 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockDamageEvent
+import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.entity.EntitySpawnEvent
 import org.bukkit.event.world.WorldInitEvent
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
-import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.chc.CHC
+import org.gaseumlabs.uhc.chc.chcs.banana.BananaType
+import org.gaseumlabs.uhc.component.UHCColor
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.core.phase.Phase
 import org.gaseumlabs.uhc.core.phase.phases.Grace
-import org.gaseumlabs.uhc.gui.ItemCreator
+import org.gaseumlabs.uhc.util.Action
 import org.gaseumlabs.uhc.util.SchedulerUtil
+import org.gaseumlabs.uhc.util.ScoreboardDisplay
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil
 import kotlin.random.Random
 
@@ -104,41 +107,86 @@ class BananaTree : BlockPopulator() {
 	}
 }
 
-class Banana : CHC<Nothing?>() {
-	private var tickingTask = -1
+class BananaData(var count: Int, var lastUsed: Int)
 
-	override fun defaultData() = null
+class Banana : CHC<BananaData>() {
+	private var tickingTask = -1
+	private var scoreboard: ScoreboardDisplay? = null
+	private var currentSecond = 0
+
+	private val recipes = BananaType.values()
+		.take(BananaType.values().size - 1)
+		.map { BananaType.genRecipe(it) }
+
+	init {
+		recipes.forEach { Bukkit.addRecipe(it) }
+	}
+
+	override fun defaultData() = BananaData(0, -12890)
 
 	override fun customDestroy(game: Game) {
 		Bukkit.getScheduler().cancelTask(tickingTask)
+		scoreboard?.destroy()
+		recipes.forEach { Bukkit.removeRecipe(it.key) }
 	}
 
 	override fun onPhaseSwitch(game: Game, phase: Phase) {
 		if (phase is Grace) {
-			tickingTask = SchedulerUtil.everyN(1001, ::tick)
+			scoreboard = ScoreboardDisplay(BananaType.REGULAR.text("Bananas"), 12)
+			scoreboard?.show()
+			tickingTask = SchedulerUtil.everyN(20) { second(game) }
 		}
 	}
 
-	private fun tick() {
-		UHC.game ?: return
+	private fun second(game: Game) {
+		++currentSecond
 
-		val players = Bukkit.getOnlinePlayers().filter { PlayerData.get(it).participating }
-		val player = players.random()
+		val playerDatas = ArrayList(PlayerData.playerDataList.map { (_, data) -> data }.filter { it.participating })
+		if (playerDatas.isEmpty()) return
 
-		val superBananaIndex = player.inventory.contents.indexOfFirst {
-			stack -> stack?.type === Material.GOLDEN_SWORD && stack.itemMeta.hasDisplayName()
+		playerDatas.forEach { playerData ->
+			val inventory = Action.playerInventory(playerData.uuid)
+			val count = inventory?.fold(0) { count, stack ->
+				count + (BananaType.getBananaType(stack)?.points ?: 0)
+			} ?: 0
+			playerData.setQuirkDataL(this) { it.count = count }
 		}
-		if (superBananaIndex != -1) {
-			player.inventory.setItem(superBananaIndex,  ItemStack(Material.TNT, 16))
-			return
-		}
+		playerDatas.sortBy { it.getQuirkData(this).count }
 
-		val bananaIndex = player.inventory.contents.indexOfFirst {
-			stack -> stack?.type === Material.GOLDEN_PICKAXE && stack.itemMeta.hasDisplayName()
-		}
-		if (bananaIndex == -1) return
+		updateScoreboard(scoreboard!!, playerDatas)
 
-		player.inventory.setItem(bananaIndex, ItemStack(Material.DIAMOND, 2))
+		if (game.phase !is Grace && currentSecond % 60 == 0) {
+			val min = playerDatas.last().getQuirkData(this).count
+			val smittenPlayers = playerDatas.filter { it.getQuirkData(this).count == min }
+
+			smittenPlayers.forEach { Action.damagePlayer(it, 2.0) }
+
+			val smiteMessages = listOf(BananaType.REGULAR.text("Banana Gods are Angry")) +
+				smittenPlayers.map {
+					Component.text("Smited ").append(
+						BananaType.values().random().text(Bukkit.getOfflinePlayer(it.uuid).name ?: "[unknown]")
+					)
+				}
+
+			playerDatas.map { Bukkit.getPlayer(it.uuid)?.let { player ->
+				smiteMessages.forEach { text -> player.sendMessage(text) }
+			}}
+		}
+	}
+
+	fun updateScoreboard(
+		scoreboard: ScoreboardDisplay,
+		playerDatas: List<PlayerData>
+	) {
+		playerDatas.take(12)
+			.forEachIndexed { i, playerData ->
+				scoreboard.setLine(i,
+					Component.text(
+						"${Bukkit.getOfflinePlayer(playerData.uuid).name}"
+					).append(Component.text(" - ", NamedTextColor.GRAY))
+						.append(BananaType.REGULAR.text(playerData.getQuirkData(this).count.toString()))
+				)
+			}
 	}
 
 	override fun eventListener() = object : Listener {
@@ -153,15 +201,22 @@ class Banana : CHC<Nothing?>() {
 			event.instaBreak = true
 			event.block.world.dropItemNaturally(
 				event.block.location,
-				if (Random.nextInt(10) == 0) createSuperBanana() else createBanana()
+				BananaType.REGULAR.create()
 			)
+		}
+
+		@EventHandler
+		fun onBlockDrop(event: BlockDropItemEvent) {
+			if (event.block.type === Material.SPONGE) {
+				event.isCancelled = true
+			}
 		}
 
 		@EventHandler
 		fun entityDeath(event: EntityDeathEvent) {
 			if (isMonkey(event.entity)) {
 				event.drops.clear()
-				event.drops.add(if (Random.nextInt(10) == 0) createSuperBanana() else createBanana())
+				event.drops.add(BananaType.REGULAR.create())
 			}
 		}
 
@@ -174,23 +229,8 @@ class Banana : CHC<Nothing?>() {
 		}
 	}
 
-	fun createBanana(): ItemStack {
-		return ItemCreator.display(Material.GOLDEN_PICKAXE)
-			.name(Component.text("UHC Banana", TextColor.color(0xffff00), TextDecoration.BOLD))
-			.lore(listOf(Component.text("BANANA"), Component.text("BANANA"), Component.text("BANANA"), Component.text("BANANA")))
-			.create()
-	}
-
-	fun createSuperBanana(): ItemStack {
-		return ItemCreator.display(Material.GOLDEN_SWORD)
-			.name(Component.text("Super UHC Banana", TextColor.color(0xff8000), TextDecoration.BOLD))
-			.lore(listOf(Component.text("OOH OOH AH AH EEEEEEEEEEEEEEEEEEEEEEEEEKKKKK")))
-			.create()
-	}
-
 	companion object {
 		const val KEY_MOB = "_uhc_b-mob"
-
 		fun isMonkey(entity: Entity) = entity.getMetadata(KEY_MOB).isNotEmpty()
 	}
 }

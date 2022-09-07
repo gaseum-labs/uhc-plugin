@@ -25,20 +25,13 @@ object CustomSpawning {
 			WorldManager.gameWorld -> {
 				if (type.overworldEntries.isEmpty()) return null
 
-				val supplementalList = game.chc?.spawnInfos?.and {
-					type === CustomSpawningType.HOSTILE
-				} ?: emptyArray()
-
 				/* wrap spawn index */
-				if (spawningData.index >= type.overworldEntries.size + supplementalList.size) {
+				if (spawningData.index >= type.overworldEntries.size) {
 					spawningData.index = 0
 					++spawningData.cycle
 				}
 
-				if (spawningData.index >= type.overworldEntries.size)
-					supplementalList[spawningData.index - type.overworldEntries.size]
-				else
-					type.overworldEntries[spawningData.index]
+				type.overworldEntries[spawningData.index]
 			}
 			WorldManager.netherWorld -> {
 				if (type.netherEntries.isEmpty()) return null

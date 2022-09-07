@@ -1,44 +1,24 @@
 package org.gaseumlabs.uhc.util
 
-import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.World
-import org.bukkit.block.Structure
-import org.bukkit.block.structure.UsageMode
+import org.bukkit.persistence.PersistentDataType
 
 object WorldStorage {
-	fun destroy(world: World, x: Int, z: Int) {
-		val infoBlock = world.getBlockAt(x, 0, z)
-		infoBlock.setType(Material.BEDROCK, false)
+	fun <T, Z : Any>setData(
+		world: World,
+		key: NamespacedKey,
+		dataType: PersistentDataType<T, Z>,
+		value: Z
+	) {
+		world.persistentDataContainer.set(key, dataType, value)
 	}
 
-	fun save(world: World, x: Int, z: Int, data: String) {
-		val infoBlock = world.getBlockAt(x, 0, z)
-
-		infoBlock.setType(Material.STRUCTURE_BLOCK, false)
-		val state = infoBlock.getState(false) as Structure
-
-		state.usageMode = UsageMode.DATA
-		state.metadata = data
-	}
-
-	fun load(world: World, x: Int, z: Int): String? {
-		val infoBlock = world.getBlockAt(x, 0, z)
-
-		if (infoBlock.type !== Material.STRUCTURE_BLOCK) return null
-		val state = infoBlock.getState(false) as Structure
-
-		if (state.usageMode !== UsageMode.DATA) return null
-		return state.metadata
-	}
-
-	fun loadOrPut(world: World, x: Int, z: Int, defaultData: String): String {
-		val existing = load(world, x, z)
-
-		return if (existing != null) {
-			existing
-		} else {
-			save(world, x, z, defaultData)
-			defaultData
-		}
+	fun <T, Z : Any>getData(
+		world: World,
+		key: NamespacedKey,
+		dataType: PersistentDataType<T, Z>,
+	): Z? {
+		return world.persistentDataContainer.get(key, dataType)
 	}
 }

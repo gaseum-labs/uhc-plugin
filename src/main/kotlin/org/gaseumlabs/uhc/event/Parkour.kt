@@ -19,7 +19,12 @@ import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerMoveEvent
+import org.bukkit.event.world.PortalCreateEvent
+import org.gaseumlabs.uhc.lobbyPvp.Arena
 import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
+import org.gaseumlabs.uhc.util.Coords
+import org.gaseumlabs.uhc.util.extensions.BlockExtensions.toBlockPos
+import org.gaseumlabs.uhc.world.WorldManager
 
 class Parkour : Listener {
 	@EventHandler
@@ -32,7 +37,7 @@ class Parkour : Listener {
 
 				val checkpointType = when {
 					under.type === Material.GOLD_BLOCK -> 0
-					under.samePlace(arena.start) -> 1
+					under.samePlace(arena.startPosition) -> 1
 					else -> -1
 				}
 
@@ -43,7 +48,7 @@ class Parkour : Listener {
 					val isBuilding = player.gameMode === GameMode.CREATIVE
 
 					if (!parkourData.checkpoint.samePlace(under)) {
-						parkourData.checkpoint = under
+						parkourData.checkpoint = under.toBlockPos()
 
 						player.uhcHotbar(
 							UHCComponent.text()
@@ -94,7 +99,7 @@ class Parkour : Listener {
 		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
 
 		if (event.blockPlaced.type === Material.LAPIS_BLOCK) {
-			arena.start = event.blockPlaced
+			arena.startPosition = event.blockPlaced.toBlockPos()
 			player.sendActionBar(Component.text("Parkour start set", NamedTextColor.BLUE))
 		}
 	}
@@ -104,8 +109,8 @@ class Parkour : Listener {
 		val player = event.player
 		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
 
-		if (event.block.samePlace(arena.start)) {
-			arena.start = arena.defaultStart()
+		if (event.block.samePlace(arena.startPosition)) {
+			arena.startPosition = arena.defaultStart()
 			player.sendActionBar(Component.text("Parkour start reset", NamedTextColor.RED))
 		}
 	}

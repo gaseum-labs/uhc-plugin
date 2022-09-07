@@ -15,20 +15,20 @@ object CustomCarvers {
 	val canyonCarverMaster = WorldCarver.CANYON
 
 	val newUhcCarver = caveCarverMaster.configured(CaveCarverConfiguration(
-		0.5f, /* commonness */
+		0.6f, /* commonness */
 		UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(90)), /* y levels */
-		UniformFloat.of(0.0f, 1.0f), /* y scale */
+		UniformFloat.of(0.0f, 2.0f), /* y scale */
 		VerticalAnchor.aboveBottom(10), /* lava fill */
 		false,
-		UniformFloat.of(1.0f, 1.75f), /* horizontal radius */
-		UniformFloat.of(1.0f, 1.75f), /* vertical radius */
+		UniformFloat.of(1.0f, 2.0f), /* horizontal radius */
+		UniformFloat.of(1.0f, 2.0f), /* vertical radius */
 		UniformFloat.of(-1.0f, 0.0f), /* floor level */
 	))
 
 	val superCanyonCarver = canyonCarverMaster.configured(
 		CanyonCarverConfiguration(
 			0.05F,
-			UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(80)),
+			UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(90)),
 			UniformFloat.of(1.5f, 3.0f),
 			VerticalAnchor.aboveBottom(10),
 			CarverDebugSettings.of(false, Blocks.OAK_BUTTON.defaultBlockState()),

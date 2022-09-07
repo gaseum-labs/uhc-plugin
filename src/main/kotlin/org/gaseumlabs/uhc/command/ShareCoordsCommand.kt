@@ -17,10 +17,19 @@ class ShareCoordsCommand : BaseCommand() {
 	@CommandAlias("sharecoords")
 	@Description("shares your coordinates with your teammates")
 	@CommandCompletion("@uhcteamplayer")
-	fun shareCoords(sender: CommandSender, teammate: OfflinePlayer?) {
-		sender as Player
+	fun shareCoords(sender: CommandSender) {
+		internalShareCoords(sender as Player, sender as OfflinePlayer)
+	}
+
+	@CommandAlias("sharecoords")
+	@Description("shares your coordinates with your teammates")
+	@CommandCompletion("@uhcteamplayer")
+	fun shareCoords(sender: CommandSender, teammate: OfflinePlayer) {
+		internalShareCoords(sender as Player, teammate)
+	}
+
+	fun internalShareCoords(sender: Player, locationPlayer: OfflinePlayer) {
 		val game = UHC.game ?: return Commands.errorMessage(sender, "Game is not going")
-		val locationPlayer = teammate ?: sender
 
 		val senderTeam = game.teams.playersTeam(sender.uniqueId)
 			?: return Commands.errorMessage(sender, "You're not playing")
@@ -34,7 +43,7 @@ class ShareCoordsCommand : BaseCommand() {
 		val location = Action.getPlayerLocation(locationPlayer.uniqueId)
 			?: return Commands.errorMessage(sender, "Can't get that player's position")
 
-		val message = senderTeam.apply(teammate?.name ?: sender.name)
+		val message = senderTeam.apply(locationPlayer.name ?: "Unknown")
 			.append(Component.text(" is at ${location.blockX}, ${location.blockY}, ${location.blockZ}"))
 
 		/* tell everyone on the team where player is */

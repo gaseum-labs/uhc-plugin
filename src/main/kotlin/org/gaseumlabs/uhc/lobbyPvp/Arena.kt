@@ -8,7 +8,6 @@ import org.gaseumlabs.uhc.component.UHCComponent
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.team.NameManager
 import org.gaseumlabs.uhc.util.Util
-import org.gaseumlabs.uhc.util.WorldStorage
 import org.gaseumlabs.uhc.world.WorldManager
 import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket
 import net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket
@@ -20,12 +19,13 @@ import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager.ARENA_STRIDE
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager.BORDER
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager.EDGE
+import org.gaseumlabs.uhc.util.Coords
 import java.util.*
 import kotlin.collections.ArrayList
 
-abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>) {
-	var x = 0
-	var z = 0
+abstract class Arena(val teams: ArrayList<ArrayList<UUID>>, coords: Coords) {
+	val x = coords.x
+	val z = coords.z
 	var startTime = -4
 
 	data class Position(val x: Int, val z: Int, val rotation: Float, val y: Int?)
@@ -107,7 +107,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		val playerData = PlayerData.get(player.uniqueId)
 
 		/* save before pvp state */
-		playerData.lobbyInventory = player.inventory.contents!!.clone()
+		playerData.lobbyInventory = player.inventory.contents.clone()
 
 		Lobby.resetPlayerStats(player)
 
@@ -127,26 +127,6 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		player.handle.connection.send(ClientboundSetBorderSizePacket(border))
 	}
 
-	/**
-	 * @return if this arena is saveable
-	 */
-	fun save(world: World): Boolean {
-		val saveData = customSave()
-
-		return if (saveData != null) {
-			WorldStorage.save(
-				world,
-				x * ARENA_STRIDE,
-				z * ARENA_STRIDE,
-				"${type.name}|${saveData}"
-			)
-
-			true
-		} else {
-			false
-		}
-	}
-
 	abstract fun customPerSecond(onlinePlayers: List<Player>): Boolean
 
 	abstract fun startingPositions(teams: ArrayList<ArrayList<UUID>>): List<List<Position>>
@@ -160,8 +140,6 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 	abstract fun startText(): String
 
 	abstract fun shutdownOnLeave(): Boolean
-
-	abstract fun customSave(): String?
 
 	/* utility */
 
@@ -191,7 +169,7 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 		return Bukkit.getPlayer(uuid)?.location?.world === WorldManager.pvpWorld
 	}
 
-	fun getCenter(): Pair<Int, Int> = Companion.getCenter(x, z)
+	fun getCenter(): Coords = Companion.getCenter(x, z)
 
 	fun inBorder(testX: Int, testZ: Int): Boolean {
 		return testX in x * ARENA_STRIDE + EDGE until x * ARENA_STRIDE + EDGE + BORDER &&
@@ -199,32 +177,15 @@ abstract class Arena(val type: ArenaType, val teams: ArrayList<ArrayList<UUID>>)
 	}
 
 	companion object {
-		fun getCenter(x: Int, z: Int): Pair<Int, Int> {
-			return Pair(
-				x * ARENA_STRIDE + (ARENA_STRIDE / 2),
-				z * ARENA_STRIDE + (ARENA_STRIDE / 2)
-			)
-		}
+		fun getCenter(x: Int, z: Int) = Coords(
+			x * ARENA_STRIDE + (ARENA_STRIDE / 2),
+			z * ARENA_STRIDE + (ARENA_STRIDE / 2)
+		)
 
-		fun load(world: World, x: Int, z: Int): Arena? {
-			val data = WorldStorage.load(
-				world,
-				x * ARENA_STRIDE,
-				z * ARENA_STRIDE
-			) ?: return null
-
-			val parts = data.split('|')
-			if (parts.size != 2) return null
-
-			val typeName = parts[0]
-			val arenaType = ArenaType.values().find { it.name == typeName } ?: return null
-
-			val arena = arenaType.load(parts[1], world) ?: return null
-			arena.x = x
-			arena.z = z
-
-			return arena
-		}
+		fun arenaCoordsAt(blockX: Int, blockZ: Int) = Coords(
+			Util.mod(blockX, ARENA_STRIDE),
+			Util.mod(blockZ, ARENA_STRIDE),
+		)
 	}
 
 	fun outsideBorder(onOutside: (Player, Int) -> Unit) {

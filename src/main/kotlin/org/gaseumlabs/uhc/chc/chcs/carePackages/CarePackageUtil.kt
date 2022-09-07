@@ -1,5 +1,6 @@
 package org.gaseumlabs.uhc.chc.chcs.carePackages
 
+import net.kyori.adventure.text.format.TextColor
 import org.gaseumlabs.uhc.event.Brew
 import org.gaseumlabs.uhc.event.Brew.Companion.POISON_INFO
 import org.gaseumlabs.uhc.event.Brew.Companion.REGEN_INFO
@@ -90,7 +91,7 @@ object CarePackageUtil {
 		world.getBlockAt(block.x, block.y + height, block.z).setType(spireData.block, false)
 	}
 
-	fun generateChest(world: World, block: Block, color: ChatColor): Inventory {
+	fun generateChest(world: World, block: Block, color: TextColor): Inventory {
 		/* create the chest */
 		block.breakNaturally()
 		block.type = CHEST

@@ -143,9 +143,11 @@ object PvpQueue {
 				PlayerData.get(pairFound.player2).inLobbyPvpQueue = TYPE_NONE
 
 				/* create pvp game */
-				ArenaManager.addArena(
+				ArenaManager.addNewArena(
 					PvpArena(
-						arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)), TYPE_1V1
+						arrayListOf(arrayListOf(pairFound.player1), arrayListOf(pairFound.player2)),
+						ArenaManager.nextCoords(),
+						TYPE_1V1
 					)
 				)
 			}
@@ -170,9 +172,11 @@ object PvpQueue {
 				group.forEach { PlayerData.get(it).inLobbyPvpQueue = TYPE_NONE }
 
 				/* create pvp game */
-				ArenaManager.addArena(
+				ArenaManager.addNewArena(
 					PvpArena(
-						arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])), TYPE_2V2
+						arrayListOf(arrayListOf(group[0], group[1]), arrayListOf(group[2], group[3])),
+						ArenaManager.nextCoords(),
+						TYPE_2V2,
 					)
 				)
 			}
@@ -210,9 +214,10 @@ object PvpQueue {
 
 		playerDatas.forEach { it.addRecentPlatform(platformUUID) }
 
-		ArenaManager.addArena(
+		ArenaManager.addNewArena(
 			GapSlapArena(
 				group.map { arrayListOf(it) } as ArrayList<ArrayList<UUID>>,
+				ArenaManager.nextCoords(),
 				platform,
 			)
 		)

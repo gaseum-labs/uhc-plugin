@@ -12,6 +12,7 @@ import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
+import org.gaseumlabs.uhc.util.KeyGen
 
 enum class CommandItemType(
 	val material: Material,
@@ -81,7 +82,7 @@ enum class CommandItemType(
 	}
 
 	private fun hasItem(inventory: Inventory): Boolean {
-		return inventory.contents!!.any { stack -> stack != null && isItem(stack) }
+		return inventory.contents.any { stack -> stack != null && isItem(stack) }
 	}
 
 	private fun createItem(): ItemStack {
@@ -93,6 +94,6 @@ enum class CommandItemType(
 	}
 
 	companion object {
-		private val key = NamespacedKey(org.gaseumlabs.uhc.UHCPlugin.plugin, "commandItem")
+		private val key = KeyGen.genKey("command_item")
 	}
 }

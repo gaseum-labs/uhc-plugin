@@ -2,19 +2,19 @@ package org.gaseumlabs.uhc.gui
 
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
-import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction.*
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import org.gaseumlabs.uhc.gui.guiItem.MoveableGuiItem
+import org.gaseumlabs.uhc.util.KeyGen
 
 abstract class MoveableGuiPage(height: Int, name: Component, needsOp: Boolean) : GuiPage(height, name, needsOp) {
 	var moveableGuiItems = ArrayList<MoveableGuiItem>()
 	val savedIventory = arrayOfNulls<ItemStack>(36)
 
 	companion object {
-		val key = NamespacedKey(org.gaseumlabs.uhc.UHCPlugin.plugin, "gid")
+		val key = KeyGen.genKey("gui_move_id")
 	}
 
 	abstract fun createMoveableGuiItems(): ArrayList<MoveableGuiItem>
@@ -34,7 +34,6 @@ abstract class MoveableGuiPage(height: Int, name: Component, needsOp: Boolean) :
 		moveableGuiItems.forEachIndexed { index, moveable ->
 			moveable.id = index
 			val creator = moveable.generate().setData(key, index)
-
 
 			if (moveable.rawSlot < inventory.size) {
 				inventory.setItem(moveable.rawSlot, creator.create())

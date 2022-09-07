@@ -84,8 +84,6 @@ object UHC {
 		heartsObjective = objective
 
 		/* lobby spawn */
-		Lobby.loadSpawn(WorldManager.lobbyWorld)
-		Lobby.loadRadius(WorldManager.lobbyWorld)
 		Bukkit.getServer().onlinePlayers.forEach { player -> Lobby.onSpawnLobby(player) }
 
 		/* begin global ticking task */
@@ -104,8 +102,6 @@ object UHC {
 					OfflineZombie.zombieBorderTick(currentTick, currentGame)
 					currentGame.trader.traderTick(currentTick)
 				}
-
-				Portal.portalTick(currentGame)
 
 				if (currentGame.phase.tick(currentTick)) {
 					currentGame.nextPhase()
@@ -146,6 +142,7 @@ object UHC {
 			Lobby.lobbyTipsTick(currentTick)
 			ArenaManager.perTick(currentTick)
 			Bukkit.getOnlinePlayers().forEach(UHCBar::updateBar)
+			Portal.portalTick()
 
 			++currentTick
 		}
@@ -181,6 +178,7 @@ object UHC {
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
 		heightmap = Heightmap(worldRadius, preGameConfig.battlegroundRadius)
+		heightmap!!.generate(WorldManager.gameWorld!!)
 
 		val (world, otherWorld) = WorldManager.getGameWorldsBy(preGameConfig.defaultWorldEnvironment)
 

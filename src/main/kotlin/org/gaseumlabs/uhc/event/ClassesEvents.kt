@@ -561,7 +561,7 @@ class ClassesEvents(val classes: Classes) : Listener {
 
 				if (item != null && item.type == Material.COMPASS) {
 					fun onSameTeam(otherUUID: UUID): Boolean {
-						val team = classes.game.teams.playersTeam(otherUUID)
+						val team = UHC.getTeams().playersTeam(otherUUID)
 						return team != null && team.members.contains(player.uniqueId)
 					}
 

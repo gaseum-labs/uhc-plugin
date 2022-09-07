@@ -36,6 +36,7 @@ class UHCPlugin : JavaPlugin() {
 		commandManager.registerCommand(TeamCommands(), true)
 		commandManager.registerCommand(TestCommands(), true)
 		commandManager.registerCommand(ParticipantCommands(), true)
+		commandManager.registerCommand(ParkourCommands(), true)
 		commandManager.registerCommand(ParticipantTeamCommands(), true)
 		commandManager.registerCommand(ShareCoordsCommand(), true)
 		commandManager.registerCommand(NicknameCommand(), true)

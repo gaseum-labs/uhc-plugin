@@ -16,35 +16,32 @@ class ParkourJoiner(index: Int, val playerData: PlayerData) : GuiItemProperty<In
 	override fun getProperty() = playerData::parkourIndex
 
 	override fun onClickProperty(player: Player, shift: Boolean, property: UHCProperty<Int>) {
+		val arenaList = ArenaManager.ongoingOf<ParkourArena>()
+		if (arenaList.isEmpty()) return
+
 		if (shift) {
-			val arenaList = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)
-
-			if (arenaList.isEmpty()) {
-				property.set(-1)
-
-			} else {
-				property.set((property.get() + 1) % arenaList.size)
-			}
+			property.set((property.get() + 1) % arenaList.size)
 		} else {
 			if (!PvpQueue.enabled) return
 			if (property.get() == -1) return
 			if (ArenaManager.playersArena(player.uniqueId) != null) return
 
-			val arena = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)[property.get()]
+			val arena = arenaList[property.get() % arenaList.size]
 			arena.startPlayer(player, arena.playerLocation(player))
 
 			player.closeInventory()
 		}
 	}
 
-	override fun renderProperty(value: Int) =
-		if (value == -1) {
+	override fun renderProperty(value: Int): ItemCreator {
+		val arenaList = ArenaManager.ongoingOf<ParkourArena>()
+
+		return if (arenaList.isEmpty()) {
 			ItemCreator.display(Material.OAK_PRESSURE_PLATE)
 				.name(Component.text("No parkour lobbies", GRAY))
 
 		} else {
-			val arenaList = ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR)
-			val arena = arenaList[value]
+			val arena = arenaList[value % arenaList.size]
 			val player = Bukkit.getOfflinePlayer(arena.owner)
 
 			ItemCreator.display(Material.PLAYER_HEAD)
@@ -52,4 +49,5 @@ class ParkourJoiner(index: Int, val playerData: PlayerData) : GuiItemProperty<In
 				.name(Component.text("Join ${player.name}'s Parkour", YELLOW))
 				.lore(if (arenaList.size == 1) emptyList() else listOf(Component.text("Shift click to see more arenas")))
 		}
+	}
 }

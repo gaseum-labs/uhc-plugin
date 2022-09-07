@@ -1,5 +1,7 @@
 package org.gaseumlabs.uhc.chc.chcs.carePackages
 
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.core.phase.Phase
 import org.gaseumlabs.uhc.core.phase.phases.Endgame
@@ -77,9 +79,11 @@ class ChaoticCarePackages : CHC<Array<Int>>() {
 				if (indexList.isNotEmpty()) {
 					val block = chaoticDropBlock(game, game.world)
 
-					val inventory = CarePackageUtil.generateChest(game.world,
+					val inventory = CarePackageUtil.generateChest(
+						game.world,
 						block,
-						ChatColor.values()[Random.nextInt(ChatColor.MAGIC.ordinal)])
+						TextColor.color(Random.nextInt())
+					)
 
 					chestSlots(PER_CHEST) { index, slot ->
 						val itemIndex = index + dropNum * PER_CHEST

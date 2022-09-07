@@ -4,7 +4,6 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
-import org.gaseumlabs.uhc.chc.CHCType
 import org.gaseumlabs.uhc.chc.chcs.classes.Classes
 import org.gaseumlabs.uhc.chc.chcs.classes.QuirkClass
 import org.gaseumlabs.uhc.util.Action
@@ -81,17 +80,11 @@ class AdminCommands : BaseCommand() {
 	fun lobbyCycle(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		ArenaManager.destroyArenas(WorldManager.pvpWorld)
+		ArenaManager.destroyAllArenas()
 
 		WorldManager.refreshWorld(WorldManager.PVP_WORLD_NAME, World.Environment.NORMAL, true)
 
 		Action.sendGameMessage(sender, "Pvp world reset")
-	}
-
-	private fun moveAllToLobby() {
-		Bukkit.getOnlinePlayers().forEach { player ->
-			if (!WorldManager.isNonGameWorld(player.world)) Lobby.onSpawnLobby(player)
-		}
 	}
 
 	@CommandCompletion("@uhcplayer")
@@ -147,29 +140,6 @@ class AdminCommands : BaseCommand() {
 		}
 
 		Action.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
-	}
-
-	@Subcommand("lobbySpawn")
-	fun lobbySpawnCommand(sender: CommandSender) {
-		sender as Player
-		if (Commands.opGuard(sender)) return
-
-		val block = sender.location.block
-		if (block.world !== WorldManager.lobbyWorld) return Commands.errorMessage(sender, "You are not in the lobby")
-
-		Lobby.saveSpawn(block)
-		Action.sendGameMessage(sender, "Set the lobby spawn to ${block.x}, ${block.y}, ${block.z}")
-	}
-
-	@Subcommand("lobbyRadius")
-	fun lobbyRadiusCommand(sender: CommandSender, radius: Int) {
-		sender as Player
-		if (Commands.opGuard(sender)) return
-
-		if (radius < 0) Commands.errorMessage(sender, "Radius cannot be negative")
-
-		Lobby.saveRadius(WorldManager.lobbyWorld, radius)
-		Action.sendGameMessage(sender, "Set the lobby radius to $radius")
 	}
 
 	@Subcommand("banPlatform")

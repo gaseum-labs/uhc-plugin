@@ -10,10 +10,11 @@ import org.gaseumlabs.uhc.lobbyPvp.*
 import org.bukkit.*
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.util.Coords
 import java.util.*
 import kotlin.math.*
 
-class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(ArenaType.PVP, teams) {
+class PvpArena(teams: ArrayList<ArrayList<UUID>>, coords: Coords, val matchType: Int) : Arena(teams, coords) {
 	companion object {
 		fun typeName(type: Int) = if (type == PvpQueue.TYPE_1V1) "1v1" else "2v2"
 
@@ -173,6 +174,4 @@ class PvpArena(teams: ArrayList<ArrayList<UUID>>, val matchType: Int) : Arena(Ar
 	override fun startText() = "Entering PVP in"
 
 	override fun shutdownOnLeave() = true
-
-	override fun customSave(): String? = null
 }

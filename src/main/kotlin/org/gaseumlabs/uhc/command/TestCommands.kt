@@ -174,11 +174,13 @@ class TestCommands : BaseCommand() {
 		PlayerData.get(player1.uniqueId).inLobbyPvpQueue = 0
 		PlayerData.get(player2.uniqueId).inLobbyPvpQueue = 0
 
-		ArenaManager.addArena(
+		ArenaManager.addNewArena(
 			PvpArena(
 				arrayListOf(arrayListOf(player1.uniqueId),
 					arrayListOf(player2.uniqueId)
-				), PvpQueue.TYPE_1V1)
+				),
+				ArenaManager.nextCoords(),
+				PvpQueue.TYPE_1V1)
 		)
 
 		Action.sendGameMessage(sender, "Started a match between ${player1.name} and ${player2.name}")

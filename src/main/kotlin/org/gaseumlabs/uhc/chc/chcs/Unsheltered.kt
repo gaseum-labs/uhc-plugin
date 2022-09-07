@@ -4,6 +4,7 @@ import org.bukkit.Material
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.gaseumlabs.uhc.chc.NoDataCHC
 import org.gaseumlabs.uhc.util.SchedulerUtil
@@ -22,6 +23,13 @@ class Unsheltered : NoDataCHC() {
 					brokenBlock.type = Material.BEDROCK
 				}
 			}
+		}
+
+		@EventHandler
+		fun onBlockDrop(event: BlockDropItemEvent) {
+			val cantAdd = event.player.inventory.addItem(*event.items.map { it.itemStack }.toTypedArray())
+			cantAdd.forEach { (_, item) -> event.block.world.dropItem(event.player.location, item)  }
+			event.isCancelled = true
 		}
 
 		@EventHandler
@@ -53,7 +61,21 @@ class Unsheltered : NoDataCHC() {
 			Material.CHEST,
 			Material.BARREL,
 			Material.WET_SPONGE,
-			Material.TNT
+			Material.TNT,
+			Material.IRON_DOOR,
+			Material.OAK_DOOR,
+			Material.BIRCH_DOOR,
+			Material.SPRUCE_DOOR,
+			Material.JUNGLE_DOOR,
+			Material.DARK_OAK_DOOR,
+			Material.ACACIA_DOOR,
+			Material.IRON_TRAPDOOR,
+			Material.OAK_TRAPDOOR,
+			Material.BIRCH_TRAPDOOR,
+			Material.SPRUCE_TRAPDOOR,
+			Material.JUNGLE_TRAPDOOR,
+			Material.DARK_OAK_TRAPDOOR,
+			Material.ACACIA_TRAPDOOR,
 		)
 	}
 }

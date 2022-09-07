@@ -1,5 +1,8 @@
 package org.gaseumlabs.uhc.chc.chcs.carePackages
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.core.phase.Phase
 import org.gaseumlabs.uhc.core.phase.phases.*
@@ -12,6 +15,7 @@ import org.gaseumlabs.uhc.chc.chcs.carePackages.CarePackageUtil.SPIRE_IRON
 import org.gaseumlabs.uhc.chc.chcs.carePackages.CarePackageUtil.SPIRE_LAPIS
 import org.gaseumlabs.uhc.util.*
 import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.ChatColor.*
 import org.bukkit.Material.*
@@ -60,19 +64,17 @@ class CarePackages : CHC<Nothing?>() {
 	override fun customDestroy(game: Game) = onEnd()
 
 	override fun onPhaseSwitch(game: Game, phase: Phase) {
-		if (phase is Grace) onStart(game)
+		if (phase is Grace) {
+			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(
+				UHCPlugin.plugin, ::perSecond, 20, 20
+			)
+
+			scoreboardDisplay = ScoreboardDisplay(Component.text("Care Packages"), NUM_DROPS * 4)
+			scoreboardDisplay?.show()
+
+			if (generateDrops(game)) prepareDrop(0) else onEnd()
+		}
 		else if (phase is Endgame || phase is Postgame) onEnd()
-	}
-
-	private fun onStart(game: Game) {
-		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(
-			UHCPlugin.plugin, ::perSecond, 20, 20
-		)
-
-		scoreboardDisplay = ScoreboardDisplay("Care Packages", NUM_DROPS * 4)
-		scoreboardDisplay?.show()
-
-		if (generateDrops(game)) prepareDrop(0) else onEnd()
 	}
 
 	private fun onEnd() {
@@ -132,17 +134,18 @@ class CarePackages : CHC<Nothing?>() {
 
 		for (i in 0 until NUM_DROPS) {
 			val location = dropLocations[i]
-			val color = if (i == dropIndex) "${dropTextColor(i)}${BOLD}" else "${WHITE}"
+			val style = if (i == dropIndex) Style.style(dropTextColor(i), TextDecoration.BOLD)
+			else Style.style(NamedTextColor.WHITE)
 
-			scoreboard.setLine(i * 4 + 1, "${color}Drop ${i + 1}")
-			scoreboard.setLine(i * 4 + 2, "${color}(${location.blockX}, ${location.blockZ})")
-			scoreboard.setLine(i * 4 + 3, if (i < dropIndex)
-				"${color}Dropped"
+			scoreboard.setLine(i * 4 + 1, Component.text("Drop ${i + 1}", style))
+			scoreboard.setLine(i * 4 + 2, Component.text("(${location.blockX}, ${location.blockZ})", style))
+			scoreboard.setLine(i * 4 + 3, Component.text(if (i < dropIndex)
+				"Dropped"
 			else if (i == dropIndex)
-				"${color}${Util.timeString(timer)}"
+				Util.timeString(timer)
 			else
-				"${color}Awaiting"
-			)
+				"Awaiting"
+				, style))
 		}
 	}
 
@@ -309,7 +312,7 @@ class CarePackages : CHC<Nothing?>() {
 				Brew.createDefaultPotion(SPLASH_POTION, PotionData(SPEED, false, true)),
 				Brew.createDefaultPotion(SPLASH_POTION, PotionData(JUMP, false, true)),
 			),
-			arrayOf<ItemCreator>(
+			arrayOf(
 				CarePackagesItems.helmet,
 				CarePackagesItems.chestplate,
 				CarePackagesItems.leggings,
@@ -439,16 +442,14 @@ class CarePackages : CHC<Nothing?>() {
 			}
 		}
 
-		fun dropTextColor(tier: Int): ChatColor {
-			return when (tier) {
-				0 -> GOLD
-				1 -> BLUE
-				2 -> LIGHT_PURPLE
-				else -> GRAY
-			}
+		private fun dropTextColor(tier: Int): TextColor = when (tier) {
+			0 -> NamedTextColor.GOLD
+			1 -> NamedTextColor.BLUE
+			2 -> NamedTextColor.LIGHT_PURPLE
+			else -> NamedTextColor.GRAY
 		}
 
-		fun circlePlacement(
+		private fun circlePlacement(
 			centerX: Int,
 			centerZ: Int,
 			minRadius: Float,
@@ -494,14 +495,18 @@ class CarePackages : CHC<Nothing?>() {
 			val inventoryList = ArrayList<Inventory>()
 
 			circlePlacement(centerX, centerZ, placeRadius * 0.4f, placeRadius * 0.6f, ringChests) { _, x, z ->
-				inventoryList.add(CarePackageUtil.generateChest(world,
+				inventoryList.add(CarePackageUtil.generateChest(
+					world,
 					CarePackageUtil.dropBlock(world, x, z),
-					dropTextColor(tier)))
+					dropTextColor(tier)
+				))
 			}
 
-			inventoryList.add(CarePackageUtil.generateChest(world,
+			inventoryList.add(CarePackageUtil.generateChest(
+				world,
 				CarePackageUtil.dropBlock(world, centerX, centerZ),
-				dropTextColor(tier)))
+				dropTextColor(tier)
+			))
 
 			return inventoryList
 		}

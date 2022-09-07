@@ -7,6 +7,7 @@ import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.gaseumlabs.uhc.util.KeyGen
 import java.util.*
 
 enum class KillReward(
@@ -64,7 +65,7 @@ enum class KillReward(
 	});
 
 	companion object {
-		val uhcAppleKey = NamespacedKey(org.gaseumlabs.uhc.UHCPlugin.plugin, "_U_ua")
+		val uhcAppleKey = KeyGen.genKey("uhc_apple")
 
 		val uhcAppleCreator = ItemCreator.display(Material.ENCHANTED_GOLDEN_APPLE)
 			.setData(uhcAppleKey, 1)

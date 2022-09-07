@@ -22,24 +22,14 @@ import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.gaseumlabs.uhc.lobbyPvp.*
 import org.gaseumlabs.uhc.util.Action
+import org.gaseumlabs.uhc.util.Coords
 import org.gaseumlabs.uhc.world.WorldManager
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.random.Random.Default.nextFloat
 
-class GapSlapArena(teams: ArrayList<ArrayList<UUID>>, val platform: Platform) : Arena(ArenaType.GAP_SLAP, teams) {
-	class Platform(
-		val builderName: String,
-		val name: String,
-		val width: Int,
-		val height: Int,
-		val upperLayer: Array<BlockData>,
-		val platformLayer: Array<BlockData>,
-		val lowerLayer: Array<BlockData>,
-		val startPositions: ArrayList<Pair<Int, Int>>,
-	)
-
+class GapSlapArena(teams: ArrayList<ArrayList<UUID>>, coords: Coords, val platform: Platform) : Arena(teams, coords) {
 	companion object {
 		const val PLATFORM_Y_LEVEL = 110
 
@@ -222,7 +212,7 @@ class GapSlapArena(teams: ArrayList<ArrayList<UUID>>, val platform: Platform) : 
 
 	override fun customStartPlayer(player: Player, playerData: PlayerData) {
 		player.gameMode = SPECTATOR
-		Action.sendGameMessage(player, "Now entering ${platform.name} by ${platform.builderName}")
+		Action.sendGameMessage(player, "Now entering ${platform.name} by ${Bukkit.getOfflinePlayer(platform.owner).name}")
 	}
 
 	override fun prepareArena(world: World) {
@@ -266,6 +256,4 @@ class GapSlapArena(teams: ArrayList<ArrayList<UUID>>, val platform: Platform) : 
 	override fun startText() = "Entering Gap Slap in"
 
 	override fun shutdownOnLeave() = true
-
-	override fun customSave(): String? = null
 }

@@ -10,7 +10,6 @@ import net.kyori.adventure.text.format.NamedTextColor.GRAY
 import net.kyori.adventure.text.format.NamedTextColor.GREEN
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 
 class ParkourCreator(index: Int) : GuiItem(index) {
 	override fun onClick(player: Player, shift: Boolean) {
@@ -25,7 +24,10 @@ class ParkourCreator(index: Int) : GuiItem(index) {
 		if (existingParkour != null) {
 			existingParkour.startPlayer(player, existingParkour.playerLocation(player))
 		} else {
-			ArenaManager.addArena(ParkourArena(arrayListOf(arrayListOf(player.uniqueId)), player.uniqueId))
+			val coords = ArenaManager.nextCoords()
+			ArenaManager.addNewArena(ParkourArena(
+				arrayListOf(player.uniqueId), coords, player.uniqueId, ParkourArena.defaultStart(coords)
+			))
 		}
 
 		player.closeInventory()

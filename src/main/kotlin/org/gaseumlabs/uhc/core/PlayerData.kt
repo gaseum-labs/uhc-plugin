@@ -11,7 +11,6 @@ import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.gaseumlabs.uhc.gui.GuiManager
-import org.gaseumlabs.uhc.lobbyPvp.arena.*
 import org.gaseumlabs.uhc.util.PropertyGroup
 import java.util.*
 import kotlin.collections.ArrayList
@@ -42,7 +41,7 @@ class PlayerData(val uuid: UUID) {
 			PvpQueue.TYPE_GAP -> PvpQueue.add(uuid, PvpQueue.TYPE_GAP)
 		}
 	})
-	var parkourIndex by queueGroup.delegate(ArenaManager.typeList<ParkourArena>(ArenaType.PARKOUR).lastIndex)
+	var parkourIndex by queueGroup.delegate(0)
 	var slotCost0 by slotGroups[0].delegate(0)
 	var slotCost1 by slotGroups[1].delegate(0)
 	var slotCost2 by slotGroups[2].delegate(0)
@@ -64,8 +63,6 @@ class PlayerData(val uuid: UUID) {
 	var quirkData: QuirkDataHolder<*>? = null
 
 	var skull = ItemStack(Material.PLAYER_HEAD)
-
-	var loadingTip = 0
 
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
@@ -91,7 +88,6 @@ class PlayerData(val uuid: UUID) {
 			}
 			field = value
 		}
-	init { offlineZombie }
 
 	/* begin functions */
 
@@ -110,7 +106,7 @@ class PlayerData(val uuid: UUID) {
 		holder.data = data
 	}
 
-	inline fun <DataType>setQuirkData(quirk: CHC<DataType>, set: (DataType) -> Unit) {
+	inline fun <DataType>setQuirkDataL(quirk: CHC<DataType>, set: (DataType) -> Unit) {
 		val holder = getQuirkDataHolder(quirk)
 		set(holder.data)
 	}

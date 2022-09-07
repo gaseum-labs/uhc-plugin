@@ -10,6 +10,7 @@ import org.bukkit.*
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.Damageable
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
@@ -19,7 +20,6 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 
 	init {
 		if (clean) meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES)
-		else meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES)
 	}
 
 	fun name(component: Component): ItemCreator {
@@ -69,6 +69,11 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 
 	fun amount(value: Int): ItemCreator {
 		amount = value
+		return this
+	}
+
+	fun damage(damage: Int): ItemCreator {
+		(meta as Damageable).damage = damage
 		return this
 	}
 

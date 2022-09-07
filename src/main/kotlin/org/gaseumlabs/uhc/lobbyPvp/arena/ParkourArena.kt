@@ -13,42 +13,38 @@ import net.kyori.adventure.text.format.NamedTextColor.BLUE
 import net.kyori.adventure.text.format.NamedTextColor.YELLOW
 import net.kyori.adventure.title.Title
 import org.bukkit.*
-import org.bukkit.block.Block
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.util.BlockPos
+import org.gaseumlabs.uhc.util.Coords
 import java.util.*
+import kotlin.collections.ArrayList
 
-class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(ArenaType.PARKOUR, teams) {
-	lateinit var start: Block
-
-	data class ParkourData(var checkpoint: Block, var timer: Int, var timerGoing: Boolean)
+class ParkourArena(
+	players: ArrayList<UUID>,
+	coords: Coords,
+	val owner: UUID,
+	var startPosition: BlockPos,
+) : Arena(arrayListOf(players), coords) {
+	data class ParkourData(var checkpoint: BlockPos, var timer: Int, var timerGoing: Boolean)
 
 	private val parkourDataList = HashMap<UUID, ParkourData>()
 
 	fun getParkourData(uuid: UUID): ParkourData {
-		return parkourDataList.getOrPut(uuid) { ParkourData(start, 0, false) }
+		return parkourDataList.getOrPut(uuid) { ParkourData(startPosition, 0, false) }
 	}
 
+	fun defaultStart() = defaultStart(Coords(x, z))
+
 	companion object {
+		var premiereArena: ParkourArena? = null
+
 		fun playersParkour(uuid: UUID) = ArenaManager.ongoing.find { arena ->
 			arena is ParkourArena && arena.owner == uuid
 		} as ParkourArena?
 
-		fun load(data: String, world: World): Arena? {
-			val parts = data.split(',')
-			if (parts.size != 2) return null
-
-			val key = parts[0].toLongOrNull() ?: return null
-			val uuid = try {
-				UUID.fromString(parts[1])
-			} catch (ex: Exception) {
-				null
-			} ?: return null
-
-			val arena = ParkourArena(arrayListOf(arrayListOf()), uuid)
-
-			arena.start = world.getBlockAtKey(key)
-
-			return arena
+		fun defaultStart(coords: Coords): BlockPos {
+			val (centerX, centerZ) = getCenter(coords.x, coords.z)
+			return BlockPos(centerX, Util.topBlockY(WorldManager.pvpWorld, centerX, centerZ), centerZ)
 		}
 	}
 
@@ -76,7 +72,7 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 	}
 
 	fun playerLocation(player: Player): Location {
-		val location = getParkourData(player.uniqueId).checkpoint.location.add(0.5, 1.0, 0.5)
+		val location = getParkourData(player.uniqueId).checkpoint.block(WorldManager.pvpWorld).location.add(0.5, 1.0, 0.5)
 		location.pitch = player.location.pitch
 		location.yaw = player.location.yaw
 		return location
@@ -108,13 +104,6 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 		player.showTitle(Title.title(Component.text("BUILD", NamedTextColor.GOLD), Component.empty()))
 	}
 
-	fun defaultStart(): Block {
-		val world = WorldManager.pvpWorld
-		val (centerX, centerZ) = getCenter()
-
-		return world.getBlockAt(centerX, Util.topBlockY(world, centerX, centerZ), centerZ)
-	}
-
 	override fun customPerSecond(onlinePlayers: List<Player>): Boolean {
 		return false
 	}
@@ -133,17 +122,11 @@ class ParkourArena(teams: ArrayList<ArrayList<UUID>>, val owner: UUID) : Arena(A
 		enterPlayer(player, false, false)
 	}
 
-	override fun prepareArena(world: World) {
-		start = defaultStart()
-	}
+	override fun prepareArena(world: World) {}
 
 	override fun arenaStart(onlinePlayers: List<Player>) {}
 
 	override fun startText() = "Starting parkour in"
 
 	override fun shutdownOnLeave() = false
-
-	override fun customSave(): String {
-		return "${start.blockKey},${owner}"
-	}
 }

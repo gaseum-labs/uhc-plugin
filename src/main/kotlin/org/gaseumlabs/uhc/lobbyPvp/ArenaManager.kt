@@ -4,12 +4,16 @@ import org.gaseumlabs.uhc.core.Lobby
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.lobbyPvp.arena.ParkourArena
 import org.gaseumlabs.uhc.util.Util
-import org.gaseumlabs.uhc.util.WorldStorage
 import org.gaseumlabs.uhc.world.WorldManager
 import org.bukkit.*
 import org.bukkit.entity.AbstractArrow
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena
+import org.gaseumlabs.uhc.util.Coords
+import org.gaseumlabs.uhc.util.WorldStorage
+import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.removeRef
 import java.util.*
+import kotlin.collections.ArrayList
 
 object ArenaManager {
 	const val ARENA_STRIDE = 96
@@ -19,26 +23,22 @@ object ArenaManager {
 	const val START_BUFFER = 5
 	const val TEAM_BUFFER = 3
 
+	var spiral = Spiral.defaultSpiral()
 	val ongoing = ArrayList<Arena>()
-	private val typedOngoing = HashMap<ArenaType, ArrayList<Arena>>()
-	fun <T : Arena> typeList(type: ArenaType): ArrayList<T> =
-		typedOngoing.getOrPut(type) { ArrayList() } as ArrayList<T>
 
-	val spiral = Spiral()
+	inline fun <reified A: Arena>ongoingOf() = ongoing.filterIsInstance<A>()
 
-	fun addArena(arena: Arena, coords: Pair<Int, Int>? = null) {
-		if (coords == null) {
-			arena.x = spiral.getX()
-			arena.z = spiral.getZ()
-			spiral.next()
-		} else {
-			arena.x = coords.first
-			arena.z = coords.second
-		}
+	fun nextCoords(): Coords {
+		val x = spiral.getX()
+		val z = spiral.getZ()
+		spiral.next()
+		return Coords(x, z)
+	}
 
+	fun addNewArena(arena: Arena) {
 		/* set last played against for players */
 		/* can only set last played against for one of the players on the other team */
-		for (i in 0..arena.teams.lastIndex - 1) {
+		for (i in 0 until arena.teams.lastIndex) {
 			val otherTeamIndex = arena.teams.indices.firstOrNull { it != i } ?: continue
 
 			arena.teams[i].zip(arena.teams[otherTeamIndex]).forEach { (playerA, playerB) ->
@@ -47,16 +47,13 @@ object ArenaManager {
 			}
 		}
 
-		if (coords == null) arena.prepareArena(WorldManager.pvpWorld)
+		arena.prepareArena(WorldManager.pvpWorld)
 
 		ongoing.add(arena)
-		typeList<Arena>(arena.type).add(arena)
+	}
 
-		if (arena.type === ArenaType.PARKOUR) {
-			PlayerData.playerDataList.forEach { (_, playerData) ->
-				if (playerData.parkourIndex == -1) playerData.parkourIndex = 0
-			}
-		}
+	fun addExistingArena(arena: Arena) {
+		ongoing.add(arena)
 	}
 
 	fun playersArena(uuid: UUID): Arena? {
@@ -70,7 +67,6 @@ object ArenaManager {
 	fun onEdge(x: Int, z: Int): Boolean {
 		val x = Util.mod(x, ARENA_STRIDE)
 		val z = Util.mod(z, ARENA_STRIDE)
-
 		return x < GUTTER || x > ARENA_STRIDE - GUTTER || z < GUTTER || z > ARENA_STRIDE - GUTTER
 	}
 
@@ -152,39 +148,35 @@ object ArenaManager {
 		}
 	}
 
-	fun destroyArenas(world: World) {
-		ongoing.removeIf { game ->
-			destroyArena(game)
-			true
-		}
+	private fun cleanKickPlayersOut(arena: Arena) = arena.online().forEach { player ->
+		val playerData = PlayerData.get(player.uniqueId)
+		Lobby.onSpawnLobby(player)
+		player.inventory.contents = playerData.lobbyInventory
+	}
 
-		WorldStorage.destroy(world, 1, 1)
-		WorldStorage.destroy(world, 2, 2)
+	private fun updateParkourIndices() = PlayerData.playerDataList.forEach {
+		(_, playerData) -> playerData.parkourIndex = 0
+	}
 
-		spiral.reset()
+	fun destroyAllArenas() {
+		spiral = Spiral.defaultSpiral()
+
+		ongoing.forEach(::cleanKickPlayersOut)
+		ongoing.clear()
+
+		updateParkourIndices()
+		ParkourArena.premiereArena = null
 	}
 
 	fun destroyArena(arena: Arena) {
-		arena.online().forEach { player ->
-			removePlayer(player.uniqueId)
+		cleanKickPlayersOut(arena)
 
-			val playerData = PlayerData.get(player.uniqueId)
-			Lobby.onSpawnLobby(player)
-			player.inventory.setContents(playerData.lobbyInventory)
-		}
+		ongoing.removeRef(arena)
 
-		val typeList = typeList<Arena>(arena.type)
-		typeList.removeIf { it === arena }
-
-		WorldStorage.destroy(WorldManager.pvpWorld, arena.x * ARENA_STRIDE, arena.z * ARENA_STRIDE)
-
-		if (arena.type === ArenaType.PARKOUR) {
-			typeList as ArrayList<ParkourArena>
-			PlayerData.playerDataList.forEach { (_, playerData) ->
-				if (playerData.parkourIndex >= typeList.size) {
-					playerData.parkourIndex = typeList.lastIndex
-				}
-			}
+		if (arena is ParkourArena) {
+			updateParkourIndices()
+			if (arena === ParkourArena.premiereArena)
+				ParkourArena.premiereArena = null
 		}
 	}
 
@@ -193,33 +185,46 @@ object ArenaManager {
 		game?.teams?.any { team -> team.removeIf { it == uuid } }
 	}
 
-	/* saving arena data */
-
-	fun encodeArenaLocations(arenas: List<Arena>): String {
-		return arenas.joinToString("|") { arena -> "${arena.x},${arena.z}" }
-	}
-
-	fun decodeArenaLocations(data: String): List<Pair<Int, Int>> {
-		return data.split('|').map { str ->
-			val parts = str.split(',')
-			(parts[0].toIntOrNull() ?: return emptyList()) to (parts[1].toIntOrNull() ?: return emptyList())
-		}
-	}
-
 	fun saveWorldInfo(world: World) {
-		WorldStorage.save(world, 1, 1, spiral.toMetadata())
-		WorldStorage.save(world, 2, 2,
-			encodeArenaLocations(ongoing.filter { arena -> arena.save(world) }))
+		WorldStorage.setData(world, Spiral.key, Spiral.spiralData, spiral)
+
+		val arenaMarkers = ongoing.filterIsInstance<ParkourArena>().map { arena ->
+			ArenaMarker(
+				Coords(arena.x, arena.z),
+				arena.startPosition,
+				arena.owner,
+				arena === ParkourArena.premiereArena
+			)
+		} as ArrayList<ArenaMarker>
+
+		WorldStorage.setData(world, ArenaMarker.key, ArenaMarker.dataType, arenaMarkers)
+
+		WorldStorage.setData(
+			world,
+			PlatformStorage.key,
+			PlatformStorage.dataType,
+			GapSlapArena.submittedPlatforms.map { (_, platform) -> platform.storage } as ArrayList<PlatformStorage>
+		)
 	}
 
 	fun loadWorldInfo(world: World) {
-		val spiralData = WorldStorage.load(world, 1, 1) ?: return
-		spiral.fromMetadata(spiralData)
+		val dataSpiral = WorldStorage.getData(world, Spiral.key, Spiral.spiralData)
+		if (dataSpiral != null) spiral = dataSpiral
 
-		val arenaLocationsData = WorldStorage.load(world, 2, 2) ?: return
-		decodeArenaLocations(arenaLocationsData).forEach { (x, z) ->
-			val loadedArena = Arena.load(world, x, z)
-			if (loadedArena != null) addArena(loadedArena, Pair(x, z))
+		val arenaMarkers = WorldStorage.getData(world, ArenaMarker.key, ArenaMarker.dataType)
+		arenaMarkers?.forEach { marker ->
+			val arena = ParkourArena(arrayListOf(), marker.coords, marker.owner, marker.start)
+			addExistingArena(arena)
+			if (marker.premiere) ParkourArena.premiereArena = arena
+		}
+
+		val platformStorage = WorldStorage.getData(world, PlatformStorage.key, PlatformStorage.dataType)
+		platformStorage?.forEach { platform ->
+			try {
+				GapSlapArena.submittedPlatforms[platform.owner] = Platform.fromStorage(world, platform)
+			} catch (ex: Exception) {
+				Util.log("WARNING: Bad gap slap platform loaded: ${ex.message}")
+			}
 		}
 	}
 }

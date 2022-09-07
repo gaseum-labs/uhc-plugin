@@ -66,17 +66,16 @@ object Action {
 		}
 	}
 
-	fun getPlayerLocation(uuid: UUID): Location? {
-		val onlinePlayer = Bukkit.getPlayer(uuid)
+	fun damagePlayer(playerData: PlayerData, amount: Double) =
+		(Bukkit.getPlayer(playerData.uuid) ?: playerData.offlineZombie)?.damage(amount)
 
-		return if (onlinePlayer == null) {
-			val playerData = PlayerData.get(uuid)
-			playerData.offlineZombie?.location
+	fun getPlayerLocation(uuid: UUID) = Bukkit.getPlayer(uuid)?.location
+		?: PlayerData.get(uuid).offlineZombie?.location
 
-		} else {
-			onlinePlayer.location
+	fun playerInventory(uuid: UUID) = Bukkit.getPlayer(uuid)?.inventory?.contents
+		?: PlayerData.get(uuid).offlineZombie?.let {
+			OfflineZombie.getZombieInventory(it)
 		}
-	}
 
 	fun awardAdvancement(player: Player, name: String) {
 		val advancement = Bukkit.getServer().getAdvancement(NamespacedKey.minecraft(name)) ?: return

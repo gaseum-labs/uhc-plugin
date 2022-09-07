@@ -12,6 +12,8 @@ object ArrayListExtensions {
 		return null
 	}
 
+	inline fun <T> ArrayList<T>.removeRef(element: T) = removeFirst { it === element }
+
 	inline fun <T, R> ArrayList<T>.mapFirstNotNullPrefer(predicate: (T) -> Pair<R?, R?>): R? {
 		var fallback: R? = null
 

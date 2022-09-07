@@ -105,6 +105,8 @@ object UHCNoiseRouterData {
 			uhcSpaghetti(-16.0, 0.0, 3),
 			uhcSpaghetti(0.0, 16.0, 4),
 			uhcSpaghetti(16.0, 32.0, 5),
+			uhcSpaghetti(32.0, 48.0, 6),
+			uhcSpaghetti(48.0, 64.0, 7),
 		)
 	}
 

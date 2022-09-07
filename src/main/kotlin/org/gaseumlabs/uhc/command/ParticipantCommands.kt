@@ -9,15 +9,15 @@ import org.gaseumlabs.uhc.chc.chcs.classes.QuirkClass
 import org.gaseumlabs.uhc.util.Action
 import net.kyori.adventure.text.format.NamedTextColor.*
 import org.bukkit.*
-import org.bukkit.Material.EMERALD_BLOCK
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.gui.GuiManager
 import org.gaseumlabs.uhc.gui.gui.CreateGameGui
 import org.gaseumlabs.uhc.gui.gui.QueueGUI
-import org.gaseumlabs.uhc.lobbyPvp.ArenaType.PARKOUR
+import org.gaseumlabs.uhc.lobbyPvp.Platform
+import org.gaseumlabs.uhc.lobbyPvp.PlatformStorage
 import org.gaseumlabs.uhc.lobbyPvp.arena.*
-import org.gaseumlabs.uhc.lobbyPvp.arena.GapSlapArena.Platform
+import org.gaseumlabs.uhc.util.BlockPos
 import org.gaseumlabs.uhc.world.WorldManager
 
 @CommandAlias("uhc")
@@ -213,130 +213,5 @@ class ParticipantCommands : BaseCommand() {
 		} else {
 			Commands.errorMessage(sender, "You cannot teleport right now")
 		}
-	}
-
-	/* lobby parkour */
-	@Subcommand("parkour test")
-	fun parkourTest(sender: CommandSender) {
-		sender as Player
-
-		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
-		arena.enterPlayer(sender, sender.gameMode === GameMode.CREATIVE, false)
-	}
-
-	@Subcommand("parkour checkpoint")
-	fun parkourCheckpoint(sender: CommandSender) {
-		sender as Player
-
-		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
-		arena.enterPlayer(sender, true, true)
-	}
-
-	@Subcommand("parkour reset")
-	fun parkourReset(sender: CommandSender) {
-		sender as Player
-
-		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
-
-		val data = arena.getParkourData(sender.uniqueId)
-		data.checkpoint = arena.start
-		data.timer = 0
-		data.timerGoing = false
-		arena.enterPlayer(sender, true, true)
-	}
-
-	@CommandCompletion("@uhcblockx @uhcblocky @uhcblockz @uhcblockx @uhcblocky @uhcblockz")
-	@Subcommand("definePlatform")
-	fun definePlatformCommand(
-		sender: CommandSender,
-		x0: Int,
-		y0: Int,
-		z0: Int,
-		x1: Int,
-		y1: Int,
-		z1: Int,
-		name: String,
-	) {
-		val player = sender as? Player ?: return
-
-		val filteredName = name.trim()
-		if (filteredName.length !in 3..36) return Commands.errorMessage(player,
-			"Arena name must be 3 to 36 characters long")
-
-		val arena = ArenaManager.playersArena(player.uniqueId) ?: return Commands.errorMessage(player,
-			"You must be in your parkour arena")
-
-		if (arena.type !== PARKOUR || (arena as ParkourArena).owner != player.uniqueId)
-			return Commands.errorMessage(player, "You must be in your parkour arena")
-
-		val world = player.world
-		if (world !== WorldManager.pvpWorld) return Commands.errorMessage(player, "How did you get here")
-
-		if (y0 != y1) return Commands.errorMessage(player, "Please only select one y layer")
-
-		if (!arena.inBorder(x0, z0) || !arena.inBorder(x1, z1)) return Commands.errorMessage(player,
-			"Please define a shape inside your border")
-
-		val left = Math.min(x0, x1)
-		val right = Math.max(x0, x1)
-		val up = Math.min(z0, z1)
-		val down = Math.max(z0, z1)
-
-		val width = right - left + 1
-		val height = down - up + 1
-
-		if (width < 16 || height < 16) return Commands.errorMessage(player, "Min dimensions for arena is 16*16")
-		if (width > 48 || height > 48) return Commands.errorMessage(player, "Max dimensions for arena is 48*48")
-
-		val startPositions = ArrayList<Pair<Int, Int>>()
-
-		val upperLayer = Array(width * height) { i ->
-			val z = i / width
-			val x = i % width
-
-			val block = world.getBlockAt(left + x, y0 + 1, up + z)
-			if (block.isPassable) block.blockData else Material.AIR.createBlockData()
-		}
-
-		val platformBlockDatas = Array(width * height) { i ->
-			val z = i / width
-			val x = i % width
-
-			if ((left + x == x0 && up + z == z0) || (left + x == x1 && up + z == z1)) {
-				Material.AIR.createBlockData()
-			} else {
-				val block = world.getBlockAt(left + x, y0, up + z)
-
-				if (block.type === EMERALD_BLOCK) startPositions.add(x to z)
-
-				block.blockData
-			}
-		}
-
-		val lowerLayer = Array(width * height) { i ->
-			val z = i / width
-			val x = i % width
-
-			val block = world.getBlockAt(left + x, y0 - 1, up + z)
-			if (block.isPassable) block.blockData else Material.AIR.createBlockData()
-		}
-
-		if (startPositions.size < 4) return Commands.errorMessage(player,
-			"Need at least 4 starting positions (Emerald block) (Not on corners)")
-
-		val platform = Platform(
-			player.name,
-			filteredName,
-			width,
-			height,
-			upperLayer,
-			platformBlockDatas,
-			lowerLayer,
-			startPositions
-		)
-
-		GapSlapArena.submittedPlatforms[player.uniqueId] = platform
-
-		Action.sendGameMessage(player, "Updated your gap slap arena")
 	}
 }

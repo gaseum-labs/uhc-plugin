@@ -165,7 +165,7 @@ object PlayerSpreader {
 					val chunkX = ((point.x - 0.5f) * (borderRadius * 2 + 1) / 16.0f).toInt()
 					val chunkZ = ((point.y - 0.5f) * (borderRadius * 2 + 1) / 16.0f).toInt()
 
-					val spiral = Spiral()
+					val spiral = Spiral.defaultSpiral()
 
 					for (t in 0 until 25) {
 						val chunkLimit = (borderRadius / 16)

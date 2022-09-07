@@ -271,4 +271,10 @@ object Util {
 		array.sortBy { mapping(it) }
 		return array as Array<R>
 	}
+
+	inline fun <C>createArrayList(size: Int, element: (Int) -> C): ArrayList<C> {
+		val list = ArrayList<C>(size)
+		for (i in 0 until size) list.add(element(i))
+		return list
+	}
 }
