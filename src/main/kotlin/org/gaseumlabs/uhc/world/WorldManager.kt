@@ -7,6 +7,7 @@ import org.bukkit.World.Environment
 import org.bukkit.entity.SpawnCategory.ANIMAL
 import org.bukkit.entity.SpawnCategory.MONSTER
 import org.bukkit.persistence.PersistentDataHolder
+import org.gaseumlabs.uhc.core.Lobby
 import org.gaseumlabs.uhc.core.UHC
 import java.io.File
 
@@ -98,6 +99,11 @@ object WorldManager {
 					zombie.remove()
 					playerData.offlineZombie = null
 				}
+			}
+
+			/* remove players from this world */
+			Bukkit.getOnlinePlayers().forEach { player ->
+				if (oldWorld === player.world) Lobby.onSpawnLobby(player)
 			}
 
 			Bukkit.getServer().unloadWorld(oldWorld, false)

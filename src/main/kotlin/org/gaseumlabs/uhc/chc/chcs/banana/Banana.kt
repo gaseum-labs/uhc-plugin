@@ -1,11 +1,9 @@
-package org.gaseumlabs.uhc.chc.chcs
+package org.gaseumlabs.uhc.chc.chcs.banana
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.minecraft.commands.Commands
 import org.bukkit.*
 import org.bukkit.block.data.Orientable
 import org.bukkit.entity.Cow
@@ -18,6 +16,7 @@ import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.entity.EntitySpawnEvent
+import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.world.WorldInitEvent
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
@@ -27,11 +26,8 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.chc.CHC
-import org.gaseumlabs.uhc.chc.chcs.banana.BananaType
-import org.gaseumlabs.uhc.component.UHCColor
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.PlayerData
-import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.core.phase.Phase
 import org.gaseumlabs.uhc.core.phase.phases.Grace
 import org.gaseumlabs.uhc.util.Action
@@ -39,6 +35,10 @@ import org.gaseumlabs.uhc.util.SchedulerUtil
 import org.gaseumlabs.uhc.util.ScoreboardDisplay
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil
 import kotlin.random.Random
+import org.bukkit.event.block.Action as BAction
+import org.gaseumlabs.uhc.command.Commands
+import java.util.*
+import kotlin.collections.ArrayList
 
 fun findGroundAt(x: Int, z: Int, limitedRegion: LimitedRegion): Int? {
 	for (y in 128 downTo 58) {
@@ -114,9 +114,12 @@ class Banana : CHC<BananaData>() {
 	private var scoreboard: ScoreboardDisplay? = null
 	private var currentSecond = 0
 
-	private val recipes = BananaType.values()
-		.take(BananaType.values().size - 1)
-		.map { BananaType.genRecipe(it) }
+	private val recipes = arrayOf(
+		BananaType.genRecipe(BananaType.REGULAR, BananaType.SUPER),
+		BananaType.genRecipe(BananaType.SUPER, BananaType.MEGA),
+		BananaType.genRecipe(BananaType.MEGA, BananaType.HYPER),
+		BananaType.genRecipe(BananaType.HYPER, BananaType.GIGA),
+	)
 
 	init {
 		recipes.forEach { Bukkit.addRecipe(it) }
@@ -138,6 +141,12 @@ class Banana : CHC<BananaData>() {
 		}
 	}
 
+	override fun onStartPlayer(game: Game, uuid: UUID) {
+		Action.playerAction(uuid) { player ->
+			player.discoverRecipes(recipes.map { it.key })
+		}
+	}
+
 	private fun second(game: Game) {
 		++currentSecond
 
@@ -155,22 +164,29 @@ class Banana : CHC<BananaData>() {
 
 		updateScoreboard(scoreboard!!, playerDatas)
 
-		if (game.phase !is Grace && currentSecond % 60 == 0) {
-			val min = playerDatas.last().getQuirkData(this).count
-			val smittenPlayers = playerDatas.filter { it.getQuirkData(this).count == min }
+		if (game.phase !is Grace) {
+			val max = playerDatas.first().getQuirkData(this).count
+			val topPlayers = playerDatas.filter { it.getQuirkData(this).count == max }
 
-			smittenPlayers.forEach { Action.damagePlayer(it, 2.0) }
+			topPlayers.forEach { Action.potionEffectPlayer(it.uuid, PotionEffect(PotionEffectType.GLOWING, 30, 1)) }
 
-			val smiteMessages = listOf(BananaType.REGULAR.text("Banana Gods are Angry")) +
-				smittenPlayers.map {
-					Component.text("Smited ").append(
-						BananaType.values().random().text(Bukkit.getOfflinePlayer(it.uuid).name ?: "[unknown]")
-					)
-				}
+			if (currentSecond % 60 == 0) {
+				val min = playerDatas.last().getQuirkData(this).count
+				val smittenPlayers = playerDatas.filter { it.getQuirkData(this).count == min }
 
-			playerDatas.map { Bukkit.getPlayer(it.uuid)?.let { player ->
-				smiteMessages.forEach { text -> player.sendMessage(text) }
-			}}
+				smittenPlayers.forEach { Action.damagePlayer(it, 2.0) }
+
+				val smiteMessages = listOf(BananaType.REGULAR.text("Banana Gods are Angry")) +
+					smittenPlayers.map {
+						Component.text("Smited ").append(
+							BananaType.values().random().text(Bukkit.getOfflinePlayer(it.uuid).name ?: "[unknown]")
+						)
+					}
+
+				playerDatas.map { Bukkit.getPlayer(it.uuid)?.let { player ->
+					smiteMessages.forEach { text -> player.sendMessage(text) }
+				}}
+			}
 		}
 	}
 
@@ -225,6 +241,30 @@ class Banana : CHC<BananaData>() {
 			if (event.entity !is Player && event.entity is LivingEntity && Random.nextInt(20) == 0) {
 				spawnMonkey(event.entity.location)
 				event.isCancelled = true
+			}
+		}
+
+		@EventHandler
+		fun onUseItem(event: PlayerInteractEvent) {
+			if (
+				event.action === BAction.RIGHT_CLICK_AIR ||
+				event.action === BAction.RIGHT_CLICK_BLOCK
+			) {
+				val item = event.item ?: return
+				val type = BananaType.getBananaType(item) ?: return
+
+				val bananaData = PlayerData.get(event.player).getQuirkData(this@Banana)
+
+				if (currentSecond > bananaData.lastUsed + 10) {
+					return Commands.errorMessage(
+						event.player,
+						"Banana cooldown, try again in ${bananaData.lastUsed + 10 - bananaData.lastUsed} seconds"
+					)
+				}
+
+				bananaData.lastUsed = currentSecond
+
+				type.ability(event.player)
 			}
 		}
 	}

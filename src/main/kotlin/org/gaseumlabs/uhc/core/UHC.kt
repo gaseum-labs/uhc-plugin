@@ -258,18 +258,19 @@ object UHC {
 	}
 
 	fun destroyGame() {
-		val runningGame = game ?: return
+		val runningGame = game
+		if (runningGame != null) {
+			runningGame.teams.clearTeams()
+			chc?.onDestroy(runningGame)
+		}
 
-		runningGame.teams.clearTeams()
-		chc?.onDestroy(runningGame)
 		chcListener?.let { HandlerList.unregisterAll(it) }
-		game = null
 		preGameConfig = GameConfig()
+		timer.reset()
+
+		game = null
 
 		PlayerData.prune()
-		Bukkit.getOnlinePlayers().forEach { player ->
-			if (WorldManager.isGameWorld(player.world)) Lobby.onSpawnLobby(player)
-		}
 		WorldManager.destroyGameWorlds()
 	}
 

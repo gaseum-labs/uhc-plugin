@@ -20,7 +20,7 @@ class AdminCommands : BaseCommand() {
 	fun testReset(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
 
-		if (UHC.game == null) {
+		if (UHC.timer.onMode(GameTimer.Mode.NONE)) {
 			return Commands.errorMessage(sender, "Game is not running")
 		}
 

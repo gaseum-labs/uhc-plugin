@@ -10,6 +10,7 @@ import org.bukkit.Material
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
+import org.gaseumlabs.uhc.chc.chcs.banana.Banana
 
 enum class CHCType(
 	val prettyName: String,

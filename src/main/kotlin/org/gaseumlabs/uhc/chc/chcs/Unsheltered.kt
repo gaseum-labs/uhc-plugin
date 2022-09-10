@@ -27,8 +27,7 @@ class Unsheltered : NoDataCHC() {
 
 		@EventHandler
 		fun onBlockDrop(event: BlockDropItemEvent) {
-			val cantAdd = event.player.inventory.addItem(*event.items.map { it.itemStack }.toTypedArray())
-			cantAdd.forEach { (_, item) -> event.block.world.dropItem(event.player.location, item)  }
+			Util.addOrDrop(event.player, *event.items.map { it.itemStack }.toTypedArray())
 			event.isCancelled = true
 		}
 

@@ -5,8 +5,12 @@ import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.TextColor
 import net.minecraft.network.chat.*
 import org.bukkit.*
+import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import java.util.logging.*
 import kotlin.math.*
+import kotlin.random.Random
+import kotlin.random.nextInt
 
 object Util {
 	inline fun Any?.unit() = Unit
@@ -277,4 +281,16 @@ object Util {
 		for (i in 0 until size) list.add(element(i))
 		return list
 	}
+
+	fun addOrDrop(player: Player, vararg stacks: ItemStack) {
+		val cantAdd = player.inventory.addItem(*stacks)
+		cantAdd.forEach { (_, item) -> player.world.dropItem(player.location, item) }
+	}
+
+	fun randomMirrored(range: IntRange): Int {
+		val length = range.last - range.first + 1
+		val value = Random.nextInt(length * 2)
+		return if (value < length) -value - range.first else range.first + (value - length)
+	}
+
 }
