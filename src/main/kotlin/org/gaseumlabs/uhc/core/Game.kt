@@ -146,11 +146,11 @@ class Game(
 
 	/* death */
 
-	fun playerDeath(uuid: UUID, killer: Player?, playerData: PlayerData, forcePermaDeath: Boolean) {
+	fun playerDeath(uuid: UUID, location: Location?, killer: Player?, playerData: PlayerData, forcePermaDeath: Boolean) {
 		if (!forcePermaDeath && shouldRespawn(playerData)) {
 			playerRespawn(uuid)
 		} else {
-			playerPermaDeath(uuid, killer, chc is Pests) { teams.leaveTeam(uuid) }
+			playerPermaDeath(uuid, location, killer, chc is Pests)
 		}
 	}
 
@@ -175,7 +175,12 @@ class Game(
 		return phase is Grace || playerData.undead()
 	}
 
-	private fun playerPermaDeath(uuid: UUID, killer: Player?, respawn: Boolean, setupRespawn: (UUID) -> Unit) {
+	private fun playerPermaDeath(
+		uuid: UUID,
+		location: Location?,
+		killer: Player?,
+		respawn: Boolean,
+	) {
 		val playerData = PlayerData.get(uuid)
 		val playerTeam = teams.playersTeam(uuid)
 		val killerTeam = if (killer == null) null else teams.playersTeam(killer.uniqueId)
@@ -184,13 +189,14 @@ class Game(
 		playerData.alive = false
 		playerData.participating = respawn
 
+		/* check game state after death */
 		val (numRemaining, lastTeamAlive, teamIsAlive) = remainingTeamsFocusOn(playerTeam)
 
 		/* broadcast elimination */
 		val eliminationMessages = eliminationMessages(uuid, playerTeam, numRemaining, teamIsAlive)
-		Bukkit.getOnlinePlayers().filter { WorldManager.isGameWorld(it.world) }.forEach { player ->
-			eliminationMessages.forEach { player.sendMessage(it) }
-		}
+		PlayerData.playerDataList.filter { (_, data) -> data.participating }
+			.mapNotNull { (uuid, _) -> Bukkit.getPlayer(uuid) }
+			.forEach { player -> eliminationMessages.forEach { player.sendMessage(it) } }
 
 		/* add to ledger */
 		summaryBuilder.addEntry(uuid, UHC.timer.get(), killer?.uniqueId)
@@ -198,29 +204,28 @@ class Game(
 		/* chc undoes them */
 		chc?.onEndPlayer(this, uuid)
 
-		/* does the UHC end here? */
+		/* apply kill reward, only on player kill, no team kills */
+		if (
+			killer != null &&
+			playerTeam !== killerTeam &&
+			location != null
+		) config.killReward.apply(
+			killer.uniqueId,
+			killerTeam?.members ?: arrayListOf(),
+			location
+		)
+
+		/* end the game maybe */
 		if (numRemaining <= 1) {
 			Action.playerAction(uuid) { it.gameMode = GameMode.SPECTATOR }
 			end(lastTeamAlive)
 
-			/* or does it keep going */
-		} else {
-			/* apply kill reward (no team kills) */
-			if (killer != null && playerTeam !== killerTeam) {
-				config.killReward.apply(
-					killer.uniqueId,
-					killerTeam?.members ?: arrayListOf(),
-					Action.getPlayerLocation(uuid) ?: spectatorSpawnLocation()
-				)
-			}
+		} else if (respawn) {
+			teams.leaveTeam(uuid)
+			playerRespawn(uuid)
 
-			/* tell player they died */
-			if (respawn) {
-				setupRespawn(uuid)
-				playerRespawn(uuid)
-			} else {
-				Action.playerAction(uuid) { deathTitle(it, killer, false) }
-			}
+		} else {
+			Action.playerAction(uuid) { deathTitle(it, killer, false) }
 		}
 	}
 
@@ -330,5 +335,17 @@ class Game(
 		world.setSpawnLimit(SpawnCategory.AXOLOTL, spawnLimit(5, borderRadius))
 		world.setSpawnLimit(SpawnCategory.WATER_ANIMAL, spawnLimit(5, borderRadius))
 		world.setSpawnLimit(SpawnCategory.WATER_UNDERGROUND_CREATURE, spawnLimit(5, borderRadius))
+	}
+
+	companion object {
+		fun bloodCloud(location: Location) {
+			location.world.spawnParticle(Particle.REDSTONE,
+				location.clone().add(0.0, 1.0, 0.0),
+				64,
+				0.5,
+				1.0,
+				0.5,
+				Particle.DustOptions(Color.RED, 2.0f))
+		}
 	}
 }

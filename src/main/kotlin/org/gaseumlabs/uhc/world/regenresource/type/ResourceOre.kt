@@ -1,27 +1,26 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
-import org.bukkit.*
-import org.bukkit.Material.GOLD_ORE
-import org.bukkit.Material.TUFF
+import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
-import org.bukkit.entity.FallingBlock
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.phase.PhaseType
-import org.gaseumlabs.uhc.customSpawning.SpawnUtil
+import org.gaseumlabs.uhc.util.IntVector
+import org.gaseumlabs.uhc.util.Util
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapFirstNotNullPrefer
 import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
-import org.gaseumlabs.uhc.util.extensions.IntRangeExtensions.rangeIntersection
-import org.gaseumlabs.uhc.world.WorldManager
-import org.gaseumlabs.uhc.world.regenresource.*
-import kotlin.math.*
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil
+import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionBlock
+import kotlin.math.ceil
+import kotlin.random.Random
 
 class ResourceOre(
 	val type: Material,
 	val deepType: Material,
 	val veinSize: Int,
-	val yDistribution: (y: Float) -> Int,
+	val yRange: IntRange,
 	val yEligable: (y: Int) -> Boolean,
+	val perfectGen: Boolean,
 
 	released: HashMap<PhaseType, Int>,
 	chunkRadius: Int,
@@ -39,21 +38,23 @@ class ResourceOre(
 		return yEligable(player.location.y.toInt())
 	}
 
-	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
-		val potentialSpots = RegenUtil.aroundInChunk(
-			chunk,
-			yDistribution,
+	override fun generate(bounds: RegenUtil.GenBounds, fullVein: Boolean): List<Block>? {
+		if (perfectGen) return generate2(bounds, fullVein)
+
+		val potentialSpots = RegenUtil.volume(
+			bounds,
+			yRange,
 			32
 		) { block ->
 			if (block.isPassable) block else null
 		}
 
 		val oreSource = potentialSpots.firstNotNullOfOrNull { startBlock ->
-			RegenUtil.expandFrom(startBlock, 4) { block ->
-				if (block.isPassable) {
-					false
-				} else {
-					if (isStone(block)) true else null
+			RegenUtil.expandFrom(startBlock, 4) {
+				when {
+					isPass(it) -> false
+					isReplaceable(it) -> true
+					else -> null
 				}
 			}
 		} ?: return null
@@ -61,8 +62,79 @@ class ResourceOre(
 		return createOreFrom(oreSource, if (fullVein) veinSize else 1)
 	}
 
+	fun isWall(block: Block) = block.type === Material.LAVA || block.isCollidable
+
+	fun indexToXYZ(i: Int, wide: Int, tall: Int, deep: Int) = IntVector(
+		i / (tall * deep),
+		(i / deep) % tall,
+		i % deep
+	)
+
+	fun xyzToIndex(x: Int, y: Int, z: Int, wide: Int, tall: Int, deep: Int) =
+		x * tall * deep + y * deep + z
+
+	fun generate2(bounds: RegenUtil.GenBounds, fullVein: Boolean): List<Block>? {
+		val GAP = 4
+
+		val wide = ceil(bounds.width / GAP.toFloat()).toInt()
+		val tall = ceil((yRange.last - yRange.first + 1) / GAP.toFloat()).toInt()
+		val deep = ceil(bounds.depth / GAP.toFloat()).toInt()
+
+		val outerWide = wide + 2
+		val outerTall = tall + 2
+		val outerDeep = deep + 2
+
+		val offX = Random.nextInt(GAP)
+		val offY = Random.nextInt(GAP)
+		val offZ = Random.nextInt(GAP)
+
+		val grid = Array(outerWide * outerTall * outerDeep) { i ->
+			val (x, y, z) = indexToXYZ(i, outerWide, outerTall, outerDeep)
+
+			val block = bounds.world.getBlockAt(
+				bounds.x     + offX + (x - 1) * GAP,
+				yRange.first + offY + (y - 1) * GAP,
+				bounds.z     + offZ + (z - 1) * GAP
+			)
+
+			if (isWall(block)) 1 else if (isPass(block)) 0 else 2
+		}
+
+		val visitOrder = Array(wide * tall * deep) { it }
+		visitOrder.shuffle()
+
+		for (i in visitOrder.indices) {
+			val (x, y, z) = indexToXYZ(visitOrder[i], wide, tall, deep).add(1, 1, 1)
+
+			if (grid[xyzToIndex(x, y, z, outerWide, outerTall, outerDeep)] == 0) {
+				val expandFaces = aroundFaces.filter { face ->
+					grid[xyzToIndex(x + face.modX, y + face.modY, z + face.modZ, outerWide, outerTall, outerDeep)] == 1
+				}
+				if (expandFaces.isEmpty()) continue
+
+				val startBlock = bounds.world.getBlockAt(
+					bounds.x     + offX + (x - 1) * GAP,
+					yRange.first + offY + (y - 1) * GAP,
+					bounds.z     + offZ + (z - 1) * GAP
+				)
+
+				val oreSource = RegenUtil.newExpandFrom(expandFaces, startBlock, 4) {
+					when {
+						isPass(it) -> false
+						isReplaceable(it) -> true
+						else -> null
+					}
+				} ?: continue
+
+				return createOreFrom(oreSource, if (fullVein) veinSize else 1)
+			}
+		}
+
+		return null
+	}
+
 	override fun setBlock(block: Block, index: Int, fullVein: Boolean) {
-		block.setType(if (block.type === Material.DEEPSLATE || block.type === TUFF) deepType else type, false)
+		block.setType(if (block.type === Material.DEEPSLATE || block.type === Material.TUFF) deepType else type, false)
 	}
 
 	override fun isBlock(block: Block): Boolean {
@@ -117,7 +189,7 @@ class ResourceOre(
 			/* do NOT tread back into an already placed ore */
 			if (currentVein.any { it.samePlace(relative) }) continue
 
-			if (isStone(relative)) {
+			if (isReplaceable(relative)) {
 				return face to null
 
 			} else {
@@ -128,18 +200,74 @@ class ResourceOre(
 		return null to nonOptimal
 	}
 
-	private fun isStone(block: Block): Boolean {
-		return block.type === Material.STONE ||
-		block.type === Material.ANDESITE ||
-		block.type === Material.GRANITE ||
-		block.type === Material.DIORITE ||
-		block.type === Material.TUFF ||
-		block.type === Material.DEEPSLATE ||
-		block.type === Material.SOUL_SAND ||
-		block.type === Material.SOUL_SOIL ||
-		block.type === Material.NETHERRACK ||
-		block.type === Material.BLACKSTONE ||
-		block.type === Material.BASALT ||
-		block.type === Material.MAGMA_BLOCK
+	companion object {
+		val wallMaterials = Util.sortedArrayOf(
+			Material.DRIPSTONE_BLOCK,
+			Material.STONE,
+			Material.ANDESITE,
+			Material.DIORITE,
+			Material.GRANITE,
+			Material.TUFF,
+			Material.DEEPSLATE,
+			Material.COPPER_ORE,
+			Material.DEEPSLATE_COPPER_ORE,
+			Material.IRON_ORE,
+			Material.DEEPSLATE_IRON_ORE,
+			Material.COAL_ORE,
+			Material.DEEPSLATE_COAL_ORE,
+			Material.GOLD_ORE,
+			Material.DEEPSLATE_GOLD_ORE,
+			Material.REDSTONE_ORE,
+			Material.DEEPSLATE_REDSTONE_ORE,
+			Material.DIAMOND_ORE,
+			Material.DEEPSLATE_DIAMOND_ORE,
+			Material.LAPIS_ORE,
+			Material.DEEPSLATE_LAPIS_ORE,
+			Material.EMERALD_ORE,
+			Material.DEEPSLATE_EMERALD_ORE,
+			Material.CLAY,
+			Material.MAGMA_BLOCK,
+		)
+
+		val replaceMaterials = Util.sortedArrayOf(
+			Material.DRIPSTONE_BLOCK,
+			Material.STONE,
+			Material.ANDESITE,
+			Material.DIORITE,
+			Material.GRANITE,
+			Material.TUFF,
+			Material.DEEPSLATE,
+			Material.COPPER_ORE,
+			Material.DEEPSLATE_COPPER_ORE,
+			Material.CLAY,
+
+			Material.BLACKSTONE,
+			Material.BASALT,
+			Material.NETHERRACK,
+			Material.NETHER_GOLD_ORE,
+			Material.NETHER_QUARTZ_ORE,
+			Material.SOUL_SAND,
+			Material.SOUL_SOIL,
+			Material.CRIMSON_NYLIUM,
+			Material.WARPED_NYLIUM,
+		)
+
+		val passMaterials = Util.sortedArrayOf(
+			Material.POINTED_DRIPSTONE,
+			Material.BIG_DRIPLEAF,
+			Material.AZALEA,
+			Material.FLOWERING_AZALEA,
+			Material.MOSS_CARPET,
+			Material.SMALL_AMETHYST_BUD,
+			Material.MEDIUM_AMETHYST_BUD,
+			Material.LARGE_AMETHYST_BUD,
+			Material.AMETHYST_CLUSTER,
+		)
+
+		fun isWall(block: Block) = Util.binarySearch(block.type, wallMaterials)
+
+		fun isPass(block: Block) = (block.type !== Material.LAVA && block.isPassable) || Util.binarySearch(block.type, passMaterials)
+
+		fun isReplaceable(block: Block) = Util.binarySearch(block.type, replaceMaterials)
 	}
 }

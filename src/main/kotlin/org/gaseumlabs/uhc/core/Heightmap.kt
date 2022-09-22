@@ -1,8 +1,9 @@
 package org.gaseumlabs.uhc.core
 
-import org.bukkit.Material.*
+import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Block
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil
 
 class Heightmap(val radius: Int, val range: Int) {
 	val heights = IntArray((radius * 2 + 1) * (radius * 2 + 1))
@@ -14,37 +15,15 @@ class Heightmap(val radius: Int, val range: Int) {
 		val CHECK_ABOVE = 5
 	}
 
-	val surfaceIgnore = arrayOf(
-		OAK_LEAVES,
-		BIRCH_LEAVES,
-		ACACIA_LEAVES,
-		SPRUCE_LEAVES,
-		JUNGLE_LEAVES,
-		DARK_OAK_LEAVES,
-		AZALEA_LEAVES,
-		FLOWERING_AZALEA_LEAVES,
-		RED_MUSHROOM_BLOCK,
-		BROWN_MUSHROOM_BLOCK,
-		MUSHROOM_STEM,
-		OAK_LOG,
-		BIRCH_LOG,
-		ACACIA_LOG,
-		SPRUCE_LOG,
-		JUNGLE_LOG,
-		DARK_OAK_LOG,
-		BAMBOO,
-		COCOA,
-		LILY_PAD,
-		CACTUS,
-	)
-
-	private fun air(block: Block): Boolean {
-		return block.isPassable || surfaceIgnore.contains(block.type)
+	private fun ignore(block: Block): Boolean {
+		return block.isPassable ||
+			block.type === Material.ICE ||
+			RegenUtil.surfaceIgnore.contains(block.type)
 	}
 
 	private fun topOfColumnFrom(world: World, x: Int, initialY: Int, z: Int): Int {
 		for (y in initialY until MAX_HEIGHT) {
-			if (air(world.getBlockAt(x, y, z))) {
+			if (ignore(world.getBlockAt(x, y, z))) {
 				return y - 1
 			}
 		}
@@ -62,7 +41,7 @@ class Heightmap(val radius: Int, val range: Int) {
 			var terrainAbove = false
 
 			for (y in runningTop + 2..runningTop + CHECK_ABOVE) {
-				if (!air(world.getBlockAt(x, y, z))) {
+				if (!ignore(world.getBlockAt(x, y, z))) {
 					runningTop = y
 					terrainAbove = true
 					break

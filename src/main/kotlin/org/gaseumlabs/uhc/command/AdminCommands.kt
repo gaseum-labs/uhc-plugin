@@ -73,7 +73,13 @@ class AdminCommands : BaseCommand() {
 		if (!playerData.participating) return Commands.errorMessage(sender, "${offlinePlayer.name} is not in the game")
 		if (!playerData.alive) return Commands.errorMessage(sender, "${offlinePlayer.name} is already dead")
 
-		game.playerDeath(offlinePlayer.uniqueId, null, playerData, true)
+		game.playerDeath(
+			offlinePlayer.uniqueId,
+			Action.getPlayerLocation(offlinePlayer.uniqueId),
+			null,
+			playerData,
+			true
+		)
 	}
 
 	@Subcommand("pvpCycle")

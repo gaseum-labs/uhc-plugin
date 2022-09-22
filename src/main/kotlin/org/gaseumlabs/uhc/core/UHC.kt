@@ -177,7 +177,7 @@ object UHC {
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
-		heightmap = Heightmap(worldRadius, preGameConfig.battlegroundRadius)
+		heightmap = Heightmap(preGameConfig.battlegroundRadius, 48)
 		heightmap!!.generate(WorldManager.gameWorld!!)
 
 		val (world, otherWorld) = WorldManager.getGameWorldsBy(preGameConfig.defaultWorldEnvironment)

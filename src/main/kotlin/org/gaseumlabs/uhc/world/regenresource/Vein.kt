@@ -8,6 +8,8 @@ import org.bukkit.entity.Entity
 abstract class Vein(
 	val x: Int,
 	val z: Int,
+	val partition: Int,
+	val timestamp: Int,
 ) {
 	abstract fun centerLocation(): Location
 
@@ -19,7 +21,9 @@ class VeinBlock(
 	val blocks: List<Block>,
 	x: Int,
 	z: Int,
-) : Vein(x, z) {
+	partition: Int,
+	timestamp: Int,
+) : Vein(x, z, partition, timestamp) {
 	override fun centerLocation(): Location {
 		return blocks[blocks.size / 2].location.toCenterLocation()
 	}
@@ -33,7 +37,9 @@ class VeinEntity(
 	val entity: Entity,
 	x: Int,
 	z: Int,
-) : Vein(x, z) {
+	partition: Int,
+	timestamp: Int,
+) : Vein(x, z, partition, timestamp) {
 	fun isLoaded(): Boolean {
 		return entity.isValid && entity.isTicking && !entity.isDead
 	}

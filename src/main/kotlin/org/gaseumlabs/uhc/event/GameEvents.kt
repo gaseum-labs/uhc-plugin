@@ -28,10 +28,7 @@ import org.bukkit.potion.PotionType
 import org.gaseumlabs.uhc.blockfix.BlockFixType
 import org.gaseumlabs.uhc.chc.chcs.Pests
 import org.gaseumlabs.uhc.command.Commands
-import org.gaseumlabs.uhc.core.KillReward
-import org.gaseumlabs.uhc.core.OfflineZombie
-import org.gaseumlabs.uhc.core.PlayerData
-import org.gaseumlabs.uhc.core.UHC
+import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.core.phase.PhaseType.GRACE
 import org.gaseumlabs.uhc.core.phase.PhaseType.POSTGAME
 import org.gaseumlabs.uhc.core.phase.phases.Endgame
@@ -87,74 +84,17 @@ class GameEvents : Listener {
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
-	fun onPlayerDeath(event: PlayerDeathEvent) {
-		fun bloodCloud(location: Location) {
-			location.world.spawnParticle(Particle.REDSTONE,
-				location.clone().add(0.0, 1.0, 0.0),
-				64,
-				0.5,
-				1.0,
-				0.5,
-				Particle.DustOptions(Color.RED, 2.0f))
-		}
-
-		val player = event.entity
-		val uuid = player.uniqueId
-		val playerData = PlayerData.get(uuid)
-		val arena = ArenaManager.playersArena(uuid)
-
-		/* dying in lobby pvp */
-		if (arena is PvpArena) {
-			/* player spectates at that exact place */
-			event.isCancelled = true
-			bloodCloud(player.location)
-
-			player.gameMode = GameMode.SPECTATOR
-
-			/* announce death to only pvp game players */
-			val deathMessage = event.deathMessage()
-			if (deathMessage != null) arena.online().forEach { pvpPlayer ->
-				pvpPlayer.sendMessage(deathMessage)
-			}
-
-			arena.checkEnd()
-
-			/* players dying in the game */
-		} else if (arena is GapSlapArena) {
-			event.isCancelled = true
-			bloodCloud(player.location)
-
-			player.gameMode = GameMode.SPECTATOR
-
-		} else if (playerData.participating) {
-			event.isCancelled = true
-			bloodCloud(player.location)
-
-			/* drop items */
-			event.drops.forEach { drop ->
-				player.location.world.dropItem(player.location, drop)
-			}
-
-			/* drop experience */
-			val orb = player.location.world.spawnEntity(player.location, EntityType.EXPERIENCE_ORB) as ExperienceOrb
-			orb.experience = event.droppedExp
-
-			val deathMessage = event.deathMessage()
-			if (deathMessage != null) Bukkit.getOnlinePlayers()
-				.filter { !WorldManager.isNonGameWorld(it.world) }
-				.forEach { it.sendMessage(deathMessage) }
-
-			UHC.game?.playerDeath(uuid, player.killer, playerData, false)
-		}
-	}
-
-	@EventHandler(priority = EventPriority.LOWEST)
 	fun onWeather(event: WeatherChangeEvent) {
 		event.isCancelled = WorldManager.isNonGameWorld(event.world)
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	fun onEntitySpawn(event: EntitySpawnEvent) {
+
+		if (event.entity.entitySpawnReason === CreatureSpawnEvent.SpawnReason.NETHER_PORTAL) {
+
+		}
+
 		if (event.entity.entitySpawnReason === CreatureSpawnEvent.SpawnReason.REINFORCEMENTS) {
 			event.isCancelled = true
 
@@ -177,7 +117,7 @@ class GameEvents : Listener {
 		/* offline zombie targeting */
 		val target = event.target ?: return
 
-		if (OfflineZombie.getZombieUUID(target) != null) {
+		if (OfflineZombie.getZombieData(target) != null) {
 			event.isCancelled = true
 
 		} else if (target is Player) {
@@ -268,7 +208,9 @@ class GameEvents : Listener {
 
 		/* offline zombie was killed */
 		if (zombieData != null) {
-			val (inventory, experience, uuid) = zombieData
+			Game.bloodCloud(event.entity.location)
+
+			val (uuid, inventory, experience) = zombieData
 			val playerData = PlayerData.get(uuid)
 
 			playerData.offlineZombie = null
@@ -279,11 +221,64 @@ class GameEvents : Listener {
 			val droppedExperience = experience.coerceAtMost(100)
 			event.droppedExp = droppedExperience
 
-			game.playerDeath(uuid, killer, playerData, false)
+			game.playerDeath(uuid, event.entity.location, killer, playerData, false)
 
 		} else {
 			Util.binaryFind(event.entityType, DropFixType.list) { it.dropFix.entityType }
 				?.dropFix?.onDeath(event.entity, killer, event.drops)
+		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	fun onPlayerDeath(event: PlayerDeathEvent) {
+		val player = event.entity
+		val uuid = player.uniqueId
+		val playerData = PlayerData.get(uuid)
+		val arena = ArenaManager.playersArena(uuid)
+
+		/* dying in lobby pvp */
+		if (arena is PvpArena) {
+			/* player spectates at that exact place */
+			event.isCancelled = true
+			Game.bloodCloud(player.location)
+
+			player.gameMode = GameMode.SPECTATOR
+
+			/* announce death to only pvp game players */
+			val deathMessage = event.deathMessage()
+			if (deathMessage != null) arena.online().forEach { pvpPlayer ->
+				pvpPlayer.sendMessage(deathMessage)
+			}
+
+			arena.checkEnd()
+
+			/* players dying in the game */
+		} else if (arena is GapSlapArena) {
+			event.isCancelled = true
+			Game.bloodCloud(player.location)
+
+			player.gameMode = GameMode.SPECTATOR
+
+		} else if (playerData.participating) {
+			event.isCancelled = true
+			Game.bloodCloud(player.location)
+
+			/* drop items */
+			event.drops.forEach { drop ->
+				player.location.world.dropItem(player.location, drop)
+			}
+
+			/* drop experience */
+			val orb = player.location.world.spawnEntity(player.location, EntityType.EXPERIENCE_ORB) as ExperienceOrb
+			orb.experience = event.droppedExp
+
+			event.deathMessage()?.let { deathMessage ->
+				PlayerData.playerDataList.filter { (_, data) -> data.participating }
+					.mapNotNull { (uuid, _) -> Bukkit.getPlayer(uuid) }
+					.forEach { player -> player.sendMessage(deathMessage) }
+			}
+
+			UHC.game?.playerDeath(uuid, player.location, player.killer, playerData, false)
 		}
 	}
 

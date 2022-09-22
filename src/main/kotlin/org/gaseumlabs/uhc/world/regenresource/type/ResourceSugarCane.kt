@@ -1,18 +1,17 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
-import org.bukkit.Chunk
 import org.bukkit.Material.*
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockFace.UP
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.SpawnUtil
-import org.gaseumlabs.uhc.world.WorldManager
-import org.gaseumlabs.uhc.world.regenresource.*
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil.locateAround
+import org.gaseumlabs.uhc.util.Util
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil.superSurfaceSpreader
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
+import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionBlock
 
 class ResourceSugarCane(
 	released: HashMap<PhaseType, Int>,
@@ -31,8 +30,17 @@ class ResourceSugarCane(
 		return player.location.y >= 58
 	}
 
-	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
-		val surface = surfaceSpreaderOverworld(chunk.world, chunk.x * 16 + 8, chunk.z * 16 + 7, 7, ::sugarCaneGood)
+	override fun generate(bounds: RegenUtil.GenBounds, fullVein: Boolean): List<Block>? {
+		//val potentialBlocks = superSurfaceSpreader(bounds) { block ->
+		//	block
+		//}
+		val surface = surfaceSpreaderOverworld(
+			bounds.world,
+			bounds.centerX(),
+			bounds.centerZ(),
+			9,
+			::sugarCaneGood
+		)
 		if (surface != null) {
 			return if (fullVein) listOf(
 				surface.getRelative(0, 1, 0),
@@ -55,6 +63,16 @@ class ResourceSugarCane(
 	}
 
 	/* placement */
+
+	companion object {
+		val growable = Util.sortedArrayOf(
+			GRASS_BLOCK,
+			SAND,
+			RED_SAND,
+			COARSE_DIRT,
+			PODZOL,
+		)
+	}
 
 	private fun sugarCaneGood(surfaceBlock: Block): Boolean {
 		if (!(surfaceBlock.type === GRASS_BLOCK ||

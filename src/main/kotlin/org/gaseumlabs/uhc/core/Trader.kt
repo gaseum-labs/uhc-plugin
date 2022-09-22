@@ -10,6 +10,7 @@ import org.bukkit.inventory.MerchantRecipe
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil
 import kotlin.random.Random
+import kotlin.random.nextInt
 
 class Trader {
 	var currentTrader: WanderingTrader? = null
@@ -51,13 +52,15 @@ class Trader {
 			if (currentTick % 27 != 0) return
 
 			val spawnRadius = ((world.worldBorder.size / 2.0).toInt() - 16).coerceAtMost(250)
+			val checkRange = -spawnRadius..spawnRadius
+			if (checkRange.isEmpty()) return
 
 			var spawnSurface: Block? = null
 			for (tries in 0 until 10) {
 				spawnSurface = RegenUtil.surfaceSpreaderOverworld(
 					world,
-					Random.nextInt(-spawnRadius, spawnRadius),
-					Random.nextInt(-spawnRadius, spawnRadius),
+					Random.nextInt(checkRange),
+					Random.nextInt(checkRange),
 					8
 				) { block ->
 					!block.isPassable &&

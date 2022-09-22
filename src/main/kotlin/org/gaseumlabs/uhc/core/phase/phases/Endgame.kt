@@ -42,7 +42,7 @@ class Endgame(game: Game, private val heightmap: Heightmap, val radius: Int, pri
 					}
 
 					if (!Portal.sendThroughPortal(uuid, player)) {
-						game.playerDeath(uuid, null, playerData, true)
+						game.playerDeath(uuid, null, null, playerData, true)
 					}
 				}
 			}

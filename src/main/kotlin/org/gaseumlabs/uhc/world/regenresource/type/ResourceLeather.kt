@@ -1,16 +1,21 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
-import org.bukkit.Chunk
 import org.bukkit.Material.GOLDEN_HORSE_ARMOR
 import org.bukkit.Material.SADDLE
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace.UP
-import org.bukkit.entity.*
+import org.bukkit.entity.Animals
+import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType.*
-import org.bukkit.inventory.*
+import org.bukkit.entity.Player
+import org.bukkit.entity.Tameable
+import org.bukkit.inventory.ArmoredHorseInventory
+import org.bukkit.inventory.InventoryHolder
+import org.bukkit.inventory.ItemStack
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.spawnInfos.SpawnHorse
 import org.gaseumlabs.uhc.world.gen.BiomeNo
+import org.gaseumlabs.uhc.world.regenresource.RegenUtil
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
 import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionEntity
 import kotlin.random.Random
@@ -32,8 +37,8 @@ class ResourceLeather(
 		return player.location.y >= 58
 	}
 
-	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
-		val surface = surfaceSpreaderOverworld(chunk.world, chunk.x * 16 + 8, chunk.z * 16 + 8, 7, ::cowHorseGood)
+	override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): List<Block>? {
+		val surface = surfaceSpreaderOverworld(genBounds.world, genBounds.centerX(), genBounds.centerZ(), 7, ::cowHorseGood)
 		if (surface != null) {
 			return listOf(surface.getRelative(UP))
 		}

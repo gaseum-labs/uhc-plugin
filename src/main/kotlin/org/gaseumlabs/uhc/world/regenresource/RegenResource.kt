@@ -18,7 +18,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 		ResourceMelon(
 			hashMapOf(
 				PhaseType.GRACE to 2, PhaseType.SHRINK to 2,
-				PhaseType.BATTLEGROUND to 1, PhaseType.ENDGAME to 1,
+				PhaseType.BATTLEGROUND to 9, PhaseType.ENDGAME to 9,
 			),
 			3,
 			WorldManager.GAME_WORLD_NAME,
@@ -30,7 +30,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 		ResourceSugarCane(
 			hashMapOf(
 				PhaseType.GRACE to 16, PhaseType.SHRINK to 16,
-				PhaseType.BATTLEGROUND to 5, PhaseType.ENDGAME to 5,
+				PhaseType.BATTLEGROUND to 9, PhaseType.ENDGAME to 9,
 			),
 			5,
 			WorldManager.GAME_WORLD_NAME,
@@ -42,7 +42,7 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 		ResourceLeather(
 			hashMapOf(
 				PhaseType.GRACE to 16, PhaseType.SHRINK to 16,
-				PhaseType.BATTLEGROUND to 5, PhaseType.ENDGAME to 5,
+				PhaseType.BATTLEGROUND to 9, PhaseType.ENDGAME to 9,
 			),
 			5,
 			WorldManager.GAME_WORLD_NAME,
@@ -79,12 +79,13 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			Material.DIAMOND_ORE,
 			Material.DEEPSLATE_DIAMOND_ORE,
 			3,
-			{ y -> RegenUtil.yRangeLinear(y, 0.0f, 1.0f, -54, 0) },
+			-54..0,
 			{ y -> y < 16 },
+			true,
 
 			hashMapOf(
 				PhaseType.GRACE to 6, PhaseType.SHRINK to 6,
-				PhaseType.BATTLEGROUND to 12, PhaseType.ENDGAME to 0,
+				PhaseType.BATTLEGROUND to 16, PhaseType.ENDGAME to 0,
 			),
 			5,
 			WorldManager.GAME_WORLD_NAME,
@@ -97,11 +98,9 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			Material.GOLD_ORE,
 			Material.DEEPSLATE_GOLD_ORE,
 			5,
-			{ y ->
-				RegenUtil.yRangeLinear(y, 0.0f, 0.8f, -54, 32) +
-				RegenUtil.yRangeLinear(y, 0.8f, 1.0f, 87, 130)
-			},
+			-54..32,
 			{ true },
+			true,
 
 			hashMapOf(
 				PhaseType.GRACE to -1, PhaseType.SHRINK to -1,
@@ -118,11 +117,9 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			Material.EMERALD_ORE,
 			Material.DEEPSLATE_EMERALD_ORE,
 			1,
-			{ y ->
-				RegenUtil.yRangeLinear(y, 0.0f, 0.7f, -54, 48) +
-				RegenUtil.yRangeLinear(y, 0.7f, 1.0f, 76, 130)
-			},
+			-54..48,
 			{ true },
+			true,
 
 			hashMapOf(
 				PhaseType.GRACE to -1, PhaseType.SHRINK to -1,
@@ -139,8 +136,9 @@ enum class RegenResource(createDescription: () -> ResourceDescription) {
 			Material.ANCIENT_DEBRIS,
 			Material.ANCIENT_DEBRIS,
 			2,
-			{ y -> RegenUtil.yRangeLinear(y, 0.0f, 1.0f, 32, 110) },
+			32..110,
 			{ true },
+			false,
 
 			hashMapOf(
 				PhaseType.GRACE to -1, PhaseType.SHRINK to -1,

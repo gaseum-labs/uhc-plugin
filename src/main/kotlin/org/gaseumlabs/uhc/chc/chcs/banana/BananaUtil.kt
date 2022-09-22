@@ -1,6 +1,12 @@
 package org.gaseumlabs.uhc.chc.chcs.banana
 
+import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
+import org.bukkit.inventory.FurnaceRecipe
+import org.bukkit.inventory.ItemStack
+import org.gaseumlabs.uhc.util.Util
 
 object BananaUtil {
 	val scrapMaterials = arrayOf(
@@ -24,4 +30,28 @@ object BananaUtil {
 		Material.MELON_SLICE to 1,
 		Material.COOKED_BEEF to 5,
 	)
+
+	val smelts2 = HashMap<Material, ItemStack>()
+	init {
+		Bukkit.recipeIterator().forEach { recipe ->
+			if (recipe is FurnaceRecipe) {
+				smelts2[recipe.input.type] = recipe.result
+			}
+		}
+	}
+
+	val logs = Util.sortedArrayOf(
+		*Material.values().filter { it.name.endsWith("_LOG") }.toTypedArray()
+	)
+
+	fun isLog(block: Block) = Util.binarySearch(block.type, logs)
+
+	val facings = arrayOf(
+		BlockFace.EAST,
+		BlockFace.WEST,
+		BlockFace.NORTH,
+		BlockFace.SOUTH,
+	)
+
+	fun randomFacing() = facings.random()
 }

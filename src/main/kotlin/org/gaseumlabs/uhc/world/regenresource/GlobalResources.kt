@@ -9,12 +9,16 @@ import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.PhaseType.BATTLEGROUND
 import org.gaseumlabs.uhc.core.phase.PhaseType.ENDGAME
 import org.gaseumlabs.uhc.team.Team
-import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.inPlaceReplace
-import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapUHC
+import org.gaseumlabs.uhc.util.Util.randomFirstMatchIndex
 import org.gaseumlabs.uhc.world.WorldManager
 import kotlin.random.Random
 
 class GlobalResources {
+	companion object {
+		val PROTECT_RADIUS = 24.0
+		val STALE_TIME = 20 * 5 * 60
+	}
+
 	data class TeamVeinData(
 		var collected: HashMap<PhaseType, Int>,
 	)
@@ -87,9 +91,9 @@ class GlobalResources {
 					(game.phase.phaseType === BATTLEGROUND || game.phase.phaseType === ENDGAME) &&
 					regenResource.description.worldName != WorldManager.NETHER_WORLD_NAME
 				) {
-					updateBattleground(game, resourceData, regenResource)
+					updateBattleground(game, resourceData, regenResource.description, currentTick)
 				} else {
-					update(game, resourceData, regenResource)
+					update(game, resourceData, regenResource, currentTick)
 				}
 
 				resourceData.nextTick = nextTick(currentTick)
@@ -97,7 +101,12 @@ class GlobalResources {
 		}
 	}
 
-	private fun update(game: Game, resourceData: ResourceData, regenResource: RegenResource) {
+	private fun update(
+		game: Game,
+		resourceData: ResourceData,
+		regenResource: RegenResource,
+		currentTick: Int,
+	) {
 		val world = Bukkit.getWorld(regenResource.description.worldName)!!
 		val description = regenResource.description
 
@@ -140,9 +149,9 @@ class GlobalResources {
 						oldChunkRound != resourceData.round - 1
 					) {
 						if (Random.nextFloat() < description.chunkSpawnChance) {
-							val generatedList = description.generateInChunk(testChunk, quotaReached == 0)
+							val generatedList = description.generate(RegenUtil.GenBounds.fromChunk(testChunk), quotaReached == 0)
 							if (generatedList != null) {
-								generateInChunk(testChunk, generatedList, resourceData, description, quotaReached == 0)
+								generateVein(x, z, -1, currentTick, generatedList, resourceData.veins, description, quotaReached == 0)
 							}
 						}
 					}
@@ -153,112 +162,158 @@ class GlobalResources {
 		}
 
 		/* delete veins that have moved out of the around players */
+		/* if environment modifies the vein, leave it physically, not counted in the list */
 		resourceData.veins.removeIf { vein ->
-			if (
-				getChunkRound(world.getChunkAt(vein.x, vein.z), regenResource) != resourceData.round ||
-				inSomeWayModified(regenResource.description, vein)
-			) {
+			if (getChunkRound(world.getChunkAt(vein.x, vein.z), regenResource) != resourceData.round) {
 				vein.erase()
-				true
-			} else {
-				false
+				return@removeIf true
 			}
+			inSomeWayModified(regenResource.description, vein)
 		}
 	}
 
-	fun generateInChunk(
-		chunk: Chunk,
+	fun generateVein(
+		x: Int,
+		z: Int,
+		partition: Int,
+		timestamp: Int,
 		generatedList: List<Block>,
-		resourceData: ResourceData,
+		veins: ArrayList<Vein>,
 		description: ResourceDescription,
 		full: Boolean,
-	) {
-		if (description is ResourceDescriptionBlock) {
-			val originalData = generatedList.map { it.blockData }
-			generatedList.forEachIndexed { j, block ->
-				description.setBlock(
-					block,
-					j,
-					full
-				)
+	): Vein {
+		val vein = when (description) {
+			is ResourceDescriptionBlock -> {
+				val originalData = generatedList.map { it.blockData }
+				generatedList.forEachIndexed { j, block ->
+					description.setBlock(
+						block,
+						j,
+						full
+					)
+				}
+				VeinBlock(originalData, generatedList, x, z, partition, timestamp)
 			}
-
-			resourceData.veins.add(VeinBlock(
-				originalData, generatedList, chunk.x, chunk.z,
-			))
-		} else if (description is ResourceDescriptionEntity) {
-			resourceData.veins.add(VeinEntity(
-				description.setEntity(generatedList[0], full), chunk.x, chunk.z,
-			))
+			is ResourceDescriptionEntity -> VeinEntity(
+				description.setEntity(generatedList[0], full), x, z, partition, timestamp
+			)
+			else -> throw Error("Unknown vein type for $description")
 		}
+		veins.add(vein)
+		return vein
 	}
 
-	fun updateBattleground(game: Game, resourceData: ResourceData, regenResource: RegenResource) {
-		val world = Bukkit.getWorld(regenResource.description.worldName)!!
-		val chunkRadius = ((world.worldBorder.size / 2) / 16).toInt()
-		val description = regenResource.description
+	fun veinProtected(playerLocations: List<Location>, vein: Vein): Boolean {
+		val location = vein.centerLocation()
+		return playerLocations.any { location.distance(it) <= PROTECT_RADIUS }
+	}
 
-		/* don't attempt to generate if none can exist */
-		val maxCurrent = description.released[game.phase.phaseType] ?: 0
-		if (maxCurrent <= 0) return
-
-		val players = PlayerData.playerDataList.mapNotNull { (uuid, playerData) ->
-			if (!playerData.alive) return@mapNotNull null
-
-			val player = Bukkit.getPlayer(uuid) ?: return@mapNotNull null
-			if (player.world !== world) return@mapNotNull null
-
-			player
+	/**
+	 * @return an empty partition to fill, or null if all partitions are filled
+	 */
+	fun findPartitionToFill(
+		numPartitions: Int, veins: ArrayList<Vein>
+	): Int? {
+		val partitionsFilled = Array(numPartitions) { false }
+		veins.forEach { vein ->
+			if (vein.partition != -1) partitionsFilled[vein.partition] = true
 		}
-		if (players.isEmpty()) return
+		return partitionsFilled.randomFirstMatchIndex { !it }
+	}
 
-		/* tries to spawn */
-		var generatedList: List<Block>? = null
-		var generatedChunk: Chunk? = null
-		for (t in 0 until chunkRadius) {
-			val chunkX = Random.nextInt(-chunkRadius, chunkRadius + 1)
-			val chunkZ = Random.nextInt(-chunkRadius, chunkRadius + 1)
+	/**
+	 * veins that are too old,
+	 * these should be replaced because they might be in an unreachable location
+	 */
+	fun findStaleVeins(
+		playerLocations: List<Location>,
+		veins: ArrayList<Vein>,
+		currentTick: Int
+	): List<Vein> {
+		val list = ArrayList<Vein>()
 
-			val chunk = world.getChunkAt(chunkX, chunkZ)
-			generatedList = description.generateInChunk(chunk, true)
+		/* delete the oldest pre-battlground vein */
+		veins.filter { vein -> vein.partition == -1 }
+			.sortedBy { it.timestamp }
+			.find { !veinProtected(playerLocations, it) }
+			?.let { list.add(it) }
+		/* and all stale battleground veins */
+		list.addAll(veins.filter { vein ->
+			vein.partition != -1 &&
+			currentTick - vein.timestamp > STALE_TIME &&
+			!veinProtected(playerLocations, vein)
+		})
 
-			if (generatedList != null) {
-				generatedChunk = chunk
-				break
-			}
+		return list
+	}
+
+	fun deleteVein(index: Int, veins: ArrayList<Vein>): Vein {
+		val deleteVein = veins[index]
+		deleteVein.erase()
+		return veins.removeAt(index)
+	}
+
+	fun deleteVeins(deleteVeins: List<Vein>, veins: ArrayList<Vein>) {
+		veins.removeAll(deleteVeins)
+		deleteVeins.forEach { vein -> vein.erase() }
+	}
+
+	fun createVein(
+		resourcePartition: ResourcePartition,
+		world: World,
+		partition: Int,
+		currentTick: Int,
+		radius: Int,
+		veins: ArrayList<Vein>,
+		description: ResourceDescription,
+	): Vein? {
+		val generatedBounds = resourcePartition.selectFor(world, partition, radius)
+		val generatedList = description.generate(generatedBounds, true) ?: return null
+		return generateVein(0, 0, partition, currentTick, generatedList, veins, description, true)
+	}
+
+	fun updateBattleground(
+		game: Game,
+		resourceData: ResourceData,
+		description: ResourceDescription,
+		currentTick: Int,
+	) {
+		val world = Bukkit.getWorld(description.worldName)!!
+
+		val playerLocations = PlayerData.playerDataList.filter { (_, playerData) -> playerData.alive }
+			.mapNotNull { (uuid) -> Bukkit.getPlayer(uuid)?.eyeLocation }
+			.filter { location -> location.world === world }
+		if (playerLocations.isEmpty()) return
+
+		val numPartitions = description.released[game.phase.phaseType] ?: return
+		val resourcePartition = ResourcePartition.partitionOfSize(numPartitions) ?: return
+
+		/* delete all stale veins, replace ones that were partitioned */
+		val deletedVeins = findStaleVeins(playerLocations, resourceData.veins, currentTick)
+		deleteVeins(deletedVeins, resourceData.veins)
+		deletedVeins.forEach { deletedVein ->
+			if (deletedVein.partition != -1) createVein(
+				resourcePartition,
+				world,
+				deletedVein.partition,
+				currentTick,
+				game.config.battlegroundRadius,
+				resourceData.veins,
+				description
+			)
 		}
-		if (generatedList == null || generatedChunk == null) return
 
-		var couldNotDelete = false
-
-		/* another is going to spawn, so make room for it */
-		if (resourceData.veins.size >= maxCurrent) {
-			val minDistances = resourceData.veins.mapUHC { vein ->
-				vein to players.minOf { player ->
-					vein.centerLocation().distance(player.location)
-				}
-			}
-			minDistances.sortBy { (_, distance) -> distance }
-
-			val numDeletes = (resourceData.veins.size - maxCurrent) + 1
-			for (i in 0 until numDeletes) {
-				val (lastVein, distance) = minDistances.last()
-
-				/* all veins are protected within 24 blocks of a player */
-				if (distance < 24.0) {
-					couldNotDelete = true
-					break
-				} else {
-					lastVein.erase()
-					minDistances.removeLast()
-				}
-			}
-
-			resourceData.veins.inPlaceReplace(minDistances) { (vein) -> vein }
-		}
-
-		if (!couldNotDelete) {
-			generateInChunk(generatedChunk, generatedList, resourceData, description, true)
+		/* always try to add an extra vein */
+		findPartitionToFill(numPartitions, resourceData.veins)?.let { partitionToFill ->
+			createVein(
+				resourcePartition,
+				world,
+				partitionToFill,
+				currentTick,
+				game.config.battlegroundRadius,
+				resourceData.veins,
+				description
+			)
 		}
 	}
 }

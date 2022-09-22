@@ -1,19 +1,37 @@
 package org.gaseumlabs.uhc.world.regenresource
 
-import net.minecraft.resources.ResourceKey
-import net.minecraft.server.level.ServerLevel
-import net.minecraft.world.level.biome.Biome
-import org.bukkit.*
+import org.bukkit.Chunk
+import org.bukkit.Material
+import org.bukkit.World
 import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockFace.DOWN
 import org.bukkit.block.BlockFace.UP
-import org.bukkit.craftbukkit.v1_18_R2.CraftWorld
+import org.gaseumlabs.uhc.util.IntVector
 import org.gaseumlabs.uhc.util.Util
 import kotlin.math.*
 import kotlin.random.Random
 import kotlin.random.nextInt
 
 object RegenUtil {
+	class GenBounds(val world: World, val x: Int, val z: Int, val width: Int, val depth: Int) {
+		companion object {
+			fun fromChunk(chunk: Chunk) = GenBounds(
+				chunk.world,
+				chunk.x * 16,
+				chunk.z * 16,
+				16,
+				16,
+			)
+		}
+
+		fun centerX() = x + width / 2
+		fun centerZ() = z + depth / 2
+		fun alongX(t: Float) = (x + width * t).toInt()
+		fun alongZ(t: Float) = (z + depth * t).toInt()
+		fun randomIn() = x + Random.nextInt(width) to z + Random.nextInt(depth)
+	}
+
 	/**
 	 * gives block positions at scanY
 	 */
@@ -109,21 +127,18 @@ object RegenUtil {
 		return ret
 	}
 
-	fun <T> aroundInChunk(
-		chunk: Chunk,
-		yMapper: (along: Float) -> Int,
+	fun <T> volume(
+		bounds: GenBounds,
+		yRange: IntRange,
 		tries: Int,
 		isGood: (block: Block) -> T?,
 	): ArrayList<T> {
 		val ret = ArrayList<T>(tries)
 
 		for (i in 0 until tries) {
-			val y = yMapper(Random.nextFloat())
-			val x = Random.nextInt(16)
-			val z = Random.nextInt(16)
-
-			val result = isGood(chunk.getBlock(x, y, z))
-			if (result != null) ret.add(result)
+			val y = Random.nextInt(yRange)
+			val (x, z) = bounds.randomIn()
+			isGood(bounds.world.getBlockAt(x, y, z))?.let { ret.add(it) }
 		}
 
 		return ret
@@ -187,6 +202,33 @@ object RegenUtil {
 		isGood: (block: Block) -> Boolean,
 	): Block? {
 		return surfaceSpreader(world, x, y, z, spread, ::initialSurfaceNether, isGood)
+	}
+
+	const val MAX_SURFACE = 200
+	const val MIN_SURFACE = 58
+
+	fun findSurfaceFromTop(world: World, x: Int, z: Int): Block {
+		for (y in MAX_SURFACE downTo MIN_SURFACE + 1) {
+			val block = world.getBlockAt(x, y, z)
+			if (!surfacePassable(block)) return block
+		}
+		return world.getBlockAt(x, MIN_SURFACE, z)
+	}
+
+	inline fun superSurfaceSpreader(genBounds: GenBounds, isGood: (Block) -> Boolean): ArrayList<Block> {
+		val potentialBlocks = ArrayList<Block>()
+
+		for (x in genBounds.x until genBounds.x + genBounds.width) {
+			var currentBlock = findSurfaceFromTop(genBounds.world, x, genBounds.z)
+			if (isGood(currentBlock)) potentialBlocks.add(currentBlock)
+
+			for (z in genBounds.z + 1 until genBounds.z + genBounds.depth) {
+				currentBlock = findSurfaceFromBE(genBounds.world.getBlockAt(x, currentBlock.y, z))
+				if (isGood(currentBlock)) potentialBlocks.add(currentBlock)
+			}
+		}
+
+		return potentialBlocks
 	}
 
 	private fun surfaceSpreader(
@@ -292,12 +334,58 @@ object RegenUtil {
 		return null
 	}
 
+	fun newExpandFrom(
+		expandFaces: List<BlockFace>,
+		centerBlock: Block,
+		range: Int,
+		isGood: (Block) -> Boolean?
+	): Block? {
+		val world = centerBlock.world
+		val usingFaces = ArrayList(expandFaces)
+		for (i in 1..range) {
+			val removeFaces = ArrayList<BlockFace>(expandFaces.size)
+			for (face in usingFaces) {
+				val primaryAxis = IntVector.fromBlockFace(face)
+				val orth0 = primaryAxis.orthogonal0()
+				val orth1 = primaryAxis.orthogonal1()
+
+				val block = IntVector.fromBlock(centerBlock).add(primaryAxis.mul(i)).block(world)
+				when (isGood(block)) {
+					true -> return block
+					false -> {}
+					null -> {
+						removeFaces.add(face)
+						continue
+					}
+				}
+
+				for (i in -1 .. 1) {
+					for (j in -1 .. 1) {
+						if (i == 0 && j == 0) continue
+						val block = IntVector.fromBlock(centerBlock).add(primaryAxis.mul(i)).add(orth0.mul(i)).add(orth1.mul(j)).block(world)
+						when (isGood(block)) {
+							true -> return block
+							false -> {}
+							null -> {
+								removeFaces.add(face)
+								continue
+							}
+						}
+					}
+				}
+			}
+			usingFaces.removeAll(removeFaces.toSet())
+			if (usingFaces.isEmpty()) return null
+		}
+		return null
+	}
+
 	val SEA_LEVEL = 62
 	val ROOF_CHECK = 16
 	val START_RANGE = 62..80
 	val TOO_LOW = 50
 
-	val treeParts = arrayOf(
+	val surfaceIgnore = Util.sortedArrayOf(
 		Material.OAK_LEAVES,
 		Material.BIRCH_LEAVES,
 		Material.ACACIA_LEAVES,
@@ -316,10 +404,13 @@ object RegenUtil {
 		Material.JUNGLE_LOG,
 		Material.DARK_OAK_LOG,
 		Material.BAMBOO,
+		Material.COCOA,
+		Material.LILY_PAD,
+		Material.CACTUS,
 	)
 
 	fun surfacePassable(block: Block): Boolean {
-		return (block.isPassable && !block.isLiquid) || treeParts.contains(block.type)
+		return (block.isPassable && !block.isLiquid) || Util.binarySearch(block.type, surfaceIgnore)
 	}
 
 	fun initialSurfaceOverworld(world: World, x: Int, y: Int, z: Int): Block? {
@@ -397,6 +488,30 @@ object RegenUtil {
 		}
 
 		return null
+	}
+
+	fun findSurfaceFromBE(block: Block): Block {
+		var last = block
+
+		if (surfacePassable(block)) {
+			/* go down */
+			for (y in block.y - 1 downTo MIN_SURFACE) {
+				val below = block.world.getBlockAt(block.x, y, block.z)
+				if (!surfacePassable(below)) return below
+
+				last = below
+			}
+		} else {
+			/* go up */
+			for (y in block.y + 1..MAX_SURFACE) {
+				val above = block.world.getBlockAt(block.x, y, block.z)
+				if (surfacePassable(above)) return last
+
+				last = above
+			}
+		}
+
+		return last
 	}
 }
 

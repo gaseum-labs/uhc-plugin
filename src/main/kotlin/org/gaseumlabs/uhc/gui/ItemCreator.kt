@@ -77,6 +77,13 @@ class ItemCreator private constructor(val type: Material, val meta: ItemMeta, cl
 		return this
 	}
 
+	fun unbreakable(): ItemCreator {
+		meta.isUnbreakable = true
+		return this
+	}
+
+	/* create */
+
 	fun create(): ItemStack {
 		val stack = ItemStack(type, amount)
 		stack.itemMeta = meta

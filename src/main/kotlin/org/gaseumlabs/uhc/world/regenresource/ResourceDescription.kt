@@ -1,7 +1,5 @@
 package org.gaseumlabs.uhc.world.regenresource
 
-import org.bukkit.Chunk
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
@@ -18,7 +16,7 @@ abstract class ResourceDescription(
 
 	abstract fun eligable(player: Player): Boolean
 
-	abstract fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>?
+	abstract fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): List<Block>?
 
 	override fun toString(): String {
 		return prettyName

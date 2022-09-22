@@ -231,7 +231,7 @@ class TestCommands : BaseCommand() {
 		val player = sender as? Player ?: return
 
 		val game = UHC.game ?: return errorMessage(player, "Game is not going")
-		Portal.onPlayerPortal(player, game)
+		Portal.onPlayerPortal(player)
 	}
 
 	@Subcommand("seeVeins")
@@ -264,6 +264,20 @@ class TestCommands : BaseCommand() {
 		}
 
 		Action.sendGameMessage(player, "Found ${veins.size} veins")
+	}
+
+	@Subcommand("clearVeins")
+	fun testClearVeins(sender: CommandSender, regenResource: RegenResource) {
+		if (Commands.opGuard(sender)) return
+
+		val player = sender as? Player ?: return
+		val game = UHC.game ?: return
+
+		val veins = game.globalResources.getVeinList(regenResource)
+		val size = veins.size
+		veins.removeIf { vein -> vein.erase(); true }
+
+		Action.sendGameMessage(player, "Deleted $size veins")
 	}
 
 	@Subcommand("veinData")
@@ -299,5 +313,17 @@ class TestCommands : BaseCommand() {
 	@Subcommand("refreshLinks")
 	fun refreshLinksCommand(sender: CommandSender) {
 		UHC.dataManager.linkData.massPlayersLink()
+	}
+
+	@Subcommand("surfacescan")
+	fun surfaceScanCommand(sender: CommandSender) {
+		val player = sender as? Player ?: return
+
+		val chunk = player.chunk
+		val genBounds = RegenUtil.GenBounds.fromChunk(chunk)
+
+		RegenUtil.superSurfaceSpreader(genBounds) { true }.forEach { block ->
+			block.setType(Material.GOLD_BLOCK, false)
+		}
 	}
 }

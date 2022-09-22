@@ -18,7 +18,7 @@ object CustomCarvers {
 		0.6f, /* commonness */
 		UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(90)), /* y levels */
 		UniformFloat.of(0.0f, 2.0f), /* y scale */
-		VerticalAnchor.aboveBottom(10), /* lava fill */
+		VerticalAnchor.aboveBottom(9), /* lava fill */
 		false,
 		UniformFloat.of(1.0f, 2.0f), /* horizontal radius */
 		UniformFloat.of(1.0f, 2.0f), /* vertical radius */
@@ -30,7 +30,7 @@ object CustomCarvers {
 			0.05F,
 			UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(90)),
 			UniformFloat.of(1.5f, 3.0f),
-			VerticalAnchor.aboveBottom(10),
+			VerticalAnchor.aboveBottom(9),
 			CarverDebugSettings.of(false, Blocks.OAK_BUTTON.defaultBlockState()),
 			UniformFloat.of(-1.0F, 1.0F),
 			CanyonShapeConfiguration(
@@ -41,32 +41,6 @@ object CustomCarvers {
 				1.1f,
 				0.5F
 			)
-		)
-	)
-
-	val netherSuperCaveCarver = netherCavesMaster.configured(
-		CaveCarverConfiguration(
-			1.0f,
-			UniformHeight.of(VerticalAnchor.aboveBottom(-8), VerticalAnchor.aboveBottom(32)),
-			ConstantFloat.of(0.0f),
-			VerticalAnchor.aboveBottom(6),
-			false,
-			ConstantFloat.of(2.0f),
-			ConstantFloat.of(2.0f),
-			UniformFloat.of(-1.0f, 0.0f)
-		)
-	)
-
-	val netherUpperCaveCarver = netherCavesMaster.configured(
-		CaveCarverConfiguration(
-			0.45f,
-			UniformHeight.of(VerticalAnchor.aboveBottom(29), VerticalAnchor.aboveBottom(112)),
-			ConstantFloat.of(2.5f),
-			VerticalAnchor.aboveBottom(6),
-			false,
-			ConstantFloat.of(1.0f),
-			ConstantFloat.of(1.0f),
-			ConstantFloat.of(-1.0f)
 		)
 	)
 }

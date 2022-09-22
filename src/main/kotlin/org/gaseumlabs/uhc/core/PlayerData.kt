@@ -64,6 +64,7 @@ class PlayerData(val uuid: UUID) {
 
 	var skull = ItemStack(Material.PLAYER_HEAD)
 
+	var shouldGameMode: GameMode? = null
 	var actionsQueue: Queue<(Player) -> Unit> = LinkedList()
 
 	var lifeNo = 0

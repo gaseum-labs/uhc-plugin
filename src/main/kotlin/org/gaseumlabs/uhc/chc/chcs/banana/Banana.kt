@@ -39,11 +39,13 @@ import org.bukkit.event.block.Action as BAction
 import org.gaseumlabs.uhc.command.Commands
 import java.util.*
 import kotlin.collections.ArrayList
+import org.bukkit.Sound
+import org.bukkit.block.data.type.Leaves
 
 fun findGroundAt(x: Int, z: Int, limitedRegion: LimitedRegion): Int? {
 	for (y in 128 downTo 58) {
 		val block = limitedRegion.getBlockData(x, y, z)
-		if (block.material.isSolid && !RegenUtil.treeParts.contains(block.material)) {
+		if (block.material.isSolid && !RegenUtil.surfaceIgnore.contains(block.material)) {
 			return y + 1
 		}
 	}
@@ -65,7 +67,14 @@ val trunkBlockData = Material.STRIPPED_JUNGLE_LOG.createBlockData().let { data -
 	(data as Orientable).axis = Axis.Y
 	data
 }
-val leavesData = Material.JUNGLE_LEAVES.createBlockData()
+val topTrunkBlockData = Material.JUNGLE_LOG.createBlockData().let { data ->
+	(data as Orientable).axis = Axis.Y
+	data
+}
+val leavesData = Material.JUNGLE_LEAVES.createBlockData().let { data ->
+	(data as Leaves).distance = 1
+	data
+}
 val spongeBlocKData = Material.SPONGE.createBlockData()
 
 class BananaTree : BlockPopulator() {
@@ -89,9 +98,11 @@ class BananaTree : BlockPopulator() {
 
 		val height = random.nextInt(10, 20)
 
-		for (i in 0 until height) {
+		for (i in 0 until height - 1) {
 			limitedRegion.setBlockData(cx, startY + i, cz, trunkBlockData)
 		}
+		limitedRegion.setBlockData(cx, startY + height - 1, cz, topTrunkBlockData)
+
 		for (i in -5 until 5) {
 			if (i == 0) {
 				limitedRegion.setBlockData(cx, startY + height, cz, leavesData)
@@ -107,25 +118,18 @@ class BananaTree : BlockPopulator() {
 	}
 }
 
-class BananaData(var count: Int, var lastUsed: Int)
+class BananaData(var count: Int, var lastUsed: IntArray)
 
 class Banana : CHC<BananaData>() {
 	private var tickingTask = -1
 	private var scoreboard: ScoreboardDisplay? = null
 	private var currentSecond = 0
 
-	private val recipes = arrayOf(
-		BananaType.genRecipe(BananaType.REGULAR, BananaType.SUPER),
-		BananaType.genRecipe(BananaType.SUPER, BananaType.MEGA),
-		BananaType.genRecipe(BananaType.MEGA, BananaType.HYPER),
-		BananaType.genRecipe(BananaType.HYPER, BananaType.GIGA),
-	)
-
 	init {
-		recipes.forEach { Bukkit.addRecipe(it) }
+		recipes.forEach { if (Bukkit.getRecipe(it.key) == null) Bukkit.addRecipe(it) }
 	}
 
-	override fun defaultData() = BananaData(0, -12890)
+	override fun defaultData() = BananaData(0, IntArray(bananaRegistry.size) { -10000 })
 
 	override fun customDestroy(game: Game) {
 		Bukkit.getScheduler().cancelTask(tickingTask)
@@ -135,7 +139,7 @@ class Banana : CHC<BananaData>() {
 
 	override fun onPhaseSwitch(game: Game, phase: Phase) {
 		if (phase is Grace) {
-			scoreboard = ScoreboardDisplay(BananaType.REGULAR.text("Bananas"), 12)
+			scoreboard = ScoreboardDisplay(REGULAR.text("Bananas"), 12)
 			scoreboard?.show()
 			tickingTask = SchedulerUtil.everyN(20) { second(game) }
 		}
@@ -176,10 +180,10 @@ class Banana : CHC<BananaData>() {
 
 				smittenPlayers.forEach { Action.damagePlayer(it, 2.0) }
 
-				val smiteMessages = listOf(BananaType.REGULAR.text("Banana Gods are Angry")) +
+				val smiteMessages = listOf(REGULAR.text("Banana Gods are Angry")) +
 					smittenPlayers.map {
 						Component.text("Smited ").append(
-							BananaType.values().random().text(Bukkit.getOfflinePlayer(it.uuid).name ?: "[unknown]")
+							bananaRegistry.random().text(Bukkit.getOfflinePlayer(it.uuid).name ?: "[unknown]")
 						)
 					}
 
@@ -200,7 +204,7 @@ class Banana : CHC<BananaData>() {
 					Component.text(
 						"${Bukkit.getOfflinePlayer(playerData.uuid).name}"
 					).append(Component.text(" - ", NamedTextColor.GRAY))
-						.append(BananaType.REGULAR.text(playerData.getQuirkData(this).count.toString()))
+						.append(REGULAR.text(playerData.getQuirkData(this).count.toString()))
 				)
 			}
 	}
@@ -217,14 +221,14 @@ class Banana : CHC<BananaData>() {
 			event.instaBreak = true
 			event.block.world.dropItemNaturally(
 				event.block.location,
-				BananaType.REGULAR.create()
+				REGULAR.create()
 			)
 		}
 
 		@EventHandler
 		fun onBlockDrop(event: BlockDropItemEvent) {
 			if (event.block.type === Material.SPONGE) {
-				event.isCancelled = true
+				event.items.clear()
 			}
 		}
 
@@ -232,13 +236,17 @@ class Banana : CHC<BananaData>() {
 		fun entityDeath(event: EntityDeathEvent) {
 			if (isMonkey(event.entity)) {
 				event.drops.clear()
-				event.drops.add(BananaType.REGULAR.create())
+				event.drops.add(REGULAR.create())
 			}
 		}
 
 		@EventHandler
 		fun spawnEntity(event: EntitySpawnEvent) {
-			if (event.entity !is Player && event.entity is LivingEntity && Random.nextInt(20) == 0) {
+			if (
+				event.entity !is Player &&
+				event.entity is LivingEntity &&
+				Random.nextInt(20) == 0
+			) {
 				spawnMonkey(event.entity.location)
 				event.isCancelled = true
 			}
@@ -255,16 +263,20 @@ class Banana : CHC<BananaData>() {
 
 				val bananaData = PlayerData.get(event.player).getQuirkData(this@Banana)
 
-				if (currentSecond > bananaData.lastUsed + 10) {
+				if (currentSecond < bananaData.lastUsed[type.id] + 10) {
 					return Commands.errorMessage(
 						event.player,
-						"Banana cooldown, try again in ${bananaData.lastUsed + 10 - bananaData.lastUsed} seconds"
+						"Banana cooldown, try again in ${bananaData.lastUsed[type.id] + 10 - currentSecond} seconds"
 					)
 				}
 
-				bananaData.lastUsed = currentSecond
-
-				type.ability(event.player)
+				val result = type.ability(event.player) ?: return
+				if (result) {
+					bananaData.lastUsed[type.id] = currentSecond
+					event.player.playSound(event.player.location, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f)
+				} else {
+					event.player.playSound(event.player.location, Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, 1.0f, 0.707107f)
+				}
 			}
 		}
 	}

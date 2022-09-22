@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor.GOLD
 import net.kyori.adventure.text.format.TextDecoration.BOLD
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.command.CommandSender
@@ -66,6 +67,17 @@ object Action {
 		}
 	}
 
+	fun playerGameMode (uuid: UUID, gameMode: GameMode) {
+		val onlinePlayer = Bukkit.getPlayer(uuid)
+
+		if (onlinePlayer == null) {
+			val playerData = PlayerData.get(uuid)
+			playerData.shouldGameMode = gameMode
+		} else {
+			onlinePlayer.gameMode = gameMode
+		}
+	}
+
 	fun damagePlayer(playerData: PlayerData, amount: Double) =
 		(Bukkit.getPlayer(playerData.uuid) ?: playerData.offlineZombie)?.damage(amount)
 
@@ -74,7 +86,7 @@ object Action {
 
 	fun playerInventory(uuid: UUID) = Bukkit.getPlayer(uuid)?.inventory?.contents
 		?: PlayerData.get(uuid).offlineZombie?.let {
-			OfflineZombie.getZombieInventory(it)
+			OfflineZombie.getZombieData(it)?.inventory
 		}
 
 	fun awardAdvancement(player: Player, name: String) {

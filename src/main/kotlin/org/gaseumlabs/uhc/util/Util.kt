@@ -293,4 +293,15 @@ object Util {
 		return if (value < length) -value - range.first else range.first + (value - length)
 	}
 
+	inline fun <T> Array<T>.randomFirstMatchIndex(matches: (el: T) -> Boolean): Int? {
+		val initialIndex = Random.nextInt(this.size)
+
+		for (i in 0 until this.size) {
+			val index = (initialIndex + i) % this.size
+			if (matches(this[index])) return index
+		}
+
+		return null
+	}
+
 }

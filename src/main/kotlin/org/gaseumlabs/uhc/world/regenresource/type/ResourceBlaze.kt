@@ -1,7 +1,5 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
-import org.bukkit.Chunk
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace.UP
 import org.bukkit.entity.*
@@ -9,14 +7,13 @@ import org.bukkit.entity.EntityType.BLAZE
 import org.bukkit.entity.EntityType.WITHER_SKELETON
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.spawnInfos.SpawnBlaze
-import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderNether
 import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionEntity
 
 class ResourceBlaze(
 	released: HashMap<PhaseType, Int>,
-	chunkRadius: Int, //4?
+	chunkRadius: Int,
 	worldName: String,
 	chunkSpawnChance: Float,
 	prettyName: String,
@@ -31,17 +28,17 @@ class ResourceBlaze(
 		return true
 	}
 
-	override fun generateInChunk(chunk: Chunk, fullVein: Boolean): List<Block>? {
-		val potentialSpots = RegenUtil.aroundInChunk(
-			chunk,
-			{ y -> RegenUtil.yRangeCenterBias(y, 0.0f, 1.0f, 32, 110) },
+	override fun generate(bounds: RegenUtil.GenBounds, fullVein: Boolean): List<Block>? {
+		val potentialSpots = RegenUtil.volume(
+			bounds,
+			32..110,
 			32
 		) { block ->
 			if (block.isPassable) block else null
 		}
 
 		for (block in potentialSpots) {
-			val surface = surfaceSpreaderNether(chunk.world, block.x, block.y, block.z, 4, ::blazeGood)
+			val surface = surfaceSpreaderNether(block.world, block.x, block.y, block.z, 4, ::blazeGood)
 			if (surface != null) {
 				return listOf(surface.getRelative(UP))
 			}
