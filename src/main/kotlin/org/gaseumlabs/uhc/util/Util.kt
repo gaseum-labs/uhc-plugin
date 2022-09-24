@@ -287,11 +287,7 @@ object Util {
 		cantAdd.forEach { (_, item) -> player.world.dropItem(player.location, item) }
 	}
 
-	fun randomMirrored(range: IntRange): Int {
-		val length = range.last - range.first + 1
-		val value = Random.nextInt(length * 2)
-		return if (value < length) -value - range.first else range.first + (value - length)
-	}
+	fun randomMirrored(range: IntRange): Int = range.random() * if (Random.nextDouble() < 0.5) -1 else 1
 
 	inline fun <T> Array<T>.randomFirstMatchIndex(matches: (el: T) -> Boolean): Int? {
 		val initialIndex = Random.nextInt(this.size)

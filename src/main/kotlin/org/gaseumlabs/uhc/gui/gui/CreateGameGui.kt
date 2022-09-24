@@ -7,6 +7,7 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.command.TeamCommands
 import org.gaseumlabs.uhc.core.KillReward
 import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.gui.GuiManager
@@ -121,6 +122,9 @@ class CreateGameGui : GuiPage(
 		object : GuiItem(coords(4, 2)) {
 			override fun onClick(player: Player, shift: Boolean) {
 				player.closeInventory()
+				if (shift) {
+					TeamCommands.generateRandomTeams(player, 1)
+				}
 				UHC.startGame { error, message -> Action.messageOrError(player, message, error) }
 			}
 			override fun render() =

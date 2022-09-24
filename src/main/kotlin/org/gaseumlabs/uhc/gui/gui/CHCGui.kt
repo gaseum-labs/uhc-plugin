@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.command.TeamCommands
 import org.gaseumlabs.uhc.core.UHC
 import org.gaseumlabs.uhc.util.Action
 
@@ -31,6 +32,9 @@ class CHCGui : GuiPage(
 				override fun onClick(player: Player, shift: Boolean) {
 					player.closeInventory()
 					UHC.getConfig().chcType = chcType
+					if (shift) {
+						TeamCommands.generateRandomTeams(player, 1)
+					}
 					UHC.startGame { error, message -> Action.messageOrError(player, message, error) }
 				}
 			}
