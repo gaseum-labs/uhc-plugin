@@ -11,6 +11,7 @@ import org.bukkit.Bukkit
 import org.bukkit.block.Biome
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.gaseumlabs.uhc.world.regenresource.ResourceId
 
 object Commands {
 	fun errorMessage(sender: CommandSender, text: String) {
@@ -67,6 +68,10 @@ object Commands {
 		commandManager.commandCompletions.registerCompletion("uhcblockz") { context ->
 			val block = context.player.getTargetBlock(10)
 			if (block == null) emptyList() else listOf(block.z.toString())
+		}
+
+		commandManager.commandCompletions.registerCompletion("uhcregenresource") {
+			ResourceId.allKeys()
 		}
 	}
 }

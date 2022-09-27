@@ -10,6 +10,7 @@ abstract class Vein(
 	val z: Int,
 	val partition: Int,
 	val timestamp: Int,
+	val value: Int,
 ) {
 	abstract fun centerLocation(): Location
 
@@ -23,7 +24,8 @@ class VeinBlock(
 	z: Int,
 	partition: Int,
 	timestamp: Int,
-) : Vein(x, z, partition, timestamp) {
+	value: Int,
+) : Vein(x, z, partition, timestamp, value) {
 	override fun centerLocation(): Location {
 		return blocks[blocks.size / 2].location.toCenterLocation()
 	}
@@ -39,7 +41,8 @@ class VeinEntity(
 	z: Int,
 	partition: Int,
 	timestamp: Int,
-) : Vein(x, z, partition, timestamp) {
+	value: Int,
+) : Vein(x, z, partition, timestamp, value) {
 	fun isLoaded(): Boolean {
 		return entity.isValid && entity.isTicking && !entity.isDead
 	}
@@ -52,3 +55,4 @@ class VeinEntity(
 		entity.remove()
 	}
 }
+

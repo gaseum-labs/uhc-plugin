@@ -268,7 +268,7 @@ object Util {
 		return array as Array<T>
 	}
 
-	inline fun <reified R, reified T : Enum<T>>sortedArrayOf(
+	inline fun <reified R, reified T: Comparable<T>>sortedArrayOf(
 		vararg array: R,
 		crossinline mapping: (R) -> T
 	): Array<R> {

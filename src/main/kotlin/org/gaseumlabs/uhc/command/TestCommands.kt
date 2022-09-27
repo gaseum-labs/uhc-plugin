@@ -11,7 +11,6 @@ import org.gaseumlabs.uhc.customSpawning.CustomSpawningType
 import org.gaseumlabs.uhc.event.Portal
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.lobbyPvp.arena.PvpArena
-import org.gaseumlabs.uhc.chc.CHCType
 import org.gaseumlabs.uhc.chc.chcs.carePackages.CarePackages
 import org.gaseumlabs.uhc.util.Action
 import net.kyori.adventure.text.Component
@@ -24,6 +23,7 @@ import org.bukkit.inventory.ItemStack
 import org.gaseumlabs.uhc.core.OfflineZombie
 import org.gaseumlabs.uhc.lobbyPvp.PvpQueue
 import org.gaseumlabs.uhc.world.regenresource.*
+import org.gaseumlabs.uhc.world.regenresource.type.VeinFish
 import java.util.*
 
 @CommandAlias("uhct")
@@ -235,13 +235,15 @@ class TestCommands : BaseCommand() {
 	}
 
 	@Subcommand("seeVeins")
-	fun testSeeVeins(sender: CommandSender, regenResource: RegenResource) {
+	@CommandCompletion("@uhcregenresource")
+	fun testSeeVeins(sender: CommandSender, resourceKey: String) {
 		if (Commands.opGuard(sender)) return
 
 		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
 
-		val veins = game.globalResources.getVeinList(regenResource)
+		val resource = ResourceId.byKeyName(resourceKey) ?: return
+		val veins = game.globalResources.getVeinList(resource)
 
 		veins.forEach { vein ->
 			when (vein) {
@@ -258,8 +260,10 @@ class TestCommands : BaseCommand() {
 				is VeinEntity -> {
 					vein.entity.isGlowing = true
 				}
-				else -> {
+				is VeinFish -> {
+					vein.fish.forEach { it.isGlowing = true }
 				}
+				else -> {}
 			}
 		}
 
@@ -267,13 +271,15 @@ class TestCommands : BaseCommand() {
 	}
 
 	@Subcommand("clearVeins")
-	fun testClearVeins(sender: CommandSender, regenResource: RegenResource) {
+	@CommandCompletion("@uhcregenresource")
+	fun testClearVeins(sender: CommandSender, resourceKey: String) {
 		if (Commands.opGuard(sender)) return
 
 		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
+		val resource = ResourceId.byKeyName(resourceKey) ?: return
 
-		val veins = game.globalResources.getVeinList(regenResource)
+		val veins = game.globalResources.getVeinList(resource)
 		val size = veins.size
 		veins.removeIf { vein -> vein.erase(); true }
 
@@ -281,33 +287,36 @@ class TestCommands : BaseCommand() {
 	}
 
 	@Subcommand("veinData")
-	fun testVeinData(sender: CommandSender, regenResource: RegenResource) {
+	@CommandCompletion("@uhcregenresource")
+	fun testVeinData(sender: CommandSender, resourceKey: String) {
 		if (Commands.opGuard(sender)) return
 
 		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
 
-		val description = regenResource.description
-		val veinData = game.globalResources.getTeamVeinData(team, regenResource)
+		val resource = ResourceId.byKeyName(resourceKey) ?: return
+		val veinData = game.globalResources.getTeamVeinData(team, resource)
 
-		Action.sendGameMessage(player, "Veindata for ${regenResource}:")
-		Action.sendGameMessage(player, "Num Released: ${game.globalResources.releasedCurrently(game, description)}")
+		Action.sendGameMessage(player, "Veindata for ${resource.prettyName}:")
+		Action.sendGameMessage(player, "Num Released: ${game.globalResources.releasedCurrently(game, resource)}")
 		Action.sendGameMessage(player, "Collected: ${veinData.collected.getOrDefault(game.phase.phaseType, 0)}")
 	}
 
 	@Subcommand("setVeinCollected")
-	fun testSetVeinCollected(sender: CommandSender, regenResource: RegenResource, amount: Int) {
+	@CommandCompletion("@uhcregenresource")
+	fun testSetVeinCollected(sender: CommandSender, resourceKey: String, amount: Int) {
 		if (Commands.opGuard(sender)) return
 
 		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
+		val resource = ResourceId.byKeyName(resourceKey) ?: return
 
-		val veinData = game.globalResources.getTeamVeinData(team, regenResource)
+		val veinData = game.globalResources.getTeamVeinData(team, resource)
 		veinData.collected[game.phase.phaseType] = amount
 
-		Action.sendGameMessage(player, "Set collected for ${regenResource.name} to $amount")
+		Action.sendGameMessage(player, "Set collected for ${resource.prettyName} to $amount")
 	}
 
 	@Subcommand("refreshLinks")

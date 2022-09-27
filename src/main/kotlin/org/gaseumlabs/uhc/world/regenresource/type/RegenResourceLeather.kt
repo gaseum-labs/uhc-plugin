@@ -4,6 +4,7 @@ import org.bukkit.Material.GOLDEN_HORSE_ARMOR
 import org.bukkit.Material.SADDLE
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace.UP
+import org.bukkit.entity.AbstractHorse
 import org.bukkit.entity.Animals
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType.*
@@ -15,38 +16,32 @@ import org.bukkit.inventory.ItemStack
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.customSpawning.spawnInfos.SpawnHorse
 import org.gaseumlabs.uhc.world.gen.BiomeNo
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil
+import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
-import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionEntity
 import kotlin.random.Random
 
-class ResourceLeather(
+class RegenResourceLeather(
 	released: HashMap<PhaseType, Int>,
-	chunkRadius: Int,
 	worldName: String,
 	chunkSpawnChance: Float,
 	prettyName: String,
-) : ResourceDescriptionEntity(
+) : RegenResourceEntity(
 	released,
-	chunkRadius,
 	worldName,
 	chunkSpawnChance,
 	prettyName,
 ) {
-	override fun eligable(player: Player): Boolean {
-		return player.location.y >= 58
-	}
+	override fun eligible(player: Player) = player.location.y >= 58
+	override fun onUpdate(vein: VeinEntity) {}
 
-	override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): List<Block>? {
-		val surface = surfaceSpreaderOverworld(genBounds.world, genBounds.centerX(), genBounds.centerZ(), 7, ::cowHorseGood)
-		if (surface != null) {
-			return listOf(surface.getRelative(UP))
+	override fun generateEntity(genBounds: RegenUtil.GenBounds, fullVein: Boolean) =
+		surfaceSpreaderOverworld(genBounds.world, genBounds.centerX(), genBounds.centerZ(), 7) {
+			spawnHorse.allowSpawn(it.getRelative(UP), 0)
+		}?.let {
+			EntityGenResult(it.getRelative(UP), if (fullVein) 1 else 0)
 		}
 
-		return null
-	}
-
-	override fun setEntity(block: Block, fullVein: Boolean): Entity {
+	override fun initializeEntity(block: Block, fullVein: Boolean): Entity {
 		val biome = BiomeNo.biomeAt(block)
 		val entityType = when {
 			BiomeNo.isMountainsBiome(biome) && Random.nextBoolean() -> LLAMA
@@ -77,20 +72,10 @@ class ResourceLeather(
 		return animal
 	}
 
-	override fun isEntity(entity: Entity): Boolean {
-		return when (entity.type) {
-			COW,
-			HORSE,
-			LLAMA,
-			-> true
-			else -> false
-		}
+	override fun isModifiedEntity(entity: Entity): Boolean {
+		if (entity !is AbstractHorse) return false
+		return entity.isTamed
 	}
 
 	private val spawnHorse = SpawnHorse()
-
-	/* placement */
-	private fun cowHorseGood(surfaceBlock: Block): Boolean {
-		return spawnHorse.allowSpawn(surfaceBlock.getRelative(UP), 0)
-	}
 }

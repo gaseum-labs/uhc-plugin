@@ -2,35 +2,32 @@ package org.gaseumlabs.uhc.world.regenresource.type
 
 import org.bukkit.Material.*
 import org.bukkit.block.Block
-import org.bukkit.block.BlockFace
 import org.bukkit.block.BlockFace.UP
 import org.bukkit.block.data.Ageable
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.phase.PhaseType
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil
+import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderNether
-import org.gaseumlabs.uhc.world.regenresource.ResourceDescriptionBlock
 
-class ResourceNetherWart(
+class RegenResourceNetherWart(
 	released: HashMap<PhaseType, Int>,
-	chunkRadius: Int,
 	worldName: String,
 	chunkSpawnChance: Float,
 	prettyName: String,
-) : ResourceDescriptionBlock(
+) : RegenResourceBlock(
 	released,
-	chunkRadius,
 	worldName,
 	chunkSpawnChance,
 	prettyName,
 ) {
-	override fun eligable(player: Player): Boolean {
+	override fun eligible(player: Player): Boolean {
 		return true
 	}
+	override fun onUpdate(vein: VeinBlock) {}
 
-	override fun generate(bounds: RegenUtil.GenBounds, fullVein: Boolean): List<Block>? {
+	override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): GenResult? {
 		val potentialSpots = RegenUtil.volume(
-			bounds,
+			genBounds,
 			32..110,
 			32
 		) { block ->
@@ -38,34 +35,29 @@ class ResourceNetherWart(
 		}
 
 		for (block in potentialSpots) {
-			val surface = surfaceSpreaderNether(bounds.world, block.x, block.y, block.z, 5, ::wartGood)
+			val surface = surfaceSpreaderNether(genBounds.world, block.x, block.y, block.z, 5, ::wartGood)
 			if (surface != null) {
-				return listOf(
+				return GenResult(listOf(
 					surface,
 					surface.getRelative(UP)
-				)
+				), 1)
 			}
 		}
 
 		return null
 	}
 
-	override fun setBlock(block: Block, index: Int, fullVein: Boolean) {
-		if (index == 0) {
-			block.setType(SOUL_SAND, false)
-		} else {
-			block.setType(NETHER_WART, false)
-			val data = block.blockData as Ageable
-			data.age = if (fullVein) 3 else 0
-			block.setBlockData(data, false)
-		}
+	override fun initializeBlock(blocks: List<Block>, fullVein: Boolean) {
+		blocks[0].setType(SOUL_SAND, false)
+
+		blocks[1].setType(NETHER_WART, false)
+		val data = blocks[1].blockData as Ageable
+		data.age = if (fullVein) 3 else 0
+		blocks[1].setBlockData(data, false)
 	}
 
-	override fun isBlock(block: Block): Boolean {
-		return block.type === NETHER_WART || block.type === SOUL_SAND
-	}
-
-	/* placement */
+	override fun isModifiedBlock(blocks: List<Block>) =
+		blocks[0].type !== SOUL_SAND || blocks[1].type !== NETHER_WART
 
 	private fun wartGood(surfaceBlock: Block): Boolean {
 		if (!(surfaceBlock.type === BASALT ||
@@ -77,7 +69,7 @@ class ResourceNetherWart(
 			surfaceBlock.type === CRIMSON_NYLIUM)
 		) return false
 
-		val up = surfaceBlock.getRelative(BlockFace.UP)
+		val up = surfaceBlock.getRelative(UP)
 
 		return up.isPassable && !up.isLiquid
 	}

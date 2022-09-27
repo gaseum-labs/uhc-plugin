@@ -9,6 +9,7 @@ import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.gaseumlabs.uhc.command.Commands
 import org.gaseumlabs.uhc.core.OfflineZombie
@@ -84,10 +85,12 @@ object Action {
 	fun getPlayerLocation(uuid: UUID) = Bukkit.getPlayer(uuid)?.location
 		?: PlayerData.get(uuid).offlineZombie?.location
 
-	fun playerInventory(uuid: UUID) = Bukkit.getPlayer(uuid)?.inventory?.contents
+	fun playerInventory(uuid: UUID): Array<ItemStack?>? = Bukkit.getPlayer(uuid)?.inventory?.contents
 		?: PlayerData.get(uuid).offlineZombie?.let {
 			OfflineZombie.getZombieData(it)?.inventory
 		}
+
+	fun playerHealth(uuid: UUID) = Bukkit.getPlayer(uuid)?.health ?: PlayerData.get(uuid).offlineZombie?.health
 
 	fun awardAdvancement(player: Player, name: String) {
 		val advancement = Bukkit.getServer().getAdvancement(NamespacedKey.minecraft(name)) ?: return

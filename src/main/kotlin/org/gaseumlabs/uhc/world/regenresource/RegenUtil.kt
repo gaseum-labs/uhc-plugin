@@ -9,6 +9,7 @@ import org.bukkit.block.BlockFace.DOWN
 import org.bukkit.block.BlockFace.UP
 import org.gaseumlabs.uhc.util.IntVector
 import org.gaseumlabs.uhc.util.Util
+import org.gaseumlabs.uhc.world.regenresource.type.RegenResourceOre
 import kotlin.math.*
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -127,7 +128,7 @@ object RegenUtil {
 		return ret
 	}
 
-	fun <T> volume(
+	inline fun <T> volume(
 		bounds: GenBounds,
 		yRange: IntRange,
 		tries: Int,
@@ -183,26 +184,22 @@ object RegenUtil {
 		return x in -radius..radius && z in -radius..radius
 	}
 
-	fun surfaceSpreaderOverworld(
+	inline fun surfaceSpreaderOverworld(
 		world: World,
 		x: Int,
 		z: Int,
 		spread: Int,
 		isGood: (block: Block) -> Boolean,
-	): Block? {
-		return surfaceSpreader(world, x, 0, z, spread, ::initialSurfaceOverworld, isGood)
-	}
+	) = surfaceSpreader(world, x, 0, z, spread, ::initialSurfaceOverworld, isGood)
 
-	fun surfaceSpreaderNether(
+	inline fun surfaceSpreaderNether(
 		world: World,
 		x: Int,
 		y: Int,
 		z: Int,
 		spread: Int,
 		isGood: (block: Block) -> Boolean,
-	): Block? {
-		return surfaceSpreader(world, x, y, z, spread, ::initialSurfaceNether, isGood)
-	}
+	) = surfaceSpreader(world, x, y, z, spread, ::initialSurfaceNether, isGood)
 
 	const val MAX_SURFACE = 200
 	const val MIN_SURFACE = 58
@@ -231,7 +228,7 @@ object RegenUtil {
 		return potentialBlocks
 	}
 
-	private fun surfaceSpreader(
+	inline fun surfaceSpreader(
 		world: World,
 		x: Int,
 		y: Int,
@@ -334,42 +331,41 @@ object RegenUtil {
 		return null
 	}
 
-	fun newExpandFrom(
+	val ijOrder = arrayOf(
+		0 to 0,
+		0 to 1,
+		1 to 0,
+		0 to -1,
+		-1 to 0,
+		1 to 1,
+		1 to -1,
+		-1 to 1,
+		-1 to -1
+	)
+
+	inline fun newExpandFrom(
 		expandFaces: List<BlockFace>,
 		centerBlock: Block,
 		range: Int,
-		isGood: (Block) -> Boolean?
+		crossinline isGood: (Block) -> Boolean?
 	): Block? {
 		val world = centerBlock.world
 		val usingFaces = ArrayList(expandFaces)
-		for (i in 1..range) {
+		for (d in 1..range) {
 			val removeFaces = ArrayList<BlockFace>(expandFaces.size)
 			for (face in usingFaces) {
 				val primaryAxis = IntVector.fromBlockFace(face)
 				val orth0 = primaryAxis.orthogonal0()
 				val orth1 = primaryAxis.orthogonal1()
 
-				val block = IntVector.fromBlock(centerBlock).add(primaryAxis.mul(i)).block(world)
-				when (isGood(block)) {
-					true -> return block
-					false -> {}
-					null -> {
-						removeFaces.add(face)
-						continue
-					}
-				}
-
-				for (i in -1 .. 1) {
-					for (j in -1 .. 1) {
-						if (i == 0 && j == 0) continue
-						val block = IntVector.fromBlock(centerBlock).add(primaryAxis.mul(i)).add(orth0.mul(i)).add(orth1.mul(j)).block(world)
-						when (isGood(block)) {
-							true -> return block
-							false -> {}
-							null -> {
-								removeFaces.add(face)
-								continue
-							}
+				for ((i, j) in ijOrder) {
+					val block = IntVector.fromBlock(centerBlock).add(primaryAxis.mul(d)).add(orth0.mul(i)).add(orth1.mul(j)).block(world)
+					when (isGood(block)) {
+						true -> return block
+						false -> {}
+						null -> {
+							removeFaces.add(face)
+							continue
 						}
 					}
 				}
@@ -473,9 +469,7 @@ object RegenUtil {
 			/* go down */
 			for (i in 1..yRange) {
 				val below = block.getRelative(0, -i, 0)
-				if (!surfacePassable(below)) return last
-
-				last = below
+				if (!surfacePassable(below)) return below
 			}
 		} else {
 			/* go up */
@@ -512,6 +506,74 @@ object RegenUtil {
 		}
 
 		return last
+	}
+
+	fun indexToXYZ(i: Int, tall: Int, deep: Int) = IntVector(
+		i / (tall * deep),
+		(i / deep) % tall,
+		i % deep
+	)
+
+	fun xyzToIndex(x: Int, y: Int, z: Int, tall: Int, deep: Int) =
+		x * tall * deep + y * deep + z
+
+	inline fun perfectGen(
+		gap: Int,
+		bounds: GenBounds,
+		yRange: IntRange,
+		faces: Array<BlockFace>,
+		crossinline categorize: (Block) -> Int,
+		crossinline expander: (Block) -> Boolean?
+	): Block? {
+		val wide = ceil(bounds.width / gap.toFloat()).toInt()
+		val tall = ceil((yRange.last - yRange.first + 1) / gap.toFloat()).toInt()
+		val deep = ceil(bounds.depth / gap.toFloat()).toInt()
+
+		val outerWide = wide + 2
+		val outerTall = tall + 2
+		val outerDeep = deep + 2
+
+		val offX = Random.nextInt(gap)
+		val offY = Random.nextInt(gap)
+		val offZ = Random.nextInt(gap)
+
+		val grid = Array(outerWide * outerTall * outerDeep) { i ->
+			val (x, y, z) = indexToXYZ(i, outerTall, outerDeep)
+
+			val block = bounds.world.getBlockAt(
+				bounds.x     + offX + (x - 1) * gap,
+				yRange.first + offY + (y - 1) * gap,
+				bounds.z     + offZ + (z - 1) * gap
+			)
+
+			categorize(block)
+		}
+
+		val visitOrder = Array(wide * tall * deep) { it }
+		visitOrder.shuffle()
+
+		for (i in visitOrder.indices) {
+			val (x, y, z) = indexToXYZ(visitOrder[i], tall, deep).add(1, 1, 1)
+
+			if (grid[xyzToIndex(x, y, z, outerTall, outerDeep)] == 0) {
+				val expandFaces = faces.filter { face ->
+					grid[xyzToIndex(x + face.modX, y + face.modY, z + face.modZ, outerTall, outerDeep)] == 1
+				}
+				if (expandFaces.isEmpty()) continue
+
+				val startBlock = bounds.world.getBlockAt(
+					bounds.x     + offX + (x - 1) * gap,
+					yRange.first + offY + (y - 1) * gap,
+					bounds.z     + offZ + (z - 1) * gap
+				)
+
+				newExpandFrom(expandFaces, startBlock, 4, expander)?.let {
+					return it
+				}
+			}
+		}
+
+		return null
 	}
 }
 

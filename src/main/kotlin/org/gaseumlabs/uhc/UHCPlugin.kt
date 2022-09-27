@@ -54,10 +54,10 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(Enchant(), this)
 		server.pluginManager.registerEvents(Parkour(), this)
 		server.pluginManager.registerEvents(Snowball(), this)
-		server.pluginManager.registerEvents(Fishing(), this)
 		server.pluginManager.registerEvents(CaveIndicator(), this)
 		server.pluginManager.registerEvents(ResourceEvents(), this)
 		server.pluginManager.registerEvents(TeamShield(), this)
+		server.pluginManager.registerEvents(Fishing(), this)
 
 		Packet.registerListeners()
 

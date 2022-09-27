@@ -1,161 +1,105 @@
 package org.gaseumlabs.uhc.world.regenresource
 
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
+import org.bukkit.block.Block
+import org.bukkit.entity.Entity
+import org.bukkit.entity.Player
+import org.bukkit.metadata.FixedMetadataValue
 import org.gaseumlabs.uhc.UHCPlugin
-import org.gaseumlabs.uhc.world.regenresource.type.ResourceMelon
-import org.gaseumlabs.uhc.world.regenresource.type.ResourceOre
-import org.gaseumlabs.uhc.world.regenresource.type.ResourceSugarCane
-import org.gaseumlabs.uhc.world.regenresource.type.ResourceLeather
-import org.gaseumlabs.uhc.world.regenresource.type.ResourceBlaze
-import org.gaseumlabs.uhc.world.regenresource.type.ResourceNetherWart
-import org.gaseumlabs.uhc.world.WorldManager
-import kotlin.collections.hashMapOf
 import org.gaseumlabs.uhc.core.phase.PhaseType
+import org.gaseumlabs.uhc.util.KeyGen
 
-enum class RegenResource(createDescription: () -> ResourceDescription) {
-	MELON({
-		ResourceMelon(
-			hashMapOf(
-				PhaseType.GRACE to 2, PhaseType.SHRINK to 2,
-				PhaseType.BATTLEGROUND to 9, PhaseType.ENDGAME to 9,
-			),
-			3,
-			WorldManager.GAME_WORLD_NAME,
-			1.0f / 13.0f,
-			"Melon"
-		)
-	}),
-	SUGAR_CANE({
-		ResourceSugarCane(
-			hashMapOf(
-				PhaseType.GRACE to 16, PhaseType.SHRINK to 16,
-				PhaseType.BATTLEGROUND to 9, PhaseType.ENDGAME to 9,
-			),
-			5,
-			WorldManager.GAME_WORLD_NAME,
-			1.0f / 4.0f,
-			"Sugar cane"
-		)
-	}),
-	LEATHER({
-		ResourceLeather(
-			hashMapOf(
-				PhaseType.GRACE to 16, PhaseType.SHRINK to 16,
-				PhaseType.BATTLEGROUND to 9, PhaseType.ENDGAME to 9,
-			),
-			5,
-			WorldManager.GAME_WORLD_NAME,
-			1.0f / 10.0f,
-			"Leather"
-		)
-	}),
-	BLAZE({
-		ResourceBlaze(
-			hashMapOf(
-				PhaseType.GRACE to 2, PhaseType.SHRINK to 2,
-				PhaseType.BATTLEGROUND to 2, PhaseType.ENDGAME to 2,
-			),
-			4,
-			WorldManager.NETHER_WORLD_NAME,
-			1.0f / 13.0f,
-			"Blaze"
-		)
-	}),
-	NETHER_WART({
-		ResourceNetherWart(
-			hashMapOf(
-				PhaseType.GRACE to 3, PhaseType.SHRINK to 3,
-				PhaseType.BATTLEGROUND to 3, PhaseType.ENDGAME to 3,
-			),
-			4,
-			WorldManager.NETHER_WORLD_NAME,
-			1.0f / 9.0f,
-			"Nether wart"
-		)
-	}),
-	DIAMOND({
-		ResourceOre(
-			Material.DIAMOND_ORE,
-			Material.DEEPSLATE_DIAMOND_ORE,
-			3,
-			-54..0,
-			{ y -> y < 16 },
-			true,
+data class GenResult(val blocks: List<Block>, val value: Int)
 
-			hashMapOf(
-				PhaseType.GRACE to 6, PhaseType.SHRINK to 6,
-				PhaseType.BATTLEGROUND to 16, PhaseType.ENDGAME to 0,
-			),
-			5,
-			WorldManager.GAME_WORLD_NAME,
-			1.0f / 6.0f,
-			"Diamond"
-		)
-	}),
-	GOLD({
-		ResourceOre(
-			Material.GOLD_ORE,
-			Material.DEEPSLATE_GOLD_ORE,
-			5,
-			-54..32,
-			{ true },
-			true,
+abstract class RegenResource<V : Vein>(
+	val released: HashMap<PhaseType, Int>,
+	val worldName: String,
+	val chunkSpawnChance: Float,
+	val prettyName: String,
+) {
+	val id = ResourceId.register(this)
+	val idName = prettyName.lowercase().replace(' ', '_')
+	val chunkKey = KeyGen.genKey("resource_${idName}")
 
-			hashMapOf(
-				PhaseType.GRACE to -1, PhaseType.SHRINK to -1,
-				PhaseType.BATTLEGROUND to 16, PhaseType.ENDGAME to 16,
-			),
-			5,
-			WorldManager.GAME_WORLD_NAME,
-			1.0f / 3.0f,
-			"Gold"
-		)
-	}),
-	EMERALD({
-		ResourceOre(
-			Material.EMERALD_ORE,
-			Material.DEEPSLATE_EMERALD_ORE,
-			1,
-			-54..48,
-			{ true },
-			true,
+	abstract fun eligible(player: Player): Boolean
 
-			hashMapOf(
-				PhaseType.GRACE to -1, PhaseType.SHRINK to -1,
-				PhaseType.BATTLEGROUND to 16, PhaseType.ENDGAME to 16,
-			),
-			5,
-			WorldManager.GAME_WORLD_NAME,
-			1.0f / 3.0f,
-			"Emerald"
-		)
-	}),
-	ANCIENT_DEBRIS({
-		ResourceOre(
-			Material.ANCIENT_DEBRIS,
-			Material.ANCIENT_DEBRIS,
-			2,
-			32..110,
-			{ true },
-			false,
+	abstract fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): GenResult?
 
-			hashMapOf(
-				PhaseType.GRACE to -1, PhaseType.SHRINK to -1,
-				PhaseType.BATTLEGROUND to -1, PhaseType.ENDGAME to -1,
-			),
-			5,
-			WorldManager.NETHER_WORLD_NAME,
-			1.0f / 4.0f,
-			"Ancient debris"
-		)
-	});
+	abstract fun isModified(vein: V): Boolean
 
-	val description = createDescription()
+	abstract fun onUpdate(vein: V)
 
-	val chunkKey = NamespacedKey(UHCPlugin.plugin, name)
+	abstract fun createVein(
+		x: Int,
+		z: Int,
+		partition: Int,
+		timestamp: Int,
+		value: Int,
+		blocks: List<Block>,
+		full: Boolean
+	): V
 
-	init {
-		description.regenResource = this
+	final override fun toString(): String {
+		return prettyName
+	}
+}
+
+abstract class RegenResourceBlock(
+	released: HashMap<PhaseType, Int>,
+	worldName: String,
+	chunkSpawnChance: Float,
+	prettyName: String,
+) : RegenResource<VeinBlock>(released, worldName, chunkSpawnChance, prettyName) {
+	abstract fun initializeBlock(blocks: List<Block>, fullVein: Boolean)
+
+	final override fun isModified(vein: VeinBlock) = isModifiedBlock(vein.blocks)
+	abstract fun isModifiedBlock(blocks: List<Block>): Boolean
+
+	override fun createVein(
+		x: Int,
+		z: Int,
+		partition: Int,
+		timestamp: Int,
+		value: Int,
+		blocks: List<Block>,
+		full: Boolean
+	): VeinBlock {
+		val originalData = blocks.map { it.blockData }
+		initializeBlock(blocks, full)
+		blocks.forEach {
+			it.setMetadata(GlobalResources.RESOURCE_KEY, FixedMetadataValue(UHCPlugin.plugin, id))
+		}
+		return VeinBlock(originalData, blocks, x, z, partition, timestamp, value)
+	}
+}
+
+data class EntityGenResult(val block: Block, val value: Int)
+
+abstract class RegenResourceEntity(
+	released: HashMap<PhaseType, Int>,
+	worldName: String,
+	chunkSpawnChance: Float,
+	prettyName: String,
+) : RegenResource<VeinEntity>(released, worldName, chunkSpawnChance, prettyName) {
+ 	final override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean) =
+		 generateEntity(genBounds, fullVein)?.let { (block, value) -> GenResult(listOf(block), value) }
+	abstract fun generateEntity(genBounds: RegenUtil.GenBounds, fullVein: Boolean): EntityGenResult?
+
+	abstract fun initializeEntity(block: Block, fullVein: Boolean): Entity
+
+	final override fun isModified(vein: VeinEntity) = !vein.isLoaded() || isModifiedEntity(vein.entity)
+	abstract fun isModifiedEntity(entity: Entity): Boolean
+
+	override fun createVein(
+		x: Int,
+		z: Int,
+		partition: Int,
+		timestamp: Int,
+		value: Int,
+		blocks: List<Block>,
+		full: Boolean
+	): VeinEntity {
+		val entity = initializeEntity(blocks[0], full)
+		entity.setMetadata(GlobalResources.RESOURCE_KEY, FixedMetadataValue(UHCPlugin.plugin, id))
+		return VeinEntity(entity, x, z, partition, timestamp, value)
 	}
 }
