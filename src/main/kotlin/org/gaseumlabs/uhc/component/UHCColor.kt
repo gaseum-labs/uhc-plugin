@@ -15,6 +15,8 @@ object UHCColor {
 
 	val U_GREEN = TextColor.fromRgb(0x13b50b)
 
+	val BANANA = TextColor.fromRgb(0xf3da6c)
+
 	val CNTDWN0 = TextColor.fromRgb(0xe82020)
 	val CNTDWN1 = TextColor.fromRgb(0x4dc91c)
 	val CNTDWN2 = TextColor.fromRgb(0x2458d1)

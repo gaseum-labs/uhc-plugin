@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.*
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.event.TeamShield
 import org.gaseumlabs.uhc.util.Util.trueThrough
 import org.gaseumlabs.uhc.util.Util.void
@@ -19,6 +20,55 @@ import java.util.*
 @CommandAlias("uhca")
 @Subcommand("team")
 class TeamCommands : BaseCommand() {
+
+	companion object {
+		private fun teamPlayerList(sender: CommandSender, players: List<OfflinePlayer>) =
+				players.filter { player ->
+					!trueThrough(PlayerData.get(player).optingOut) {
+						Commands.errorMessage(sender, "${player.name} is opting out of participating")
+					}
+				}.ifEmpty {
+					Commands.errorMessage(sender, "No valid players selected").void()
+				}
+
+		private fun internalCreateTeam(sender: CommandSender, players: List<OfflinePlayer>) {
+			if (Commands.opGuard(sender)) return
+
+			val teamPlayerList = teamPlayerList(sender, players) ?: return
+			val uuids = teamPlayerList.map { it.uniqueId } as ArrayList<UUID>
+
+			val (color0, color1) = UHC.colorCube.pickTeam() ?: return Action.sendGameMessage(sender,
+					"Not enough colors available to create a team")
+
+			val game = UHC.game
+			if (game == null) {
+				UHC.preGameTeams.addTeam(PreTeam(color0, color1, uuids))
+
+			} else {
+				game.teams.addTeam(Team(PreTeam.randomName(),
+						color0,
+						color1,
+						uuids,
+						TeamShield.randomBannerPattern(color0, color1)))
+			}
+
+			Action.sendGameMessage(sender,
+					"Created a team for ${teamPlayerList.joinToString(" and ") { it.name ?: "Unknown" }}")
+		}
+
+		fun generateRandomTeams(sender: Player, teamSize: Int) {
+			val teams = UHC.getTeams()
+
+			val memberLists = Teams.randomMemberLists(sender.server.onlinePlayers.filter { player ->
+				!teams.isOnTeam(player.uniqueId) && !PlayerData.get(player.uniqueId).optingOut
+			}, teamSize)
+
+			memberLists.forEach { memberList ->
+				internalCreateTeam(sender, memberList.filterNotNull())
+			}
+		}
+	}
+
 	@Subcommand("clear")
 	@Description("remove all current teams")
 	fun clearTeamsCommand(sender: CommandSender) {
@@ -124,17 +174,9 @@ class TeamCommands : BaseCommand() {
 	fun randomTeams(sender: CommandSender, teamSize: Int) {
 		if (Commands.opGuard(sender)) return
 
-		val teams = UHC.getTeams()
+        val size = generateRandomTeams(sender as Player, teamSize)
 
-		val memberLists = Teams.randomMemberLists(sender.server.onlinePlayers.filter { player ->
-			!teams.isOnTeam(player.uniqueId) && !PlayerData.get(player.uniqueId).optingOut
-		}, teamSize)
-
-		memberLists.forEach { memberList ->
-			internalCreateTeam(sender, memberList.filterNotNull())
-		}
-
-		Action.sendGameMessage(sender, "Created ${memberLists.size} teams of size $teamSize")
+		Action.sendGameMessage(sender, "Created ${size} teams of size ${teamSize}")
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")

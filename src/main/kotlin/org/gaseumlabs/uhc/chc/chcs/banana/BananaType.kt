@@ -1,10 +1,13 @@
 package org.gaseumlabs.uhc.chc.chcs.banana
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.Particle
+import org.bukkit.Sound
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Bisected
 import org.bukkit.block.data.type.Door
@@ -14,12 +17,16 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.ShapedRecipe
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import org.gaseumlabs.uhc.command.Commands
 import org.gaseumlabs.uhc.gui.ItemCreator
 import org.gaseumlabs.uhc.util.KeyGen
 import org.gaseumlabs.uhc.util.SchedulerUtil
 import org.gaseumlabs.uhc.util.Util
 import org.gaseumlabs.uhc.util.Util.comma
+import org.gaseumlabs.uhc.util.extensions.VectorExtensions.plus
+import org.gaseumlabs.uhc.util.extensions.VectorExtensions.times
 import kotlin.random.Random
 
 class RecipeCreator(val lines: Array<String>, val ingredients: Array<Pair<Char, ItemStack>>)
@@ -36,10 +43,12 @@ fun register(bananaType: BananaType): Int {
 abstract class BananaType(
 	val name: String,
 	val points: Int,
+	val cooldown: Int,
 	val color: TextColor,
 	val material: Material,
 	val description: String?,
 	recipeCreator: RecipeCreator?,
+	val overrideName: Boolean = false
 ) {
 	val id = register(this)
 
@@ -47,7 +56,7 @@ abstract class BananaType(
 
 	fun text(string: String) = Component.text(string, color, TextDecoration.BOLD)
 
-	open fun displayName() = "UHC $name Banana"
+	open fun displayName() = if (overrideName) name else "UHC $name Banana"
 
 	private val creator = ItemCreator.display(material)
 		.name(text(displayName()))
@@ -61,7 +70,7 @@ abstract class BananaType(
 
 	fun create() = creator.create()
 
-	val recipeKey = KeyGen.genKey("banana_recipe_${name.lowercase()}")
+	val recipeKey = KeyGen.genKey("banana_recipe_${name.lowercase().replace(" ", "_")}")
 	val recipe = recipeCreator?.let {
 		val recipe = ShapedRecipe(recipeKey, create())
 		recipe.shape(*recipeCreator.lines)
@@ -85,6 +94,7 @@ abstract class BananaType(
 val REGULAR = object : BananaType(
 	"Regular",
 	1,
+    0,
 	TextColor.color(0xedb92b),
 	Material.GOLDEN_HOE,
 	null,
@@ -97,6 +107,7 @@ val REGULAR = object : BananaType(
 val SCRAP = object : BananaType(
 	"Scrap",
 	2,
+		10,
 	TextColor.color(0xedb92b),
 	Material.GOLDEN_HOE,
 	"gain random materials",
@@ -126,6 +137,7 @@ val SCRAP = object : BananaType(
 val SMELTER = object : BananaType(
 	"Smelter",
 	2,
+		10,
 	TextColor.color(0xe62d20),
 	Material.GOLDEN_HOE,
 	"smelt a random stack in your inventory",
@@ -156,6 +168,7 @@ val SMELTER = object : BananaType(
 val LOGGING = object : BananaType(
 	"Logging",
 	2,
+		10,
 	TextColor.color(0xe62d20),
 	Material.GOLDEN_AXE,
 	"chop down entire trees around you",
@@ -204,6 +217,7 @@ val LOGGING = object : BananaType(
 val SUPER = object : BananaType(
 	"Super",
 	4,
+		0,
 	TextColor.color(0xeda32b),
 	Material.GOLDEN_SHOVEL,
 	null,
@@ -212,9 +226,11 @@ val SUPER = object : BananaType(
 	override fun ability(player: Player) = null
 }
 
+
 val TELEPORT = object : BananaType(
 	"Teleport",
 	5,
+		10,
 	TextColor.color(0xeda32b),
 	Material.GOLDEN_SHOVEL,
 	"teleport away",
@@ -259,6 +275,7 @@ val TELEPORT = object : BananaType(
 val MAZE = object : BananaType(
 	"Maze",
 	5,
+		10,
 	TextColor.color(0xeda32b),
 	Material.GOLDEN_SHOVEL,
 	"get lost in a maze",
@@ -303,6 +320,7 @@ val MAZE = object : BananaType(
 val MINER = object : BananaType(
 	"Miner",
 	5,
+		10,
 	TextColor.color(0xed7f2b),
 	Material.GOLDEN_PICKAXE,
 	"dig a super hole",
@@ -339,12 +357,122 @@ val MINER = object : BananaType(
 val MEGA = object : BananaType(
 	"Mega",
 	16,
+		0,
 	TextColor.color(0xed7f2b),
 	Material.GOLDEN_PICKAXE,
 	null,
 	RecipeCreator(arrayOf("EE", "EE"), arrayOf('E' to SUPER.create())),
 ) {
 	override fun ability(player: Player) = null
+}
+
+val ROCKET = object : BananaType(
+		"Rocket",
+		5,
+		20,
+		TextColor.color(0xff0000),
+		Material.GOLDEN_SWORD,
+		"launches you in the direction you're facing",
+		RecipeCreator(
+				arrayOf(" B ", "GGG"),
+				arrayOf(
+						'B' to SUPER.create(),
+						'G' to ItemStack(Material.GUNPOWDER)
+				)
+		),
+) {
+	override fun ability(player: Player): Boolean {
+		player.world.spawnParticle(
+				Particle.EXPLOSION_HUGE,
+				player.location,
+				5
+		)
+		player.world.playSound(player.location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f)
+		player.velocity += player.location.direction * 5.0
+		BananaManager.launched += player
+		return true
+	}
+}
+
+val BANANARANG = object : BananaType(
+		"Bananarang",
+		5,
+		0,
+		TextColor.color(0xeda32b), // todo: change
+		Material.GOLDEN_PICKAXE,
+		"will always come back to you",
+		RecipeCreator(
+				arrayOf(" B ", "  B", " B "),
+				arrayOf(
+						'B' to SUPER.create()
+				)
+		),
+		true,
+) {
+	override fun ability(player: Player): Boolean {
+		BananaManager.createBananarang(player)
+		return true
+	}
+}
+
+val MAGIC = object : BananaType(
+		"Magic",
+		5,
+		120,
+		NamedTextColor.LIGHT_PURPLE,
+		Material.GOLDEN_PICKAXE,
+		"gives you 3 random positive potion effects",
+		RecipeCreator(
+				arrayOf("DDD", "DBD", "DDD"),
+				arrayOf(
+						'B' to SUPER.create(),
+						'D' to ItemStack(Material.GLOWSTONE_DUST)
+				)
+		),
+) {
+	override fun ability(player: Player): Boolean {
+		listOf(
+				PotionEffectType.ABSORPTION,
+				PotionEffectType.SPEED,
+				PotionEffectType.FAST_DIGGING,
+				PotionEffectType.JUMP,
+				PotionEffectType.FIRE_RESISTANCE,
+				PotionEffectType.DAMAGE_RESISTANCE,
+				PotionEffectType.INVISIBILITY,
+				PotionEffectType.SATURATION,
+		).shuffled().take(3).forEach { effectType ->
+			player.addPotionEffect(
+					PotionEffect(
+							effectType,
+							60 * 20,
+							Random.nextInt(3)
+					)
+			)
+		}
+		return true
+	}
+}
+
+val BANANA_PHONE = object : BananaType(
+		"Banana Phone",
+		5,
+		0,
+		NamedTextColor.YELLOW,
+		Material.GOLD_INGOT,
+		"???",
+		RecipeCreator(
+				arrayOf("DDD", "DBD", "DDD"),
+				arrayOf(
+						'B' to REGULAR.create(),
+						'D' to ItemStack(Material.REDSTONE)
+				)
+		),
+		true,
+) {
+	override fun ability(player: Player): Boolean {
+		BananaManager.onBananaPhoneRightClick(player)
+		return false
+	}
 }
 
 val recipes = bananaRegistry.mapNotNull { it.recipe }

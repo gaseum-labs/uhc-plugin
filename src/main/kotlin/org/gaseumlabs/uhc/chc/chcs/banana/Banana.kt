@@ -141,7 +141,11 @@ class Banana : CHC<BananaData>() {
 		if (phase is Grace) {
 			scoreboard = ScoreboardDisplay(REGULAR.text("Bananas"), 12)
 			scoreboard?.show()
-			tickingTask = SchedulerUtil.everyN(20) { second(game) }
+			var tick = 0;
+			tickingTask = SchedulerUtil.everyTick {
+				if (tick++ % 20 == 0) second(game)
+				BananaManager.tick()
+			}
 		}
 	}
 
@@ -263,10 +267,10 @@ class Banana : CHC<BananaData>() {
 
 				val bananaData = PlayerData.get(event.player).getQuirkData(this@Banana)
 
-				if (currentSecond < bananaData.lastUsed[type.id] + 10) {
+				if (currentSecond < bananaData.lastUsed[type.id] + type.cooldown) {
 					return Commands.errorMessage(
 						event.player,
-						"Banana cooldown, try again in ${bananaData.lastUsed[type.id] + 10 - currentSecond} seconds"
+						"Banana cooldown, try again in ${bananaData.lastUsed[type.id] + type.cooldown - currentSecond} seconds"
 					)
 				}
 

@@ -13,6 +13,7 @@ import org.gaseumlabs.uhc.util.Util.void
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.gen.WorldGenManager
 import org.bukkit.plugin.java.JavaPlugin
+import org.gaseumlabs.uhc.chc.chcs.banana.BananaManager
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.util.SchedulerUtil
 
@@ -58,6 +59,7 @@ class UHCPlugin : JavaPlugin() {
 		server.pluginManager.registerEvents(ResourceEvents(), this)
 		server.pluginManager.registerEvents(TeamShield(), this)
 		server.pluginManager.registerEvents(Fishing(), this)
+		server.pluginManager.registerEvents(BananaManager, this)
 
 		Packet.registerListeners()
 
