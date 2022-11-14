@@ -11,20 +11,18 @@ import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderNether
 
 class RegenResourceBlaze(
-	released: HashMap<PhaseType, Int>,
+	released: HashMap<PhaseType, Release>,
 	worldName: String,
-	chunkSpawnChance: Float,
 	prettyName: String,
 ) : RegenResourceEntity(
 	released,
 	worldName,
-	chunkSpawnChance,
 	prettyName,
 ) {
 	override fun eligible(player: Player) = true
 	override fun onUpdate(vein: VeinEntity) {}
 
-	override fun generateEntity(genBounds: RegenUtil.GenBounds, fullVein: Boolean): EntityGenResult? {
+	override fun generateEntity(genBounds: RegenUtil.GenBounds, tier: Int): EntityGenResult? {
 		val potentialSpots = RegenUtil.volume(
 			genBounds,
 			32..110,
@@ -44,10 +42,10 @@ class RegenResourceBlaze(
 		return null
 	}
 
-	override fun initializeEntity(block: Block, fullVein: Boolean): Entity {
+	override fun initializeEntity(block: Block, tier: Int): Entity {
 		val entity = block.world.spawnEntity(
 			block.location.add(0.5, 0.0, 0.5),
-			if (fullVein) BLAZE else WITHER_SKELETON
+			if (tier == 0) BLAZE else WITHER_SKELETON
 		) as Monster
 		entity.removeWhenFarAway = false
 		return entity

@@ -21,27 +21,25 @@ import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderOverworld
 import kotlin.random.Random
 
 class RegenResourceLeather(
-	released: HashMap<PhaseType, Int>,
+	released: HashMap<PhaseType, Release>,
 	worldName: String,
-	chunkSpawnChance: Float,
 	prettyName: String,
 ) : RegenResourceEntity(
 	released,
 	worldName,
-	chunkSpawnChance,
 	prettyName,
 ) {
 	override fun eligible(player: Player) = player.location.y >= 58
 	override fun onUpdate(vein: VeinEntity) {}
 
-	override fun generateEntity(genBounds: RegenUtil.GenBounds, fullVein: Boolean) =
+	override fun generateEntity(genBounds: RegenUtil.GenBounds, tier: Int) =
 		surfaceSpreaderOverworld(genBounds.world, genBounds.centerX(), genBounds.centerZ(), 7) {
 			spawnHorse.allowSpawn(it.getRelative(UP), 0)
 		}?.let {
-			EntityGenResult(it.getRelative(UP), if (fullVein) 1 else 0)
+			EntityGenResult(it.getRelative(UP), if (tier == 0) 1 else 0)
 		}
 
-	override fun initializeEntity(block: Block, fullVein: Boolean): Entity {
+	override fun initializeEntity(block: Block, tier: Int): Entity {
 		val biome = BiomeNo.biomeAt(block)
 		val entityType = when {
 			BiomeNo.isMountainsBiome(biome) && Random.nextBoolean() -> LLAMA
@@ -60,7 +58,7 @@ class RegenResourceLeather(
 		}
 
 		val animal = block.world.spawnEntity(block.location.add(0.5, 0.0, 0.5), entityType) as Animals
-		if (fullVein) animal.setAdult() else animal.setBaby()
+		if (tier == 0) animal.setAdult() else animal.setBaby()
 		if (animal is Tameable && Random.nextInt(100) == 0) {
 			animal.isTamed = true
 			if (animal is InventoryHolder && animal.inventory is ArmoredHorseInventory && Random.nextInt(100) == 0) {

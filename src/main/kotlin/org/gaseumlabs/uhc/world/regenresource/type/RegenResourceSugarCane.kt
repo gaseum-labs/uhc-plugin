@@ -10,14 +10,12 @@ import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.superSurfaceSpreader
 
 class RegenResourceSugarCane(
-	released: HashMap<PhaseType, Int>,
+	released: HashMap<PhaseType, Release>,
 	worldName: String,
-	chunkSpawnChance: Float,
 	prettyName: String,
 ) : RegenResourceBlock(
 	released,
 	worldName,
-	chunkSpawnChance,
 	prettyName,
 ) {
 	override fun eligible(player: Player): Boolean {
@@ -25,7 +23,7 @@ class RegenResourceSugarCane(
 	}
 	override fun onUpdate(vein: VeinBlock) {}
 
-	override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): GenResult? {
+	override fun generate(genBounds: RegenUtil.GenBounds, tier: Int): GenResult? {
 		val surface = superSurfaceSpreader(genBounds) { block ->
 			Util.binarySearch(block.type, growable) && (
 				waterSource(block.getRelative(1, 0, 0)) ||
@@ -35,22 +33,14 @@ class RegenResourceSugarCane(
 			)
 		}.randomOrNull() ?: return null
 
-		return if (fullVein) GenResult(
-			listOf(
-				surface,
-				surface.getRelative(0, 1, 0),
-				surface.getRelative(0, 2, 0),
-				surface.getRelative(0, 3, 0),
-			), 3
-		) else GenResult(
-			listOf(
-				surface,
-				surface.getRelative(0, 1, 0),
-			), 1
-		)
+		val height = (3 - tier).coerceAtLeast(1)
+
+		val list = arrayListOf(surface)
+		for (i in 0 until height) list.add(surface.getRelative(0, i + 1, 0))
+		return GenResult(list, height)
 	}
 
-	override fun initializeBlock(blocks: List<Block>, fullVein: Boolean) {
+	override fun initializeBlock(blocks: List<Block>, tier: Int) {
 		blocks.slice(1 until blocks.size).forEach { it.setType(SUGAR_CANE, false) }
 	}
 

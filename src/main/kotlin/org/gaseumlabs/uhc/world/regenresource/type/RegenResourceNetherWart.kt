@@ -10,14 +10,12 @@ import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.surfaceSpreaderNether
 
 class RegenResourceNetherWart(
-	released: HashMap<PhaseType, Int>,
+	released: HashMap<PhaseType, Release>,
 	worldName: String,
-	chunkSpawnChance: Float,
 	prettyName: String,
 ) : RegenResourceBlock(
 	released,
 	worldName,
-	chunkSpawnChance,
 	prettyName,
 ) {
 	override fun eligible(player: Player): Boolean {
@@ -25,7 +23,7 @@ class RegenResourceNetherWart(
 	}
 	override fun onUpdate(vein: VeinBlock) {}
 
-	override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): GenResult? {
+	override fun generate(genBounds: RegenUtil.GenBounds, tier: Int): GenResult? {
 		val potentialSpots = RegenUtil.volume(
 			genBounds,
 			32..110,
@@ -47,12 +45,12 @@ class RegenResourceNetherWart(
 		return null
 	}
 
-	override fun initializeBlock(blocks: List<Block>, fullVein: Boolean) {
+	override fun initializeBlock(blocks: List<Block>, tier: Int) {
 		blocks[0].setType(SOUL_SAND, false)
 
 		blocks[1].setType(NETHER_WART, false)
 		val data = blocks[1].blockData as Ageable
-		data.age = if (fullVein) 3 else 0
+		data.age = if (tier == 0) 3 else 0
 		blocks[1].setBlockData(data, false)
 	}
 

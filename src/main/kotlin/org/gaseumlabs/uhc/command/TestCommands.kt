@@ -284,9 +284,12 @@ class TestCommands : BaseCommand() {
 		val resource = ResourceId.byKeyName(resourceKey) ?: return
 		val veinData = game.globalResources.getTeamVeinData(team, resource)
 
+		val collected = veinData.collected.getOrDefault(game.phase.phaseType, 0)
+		val tier = game.globalResources.releasedCurrently(game, collected, resource) ?: Tier.none()
+
 		Action.sendGameMessage(player, "Veindata for ${resource.prettyName}:")
-		Action.sendGameMessage(player, "Num Released: ${game.globalResources.releasedCurrently(game, resource)}")
-		Action.sendGameMessage(player, "Collected: ${veinData.collected.getOrDefault(game.phase.phaseType, 0)}")
+		Action.sendGameMessage(player, "Num Released: ${tier.released} | Tier: ${tier.tier} | SpawnChance: ${tier.spawnChance}")
+		Action.sendGameMessage(player, "Collected: $collected")
 	}
 
 	@Subcommand("setVeinCollected")

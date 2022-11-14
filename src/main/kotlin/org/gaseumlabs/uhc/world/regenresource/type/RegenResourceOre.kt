@@ -5,40 +5,37 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.phase.PhaseType
-import org.gaseumlabs.uhc.util.IntVector
 import org.gaseumlabs.uhc.util.Util
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.mapFirstNotNullPrefer
 import org.gaseumlabs.uhc.util.extensions.BlockExtensions.samePlace
 import org.gaseumlabs.uhc.world.regenresource.*
-import kotlin.math.ceil
-import kotlin.random.Random
 
 class RegenResourceOre(
 	val type: Material,
 	val deepType: Material,
-	val veinSize: Int,
+	val veinSize: Array<Int>,
 	val yRange: IntRange,
 	val yEligable: (y: Int) -> Boolean,
 	val perfectGen: Boolean,
 
-	released: HashMap<PhaseType, Int>,
+	released: HashMap<PhaseType, Release>,
 	worldName: String,
-	chunkSpawnChance: Float,
 	prettyName: String,
 ) : RegenResourceBlock(
 	released,
 	worldName,
-	chunkSpawnChance,
 	prettyName,
 ) {
-	override fun eligible(player: Player): Boolean {
-		return yEligable(player.location.y.toInt())
-	}
+	override fun eligible(player: Player) = yEligable(player.location.y.toInt())
+
 	override fun onUpdate(vein: VeinBlock) {}
 
-	override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): GenResult? {
-		if (perfectGen) return generate2(genBounds, fullVein)
+	override fun generate(genBounds: RegenUtil.GenBounds, tier: Int): GenResult? {
+		return if (perfectGen) generatePerfect(genBounds, tier)
+		else generateImperfect(genBounds, tier)
+	}
 
+	private fun generateImperfect(genBounds: RegenUtil.GenBounds, tier: Int): GenResult? {
 		val potentialSpots = RegenUtil.volume(
 			genBounds,
 			yRange,
@@ -57,17 +54,16 @@ class RegenResourceOre(
 			}
 		} ?: return null
 
-		val size = if (fullVein) veinSize else 1
+		val size = veinSize[tier]
 		return GenResult(createOreFrom(oreSource, size), size)
 	}
 
-	fun isWall(block: Block) = block.type === Material.LAVA || block.isCollidable
+	private fun isWall(block: Block) = block.type === Material.LAVA || block.isCollidable
 
-
-	fun generate2(bounds: RegenUtil.GenBounds, fullVein: Boolean): GenResult? {
+	private fun generatePerfect(genBounds: RegenUtil.GenBounds, tier: Int): GenResult? {
 		val source = RegenUtil.perfectGen(
 			4,
-			bounds,
+			genBounds,
 			yRange,
 			aroundFaces,
 			{ if (isWall(it)) 1 else if (isPass(it)) 0 else 2 },
@@ -78,11 +74,11 @@ class RegenResourceOre(
 			} }
 		) ?: return null
 
-		val size = if (fullVein) veinSize else 1
+		val size = veinSize[tier]
 		return GenResult(createOreFrom(source, size), size)
 	}
 
-	override fun initializeBlock(blocks: List<Block>, fullVein: Boolean) {
+	override fun initializeBlock(blocks: List<Block>, tier: Int) {
 		blocks.forEach {
 			it.setType(if (it.type === Material.DEEPSLATE || it.type === Material.TUFF) deepType else type, false)
 		}
@@ -94,7 +90,7 @@ class RegenResourceOre(
 
 	/* placement */
 
-	fun createOreFrom(origin: Block, numBlocks: Int): List<Block> {
+	private fun createOreFrom(origin: Block, numBlocks: Int): List<Block> {
 		/* keep track of all the ores that will be placed */
 		/* to decide the next location to spread to */
 		val veinBlocks = ArrayList<Block>(numBlocks)
@@ -152,35 +148,7 @@ class RegenResourceOre(
 	}
 
 	companion object {
-		val wallMaterials = Util.sortedArrayOf(
-			Material.DRIPSTONE_BLOCK,
-			Material.STONE,
-			Material.ANDESITE,
-			Material.DIORITE,
-			Material.GRANITE,
-			Material.TUFF,
-			Material.DEEPSLATE,
-			Material.COPPER_ORE,
-			Material.DEEPSLATE_COPPER_ORE,
-			Material.IRON_ORE,
-			Material.DEEPSLATE_IRON_ORE,
-			Material.COAL_ORE,
-			Material.DEEPSLATE_COAL_ORE,
-			Material.GOLD_ORE,
-			Material.DEEPSLATE_GOLD_ORE,
-			Material.REDSTONE_ORE,
-			Material.DEEPSLATE_REDSTONE_ORE,
-			Material.DIAMOND_ORE,
-			Material.DEEPSLATE_DIAMOND_ORE,
-			Material.LAPIS_ORE,
-			Material.DEEPSLATE_LAPIS_ORE,
-			Material.EMERALD_ORE,
-			Material.DEEPSLATE_EMERALD_ORE,
-			Material.CLAY,
-			Material.MAGMA_BLOCK,
-		)
-
-		val replaceMaterials = Util.sortedArrayOf(
+		private val replaceMaterials = Util.sortedArrayOf(
 			Material.DRIPSTONE_BLOCK,
 			Material.STONE,
 			Material.ANDESITE,
@@ -203,7 +171,7 @@ class RegenResourceOre(
 			Material.WARPED_NYLIUM,
 		)
 
-		val passMaterials = Util.sortedArrayOf(
+		private val passMaterials = Util.sortedArrayOf(
 			Material.POINTED_DRIPSTONE,
 			Material.BIG_DRIPLEAF,
 			Material.AZALEA,
@@ -214,8 +182,6 @@ class RegenResourceOre(
 			Material.LARGE_AMETHYST_BUD,
 			Material.AMETHYST_CLUSTER,
 		)
-
-		fun isWall(block: Block) = Util.binarySearch(block.type, wallMaterials)
 
 		fun isPass(block: Block) = (block.type !== Material.LAVA && block.isPassable) || Util.binarySearch(block.type, passMaterials)
 

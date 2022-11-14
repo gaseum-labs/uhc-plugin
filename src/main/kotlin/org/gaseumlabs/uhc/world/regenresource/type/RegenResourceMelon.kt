@@ -11,14 +11,12 @@ import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.RegenUtil.superSurfaceSpreader
 
 class RegenResourceMelon(
-	released: HashMap<PhaseType, Int>,
+	released: HashMap<PhaseType, Release>,
 	worldName: String,
-	chunkSpawnChance: Float,
 	prettyName: String,
 ) : RegenResourceBlock(
 	released,
 	worldName,
-	chunkSpawnChance,
 	prettyName,
 ) {
 	override fun eligible(player: Player): Boolean {
@@ -40,7 +38,7 @@ class RegenResourceMelon(
 		return count >= 3
 	}
 
-	override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): GenResult? {
+	override fun generate(genBounds: RegenUtil.GenBounds, tier: Int): GenResult? {
 		if (!hasJungle(genBounds)) return null
 
 		val surface = superSurfaceSpreader(genBounds, ::melonGood).randomOrNull() ?: return null
@@ -48,8 +46,8 @@ class RegenResourceMelon(
 		return GenResult(listOf(surface.getRelative(BlockFace.UP)), 1)
 	}
 
-	override fun initializeBlock(blocks: List<Block>, fullVein: Boolean) {
-		blocks[0].setType(if (fullVein) MELON else CARVED_PUMPKIN, false)
+	override fun initializeBlock(blocks: List<Block>, tier: Int) {
+		blocks[0].setType(if (tier == 0) MELON else CARVED_PUMPKIN, false)
 	}
 
 	override fun isModifiedBlock(blocks: List<Block>) =

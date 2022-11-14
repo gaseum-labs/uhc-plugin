@@ -7,10 +7,7 @@ import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.util.Util
-import org.gaseumlabs.uhc.world.regenresource.GenResult
-import org.gaseumlabs.uhc.world.regenresource.RegenResource
-import org.gaseumlabs.uhc.world.regenresource.RegenUtil
-import org.gaseumlabs.uhc.world.regenresource.Vein
+import org.gaseumlabs.uhc.world.regenresource.*
 
 class VeinFish(
 	val center: Block,
@@ -30,19 +27,17 @@ class RegenResourceFish(
 	val yRange: IntRange,
 	val eligibleRange: IntRange,
 	val surface: Boolean,
-	released: HashMap<PhaseType, Int>,
+	released: HashMap<PhaseType, Release>,
 	worldName: String,
-	chunkSpawnChance: Float,
 	prettyName: String,
 ) : RegenResource<VeinFish>(
 	released,
 	worldName,
-	chunkSpawnChance,
 	prettyName,
 ) {
 	override fun eligible(player: Player) = eligibleRange.contains(player.location.y.toInt())
 
-	override fun generate(genBounds: RegenUtil.GenBounds, fullVein: Boolean): GenResult? {
+	override fun generate(genBounds: RegenUtil.GenBounds, tier: Int): GenResult? {
 		val source = RegenUtil.perfectGen(
 			4,
 			genBounds,
@@ -72,7 +67,7 @@ class RegenResourceFish(
 		timestamp: Int,
 		value: Int,
 		blocks: List<Block>,
-		full: Boolean
+		tier: Int,
 	): VeinFish {
 		return VeinFish(blocks[0], surface, x, z, partition, timestamp, value)
 	}

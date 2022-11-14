@@ -2,18 +2,14 @@ package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.*
 import org.bukkit.entity.Player
-import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.persistence.PersistentDataType
-import org.gaseumlabs.uhc.UHCPlugin
 import org.gaseumlabs.uhc.core.Game
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.core.phase.PhaseType.*
 import org.gaseumlabs.uhc.team.Team
 import org.gaseumlabs.uhc.util.StaticMap
-import org.gaseumlabs.uhc.util.Util.comma
 import org.gaseumlabs.uhc.util.Util.randomFirstMatchIndex
-import org.gaseumlabs.uhc.util.Util.sortedArrayOf
 import org.gaseumlabs.uhc.util.Util.trueThrough
 import org.gaseumlabs.uhc.util.createStaticMap
 import org.gaseumlabs.uhc.world.WorldManager
@@ -105,10 +101,18 @@ class GlobalResources {
 		}
 	}
 
-	fun releasedCurrently(game: Game, resource: RegenResource<*>): Int {
+	/**
+	 * @return null if the game is in a battleground phase or does not release this phase
+	 */
+	fun releasedCurrently(game: Game, collected: Int, resource: RegenResource<*>): Tier? {
 		val phaseType = game.phase.phaseType
-		val result = resource.released[phaseType] ?: 0
-		return if (result == -1) 10000000 else result
+		val release = resource.released[phaseType]
+		if (release !is ReleaseChunked) return null
+
+		val tier = release.getTier(collected)
+		if (tier.isNone()) return null
+
+		return tier
 	}
 
 	private fun markChunkRound(chunk: Chunk, regenResource: RegenResource<*>, roundNum: Int) {
@@ -153,7 +157,7 @@ class GlobalResources {
 
 		++resourceData.round
 
-		val players = PlayerData.playerDataList.mapNotNull { (uuid, playerData) ->
+		val players = (PlayerData.playerDataList.mapNotNull { (uuid, playerData) ->
 			if (!playerData.alive) return@mapNotNull null
 
 			val player = Bukkit.getPlayer(uuid) ?: return@mapNotNull null
@@ -161,14 +165,19 @@ class GlobalResources {
 
 			val team = game.teams.playersTeam(uuid) ?: return@mapNotNull null
 
-			player to if (
-				getTeamVeinData(team, regenResource).collected[game.phase.phaseType]!! <
-				releasedCurrently(game, regenResource)
-			) 0 else 1
-		}.sortedBy { (_, sort) -> sort }
+			player to releasedCurrently(
+				game,
+				getTeamVeinData(team, regenResource).collected[game.phase.phaseType]!!,
+				regenResource
+			)
+		}
+			/* only players that have this resource released */
+			.filter { (_, tier) -> tier != null } as List<Pair<Player, Tier>>)
+			/* try to drop for higher tier players first */
+			.sortedBy { (_, tier) -> tier.tier }
 
 		/* find new chunks around players to generate in */
-		players.forEach { (player, quotaReached) ->
+		players.forEach { (player, tier) ->
 			val center = player.chunk
 			for (i in 0 ..8) {
 				val z = center.z + i - 4
@@ -183,12 +192,12 @@ class GlobalResources {
 						regenResource.eligible(player) &&
 						oldChunkRound != resourceData.round &&
 						oldChunkRound != resourceData.round - 1 &&
-						Random.nextFloat() < regenResource.chunkSpawnChance
+						Random.nextFloat() < tier.spawnChance
 					) regenResource.generate(
 						RegenUtil.GenBounds.fromChunk(testChunk),
-						quotaReached == 0
+						tier.tier
 					)?.let { (list, value) -> resourceData.veins.add(regenResource.createVein(
-						x, z, -1, currentTick, value, list, quotaReached == 0
+						x, z, -1, currentTick, value, list, tier.tier
 					)) }
 
 					markChunkRound(testChunk, regenResource, resourceData.round)
@@ -260,7 +269,7 @@ class GlobalResources {
 		deleteVeins.forEach { vein -> vein.erase() }
 	}
 
-	fun <V : Vein> createVein(
+	fun <V : Vein> createVeinBattleground(
 		resourcePartition: ResourcePartition,
 		world: World,
 		partition: Int,
@@ -270,8 +279,8 @@ class GlobalResources {
 		regenResource: RegenResource<V>,
 	) {
 		val generatedBounds = resourcePartition.selectFor(world, partition, radius)
-		val (list, value) = regenResource.generate(generatedBounds, true) ?: return
-		veins.add(regenResource.createVein(0, 0, partition, currentTick, value, list, true))
+		val (list, value) = regenResource.generate(generatedBounds, 0) ?: return
+		veins.add(regenResource.createVein(0, 0, partition, currentTick, value, list, 0))
 	}
 
 	fun <V: Vein> updateBattleground(
@@ -287,14 +296,13 @@ class GlobalResources {
 			.filter { location -> location.world === world }
 		if (playerLocations.isEmpty()) return
 
-		val numPartitions = regenResource.released[game.phase.phaseType] ?: return
-		val resourcePartition = ResourcePartition.partitionOfSize(numPartitions) ?: return
+		val resourcePartition = (regenResource.released[game.phase.phaseType] as? ReleaseBattleground)?.partition ?: return
 
 		/* delete all stale veins, replace ones that were partitioned */
 		val deletedVeins = findStaleVeins(playerLocations, resourceData.veins, currentTick)
 		deleteVeins(deletedVeins, resourceData.veins)
 		deletedVeins.forEach { deletedVein ->
-			if (deletedVein.partition != -1) createVein(
+			if (deletedVein.partition != -1) createVeinBattleground(
 				resourcePartition,
 				world,
 				deletedVein.partition,
@@ -306,8 +314,8 @@ class GlobalResources {
 		}
 
 		/* always try to add an extra vein */
-		findPartitionToFill(numPartitions, resourceData.veins)?.let { partitionToFill ->
-			createVein(
+		findPartitionToFill(resourcePartition.size, resourceData.veins)?.let { partitionToFill ->
+			createVeinBattleground(
 				resourcePartition,
 				world,
 				partitionToFill,
