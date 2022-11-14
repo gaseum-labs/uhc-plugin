@@ -22,7 +22,7 @@ class ResourceEvents : Listener {
 			vein is VeinEntity && vein.entity.entityId == event.entity.entityId
 		} ?: return
 
-		markCollected(game, player, regenResource, vein.value)
+		GlobalResources.markCollected(game, player, regenResource, vein.value)
 	}
 
 	@EventHandler
@@ -37,15 +37,7 @@ class ResourceEvents : Listener {
 			vein is VeinBlock && vein.blocks.any { it.samePlace(brokenBlock) }
 		} ?: return
 
-		markCollected(game, player, regenResource, vein.value)
-	}
-
-	private fun markCollected(game: Game, player: Player, regenResource: RegenResource<*>, value: Int) {
-		val team = game.teams.playersTeam(player.uniqueId)
-		if (team != null) {
-			val collected = game.globalResources.getTeamVeinData(team, regenResource).collected
-			collected[game.phase.phaseType] = collected.getOrPut(game.phase.phaseType) { 0 } + value
-		}
+		GlobalResources.markCollected(game, player, regenResource, vein.value)
 	}
 
 	private fun getTypeFrom(holder: Metadatable) =

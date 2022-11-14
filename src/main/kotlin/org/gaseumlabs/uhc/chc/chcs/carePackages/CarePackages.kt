@@ -496,16 +496,16 @@ class CarePackages : CHC<Nothing?>() {
 
 			circlePlacement(centerX, centerZ, placeRadius * 0.4f, placeRadius * 0.6f, ringChests) { _, x, z ->
 				inventoryList.add(CarePackageUtil.generateChest(
-					world,
 					CarePackageUtil.dropBlock(world, x, z),
-					dropTextColor(tier)
+					dropTextColor(tier),
+					CHEST,
 				))
 			}
 
 			inventoryList.add(CarePackageUtil.generateChest(
-				world,
 				CarePackageUtil.dropBlock(world, centerX, centerZ),
-				dropTextColor(tier)
+				dropTextColor(tier),
+				CHEST,
 			))
 
 			return inventoryList

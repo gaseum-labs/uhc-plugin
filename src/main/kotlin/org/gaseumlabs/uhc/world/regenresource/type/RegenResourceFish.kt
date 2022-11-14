@@ -1,12 +1,10 @@
 package org.gaseumlabs.uhc.world.regenresource.type
 
-import org.bukkit.DyeColor
 import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
-import org.bukkit.entity.TropicalFish
 import org.gaseumlabs.uhc.core.phase.PhaseType
 import org.gaseumlabs.uhc.util.Util
 import org.gaseumlabs.uhc.world.regenresource.GenResult
@@ -16,7 +14,7 @@ import org.gaseumlabs.uhc.world.regenresource.Vein
 
 class VeinFish(
 	val center: Block,
-	val fish: Array<TropicalFish>,
+	val surface: Boolean,
 	x: Int,
 	z: Int,
 	partition: Int,
@@ -25,14 +23,13 @@ class VeinFish(
 ) : Vein(x, z, partition, timestamp, value) {
 	override fun centerLocation() = center.location.toCenterLocation()
 
-	override fun erase() {
-		fish.forEach { if (it.isValid) it.remove() }
-	}
+	override fun erase() {}
 }
 
 class RegenResourceFish(
 	val yRange: IntRange,
 	val eligibleRange: IntRange,
+	val surface: Boolean,
 	released: HashMap<PhaseType, Int>,
 	worldName: String,
 	chunkSpawnChance: Float,
@@ -66,9 +63,7 @@ class RegenResourceFish(
 		return GenResult(listOf(source), 1)
 	}
 
-	override fun isModified(vein: VeinFish) = vein.fish.all {
-		!it.isValid || it.isDead
-	}
+	override fun isModified(vein: VeinFish) = vein.center.type !== Material.WATER
 
 	override fun createVein(
 		x: Int,
@@ -79,17 +74,7 @@ class RegenResourceFish(
 		blocks: List<Block>,
 		full: Boolean
 	): VeinFish {
-		val world = blocks[0].world
-		val center = blocks[0].location.toCenterLocation()
-		val fish = Array(6) {
-			val fish = world.spawn(center, TropicalFish::class.java)
-			fish.bodyColor = DyeColor.values().random()
-			fish.pattern = TropicalFish.Pattern.values().random()
-			fish.patternColor = DyeColor.values().random()
-			fish.removeWhenFarAway = false
-			fish
-		}
-		return VeinFish(blocks[0], fish, x, z, partition, timestamp, value)
+		return VeinFish(blocks[0], surface, x, z, partition, timestamp, value)
 	}
 
 	override fun onUpdate(vein: VeinFish) {
@@ -104,13 +89,6 @@ class RegenResourceFish(
 			1.5,
 			0.0
 		)
-
-		vein.fish.forEach { fish ->
-			val toCenter = vein.centerLocation().subtract(fish.location).toVector()
-			if (toCenter.length() > 2.0) {
-				fish.velocity = toCenter.normalize().multiply(0.5)
-			}
-		}
 	}
 
 	companion object {

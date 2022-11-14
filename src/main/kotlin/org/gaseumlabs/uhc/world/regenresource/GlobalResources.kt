@@ -1,6 +1,7 @@
 package org.gaseumlabs.uhc.world.regenresource
 
 import org.bukkit.*
+import org.bukkit.entity.Player
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.persistence.PersistentDataType
 import org.gaseumlabs.uhc.UHCPlugin
@@ -50,6 +51,15 @@ class GlobalResources {
 			ResourceId.upperFish,
 			ResourceId.lowerFish,
 		) { it.id } as StaticMap<RegenResource<Vein>>
+
+		fun markCollected(game: Game, team: Team, regenResource: RegenResource<*>, value: Int) {
+			val collected = game.globalResources.getTeamVeinData(team, regenResource).collected
+			collected[game.phase.phaseType] = collected.getOrPut(game.phase.phaseType) { 0 } + value
+		}
+
+		fun markCollected(game: Game, player: Player, regenResource: RegenResource<*>, value: Int) {
+			markCollected(game, game.teams.playersTeam(player.uniqueId) ?: return, regenResource, value)
+		}
 	}
 
 	data class TeamVeinData(
@@ -74,7 +84,7 @@ class GlobalResources {
 		)
 	}
 
-	val resourceData = resourcesList.map {
+	private val resourceData = resourcesList.map {
 		ResourceData(
 			HashMap(),
 			ArrayList(),

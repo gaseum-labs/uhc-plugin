@@ -194,9 +194,11 @@ class Game(
 
 		/* broadcast elimination */
 		val eliminationMessages = eliminationMessages(uuid, playerTeam, numRemaining, teamIsAlive)
-		PlayerData.playerDataList.filter { (_, data) -> data.participating }
-			.mapNotNull { (uuid, _) -> Bukkit.getPlayer(uuid) }
-			.forEach { player -> eliminationMessages.forEach { player.sendMessage(it) } }
+		Bukkit.getOnlinePlayers().forEach { player ->
+			if (WorldManager.isGameWorld(player.world)) {
+				eliminationMessages.forEach { player.sendMessage(it) }
+			}
+		}
 
 		/* add to ledger */
 		summaryBuilder.addEntry(uuid, UHC.timer.get(), killer?.uniqueId)

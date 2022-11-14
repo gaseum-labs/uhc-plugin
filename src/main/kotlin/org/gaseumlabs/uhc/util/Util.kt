@@ -236,6 +236,7 @@ object Util {
 	}
 
 	fun floorDiv(a: Int, b: Int) = if (a < 0) (a - b + 1) / b else a / b
+	fun ceilDiv(a: Int, b: Int) = (a + b - 1) / b
 
 	//fun atLeastOf(required: Int, vararg tries: Boolean): Boolean {
 	//	//var count = 0

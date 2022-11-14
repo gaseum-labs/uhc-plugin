@@ -31,25 +31,6 @@ object ItemUtil {
 		return ret
 	}
 
-	fun fireworkEffect(type: FireworkEffect.Type, limitColors: Int = -1): FireworkEffect {
-		val builder = FireworkEffect.builder()
-
-		/* toggles */
-		builder.flicker(Math.random() < 0.5)
-		builder.trail(Math.random() < 0.5)
-
-		/* effect type */
-		builder.with(type)
-
-		/* colors */
-		val numColors = if (limitColors == -1) Random.nextInt(1, 9) else limitColors
-		for (i in 0 until numColors) {
-			builder.withColor(Color.fromRGB(Random.nextInt(0, 0x1000000)))
-		}
-
-		return builder.build()
-	}
-
 	class FakeEnchantment : Enchantment(NamespacedKey(org.gaseumlabs.uhc.UHCPlugin.plugin, "fakeEnchantment")) {
 		override fun getName() = ""
 		override fun getMaxLevel() = 0

@@ -17,6 +17,8 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
+import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -24,7 +26,8 @@ import org.gaseumlabs.uhc.core.OfflineZombie
 import org.gaseumlabs.uhc.lobbyPvp.PvpQueue
 import org.gaseumlabs.uhc.world.regenresource.*
 import org.gaseumlabs.uhc.world.regenresource.type.VeinFish
-import java.util.*
+import java.util.UUID
+import kotlin.random.Random
 
 @CommandAlias("uhct")
 class TestCommands : BaseCommand() {
@@ -47,11 +50,9 @@ class TestCommands : BaseCommand() {
 		if (Commands.opGuard(sender)) return
 		sender as Player
 
-		val random = Random()
-
 		for (i in 0 until 500) {
-			sender.inventory.addItem(ItemStack(Material.values()[random.nextInt(Material.values().size)],
-				random.nextInt(64) + 1))
+			sender.inventory.addItem(ItemStack(Material.values()[Random.nextInt(Material.values().size)],
+				Random.nextInt(64) + 1))
 		}
 	}
 
@@ -245,23 +246,28 @@ class TestCommands : BaseCommand() {
 		val resource = ResourceId.byKeyName(resourceKey) ?: return
 		val veins = game.globalResources.getVeinList(resource)
 
+		fun glowBlock(block: Block) {
+			val fallingBlock = block.world.spawnFallingBlock(
+				block.location.add(0.5, 0.0, 0.5),
+				Material.COPPER_BLOCK.createBlockData()
+			)
+			fallingBlock.dropItem = false
+			fallingBlock.isGlowing = true
+			fallingBlock.setGravity(false)
+		}
+
 		veins.forEach { vein ->
 			when (vein) {
 				is VeinBlock -> {
-					vein.blocks.forEach { block ->
-						Action.sendGameMessage(player, "Vein at ${block.x}, ${block.y}, ${block.z} veins")
-						val fallingBlock = block.world.spawnFallingBlock(block.location.add(0.5, 0.0, 0.5),
-							Material.COPPER_BLOCK.createBlockData())
-						fallingBlock.dropItem = false
-						fallingBlock.isGlowing = true
-						fallingBlock.setGravity(false)
-					}
+					val center = vein.blocks[vein.blocks.size / 2]
+					Action.sendGameMessage(player, "Vein at ${center.x}, ${center.y}, ${center.z} veins")
+					vein.blocks.forEach(::glowBlock)
 				}
 				is VeinEntity -> {
 					vein.entity.isGlowing = true
 				}
 				is VeinFish -> {
-					vein.fish.forEach { it.isGlowing = true }
+					glowBlock(vein.center)
 				}
 				else -> {}
 			}
@@ -333,6 +339,26 @@ class TestCommands : BaseCommand() {
 
 		RegenUtil.superSurfaceSpreader(genBounds) { true }.forEach { block ->
 			block.setType(Material.GOLD_BLOCK, false)
+		}
+	}
+
+	@Subcommand("surfacescan tree")
+	fun surfaceScanTreeCommand(sender: CommandSender) {
+		val player = sender as? Player ?: return
+
+		val chunk = player.chunk
+		val genBounds = RegenUtil.GenBounds.fromChunk(chunk)
+
+		RegenUtil.superSurfaceSpreader(genBounds) { when(it.type) {
+			Material.GRASS_BLOCK,
+			Material.DIRT -> true
+			else -> false
+		} }.forEach { block ->
+			when (Random.nextInt(16)) {
+				0 -> block.getRelative(BlockFace.UP).setType(Material.SPRUCE_SAPLING, false)
+				1 -> block.getRelative(BlockFace.UP).setType(Material.OAK_SAPLING, false)
+				else -> {}
+			}
 		}
 	}
 }

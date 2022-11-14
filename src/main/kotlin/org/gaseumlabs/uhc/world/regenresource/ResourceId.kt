@@ -137,9 +137,10 @@ object ResourceId {
 	val upperFish = RegenResourceFish(
 		48..70,
 		48..200,
+		true,
 		hashMapOf(
-			PhaseType.GRACE to -1, PhaseType.SHRINK to -1,
-			PhaseType.BATTLEGROUND to 9, PhaseType.ENDGAME to 9,
+			PhaseType.GRACE to 6, PhaseType.SHRINK to 6,
+			PhaseType.BATTLEGROUND to 4, PhaseType.ENDGAME to 4,
 		),
 		WorldManager.GAME_WORLD_NAME,
 		1.0f / 12.0f,
@@ -149,9 +150,10 @@ object ResourceId {
 	val lowerFish = RegenResourceFish(
 		-54..47,
 		-64..47,
+		false,
 		hashMapOf(
-			PhaseType.GRACE to -1, PhaseType.SHRINK to -1,
-			PhaseType.BATTLEGROUND to 16, PhaseType.ENDGAME to 0,
+			PhaseType.GRACE to 6, PhaseType.SHRINK to 6,
+			PhaseType.BATTLEGROUND to 6, PhaseType.ENDGAME to 0,
 		),
 		WorldManager.GAME_WORLD_NAME,
 		1.0f / 3.0f,

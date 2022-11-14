@@ -12,6 +12,7 @@ abstract class ResourcePartition(val size: Int = 0) {
 	companion object {
 		fun partitionOfSize(n: Int): ResourcePartition? = when (n) {
 			0 -> null
+			4 -> ResourcePartitionGrid(2, 2)
 			9 -> ResourcePartitionGrid(3, 3)
 			12 -> ResourcePartitionGrid(3, 4)
 			16 -> ResourcePartitionGrid(4, 4)

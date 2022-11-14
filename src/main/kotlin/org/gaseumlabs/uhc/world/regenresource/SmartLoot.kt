@@ -114,6 +114,8 @@ object SmartLoot {
 		}
 	}
 
+	fun saddleCount(items: List<ItemStack>) = items.sumOf { if (it.type === Material.SADDLE) it.amount else 0 }
+
 	fun brownMushroomCount(items: List<ItemStack>) = items.sumOf { if (it.type === Material.BROWN_MUSHROOM) it.amount else 0 }
 
 	fun redMushroomCount(items: List<ItemStack>) = items.sumOf { if (it.type === Material.RED_MUSHROOM) it.amount else 0 }
@@ -188,7 +190,12 @@ object SmartLoot {
 		}
 	}
 
-	fun calculateDeficiencies(teams: Teams<Team>, team: Team): List<ItemStack> {
+	fun calculateDeficiencies(
+		teams: Teams<Team>,
+		team: Team,
+		surface: Boolean,
+		luck: Int,
+	): List<ItemStack> {
 		val phase = UHC.game?.phase?.phaseType ?: return emptyList()
 		val maxTeamSize = teams.teams().maxOf { it.members.count { uuid -> PlayerData.get(uuid).participating } }
 
@@ -230,6 +237,7 @@ object SmartLoot {
 		val paper = paperCount(teamItems)
 		val arrow = arrowCount(teamItems)
 		val sand = sandCount(teamItems)
+		val saddle = saddleCount(teamItems)
 		/* ------------------------------ */
 		var totalHealth = playerDatas.sumOf { Action.playerHealth(it.uuid) ?: 0.0 }
 		totalHealth += potentialHealthCount(teamItems)
@@ -240,32 +248,40 @@ object SmartLoot {
 
 		val potentials = ArrayList<ItemStack>()
 
-		/* apple to craft golden apple */
-		if ((gold / 8) > apple) potentials.add(ItemStack(Material.APPLE))
+		if (surface) {
+			/* apple to craft golden apple */
+			if ((gold / 8) > apple) potentials.add(ItemStack(Material.APPLE))
+
+			/* feather to craft arrow */
+			if (flint > feather) potentials.add(ItemStack(Material.FEATHER, 2))
+
+			/* sugar cane to craft book */
+			if (leather > (paper / 3)) potentials.add(ItemStack(Material.SUGAR_CANE, 3))
+
+			/* leather to craft book */
+			if ((paper / 3) > leather) potentials.add(ItemStack(Material.LEATHER, 1))
+
+			/* need oxeye to heal */
+			if (oxeye < brownMushroom.coerceAtMost(redMushroom)) potentials.add(ItemStack(Material.OXEYE_DAISY))
+
+			/* need sand to brew */
+			if (sand == 0) potentials.add(ItemStack(Material.SAND, 12))
+		}
 
 		/* gold to craft golden apple */
-		if (gold > 0 && apple > (gold / 8)) potentials.add(ItemStack(Material.GOLD_INGOT, 8))
+		if (gold > 0 && apple > (gold / 8)) potentials.add(ItemStack(Material.GOLD_INGOT, 4))
 
 		/* flint to craft arrow */
-		if (feather > flint) potentials.add(ItemStack(Material.FLINT, 3))
-
-		/* feather to craft arrow */
-		if (flint > feather) potentials.add(ItemStack(Material.FEATHER, 3))
+		if (feather > flint) potentials.add(ItemStack(Material.FLINT, 2))
 
 		/* glowstone to craft spectral arrow */
-		if (glowstone > 0 && arrow > (glowstone / 4)) potentials.add(ItemStack(Material.GLOWSTONE_DUST, 16))
+		if (glowstone > 0 && arrow > (glowstone / 4)) potentials.add(ItemStack(Material.GLOWSTONE_DUST, 8))
 
 		/* arrow to craft spectral arrow */
-		if ((glowstone / 4) > arrow) potentials.add(ItemStack(Material.ARROW, 4))
-
-		/* sugar cane to craft book */
-		if (leather > (paper / 3)) potentials.add(ItemStack(Material.SUGAR_CANE, 6))
-
-		/* leather to craft book */
-		if ((paper / 3) > leather) potentials.add(ItemStack(Material.LEATHER, 2))
+		if ((glowstone / 4) > arrow) potentials.add(ItemStack(Material.ARROW, 3))
 
 		/* not enough string for a bow */
-		if (phase >= PhaseType.SHRINK && string < 3) potentials.add(ItemStack(Material.STRING, 3))
+		if (phase >= PhaseType.SHRINK && string < 3) potentials.add(ItemStack(Material.STRING, 2))
 
 		/* need brown mushroom to heal */
 		if (brownMushroom < redMushroom.coerceAtMost(oxeye)) potentials.add(ItemStack(Material.BROWN_MUSHROOM))
@@ -273,11 +289,8 @@ object SmartLoot {
 		/* need red mushroom to heal */
 		if (redMushroom < brownMushroom.coerceAtMost(oxeye)) potentials.add(ItemStack(Material.RED_MUSHROOM))
 
-		/* need oxeye to heal */
-		if (oxeye < brownMushroom.coerceAtMost(redMushroom)) potentials.add(ItemStack(Material.OXEYE_DAISY))
-
 		/* need coal to smelt */
-		if ((phase >= PhaseType.SHRINK || smelts > 0) && smelts < 8) potentials.add(ItemStack(Material.COAL, 4))
+		if ((phase >= PhaseType.SHRINK || smelts > 0) && smelts < 8) potentials.add(ItemStack(Material.COAL, 3))
 
 		val brewable = blazeRod > 0 || wart > 0
 
@@ -285,39 +298,42 @@ object SmartLoot {
 		if (brewable && blazeRod < (wart / 4)) potentials.add(ItemStack(Material.BLAZE_ROD))
 
 		/* need wart to brew */
-		if (brewable && (wart / 4) < blazeRod) potentials.add(ItemStack(Material.NETHER_WART, 2))
+		if (brewable && (wart / 4) < blazeRod) potentials.add(ItemStack(Material.NETHER_WART))
 
 		/* enough to get a new cool brewing ingredient */
 		if (brewable && blazeRod >= 2 && wart >= 4) potentials.add(arrayOf(
-			ItemStack(Material.MELON),
+			ItemStack(Material.MELON_SLICE),
 			ItemStack(Material.GHAST_TEAR, 2),
 			ItemStack(Material.MAGMA_CREAM, 3),
 		).random())
 
 		/* need gunpowder to brew */
-		if (brewable && gunpowder < 3) potentials.add(ItemStack(Material.GUNPOWDER, 2))
-
-		/* need sand to brew */
-		if (sand == 0) potentials.add(ItemStack(Material.SAND, 12))
+		if (brewable && gunpowder < 3) potentials.add(ItemStack(Material.GUNPOWDER))
 
 		/* need lapis to enchant */
-		if (phase >= PhaseType.SHRINK && lapis < 16) potentials.add(ItemStack(Material.LAPIS_LAZULI, 6))
+		if (phase >= PhaseType.SHRINK && lapis < 16) potentials.add(ItemStack(Material.LAPIS_LAZULI, 4))
 
 		/* have a saddle */
-		potentials.add(ItemStack(Material.SADDLE))
+		if (phase <= PhaseType.SHRINK && saddle == 0) potentials.add(ItemStack(Material.SADDLE))
 
 		/* ores */
 		when (phase) {
 			PhaseType.GRACE -> {
 				potentials.add(ItemStack(Material.IRON_INGOT))
+				potentials.add(ItemStack(Material.EMERALD))
+
+				potentials.add(ItemStack(Material.SUGAR_CANE, 3))
+				potentials.add(ItemStack(Material.LEATHER))
 			}
 			PhaseType.SHRINK -> {
 				potentials.add(ItemStack(Material.IRON_INGOT, 3))
+				potentials.add(ItemStack(Material.EMERALD, 2))
 
 				if (diamond < 8) potentials.add(ItemStack(Material.DIAMOND))
 			}
 			PhaseType.BATTLEGROUND -> {
-				potentials.add(ItemStack(Material.IRON_INGOT, 7))
+				potentials.add(ItemStack(Material.IRON_INGOT, 4))
+				potentials.add(ItemStack(Material.EMERALD, 3))
 
 				if (diamond < 14) potentials.add(ItemStack(Material.DIAMOND))
 			}
@@ -328,11 +344,11 @@ object SmartLoot {
 
 		/* health */
 		if (phase >= PhaseType.SHRINK) when {
-			healthBracket <= 0.10 -> potentials.add(ItemStack(Material.GOLDEN_APPLE, 3))
+			healthBracket <= 0.10 -> potentials.add(ItemStack(Material.GOLDEN_APPLE, 2))
 			healthBracket <= 0.25 -> potentials.add(ItemStack(Material.GOLDEN_APPLE))
 			healthBracket <= 0.5 -> potentials.add(CarePackageUtil.regenerationStew())
 		}
 
-		return potentials.take(if (teammateDown) 5 else 4)
+		return potentials.take((if (phase === PhaseType.GRACE) 2 else if (teammateDown) 4 else 3) + luck)
 	}
 }

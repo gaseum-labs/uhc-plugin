@@ -1,9 +1,7 @@
 package org.gaseumlabs.uhc.event
 
 import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.Material.*
-import org.bukkit.block.Container
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Item
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -11,17 +9,14 @@ import org.bukkit.event.player.PlayerFishEvent
 import org.bukkit.inventory.ItemStack
 import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.UHC
-import org.gaseumlabs.uhc.core.phase.PhaseType
-import org.gaseumlabs.uhc.core.phase.PhaseType.*
-import org.gaseumlabs.uhc.team.Team
-import org.gaseumlabs.uhc.team.Teams
-import org.gaseumlabs.uhc.util.Action
 import org.gaseumlabs.uhc.util.extensions.ArrayListExtensions.removeRef
 import org.gaseumlabs.uhc.world.WorldManager
 import org.gaseumlabs.uhc.world.regenresource.GlobalResources
 import org.gaseumlabs.uhc.world.regenresource.RegenResource
 import org.gaseumlabs.uhc.world.regenresource.ResourceId
+import org.gaseumlabs.uhc.world.regenresource.SmartLoot.calculateDeficiencies
 import org.gaseumlabs.uhc.world.regenresource.Vein
+import org.gaseumlabs.uhc.world.regenresource.type.VeinFish
 
 class Fishing : Listener {
 	@EventHandler
@@ -34,11 +29,17 @@ class Fishing : Listener {
 		event.hook.minWaitTime = 0
 		event.hook.maxWaitTime = 0
 
+		val luckOfTheSea = event.player.inventory.itemInMainHand.itemMeta?.enchants?.get(Enchantment.LUCK) ?: 0
+
 		when (event.state) {
 			PlayerFishEvent.State.CAUGHT_FISH -> {
 				findVein(game.globalResources, event.hook.location)?.let { (regenResource, vein) ->
-					spawnItems(event.caught as Item, listOf(ItemStack(COAL, 1))) //calculateDeficiencies(game.teams, team)
+					spawnItems(
+						event.caught as Item,
+						calculateDeficiencies(game.teams, team, (vein as VeinFish).surface, luckOfTheSea)
+					)
 					remove(game.globalResources, regenResource, vein)
+					GlobalResources.markCollected(game, team, regenResource, 1)
 				}
 			}
 			else -> {}
@@ -73,7 +74,5 @@ class Fishing : Listener {
 				item.pickupDelay = 0
 			}
 		}
-
-
 	}
 }

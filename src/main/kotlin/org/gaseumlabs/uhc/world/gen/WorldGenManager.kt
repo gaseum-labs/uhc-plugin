@@ -72,9 +72,6 @@ object WorldGenManager {
 				//	BiomeSourceNether.createAreaNether(seed)
 				//) to UHCSurfaceRule.uhcNether()
 			}
-			WorldManager.LOBBY_WORLD_NAME -> {
-				BiomeSourceSingle(seed, BiomeNo.biomes, BiomeNo.BADLANDS) to UHCSurfaceRule.uhcOverworld()
-			}
 			WorldManager.PVP_WORLD_NAME -> {
 				BiomeSourcePvp(seed) to UHCSurfaceRule.uhcOverworld()
 			}
