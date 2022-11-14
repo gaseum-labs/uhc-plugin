@@ -6,6 +6,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
+import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.gaseumlabs.uhc.component.ComponentAction.uhcMessage
@@ -17,12 +18,13 @@ import org.gaseumlabs.uhc.database.DataManager
 import org.gaseumlabs.uhc.database.DataManager.NotFoundException
 import org.gaseumlabs.uhc.database.DataManager.OfflineException
 import org.gaseumlabs.uhc.util.Action
+import java.util.UUID
 
 class LinkCommands : BaseCommand() {
 	@CommandAlias("link")
 	@Description("Use to link your Minecraft account with your Uhcsaturday account")
 	fun linkCommand(sender: CommandSender) {
-		val player = sender as? Player ?: return
+		val player = Commands.playerGuard(sender) ?: return
 
 		val body = JsonObject()
 		body.addProperty("uuid", player.uniqueId.toString())
@@ -49,7 +51,7 @@ class LinkCommands : BaseCommand() {
 	@CommandAlias("unlink")
 	@Description("If you are already linked, your uhcsaturday account is unlinked from your Minecraft account")
 	fun unlinkCommand(sender: CommandSender) {
-		val player = sender as? Player ?: return
+		val player = Commands.playerGuard(sender) ?: return
 
 		UHC.dataManager.postRequest("/api/bot/unlink/${player.uniqueId}").thenAccept { response ->
 			UHC.dataManager.linkData.updateLink(player.uniqueId, null)
@@ -62,6 +64,19 @@ class LinkCommands : BaseCommand() {
 				ex,
 				mapOf(404 to "You are not linked")
 			) { Commands.errorMessage(player, it) }
+		}
+	}
+
+	@CommandAlias("uslinked")
+	@Description("(Admins only) is this player linked")
+	@CommandCompletion("@uhcplayer")
+	fun isLinkedCommand(sender: CommandSender, targetPlayer: OfflinePlayer) {
+		if (Commands.opGuard(sender)) return
+
+		if (UHC.dataManager.linkData.isLinked(targetPlayer.uniqueId)) {
+			Action.sendGameMessage(sender, "${targetPlayer.name} is Linked")
+		} else {
+			Commands.errorMessage(sender, "${targetPlayer.name} is not Linked")
 		}
 	}
 }

@@ -20,16 +20,15 @@ import java.util.*
 @CommandAlias("uhca")
 @Subcommand("team")
 class TeamCommands : BaseCommand() {
-
 	companion object {
 		private fun teamPlayerList(sender: CommandSender, players: List<OfflinePlayer>) =
-				players.filter { player ->
-					!trueThrough(PlayerData.get(player).optingOut) {
-						Commands.errorMessage(sender, "${player.name} is opting out of participating")
-					}
-				}.ifEmpty {
-					Commands.errorMessage(sender, "No valid players selected").void()
+			players.filter { player ->
+				!trueThrough(PlayerData.get(player).optingOut) {
+					Commands.errorMessage(sender, "${player.name} is opting out of participating")
 				}
+			}.ifEmpty {
+				Commands.errorMessage(sender, "No valid players selected").void()
+			}
 
 		private fun internalCreateTeam(sender: CommandSender, players: List<OfflinePlayer>) {
 			if (Commands.opGuard(sender)) return
@@ -37,8 +36,8 @@ class TeamCommands : BaseCommand() {
 			val teamPlayerList = teamPlayerList(sender, players) ?: return
 			val uuids = teamPlayerList.map { it.uniqueId } as ArrayList<UUID>
 
-			val (color0, color1) = UHC.colorCube.pickTeam() ?: return Action.sendGameMessage(sender,
-					"Not enough colors available to create a team")
+			val (color0, color1) = UHC.colorCube.pickTeam()
+				?: return Action.sendGameMessage(sender, "Not enough colors available to create a team")
 
 			val game = UHC.game
 			if (game == null) {
@@ -46,25 +45,27 @@ class TeamCommands : BaseCommand() {
 
 			} else {
 				game.teams.addTeam(Team(PreTeam.randomName(),
-						color0,
-						color1,
-						uuids,
-						TeamShield.randomBannerPattern(color0, color1)))
+				color0,
+				color1,
+				uuids,
+				TeamShield.randomBannerPattern(color0, color1)))
 			}
 
-			Action.sendGameMessage(sender,
-					"Created a team for ${teamPlayerList.joinToString(" and ") { it.name ?: "Unknown" }}")
+			Action.sendGameMessage(
+				sender,
+				"Created a team for ${teamPlayerList.joinToString(" and ") { it.name ?: "Unknown" }}"
+			)
 		}
 
-		fun generateRandomTeams(sender: Player, teamSize: Int) {
+		fun generateRandomTeams(senderPlayer: Player, teamSize: Int) {
 			val teams = UHC.getTeams()
 
-			val memberLists = Teams.randomMemberLists(sender.server.onlinePlayers.filter { player ->
+			val memberLists = Teams.randomMemberLists(senderPlayer.server.onlinePlayers.filter { player ->
 				!teams.isOnTeam(player.uniqueId) && !PlayerData.get(player.uniqueId).optingOut
 			}, teamSize)
 
 			memberLists.forEach { memberList ->
-				internalCreateTeam(sender, memberList.filterNotNull())
+				internalCreateTeam(senderPlayer, memberList.filterNotNull())
 			}
 		}
 	}
@@ -176,7 +177,7 @@ class TeamCommands : BaseCommand() {
 
         val size = generateRandomTeams(sender as Player, teamSize)
 
-		Action.sendGameMessage(sender, "Created ${size} teams of size ${teamSize}")
+		Action.sendGameMessage(sender, "Created $size teams of size $teamSize")
 	}
 
 	@CommandCompletion("@uhcplayer @uhcplayer")
@@ -190,28 +191,6 @@ class TeamCommands : BaseCommand() {
 			Action.sendGameMessage(sender, "Swapped the teams of ${player0.name} and ${player1.name}")
 		} else {
 			Commands.errorMessage(sender, "Could not swap the teams of ${player0.name} and ${player1.name}")
-		}
-	}
-
-	@Subcommand("list")
-	@Description("lists out all teams and members")
-	fun testTeams(sender: CommandSender) {
-		fun <T : AbstractTeam> displayTeam(team: T) {
-			sender.sendMessage(team.apply(team.grabName()).style(Style.style(TextDecoration.BOLD)))
-
-			team.members.forEach { uuid ->
-				sender.sendMessage(Component.text("- ")
-					.append(team.apply(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
-			}
-		}
-
-		val teams = UHC.getTeams().teams()
-
-		if (teams.isNotEmpty()) {
-			sender.sendMessage(Component.text("Teams:", NamedTextColor.GRAY, TextDecoration.BOLD))
-			teams.forEach { team -> displayTeam(team) }
-		} else {
-			sender.sendMessage(Component.text("No teams", NamedTextColor.GRAY, TextDecoration.BOLD))
 		}
 	}
 }

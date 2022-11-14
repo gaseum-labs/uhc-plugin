@@ -21,31 +21,31 @@ import org.gaseumlabs.uhc.world.WorldManager
 class ParkourCommands : BaseCommand() {
 	@Subcommand("parkour test")
 	fun parkourTest(sender: CommandSender) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
-		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
-		arena.enterPlayer(sender, sender.gameMode === GameMode.CREATIVE, false)
+		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
+		arena.enterPlayer(player, player.gameMode === GameMode.CREATIVE, false)
 	}
 
 	@Subcommand("parkour checkpoint")
 	fun parkourCheckpoint(sender: CommandSender) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
-		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
-		arena.enterPlayer(sender, true, true)
+		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
+		arena.enterPlayer(player, forceParticipate = true, teleport = true)
 	}
 
 	@Subcommand("parkour reset")
 	fun parkourReset(sender: CommandSender) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
-		val arena = ArenaManager.playersArena(sender.uniqueId) as? ParkourArena ?: return
+		val arena = ArenaManager.playersArena(player.uniqueId) as? ParkourArena ?: return
 
-		val data = arena.getParkourData(sender.uniqueId)
+		val data = arena.getParkourData(player.uniqueId)
 		data.checkpoint = arena.startPosition
 		data.timer = 0
 		data.timerGoing = false
-		arena.enterPlayer(sender, true, true)
+		arena.enterPlayer(player, forceParticipate = true, teleport = true)
 	}
 
 	@CommandCompletion("@uhcblockx @uhcblocky @uhcblockz @uhcblockx @uhcblocky @uhcblockz")
@@ -60,7 +60,7 @@ class ParkourCommands : BaseCommand() {
 		z1: Int,
 		name: String,
 	) {
-		val player = sender as? Player ?: return
+		val player = Commands.playerGuard(sender) ?: return
 
 		val filteredName = name.trim()
 		if (filteredName.length !in 3..36) return Commands.errorMessage(player,

@@ -47,25 +47,12 @@ class TestCommands : BaseCommand() {
 	@Subcommand("fill")
 	@Description("fill your inventory with random items")
 	fun testFill(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-		sender as Player
+		val player = Commands.opGuardPlayer(sender) ?: return
 
-		for (i in 0 until 500) {
-			sender.inventory.addItem(ItemStack(Material.values()[Random.nextInt(Material.values().size)],
-				Random.nextInt(64) + 1))
-		}
-	}
-
-	@Subcommand("deathswap warning")
-	@Description("change the length of pre-swap warnings")
-	fun testDsWarnings(sender: CommandSender, warning: Int) {
-
-	}
-
-	@Subcommand("deathswap immunity")
-	@Description("change the length of the post-swap immunity period")
-	fun testDsImmunity(sender: CommandSender, immunity: Int) {
-
+		for (i in 0 until 500) player.inventory.addItem(ItemStack(
+			Material.values()[Random.nextInt(Material.values().size)],
+			Random.nextInt(64) + 1)
+		)
 	}
 
 	@Subcommand("insomnia")
@@ -80,11 +67,10 @@ class TestCommands : BaseCommand() {
 	@Subcommand("blockFix")
 	@Description("gets when the next apple will drop for you")
 	fun testBlockFix(sender: CommandSender, blockFixType: BlockFixType) {
-		if (Commands.opGuard(sender)) return
-		sender as Player
+		val player = Commands.opGuardPlayer(sender) ?: return
 
-		blockFixType.blockFix.getInfoString(sender) { info ->
-			sender.sendMessage(info)
+		blockFixType.blockFix.getInfoString(player) { info ->
+			player.sendMessage(info)
 		}
 	}
 
@@ -92,9 +78,6 @@ class TestCommands : BaseCommand() {
 	@Description("gets how long this UHC has been going for")
 	fun testElapsed(sender: CommandSender) {
 		if (Commands.opGuard(sender)) return
-
-		sender as Player
-
 		Action.sendGameMessage(sender, "Elapsed time: ${UHC.timer}")
 	}
 
@@ -102,6 +85,8 @@ class TestCommands : BaseCommand() {
 	@CommandCompletion("@uhcplayer")
 	@Description("get this player's playerData")
 	fun testPlayerData(sender: CommandSender, player: OfflinePlayer) {
+		if (Commands.opGuard(sender)) return
+
 		val playerData = PlayerData.get(player.uniqueId)
 		val team = UHC.getTeams().playersTeam(player.uniqueId)
 
@@ -111,6 +96,7 @@ class TestCommands : BaseCommand() {
 		Action.sendGameMessage(sender, "Opting Out: ${playerData.optingOut}")
 		Action.sendGameMessage(sender, "Last Played: ${playerData.lastPlayed}")
 		Action.sendGameMessage(sender, "Arena: ${ArenaManager.playersArena(player.uniqueId)}")
+
 		sender.sendMessage(Component.text("Team: ", NamedTextColor.GOLD, TextDecoration.BOLD).append(
 			team?.apply(team.grabName()) ?: Component.text("[Not on a team]", NamedTextColor.RED)
 		))
@@ -145,6 +131,8 @@ class TestCommands : BaseCommand() {
 	@CommandCompletion("@uhcplayer")
 	@Description("test a player's individual mobcap")
 	fun testMobCap(sender: CommandSender, offlinePlayer: OfflinePlayer, type: CustomSpawningType) {
+		if (Commands.opGuard(sender)) return
+
 		val testPlayer = Bukkit.getPlayer(offlinePlayer.uniqueId)
 			?: return errorMessage(sender, "${offlinePlayer.name} is not online")
 
@@ -202,45 +190,39 @@ class TestCommands : BaseCommand() {
 
 	@Subcommand("killreward")
 	fun testKillReward(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-		sender as Player
+		val player = Commands.opGuardPlayer(sender) ?: return
 
 		val game = UHC.game ?: return errorMessage(sender, "Game is not going")
 		val killReward = game.config.killReward
 
-		killReward.apply(sender.uniqueId,
-			game.teams.playersTeam(sender.uniqueId)?.members ?: arrayListOf(),
-			sender.location)
+		killReward.apply(
+			player.uniqueId,
+			game.teams.playersTeam(player.uniqueId)?.members ?: arrayListOf(),
+			player.location
+		)
 	}
 
 	@Subcommand("trader")
 	fun testTrader(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-		if (sender !is Player) return
+		val player = Commands.opGuardPlayer(sender) ?: return
 		val game = UHC.game ?: return
 
 		val trader = game.trader.currentTrader
-			?: return errorMessage(sender, "Trader not spawned")
+			?: return errorMessage(player, "Trader not spawned")
 
-		sender.teleport(trader.location)
+		player.teleport(trader.location)
 	}
 
 	@Subcommand("portal")
 	fun testPortal(sender: CommandSender) {
-		if (Commands.opGuard(sender)) return
-
-		val player = sender as? Player ?: return
-
-		val game = UHC.game ?: return errorMessage(player, "Game is not going")
+		val player = Commands.opGuardPlayer(sender) ?: return
 		Portal.onPlayerPortal(player)
 	}
 
 	@Subcommand("seeVeins")
 	@CommandCompletion("@uhcregenresource")
 	fun testSeeVeins(sender: CommandSender, resourceKey: String) {
-		if (Commands.opGuard(sender)) return
-
-		val player = sender as? Player ?: return
+		val player = Commands.opGuardPlayer(sender) ?: return
 		val game = UHC.game ?: return
 
 		val resource = ResourceId.byKeyName(resourceKey) ?: return
@@ -281,7 +263,6 @@ class TestCommands : BaseCommand() {
 	fun testClearVeins(sender: CommandSender, resourceKey: String) {
 		if (Commands.opGuard(sender)) return
 
-		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
 		val resource = ResourceId.byKeyName(resourceKey) ?: return
 
@@ -289,15 +270,14 @@ class TestCommands : BaseCommand() {
 		val size = veins.size
 		veins.removeIf { vein -> vein.erase(); true }
 
-		Action.sendGameMessage(player, "Deleted $size veins")
+		Action.sendGameMessage(sender, "Deleted $size veins")
 	}
 
 	@Subcommand("veinData")
 	@CommandCompletion("@uhcregenresource")
 	fun testVeinData(sender: CommandSender, resourceKey: String) {
-		if (Commands.opGuard(sender)) return
+		val player = Commands.opGuardPlayer(sender) ?: return
 
-		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
 
@@ -312,9 +292,8 @@ class TestCommands : BaseCommand() {
 	@Subcommand("setVeinCollected")
 	@CommandCompletion("@uhcregenresource")
 	fun testSetVeinCollected(sender: CommandSender, resourceKey: String, amount: Int) {
-		if (Commands.opGuard(sender)) return
+		val player = Commands.opGuardPlayer(sender) ?: return
 
-		val player = sender as? Player ?: return
 		val game = UHC.game ?: return
 		val team = game.teams.playersTeam(player.uniqueId) ?: return
 		val resource = ResourceId.byKeyName(resourceKey) ?: return
@@ -327,12 +306,14 @@ class TestCommands : BaseCommand() {
 
 	@Subcommand("refreshLinks")
 	fun refreshLinksCommand(sender: CommandSender) {
+		if (Commands.opGuard(sender)) return
+
 		UHC.dataManager.linkData.massPlayersLink()
 	}
 
 	@Subcommand("surfacescan")
 	fun surfaceScanCommand(sender: CommandSender) {
-		val player = sender as? Player ?: return
+		val player = Commands.opGuardPlayer(sender) ?: return
 
 		val chunk = player.chunk
 		val genBounds = RegenUtil.GenBounds.fromChunk(chunk)
@@ -344,7 +325,7 @@ class TestCommands : BaseCommand() {
 
 	@Subcommand("surfacescan tree")
 	fun surfaceScanTreeCommand(sender: CommandSender) {
-		val player = sender as? Player ?: return
+		val player = Commands.opGuardPlayer(sender) ?: return
 
 		val chunk = player.chunk
 		val genBounds = RegenUtil.GenBounds.fromChunk(chunk)

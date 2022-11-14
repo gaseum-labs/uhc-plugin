@@ -7,7 +7,9 @@ import org.gaseumlabs.uhc.team.NameManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.format.TextDecoration.BOLD
 import net.minecraft.core.BlockPos
 import net.minecraft.world.SimpleMenuProvider
@@ -26,6 +28,7 @@ import org.gaseumlabs.uhc.component.UHCColor
 import org.gaseumlabs.uhc.component.UHCComponent
 import org.gaseumlabs.uhc.event.TeamShield
 import org.gaseumlabs.uhc.gui.ItemCreator
+import org.gaseumlabs.uhc.team.AbstractTeam
 import org.gaseumlabs.uhc.team.ColorCube
 import org.gaseumlabs.uhc.util.Util
 
@@ -33,14 +36,15 @@ class ParticipantTeamCommands : BaseCommand() {
 	@CommandAlias("teamname")
 	@Description("change the name of your team")
 	fun teamName(sender: CommandSender, newName: String) {
+		val player = Commands.playerGuard(sender) ?: return
 		val filteredName = newName.trim()
 
 		if (filteredName.length !in 3..20) {
-			return Commands.errorMessage(sender, "Please enter a name 3 to 20 characters long")
+			return Commands.errorMessage(player, "Please enter a name 3 to 20 characters long")
 		}
 
-		val team = UHC.getTeams().playersTeam((sender as Player).uniqueId)
-			?: return Commands.errorMessage(sender, "You are not on a team")
+		val team = UHC.getTeams().playersTeam(player.uniqueId)
+			?: return Commands.errorMessage(player, "You are not on a team")
 
 		team.giveName(filteredName)
 
@@ -52,14 +56,16 @@ class ParticipantTeamCommands : BaseCommand() {
 	@CommandAlias("teamcolorrandom")
 	@Description("get a new team color")
 	fun teamColor(sender: CommandSender) {
-		if (UHC.game != null)
-			return Commands.errorMessage(sender, "Game has already started")
+		val player = Commands.playerGuard(sender) ?: return
 
-		val team = UHC.preGameTeams.playersTeam((sender as Player).uniqueId)
-			?: return Commands.errorMessage(sender, "You are not on a team")
+		if (UHC.game != null)
+			return Commands.errorMessage(player, "Game has already started")
+
+		val team = UHC.preGameTeams.playersTeam(player.uniqueId)
+			?: return Commands.errorMessage(player, "You are not on a team")
 
 		val (color0, color1) = UHC.colorCube.pickTeam()
-			?: return Commands.errorMessage(sender, "Could not pick a new color")
+			?: return Commands.errorMessage(player, "Could not pick a new color")
 
 		UHC.colorCube.removeTeam(team.colors)
 
@@ -78,33 +84,34 @@ class ParticipantTeamCommands : BaseCommand() {
 	@CommandAlias("teamcolor")
 	@CommandCompletion("@range:0-1 @range:0-15")
 	fun teamColor(sender: CommandSender, slot: Int, colorIndex: Int) {
+		val player = Commands.playerGuard(sender) ?: return
 		val colorCube = UHC.colorCube
 
-		if (slot !in 0..1) return Commands.errorMessage(sender, "Teams can only have colors for 0 and 1")
+		if (slot !in 0..1) return Commands.errorMessage(player, "Teams can only have colors for 0 and 1")
 
 		if (colorIndex !in 0 until ColorCube.NUM_COLORS) {
-			return Commands.errorMessage(sender, "Color out of range")
+			return Commands.errorMessage(player, "Color out of range")
 		}
 
 		if (UHC.game != null)
-			return Commands.errorMessage(sender, "Game has already started")
+			return Commands.errorMessage(player, "Game has already started")
 
-		val team = UHC.preGameTeams.playersTeam((sender as Player).uniqueId)
-			?: return Commands.errorMessage(sender, "You are not on a team")
+		val team = UHC.preGameTeams.playersTeam(player.uniqueId)
+			?: return Commands.errorMessage(player, "You are not on a team")
 
 		val currentColor = team.colors[slot]
 		val otherColor = team.colors[ColorCube.otherSlot(slot)]
 		val nextColor = DyeColor.values()[colorIndex]
 
 		if (nextColor === currentColor) {
-			return Commands.errorMessage(sender, "You are already using this color in this slot")
+			return Commands.errorMessage(player, "You are already using this color in this slot")
 		}
 
 		if (nextColor === otherColor) {
 			team.swapColors()
 
 		} else if (colorCube.taken(nextColor, slot)) {
-			return Commands.errorMessage(sender, "This color has already been taken")
+			return Commands.errorMessage(player, "This color has already been taken")
 
 		} else {
 			/* replace color in this slot */
@@ -115,15 +122,16 @@ class ParticipantTeamCommands : BaseCommand() {
 		team.bannerPattern = null
 		team.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { NameManager.updateNominalTeams(it, team, false) }
 
-		sender.performCommand("colorpicker")
+		player.performCommand("colorpicker")
 	}
 
 	@CommandAlias("colorpicker")
 	fun colorPickerCommand(sender: CommandSender) {
+		val player = Commands.playerGuard(sender) ?: return
 		val colorCube = UHC.colorCube
 
-		val team = UHC.getTeams().playersTeam((sender as Player).uniqueId)
-			?: return Commands.errorMessage(sender, "You are not on a team")
+		val team = UHC.getTeams().playersTeam(player.uniqueId)
+			?: return Commands.errorMessage(player, "You are not on a team")
 
 		for (slot in 0..1) {
 			var component = Component.text("Color $slot", NamedTextColor.GRAY)
@@ -144,19 +152,19 @@ class ParticipantTeamCommands : BaseCommand() {
 				component = component.append(colorBlock)
 			}
 
-			sender.sendMessage(component)
+			player.sendMessage(component)
 		}
 	}
 
 	@CommandAlias("teambanner")
 	fun teamBannerCommand(sender: CommandSender) {
-		val player = sender as? Player ?: return
+		val player = Commands.playerGuard(sender) ?: return
 
 		if (UHC.game != null)
-			return Commands.errorMessage(sender, "Game is already going")
+			return Commands.errorMessage(player, "Game is already going")
 
 		val team = UHC.preGameTeams.playersTeam(player.uniqueId)
-			?: return Commands.errorMessage(sender, "You are not on a team")
+			?: return Commands.errorMessage(player, "You are not on a team")
 
 		player.inventory.addItem(ItemStack(TeamShield.dyeColorToBanner(team.colors[0]), 16))
 		player.inventory.addItem(ItemStack(TeamShield.dyeColorToBanner(team.colors[1]), 16))
@@ -183,5 +191,27 @@ class ParticipantTeamCommands : BaseCommand() {
 		private const val CHAR_TAKEN = 0x2b1c.toChar()
 		private const val CHAR_AVAIL = 0x2b1b.toChar()
 		private const val CHAR_SELEC = 0x20de.toChar()
+	}
+
+	@CommandAlias("teamlist")
+	@Description("lists out all teams and members")
+	fun testTeams(sender: CommandSender) {
+		fun <T : AbstractTeam> displayTeam(team: T) {
+			sender.sendMessage(team.apply(team.grabName()).style(Style.style(BOLD)))
+
+			team.members.forEach { uuid ->
+				sender.sendMessage(Component.text("- ")
+					.append(team.apply(Bukkit.getOfflinePlayer(uuid).name ?: "NULL")))
+			}
+		}
+
+		val teams = UHC.getTeams().teams()
+
+		if (teams.isNotEmpty()) {
+			sender.sendMessage(Component.text("Teams:", NamedTextColor.GRAY, BOLD))
+			teams.forEach { team -> displayTeam(team) }
+		} else {
+			sender.sendMessage(Component.text("No teams", NamedTextColor.GRAY, BOLD))
+		}
 	}
 }

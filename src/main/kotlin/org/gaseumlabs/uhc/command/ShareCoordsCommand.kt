@@ -18,30 +18,32 @@ class ShareCoordsCommand : BaseCommand() {
 	@Description("shares your coordinates with your teammates")
 	@CommandCompletion("@uhcteamplayer")
 	fun shareCoords(sender: CommandSender) {
-		internalShareCoords(sender as Player, sender as OfflinePlayer)
+		val player = Commands.playerGuard(sender) ?: return
+		internalShareCoords(player, sender as OfflinePlayer)
 	}
 
 	@CommandAlias("sharecoords")
 	@Description("shares your coordinates with your teammates")
 	@CommandCompletion("@uhcteamplayer")
 	fun shareCoords(sender: CommandSender, teammate: OfflinePlayer) {
-		internalShareCoords(sender as Player, teammate)
+		val player = Commands.playerGuard(sender) ?: return
+		internalShareCoords(player, teammate)
 	}
 
-	fun internalShareCoords(sender: Player, locationPlayer: OfflinePlayer) {
-		val game = UHC.game ?: return Commands.errorMessage(sender, "Game is not going")
+	private fun internalShareCoords(senderPlayer: Player, locationPlayer: OfflinePlayer) {
+		val game = UHC.game ?: return Commands.errorMessage(senderPlayer, "Game is not going")
 
-		val senderTeam = game.teams.playersTeam(sender.uniqueId)
-			?: return Commands.errorMessage(sender, "You're not playing")
+		val senderTeam = game.teams.playersTeam(senderPlayer.uniqueId)
+			?: return Commands.errorMessage(senderPlayer, "You're not playing")
 
 		if (game.teams.playersTeam(locationPlayer.uniqueId) !== senderTeam)
-			return Commands.errorMessage(sender, "That player is not on your team")
+			return Commands.errorMessage(senderPlayer, "That player is not on your team")
 
 		if (!PlayerData.get(locationPlayer).alive)
-			return Commands.errorMessage(sender, "That player is dead")
+			return Commands.errorMessage(senderPlayer, "That player is dead")
 
 		val location = Action.getPlayerLocation(locationPlayer.uniqueId)
-			?: return Commands.errorMessage(sender, "Can't get that player's position")
+			?: return Commands.errorMessage(senderPlayer, "Can't get that player's position")
 
 		val message = senderTeam.apply(locationPlayer.name ?: "Unknown")
 			.append(Component.text(" is at ${location.blockX}, ${location.blockY}, ${location.blockZ}"))

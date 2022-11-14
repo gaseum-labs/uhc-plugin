@@ -25,71 +25,72 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("gui")
 	@Description("get the current setup as the gui")
 	fun getCurrentSetupGui(sender: CommandSender) {
-		GuiManager.openGui(sender as Player, CreateGameGui())
+		val player = Commands.playerGuard(sender) ?: return
+		GuiManager.openGui(player, CreateGameGui())
 	}
 
 	@Subcommand("pvp")
 	fun openPvp(sender: CommandSender) {
-		sender as Player
-		val playerData = PlayerData.get(sender)
+		val player = Commands.playerGuard(sender) ?: return
+		val playerData = PlayerData.get(player)
 
 		if (
 			playerData.participating ||
-			ArenaManager.playersArena(sender.uniqueId) is PvpArena
-		) return Commands.errorMessage(sender, "You can't use this menu right now")
+			ArenaManager.playersArena(player.uniqueId) is PvpArena
+		) return Commands.errorMessage(player, "You can't use this menu right now")
 
-		GuiManager.openGui(sender, QueueGUI(playerData))
+		GuiManager.openGui(player, QueueGUI(playerData))
 	}
 
 	@Subcommand("optOut")
 	@Description("opt out from participating")
 	fun optOutCommand(sender: CommandSender) {
-		sender as Player
-		val playerData = PlayerData.get(sender.uniqueId)
+		val player = Commands.playerGuard(sender) ?: return
+		val playerData = PlayerData.get(player.uniqueId)
 
 		if (playerData.participating) {
-			Commands.errorMessage(sender, "You are already in the game!")
+			Commands.errorMessage(player, "You are already in the game!")
 
 		} else if (playerData.optingOut) {
-			Commands.errorMessage(sender, "You have already opted out!")
+			Commands.errorMessage(player, "You have already opted out!")
 
 		} else {
 			playerData.optingOut = true
 
-			UHC.preGameTeams.leaveTeam(sender.uniqueId)
+			UHC.preGameTeams.leaveTeam(player.uniqueId)
 
-			Action.sendGameMessage(sender, "You have opted out of participating")
+			Action.sendGameMessage(player, "You have opted out of participating")
 		}
 	}
 
 	@Subcommand("optIn")
 	@Description("opt back into participating")
 	fun optInCommand(sender: CommandSender) {
-		sender as Player
-		val playerData = PlayerData.get(sender.uniqueId)
+		val player = Commands.playerGuard(sender) ?: return
+		val playerData = PlayerData.get(player.uniqueId)
 
 		if (playerData.participating) {
-			Commands.errorMessage(sender, "You are already in the game!")
+			Commands.errorMessage(player, "You are already in the game!")
 
 		} else if (!playerData.optingOut) {
-			Commands.errorMessage(sender, "You already aren't opting out!")
+			Commands.errorMessage(player, "You already aren't opting out!")
 
 		} else {
 			playerData.optingOut = false
 
-			Action.sendGameMessage(sender, "You have opted back into participating")
+			Action.sendGameMessage(player, "You have opted back into participating")
 		}
 	}
 
 	@Subcommand("compass")
 	@Description("tell which direction a cave will be in based on the cave indicator block")
 	fun compassCommand(sender: CommandSender) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
-		val block = sender.getTargetBlock(5)
+		val block = player.getTargetBlock(5)
 
 		if (block == null) {
-			Commands.errorMessage(sender, "You are not looking at a block")
+			Commands.errorMessage(player, "You are not looking at a block")
 		} else {
 			val goodMessage = when (block.type) {
 				Material.GRANITE -> "Granite indicates a cave to the north"
@@ -100,9 +101,9 @@ class ParticipantCommands : BaseCommand() {
 			}
 
 			if (goodMessage == null) {
-				Commands.errorMessage(sender, "This block is not a cave indicator")
+				Commands.errorMessage(player, "This block is not a cave indicator")
 			} else {
-				Action.sendGameMessage(sender, goodMessage)
+				Action.sendGameMessage(player, goodMessage)
 			}
 		}
 	}
@@ -110,37 +111,37 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("lobby")
 	@Description("return to the lobby")
 	fun lobbyCommand(sender: CommandSender) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
 		/* only non players can use this command */
-		if (PlayerData.get(sender).participating)
-			return Commands.errorMessage(sender, "You can't use this command in game")
+		if (PlayerData.get(player).participating)
+			return Commands.errorMessage(player, "You can't use this command in game")
 
 		/* forfeit */
-		val arena = ArenaManager.playersArena(sender.uniqueId)
-		if (arena is PvpArena && arena.playerIsAlive(sender))
-			Action.sendGameMessage(sender, "You have forfeited")
+		val arena = ArenaManager.playersArena(player.uniqueId)
+		if (arena is PvpArena && arena.playerIsAlive(player))
+			Action.sendGameMessage(player, "You have forfeited")
 
-		Lobby.onSpawnLobby(sender)
+		Lobby.onSpawnLobby(player)
 	}
 
 	@Subcommand("spectate")
 	fun spectate(sender: CommandSender) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
-		if (PlayerData.get(sender.uniqueId).participating)
-			return Commands.errorMessage(sender, "You can't use this command in game")
+		if (PlayerData.get(player.uniqueId).participating)
+			return Commands.errorMessage(player, "You can't use this command in game")
 
 		val game = UHC.game
 
 		if (game != null) {
-			sender.gameMode = GameMode.SPECTATOR
-			sender.setItemOnCursor(null)
-			sender.inventory.clear()
-			sender.teleport(game.spectatorSpawnLocation())
+			player.gameMode = GameMode.SPECTATOR
+			player.setItemOnCursor(null)
+			player.inventory.clear()
+			player.teleport(game.spectatorSpawnLocation())
 
 		} else {
-			Commands.errorMessage(sender, "Game has not started!")
+			Commands.errorMessage(player, "Game has not started!")
 		}
 	}
 
@@ -148,70 +149,70 @@ class ParticipantCommands : BaseCommand() {
 	@Subcommand("class")
 	@Description("set your class for classes quirk")
 	fun classCommand(sender: CommandSender, quirkClass: QuirkClass) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
-		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
+		val game = UHC.game ?: return Commands.errorMessage(player, "Game has not started")
 
-		val classes = game.chc as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes = game.chc as? Classes ?: return Commands.errorMessage(player, "Classes are not enabled")
 
-		if (classes.getClass(sender.uniqueId) != QuirkClass.NO_CLASS) {
-			return Commands.errorMessage(sender, "You've already chosen a class")
+		if (classes.getClass(player.uniqueId) != QuirkClass.NO_CLASS) {
+			return Commands.errorMessage(player, "You've already chosen a class")
 		}
 
-		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "You must pick a class")
+		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(player, "You must pick a class")
 
-		val playerData = PlayerData.get(sender.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 		val oldClass = classes.getClass(playerData)
 
 		/* always set their class, even during waiting */
-		classes.setClass(sender.uniqueId, quirkClass)
+		classes.setClass(player.uniqueId, quirkClass)
 
 		/* only start them if the game has already started */
-		Classes.startAsClass(sender, quirkClass, oldClass)
+		Classes.startAsClass(player, quirkClass, oldClass)
 
-		Action.sendGameMessage(sender, "Set your class to ${quirkClass.prettyName}")
+		Action.sendGameMessage(player, "Set your class to ${quirkClass.prettyName}")
 	}
 
 	@Subcommand("rename")
 	@Description("rename a remote control in classes chc")
 	fun renameCommand(sender: CommandSender, name: String) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
-		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
+		val game = UHC.game ?: return Commands.errorMessage(player, "Game has not started")
 
-		val classes = game.chc as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		val classes = game.chc as? Classes ?: return Commands.errorMessage(player, "Classes are not enabled")
 
-		if (classes.getClass(sender.uniqueId) != QuirkClass.ENGINEER) return Commands.errorMessage(sender,
+		if (classes.getClass(player.uniqueId) != QuirkClass.ENGINEER) return Commands.errorMessage(player,
 			"Your class can't use this command.")
 
 		val control = Classes.remoteControls.find { (item, _, _) ->
-			item == sender.inventory.itemInMainHand
+			item == player.inventory.itemInMainHand
 		}
-			?: return Commands.errorMessage(sender, "You're not holding a remote control.")
+			?: return Commands.errorMessage(player, "You're not holding a remote control.")
 
 		control.displayName = name
-		sender.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
+		player.inventory.setItemInMainHand(Classes.updateRemoteControl(control))
 	}
 
 	@CommandCompletion("@uhcplayer")
 	@Subcommand("tp")
 	@Description("teleport to a player as a spectator")
 	fun tpHereCommand(sender: CommandSender, toPlayer: OfflinePlayer) {
-		sender as Player
+		val player = Commands.playerGuard(sender) ?: return
 
-		val playerData = PlayerData.get(sender.uniqueId)
+		val playerData = PlayerData.get(player.uniqueId)
 
-		if (UHC.game != null && !playerData.participating && sender.gameMode == GameMode.SPECTATOR) {
+		if (UHC.game != null && !playerData.participating && player.gameMode == GameMode.SPECTATOR) {
 			val location = Action.getPlayerLocation(toPlayer.uniqueId)
 
 			if (location != null) {
-				sender.teleport(location)
-				Action.sendGameMessage(sender, "Teleported to ${toPlayer.name}")
+				player.teleport(location)
+				Action.sendGameMessage(player, "Teleported to ${toPlayer.name}")
 			} else {
-				Commands.errorMessage(sender, "Could not find player ${toPlayer.name}")
+				Commands.errorMessage(player, "Could not find player ${toPlayer.name}")
 			}
 		} else {
-			Commands.errorMessage(sender, "You cannot teleport right now")
+			Commands.errorMessage(player, "You cannot teleport right now")
 		}
 	}
 }

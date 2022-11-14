@@ -22,18 +22,51 @@ object Commands {
 		player.sendMessage(Component.text(text, RED, BOLD))
 	}
 
+	private const val YOU_MUST_BE = "You must be a server operator to use this command!"
+	private const val CANT_BE_USED = "Command can't be used from the console"
+
 	/**
-	 * returns if the sender cannot use this command
-	 * you should return from original function if true
+	 * gates only admins from using command
+	 * @return true if should immediately exit
 	 */
 	fun opGuard(sender: CommandSender): Boolean {
 		if (!sender.isOp) {
-			errorMessage(sender, "You must be a server operator to use this command!")
-
+			errorMessage(sender, YOU_MUST_BE)
 			return true
 		}
 
 		return false
+	}
+
+	/**
+	 * gates only admins who are also players (not console) from using command
+	 * @return null if should immediately exit, please use the return value as the player
+	 */
+	fun opGuardPlayer(sender: CommandSender): Player? {
+		if (sender !is Player) {
+			errorMessage(sender, CANT_BE_USED)
+			return null
+		}
+
+		if (!sender.isOp) {
+			errorMessage(sender, YOU_MUST_BE)
+			return null
+		}
+
+		return sender
+	}
+
+	/**
+	 * gates only players (not console) from using command
+	 * @return null if should immediately exit, please use the return value as the player
+	 */
+	fun playerGuard(sender: CommandSender): Player? {
+		if (sender !is Player) {
+			errorMessage(sender, CANT_BE_USED)
+			return null
+		}
+
+		return sender
 	}
 
 	fun registerCompletions(commandManager: PaperCommandManager) {

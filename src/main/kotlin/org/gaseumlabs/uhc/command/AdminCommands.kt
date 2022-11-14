@@ -97,16 +97,15 @@ class AdminCommands : BaseCommand() {
 	@Subcommand("tp")
 	@Description("teleport to a player's location")
 	fun tpCommand(sender: CommandSender, toPlayer: OfflinePlayer) {
-		sender as Player
-		if (Commands.opGuard(sender)) return
+		val player = Commands.opGuardPlayer(sender) ?: return
 
 		val location = Action.getPlayerLocation(toPlayer.uniqueId)
 
 		if (location == null) {
-			Commands.errorMessage(sender, "Could not find that player!")
+			Commands.errorMessage(player, "Could not find that player!")
 		} else {
-			Action.sendGameMessage(sender, "Teleported to ${toPlayer.name}")
-			sender.teleport(location)
+			Action.sendGameMessage(player, "Teleported to ${toPlayer.name}")
+			player.teleport(location)
 		}
 	}
 
@@ -114,44 +113,40 @@ class AdminCommands : BaseCommand() {
 	@Subcommand("tphere")
 	@Description("teleport a player to you")
 	fun tpHereCommand(sender: CommandSender, toPlayer: OfflinePlayer) {
-		sender as Player
-		if (Commands.opGuard(sender)) return
+		val player = Commands.opGuardPlayer(sender) ?: return
 
-		Action.teleportPlayer(toPlayer.uniqueId, sender.location)
+		Action.teleportPlayer(toPlayer.uniqueId, player.location)
 
-		Action.sendGameMessage(sender, "Teleported ${toPlayer.name} to you")
+		Action.sendGameMessage(player, "Teleported ${toPlayer.name} to you")
 	}
 
 	@CommandCompletion("@uhcplayer @quirkclass")
 	@Subcommand("class")
 	@Description("override someone's class")
-	fun classCommand(sender: CommandSender, player: OfflinePlayer, quirkClass: QuirkClass) {
-		sender as Player
+	fun classCommand(sender: CommandSender, changePlayer: OfflinePlayer, quirkClass: QuirkClass) {
+		val player = Commands.opGuardPlayer(sender) ?: return
 
-		if (Commands.opGuard(sender)) return
+		if (UHC.game == null) return Commands.errorMessage(player, "Game has not started")
+		val classes = UHC.chc as? Classes ?: return Commands.errorMessage(player, "Classes are not enabled")
 
-		val game = UHC.game ?: return Commands.errorMessage(sender, "Game has not started")
-		val classes = UHC.chc as? Classes ?: return Commands.errorMessage(sender, "Classes are not enabled")
+		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(player, "Pick a class")
 
-		if (quirkClass == QuirkClass.NO_CLASS) return Commands.errorMessage(sender, "Pick a class")
-
-		val playerData = PlayerData.get(player.uniqueId)
+		val playerData = PlayerData.get(changePlayer.uniqueId)
 		val oldClass = classes.getClass(playerData)
 
-		classes.setClass(player.uniqueId, quirkClass)
+		classes.setClass(changePlayer.uniqueId, quirkClass)
 
 		/* only start them if the game has already started */
-		if (playerData.participating) Action.playerAction(player.uniqueId) { onlinePlayer ->
+		if (playerData.participating) Action.playerAction(changePlayer.uniqueId) { onlinePlayer ->
 			Classes.startAsClass(onlinePlayer, quirkClass, oldClass)
 		}
 
-		Action.sendGameMessage(sender, "Set ${player.name}'s class to ${quirkClass.prettyName}")
+		Action.sendGameMessage(sender, "Set ${changePlayer.name}'s class to ${quirkClass.prettyName}")
 	}
 
 	@Subcommand("banPlatform")
 	@CommandCompletion("@uhcplayer")
-	fun bad(sender: CommandSender, banPlayer: OfflinePlayer) {
-		sender as Player
+	fun ban(sender: CommandSender, banPlayer: OfflinePlayer) {
 		if (Commands.opGuard(sender)) return
 
 		val removed = GapSlapArena.submittedPlatforms.remove(banPlayer.uniqueId)
