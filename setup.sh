@@ -15,7 +15,7 @@ if [ ! -d ./paperweight ]
 then
 	git clone https://github.com/PaperMC/paperweight
 else
-	echo "paperweight already installed"
+	echo "Paperweight already installed"
 fi
 
 cd ./paperweight || ( echo "Paperweight did not clone properly" ; exit )
@@ -29,7 +29,7 @@ if [ ! -d ./uhc-paper ]
 then
 	git clone https://github.com/gaseum-labs/uhc-paper
 else
-	echo "uhc paper already installed"
+	echo "UHC paper already installed"
 fi
 
 cd ./uhc-paper || ( echo "UHC Paper did not clone properly" ; exit )
@@ -37,5 +37,9 @@ git reset --hard $UHC_PAPER_COMMIT
 gradle applyPatches
 gradle createReobfPaperclipJar
 gradle publishDevBundlePublicationToMavenLocal
+
+# copy server jar
+[ ! -d "./$SCRIPT_DIR/run" ] && mkdir "./$SCRIPT_DIR/run"
+mv "./build/libs/paper-paperclip-1.18.2-R0.1-SNAPSHOT-reobf.jar" "$SCRIPT_DIR/run/server.jar"
 
 echo "UHC Plugin successfully setup"
