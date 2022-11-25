@@ -7,8 +7,8 @@ plugins {
 	`java-library`
 	id("com.github.johnrengelman.shadow") version "7.1.2"
 	id("io.papermc.paperweight.userdev") version "1.3.11"
-	id("xyz.jpenilla.run-paper") version "1.0.6" // Adds runServer and runMojangMappedServer tasks for testing
-	id("net.minecrell.plugin-yml.bukkit") version "0.5.1" // Generates plugin.yml
+	id("xyz.jpenilla.run-paper") version "1.0.6"
+	id("net.minecrell.plugin-yml.bukkit") version "0.5.1"
 	kotlin("jvm") version "1.7.10"
 }
 
@@ -110,6 +110,9 @@ tasks {
 	runServer {
 		serverJar(File("run/server.jar"))
 	}
+	wrapper {
+		gradleVersion = "7.6"
+	}
 }
 
 bukkit {
@@ -118,12 +121,4 @@ bukkit {
 	apiVersion = "1.18"
 	authors = listOf("balduvian")
 	depend = listOf("ProtocolLib")
-}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-	jvmTarget = "1.8"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-	jvmTarget = "1.8"
 }
