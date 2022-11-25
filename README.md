@@ -8,6 +8,10 @@ A Minecraft 1.18 UHC plugin built in Kotlin running on a custom PaperMC server
 
 ## Developers: How to setup
 
+### 0. Use the new setup script instead of steps 1 and 2
+
+* Run uhc-plugin/setup.sh
+
 ### 1. Install paperweight to Mavel Local
 
 * Clone the https://github.com/PaperMC/paperweight repo to your local machine
