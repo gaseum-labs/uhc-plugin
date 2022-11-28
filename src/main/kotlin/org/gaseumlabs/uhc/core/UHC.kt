@@ -40,6 +40,7 @@ object UHC {
 
 	var game: Game? = null
 	var chc: CHC<*>? = null
+	var preset: GamePreset = GamePreset.defaultGamePreset()
 	var chcListener: Listener? = null
 	var heightmap: Heightmap? = null
 
@@ -166,21 +167,23 @@ object UHC {
 		val numPlayers = teams.fold(0) { i, team -> i + team.members.size }
 		if (numPlayers == 0) return badExit("No one is playing")
 
+		chc = preGameConfig.chcType?.create?.let { it() }
+		preset = chc?.gamePreset() ?: GamePreset.defaultGamePreset()
+
 		val worldSizePlayers = numPlayers.coerceAtLeast(2)
-		worldRadius = radius(worldSizePlayers * preGameConfig.scale * areaPerPlayer).toInt()
+		worldRadius = radius(worldSizePlayers * preset.scale * areaPerPlayer).toInt()
 		messageStream(false, "Creating game worlds for the size of $worldSizePlayers players")
 
 		/* initiate chc before worlds initialize */
-		chc = preGameConfig.chcType?.create?.let { it() }
 		chcListener = chc?.eventListener()
 		chcListener?.let { Bukkit.getPluginManager().registerEvents(it, UHCPlugin.plugin) }
 
 		/* create worlds */
 		WorldManager.refreshGameWorlds()
-		heightmap = Heightmap(preGameConfig.battlegroundRadius, 48)
+		heightmap = Heightmap(preset.battlegroundRadius, 48)
 		heightmap!!.generate(WorldManager.gameWorld!!)
 
-		val (world, otherWorld) = WorldManager.getGameWorldsBy(preGameConfig.defaultWorldEnvironment)
+		val (world, otherWorld) = WorldManager.getGameWorldsBy(preset.defaultWorldEnvironment)
 
 		/* set border in each game dimension */
 		arrayOf(world, otherWorld).forEach {
@@ -228,7 +231,7 @@ object UHC {
 		})
 		preGameTeams.transfer(gameTeams, PreTeam::toTeam)
 
-		val (world, otherWorld) = if (preGameConfig.defaultWorldEnvironment === World.Environment.NORMAL)
+		val (world, otherWorld) = if (preset.defaultWorldEnvironment === World.Environment.NORMAL)
 			WorldManager.gameWorld to WorldManager.netherWorld
 		else
 			WorldManager.netherWorld to WorldManager.gameWorld
@@ -236,6 +239,7 @@ object UHC {
 		/* GAME OBJECT */
 		val newGame = Game(
 			preGameConfig,
+			preset,
 			gameTeams,
 			heightmap ?: throw Error("No heightmap?"),
 			chc,

@@ -30,6 +30,7 @@ import kotlin.math.roundToInt
 
 class Game(
 	val config: GameConfig,
+	val preset: GamePreset,
 	val teams: Teams<Team>,
 	val heightmap: Heightmap,
 	val chc: CHC<*>?,
@@ -74,10 +75,10 @@ class Game(
 
 	private fun getPhase(phaseType: PhaseType): Phase {
 		return when (phaseType) {
-			PhaseType.GRACE -> Grace(this, config.graceTime)
-			PhaseType.SHRINK -> Shrink(this, config.shrinkTime)
-			PhaseType.BATTLEGROUND -> Battleground(this, config.battlegroundTime)
-			PhaseType.ENDGAME -> Endgame(this, heightmap, config.battlegroundRadius, config.collapseTime)
+			PhaseType.GRACE -> Grace(this, preset.graceTime)
+			PhaseType.SHRINK -> Shrink(this, preset.shrinkTime)
+			PhaseType.BATTLEGROUND -> Battleground(this, preset.battlegroundTime)
+			PhaseType.ENDGAME -> Endgame(this, heightmap, preset.battlegroundRadius, preset.collapseTime)
 			PhaseType.POSTGAME -> Postgame(this)
 		}
 	}
@@ -232,7 +233,7 @@ class Game(
 				killer != null &&
 				playerTeam !== killerTeam &&
 				location != null
-			) config.killReward.apply(
+			) preset.killReward.apply(
 				killer.uniqueId,
 				killerTeam?.members ?: arrayListOf(),
 				location

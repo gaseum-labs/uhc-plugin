@@ -307,7 +307,7 @@ class GlobalResources {
 				world,
 				deletedVein.partition,
 				currentTick,
-				game.config.battlegroundRadius,
+				game.preset.battlegroundRadius,
 				resourceData.veins,
 				regenResource,
 			)
@@ -320,7 +320,7 @@ class GlobalResources {
 				world,
 				partitionToFill,
 				currentTick,
-				game.config.battlegroundRadius,
+				game.preset.battlegroundRadius,
 				resourceData.veins,
 				regenResource,
 			)

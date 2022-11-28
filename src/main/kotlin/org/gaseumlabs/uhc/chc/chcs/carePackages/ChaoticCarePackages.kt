@@ -39,6 +39,17 @@ class ChaoticCarePackages : NoDataCHC() {
 		Material.BARREL,
 	)
 
+	override fun gamePreset() = GamePreset(
+		KillReward.NONE,
+		World.Environment.NORMAL,
+		1.0f,
+		72,
+		600,
+		600,
+		600,
+		150,
+	)
+
 	override fun customDestroy(game: Game) {
 		stopDropping()
 	}
@@ -50,7 +61,7 @@ class ChaoticCarePackages : NoDataCHC() {
 			itemsList = genItemsList(numPlayers)
 
 			NUM_DROPS = Util.ceilDiv(itemsList.size, PER_CHEST)
-			TIME = (game.config.graceTime + game.config.shrinkTime) * 20
+			TIME = (game.preset.graceTime + game.preset.shrinkTime) * 20
 			TIME_PER_DROP = TIME / NUM_DROPS
 
 			startDropping(game)
@@ -107,7 +118,7 @@ class ChaoticCarePackages : NoDataCHC() {
 	 */
 	private fun chaoticDropBlock(game: Game, world: World): Block {
 		val maxRadius = (((world.worldBorder.size - 1.0) / 2.0) - 10.0).roundToInt()
-		val minRadius = game.config.battlegroundRadius / 2
+		val minRadius = game.preset.battlegroundRadius / 2
 
 		return when (Random.nextInt(4)) {
 			0 -> CarePackageUtil.dropBlock(

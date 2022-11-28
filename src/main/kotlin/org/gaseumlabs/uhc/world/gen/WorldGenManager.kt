@@ -57,7 +57,7 @@ object WorldGenManager {
 				} else {
 					BiomeSourceGame(
 						seed,
-						UHC.getConfig().battlegroundRadius,
+						UHC.preset.battlegroundRadius,
 						BiomeNo.featureBiomes,
 						BiomeSourceGame.createAreaGame(seed),
 						BiomeSourceGame.createAreaCaves(seed)

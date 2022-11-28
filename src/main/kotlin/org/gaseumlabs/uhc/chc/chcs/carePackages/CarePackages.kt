@@ -108,7 +108,7 @@ class CarePackages : CHC<Nothing?>() {
 		/* distribute drops over shrinking phase so that if there were another, */
 		/* it would fall exactly at the end of shrinking phase */
 
-		val dropPeriod = game.config.shrinkTime * (NUM_DROPS / (NUM_DROPS + 1.0))
+		val dropPeriod = game.preset.shrinkTime * (NUM_DROPS / (NUM_DROPS + 1.0))
 		val dropInterval = (dropPeriod / NUM_DROPS).toInt()
 
 		/* all drops are equally spaced by dropInterval */
@@ -118,7 +118,7 @@ class CarePackages : CHC<Nothing?>() {
 		dropTimes[0] += remaining
 
 		dropLocations = findLocations(game.world) { i ->
-			game.worldRadius * (1 - ((dropInterval * i).toDouble() / game.config.shrinkTime))
+			game.worldRadius * (1 - ((dropInterval * i).toDouble() / game.preset.shrinkTime))
 		}
 
 		return true

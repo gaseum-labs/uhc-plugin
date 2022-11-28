@@ -193,7 +193,7 @@ class TestCommands : BaseCommand() {
 		val player = Commands.opGuardPlayer(sender) ?: return
 
 		val game = UHC.game ?: return errorMessage(sender, "Game is not going")
-		val killReward = game.config.killReward
+		val killReward = game.preset.killReward
 
 		killReward.apply(
 			player.uniqueId,

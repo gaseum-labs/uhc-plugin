@@ -35,32 +35,7 @@ class CreateGameGui : GuiPage(
 					ItemCreator.enabledName("Natural Regeneration", value)
 				)
 		},
-		object : GuiItemCycler<KillReward>(
-			coords(1, 0),
-			arrayOf(KillReward.APPLE, KillReward.ABSORPTION, KillReward.REGENERATION, KillReward.NONE)
-		) {
-			override fun getProperty() = UHC.getConfig()::killReward
-			override fun renderProperty(value: KillReward) =
-				ItemCreator.display(value.representation)
-					.name(ItemCreator.stateName("Kill Reward", value.prettyName))
-					.lore(value.lore)
-		},
-		object : GuiItemCycler<World.Environment>(
-			coords(2, 0),
-			arrayOf(World.Environment.NORMAL, World.Environment.NETHER)
-		) {
-			override fun getProperty() = UHC.getConfig()::defaultWorldEnvironment
-			override fun renderProperty(value: World.Environment) =
-				ItemCreator.display(
-					if (value === World.Environment.NORMAL) Material.GRASS_BLOCK
-					else Material.NETHERRACK
-				)
-					.name(ItemCreator.stateName("World",
-						if (value === World.Environment.NORMAL) "Normal"
-						else "Nether"
-					))
-					.lore(Component.text("Which dimension the UHC starts in"))
-		},
+
 		object : GuiItemToggle(
 			coords(3, 0),
 		) {
@@ -76,50 +51,7 @@ class CreateGameGui : GuiPage(
 				)
 		},
 
-		object : GuiItemCounterF(coords(0, 1), 0.5f, 6.0f, 0.1f) {
-			override fun getProperty() = UHC.getConfig()::scale
-			override fun renderProperty(value: Float) =
-				ItemCreator.display(Material.WARPED_TRAPDOOR)
-					.enchant(value != default())
-					.name(ItemCreator.stateName("Scale", "%.2f".format(value)))
-		},
-		object : GuiItemCounter(coords(1, 1), 10, 200, 5) {
-			override fun getProperty() = UHC.getConfig()::battlegroundRadius
-			override fun renderProperty(value: Int) =
-				ItemCreator.display(Material.WARPED_DOOR)
-					.enchant(value != default())
-					.name(ItemCreator.stateName("Battleground Radius", "$value"))
-		},
-		object : GuiItemCounter(coords(2, 1), 60, 6000, 60) {
-			override fun getProperty() = UHC.getConfig()::graceTime
-			override fun renderProperty(value: Int) =
-				ItemCreator.display(Material.SUNFLOWER)
-					.enchant(value != default())
-					.name(ItemCreator.stateName("Grace Time", Util.timeString(value)))
-		},
-		object : GuiItemCounter(coords(3, 1), 60, 6000, 60) {
-			override fun getProperty() = UHC.getConfig()::shrinkTime
-			override fun renderProperty(value: Int) =
-				ItemCreator.display(Material.BELL)
-					.enchant(value != default())
-					.name(ItemCreator.stateName("Shrink Time", Util.timeString(value)))
-		},
-		object : GuiItemCounter(coords(4, 1), 60, 6000, 60) {
-			override fun getProperty() = UHC.getConfig()::battlegroundTime
-			override fun renderProperty(value: Int) =
-				ItemCreator.display(Material.CAMPFIRE)
-					.enchant(value != default())
-					.name(ItemCreator.stateName("Battleground Time", Util.timeString(value)))
-		},
-		object : GuiItemCounter(coords(5, 1), 60, 1000, 30) {
-			override fun getProperty() = UHC.getConfig()::collapseTime
-			override fun renderProperty(value: Int) =
-				ItemCreator.display(Material.HORN_CORAL)
-					.enchant(value != default())
-					.name(ItemCreator.stateName("Collapse Time", Util.timeString(value)))
-		},
-
-		object : GuiItem(coords(4, 2)) {
+		object : GuiItem(coords(3, 2)) {
 			override fun onClick(player: Player, shift: Boolean) {
 				player.closeInventory()
 				if (shift) {
@@ -131,12 +63,14 @@ class CreateGameGui : GuiPage(
 				ItemCreator.display(Material.ENCHANTING_TABLE)
 					.name(Component.text("Start UHC", NamedTextColor.GOLD))
 		},
+
 		object : GuiItem(coords(5, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = GuiManager.openGui(player, CHCGui())
 			override fun render() =
 				ItemCreator.display(Material.BREWING_STAND)
 					.name(Component.text("Start CHC", NamedTextColor.GOLD))
 		},
+
 		object : GuiItem(coords(7, 2)) {
 			override fun onClick(player: Player, shift: Boolean) = UHC.getConfig().reset()
 			override fun render() =

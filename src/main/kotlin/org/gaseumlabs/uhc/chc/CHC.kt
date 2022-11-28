@@ -4,6 +4,7 @@ import org.gaseumlabs.uhc.core.PlayerData
 import org.gaseumlabs.uhc.core.phase.Phase
 import org.bukkit.event.Listener
 import org.gaseumlabs.uhc.core.Game
+import org.gaseumlabs.uhc.core.GamePreset
 import java.util.*
 
 abstract class CHC<DataType> {
@@ -23,6 +24,7 @@ abstract class CHC<DataType> {
 
 	abstract fun defaultData(): DataType
 
+	open fun gamePreset(): GamePreset? = null
 	open fun onPhaseSwitch(game: Game, phase: Phase) {}
 	open fun onStartPlayer(game: Game, uuid: UUID) {}
 	open fun onEndPlayer(game: Game, uuid: UUID) {}
