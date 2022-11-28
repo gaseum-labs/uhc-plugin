@@ -11,7 +11,6 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.events.*
 import com.mojang.authlib.GameProfile
 import net.minecraft.ChatFormatting.*
-import net.minecraft.core.Registry
 import net.minecraft.network.chat.*
 import net.minecraft.network.protocol.game.*
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.Action.ADD_PLAYER
@@ -19,7 +18,6 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.Action.UP
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket.PlayerUpdate
 import net.minecraft.network.syncher.*
 import net.minecraft.network.syncher.SynchedEntityData.DataItem
-import net.minecraft.world.inventory.MenuType
 import net.minecraft.world.scores.*
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -76,6 +74,17 @@ object Packet {
 		return nameIndex
 	}
 
+	private val hexCodes = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f')
+
+	fun uuidToColors(uuid: UUID) = String(CharArray(64) { i ->
+		if (i % 2 == 0)
+			'\u00A7'
+		else hexCodes[
+				(if (i < 32) uuid.mostSignificantBits else uuid.leastSignificantBits)
+					.ushr(60 - 4 * (((i - 1) / 2) % 16 )).toInt().and(0xf)
+		]
+	})
+
 	private fun coloredNameComponent(playerRealName: String, team: AbstractTeam?): Component {
 		return if (team != null) {
 			Util.nmsGradientString(
@@ -117,11 +126,13 @@ object Packet {
 			val updateDisplayNamePacket = ClientboundPlayerInfoPacket(UPDATE_DISPLAY_NAME, sendPlayer.handle)
 
 			val originalEntry = updateDisplayNamePacket.entries[0]
+			val nameComponent = coloredNameComponent(teamPlayerRealName, teamPlayerTeam)
+
 			updateDisplayNamePacket.entries[0] = PlayerUpdate(
 				originalEntry.profile,
 				originalEntry.latency,
 				originalEntry.gameMode,
-				coloredNameComponent(teamPlayerRealName, teamPlayerTeam),
+				TextComponent(if (teamPlayerTeam == null) "§r" else uuidToColors(teamPlayerTeam.uuid)).append(nameComponent)
 			)
 
 			sendPlayer.handle.connection.send(updateDisplayNamePacket)

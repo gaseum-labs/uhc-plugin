@@ -16,9 +16,11 @@ class PreTeam(
 	color0: DyeColor,
 	color1: DyeColor,
 	members: ArrayList<UUID>,
+	uuid: UUID,
 ) : AbstractTeam(
 	arrayOf(color0, color1),
-	members
+	members,
+	uuid,
 ) {
 	var name: String? = null
 	var bannerPattern: Banner? = null
@@ -34,7 +36,8 @@ class PreTeam(
 			colors[0],
 			colors[1],
 			members,
-			pattern
+			pattern,
+			uuid,
 		)
 	}
 

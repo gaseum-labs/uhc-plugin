@@ -2,6 +2,7 @@ package org.gaseumlabs.uhc.command
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
+import net.kyori.adventure.text.Component
 import org.gaseumlabs.uhc.core.*
 import org.gaseumlabs.uhc.lobbyPvp.ArenaManager
 import org.gaseumlabs.uhc.chc.chcs.classes.Classes
@@ -78,7 +79,8 @@ class AdminCommands : BaseCommand() {
 			Action.getPlayerLocation(offlinePlayer.uniqueId),
 			null,
 			playerData,
-			true
+			true,
+			Component.text("${offlinePlayer.name} was forcibly killed")
 		)
 	}
 

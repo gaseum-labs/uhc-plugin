@@ -127,26 +127,36 @@ class Game(
 		setPhase(PhaseType.POSTGAME)
 	}
 
-	private fun createEndTitle(winningTeam: Team?): Title {
-		return if (winningTeam == null) {
+	private fun createEndTitle(winningTeam: Team?) = if (winningTeam == null)
 			Title.title(
 				Component.text("No one wins?", GOLD, BOLD),
 				Component.empty(),
 				Times.times(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
 			)
-		} else {
+		else
 			Title.title(
 				winningTeam.apply("${winningTeam.name} has won!"),
 				winningTeam.apply(winningTeam.members.filter { PlayerData.get(it).alive }
 					.joinToString(", ") { Bukkit.getOfflinePlayer(it).name ?: "NULL" }),
 				Times.times(Duration.ZERO, Duration.ofSeconds(10), Duration.ofSeconds(2))
 			)
-		}
-	}
 
-	/* death */
+	/**
+	 * everyone who can see a death message
+	 * spectators and game players, dead or alive (anyone in the game world)
+	 */
+	private fun deathMessagePlayers() = Bukkit.getOnlinePlayers().filter { WorldManager.isGameWorld(it.world) }
 
-	fun playerDeath(uuid: UUID, location: Location?, killer: Player?, playerData: PlayerData, forcePermaDeath: Boolean) {
+	fun playerDeath(
+		uuid: UUID,
+		location: Location?,
+		killer: Player?,
+		playerData: PlayerData,
+		forcePermaDeath: Boolean,
+		deathMessage: Component?
+	) {
+		deathMessage?.let { deathMessagePlayers().forEach { it.sendMessage(deathMessage) } }
+
 		if (!forcePermaDeath && shouldRespawn(playerData)) {
 			playerRespawn(uuid)
 		} else {
@@ -206,18 +216,7 @@ class Game(
 		/* chc undoes them */
 		chc?.onEndPlayer(this, uuid)
 
-		/* apply kill reward, only on player kill, no team kills */
-		if (
-			killer != null &&
-			playerTeam !== killerTeam &&
-			location != null
-		) config.killReward.apply(
-			killer.uniqueId,
-			killerTeam?.members ?: arrayListOf(),
-			location
-		)
-
-		/* end the game maybe */
+		/* end the game if everyone else has died */
 		if (numRemaining <= 1) {
 			Action.playerAction(uuid) { it.gameMode = GameMode.SPECTATOR }
 			end(lastTeamAlive)
@@ -226,8 +225,20 @@ class Game(
 			teams.leaveTeam(uuid)
 			playerRespawn(uuid)
 
+		/* regular kill */
 		} else {
-			Action.playerAction(uuid) { deathTitle(it, killer, false) }
+			/* apply kill reward, only on player kill, no team kills */
+			if (
+				killer != null &&
+				playerTeam !== killerTeam &&
+				location != null
+			) config.killReward.apply(
+				killer.uniqueId,
+				killerTeam?.members ?: arrayListOf(),
+				location
+			)
+
+			Action.playerAction(uuid) { makePlayerDead(it, killer, false) }
 		}
 	}
 
@@ -269,7 +280,7 @@ class Game(
 	}
 
 	private fun playerRespawn(uuid: UUID) {
-		Action.playerAction(uuid) { deathTitle(it, null, true) }
+		Action.playerAction(uuid) { makePlayerDead(it, null, true) }
 
 		Bukkit.getScheduler().scheduleSyncDelayedTask(UHCPlugin.plugin, {
 			++PlayerData.get(uuid).lifeNo
@@ -281,7 +292,7 @@ class Game(
 		}, 100)
 	}
 
-	private fun deathTitle(player: Player, killer: Player?, respawn: Boolean) {
+	private fun makePlayerDead(player: Player, killer: Player?, respawn: Boolean) {
 		player.gameMode = GameMode.SPECTATOR
 		Lobby.resetPlayerStats(player)
 

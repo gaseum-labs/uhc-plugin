@@ -41,14 +41,19 @@ class TeamCommands : BaseCommand() {
 
 			val game = UHC.game
 			if (game == null) {
-				UHC.preGameTeams.addTeam(PreTeam(color0, color1, uuids))
+				UHC.preGameTeams.addTeam(PreTeam(color0, color1, uuids, UUID.randomUUID()))
 
 			} else {
-				game.teams.addTeam(Team(PreTeam.randomName(),
-				color0,
-				color1,
-				uuids,
-				TeamShield.randomBannerPattern(color0, color1)))
+				game.teams.addTeam(
+					Team(
+						PreTeam.randomName(),
+						color0,
+						color1,
+						uuids,
+						TeamShield.randomBannerPattern(color0, color1),
+						UUID.randomUUID()
+					)
+				)
 			}
 
 			Action.sendGameMessage(
@@ -88,31 +93,6 @@ class TeamCommands : BaseCommand() {
 		}.ifEmpty {
 			Commands.errorMessage(sender, "No valid players selected").void()
 		}
-
-	private fun internalCreateTeam(sender: CommandSender, players: List<OfflinePlayer>) {
-		if (Commands.opGuard(sender)) return
-
-		val teamPlayerList = teamPlayerList(sender, players) ?: return
-		val uuids = teamPlayerList.map { it.uniqueId } as ArrayList<UUID>
-
-		val (color0, color1) = UHC.colorCube.pickTeam() ?: return Action.sendGameMessage(sender,
-			"Not enough colors available to create a team")
-
-		val game = UHC.game
-		if (game == null) {
-			UHC.preGameTeams.addTeam(PreTeam(color0, color1, uuids))
-
-		} else {
-			game.teams.addTeam(Team(PreTeam.randomName(),
-				color0,
-				color1,
-				uuids,
-				TeamShield.randomBannerPattern(color0, color1)))
-		}
-
-		Action.sendGameMessage(sender,
-			"Created a team for ${teamPlayerList.joinToString(" and ") { it.name ?: "Unknown" }}")
-	}
 
 	@CommandCompletion("@uhcplayer")
 	@Subcommand("create")

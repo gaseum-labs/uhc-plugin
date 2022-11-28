@@ -13,9 +13,11 @@ class Team(
 	color1: DyeColor,
 	members: ArrayList<UUID>,
 	val bannerPattern: Banner,
+	uuid: UUID,
 ) : AbstractTeam(
 	arrayOf(color0, color1),
-	members
+	members,
+	uuid
 ) {
 	fun serialize(): JsonObject {
 		val obj = JsonObject()

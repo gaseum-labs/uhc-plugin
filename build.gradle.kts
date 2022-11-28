@@ -1,7 +1,6 @@
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	`java-library`
@@ -85,6 +84,7 @@ abstract class WslIpTask : DefaultTask() {
 }
 
 tasks.register<WslIpTask>("wslIp")
+//tasks.register<GithubReleaseTask>("githubRelease")
 
 tasks {
 	jar {

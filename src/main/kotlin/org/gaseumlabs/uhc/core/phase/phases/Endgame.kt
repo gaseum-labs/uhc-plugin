@@ -1,5 +1,6 @@
 package org.gaseumlabs.uhc.core.phase.phases
 
+import net.kyori.adventure.text.Component
 import org.gaseumlabs.uhc.component.*
 import org.gaseumlabs.uhc.component.UHCColor.U_WHITE
 import org.gaseumlabs.uhc.core.phase.Phase
@@ -42,7 +43,7 @@ class Endgame(game: Game, private val heightmap: Heightmap, val radius: Int, pri
 					}
 
 					if (!Portal.sendThroughPortal(uuid, player)) {
-						game.playerDeath(uuid, null, null, playerData, true)
+						game.playerDeath(uuid, null, null, playerData, true, Component.text("${Bukkit.getOfflinePlayer(uuid).name} failed to return to home dimension"))
 					}
 				}
 			}

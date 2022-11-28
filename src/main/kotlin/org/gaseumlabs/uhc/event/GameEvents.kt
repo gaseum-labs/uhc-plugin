@@ -2,6 +2,7 @@ package org.gaseumlabs.uhc.event
 
 import io.papermc.paper.event.block.BlockBreakBlockEvent
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
@@ -221,7 +222,12 @@ class GameEvents : Listener {
 			val droppedExperience = experience.coerceAtMost(100)
 			event.droppedExp = droppedExperience
 
-			game.playerDeath(uuid, event.entity.location, killer, playerData, false)
+			val deathText = if (killer == null)
+				"${Bukkit.getOfflinePlayer(uuid).name}'s offline zombie died"
+			else
+				"${Bukkit.getOfflinePlayer(uuid).name}'s offline zombie was killed by ${killer.name}"
+
+			game.playerDeath(uuid, event.entity.location, killer, playerData, false, Component.text(deathText))
 
 		} else {
 			Util.binaryFind(event.entityType, DropFixType.list) { it.dropFix.entityType }
@@ -272,13 +278,14 @@ class GameEvents : Listener {
 			val orb = player.location.world.spawnEntity(player.location, EntityType.EXPERIENCE_ORB) as ExperienceOrb
 			orb.experience = event.droppedExp
 
-			event.deathMessage()?.let { deathMessage ->
-				PlayerData.playerDataList.filter { (_, data) -> data.participating }
-					.mapNotNull { (uuid, _) -> Bukkit.getPlayer(uuid) }
-					.forEach { player -> player.sendMessage(deathMessage) }
-			}
-
-			UHC.game?.playerDeath(uuid, player.location, player.killer, playerData, false)
+			UHC.game?.playerDeath(
+				uuid,
+				player.location,
+				player.killer,
+				playerData,
+				false,
+				event.deathMessage()
+			)
 		}
 	}
 
