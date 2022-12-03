@@ -19,11 +19,13 @@ object ResourceId {
 		hashMapOf(
 			PhaseType.GRACE to ReleaseChunked(
 				Tier(2, 0, ratio(1, 13)),
-				Tier.default(0, ratio(1, 26)),
+				Tier(2, 0, ratio(1, 26)),
+				Tier.default(1, ratio(1, 10)),
 			),
 			PhaseType.SHRINK to ReleaseChunked(
 				Tier(2, 0, ratio(1, 13)),
-				Tier.default(0, ratio(1, 26)),
+				Tier(2, 0, ratio(1, 26)),
+				Tier.default(1, ratio(1, 10)),
 			),
 			PhaseType.BATTLEGROUND to ReleaseBattleground(
 				ResourcePartitionGrid(3, 3)

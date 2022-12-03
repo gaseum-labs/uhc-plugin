@@ -55,7 +55,7 @@ class RegenResourceNetherWart(
 	}
 
 	override fun isModifiedBlock(blocks: List<Block>) =
-		blocks[0].type !== SOUL_SAND || blocks[1].type !== NETHER_WART
+		blocks[0].type !== SOUL_SAND && blocks[1].type !== NETHER_WART
 
 	private fun wartGood(surfaceBlock: Block): Boolean {
 		if (!(surfaceBlock.type === BASALT ||

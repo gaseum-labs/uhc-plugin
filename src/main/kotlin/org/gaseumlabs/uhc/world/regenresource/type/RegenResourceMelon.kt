@@ -51,7 +51,7 @@ class RegenResourceMelon(
 	}
 
 	override fun isModifiedBlock(blocks: List<Block>) =
-		blocks[0].type !== MELON || blocks[0].type !== CARVED_PUMPKIN
+		blocks[0].type !== MELON && blocks[0].type !== CARVED_PUMPKIN
 
 	/* placement */
 
